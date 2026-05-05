@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { T, type Lang } from "./i18n";
 import "./App.css";
 
 const PYTHON_API = "http://127.0.0.1:8765";
@@ -18,7 +19,6 @@ type LookupResult = {
 
 type Status = "idle" | "loading" | "success" | "error";
 
-type Lang = "ko" | "en";
 type Region = {
   offsetX: number;
   offsetY: number;
@@ -51,6 +51,8 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const [showSettings, setShowSettings] = useState(false);
+
+  const t = T[region.lang];
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(region));
@@ -90,9 +92,7 @@ function App() {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
           setError(
-            e instanceof Error && e.name === "AbortError"
-              ? "Timeout (120s). 첫 호출이면 OCR 모델 다운로드 중. Python 콘솔 확인."
-              : msg
+            e instanceof Error && e.name === "AbortError" ? T[r.lang].timeout : msg
           );
           setStatus("error");
         } finally {
@@ -115,11 +115,12 @@ function App() {
     <div className="overlay">
       <div className="card">
         <div className="header">
-          <span className="title">Tarkov Price</span>
+          <span className="title">{t.title}</span>
           <span className="hotkey">F2</span>
           <button
             className="settings-btn"
             onClick={() => setShowSettings((s) => !s)}
+            title={t.settings}
           >
             ⚙
           </button>
@@ -128,7 +129,7 @@ function App() {
         {showSettings && (
           <div className="settings">
             <div className="settings-row">
-              <label>language</label>
+              <label>{t.language}</label>
               <select
                 value={region.lang}
                 onChange={(e) => updateRegion("lang", e.target.value as Lang)}
@@ -138,7 +139,7 @@ function App() {
               </select>
             </div>
             <div className="settings-row">
-              <label>offsetX</label>
+              <label>{t.offsetX}</label>
               <input
                 type="number"
                 value={region.offsetX}
@@ -146,7 +147,7 @@ function App() {
               />
             </div>
             <div className="settings-row">
-              <label>offsetY</label>
+              <label>{t.offsetY}</label>
               <input
                 type="number"
                 value={region.offsetY}
@@ -154,7 +155,7 @@ function App() {
               />
             </div>
             <div className="settings-row">
-              <label>width</label>
+              <label>{t.width}</label>
               <input
                 type="number"
                 value={region.width}
@@ -162,33 +163,26 @@ function App() {
               />
             </div>
             <div className="settings-row">
-              <label>height</label>
+              <label>{t.height}</label>
               <input
                 type="number"
                 value={region.height}
                 onChange={(e) => updateRegion("height", parseInt(e.target.value) || 1)}
               />
             </div>
-            <div className="settings-hint">
-              capture box = (cursor.x + offsetX, cursor.y + offsetY) ~ +width/+height
-            </div>
-            <button
-              className="reset-btn"
-              onClick={() => setRegion(DEFAULT_REGION)}
-            >
-              Reset
+            <div className="settings-hint">{t.captureHint}</div>
+            <button className="reset-btn" onClick={() => setRegion(DEFAULT_REGION)}>
+              {t.reset}
             </button>
           </div>
         )}
 
-        {status === "idle" && (
-          <div className="hint">Hover an item, press F2</div>
-        )}
+        {status === "idle" && <div className="hint">{t.hintIdle}</div>}
         {status === "loading" && (
           <div className="hint">
-            Looking up…
+            {t.hintLoading}
             <div style={{ fontSize: 10, marginTop: 4, color: "#666" }}>
-              첫 호출은 OCR 모델 다운로드로 1~5분
+              {t.hintFirstLoad}
             </div>
           </div>
         )}
@@ -196,22 +190,22 @@ function App() {
         {status === "success" && result && (
           <div className="result">
             <div className="item-name">
-              {result.item_name ?? `(no match) "${result.raw_text}"`}
+              {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
             </div>
             {result.item_name && (
               <div className="prices">
                 <div className="price">
-                  <span className="label">Flea</span>
+                  <span className="label">{t.flea}</span>
                   <span className="value">{fmt(result.flea_price)}</span>
                 </div>
                 <div className="price">
-                  <span className="label">Trader</span>
+                  <span className="label">{t.trader}</span>
                   <span className="value">{fmt(result.trader_price)}</span>
                 </div>
               </div>
             )}
             {!result.item_name && result.raw_text && (
-              <div className="raw-text">OCR: {result.raw_text}</div>
+              <div className="raw-text">{t.ocr}: {result.raw_text}</div>
             )}
           </div>
         )}
