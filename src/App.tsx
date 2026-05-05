@@ -18,13 +18,21 @@ type LookupResult = {
 
 type Status = "idle" | "loading" | "success" | "error";
 
-type Region = { offsetX: number; offsetY: number; width: number; height: number };
+type Lang = "ko" | "en";
+type Region = {
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+  lang: Lang;
+};
 
 const DEFAULT_REGION: Region = {
   offsetX: -300,
   offsetY: -100,
   width: 600,
   height: 100,
+  lang: "ko",
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -62,6 +70,7 @@ function App() {
           y: event.payload.y + r.offsetY,
           width: r.width,
           height: r.height,
+          lang: r.lang,
         });
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000);
@@ -99,7 +108,7 @@ function App() {
   const fmt = (n: number | null) =>
     n == null ? "—" : n.toLocaleString() + " ₽";
 
-  const updateRegion = (key: keyof Region, value: number) =>
+  const updateRegion = <K extends keyof Region>(key: K, value: Region[K]) =>
     setRegion((r) => ({ ...r, [key]: value }));
 
   return (
@@ -118,6 +127,16 @@ function App() {
 
         {showSettings && (
           <div className="settings">
+            <div className="settings-row">
+              <label>language</label>
+              <select
+                value={region.lang}
+                onChange={(e) => updateRegion("lang", e.target.value as Lang)}
+              >
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+              </select>
+            </div>
             <div className="settings-row">
               <label>offsetX</label>
               <input

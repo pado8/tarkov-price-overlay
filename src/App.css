@@ -132,8 +132,9 @@ html, body, #root {
   color: #999;
   font-family: "Consolas", monospace;
 }
-.settings-row input {
-  width: 70px;
+.settings-row input,
+.settings-row select {
+  width: 80px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(200, 170, 100, 0.3);
   color: #fff;

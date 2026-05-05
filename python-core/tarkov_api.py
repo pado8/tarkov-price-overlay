@@ -18,15 +18,9 @@ query ItemByName($name: String!, $lang: LanguageCode) {
 """
 
 
-def _is_korean(text: str) -> bool:
-    return any("가" <= ch <= "힣" for ch in text)
-
-
-def get_item_price(item_name: str) -> dict:
+def get_item_price(item_name: str, lang: str = "ko") -> dict:
     if not item_name:
         return {"name": None, "flea": None, "trader": None}
-
-    lang = "ko" if _is_korean(item_name) else "en"
 
     response = requests.post(
         TARKOV_API_URL,

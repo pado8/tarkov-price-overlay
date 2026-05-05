@@ -39,6 +39,7 @@ class CaptureRequest(BaseModel):
     y: int
     width: int
     height: int
+    lang: str = "ko"  # "ko" | "en"
 
 
 class LookupResponse(BaseModel):
@@ -62,11 +63,12 @@ def debug_screen() -> dict:
 
 @app.post("/lookup", response_model=LookupResponse)
 def lookup(req: CaptureRequest) -> LookupResponse:
-    print(f"[lookup] received: x={req.x} y={req.y} w={req.width} h={req.height}")
+    print(f"[lookup] x={req.x} y={req.y} w={req.width} h={req.height} lang={req.lang}")
     image = capture_region(req.x, req.y, req.width, req.height)
-    text = recognize_text(image)
-    print(f"[lookup] OCR text: {text!r}")
-    price = get_item_price(text)
+    langs = (req.lang,) if req.lang in ("ko", "en") else ("ko", "en")
+    text = recognize_text(image, langs=langs)
+    print(f"[lookup] OCR: {text!r}")
+    price = get_item_price(text, lang=req.lang if req.lang in ("ko", "en") else "ko")
     return LookupResponse(
         raw_text=text,
         item_name=price.get("name"),
