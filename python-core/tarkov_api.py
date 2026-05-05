@@ -3,10 +3,11 @@ import requests
 TARKOV_API_URL = "https://api.tarkov.dev/graphql"
 
 _QUERY = """
-query ItemByName($name: String!) {
-  items(name: $name) {
+query ItemByName($name: String!, $lang: LanguageCode) {
+  items(name: $name, lang: $lang) {
     id
     name
+    shortName
     avg24hPrice
     sellFor {
       price
@@ -17,13 +18,19 @@ query ItemByName($name: String!) {
 """
 
 
+def _is_korean(text: str) -> bool:
+    return any("가" <= ch <= "힣" for ch in text)
+
+
 def get_item_price(item_name: str) -> dict:
     if not item_name:
         return {"name": None, "flea": None, "trader": None}
 
+    lang = "ko" if _is_korean(item_name) else "en"
+
     response = requests.post(
         TARKOV_API_URL,
-        json={"query": _QUERY, "variables": {"name": item_name}},
+        json={"query": _QUERY, "variables": {"name": item_name, "lang": lang}},
         timeout=10,
     )
     response.raise_for_status()
@@ -32,7 +39,9 @@ def get_item_price(item_name: str) -> dict:
         return {"name": None, "flea": None, "trader": None}
 
     item = items[0]
-    trader_prices = [s["price"] for s in item.get("sellFor", []) if s["vendor"]["name"] != "Flea Market"]
+    trader_prices = [
+        s["price"] for s in item.get("sellFor", []) if s["vendor"]["name"] != "Flea Market"
+    ]
     return {
         "name": item["name"],
         "flea": item.get("avg24hPrice"),

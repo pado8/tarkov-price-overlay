@@ -7,7 +7,7 @@ _reader: easyocr.Reader | None = None
 def _get_reader() -> easyocr.Reader:
     global _reader
     if _reader is None:
-        _reader = easyocr.Reader(["en"], gpu=False)
+        _reader = easyocr.Reader(["ko", "en"], gpu=False)
     return _reader
 
 
