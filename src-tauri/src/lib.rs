@@ -35,7 +35,11 @@ pub fn run() {
                             x: mouse.coords.0,
                             y: mouse.coords.1,
                         };
-                        let _ = app.emit("hotkey-lookup", pos);
+                        println!("[hotkey] F2 pressed, cursor=({}, {})", pos.x, pos.y);
+                        match app.emit("hotkey-lookup", pos) {
+                            Ok(_) => println!("[hotkey] emitted hotkey-lookup event"),
+                            Err(e) => println!("[hotkey] emit failed: {:?}", e),
+                        }
                     }
                 })
                 .build(),
@@ -43,7 +47,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![get_cursor_position])
         .setup(|app| {
             let f2 = Shortcut::new(None, Code::F2);
-            app.global_shortcut().register(f2)?;
+            match app.global_shortcut().register(f2) {
+                Ok(_) => println!("[setup] F2 global shortcut registered"),
+                Err(e) => println!("[setup] F2 registration FAILED: {:?}", e),
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
