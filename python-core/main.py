@@ -1,12 +1,21 @@
 import sys
 
+DPI_STATUS = "not-windows"
 if sys.platform == "win32":
     import ctypes
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
-    except (AttributeError, OSError):
-        ctypes.windll.user32.SetProcessDPIAware()
+        DPI_STATUS = "per-monitor-aware (shcore.SetProcessDpiAwareness=2)"
+    except (AttributeError, OSError) as e1:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+            DPI_STATUS = "system-aware (user32.SetProcessDPIAware) — fallback"
+        except Exception as e2:
+            DPI_STATUS = f"FAILED: {e1!r} / {e2!r}"
 
+print(f"[startup] DPI awareness: {DPI_STATUS}")
+
+import mss
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -42,6 +51,13 @@ class LookupResponse(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/debug/screen")
+def debug_screen() -> dict:
+    with mss.mss() as sct:
+        monitors = sct.monitors
+    return {"dpi_status": DPI_STATUS, "monitors": monitors}
 
 
 @app.post("/lookup", response_model=LookupResponse)
