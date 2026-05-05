@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+
+const log = (msg: string) => {
+  invoke("log_msg", { msg }).catch(() => {});
+};
 
 const PYTHON_API = "http://127.0.0.1:8765";
 // 마우스 좌표 기준, 좌상단으로 캡처 (타르코프 툴팁 위치)
@@ -24,11 +29,20 @@ function App() {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
+    log("React: subscribing to hotkey-lookup");
     const unlistenPromise = listen<{ x: number; y: number }>(
       "hotkey-lookup",
       async (event) => {
+        log(`React: got hotkey-lookup payload=${JSON.stringify(event.payload)}`);
         setStatus("loading");
         setError("");
+        const body = JSON.stringify({
+          x: event.payload.x + CAPTURE_OFFSET_X,
+          y: event.payload.y + CAPTURE_OFFSET_Y,
+          width: CAPTURE_WIDTH,
+          height: CAPTURE_HEIGHT,
+        });
+        log(`React: about to fetch ${PYTHON_API}/lookup body=${body}`);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000);
         try {
@@ -36,22 +50,21 @@ function App() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             signal: controller.signal,
-            body: JSON.stringify({
-              x: event.payload.x + CAPTURE_OFFSET_X,
-              y: event.payload.y + CAPTURE_OFFSET_Y,
-              width: CAPTURE_WIDTH,
-              height: CAPTURE_HEIGHT,
-            }),
+            body,
           });
+          log(`React: fetch returned status=${res.status}`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
+          log(`React: parsed json item_name=${data.item_name}`);
           setResult(data);
           setStatus("success");
         } catch (e) {
+          const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+          log(`React: fetch ERROR ${msg}`);
           if (e instanceof Error && e.name === "AbortError") {
-            setError("Timeout (120s). 첫 호출이면 EasyOCR 한글 모델 다운로드 중일 수 있음. Python 콘솔 확인.");
+            setError("Timeout (120s). 첫 호출이면 EasyOCR 한글 모델 다운로드 중. Python 콘솔 확인.");
           } else {
-            setError(e instanceof Error ? e.message : String(e));
+            setError(msg);
           }
           setStatus("error");
         } finally {

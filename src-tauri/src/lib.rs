@@ -19,6 +19,11 @@ fn get_cursor_position() -> CursorPos {
     }
 }
 
+#[tauri::command]
+fn log_msg(msg: String) {
+    println!("[react] {}", msg);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -44,7 +49,7 @@ pub fn run() {
                 })
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![get_cursor_position])
+        .invoke_handler(tauri::generate_handler![get_cursor_position, log_msg])
         .setup(|app| {
             let f2 = Shortcut::new(None, Code::F2);
             match app.global_shortcut().register(f2) {
