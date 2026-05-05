@@ -5,6 +5,10 @@ import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
 
+const exitApp = () => {
+  invoke("exit_app").catch(() => {});
+};
+
 const PYTHON_API = "http://127.0.0.1:8765";
 
 const log = (msg: string) => {
@@ -283,6 +287,13 @@ function App() {
             title={t.settings}
           >
             ⚙
+          </button>
+          <button
+            className="settings-btn exit-btn"
+            onClick={exitApp}
+            title={t.exit}
+          >
+            ✕
           </button>
         </div>
 

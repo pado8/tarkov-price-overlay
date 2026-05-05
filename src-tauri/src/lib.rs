@@ -52,6 +52,17 @@ fn unregister_hotkey(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn exit_app(app: tauri::AppHandle) {
+    if let Some(state) = app.try_state::<SidecarChild>() {
+        if let Some(child) = state.0.lock().unwrap().take() {
+            let _ = child.kill();
+            println!("[sidecar] killed on exit_app");
+        }
+    }
+    app.exit(0);
+}
+
 fn spawn_sidecar(app: &tauri::AppHandle) -> Result<CommandChild, String> {
     let cmd = app
         .shell()
@@ -115,7 +126,8 @@ pub fn run() {
             get_cursor_position,
             log_msg,
             register_hotkey,
-            unregister_hotkey
+            unregister_hotkey,
+            exit_app
         ])
         .setup(|app| {
             match spawn_sidecar(&app.handle()) {

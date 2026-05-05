@@ -53,3 +53,11 @@ _debug_captures/
 
 # Bundled OCR models (~125MB, downloaded on first run)
 python-core/models/
+
+# PyInstaller build outputs
+dist-python/
+build-python/
+src-tauri/binaries/
+
+# Claude worktrees
+.claude/worktrees/

@@ -31,6 +31,7 @@ export const T = {
     edit: "수정",
     hide: "숨기기",
     hideDelay: "표시 시간(초)",
+    exit: "종료",
   },
   en: {
     title: "Tarkov Price",
@@ -61,6 +62,7 @@ export const T = {
     edit: "Edit",
     hide: "Hide",
     hideDelay: "Auto-hide (s)",
+    exit: "Exit",
   },
 } as const;
 

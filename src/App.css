@@ -41,6 +41,9 @@ html, body, #root {
   pointer-events: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  border-color: transparent;
+  box-shadow: none;
+  background: transparent;
 }
 
 .header {
@@ -123,6 +126,14 @@ html, body, #root {
 .settings-btn:hover,
 .reset-btn:hover {
   background: rgba(200, 170, 100, 0.15);
+}
+.exit-btn {
+  border-color: rgba(255, 100, 100, 0.5);
+  color: #ff8080;
+}
+.exit-btn:hover {
+  background: rgba(255, 80, 80, 0.2);
+  color: #ffb0b0;
 }
 
 .settings {
