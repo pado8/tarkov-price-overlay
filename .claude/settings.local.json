@@ -18,7 +18,12 @@
       "Read(//c/Users/AQUAPADO/.cargo/bin//**)",
       "Bash(\"/c/Users/AQUAPADO/.cargo/bin/cargo.exe\" --version)",
       "Bash(npx --yes create-tauri-app@latest _scaffold --manager npm --template react-ts --identifier com.tarkov.overlay)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(git push *)",
+      "Bash(.venv/Scripts/python.exe main.py)",
+      "Bash(export PATH=\"$PATH:/c/Users/AQUAPADO/.cargo/bin\")",
+      "Bash(npm run *)",
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match 'tarkov|uvicorn|python' } | Select-Object Id, ProcessName, StartTime | Format-Table -AutoSize)"
     ]
   }
 }

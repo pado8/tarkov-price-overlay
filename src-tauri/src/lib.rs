@@ -1,14 +1,51 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use device_query::{DeviceQuery, DeviceState};
+use serde::Serialize;
+use tauri::Emitter;
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+
+#[derive(Serialize, Clone)]
+struct CursorPos {
+    x: i32,
+    y: i32,
+}
+
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+fn get_cursor_position() -> CursorPos {
+    let device_state = DeviceState::new();
+    let mouse = device_state.get_mouse();
+    CursorPos {
+        x: mouse.coords.0,
+        y: mouse.coords.1,
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state == ShortcutState::Pressed
+                        && shortcut.matches(Modifiers::empty(), Code::F2)
+                    {
+                        let device_state = DeviceState::new();
+                        let mouse = device_state.get_mouse();
+                        let pos = CursorPos {
+                            x: mouse.coords.0,
+                            y: mouse.coords.1,
+                        };
+                        let _ = app.emit("hotkey-lookup", pos);
+                    }
+                })
+                .build(),
+        )
+        .invoke_handler(tauri::generate_handler![get_cursor_position])
+        .setup(|app| {
+            let f2 = Shortcut::new(None, Code::F2);
+            app.global_shortcut().register(f2)?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
