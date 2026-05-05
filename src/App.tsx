@@ -3,10 +3,10 @@ import { listen } from "@tauri-apps/api/event";
 import "./App.css";
 
 const PYTHON_API = "http://127.0.0.1:8765";
-// 마우스 좌표 기준, 우상단으로 캡처 (타르코프 툴팁 위치)
+// 마우스 좌표 기준, 좌상단으로 캡처 (타르코프 툴팁 위치)
 const CAPTURE_WIDTH = 400;
 const CAPTURE_HEIGHT = 50;
-const CAPTURE_OFFSET_X = 0; // cursor.x ~ cursor.x + 400
+const CAPTURE_OFFSET_X = -CAPTURE_WIDTH; // cursor.x - 400 ~ cursor.x
 const CAPTURE_OFFSET_Y = -CAPTURE_HEIGHT; // cursor.y - 50 ~ cursor.y
 
 type LookupResult = {

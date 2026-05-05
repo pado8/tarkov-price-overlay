@@ -47,3 +47,6 @@ Thumbs.db
 # Build outputs
 build/
 out/
+
+# Debug captures
+_debug_captures/
