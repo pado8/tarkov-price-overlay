@@ -29,10 +29,13 @@ function App() {
       async (event) => {
         setStatus("loading");
         setError("");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000);
         try {
           const res = await fetch(`${PYTHON_API}/lookup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
             body: JSON.stringify({
               x: event.payload.x + CAPTURE_OFFSET_X,
               y: event.payload.y + CAPTURE_OFFSET_Y,
@@ -45,8 +48,14 @@ function App() {
           setResult(data);
           setStatus("success");
         } catch (e) {
-          setError(e instanceof Error ? e.message : String(e));
+          if (e instanceof Error && e.name === "AbortError") {
+            setError("Timeout (120s). 첫 호출이면 EasyOCR 한글 모델 다운로드 중일 수 있음. Python 콘솔 확인.");
+          } else {
+            setError(e instanceof Error ? e.message : String(e));
+          }
           setStatus("error");
+        } finally {
+          clearTimeout(timeoutId);
         }
       }
     );
@@ -68,7 +77,14 @@ function App() {
         {status === "idle" && (
           <div className="hint">Hover an item, press F2</div>
         )}
-        {status === "loading" && <div className="hint">Looking up…</div>}
+        {status === "loading" && (
+          <div className="hint">
+            Looking up…
+            <div style={{ fontSize: 10, marginTop: 4, color: "#666" }}>
+              첫 호출은 OCR 모델 다운로드로 1~5분 걸릴 수 있음
+            </div>
+          </div>
+        )}
         {status === "error" && (
           <div className="error">⚠ {error}</div>
         )}
