@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(claude mcp *)",
+      "PowerShell(gh auth status 2>&1)",
+      "Read(//c/Program Files/GitHub CLI//**)",
+      "Read(//c/Users/AQUAPADO/AppData/Local/Programs/**)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
