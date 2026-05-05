@@ -7,7 +7,18 @@
       "Read(//c/Program Files/GitHub CLI//**)",
       "Read(//c/Users/AQUAPADO/AppData/Local/Programs/**)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npm --version)",
+      "Bash(cargo --version)",
+      "Bash(rustc --version)",
+      "Bash(python -m venv .venv)",
+      "Bash(.venv/Scripts/python.exe -m pip install --upgrade pip)",
+      "Bash(.venv/Scripts/python.exe -m pip install -r requirements.txt)",
+      "Bash(winget install *)",
+      "Read(//c/Users/AQUAPADO/.cargo/bin//**)",
+      "Bash(\"/c/Users/AQUAPADO/.cargo/bin/cargo.exe\" --version)",
+      "Bash(npx --yes create-tauri-app@latest _scaffold --manager npm --template react-ts --identifier com.tarkov.overlay)",
+      "Bash(npm install *)"
     ]
   }
 }
