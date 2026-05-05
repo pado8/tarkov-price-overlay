@@ -46,8 +46,10 @@ def health() -> dict[str, str]:
 
 @app.post("/lookup", response_model=LookupResponse)
 def lookup(req: CaptureRequest) -> LookupResponse:
+    print(f"[lookup] received: x={req.x} y={req.y} w={req.width} h={req.height}")
     image = capture_region(req.x, req.y, req.width, req.height)
     text = recognize_text(image)
+    print(f"[lookup] OCR text: {text!r}")
     price = get_item_price(text)
     return LookupResponse(
         raw_text=text,
