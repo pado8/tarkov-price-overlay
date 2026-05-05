@@ -1,0 +1,64 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git branch *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git stash *)",
+      "Bash(git restore *)",
+      "Bash(git remote *)",
+
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm run *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm update *)",
+      "Bash(npm ci)",
+      "Bash(npx --yes *)",
+      "Bash(npx -y *)",
+
+      "Bash(.venv/Scripts/python.exe *)",
+      "Bash(.venv/Scripts/pip.exe *)",
+      "Bash(.venv/Scripts/pip *)",
+      "Bash(python -m venv *)",
+      "Bash(python -m pip *)",
+
+      "Bash(\"/c/Users/AQUAPADO/.cargo/bin/cargo.exe\" *)",
+      "Bash(\"/c/Users/AQUAPADO/.cargo/bin/rustc.exe\" *)",
+      "Bash(\"/c/Users/AQUAPADO/.cargo/bin/rustup.exe\" *)",
+      "Bash(cargo *)",
+      "Bash(rustc *)",
+      "Bash(rustup *)",
+
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" *)",
+      "Bash(gh *)",
+
+      "Bash(curl http://127.0.0.1:*)",
+      "Bash(curl http://localhost:*)",
+      "Bash(curl -s http://127.0.0.1:*)",
+      "Bash(curl -s http://localhost:*)",
+      "Bash(curl -X * http://127.0.0.1:*)",
+      "Bash(curl -X * http://localhost:*)",
+
+      "Bash(claude mcp *)",
+      "Bash(winget install *)",
+      "Bash(winget search *)",
+      "Bash(winget list *)",
+
+      "Bash(export PATH=*)",
+      "Bash(mv *)",
+      "Bash(mkdir *)",
+      "Bash(touch *)",
+      "Bash(cp *)",
+
+      "WebSearch",
+      "WebFetch"
+    ]
+  }
+}
