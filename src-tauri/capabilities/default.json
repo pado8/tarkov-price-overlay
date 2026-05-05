@@ -5,9 +5,23 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-position",
+    "core:window:allow-outer-position",
+    "core:window:allow-set-ignore-cursor-events",
     "opener:default",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
-    "global-shortcut:allow-is-registered"
+    "global-shortcut:allow-is-registered",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/tarkov-server",
+          "sidecar": true,
+          "args": []
+        }
+      ]
+    }
   ]
 }

@@ -15,16 +15,27 @@ if sys.platform == "win32":
 
 print(f"[startup] DPI awareness: {DPI_STATUS}")
 
+from contextlib import asynccontextmanager
+
 import mss
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from capture import capture_region
-from ocr import recognize_text
+from ocr import _get_reader, recognize_text
 from tarkov_api import get_item_price
 
-app = FastAPI(title="Tarkov Price Overlay Core")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    print("[startup] warming up OCR reader (ko+en)…")
+    _get_reader(("ko", "en"))  # loads models once so first /lookup is fast
+    print("[startup] warmup complete")
+    yield
+
+
+app = FastAPI(title="Tarkov Price Overlay Core", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +51,10 @@ class CaptureRequest(BaseModel):
     width: int
     height: int
     lang: str = "ko"  # "ko" | "en"
+    game_mode: str = "regular"  # "regular" (PVP) | "pve"
+    mirror_x: int | None = None  # alt capture x (mirrored side), tried if primary doesn't match
+    cursor_x: int | None = None  # cursor pos, used to clamp capture to that monitor
+    cursor_y: int | None = None
 
 
 class LookupResponse(BaseModel):
@@ -47,6 +62,7 @@ class LookupResponse(BaseModel):
     item_name: str | None
     flea_price: int | None
     trader_price: int | None
+    matched_from: str | None = None
 
 
 @app.get("/health")
@@ -61,19 +77,126 @@ def debug_screen() -> dict:
     return {"dpi_status": DPI_STATUS, "monitors": monitors}
 
 
+def _get_cursor_pos_winapi() -> tuple[int, int] | None:
+    if sys.platform != "win32":
+        return None
+    import ctypes
+
+    class POINT(ctypes.Structure):
+        _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+    pt = POINT()
+    if ctypes.windll.user32.GetCursorPos(ctypes.byref(pt)):
+        return pt.x, pt.y
+    return None
+
+
+def _clamp_to_monitor(
+    x: int, y: int, width: int, height: int, cursor_x: int, cursor_y: int
+) -> tuple[int, int, int, int]:
+    """Keep capture inside the monitor that contains the cursor — prevents
+    bleeding into a second monitor (e.g. the dev console) at screen edges."""
+    with mss.mss() as sct:
+        monitors = sct.monitors[1:]  # index 0 is the virtual all-monitors bbox
+        for i, m in enumerate(monitors, start=1):
+            mx, my, mw, mh = m["left"], m["top"], m["width"], m["height"]
+            if mx <= cursor_x < mx + mw and my <= cursor_y < my + mh:
+                ox, oy, ow, oh = x, y, width, height
+                width = min(width, mw)
+                height = min(height, mh)
+                x = max(mx, min(x, mx + mw - width))
+                y = max(my, min(y, my + mh - height))
+                print(
+                    f"[clamp] cursor=({cursor_x},{cursor_y}) -> monitor#{i} "
+                    f"[{mx},{my} {mw}x{mh}]; in=({ox},{oy} {ow}x{oh}) "
+                    f"out=({x},{y} {width}x{height})"
+                )
+                return x, y, width, height
+        print(
+            f"[clamp] WARN: cursor=({cursor_x},{cursor_y}) is outside every "
+            f"monitor in mss list. monitors={monitors}"
+        )
+    return x, y, width, height
+
+
+def _capture_and_lookup(
+    x: int, y: int, width: int, height: int, lang: str, game_mode: str, label: str
+) -> tuple[str, dict]:
+    import time
+
+    t0 = time.perf_counter()
+    image = capture_region(x, y, width, height)
+    t1 = time.perf_counter()
+    text = recognize_text(image, langs=("ko", "en"))
+    t2 = time.perf_counter()
+    print(f"[lookup] OCR({label}): {text!r}")
+    price = get_item_price(text, lang=lang, game_mode=game_mode)
+    t3 = time.perf_counter()
+    print(
+        f"[timing/{label}] capture={t1 - t0:.3f}s ocr={t2 - t1:.3f}s "
+        f"price_lookup={t3 - t2:.3f}s total={t3 - t0:.3f}s"
+    )
+    return text, price
+
+
 @app.post("/lookup", response_model=LookupResponse)
 def lookup(req: CaptureRequest) -> LookupResponse:
-    print(f"[lookup] x={req.x} y={req.y} w={req.width} h={req.height} lang={req.lang}")
-    image = capture_region(req.x, req.y, req.width, req.height)
-    langs = (req.lang,) if req.lang in ("ko", "en") else ("ko", "en")
-    text = recognize_text(image, langs=langs)
-    print(f"[lookup] OCR: {text!r}")
-    price = get_item_price(text, lang=req.lang if req.lang in ("ko", "en") else "ko")
+    winapi_cursor = _get_cursor_pos_winapi()
+    print(
+        f"[lookup] x={req.x} y={req.y} w={req.width} h={req.height} "
+        f"lang={req.lang} game_mode={req.game_mode} mirror_x={req.mirror_x} "
+        f"front_cursor=({req.cursor_x},{req.cursor_y}) "
+        f"winapi_cursor={winapi_cursor}"
+    )
+    lang = req.lang if req.lang in ("ko", "en") else "ko"
+    game_mode = req.game_mode if req.game_mode in ("regular", "pve") else "regular"
+
+    # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,
+    # so it shares a coordinate space with mss). Fall back to the value the
+    # frontend sent if WinAPI fails for any reason.
+    cursor_x = winapi_cursor[0] if winapi_cursor else req.cursor_x
+    cursor_y = winapi_cursor[1] if winapi_cursor else req.cursor_y
+
+    # Re-derive primary/mirror capture origins from the trusted cursor position
+    # plus the offsets the frontend chose, so they match the same coord system
+    # as mss.monitors. (Otherwise DPI mismatch can place us on the wrong screen.)
+    if winapi_cursor and req.cursor_x is not None and req.cursor_y is not None:
+        offset_x = req.x - req.cursor_x
+        offset_y = req.y - req.cursor_y
+        primary_x = winapi_cursor[0] + offset_x
+        primary_y = winapi_cursor[1] + offset_y
+        mirror_x_val = (
+            winapi_cursor[0] - offset_x - req.width
+            if req.mirror_x is not None
+            else None
+        )
+    else:
+        primary_x, primary_y = req.x, req.y
+        mirror_x_val = req.mirror_x
+
+    can_clamp = cursor_x is not None and cursor_y is not None
+    px, py, pw, ph = primary_x, primary_y, req.width, req.height
+    if can_clamp:
+        px, py, pw, ph = _clamp_to_monitor(px, py, pw, ph, cursor_x, cursor_y)
+
+    text, price = _capture_and_lookup(px, py, pw, ph, lang, game_mode, "primary")
+
+    if price.get("name") is None and mirror_x_val is not None:
+        mx, my, mw_, mh_ = mirror_x_val, primary_y, req.width, req.height
+        if can_clamp:
+            mx, my, mw_, mh_ = _clamp_to_monitor(
+                mx, my, mw_, mh_, cursor_x, cursor_y
+            )
+        text2, price2 = _capture_and_lookup(mx, my, mw_, mh_, lang, game_mode, "mirror")
+        if price2.get("name") is not None:
+            text, price = text2, price2
+
     return LookupResponse(
         raw_text=text,
         item_name=price.get("name"),
         flea_price=price.get("flea"),
         trader_price=price.get("trader"),
+        matched_from=price.get("matched_from"),
     )
 
 

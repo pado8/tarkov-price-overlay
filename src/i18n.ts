@@ -1,4 +1,5 @@
 export type Lang = "ko" | "en";
+export type GameMode = "regular" | "pve";
 
 export const T = {
   ko: {
@@ -19,6 +20,17 @@ export const T = {
     height: "높이",
     captureHint: "캡처 영역 = (마우스X + X오프셋, 마우스Y + Y오프셋) ~ 너비/높이",
     reset: "초기화",
+    correctedFrom: "OCR 보정",
+    gameMode: "게임 모드",
+    gameModePvp: "PVP (일반)",
+    gameModePve: "PVE",
+    hotkey: "단축키",
+    recordingHotkey: "키 누르세요…",
+    hotkeyHint: "클릭 후 키 입력 (Esc=취소)",
+    captureRegion: "캡처 영역",
+    edit: "수정",
+    hide: "숨기기",
+    hideDelay: "표시 시간(초)",
   },
   en: {
     title: "Tarkov Price",
@@ -38,6 +50,17 @@ export const T = {
     height: "height",
     captureHint: "capture = (cursor.x + offsetX, cursor.y + offsetY) ~ width/height",
     reset: "Reset",
+    correctedFrom: "OCR fix",
+    gameMode: "Game mode",
+    gameModePvp: "PVP (regular)",
+    gameModePve: "PVE",
+    hotkey: "Hotkey",
+    recordingHotkey: "Press a key…",
+    hotkeyHint: "Click then press a key (Esc=cancel)",
+    captureRegion: "Capture region",
+    edit: "Edit",
+    hide: "Hide",
+    hideDelay: "Auto-hide (s)",
   },
 } as const;
 

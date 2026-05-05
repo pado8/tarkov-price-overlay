@@ -50,3 +50,6 @@ out/
 
 # Debug captures
 _debug_captures/
+
+# Bundled OCR models (~125MB, downloaded on first run)
+python-core/models/
