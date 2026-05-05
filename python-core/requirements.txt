@@ -1,0 +1,7 @@
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+mss==9.0.2
+Pillow==10.4.0
+easyocr==1.7.2
+requests==2.32.3
+pydantic==2.9.2
