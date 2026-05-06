@@ -67,6 +67,15 @@ if (-not (Test-Path $installer)) {
 }
 Write-Host "[release] installer ready: $installer"
 
+# 3b. Build portable ZIP from the same target/release artifacts
+Write-Host "[release] building portable ZIP..."
+& "$root\scripts\portable.ps1"
+$portableZip = "$root\src-tauri\target\release\portable\Tarkov Price Overlay_${Version}_portable.zip"
+if (-not (Test-Path $portableZip)) {
+    throw "Portable ZIP not found at $portableZip"
+}
+Write-Host "[release] portable zip ready: $portableZip"
+
 # 4. Push dev, merge to master, tag
 Write-Host "[release] pushing dev..."
 & git push origin dev
@@ -81,9 +90,9 @@ if ($LASTEXITCODE -ne 0) {
 & git tag -a $tag -m "Release $tag"
 & git push origin master --tags
 
-# 5. Create release on PUBLIC distribution repo
+# 5. Create release on PUBLIC distribution repo (installer + portable ZIP)
 Write-Host "[release] creating GitHub Release on $publicRepo..."
-& $ghExe release create $tag $installer `
+& $ghExe release create $tag $installer $portableZip `
     --repo $publicRepo `
     --title "Tarkov Price Overlay $tag" `
     --notes $Notes
