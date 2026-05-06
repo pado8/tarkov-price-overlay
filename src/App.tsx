@@ -100,9 +100,7 @@ function App() {
     hideDelayRef.current = region.hideDelaySec;
   }, [region.hideDelaySec]);
 
-  const setClickthrough = (enabled: boolean) => {
-    getCurrentWindow().setIgnoreCursorEvents(enabled).catch(() => {});
-  };
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const cancelHideTimer = () => {
     if (hideTimerRef.current !== null) {
       clearTimeout(hideTimerRef.current);
@@ -114,15 +112,68 @@ function App() {
     const ms = Math.max(1, hideDelayRef.current) * 1000;
     hideTimerRef.current = window.setTimeout(() => {
       setCardVisible(false);
-      setClickthrough(true);
       hideTimerRef.current = null;
     }, ms);
   };
   const showCard = () => {
     cancelHideTimer();
     setCardVisible(true);
-    setClickthrough(false);
   };
+
+  // Region-based click-through: while the card is visible, poll cursor
+  // position and only capture clicks when the cursor is over the card's
+  // screen rect. Outside the card (rest of the 800x600 invisible window)
+  // clicks pass through to whatever's underneath (the game).
+  useEffect(() => {
+    const win = getCurrentWindow();
+    if (!cardVisible) {
+      // Hidden: full pass-through.
+      win.setIgnoreCursorEvents(true).catch(() => {});
+      return;
+    }
+
+    let cancelled = false;
+    let currentlyIgnoring: boolean | null = null;
+    const setIgnore = (v: boolean) => {
+      if (currentlyIgnoring === v) return;
+      currentlyIgnoring = v;
+      win.setIgnoreCursorEvents(v).catch(() => {});
+    };
+    // Start in pass-through; the first poll will flip it if cursor is on card.
+    setIgnore(true);
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const cardEl = cardRef.current;
+        if (cardEl) {
+          const rect = cardEl.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            const winPos = await win.outerPosition();
+            const dpr = window.devicePixelRatio || 1;
+            const left = winPos.x + rect.left * dpr;
+            const top = winPos.y + rect.top * dpr;
+            const right = left + rect.width * dpr;
+            const bottom = top + rect.height * dpr;
+            const cursor = await invoke<{ x: number; y: number }>(
+              "get_cursor_position"
+            );
+            const inside =
+              cursor.x >= left &&
+              cursor.x < right &&
+              cursor.y >= top &&
+              cursor.y < bottom;
+            setIgnore(!inside);
+          }
+        }
+      } catch {}
+      if (!cancelled) setTimeout(poll, 40);
+    };
+    poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [cardVisible]);
 
   const t = T[region.lang];
 
@@ -272,6 +323,7 @@ function App() {
   return (
     <div className="overlay">
       <div
+        ref={cardRef}
         className={`card${cardVisible ? "" : " card-hidden"}`}
         onMouseEnter={() => cancelHideTimer()}
         onMouseLeave={() => {
