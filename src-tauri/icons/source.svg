@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Dark circular backdrop for contrast on light/dark tray themes -->
+  <circle cx="512" cy="512" r="496" fill="#1a1a1a"/>
+
+  <!-- Subtle inner reticle ring -->
+  <circle cx="512" cy="512" r="388" fill="none" stroke="#c8aa64" stroke-width="6" opacity="0.45"/>
+
+  <!-- Outer scope ring -->
+  <circle cx="512" cy="512" r="448" fill="none" stroke="#c8aa64" stroke-width="44"/>
+
+  <!-- Crosshair arms (going from outer ring into the field) -->
+  <line x1="512" y1="60"  x2="512" y2="240" stroke="#c8aa64" stroke-width="40" stroke-linecap="round"/>
+  <line x1="512" y1="784" x2="512" y2="964" stroke="#c8aa64" stroke-width="40" stroke-linecap="round"/>
+  <line x1="60"  y1="512" x2="240" y2="512" stroke="#c8aa64" stroke-width="40" stroke-linecap="round"/>
+  <line x1="784" y1="512" x2="964" y2="512" stroke="#c8aa64" stroke-width="40" stroke-linecap="round"/>
+
+  <!-- Mil-dot tick marks on horizontal axis -->
+  <circle cx="312" cy="512" r="10" fill="#c8aa64" opacity="0.7"/>
+  <circle cx="712" cy="512" r="10" fill="#c8aa64" opacity="0.7"/>
+  <!-- Mil-dot tick marks on vertical axis -->
+  <circle cx="512" cy="312" r="10" fill="#c8aa64" opacity="0.7"/>
+  <circle cx="512" cy="712" r="10" fill="#c8aa64" opacity="0.7"/>
+
+  <!-- Ruble symbol ₽ drawn as paths so we don't rely on system fonts.
+       Geometry is authored centered on its own centroid (474, 512), then
+       wrapped in a transform that (a) scales 1.4× to make the glyph more
+       legible at 32×32 tray size, and (b) re-centers the centroid on
+       (512, 512). Read transforms right-to-left. -->
+  <g transform="translate(512 512) scale(1.4) translate(-474 -512)">
+    <g fill="#c8aa64" stroke="none">
+      <!-- Vertical stem -->
+      <rect x="395" y="345" width="60" height="334" rx="6"/>
+      <!-- Horizontal crossbar that distinguishes ₽ from P -->
+      <rect x="358" y="551" width="232" height="48" rx="6"/>
+    </g>
+    <!-- Upper bowl: hollow outline (stroked, not filled) so the inside is open like a real P/₽.
+         Stroke-width matches the stem thickness (60) so it reads as one continuous shape. -->
+    <path d="M 455 375 L 500 375 A 58 58 0 0 1 500 491 L 455 491"
+          fill="none" stroke="#c8aa64" stroke-width="60"
+          stroke-linecap="butt" stroke-linejoin="round"/>
+  </g>
+</svg>

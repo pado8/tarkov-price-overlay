@@ -2,12 +2,31 @@ import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
 
-const exitApp = () => {
-  invoke("exit_app").catch(() => {});
+const APP_VERSION = "0.1.5";
+const FEEDBACK_EMAIL = "floe9235@gmail.com";
+const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
+
+const hideToTray = () => {
+  invoke("hide_to_tray").catch(() => {});
 };
+
+const sendFeedback = (lang: Lang) => {
+  const t = T[lang];
+  const subject = encodeURIComponent(t.feedbackSubject);
+  const body = encodeURIComponent(
+    t.feedbackBody.replace("{version}", APP_VERSION)
+  );
+  const url = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+  openUrl(url).catch((e) => {
+    log(`feedback: openUrl failed — ${String(e)}`);
+  });
+};
+
 
 const PYTHON_API = "http://127.0.0.1:8765";
 
@@ -42,7 +61,7 @@ const DEFAULT_REGION: Region = {
   height: 70,
   lang: "ko",
   gameMode: "regular",
-  hideDelaySec: 7,
+  hideDelaySec: 5,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -94,6 +113,8 @@ function App() {
   const [recordingHotkey, setRecordingHotkey] = useState(false);
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
   const [cardVisible, setCardVisible] = useState(true);
+  const [showDonate, setShowDonate] = useState(false);
+  const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
   const hideDelayRef = useRef(region.hideDelaySec);
   useEffect(() => {
@@ -258,6 +279,27 @@ function App() {
     };
   }, []);
 
+  // Tray icon events: left-click or "Show" menu item brings the card up.
+  // "Settings" menu item brings the card up AND opens the settings panel.
+  useEffect(() => {
+    const unlistenShow = listen("tray-show", () => {
+      log("React: tray-show event");
+      showCard();
+      scheduleHide();
+    });
+    const unlistenSettings = listen("tray-settings", () => {
+      log("React: tray-settings event");
+      showCard();
+      setShowSettings(true);
+      scheduleHide();
+    });
+    return () => {
+      unlistenShow.then((fn) => fn());
+      unlistenSettings.then((fn) => fn());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     log("React: subscribing to hotkey-lookup");
     const unlistenPromise = listen<{ x: number; y: number }>(
@@ -332,21 +374,27 @@ function App() {
       >
         <div className="header" data-tauri-drag-region>
           <span className="title" data-tauri-drag-region>{t.title}</span>
-          <span className="hotkey" data-tauri-drag-region>{hotkey}</span>
-          <button
-            className="settings-btn"
-            onClick={() => setShowSettings((s) => !s)}
-            title={t.settings}
-          >
-            ⚙
-          </button>
-          <button
-            className="settings-btn exit-btn"
-            onClick={exitApp}
-            title={t.exit}
-          >
-            ✕
-          </button>
+          <div className="header-actions">
+            <span className="hotkey" data-tauri-drag-region>
+              <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
+              <span className="hotkey-sep">:</span>
+              <span className="hotkey-key">{hotkey}</span>
+            </span>
+            <button
+              className="settings-btn"
+              onClick={() => setShowSettings((s) => !s)}
+              title={t.settings}
+            >
+              ⚙
+            </button>
+            <button
+              className="settings-btn exit-btn"
+              onClick={hideToTray}
+              title={t.hideToTrayTitle}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {showSettings && (
@@ -463,6 +511,65 @@ function App() {
                   {t.reset}
                 </button>
               </>
+            )}
+            <div className="settings-row settings-feedback-row">
+              <button
+                className="reset-btn feedback-btn"
+                onClick={() => sendFeedback(region.lang)}
+                title={`mailto:${FEEDBACK_EMAIL}`}
+              >
+                ✉ {t.feedback}
+              </button>
+              <button
+                className="reset-btn donate-btn"
+                onClick={() => {
+                  setShowDonate((s) => !s);
+                  setDonateCopied(false);
+                }}
+                title={t.donateTitle}
+              >
+                💝 {t.donate}
+              </button>
+            </div>
+            {showDonate && (
+              <div className="donate-panel">
+                <div className="donate-hint">{t.donateScanHint}</div>
+                <div className="donate-qr">
+                  <QRCodeSVG
+                    value={KAKAOPAY_URL}
+                    size={140}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                    level="M"
+                    includeMargin
+                  />
+                </div>
+                <div className="donate-url">{KAKAOPAY_URL}</div>
+                <div className="donate-actions">
+                  <button
+                    className="reset-btn"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(KAKAOPAY_URL)
+                        .then(() => {
+                          setDonateCopied(true);
+                          window.setTimeout(() => setDonateCopied(false), 1500);
+                        })
+                        .catch((e) =>
+                          log(`donate: clipboard failed — ${String(e)}`)
+                        );
+                    }}
+                  >
+                    {donateCopied ? t.donateCopied : t.donateCopyUrl}
+                  </button>
+                  <button
+                    className="reset-btn"
+                    onClick={() => setShowDonate(false)}
+                  >
+                    {t.donateClose}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
