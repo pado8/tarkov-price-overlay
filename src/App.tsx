@@ -83,18 +83,35 @@ type Barter = {
   items: BarterRequiredItem[];
 };
 
+type TaskRef = {
+  id: string | null;
+  name: string;
+  trader: string;
+  min_level: number;
+};
+
+type HideoutCraft = {
+  station: string;
+  level: number;
+  duration_sec: number;
+  items: BarterRequiredItem[];
+};
+
 type LookupResult = {
   raw_text: string;
   item_name: string | null;
   short_name: string | null;
   width: number | null;
   height: number | null;
+  icon: string | null;
   flea_price: number | null;
   flea_low_24h: number | null;
   flea_change_48h_pct: number | null;
   trader_price: number | null;
   sell_for: TraderPrice[];
   barters_for: Barter[];
+  used_in_tasks: TaskRef[];
+  crafts_for: HideoutCraft[];
   matched_from: string | null;
 };
 
@@ -633,6 +650,15 @@ function App() {
     return Math.round(price / slots).toLocaleString() + " " + t.perSlotUnit;
   };
 
+  const fmtDuration = (sec: number): string => {
+    if (!sec || sec <= 0) return "";
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${Math.max(1, m)}m`;
+  };
+
   const trendPct = (pct: number | null | undefined) => {
     if (pct == null) return null;
     const arrow = pct > 0 ? "▲" : pct < 0 ? "▼" : "•";
@@ -1056,8 +1082,22 @@ function App() {
         {status === "error" && <div className="error">⚠ {error}</div>}
         {status === "success" && result && (
           <div className="result">
-            <div className="item-name">
-              {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
+            <div className="item-row">
+              {result.icon && (
+                <img
+                  className="item-icon"
+                  src={result.icon}
+                  alt=""
+                  loading="lazy"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display =
+                      "none";
+                  }}
+                />
+              )}
+              <div className="item-name">
+                {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
+              </div>
             </div>
             {result.item_name && (() => {
               const trend = trendPct(result.flea_change_48h_pct);
@@ -1143,6 +1183,52 @@ function App() {
                       </div>
                     </details>
                   )}
+                  {result.crafts_for && result.crafts_for.length > 0 && (
+                    <details className="all-traders barters">
+                      <summary>
+                        🏭 {t.craftFor} ({result.crafts_for.length})
+                      </summary>
+                      <div className="trader-list">
+                        {result.crafts_for.map((c, idx) => (
+                          <div key={idx} className="barter-row">
+                            <div className="barter-trader">
+                              {c.station}{" "}
+                              <span className="barter-level">
+                                Lv{c.level} · {fmtDuration(c.duration_sec)}
+                              </span>
+                            </div>
+                            <div className="barter-items">
+                              {c.items.map((it, i) => (
+                                <span key={i} className="barter-item">
+                                  {i > 0 && (
+                                    <span className="barter-plus"> + </span>
+                                  )}
+                                  {it.short_name ?? it.name}
+                                  <span className="barter-count">
+                                    ×{it.count}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  {result.used_in_tasks &&
+                    result.used_in_tasks.length > 0 && (
+                      <div className="quest-warning">
+                        🎯 {t.usedInTasks} ({result.used_in_tasks.length})
+                        <div className="quest-list">
+                          {result.used_in_tasks.map((q, idx) => (
+                            <div key={q.id ?? idx} className="quest-row">
+                              <span className="quest-trader">{q.trader}</span>
+                              <span className="quest-name">{q.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   {slot && (
                     <div className="slot-price">
                       📦 {result.width}×{result.height} → <strong>{slot}</strong>

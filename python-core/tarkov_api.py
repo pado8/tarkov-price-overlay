@@ -21,6 +21,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     shortName
     width
     height
+    gridImageLink
     avg24hPrice
     low24hPrice
     changeLast48hPercent
@@ -31,6 +32,21 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     bartersFor {
       trader { name }
       level
+      requiredItems {
+        count
+        item { name shortName }
+      }
+    }
+    usedInTasks {
+      id
+      name
+      minPlayerLevel
+      trader { name }
+    }
+    craftsFor {
+      station { name }
+      level
+      duration
       requiredItems {
         count
         item { name shortName }
@@ -55,6 +71,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     shortName
     width
     height
+    gridImageLink
     avg24hPrice
     low24hPrice
     changeLast48hPercent
@@ -65,6 +82,21 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     bartersFor {
       trader { name }
       level
+      requiredItems {
+        count
+        item { name shortName }
+      }
+    }
+    usedInTasks {
+      id
+      name
+      minPlayerLevel
+      trader { name }
+    }
+    craftsFor {
+      station { name }
+      level
+      duration
       requiredItems {
         count
         item { name shortName }
@@ -119,17 +151,61 @@ def _build_cache_entry(item: dict) -> dict:
             }
         )
 
+    # Quest references — minimal info, just enough for "do not sell" warning.
+    used_in_tasks = []
+    for t in item.get("usedInTasks", []) or []:
+        if not t.get("name"):
+            continue
+        trader = t.get("trader") or {}
+        used_in_tasks.append(
+            {
+                "id": t.get("id"),
+                "name": t["name"],
+                "trader": trader.get("name") or "",
+                "min_level": t.get("minPlayerLevel") or 0,
+            }
+        )
+
+    # Hideout production recipes that produce THIS item (item is the reward).
+    crafts_for: list[dict] = []
+    for c in item.get("craftsFor", []) or []:
+        items_list = []
+        for ri in c.get("requiredItems", []) or []:
+            inner = ri.get("item") or {}
+            if inner.get("name"):
+                items_list.append(
+                    {
+                        "name": inner["name"],
+                        "short_name": inner.get("shortName"),
+                        "count": ri.get("count") or 1,
+                    }
+                )
+        if not items_list:
+            continue
+        station = c.get("station") or {}
+        crafts_for.append(
+            {
+                "station": station.get("name") or "?",
+                "level": c.get("level") or 1,
+                "duration_sec": c.get("duration") or 0,
+                "items": items_list,
+            }
+        )
+
     return {
         "name": item["name"],
         "short_name": item.get("shortName"),
         "width": item.get("width"),
         "height": item.get("height"),
+        "icon": item.get("gridImageLink"),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_change_48h_pct": item.get("changeLast48hPercent"),
         "trader": trader_entries[0]["price"] if trader_entries else None,
         "sell_for": trader_entries,
         "barters_for": barters,
+        "used_in_tasks": used_in_tasks,
+        "crafts_for": crafts_for,
     }
 
 
@@ -232,12 +308,15 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "short_name": None,
         "width": None,
         "height": None,
+        "icon": None,
         "flea": None,
         "flea_low_24h": None,
         "flea_change_48h_pct": None,
         "trader": None,
         "sell_for": [],
         "barters_for": [],
+        "used_in_tasks": [],
+        "crafts_for": [],
         "matched_from": matched_from,
     }
 

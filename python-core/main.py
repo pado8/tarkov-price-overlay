@@ -82,18 +82,35 @@ class Barter(BaseModel):
     items: list[BarterRequiredItem] = []
 
 
+class TaskRef(BaseModel):
+    id: str | None = None
+    name: str
+    trader: str = ""
+    min_level: int = 0
+
+
+class HideoutCraft(BaseModel):
+    station: str
+    level: int = 1
+    duration_sec: int = 0
+    items: list[BarterRequiredItem] = []
+
+
 class LookupResponse(BaseModel):
     raw_text: str
     item_name: str | None
     short_name: str | None = None
     width: int | None = None  # inventory grid units (1, 2, ...)
     height: int | None = None
+    icon: str | None = None  # gridImageLink (webp URL)
     flea_price: int | None
     flea_low_24h: int | None = None
     flea_change_48h_pct: float | None = None
     trader_price: int | None
     sell_for: list[TraderPrice] = []  # all traders, sorted high to low (RUB)
     barters_for: list[Barter] = []  # ways to obtain this item via trader barter
+    used_in_tasks: list[TaskRef] = []  # quests that need this item
+    crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
     matched_from: str | None = None
 
 
@@ -229,6 +246,32 @@ def lookup(req: CaptureRequest) -> LookupResponse:
                 )
                 for b in price.get("barters_for", [])
             ],
+            used_in_tasks=[
+                TaskRef(
+                    id=t.get("id"),
+                    name=t["name"],
+                    trader=t.get("trader", ""),
+                    min_level=t.get("min_level", 0),
+                )
+                for t in price.get("used_in_tasks", [])
+            ],
+            crafts_for=[
+                HideoutCraft(
+                    station=c["station"],
+                    level=c.get("level", 1),
+                    duration_sec=c.get("duration_sec", 0),
+                    items=[
+                        BarterRequiredItem(
+                            name=it["name"],
+                            short_name=it.get("short_name"),
+                            count=it.get("count", 1),
+                        )
+                        for it in c.get("items", [])
+                    ],
+                )
+                for c in price.get("crafts_for", [])
+            ],
+            icon=price.get("icon"),
             matched_from=price.get("matched_from"),
         )
 
