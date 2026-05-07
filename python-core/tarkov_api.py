@@ -1,9 +1,17 @@
 import difflib
 import threading
+import time
 
 import requests
 
 TARKOV_API_URL = "https://api.tarkov.dev/graphql"
+
+# Background bulk-cache configuration. The whole tarkov.dev item catalog
+# (per language × per game mode) is fetched periodically so that /lookup
+# becomes a hashmap lookup + an optional fuzzy match - no per-item network
+# round-trip on the hot path.
+CACHE_TTL_SEC = 600  # 10 min
+REFRESH_RETRY_BACKOFF_SEC = 30  # transient failure cool-down
 
 _QUERY_BY_NAME = """
 query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
@@ -32,8 +40,104 @@ query AllNames($lang: LanguageCode) {
 }
 """
 
+_QUERY_ALL_PRICED = """
+query AllItems($lang: LanguageCode, $gameMode: GameMode) {
+  items(lang: $lang, gameMode: $gameMode) {
+    name
+    shortName
+    width
+    height
+    avg24hPrice
+    low24hPrice
+    changeLast48hPercent
+    sellFor {
+      priceRUB
+      vendor { name }
+    }
+  }
+}
+"""
+
 _names_cache: dict[str, list[str]] = {}
 _names_lock = threading.Lock()
+
+# (lang, game_mode) -> {item_name: entry_dict}
+_price_cache: dict[tuple[str, str], dict[str, dict]] = {}
+_price_cache_ts: dict[tuple[str, str], float] = {}
+_price_cache_lock = threading.Lock()
+_refresher_started = False
+_refresher_lock = threading.Lock()
+
+
+def _build_cache_entry(item: dict) -> dict:
+    sell_for_all = item.get("sellFor", []) or []
+    trader_entries = [
+        {"name": s["vendor"]["name"], "price": s["priceRUB"]}
+        for s in sell_for_all
+        if s["vendor"]["name"] != "Flea Market" and s.get("priceRUB") is not None
+    ]
+    trader_entries.sort(key=lambda e: e["price"], reverse=True)
+    return {
+        "name": item["name"],
+        "short_name": item.get("shortName"),
+        "width": item.get("width"),
+        "height": item.get("height"),
+        "flea": item.get("avg24hPrice"),
+        "flea_low_24h": item.get("low24hPrice"),
+        "flea_change_48h_pct": item.get("changeLast48hPercent"),
+        "trader": trader_entries[0]["price"] if trader_entries else None,
+        "sell_for": trader_entries,
+    }
+
+
+def _refresh_one(lang: str, game_mode: str) -> int:
+    response = requests.post(
+        TARKOV_API_URL,
+        json={
+            "query": _QUERY_ALL_PRICED,
+            "variables": {"lang": lang, "gameMode": game_mode},
+        },
+        timeout=30,
+    )
+    response.raise_for_status()
+    items = response.json().get("data", {}).get("items", []) or []
+    by_name = {it["name"]: _build_cache_entry(it) for it in items if it.get("name")}
+    with _price_cache_lock:
+        _price_cache[(lang, game_mode)] = by_name
+        _price_cache_ts[(lang, game_mode)] = time.time()
+    # Reuse the populated names for fuzzy matching too (one source of truth).
+    with _names_lock:
+        _names_cache[lang] = list(by_name.keys())
+    print(f"[cache] refreshed ({lang},{game_mode}) - {len(by_name)} items")
+    return len(by_name)
+
+
+def _refresher_loop() -> None:
+    """Periodic warm-up + refresh of all (lang, game_mode) catalogs."""
+    while True:
+        for lang in ("ko", "en"):
+            for game_mode in ("regular", "pve"):
+                try:
+                    _refresh_one(lang, game_mode)
+                except Exception as e:
+                    print(f"[cache] refresh ({lang},{game_mode}) failed: {e!r}")
+                    time.sleep(REFRESH_RETRY_BACKOFF_SEC)
+                    continue
+                # Tiny gap between calls so we don't slam tarkov.dev.
+                time.sleep(1)
+        time.sleep(CACHE_TTL_SEC)
+
+
+def start_background_refresher() -> None:
+    """Idempotent - call from FastAPI lifespan to warm + keep cache fresh."""
+    global _refresher_started
+    with _refresher_lock:
+        if _refresher_started:
+            return
+        _refresher_started = True
+    t = threading.Thread(target=_refresher_loop, daemon=True, name="price-cache-refresher")
+    t.start()
+    print("[cache] background refresher started")
 
 
 def _load_all_names(lang: str) -> list[str]:
@@ -94,6 +198,33 @@ def _empty_result(matched_from: str | None = None) -> dict:
     }
 
 
+def _cache_lookup(
+    item_name: str, lang: str, game_mode: str, matched_from: str | None
+) -> dict | None:
+    """Hot-path cache hit (exact + fuzzy). Returns a result dict ready to
+    return, or None if cache is empty / no fuzzy hit either. Even stale
+    caches are served - the background refresher will eventually update."""
+    cache = _price_cache.get((lang, game_mode))
+    if not cache:
+        return None
+
+    # Exact hit
+    entry = cache.get(item_name)
+    if entry:
+        return {**entry, "matched_from": matched_from}
+
+    # Fuzzy match against cached names
+    matches = difflib.get_close_matches(item_name, list(cache.keys()), n=1, cutoff=0.6)
+    if matches:
+        hit = matches[0]
+        print(f"[cache] fuzzy: {item_name!r} -> {hit!r}")
+        entry = cache[hit]
+        return {**entry, "matched_from": matched_from or item_name}
+
+    # Cache populated but no name matches → real miss.
+    return _empty_result(matched_from)
+
+
 def get_item_price(
     item_name: str,
     lang: str = "ko",
@@ -118,6 +249,13 @@ def get_item_price(
                 matched_from = item_name
                 item_name = corrected
 
+    # Fast path: in-memory cache.
+    cached = _cache_lookup(item_name, lang, game_mode, matched_from)
+    if cached is not None:
+        return cached
+
+    # Cold path (cache not yet populated for this lang/mode): fall back to
+    # individual GraphQL queries. Same flow as pre-v0.4.0.
     items = _query_by_name(item_name, lang, game_mode)
 
     if not items:
@@ -132,27 +270,8 @@ def get_item_price(
         return _empty_result(matched_from)
 
     item = items[0]
-
-    # All vendors except Flea Market, sorted high to low. priceRUB normalizes
-    # USD/EUR vendors to rubles for direct comparison.
-    sell_for_all = item.get("sellFor", []) or []
-    trader_entries = [
-        {"name": s["vendor"]["name"], "price": s["priceRUB"]}
-        for s in sell_for_all
-        if s["vendor"]["name"] != "Flea Market" and s.get("priceRUB") is not None
-    ]
-    trader_entries.sort(key=lambda e: e["price"], reverse=True)
-    best_trader = trader_entries[0]["price"] if trader_entries else None
-
-    return {
-        "name": item["name"],
-        "short_name": item.get("shortName"),
-        "width": item.get("width"),
-        "height": item.get("height"),
-        "flea": item.get("avg24hPrice"),
-        "flea_low_24h": item.get("low24hPrice"),
-        "flea_change_48h_pct": item.get("changeLast48hPercent"),
-        "trader": best_trader,
-        "sell_for": trader_entries,
-        "matched_from": matched_from,
-    }
+    entry = _build_cache_entry(item)
+    # Backfill the cache with this single entry so the next lookup is hot.
+    with _price_cache_lock:
+        _price_cache.setdefault((lang, game_mode), {})[item["name"]] = entry
+    return {**entry, "matched_from": matched_from}

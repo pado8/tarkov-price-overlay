@@ -24,13 +24,15 @@ from pydantic import BaseModel
 
 from capture import capture_region
 from ocr import _get_reader, recognize_text
-from tarkov_api import get_item_price
+from tarkov_api import get_item_price, start_background_refresher
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     print("[startup] warming up OCR reader (ko+en)…")
     _get_reader(("ko", "en"))  # loads models once so first /lookup is fast
+    print("[startup] starting price-cache background refresher…")
+    start_background_refresher()
     print("[startup] warmup complete")
     yield
 
