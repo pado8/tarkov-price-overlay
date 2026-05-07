@@ -1184,21 +1184,8 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.trader_price)}</span>
                   </div>
-                  {result.sell_for.length > 1 && (
-                    <details className="all-traders">
-                      <summary>{t.allTraders} ({result.sell_for.length})</summary>
-                      <div className="trader-list">
-                        {result.sell_for.map((tr) => (
-                          <div key={tr.name} className="price sub-price">
-                            <span className="label">{tr.name}</span>
-                            <span className="value sub-value">{fmt(tr.price)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  )}
                   {result.buy_for && result.buy_for.length > 0 && (
-                    <details className="all-traders">
+                    <details className="all-traders" open>
                       <summary>
                         🏪 {t.buyFor} ({result.buy_for.length})
                       </summary>
@@ -1219,7 +1206,7 @@ function App() {
                     </details>
                   )}
                   {result.barters_for && result.barters_for.length > 0 && (
-                    <details className="all-traders barters">
+                    <details className="all-traders barters" open>
                       <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
                       <div className="trader-list">
                         {result.barters_for.map((b, idx) => (
@@ -1242,7 +1229,7 @@ function App() {
                     </details>
                   )}
                   {result.barters_using && result.barters_using.length > 0 && (
-                    <details className="all-traders barters">
+                    <details className="all-traders barters" open>
                       <summary>
                         🔁 {t.barterUsing} ({result.barters_using.length})
                       </summary>
@@ -1273,7 +1260,7 @@ function App() {
                     </details>
                   )}
                   {result.crafts_for && result.crafts_for.length > 0 && (
-                    <details className="all-traders barters">
+                    <details className="all-traders barters" open>
                       <summary>
                         🏭 {t.craftFor} ({result.crafts_for.length})
                       </summary>
