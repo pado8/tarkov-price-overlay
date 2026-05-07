@@ -214,6 +214,43 @@ html, body, #root {
   border-left: 1px solid rgba(200, 170, 100, 0.15);
 }
 
+/* Barter rows */
+.barter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 11px;
+  padding: 3px 0;
+  border-top: 1px dotted rgba(200, 170, 100, 0.1);
+}
+.barter-row:first-child {
+  border-top: none;
+}
+.barter-trader {
+  color: #c8aa64;
+  font-weight: 600;
+}
+.barter-level {
+  color: #888;
+  font-weight: 400;
+  font-size: 10px;
+  font-family: "Consolas", monospace;
+}
+.barter-items {
+  color: #ddd;
+  margin-left: 4px;
+  word-break: break-word;
+}
+.barter-plus {
+  color: #666;
+}
+.barter-count {
+  color: #4caf50;
+  font-family: "Consolas", monospace;
+  font-size: 10px;
+  margin-left: 2px;
+}
+
 /* History panel */
 .history-panel {
   background: rgba(40, 40, 40, 0.6);

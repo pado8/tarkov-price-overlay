@@ -72,6 +72,16 @@ const log = (msg: string) => {
 };
 
 type TraderPrice = { name: string; price: number };
+type BarterRequiredItem = {
+  name: string;
+  short_name: string | null;
+  count: number;
+};
+type Barter = {
+  trader: string;
+  level: number;
+  items: BarterRequiredItem[];
+};
 
 type LookupResult = {
   raw_text: string;
@@ -84,6 +94,7 @@ type LookupResult = {
   flea_change_48h_pct: number | null;
   trader_price: number | null;
   sell_for: TraderPrice[];
+  barters_for: Barter[];
   matched_from: string | null;
 };
 
@@ -116,6 +127,11 @@ const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const SOUND_KEY = "tarkov.soundOn";
 const HISTORY_KEY = "tarkov.history";
 const CORRECTIONS_KEY = "tarkov.ocrCorrections";
+const ADVANCED_KEY = "tarkov.advancedMode";
+
+function loadAdvanced(): boolean {
+  return localStorage.getItem(ADVANCED_KEY) === "true";
+}
 const DEFAULT_HOTKEY = "F2";
 const DEFAULT_TOGGLE_HOTKEY = "Shift+F2";
 const MAX_HISTORY = 15;
@@ -271,6 +287,7 @@ function App() {
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     loadAutoCheckUpdate
   );
+  const [advancedMode, setAdvancedMode] = useState<boolean>(loadAdvanced);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
@@ -387,6 +404,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem(UPDATE_CHECK_KEY, String(autoCheckUpdate));
   }, [autoCheckUpdate]);
+
+  useEffect(() => {
+    localStorage.setItem(ADVANCED_KEY, String(advancedMode));
+  }, [advancedMode]);
 
   // Update check helper.
   const checkForUpdate = async () => {
@@ -609,7 +630,7 @@ function App() {
     if (price == null || !w || !h) return null;
     const slots = w * h;
     if (slots <= 1) return null; // 1x1: per-slot is identical, skip
-    return Math.round(price / slots).toLocaleString() + " ₽/slot";
+    return Math.round(price / slots).toLocaleString() + " " + t.perSlotUnit;
   };
 
   const trendPct = (pct: number | null | undefined) => {
@@ -848,6 +869,14 @@ function App() {
                 type="checkbox"
                 checked={autoCheckUpdate}
                 onChange={(e) => setAutoCheckUpdate(e.target.checked)}
+              />
+            </div>
+            <div className="settings-row">
+              <label title={t.advancedModeHint}>{t.advancedMode}</label>
+              <input
+                type="checkbox"
+                checked={advancedMode}
+                onChange={(e) => setAdvancedMode(e.target.checked)}
               />
             </div>
             <div className="settings-row">
@@ -1091,6 +1120,29 @@ function App() {
                       </div>
                     </details>
                   )}
+                  {result.barters_for && result.barters_for.length > 0 && (
+                    <details className="all-traders barters">
+                      <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
+                      <div className="trader-list">
+                        {result.barters_for.map((b, idx) => (
+                          <div key={idx} className="barter-row">
+                            <div className="barter-trader">
+                              {b.trader} <span className="barter-level">Lv{b.level}</span>
+                            </div>
+                            <div className="barter-items">
+                              {b.items.map((it, i) => (
+                                <span key={i} className="barter-item">
+                                  {i > 0 && <span className="barter-plus"> + </span>}
+                                  {it.short_name ?? it.name}
+                                  <span className="barter-count">×{it.count}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                   {slot && (
                     <div className="slot-price">
                       📦 {result.width}×{result.height} → <strong>{slot}</strong>
@@ -1107,9 +1159,10 @@ function App() {
             {!result.item_name && result.raw_text && (
               <div className="raw-text">{t.ocr}: {result.raw_text}</div>
             )}
-            {/* "직접 입력" correction UI: always available, more prominent on
-                no-match / auto-corrected cases. */}
-            {!correcting && (
+            {/* "직접 입력" correction UI: hidden by default; advanced
+                users can enable it from settings. Past learned corrections
+                still apply automatically regardless. */}
+            {advancedMode && !correcting && (
               <button
                 className="correction-btn"
                 onClick={() => {
@@ -1121,7 +1174,7 @@ function App() {
                 ✏️ {t.correctionPrompt}
               </button>
             )}
-            {correcting && (
+            {advancedMode && correcting && (
               <div className="correction-input-row">
                 <input
                   type="text"

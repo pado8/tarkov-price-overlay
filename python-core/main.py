@@ -70,6 +70,18 @@ class TraderPrice(BaseModel):
     price: int
 
 
+class BarterRequiredItem(BaseModel):
+    name: str
+    short_name: str | None = None
+    count: float = 1
+
+
+class Barter(BaseModel):
+    trader: str
+    level: int = 1
+    items: list[BarterRequiredItem] = []
+
+
 class LookupResponse(BaseModel):
     raw_text: str
     item_name: str | None
@@ -81,6 +93,7 @@ class LookupResponse(BaseModel):
     flea_change_48h_pct: float | None = None
     trader_price: int | None
     sell_for: list[TraderPrice] = []  # all traders, sorted high to low (RUB)
+    barters_for: list[Barter] = []  # ways to obtain this item via trader barter
     matched_from: str | None = None
 
 
@@ -200,6 +213,21 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             sell_for=[
                 TraderPrice(name=e["name"], price=e["price"])
                 for e in price.get("sell_for", [])
+            ],
+            barters_for=[
+                Barter(
+                    trader=b["trader"],
+                    level=b.get("level", 1),
+                    items=[
+                        BarterRequiredItem(
+                            name=it["name"],
+                            short_name=it.get("short_name"),
+                            count=it.get("count", 1),
+                        )
+                        for it in b.get("items", [])
+                    ],
+                )
+                for b in price.get("barters_for", [])
             ],
             matched_from=price.get("matched_from"),
         )

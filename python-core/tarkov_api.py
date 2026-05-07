@@ -28,6 +28,14 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
       priceRUB
       vendor { name }
     }
+    bartersFor {
+      trader { name }
+      level
+      requiredItems {
+        count
+        item { name shortName }
+      }
+    }
   }
 }
 """
@@ -54,6 +62,14 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       priceRUB
       vendor { name }
     }
+    bartersFor {
+      trader { name }
+      level
+      requiredItems {
+        count
+        item { name shortName }
+      }
+    }
   }
 }
 """
@@ -77,6 +93,32 @@ def _build_cache_entry(item: dict) -> dict:
         if s["vendor"]["name"] != "Flea Market" and s.get("priceRUB") is not None
     ]
     trader_entries.sort(key=lambda e: e["price"], reverse=True)
+
+    # Flatten bartersFor: [{trader, level, items: [{name, short_name, count}]}]
+    barters: list[dict] = []
+    for b in item.get("bartersFor", []) or []:
+        items_list = []
+        for ri in b.get("requiredItems", []) or []:
+            inner = ri.get("item") or {}
+            if inner.get("name"):
+                items_list.append(
+                    {
+                        "name": inner["name"],
+                        "short_name": inner.get("shortName"),
+                        "count": ri.get("count") or 1,
+                    }
+                )
+        if not items_list:
+            continue
+        trader = b.get("trader") or {}
+        barters.append(
+            {
+                "trader": trader.get("name") or "?",
+                "level": b.get("level") or 1,
+                "items": items_list,
+            }
+        )
+
     return {
         "name": item["name"],
         "short_name": item.get("shortName"),
@@ -87,6 +129,7 @@ def _build_cache_entry(item: dict) -> dict:
         "flea_change_48h_pct": item.get("changeLast48hPercent"),
         "trader": trader_entries[0]["price"] if trader_entries else None,
         "sell_for": trader_entries,
+        "barters_for": barters,
     }
 
 
@@ -194,6 +237,7 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "flea_change_48h_pct": None,
         "trader": None,
         "sell_for": [],
+        "barters_for": [],
         "matched_from": matched_from,
     }
 
