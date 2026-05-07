@@ -37,6 +37,21 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
         item { name shortName }
       }
     }
+    bartersUsing {
+      trader { name }
+      level
+      rewardItems {
+        count
+        item { name shortName }
+      }
+    }
+    buyFor {
+      priceRUB
+      vendor {
+        name
+        ... on TraderOffer { minTraderLevel }
+      }
+    }
     usedInTasks {
       id
       name
@@ -85,6 +100,21 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       requiredItems {
         count
         item { name shortName }
+      }
+    }
+    bartersUsing {
+      trader { name }
+      level
+      rewardItems {
+        count
+        item { name shortName }
+      }
+    }
+    buyFor {
+      priceRUB
+      vendor {
+        name
+        ... on TraderOffer { minTraderLevel }
       }
     }
     usedInTasks {
@@ -166,6 +196,50 @@ def _build_cache_entry(item: dict) -> dict:
             }
         )
 
+    # bartersUsing: barters where THIS item is a required ingredient. Show
+    # only the reward side — user already has this item, they want to know
+    # what comes out.
+    barters_using: list[dict] = []
+    for b in item.get("bartersUsing", []) or []:
+        rewards = []
+        for ri in b.get("rewardItems", []) or []:
+            inner = ri.get("item") or {}
+            if inner.get("name"):
+                rewards.append(
+                    {
+                        "name": inner["name"],
+                        "short_name": inner.get("shortName"),
+                        "count": ri.get("count") or 1,
+                    }
+                )
+        if not rewards:
+            continue
+        trader = b.get("trader") or {}
+        barters_using.append(
+            {
+                "trader": trader.get("name") or "?",
+                "level": b.get("level") or 1,
+                "rewards": rewards,
+            }
+        )
+
+    # buyFor: cash purchase offers (traders only — Flea Market is already
+    # captured by flea_price). minTraderLevel is the rep gate.
+    buy_for: list[dict] = []
+    for b in item.get("buyFor", []) or []:
+        vendor = b.get("vendor") or {}
+        vname = vendor.get("name") or ""
+        if vname == "Flea Market" or b.get("priceRUB") is None:
+            continue
+        buy_for.append(
+            {
+                "name": vname,
+                "price": b["priceRUB"],
+                "min_level": vendor.get("minTraderLevel") or 1,
+            }
+        )
+    buy_for.sort(key=lambda e: e["price"])
+
     # Hideout production recipes that produce THIS item (item is the reward).
     crafts_for: list[dict] = []
     for c in item.get("craftsFor", []) or []:
@@ -204,6 +278,8 @@ def _build_cache_entry(item: dict) -> dict:
         "trader": trader_entries[0]["price"] if trader_entries else None,
         "sell_for": trader_entries,
         "barters_for": barters,
+        "barters_using": barters_using,
+        "buy_for": buy_for,
         "used_in_tasks": used_in_tasks,
         "crafts_for": crafts_for,
     }
@@ -315,6 +391,8 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "trader": None,
         "sell_for": [],
         "barters_for": [],
+        "barters_using": [],
+        "buy_for": [],
         "used_in_tasks": [],
         "crafts_for": [],
         "matched_from": matched_from,

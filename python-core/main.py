@@ -96,6 +96,18 @@ class HideoutCraft(BaseModel):
     items: list[BarterRequiredItem] = []
 
 
+class BarterUsing(BaseModel):
+    trader: str
+    level: int = 1
+    rewards: list[BarterRequiredItem] = []
+
+
+class BuyOffer(BaseModel):
+    name: str  # trader name
+    price: int  # RUB
+    min_level: int = 1
+
+
 class LookupResponse(BaseModel):
     raw_text: str
     item_name: str | None
@@ -109,6 +121,8 @@ class LookupResponse(BaseModel):
     trader_price: int | None
     sell_for: list[TraderPrice] = []  # all traders, sorted high to low (RUB)
     barters_for: list[Barter] = []  # ways to obtain this item via trader barter
+    barters_using: list[BarterUsing] = []  # barters where this item is required
+    buy_for: list[BuyOffer] = []  # trader cash offers (Flea excluded)
     used_in_tasks: list[TaskRef] = []  # quests that need this item
     crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
     matched_from: str | None = None
@@ -270,6 +284,29 @@ def lookup(req: CaptureRequest) -> LookupResponse:
                     ],
                 )
                 for c in price.get("crafts_for", [])
+            ],
+            barters_using=[
+                BarterUsing(
+                    trader=u["trader"],
+                    level=u.get("level", 1),
+                    rewards=[
+                        BarterRequiredItem(
+                            name=it["name"],
+                            short_name=it.get("short_name"),
+                            count=it.get("count", 1),
+                        )
+                        for it in u.get("rewards", [])
+                    ],
+                )
+                for u in price.get("barters_using", [])
+            ],
+            buy_for=[
+                BuyOffer(
+                    name=b["name"],
+                    price=b["price"],
+                    min_level=b.get("min_level", 1),
+                )
+                for b in price.get("buy_for", [])
             ],
             icon=price.get("icon"),
             matched_from=price.get("matched_from"),

@@ -97,6 +97,18 @@ type HideoutCraft = {
   items: BarterRequiredItem[];
 };
 
+type BarterUsing = {
+  trader: string;
+  level: number;
+  rewards: BarterRequiredItem[];
+};
+
+type BuyOffer = {
+  name: string;
+  price: number;
+  min_level: number;
+};
+
 type LookupResult = {
   raw_text: string;
   item_name: string | null;
@@ -110,6 +122,8 @@ type LookupResult = {
   trader_price: number | null;
   sell_for: TraderPrice[];
   barters_for: Barter[];
+  barters_using: BarterUsing[];
+  buy_for: BuyOffer[];
   used_in_tasks: TaskRef[];
   crafts_for: HideoutCraft[];
   matched_from: string | null;
@@ -1160,6 +1174,27 @@ function App() {
                       </div>
                     </details>
                   )}
+                  {result.buy_for && result.buy_for.length > 0 && (
+                    <details className="all-traders">
+                      <summary>
+                        🏪 {t.buyFor} ({result.buy_for.length})
+                      </summary>
+                      <div className="trader-list">
+                        {result.buy_for.map((bo) => (
+                          <div
+                            key={bo.name + bo.min_level}
+                            className="price sub-price"
+                          >
+                            <span className="label">
+                              {bo.name}
+                              <span className="vendor-name"> Lv{bo.min_level}</span>
+                            </span>
+                            <span className="value sub-value">{fmt(bo.price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                   {result.barters_for && result.barters_for.length > 0 && (
                     <details className="all-traders barters">
                       <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
@@ -1175,6 +1210,37 @@ function App() {
                                   {i > 0 && <span className="barter-plus"> + </span>}
                                   {it.short_name ?? it.name}
                                   <span className="barter-count">×{it.count}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  {result.barters_using && result.barters_using.length > 0 && (
+                    <details className="all-traders barters">
+                      <summary>
+                        🔁 {t.barterUsing} ({result.barters_using.length})
+                      </summary>
+                      <div className="trader-list">
+                        {result.barters_using.map((u, idx) => (
+                          <div key={idx} className="barter-row">
+                            <div className="barter-trader">
+                              {u.trader}{" "}
+                              <span className="barter-level">Lv{u.level}</span>
+                            </div>
+                            <div className="barter-items">
+                              {t.barterUsingArrow}{" "}
+                              {u.rewards.map((it, i) => (
+                                <span key={i} className="barter-item">
+                                  {i > 0 && (
+                                    <span className="barter-plus">, </span>
+                                  )}
+                                  {it.short_name ?? it.name}
+                                  <span className="barter-count">
+                                    ×{it.count}
+                                  </span>
                                 </span>
                               ))}
                             </div>
