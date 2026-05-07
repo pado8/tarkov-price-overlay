@@ -7,7 +7,44 @@ import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
 
-const APP_VERSION = "0.1.5";
+declare const __APP_VERSION__: string;
+const APP_VERSION = __APP_VERSION__;
+const UPDATE_REPO = "pado8/tarkov-price-overlay-releases";
+const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
+
+function loadAutoCheckUpdate(): boolean {
+  const v = localStorage.getItem(UPDATE_CHECK_KEY);
+  return v == null ? true : v === "true";
+}
+
+type UpdateInfo = { tag: string; url: string };
+
+function compareSemver(a: string, b: string): number {
+  // returns >0 if a > b, <0 if a < b, 0 if equal. Strips leading "v".
+  const pa = a.replace(/^v/, "").split(".").map((s) => parseInt(s, 10) || 0);
+  const pb = b.replace(/^v/, "").split(".").map((s) => parseInt(s, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] ?? 0;
+    const y = pb[i] ?? 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
+}
+
+async function fetchLatestRelease(): Promise<UpdateInfo | null> {
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${UPDATE_REPO}/releases/latest`,
+      { headers: { Accept: "application/vnd.github+json" } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.tag_name || !data?.html_url) return null;
+    return { tag: data.tag_name, url: data.html_url };
+  } catch {
+    return null;
+  }
+}
 const FEEDBACK_EMAIL = "floe9235@gmail.com";
 const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
 
@@ -231,6 +268,13 @@ function App() {
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
   const [correctionInput, setCorrectionInput] = useState<string>("");
   const [correcting, setCorrecting] = useState<boolean>(false);
+  const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
+    loadAutoCheckUpdate
+  );
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
+  const [updateChecking, setUpdateChecking] = useState<boolean>(false);
+  const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
   const [showDonate, setShowDonate] = useState(false);
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
@@ -339,6 +383,37 @@ function App() {
   useEffect(() => {
     localStorage.setItem(SOUND_KEY, String(soundOn));
   }, [soundOn]);
+
+  useEffect(() => {
+    localStorage.setItem(UPDATE_CHECK_KEY, String(autoCheckUpdate));
+  }, [autoCheckUpdate]);
+
+  // Update check helper.
+  const checkForUpdate = async () => {
+    setUpdateChecking(true);
+    const latest = await fetchLatestRelease();
+    setUpdateChecking(false);
+    setUpdateCheckedAt(Date.now());
+    if (latest && compareSemver(latest.tag, APP_VERSION) > 0) {
+      setUpdateInfo(latest);
+      log(`update: ${APP_VERSION} -> ${latest.tag} available`);
+    } else {
+      setUpdateInfo(null);
+      log(
+        `update: up to date (${APP_VERSION}, latest=${latest?.tag ?? "?"})`
+      );
+    }
+  };
+
+  // Run a single auto-check shortly after mount, if user opted in.
+  useEffect(() => {
+    if (!autoCheckUpdate) return;
+    const t = window.setTimeout(() => {
+      checkForUpdate();
+    }, 3000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Initial state: card shown briefly so user can position it, then auto-hide.
@@ -640,6 +715,27 @@ function App() {
           </div>
         </div>
 
+        {updateInfo && updateInfo.tag !== dismissedUpdate && (
+          <div className="update-banner">
+            <span className="update-text">
+              🆕 {t.updateAvailable} <strong>{updateInfo.tag}</strong>
+            </span>
+            <button
+              className="reset-btn update-btn"
+              onClick={() => openUrl(updateInfo.url).catch(() => {})}
+            >
+              {t.updateOpen}
+            </button>
+            <button
+              className="settings-btn"
+              onClick={() => setDismissedUpdate(updateInfo.tag)}
+              title={t.updateLater}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {historyVisible && (
           <div className="history-panel">
             <div className="history-header">
@@ -745,6 +841,34 @@ function App() {
                 checked={soundOn}
                 onChange={(e) => setSoundOn(e.target.checked)}
               />
+            </div>
+            <div className="settings-row">
+              <label>{t.autoCheckUpdate}</label>
+              <input
+                type="checkbox"
+                checked={autoCheckUpdate}
+                onChange={(e) => setAutoCheckUpdate(e.target.checked)}
+              />
+            </div>
+            <div className="settings-row">
+              <label>
+                {t.update}
+                <span className="settings-hint-inline">
+                  {" "}
+                  v{APP_VERSION}
+                </span>
+              </label>
+              <button
+                className="reset-btn"
+                onClick={checkForUpdate}
+                disabled={updateChecking}
+              >
+                {updateChecking
+                  ? t.updateChecking
+                  : updateCheckedAt && !updateInfo
+                    ? t.updateUpToDate
+                    : t.updateCheckNow}
+              </button>
             </div>
             <div className="settings-row">
               <label>{t.hideDelay}</label>

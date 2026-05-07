@@ -311,6 +311,36 @@ html, body, #root {
   border-color: rgba(200, 170, 100, 0.7);
 }
 
+/* Update banner */
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(200, 170, 100, 0.12);
+  border: 1px solid rgba(200, 170, 100, 0.4);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin: 6px 0;
+  font-size: 11px;
+  color: #f0e0b0;
+}
+.update-text {
+  flex: 1;
+}
+.update-btn {
+  background: rgba(200, 170, 100, 0.25);
+  color: #fff;
+  font-weight: 600;
+}
+.update-btn:hover {
+  background: rgba(200, 170, 100, 0.4);
+}
+.settings-hint-inline {
+  font-size: 9px;
+  color: #666;
+  font-family: "Consolas", monospace;
+}
+
 .settings-btn,
 .reset-btn {
   background: transparent;
