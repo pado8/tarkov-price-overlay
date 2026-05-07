@@ -57,11 +57,22 @@ class CaptureRequest(BaseModel):
     cursor_y: int | None = None
 
 
+class TraderPrice(BaseModel):
+    name: str
+    price: int
+
+
 class LookupResponse(BaseModel):
     raw_text: str
     item_name: str | None
+    short_name: str | None = None
+    width: int | None = None  # inventory grid units (1, 2, ...)
+    height: int | None = None
     flea_price: int | None
+    flea_low_24h: int | None = None
+    flea_change_48h_pct: float | None = None
     trader_price: int | None
+    sell_for: list[TraderPrice] = []  # all traders, sorted high to low (RUB)
     matched_from: str | None = None
 
 
@@ -194,8 +205,17 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     return LookupResponse(
         raw_text=text,
         item_name=price.get("name"),
+        short_name=price.get("short_name"),
+        width=price.get("width"),
+        height=price.get("height"),
         flea_price=price.get("flea"),
+        flea_low_24h=price.get("flea_low_24h"),
+        flea_change_48h_pct=price.get("flea_change_48h_pct"),
         trader_price=price.get("trader"),
+        sell_for=[
+            TraderPrice(name=e["name"], price=e["price"])
+            for e in price.get("sell_for", [])
+        ],
         matched_from=price.get("matched_from"),
     )
 

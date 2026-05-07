@@ -34,11 +34,19 @@ const log = (msg: string) => {
   invoke("log_msg", { msg }).catch(() => {});
 };
 
+type TraderPrice = { name: string; price: number };
+
 type LookupResult = {
   raw_text: string;
   item_name: string | null;
+  short_name: string | null;
+  width: number | null;
+  height: number | null;
   flea_price: number | null;
+  flea_low_24h: number | null;
+  flea_change_48h_pct: number | null;
   trader_price: number | null;
+  sell_for: TraderPrice[];
   matched_from: string | null;
 };
 
@@ -356,8 +364,22 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fmt = (n: number | null) =>
+  const fmt = (n: number | null | undefined) =>
     n == null ? "—" : n.toLocaleString() + " ₽";
+
+  const fmtSlot = (price: number | null, w: number | null, h: number | null) => {
+    if (price == null || !w || !h) return null;
+    const slots = w * h;
+    if (slots <= 1) return null; // 1x1: per-slot is identical, skip
+    return Math.round(price / slots).toLocaleString() + " ₽/slot";
+  };
+
+  const trendPct = (pct: number | null | undefined) => {
+    if (pct == null) return null;
+    const arrow = pct > 0 ? "▲" : pct < 0 ? "▼" : "•";
+    const sign = pct > 0 ? "+" : "";
+    return { arrow, text: `${arrow} ${sign}${pct.toFixed(1)}%`, sign: pct };
+  };
 
   const updateRegion = <K extends keyof Region>(key: K, value: Region[K]) =>
     setRegion((r) => ({ ...r, [key]: value }));
@@ -589,18 +611,75 @@ function App() {
             <div className="item-name">
               {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
             </div>
-            {result.item_name && (
-              <div className="prices">
-                <div className="price">
-                  <span className="label">{t.flea}</span>
-                  <span className="value">{fmt(result.flea_price)}</span>
+            {result.item_name && (() => {
+              const trend = trendPct(result.flea_change_48h_pct);
+              const slot = fmtSlot(
+                result.flea_price ?? result.trader_price,
+                result.width,
+                result.height
+              );
+              const bestTraderName =
+                result.sell_for[0]?.name ?? null;
+              return (
+                <div className="prices">
+                  <div className="price">
+                    <span className="label">
+                      {t.flea}
+                      {trend && (
+                        <span
+                          className="trend"
+                          style={{
+                            color:
+                              trend.sign > 0
+                                ? "#4caf50"
+                                : trend.sign < 0
+                                  ? "#ff6b6b"
+                                  : "#999",
+                          }}
+                        >
+                          {" "}
+                          {trend.text}
+                        </span>
+                      )}
+                    </span>
+                    <span className="value">{fmt(result.flea_price)}</span>
+                  </div>
+                  {result.flea_low_24h != null && (
+                    <div className="price sub-price">
+                      <span className="label">{t.fleaLow24}</span>
+                      <span className="value sub-value">{fmt(result.flea_low_24h)}</span>
+                    </div>
+                  )}
+                  <div className="price">
+                    <span className="label">
+                      {t.trader}
+                      {bestTraderName && (
+                        <span className="vendor-name"> ({bestTraderName})</span>
+                      )}
+                    </span>
+                    <span className="value">{fmt(result.trader_price)}</span>
+                  </div>
+                  {result.sell_for.length > 1 && (
+                    <details className="all-traders">
+                      <summary>{t.allTraders} ({result.sell_for.length})</summary>
+                      <div className="trader-list">
+                        {result.sell_for.map((tr) => (
+                          <div key={tr.name} className="price sub-price">
+                            <span className="label">{tr.name}</span>
+                            <span className="value sub-value">{fmt(tr.price)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  {slot && (
+                    <div className="slot-price">
+                      📦 {result.width}×{result.height} → <strong>{slot}</strong>
+                    </div>
+                  )}
                 </div>
-                <div className="price">
-                  <span className="label">{t.trader}</span>
-                  <span className="value">{fmt(result.trader_price)}</span>
-                </div>
-              </div>
-            )}
+              );
+            })()}
             {result.item_name && result.matched_from && (
               <div className="raw-text">
                 {t.correctedFrom}: "{result.matched_from}" → "{result.item_name}"

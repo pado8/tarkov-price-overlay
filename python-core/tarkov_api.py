@@ -11,9 +11,13 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     id
     name
     shortName
+    width
+    height
     avg24hPrice
+    low24hPrice
+    changeLast48hPercent
     sellFor {
-      price
+      priceRUB
       vendor { name }
     }
   }
@@ -75,9 +79,24 @@ def _query_by_name(name: str, lang: str, game_mode: str) -> list[dict]:
     return response.json().get("data", {}).get("items", [])
 
 
+def _empty_result(matched_from: str | None = None) -> dict:
+    return {
+        "name": None,
+        "short_name": None,
+        "width": None,
+        "height": None,
+        "flea": None,
+        "flea_low_24h": None,
+        "flea_change_48h_pct": None,
+        "trader": None,
+        "sell_for": [],
+        "matched_from": matched_from,
+    }
+
+
 def get_item_price(item_name: str, lang: str = "ko", game_mode: str = "regular") -> dict:
     if not item_name:
-        return {"name": None, "flea": None, "trader": None, "matched_from": None}
+        return _empty_result()
 
     items = _query_by_name(item_name, lang, game_mode)
     matched_from: str | None = None
@@ -90,15 +109,30 @@ def get_item_price(item_name: str, lang: str = "ko", game_mode: str = "regular")
             items = _query_by_name(closest, lang, game_mode)
 
     if not items:
-        return {"name": None, "flea": None, "trader": None, "matched_from": matched_from}
+        return _empty_result(matched_from)
 
     item = items[0]
-    trader_prices = [
-        s["price"] for s in item.get("sellFor", []) if s["vendor"]["name"] != "Flea Market"
+
+    # All vendors except Flea Market, sorted high to low. priceRUB normalizes
+    # USD/EUR vendors to rubles for direct comparison.
+    sell_for_all = item.get("sellFor", []) or []
+    trader_entries = [
+        {"name": s["vendor"]["name"], "price": s["priceRUB"]}
+        for s in sell_for_all
+        if s["vendor"]["name"] != "Flea Market" and s.get("priceRUB") is not None
     ]
+    trader_entries.sort(key=lambda e: e["price"], reverse=True)
+    best_trader = trader_entries[0]["price"] if trader_entries else None
+
     return {
         "name": item["name"],
+        "short_name": item.get("shortName"),
+        "width": item.get("width"),
+        "height": item.get("height"),
         "flea": item.get("avg24hPrice"),
-        "trader": max(trader_prices) if trader_prices else None,
+        "flea_low_24h": item.get("low24hPrice"),
+        "flea_change_48h_pct": item.get("changeLast48hPercent"),
+        "trader": best_trader,
+        "sell_for": trader_entries,
         "matched_from": matched_from,
     }
