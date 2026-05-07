@@ -132,6 +132,96 @@ class LookupResponse(BaseModel):
     matched_from: str | None = None
 
 
+def _build_response(raw_text: str, price: dict) -> LookupResponse:
+    """Single source of truth that maps a get_item_price() dict into the
+    Pydantic response. Both the F2-capture and override_text paths use it,
+    so adding a field touches exactly one place going forward."""
+    return LookupResponse(
+        raw_text=raw_text,
+        item_name=price.get("name"),
+        short_name=price.get("short_name"),
+        width=price.get("width"),
+        height=price.get("height"),
+        weight=price.get("weight"),
+        icon=price.get("icon"),
+        flea_price=price.get("flea"),
+        flea_low_24h=price.get("flea_low_24h"),
+        flea_high_24h=price.get("flea_high_24h"),
+        flea_last_low=price.get("flea_last_low"),
+        flea_last_offer_count=price.get("flea_last_offer_count"),
+        flea_change_48h_pct=price.get("flea_change_48h_pct"),
+        trader_price=price.get("trader"),
+        sell_for=[
+            TraderPrice(name=e["name"], price=e["price"])
+            for e in price.get("sell_for", [])
+        ],
+        barters_for=[
+            Barter(
+                trader=b["trader"],
+                level=b.get("level", 1),
+                items=[
+                    BarterRequiredItem(
+                        name=it["name"],
+                        short_name=it.get("short_name"),
+                        count=it.get("count", 1),
+                    )
+                    for it in b.get("items", [])
+                ],
+            )
+            for b in price.get("barters_for", [])
+        ],
+        barters_using=[
+            BarterUsing(
+                trader=u["trader"],
+                level=u.get("level", 1),
+                rewards=[
+                    BarterRequiredItem(
+                        name=it["name"],
+                        short_name=it.get("short_name"),
+                        count=it.get("count", 1),
+                    )
+                    for it in u.get("rewards", [])
+                ],
+            )
+            for u in price.get("barters_using", [])
+        ],
+        buy_for=[
+            BuyOffer(
+                name=b["name"],
+                price=b["price"],
+                min_level=b.get("min_level", 1),
+            )
+            for b in price.get("buy_for", [])
+        ],
+        used_in_tasks=[
+            TaskRef(
+                id=t.get("id"),
+                name=t["name"],
+                trader=t.get("trader", ""),
+                min_level=t.get("min_level", 0),
+            )
+            for t in price.get("used_in_tasks", [])
+        ],
+        crafts_for=[
+            HideoutCraft(
+                station=c["station"],
+                level=c.get("level", 1),
+                duration_sec=c.get("duration_sec", 0),
+                items=[
+                    BarterRequiredItem(
+                        name=it["name"],
+                        short_name=it.get("short_name"),
+                        count=it.get("count", 1),
+                    )
+                    for it in c.get("items", [])
+                ],
+            )
+            for c in price.get("crafts_for", [])
+        ],
+        matched_from=price.get("matched_from"),
+    )
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -235,90 +325,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             game_mode=game_mode,
             corrections=req.corrections,
         )
-        return LookupResponse(
-            raw_text=req.override_text,
-            item_name=price.get("name"),
-            short_name=price.get("short_name"),
-            width=price.get("width"),
-            height=price.get("height"),
-            weight=price.get("weight"),
-            flea_price=price.get("flea"),
-            flea_low_24h=price.get("flea_low_24h"),
-            flea_high_24h=price.get("flea_high_24h"),
-            flea_last_low=price.get("flea_last_low"),
-            flea_last_offer_count=price.get("flea_last_offer_count"),
-            flea_change_48h_pct=price.get("flea_change_48h_pct"),
-            trader_price=price.get("trader"),
-            sell_for=[
-                TraderPrice(name=e["name"], price=e["price"])
-                for e in price.get("sell_for", [])
-            ],
-            barters_for=[
-                Barter(
-                    trader=b["trader"],
-                    level=b.get("level", 1),
-                    items=[
-                        BarterRequiredItem(
-                            name=it["name"],
-                            short_name=it.get("short_name"),
-                            count=it.get("count", 1),
-                        )
-                        for it in b.get("items", [])
-                    ],
-                )
-                for b in price.get("barters_for", [])
-            ],
-            used_in_tasks=[
-                TaskRef(
-                    id=t.get("id"),
-                    name=t["name"],
-                    trader=t.get("trader", ""),
-                    min_level=t.get("min_level", 0),
-                )
-                for t in price.get("used_in_tasks", [])
-            ],
-            crafts_for=[
-                HideoutCraft(
-                    station=c["station"],
-                    level=c.get("level", 1),
-                    duration_sec=c.get("duration_sec", 0),
-                    items=[
-                        BarterRequiredItem(
-                            name=it["name"],
-                            short_name=it.get("short_name"),
-                            count=it.get("count", 1),
-                        )
-                        for it in c.get("items", [])
-                    ],
-                )
-                for c in price.get("crafts_for", [])
-            ],
-            barters_using=[
-                BarterUsing(
-                    trader=u["trader"],
-                    level=u.get("level", 1),
-                    rewards=[
-                        BarterRequiredItem(
-                            name=it["name"],
-                            short_name=it.get("short_name"),
-                            count=it.get("count", 1),
-                        )
-                        for it in u.get("rewards", [])
-                    ],
-                )
-                for u in price.get("barters_using", [])
-            ],
-            buy_for=[
-                BuyOffer(
-                    name=b["name"],
-                    price=b["price"],
-                    min_level=b.get("min_level", 1),
-                )
-                for b in price.get("buy_for", [])
-            ],
-            icon=price.get("icon"),
-            matched_from=price.get("matched_from"),
-        )
+        return _build_response(req.override_text, price)
 
     # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,
     # so it shares a coordinate space with mss). Fall back to the value the
@@ -364,22 +371,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if price2.get("name") is not None:
             text, price = text2, price2
 
-    return LookupResponse(
-        raw_text=text,
-        item_name=price.get("name"),
-        short_name=price.get("short_name"),
-        width=price.get("width"),
-        height=price.get("height"),
-        flea_price=price.get("flea"),
-        flea_low_24h=price.get("flea_low_24h"),
-        flea_change_48h_pct=price.get("flea_change_48h_pct"),
-        trader_price=price.get("trader"),
-        sell_for=[
-            TraderPrice(name=e["name"], price=e["price"])
-            for e in price.get("sell_for", [])
-        ],
-        matched_from=price.get("matched_from"),
-    )
+    return _build_response(text, price)
 
 
 if __name__ == "__main__":
