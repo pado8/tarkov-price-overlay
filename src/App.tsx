@@ -75,7 +75,10 @@ const DEFAULT_REGION: Region = {
 const STORAGE_KEY = "tarkov.captureRegion";
 const POSITION_KEY = "tarkov.windowPosition";
 const HOTKEY_KEY = "tarkov.hotkey";
+const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
+const SOUND_KEY = "tarkov.soundOn";
 const DEFAULT_HOTKEY = "F2";
+const DEFAULT_TOGGLE_HOTKEY = "Shift+F2";
 
 function loadRegion(): Region {
   try {
@@ -87,6 +90,36 @@ function loadRegion(): Region {
 
 function loadHotkey(): string {
   return localStorage.getItem(HOTKEY_KEY) || DEFAULT_HOTKEY;
+}
+
+function loadToggleHotkey(): string {
+  return localStorage.getItem(TOGGLE_HOTKEY_KEY) || DEFAULT_TOGGLE_HOTKEY;
+}
+
+function loadSoundOn(): boolean {
+  const raw = localStorage.getItem(SOUND_KEY);
+  return raw == null ? true : raw === "true";
+}
+
+// Synthesized "ding" via Web Audio — no asset bundling needed.
+let _audioCtx: AudioContext | null = null;
+function playDing(success: boolean) {
+  try {
+    _audioCtx ??= new (window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext)();
+    const ctx = _audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = success ? 880 : 330;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+  } catch {}
 }
 
 function eventToAccelerator(e: KeyboardEvent): string | null {
@@ -118,7 +151,13 @@ function App() {
   const [region, setRegion] = useState<Region>(loadRegion);
   const [showSettings, setShowSettings] = useState(false);
   const [hotkey, setHotkey] = useState<string>(loadHotkey);
-  const [recordingHotkey, setRecordingHotkey] = useState(false);
+  const [toggleHotkey, setToggleHotkey] =
+    useState<string>(loadToggleHotkey);
+  const [soundOn, setSoundOn] = useState<boolean>(loadSoundOn);
+  const [recordingTarget, setRecordingTarget] = useState<
+    null | "lookup" | "toggle"
+  >(null);
+  const recordingHotkey = recordingTarget !== null;
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
   const [cardVisible, setCardVisible] = useState(true);
   const [showDonate, setShowDonate] = useState(false);
@@ -212,10 +251,23 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem(HOTKEY_KEY, hotkey);
-    invoke("register_hotkey", { accelerator: hotkey })
-      .then(() => log(`React: hotkey registered = ${hotkey}`))
-      .catch((e) => log(`React: hotkey register FAILED (${hotkey}): ${e}`));
+    invoke("register_lookup_hotkey", { accelerator: hotkey })
+      .then(() => log(`React: lookup hotkey = ${hotkey}`))
+      .catch((e) => log(`React: lookup hotkey FAILED (${hotkey}): ${e}`));
   }, [hotkey]);
+
+  useEffect(() => {
+    localStorage.setItem(TOGGLE_HOTKEY_KEY, toggleHotkey);
+    invoke("register_toggle_hotkey", { accelerator: toggleHotkey })
+      .then(() => log(`React: toggle hotkey = ${toggleHotkey}`))
+      .catch((e) =>
+        log(`React: toggle hotkey FAILED (${toggleHotkey}): ${e}`)
+      );
+  }, [toggleHotkey]);
+
+  useEffect(() => {
+    localStorage.setItem(SOUND_KEY, String(soundOn));
+  }, [soundOn]);
 
   useEffect(() => {
     // Initial state: card shown briefly so user can position it, then auto-hide.
@@ -236,31 +288,35 @@ function App() {
   }, [recordingHotkey]);
 
   useEffect(() => {
-    if (!recordingHotkey) return;
+    if (recordingTarget === null) return;
     // Release the OS-level grab so the chosen key actually reaches the page.
-    invoke("unregister_hotkey").catch(() => {});
+    invoke("unregister_all_hotkeys").catch(() => {});
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (e.code === "Escape") {
-        setRecordingHotkey(false);
+        setRecordingTarget(null);
         return;
       }
       const accel = eventToAccelerator(e);
       if (accel) {
-        setHotkey(accel);
-        setRecordingHotkey(false);
+        if (recordingTarget === "lookup") setHotkey(accel);
+        else if (recordingTarget === "toggle") setToggleHotkey(accel);
+        setRecordingTarget(null);
       }
     };
     window.addEventListener("keydown", onKey, true);
     return () => {
       window.removeEventListener("keydown", onKey, true);
-      // Restore the grab. If the hotkey was changed, the [hotkey] effect will
-      // also re-register — duplicate registration is idempotent (we always
-      // unregister_all first), so this is safe.
-      invoke("register_hotkey", { accelerator: hotkey }).catch(() => {});
+      // Restore both grabs. If a hotkey changed, its useEffect will also fire
+      // and re-register — duplicate registration is idempotent (each command
+      // unregisters its previous accelerator first).
+      invoke("register_lookup_hotkey", { accelerator: hotkey }).catch(() => {});
+      invoke("register_toggle_hotkey", { accelerator: toggleHotkey }).catch(
+        () => {}
+      );
     };
-  }, [recordingHotkey]);
+  }, [recordingTarget]);
 
   useEffect(() => {
     const win = getCurrentWindow();
@@ -343,6 +399,7 @@ function App() {
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
           setResult(data);
           setStatus("success");
+          if (loadSoundOn()) playDing(data.item_name != null);
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
@@ -350,6 +407,7 @@ function App() {
             e instanceof Error && e.name === "AbortError" ? T[r.lang].timeout : msg
           );
           setStatus("error");
+          if (loadSoundOn()) playDing(false);
         } finally {
           clearTimeout(timeoutId);
           // Start the auto-hide countdown only after fetch completes,
@@ -360,6 +418,37 @@ function App() {
     );
     return () => {
       unlistenPromise.then((fn) => fn());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Toggle hotkey: show last result if hidden, hide if shown.
+  useEffect(() => {
+    const unlisten = listen("hotkey-toggle", async () => {
+      log("React: hotkey-toggle");
+      const win = getCurrentWindow();
+      try {
+        const visible = await win.isVisible();
+        if (!visible) {
+          await win.show();
+          await win.setFocus();
+        }
+      } catch {}
+      // Internal card visibility flip.
+      setCardVisible((v) => {
+        if (v) {
+          // Hide now: cancel any pending auto-hide and clear state next tick.
+          cancelHideTimer();
+          return false;
+        }
+        // Show: bring card up, schedule a fresh auto-hide.
+        cancelHideTimer();
+        scheduleHide();
+        return true;
+      });
+    });
+    return () => {
+      unlisten.then((fn) => fn());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -445,11 +534,35 @@ function App() {
               <label>{t.hotkey}</label>
               <button
                 className="reset-btn hotkey-rec-btn"
-                onClick={() => setRecordingHotkey((r) => !r)}
+                onClick={() =>
+                  setRecordingTarget((r) => (r === "lookup" ? null : "lookup"))
+                }
                 title={t.hotkeyHint}
               >
-                {recordingHotkey ? t.recordingHotkey : hotkey}
+                {recordingTarget === "lookup" ? t.recordingHotkey : hotkey}
               </button>
+            </div>
+            <div className="settings-row">
+              <label>{t.toggleHotkey}</label>
+              <button
+                className="reset-btn hotkey-rec-btn"
+                onClick={() =>
+                  setRecordingTarget((r) => (r === "toggle" ? null : "toggle"))
+                }
+                title={t.toggleHotkeyHint}
+              >
+                {recordingTarget === "toggle"
+                  ? t.recordingHotkey
+                  : toggleHotkey}
+              </button>
+            </div>
+            <div className="settings-row">
+              <label>{t.sound}</label>
+              <input
+                type="checkbox"
+                checked={soundOn}
+                onChange={(e) => setSoundOn(e.target.checked)}
+              />
             </div>
             <div className="settings-row">
               <label>{t.hideDelay}</label>

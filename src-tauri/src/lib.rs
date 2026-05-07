@@ -6,7 +6,7 @@ use serde::Serialize;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager, RunEvent};
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
@@ -24,6 +24,17 @@ struct SidecarChild(Mutex<Option<CommandChild>>);
 /// `exit_app` command). The window-close path checks this flag and, if
 /// false, prevents the exit and hides to tray instead.
 struct IsQuitting(AtomicBool);
+
+/// The two global hotkeys we manage. We store the parsed `Shortcut` so the
+/// pressed-shortcut handler can compare by equality and emit the right event
+/// without dealing with string-format normalization (e.g. "Shift+F2" vs
+/// "shift+f2").
+#[derive(Default)]
+struct HotkeyConfig {
+    lookup: Option<Shortcut>,
+    toggle: Option<Shortcut>,
+}
+struct Hotkeys(Mutex<HotkeyConfig>);
 
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
     let _ = app
@@ -49,23 +60,52 @@ fn log_msg(msg: String) {
     println!("[react] {}", msg);
 }
 
+fn parse_accel(accelerator: &str) -> Result<Shortcut, String> {
+    accelerator
+        .parse::<Shortcut>()
+        .map_err(|e| format!("parse({accelerator}) failed: {e}"))
+}
+
 #[tauri::command]
-fn register_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
+fn register_lookup_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
+    let parsed = parse_accel(&accelerator)?;
     let gs = app.global_shortcut();
-    let _ = gs.unregister_all();
-    gs.register(accelerator.as_str()).map_err(|e| {
-        let msg = format!("register({}) failed: {}", accelerator, e);
-        println!("[hotkey] {}", msg);
-        msg
-    })?;
-    println!("[hotkey] registered: {}", accelerator);
+    let state = app.state::<Hotkeys>();
+    let mut cfg = state.0.lock().unwrap();
+    if let Some(old) = cfg.lookup.take() {
+        let _ = gs.unregister(old);
+    }
+    gs.register(parsed.clone())
+        .map_err(|e| format!("register lookup({accelerator}) failed: {e}"))?;
+    cfg.lookup = Some(parsed);
+    println!("[hotkey] lookup registered: {accelerator}");
     Ok(())
 }
 
 #[tauri::command]
-fn unregister_hotkey(app: tauri::AppHandle) -> Result<(), String> {
+fn register_toggle_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
+    let parsed = parse_accel(&accelerator)?;
+    let gs = app.global_shortcut();
+    let state = app.state::<Hotkeys>();
+    let mut cfg = state.0.lock().unwrap();
+    if let Some(old) = cfg.toggle.take() {
+        let _ = gs.unregister(old);
+    }
+    gs.register(parsed.clone())
+        .map_err(|e| format!("register toggle({accelerator}) failed: {e}"))?;
+    cfg.toggle = Some(parsed);
+    println!("[hotkey] toggle registered: {accelerator}");
+    Ok(())
+}
+
+#[tauri::command]
+fn unregister_all_hotkeys(app: tauri::AppHandle) -> Result<(), String> {
     let gs = app.global_shortcut();
     gs.unregister_all().map_err(|e| e.to_string())?;
+    let state = app.state::<Hotkeys>();
+    let mut cfg = state.0.lock().unwrap();
+    cfg.lookup = None;
+    cfg.toggle = None;
     println!("[hotkey] unregistered all");
     Ok(())
 }
@@ -134,31 +174,50 @@ pub fn run() {
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
-                    // Any registered shortcut triggers a lookup. The frontend
-                    // owns which key is currently registered.
-                    if event.state == ShortcutState::Pressed {
-                        let device_state = DeviceState::new();
-                        let mouse = device_state.get_mouse();
-                        let pos = CursorPos {
-                            x: mouse.coords.0,
-                            y: mouse.coords.1,
-                        };
-                        println!(
-                            "[hotkey] {:?} pressed, cursor=({}, {})",
-                            shortcut, pos.x, pos.y
-                        );
-                        let _ = app.emit("hotkey-lookup", pos);
+                    if event.state != ShortcutState::Pressed {
+                        return;
                     }
+                    // Decide event kind by comparing the pressed shortcut to
+                    // the two registered ones. This avoids any string-format
+                    // ambiguity ("Shift+F2" vs "shift+f2", etc.).
+                    let kind = {
+                        let state = app.state::<Hotkeys>();
+                        let cfg = state.0.lock().unwrap();
+                        if cfg.lookup.as_ref() == Some(shortcut) {
+                            Some("hotkey-lookup")
+                        } else if cfg.toggle.as_ref() == Some(shortcut) {
+                            Some("hotkey-toggle")
+                        } else {
+                            None
+                        }
+                    };
+                    let Some(event_name) = kind else {
+                        println!("[hotkey] {shortcut:?} pressed but unmapped");
+                        return;
+                    };
+                    let device_state = DeviceState::new();
+                    let mouse = device_state.get_mouse();
+                    let pos = CursorPos {
+                        x: mouse.coords.0,
+                        y: mouse.coords.1,
+                    };
+                    println!(
+                        "[hotkey] {event_name} ({shortcut:?}) cursor=({}, {})",
+                        pos.x, pos.y
+                    );
+                    let _ = app.emit(event_name, pos);
                 })
                 .build(),
         )
         .manage(SidecarChild(Mutex::new(None)))
         .manage(IsQuitting(AtomicBool::new(false)))
+        .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
         .invoke_handler(tauri::generate_handler![
             get_cursor_position,
             log_msg,
-            register_hotkey,
-            unregister_hotkey,
+            register_lookup_hotkey,
+            register_toggle_hotkey,
+            unregister_all_hotkeys,
             hide_to_tray,
             exit_app
         ])
