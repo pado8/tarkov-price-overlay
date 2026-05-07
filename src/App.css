@@ -181,6 +181,13 @@ html, body, #root {
   color: #c8aa64;
   font-family: "Consolas", monospace;
 }
+.weight-info {
+  color: #aaa;
+}
+.weight-per {
+  color: #888;
+  font-size: 10px;
+}
 
 .all-traders {
   font-size: 11px;

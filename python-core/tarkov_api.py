@@ -21,9 +21,13 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     shortName
     width
     height
+    weight
     gridImageLink
     avg24hPrice
     low24hPrice
+    high24hPrice
+    lastLowPrice
+    lastOfferCount
     changeLast48hPercent
     sellFor {
       priceRUB
@@ -86,9 +90,13 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     shortName
     width
     height
+    weight
     gridImageLink
     avg24hPrice
     low24hPrice
+    high24hPrice
+    lastLowPrice
+    lastOfferCount
     changeLast48hPercent
     sellFor {
       priceRUB
@@ -271,9 +279,13 @@ def _build_cache_entry(item: dict) -> dict:
         "short_name": item.get("shortName"),
         "width": item.get("width"),
         "height": item.get("height"),
+        "weight": item.get("weight"),
         "icon": item.get("gridImageLink"),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
+        "flea_high_24h": item.get("high24hPrice"),
+        "flea_last_low": item.get("lastLowPrice"),
+        "flea_last_offer_count": item.get("lastOfferCount"),
         "flea_change_48h_pct": item.get("changeLast48hPercent"),
         "trader": trader_entries[0]["price"] if trader_entries else None,
         "sell_for": trader_entries,
@@ -384,9 +396,13 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "short_name": None,
         "width": None,
         "height": None,
+        "weight": None,
         "icon": None,
         "flea": None,
         "flea_low_24h": None,
+        "flea_high_24h": None,
+        "flea_last_low": None,
+        "flea_last_offer_count": None,
         "flea_change_48h_pct": None,
         "trader": None,
         "sell_for": [],

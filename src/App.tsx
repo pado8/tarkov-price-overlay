@@ -115,9 +115,13 @@ type LookupResult = {
   short_name: string | null;
   width: number | null;
   height: number | null;
+  weight: number | null;
   icon: string | null;
   flea_price: number | null;
   flea_low_24h: number | null;
+  flea_high_24h: number | null;
+  flea_last_low: number | null;
+  flea_last_offer_count: number | null;
   flea_change_48h_pct: number | null;
   trader_price: number | null;
   sell_for: TraderPrice[];
@@ -1146,10 +1150,29 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.flea_price)}</span>
                   </div>
-                  {result.flea_low_24h != null && (
+                  {(result.flea_low_24h != null ||
+                    result.flea_high_24h != null) && (
                     <div className="price sub-price">
-                      <span className="label">{t.fleaLow24}</span>
-                      <span className="value sub-value">{fmt(result.flea_low_24h)}</span>
+                      <span className="label">{t.fleaRange24}</span>
+                      <span className="value sub-value">
+                        {fmt(result.flea_low_24h)} ~ {fmt(result.flea_high_24h)}
+                      </span>
+                    </div>
+                  )}
+                  {result.flea_last_low != null && (
+                    <div className="price sub-price">
+                      <span className="label">
+                        {t.fleaLastLow}
+                        {result.flea_last_offer_count != null && (
+                          <span className="vendor-name">
+                            {" "}
+                            ({result.flea_last_offer_count}{t.fleaOffersUnit})
+                          </span>
+                        )}
+                      </span>
+                      <span className="value sub-value">
+                        {fmt(result.flea_last_low)}
+                      </span>
                     </div>
                   )}
                   <div className="price">
@@ -1295,9 +1318,29 @@ function App() {
                         </div>
                       </div>
                     )}
-                  {slot && (
+                  {(slot || (result.weight && result.weight > 0)) && (
                     <div className="slot-price">
-                      📦 {result.width}×{result.height} → <strong>{slot}</strong>
+                      {slot && (
+                        <span>
+                          📦 {result.width}×{result.height} →{" "}
+                          <strong>{slot}</strong>
+                        </span>
+                      )}
+                      {result.weight != null && result.weight > 0 && (
+                        <span className="weight-info">
+                          {slot ? " · " : ""}⚖ {result.weight.toFixed(2)}kg
+                          {result.flea_price != null &&
+                            result.weight >= 0.05 && (
+                              <span className="weight-per">
+                                {" "}
+                                ({Math.round(
+                                  result.flea_price / result.weight
+                                ).toLocaleString()}{" "}
+                                {t.perKgUnit})
+                              </span>
+                            )}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>

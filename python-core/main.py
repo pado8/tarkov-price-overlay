@@ -114,9 +114,13 @@ class LookupResponse(BaseModel):
     short_name: str | None = None
     width: int | None = None  # inventory grid units (1, 2, ...)
     height: int | None = None
+    weight: float | None = None  # kg
     icon: str | None = None  # gridImageLink (webp URL)
     flea_price: int | None
     flea_low_24h: int | None = None
+    flea_high_24h: int | None = None
+    flea_last_low: int | None = None
+    flea_last_offer_count: int | None = None
     flea_change_48h_pct: float | None = None
     trader_price: int | None
     sell_for: list[TraderPrice] = []  # all traders, sorted high to low (RUB)
@@ -237,8 +241,12 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             short_name=price.get("short_name"),
             width=price.get("width"),
             height=price.get("height"),
+            weight=price.get("weight"),
             flea_price=price.get("flea"),
             flea_low_24h=price.get("flea_low_24h"),
+            flea_high_24h=price.get("flea_high_24h"),
+            flea_last_low=price.get("flea_last_low"),
+            flea_last_offer_count=price.get("flea_last_offer_count"),
             flea_change_48h_pct=price.get("flea_change_48h_pct"),
             trader_price=price.get("trader"),
             sell_for=[
