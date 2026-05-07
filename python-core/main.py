@@ -9,7 +9,7 @@ if sys.platform == "win32":
     except (AttributeError, OSError) as e1:
         try:
             ctypes.windll.user32.SetProcessDPIAware()
-            DPI_STATUS = "system-aware (user32.SetProcessDPIAware) — fallback"
+            DPI_STATUS = "system-aware (user32.SetProcessDPIAware) - fallback"
         except Exception as e2:
             DPI_STATUS = f"FAILED: {e1!r} / {e2!r}"
 
@@ -126,7 +126,7 @@ def _get_cursor_pos_winapi() -> tuple[int, int] | None:
 def _clamp_to_monitor(
     x: int, y: int, width: int, height: int, cursor_x: int, cursor_y: int
 ) -> tuple[int, int, int, int]:
-    """Keep capture inside the monitor that contains the cursor — prevents
+    """Keep capture inside the monitor that contains the cursor - prevents
     bleeding into a second monitor (e.g. the dev console) at screen edges."""
     with mss.mss() as sct:
         monitors = sct.monitors[1:]  # index 0 is the virtual all-monitors bbox
@@ -193,7 +193,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # Direct-name lookup path: skip capture+OCR, use the supplied text.
     # Triggered by 최근 검색 재조회 / 직접 입력 correction submit.
     if req.override_text:
-        print(f"[lookup] override_text path — name={req.override_text!r}")
+        print(f"[lookup] override_text path - name={req.override_text!r}")
         price = get_item_price(
             req.override_text,
             lang=lang,

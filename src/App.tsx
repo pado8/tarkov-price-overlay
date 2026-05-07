@@ -1151,12 +1151,15 @@ function App() {
                 </div>
               );
             })()}
-            {result.item_name && result.matched_from && (
+            {/* OCR diagnostic lines (matched_from arrow, raw OCR text)
+                are advanced-mode only — regular users only see the final
+                resolved item, not the noisy OCR plumbing. */}
+            {advancedMode && result.item_name && result.matched_from && (
               <div className="raw-text">
                 {t.correctedFrom}: "{result.matched_from}" → "{result.item_name}"
               </div>
             )}
-            {!result.item_name && result.raw_text && (
+            {advancedMode && !result.item_name && result.raw_text && (
               <div className="raw-text">{t.ocr}: {result.raw_text}</div>
             )}
             {/* "직접 입력" correction UI: hidden by default; advanced
