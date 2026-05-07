@@ -55,6 +55,12 @@ class CaptureRequest(BaseModel):
     mirror_x: int | None = None  # alt capture x (mirrored side), tried if primary doesn't match
     cursor_x: int | None = None  # cursor pos, used to clamp capture to that monitor
     cursor_y: int | None = None
+    # If set, skip capture/OCR entirely and look this name up directly.
+    # Used by "직접 입력" / 최근 검색 재조회.
+    override_text: str | None = None
+    # User-trained OCR corrections. Keys are lowercased OCR text, values are
+    # the canonical item name to query GraphQL with.
+    corrections: dict[str, str] = {}
 
 
 class TraderPrice(BaseModel):
@@ -131,7 +137,14 @@ def _clamp_to_monitor(
 
 
 def _capture_and_lookup(
-    x: int, y: int, width: int, height: int, lang: str, game_mode: str, label: str
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    lang: str,
+    game_mode: str,
+    label: str,
+    corrections: dict[str, str],
 ) -> tuple[str, dict]:
     import time
 
@@ -141,7 +154,7 @@ def _capture_and_lookup(
     text = recognize_text(image, langs=("ko", "en"))
     t2 = time.perf_counter()
     print(f"[lookup] OCR({label}): {text!r}")
-    price = get_item_price(text, lang=lang, game_mode=game_mode)
+    price = get_item_price(text, lang=lang, game_mode=game_mode, corrections=corrections)
     t3 = time.perf_counter()
     print(
         f"[timing/{label}] capture={t1 - t0:.3f}s ocr={t2 - t1:.3f}s "
@@ -161,6 +174,33 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     )
     lang = req.lang if req.lang in ("ko", "en") else "ko"
     game_mode = req.game_mode if req.game_mode in ("regular", "pve") else "regular"
+
+    # Direct-name lookup path: skip capture+OCR, use the supplied text.
+    # Triggered by 최근 검색 재조회 / 직접 입력 correction submit.
+    if req.override_text:
+        print(f"[lookup] override_text path — name={req.override_text!r}")
+        price = get_item_price(
+            req.override_text,
+            lang=lang,
+            game_mode=game_mode,
+            corrections=req.corrections,
+        )
+        return LookupResponse(
+            raw_text=req.override_text,
+            item_name=price.get("name"),
+            short_name=price.get("short_name"),
+            width=price.get("width"),
+            height=price.get("height"),
+            flea_price=price.get("flea"),
+            flea_low_24h=price.get("flea_low_24h"),
+            flea_change_48h_pct=price.get("flea_change_48h_pct"),
+            trader_price=price.get("trader"),
+            sell_for=[
+                TraderPrice(name=e["name"], price=e["price"])
+                for e in price.get("sell_for", [])
+            ],
+            matched_from=price.get("matched_from"),
+        )
 
     # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,
     # so it shares a coordinate space with mss). Fall back to the value the
@@ -190,7 +230,9 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     if can_clamp:
         px, py, pw, ph = _clamp_to_monitor(px, py, pw, ph, cursor_x, cursor_y)
 
-    text, price = _capture_and_lookup(px, py, pw, ph, lang, game_mode, "primary")
+    text, price = _capture_and_lookup(
+        px, py, pw, ph, lang, game_mode, "primary", req.corrections
+    )
 
     if price.get("name") is None and mirror_x_val is not None:
         mx, my, mw_, mh_ = mirror_x_val, primary_y, req.width, req.height
@@ -198,7 +240,9 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             mx, my, mw_, mh_ = _clamp_to_monitor(
                 mx, my, mw_, mh_, cursor_x, cursor_y
             )
-        text2, price2 = _capture_and_lookup(mx, my, mw_, mh_, lang, game_mode, "mirror")
+        text2, price2 = _capture_and_lookup(
+            mx, my, mw_, mh_, lang, game_mode, "mirror", req.corrections
+        )
         if price2.get("name") is not None:
             text, price = text2, price2
 

@@ -77,8 +77,75 @@ const POSITION_KEY = "tarkov.windowPosition";
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const SOUND_KEY = "tarkov.soundOn";
+const HISTORY_KEY = "tarkov.history";
+const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const DEFAULT_HOTKEY = "F2";
 const DEFAULT_TOGGLE_HOTKEY = "Shift+F2";
+const MAX_HISTORY = 15;
+
+type HistoryEntry = {
+  ts: number;
+  raw_text: string;
+  result: LookupResult;
+};
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.slice(0, MAX_HISTORY);
+    }
+  } catch {}
+  return [];
+}
+
+function addToHistory(result: LookupResult): HistoryEntry[] {
+  if (!result.item_name) return loadHistory();
+  const entries = loadHistory().filter(
+    (e) => e.result.item_name !== result.item_name
+  );
+  entries.unshift({ ts: Date.now(), raw_text: result.raw_text, result });
+  const trimmed = entries.slice(0, MAX_HISTORY);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  } catch {}
+  return trimmed;
+}
+
+function clearHistory() {
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+  } catch {}
+}
+
+function loadCorrections(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(CORRECTIONS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {}
+  return {};
+}
+
+function saveCorrection(rawText: string, correctedName: string) {
+  if (!rawText.trim() || !correctedName.trim()) return;
+  const c = loadCorrections();
+  c[rawText.trim().toLowerCase()] = correctedName.trim();
+  try {
+    localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(c));
+  } catch {}
+}
+
+function removeCorrection(rawText: string) {
+  const c = loadCorrections();
+  delete c[rawText.trim().toLowerCase()];
+  try {
+    localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(c));
+  } catch {}
+}
 
 function loadRegion(): Region {
   try {
@@ -160,6 +227,10 @@ function App() {
   const recordingHotkey = recordingTarget !== null;
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
   const [cardVisible, setCardVisible] = useState(true);
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
+  const [correctionInput, setCorrectionInput] = useState<string>("");
+  const [correcting, setCorrecting] = useState<boolean>(false);
   const [showDonate, setShowDonate] = useState(false);
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
@@ -384,6 +455,7 @@ function App() {
           mirror_x: event.payload.x - r.offsetX - r.width,
           cursor_x: event.payload.x,
           cursor_y: event.payload.y,
+          corrections: loadCorrections(),
         });
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000);
@@ -399,6 +471,8 @@ function App() {
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
           setResult(data);
           setStatus("success");
+          setHistory(addToHistory(data));
+          setCorrecting(false);
           if (loadSoundOn()) playDing(data.item_name != null);
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -473,6 +547,57 @@ function App() {
   const updateRegion = <K extends keyof Region>(key: K, value: Region[K]) =>
     setRegion((r) => ({ ...r, [key]: value }));
 
+  // Direct-name lookup (skips capture+OCR). Used by recent-history click and
+  // by "직접 입력" correction submit.
+  const lookupByName = async (name: string, rememberAsCorrection?: string) => {
+    const r = loadRegion();
+    showCard();
+    setStatus("loading");
+    setError("");
+    if (rememberAsCorrection) saveCorrection(rememberAsCorrection, name);
+    const body = JSON.stringify({
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      lang: r.lang,
+      game_mode: r.gameMode,
+      override_text: name,
+      corrections: loadCorrections(),
+    });
+    try {
+      const res = await fetch(`${PYTHON_API}/lookup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: LookupResult = await res.json();
+      setResult(data);
+      setStatus("success");
+      setHistory(addToHistory(data));
+      setCorrecting(false);
+      if (loadSoundOn()) playDing(data.item_name != null);
+    } catch (e) {
+      const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+      setError(msg);
+      setStatus("error");
+      if (loadSoundOn()) playDing(false);
+    } finally {
+      scheduleHide();
+    }
+  };
+
+  const submitCorrection = () => {
+    const trimmed = correctionInput.trim();
+    if (!trimmed || !result) return;
+    const rawKey = result.raw_text || result.item_name || "";
+    if (!rawKey) return;
+    setCorrectionInput("");
+    setCorrecting(false);
+    lookupByName(trimmed, rawKey);
+  };
+
   return (
     <div className="overlay">
       <div
@@ -493,6 +618,13 @@ function App() {
             </span>
             <button
               className="settings-btn"
+              onClick={() => setHistoryVisible((v) => !v)}
+              title={t.history}
+            >
+              🕒
+            </button>
+            <button
+              className="settings-btn"
               onClick={() => setShowSettings((s) => !s)}
               title={t.settings}
             >
@@ -507,6 +639,56 @@ function App() {
             </button>
           </div>
         </div>
+
+        {historyVisible && (
+          <div className="history-panel">
+            <div className="history-header">
+              <span>{t.history} ({history.length})</span>
+              {history.length > 0 && (
+                <button
+                  className="reset-btn"
+                  onClick={() => {
+                    clearHistory();
+                    setHistory([]);
+                  }}
+                  title={t.clearHistory}
+                >
+                  {t.clear}
+                </button>
+              )}
+            </div>
+            {history.length === 0 ? (
+              <div className="history-empty">{t.historyEmpty}</div>
+            ) : (
+              <div className="history-list">
+                {history.map((entry) => (
+                  <button
+                    key={`${entry.ts}-${entry.result.item_name}`}
+                    className="history-row"
+                    onClick={() => {
+                      if (entry.result.item_name) {
+                        lookupByName(entry.result.item_name);
+                      }
+                      setHistoryVisible(false);
+                    }}
+                    title={entry.result.item_name ?? entry.raw_text}
+                  >
+                    <span className="history-name">
+                      {entry.result.short_name ??
+                        entry.result.item_name ??
+                        entry.raw_text}
+                    </span>
+                    <span className="history-price">
+                      {fmt(
+                        entry.result.flea_price ?? entry.result.trader_price
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {showSettings && (
           <div className="settings">
@@ -800,6 +982,59 @@ function App() {
             )}
             {!result.item_name && result.raw_text && (
               <div className="raw-text">{t.ocr}: {result.raw_text}</div>
+            )}
+            {/* "직접 입력" correction UI: always available, more prominent on
+                no-match / auto-corrected cases. */}
+            {!correcting && (
+              <button
+                className="correction-btn"
+                onClick={() => {
+                  setCorrecting(true);
+                  setCorrectionInput(result.item_name ?? result.raw_text ?? "");
+                }}
+                title={t.correctionHint}
+              >
+                ✏️ {t.correctionPrompt}
+              </button>
+            )}
+            {correcting && (
+              <div className="correction-input-row">
+                <input
+                  type="text"
+                  className="correction-input"
+                  autoFocus
+                  value={correctionInput}
+                  onChange={(e) => setCorrectionInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") submitCorrection();
+                    else if (e.key === "Escape") {
+                      setCorrecting(false);
+                      setCorrectionInput("");
+                    }
+                  }}
+                  placeholder={t.correctionPlaceholder}
+                />
+                <button
+                  className="reset-btn"
+                  onClick={submitCorrection}
+                  disabled={!correctionInput.trim()}
+                >
+                  {t.correctionSubmit}
+                </button>
+                {result.raw_text && loadCorrections()[result.raw_text.toLowerCase()] && (
+                  <button
+                    className="reset-btn"
+                    onClick={() => {
+                      removeCorrection(result.raw_text);
+                      setCorrecting(false);
+                      setCorrectionInput("");
+                    }}
+                    title={t.correctionForget}
+                  >
+                    🗑
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}

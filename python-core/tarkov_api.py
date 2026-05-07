@@ -94,18 +94,38 @@ def _empty_result(matched_from: str | None = None) -> dict:
     }
 
 
-def get_item_price(item_name: str, lang: str = "ko", game_mode: str = "regular") -> dict:
+def get_item_price(
+    item_name: str,
+    lang: str = "ko",
+    game_mode: str = "regular",
+    corrections: dict[str, str] | None = None,
+) -> dict:
     if not item_name:
         return _empty_result()
 
-    items = _query_by_name(item_name, lang, game_mode)
     matched_from: str | None = None
+
+    # User-trained OCR correction takes priority over fuzzy matching. The
+    # frontend ships the dict each call; key is the lowercased OCR text.
+    if corrections:
+        key = item_name.strip().lower()
+        if key in corrections:
+            corrected = corrections[key]
+            if corrected and corrected != item_name:
+                print(
+                    f"[tarkov_api] user correction: {item_name!r} -> {corrected!r}"
+                )
+                matched_from = item_name
+                item_name = corrected
+
+    items = _query_by_name(item_name, lang, game_mode)
 
     if not items:
         closest = _find_closest_name(item_name, lang)
         if closest and closest != item_name:
             print(f"[tarkov_api] fuzzy match: {item_name!r} -> {closest!r}")
-            matched_from = item_name
+            if matched_from is None:
+                matched_from = item_name
             items = _query_by_name(closest, lang, game_mode)
 
     if not items:

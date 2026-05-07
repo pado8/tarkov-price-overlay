@@ -214,6 +214,103 @@ html, body, #root {
   border-left: 1px solid rgba(200, 170, 100, 0.15);
 }
 
+/* History panel */
+.history-panel {
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid rgba(200, 170, 100, 0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 6px 0;
+  font-size: 11px;
+}
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #999;
+  margin-bottom: 4px;
+}
+.history-empty {
+  color: #666;
+  font-style: italic;
+  font-size: 10px;
+  padding: 4px 0;
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #ddd;
+  text-align: left;
+  padding: 3px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 2px;
+}
+.history-row:hover {
+  background: rgba(200, 170, 100, 0.1);
+  border-color: rgba(200, 170, 100, 0.3);
+}
+.history-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 6px;
+}
+.history-price {
+  color: #4caf50;
+  font-family: "Consolas", monospace;
+  font-weight: 600;
+}
+
+/* Correction (직접 입력) */
+.correction-btn {
+  margin-top: 6px;
+  background: transparent;
+  border: 1px dashed rgba(200, 170, 100, 0.3);
+  color: #999;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.correction-btn:hover {
+  color: #c8aa64;
+  border-color: rgba(200, 170, 100, 0.5);
+  background: rgba(200, 170, 100, 0.08);
+}
+.correction-input-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.correction-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(200, 170, 100, 0.4);
+  color: #fff;
+  padding: 3px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  border-radius: 2px;
+}
+.correction-input:focus {
+  outline: none;
+  border-color: rgba(200, 170, 100, 0.7);
+}
+
 .settings-btn,
 .reset-btn {
   background: transparent;
