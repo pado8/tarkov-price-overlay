@@ -24,12 +24,18 @@ html, body, #root {
   user-select: none;
 }
 
+/* ── Font size tiers (derived from --card-fs set via inline style) ── */
 .card {
+  --card-fs: 13px;
+  --card-fs-sm:  calc(var(--card-fs) * 0.85);  /* ≈11px at default */
+  --card-fs-xs:  calc(var(--card-fs) * 0.77);  /* ≈10px at default */
+  --card-fs-xxs: calc(var(--card-fs) * 0.69);  /* ≈9px  at default */
+  font-size: var(--card-fs);
   background: rgba(20, 20, 20, 0.85);
   border: 1px solid rgba(200, 170, 100, 0.6);
   border-radius: 6px;
   padding: 10px 14px;
-  width: 280px;
+  /* width set via inline style */
   box-sizing: border-box;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
@@ -59,7 +65,7 @@ html, body, #root {
 .title {
   font-weight: 600;
   color: #c8aa64;
-  font-size: 13px;
+  font-size: var(--card-fs);
 }
 
 .hotkey {
@@ -69,13 +75,13 @@ html, body, #root {
   background: rgba(200, 170, 100, 0.2);
   padding: 1px 6px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   line-height: 1;
   color: #c8aa64;
 }
 
 .hotkey-icon {
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -106,13 +112,13 @@ html, body, #root {
 
 .hint {
   color: #999;
-  font-size: 12px;
+  font-size: var(--card-fs-sm);
   font-style: italic;
 }
 
 .error {
   color: #ff6b6b;
-  font-size: 12px;
+  font-size: var(--card-fs-sm);
 }
 
 .item-name {
@@ -122,6 +128,7 @@ html, body, #root {
   word-break: break-word;
   overflow-wrap: break-word;
   line-height: 1.3;
+  font-size: var(--card-fs);
 }
 
 .prices {
@@ -133,7 +140,7 @@ html, body, #root {
 .price {
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: var(--card-fs);
 }
 
 .label {
@@ -147,7 +154,7 @@ html, body, #root {
 }
 
 .sub-price {
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   opacity: 0.75;
   margin-left: 8px;
 }
@@ -157,7 +164,7 @@ html, body, #root {
 }
 
 .trend {
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   font-weight: 600;
   font-family: "Consolas", monospace;
   margin-left: 4px;
@@ -165,7 +172,7 @@ html, body, #root {
 
 .vendor-name {
   color: #666;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   font-weight: 400;
   margin-left: 4px;
 }
@@ -174,11 +181,11 @@ html, body, #root {
   margin-top: 6px;
   padding-top: 5px;
   border-top: 1px dashed rgba(200, 170, 100, 0.2);
-  font-size: 11px;
-  color: #aaa;
+  font-size: var(--card-fs);
+  color: #ccc;
 }
 .slot-price strong {
-  color: #c8aa64;
+  color: #f0c040;
   font-family: "Consolas", monospace;
 }
 .weight-info {
@@ -186,11 +193,11 @@ html, body, #root {
 }
 .weight-per {
   color: #888;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
 }
 
 .all-traders {
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   margin-top: 2px;
 }
 .all-traders > summary {
@@ -202,7 +209,7 @@ html, body, #root {
 }
 .all-traders > summary::before {
   content: "▸ ";
-  font-size: 9px;
+  font-size: var(--card-fs-xs);
   color: #c8aa64;
 }
 .all-traders[open] > summary::before {
@@ -226,7 +233,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   padding: 3px 0;
   border-top: 1px dotted rgba(200, 170, 100, 0.1);
 }
@@ -240,7 +247,7 @@ html, body, #root {
 .barter-level {
   color: #888;
   font-weight: 400;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
 }
 .barter-items {
@@ -254,7 +261,7 @@ html, body, #root {
 .barter-count {
   color: #4caf50;
   font-family: "Consolas", monospace;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   margin-left: 2px;
 }
 
@@ -287,7 +294,7 @@ html, body, #root {
   background: rgba(220, 170, 60, 0.10);
   border: 1px solid rgba(220, 170, 60, 0.35);
   border-radius: 3px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   color: #f0d28e;
 }
 .quest-list {
@@ -299,7 +306,7 @@ html, body, #root {
 .quest-row {
   display: flex;
   gap: 6px;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   padding-left: 6px;
   align-items: center;
 }
@@ -328,7 +335,7 @@ html, body, #root {
 }
 .quest-fir {
   color: #ff9966;
-  font-size: 9px;
+  font-size: var(--card-fs-xxs);
   background: rgba(255, 100, 60, 0.15);
   border: 1px solid rgba(255, 100, 60, 0.4);
   border-radius: 2px;
@@ -338,7 +345,7 @@ html, body, #root {
 }
 .quest-anyitem {
   color: #888;
-  font-size: 9px;
+  font-size: var(--card-fs-xxs);
   background: rgba(120, 120, 120, 0.15);
   border: 1px solid rgba(120, 120, 120, 0.3);
   border-radius: 2px;
@@ -348,12 +355,12 @@ html, body, #root {
 .quest-total {
   color: #f0d28e;
   font-weight: 400;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
 }
 .quest-total strong {
   color: #4caf50;
   font-family: "Consolas", monospace;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
 }
 
 /* History panel */
@@ -363,7 +370,7 @@ html, body, #root {
   border-radius: 4px;
   padding: 6px 8px;
   margin: 6px 0;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
 }
 .history-header {
   display: flex;
@@ -375,7 +382,7 @@ html, body, #root {
 .history-empty {
   color: #666;
   font-style: italic;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   padding: 4px 0;
 }
 .history-list {
@@ -393,7 +400,7 @@ html, body, #root {
   color: #ddd;
   text-align: left;
   padding: 3px 6px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   cursor: pointer;
   font-family: inherit;
   border-radius: 2px;
@@ -423,7 +430,7 @@ html, body, #root {
   color: #999;
   border-radius: 3px;
   padding: 3px 8px;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   cursor: pointer;
   width: 100%;
   text-align: center;
@@ -444,7 +451,7 @@ html, body, #root {
   border: 1px solid rgba(200, 170, 100, 0.4);
   color: #fff;
   padding: 3px 6px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   font-family: inherit;
   border-radius: 2px;
 }
@@ -463,7 +470,7 @@ html, body, #root {
   border-radius: 4px;
   padding: 5px 8px;
   margin: 6px 0;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   color: #f0e0b0;
 }
 .update-text {
@@ -478,7 +485,7 @@ html, body, #root {
   background: rgba(200, 170, 100, 0.4);
 }
 .settings-hint-inline {
-  font-size: 9px;
+  font-size: var(--card-fs-xxs);
   color: #666;
   font-family: "Consolas", monospace;
 }
@@ -486,7 +493,7 @@ html, body, #root {
   margin-top: 6px;
   padding-top: 4px;
   border-top: 1px solid rgba(200, 170, 100, 0.15);
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   color: #c8aa64;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -500,7 +507,7 @@ html, body, #root {
   color: #c8aa64;
   border-radius: 3px;
   padding: 1px 6px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   cursor: pointer;
   margin-left: 4px;
 }
@@ -531,20 +538,21 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
 }
 .settings-row label {
   color: #999;
   font-family: "Consolas", monospace;
 }
-.settings-row input,
+.settings-row input[type="number"],
+.settings-row input[type="checkbox"],
 .settings-row select {
   width: 80px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(200, 170, 100, 0.3);
   color: #fff;
   padding: 1px 4px;
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   font-family: "Consolas", monospace;
   border-radius: 2px;
 }
@@ -554,7 +562,7 @@ html, body, #root {
   margin-left: 0;
 }
 .settings-hint {
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   color: #666;
   margin-top: 2px;
   font-style: italic;
@@ -562,9 +570,9 @@ html, body, #root {
 .settings-feedback-row {
   justify-content: center;
   gap: 6px;
-  margin-top: 4px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(200, 170, 100, 0.15);
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(200, 170, 100, 0.15);
 }
 .feedback-btn,
 .donate-btn {
@@ -580,6 +588,25 @@ html, body, #root {
   color: #ffd5a0;
 }
 
+/* Font size control in settings */
+.font-size-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.font-size-slider {
+  width: 70px;
+  accent-color: #c8aa64;
+  cursor: pointer;
+}
+.font-size-value {
+  font-family: "Consolas", monospace;
+  font-size: var(--card-fs-xs);
+  color: #c8aa64;
+  min-width: 24px;
+  text-align: right;
+}
+
 .donate-panel {
   display: flex;
   flex-direction: column;
@@ -592,7 +619,7 @@ html, body, #root {
   border-radius: 4px;
 }
 .donate-hint {
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   color: #ffc080;
   text-align: center;
 }
@@ -604,7 +631,7 @@ html, body, #root {
 }
 .donate-url {
   font-family: "Consolas", monospace;
-  font-size: 10px;
+  font-size: var(--card-fs-xs);
   color: #aaa;
   word-break: break-all;
   text-align: center;
@@ -620,7 +647,7 @@ html, body, #root {
   padding: 2px 10px;
 }
 .raw-text {
-  font-size: 11px;
+  font-size: var(--card-fs-sm);
   color: #888;
   margin-top: 4px;
   font-family: "Consolas", monospace;

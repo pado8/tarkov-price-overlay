@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, LogicalSize } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
@@ -157,6 +157,7 @@ type Region = {
   showQuests: boolean;
   // Whether the optional <details> panels start expanded.
   detailsOpenDefault: boolean;
+  fontSize: number;
 };
 
 const DEFAULT_REGION: Region = {
@@ -167,15 +168,16 @@ const DEFAULT_REGION: Region = {
   lang: "ko",
   gameMode: "regular",
   hideDelaySec: 5,
-  show24hRange: false,
-  showLastTrade: false,
-  showWeight: false,
-  showBuyFor: false,
-  showBartersFor: false,
-  showBartersUsing: false,
-  showCraftsFor: false,
-  showQuests: false,
+  show24hRange: true,
+  showLastTrade: true,
+  showWeight: true,
+  showBuyFor: true,
+  showBartersFor: true,
+  showBartersUsing: true,
+  showCraftsFor: true,
+  showQuests: true,
   detailsOpenDefault: true,
+  fontSize: 13,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -190,6 +192,16 @@ const ADVANCED_KEY = "tarkov.advancedMode";
 function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
 }
+const WIN_BASE_W = 800;
+const WIN_BASE_H = 600;
+const WIN_DONATE_EXTRA = 300;
+const FONT_DEFAULT = 13;
+
+const computeWinH = (fontSize: number, donateOpen: boolean) => {
+  const base = Math.round(WIN_BASE_H * (fontSize / FONT_DEFAULT));
+  return donateOpen ? base + WIN_DONATE_EXTRA : base;
+};
+
 const DEFAULT_HOTKEY = "F2";
 const DEFAULT_TOGGLE_HOTKEY = "Shift+F2";
 const MAX_HISTORY = 15;
@@ -351,6 +363,7 @@ function App() {
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
   const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
   const [showDonate, setShowDonate] = useState(false);
+  const [committedFontSize, setCommittedFontSize] = useState<number>(region.fontSize);
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
   const hideDelayRef = useRef(region.hideDelaySec);
@@ -568,12 +581,24 @@ function App() {
     };
   }, []);
 
+  // Resize window when committed font size or donate panel changes.
+  // committedFontSize updates only on slider mouseUp/keyUp — avoids jitter while dragging.
+  useEffect(() => {
+    getCurrentWindow()
+      .setSize(new LogicalSize(WIN_BASE_W, computeWinH(committedFontSize, showDonate)))
+      .catch(() => {});
+  }, [committedFontSize, showDonate]);
+
   // Tray icon events: left-click or "Show" menu item brings the card up.
   // "Settings" menu item brings the card up AND opens the settings panel.
   useEffect(() => {
     const unlistenShow = listen("tray-show", () => {
       log("React: tray-show event");
       showCard();
+      setShowDonate(false);
+      getCurrentWindow()
+        .setSize(new LogicalSize(WIN_BASE_W, computeWinH(loadRegion().fontSize, false)))
+        .catch(() => {});
       scheduleHide();
     });
     const unlistenSettings = listen("tray-settings", () => {
@@ -597,6 +622,7 @@ function App() {
         const r = loadRegion();
         log(`React: got hotkey-lookup payload=${JSON.stringify(event.payload)} region=${JSON.stringify(r)}`);
         showCard(); // bring card up + cancel any in-flight hide
+        setShowSettings(false);
         setStatus("loading");
         setError("");
         const body = JSON.stringify({
@@ -766,6 +792,10 @@ function App() {
       <div
         ref={cardRef}
         className={`card${cardVisible ? "" : " card-hidden"}`}
+        style={{
+          "--card-fs": `${region.fontSize}px`,
+          width: `${Math.round(280 * region.fontSize / FONT_DEFAULT)}px`,
+        } as React.CSSProperties}
         onMouseEnter={() => cancelHideTimer()}
         onMouseLeave={() => {
           if (!recordingHotkey) scheduleHide();
@@ -788,7 +818,10 @@ function App() {
             </button>
             <button
               className="settings-btn"
-              onClick={() => setShowSettings((s) => !s)}
+              onClick={() => setShowSettings((s) => {
+                if (s) setShowDonate(false);
+                return !s;
+              })}
               title={t.settings}
             >
               ⚙
@@ -876,6 +909,65 @@ function App() {
 
         {showSettings && (
           <div className="settings">
+            <div className="settings-row settings-feedback-row">
+              <button
+                className="reset-btn feedback-btn"
+                onClick={() => sendFeedback(region.lang)}
+                title={`mailto:${FEEDBACK_EMAIL}`}
+              >
+                ✉ {t.feedback}
+              </button>
+              <button
+                className="reset-btn donate-btn"
+                onClick={() => {
+                  setShowDonate((s) => !s);
+                  setDonateCopied(false);
+                }}
+                title={t.donateTitle}
+              >
+                💝 {t.donate}
+              </button>
+            </div>
+            {showDonate && (
+              <div className="donate-panel">
+                <div className="donate-hint">{t.donateScanHint}</div>
+                <div className="donate-qr">
+                  <QRCodeSVG
+                    value={KAKAOPAY_URL}
+                    size={140}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                    level="M"
+                    includeMargin
+                  />
+                </div>
+                <div className="donate-url">{KAKAOPAY_URL}</div>
+                <div className="donate-actions">
+                  <button
+                    className="reset-btn"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(KAKAOPAY_URL)
+                        .then(() => {
+                          setDonateCopied(true);
+                          window.setTimeout(() => setDonateCopied(false), 1500);
+                        })
+                        .catch((e) =>
+                          log(`donate: clipboard failed — ${String(e)}`)
+                        );
+                    }}
+                  >
+                    {donateCopied ? t.donateCopied : t.donateCopyUrl}
+                  </button>
+                  <button
+                    className="reset-btn"
+                    onClick={() => setShowDonate(false)}
+                  >
+                    {t.donateClose}
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="settings-row">
               <label>{t.language}</label>
               <select
@@ -984,6 +1076,29 @@ function App() {
             <div className="settings-section-header">
               {t.displaySection}
             </div>
+            <div className="settings-row">
+              <label>{t.fontSize}</label>
+              <div className="font-size-control">
+                <input
+                  type="range"
+                  min="11"
+                  max="16"
+                  step="1"
+                  value={region.fontSize}
+                  onChange={(e) =>
+                    updateRegion("fontSize", parseInt(e.target.value))
+                  }
+                  onMouseUp={(e) =>
+                    setCommittedFontSize(parseInt((e.target as HTMLInputElement).value))
+                  }
+                  onKeyUp={(e) =>
+                    setCommittedFontSize(parseInt((e.target as HTMLInputElement).value))
+                  }
+                  className="font-size-slider"
+                />
+                <span className="font-size-value">{region.fontSize}px</span>
+              </div>
+            </div>
             {(
               [
                 ["show24hRange", "displayRange24"],
@@ -1083,70 +1198,11 @@ function App() {
                 </button>
               </>
             )}
-            <div className="settings-row settings-feedback-row">
-              <button
-                className="reset-btn feedback-btn"
-                onClick={() => sendFeedback(region.lang)}
-                title={`mailto:${FEEDBACK_EMAIL}`}
-              >
-                ✉ {t.feedback}
-              </button>
-              <button
-                className="reset-btn donate-btn"
-                onClick={() => {
-                  setShowDonate((s) => !s);
-                  setDonateCopied(false);
-                }}
-                title={t.donateTitle}
-              >
-                💝 {t.donate}
-              </button>
-            </div>
-            {showDonate && (
-              <div className="donate-panel">
-                <div className="donate-hint">{t.donateScanHint}</div>
-                <div className="donate-qr">
-                  <QRCodeSVG
-                    value={KAKAOPAY_URL}
-                    size={140}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                    level="M"
-                    includeMargin
-                  />
-                </div>
-                <div className="donate-url">{KAKAOPAY_URL}</div>
-                <div className="donate-actions">
-                  <button
-                    className="reset-btn"
-                    onClick={() => {
-                      navigator.clipboard
-                        .writeText(KAKAOPAY_URL)
-                        .then(() => {
-                          setDonateCopied(true);
-                          window.setTimeout(() => setDonateCopied(false), 1500);
-                        })
-                        .catch((e) =>
-                          log(`donate: clipboard failed — ${String(e)}`)
-                        );
-                    }}
-                  >
-                    {donateCopied ? t.donateCopied : t.donateCopyUrl}
-                  </button>
-                  <button
-                    className="reset-btn"
-                    onClick={() => setShowDonate(false)}
-                  >
-                    {t.donateClose}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {status === "idle" && <div className="hint">{t.hintIdle}</div>}
-        {status === "loading" && (
+        {!showSettings && status === "idle" && <div className="hint">{t.hintIdle}</div>}
+        {!showSettings && status === "loading" && (
           <div className="hint">
             {t.hintLoading}
             <div style={{ fontSize: 10, marginTop: 4, color: "#666" }}>
@@ -1154,8 +1210,8 @@ function App() {
             </div>
           </div>
         )}
-        {status === "error" && <div className="error">⚠ {error}</div>}
-        {status === "success" && result && (
+        {!showSettings && status === "error" && <div className="error">⚠ {error}</div>}
+        {!showSettings && status === "success" && result && (
           <div className="result">
             <div className="item-row">
               {result.icon && (
