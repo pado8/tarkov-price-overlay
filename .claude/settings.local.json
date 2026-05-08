@@ -23,7 +23,8 @@
       "Bash(.venv/Scripts/python.exe main.py)",
       "Bash(export PATH=\"$PATH:/c/Users/AQUAPADO/.cargo/bin\")",
       "Bash(npm run *)",
-      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match 'tarkov|uvicorn|python' } | Select-Object Id, ProcessName, StartTime | Format-Table -AutoSize)"
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match 'tarkov|uvicorn|python' } | Select-Object Id, ProcessName, StartTime | Format-Table -AutoSize)",
+      "Bash(\"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" release list --repo pado8/tarkov-price-overlay-releases --limit 3)"
     ]
   }
 }
