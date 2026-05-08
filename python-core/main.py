@@ -87,6 +87,8 @@ class TaskRef(BaseModel):
     name: str
     trader: str = ""
     min_level: int = 0
+    count: int | None = None  # how many of THIS item this task needs
+    fir: bool = False  # whether the item must be Found in Raid
 
 
 class HideoutCraft(BaseModel):
@@ -199,6 +201,8 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
                 name=t["name"],
                 trader=t.get("trader", ""),
                 min_level=t.get("min_level", 0),
+                count=t.get("count"),
+                fir=t.get("fir", False),
             )
             for t in price.get("used_in_tasks", [])
         ],

@@ -88,6 +88,8 @@ type TaskRef = {
   name: string;
   trader: string;
   min_level: number;
+  count: number | null;
+  fir: boolean;
 };
 
 type HideoutCraft = {
@@ -1292,19 +1294,55 @@ function App() {
                     </details>
                   )}
                   {result.used_in_tasks &&
-                    result.used_in_tasks.length > 0 && (
-                      <div className="quest-warning">
-                        🎯 {t.usedInTasks} ({result.used_in_tasks.length})
-                        <div className="quest-list">
-                          {result.used_in_tasks.map((q, idx) => (
-                            <div key={q.id ?? idx} className="quest-row">
-                              <span className="quest-trader">{q.trader}</span>
-                              <span className="quest-name">{q.name}</span>
-                            </div>
-                          ))}
+                    result.used_in_tasks.length > 0 && (() => {
+                      const totalCount = result.used_in_tasks.reduce(
+                        (acc, q) => acc + (q.count ?? 0),
+                        0
+                      );
+                      return (
+                        <div className="quest-warning">
+                          🎯 {t.usedInTasks} ({result.used_in_tasks.length})
+                          {totalCount > 0 && (
+                            <span className="quest-total">
+                              {" "}
+                              · {t.questTotal} <strong>{totalCount}</strong>
+                            </span>
+                          )}
+                          <div className="quest-list">
+                            {result.used_in_tasks.map((q, idx) => (
+                              <div key={q.id ?? idx} className="quest-row">
+                                <span className="quest-trader">{q.trader}</span>
+                                <span className="quest-name">{q.name}</span>
+                                <span className="quest-count">
+                                  {q.count != null && (
+                                    <span className="quest-count-num">
+                                      ×{q.count}
+                                    </span>
+                                  )}
+                                  {q.fir ? (
+                                    <span
+                                      className="quest-fir"
+                                      title={t.questFirHint}
+                                    >
+                                      {t.questFirBadge}
+                                    </span>
+                                  ) : (
+                                    q.count != null && (
+                                      <span
+                                        className="quest-anyitem"
+                                        title={t.questAnyHint}
+                                      >
+                                        {t.questAnyBadge}
+                                      </span>
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   {(slot || (result.weight && result.weight > 0)) && (
                     <div className="slot-price">
                       {slot && (

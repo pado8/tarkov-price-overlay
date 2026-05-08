@@ -301,6 +301,7 @@ html, body, #root {
   gap: 6px;
   font-size: 10px;
   padding-left: 6px;
+  align-items: center;
 }
 .quest-trader {
   color: #c8aa64;
@@ -309,6 +310,50 @@ html, body, #root {
 }
 .quest-name {
   color: #ddd;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quest-count {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.quest-count-num {
+  color: #4caf50;
+  font-family: "Consolas", monospace;
+  font-weight: 600;
+}
+.quest-fir {
+  color: #ff9966;
+  font-size: 9px;
+  background: rgba(255, 100, 60, 0.15);
+  border: 1px solid rgba(255, 100, 60, 0.4);
+  border-radius: 2px;
+  padding: 0 4px;
+  font-weight: 600;
+  cursor: help;
+}
+.quest-anyitem {
+  color: #888;
+  font-size: 9px;
+  background: rgba(120, 120, 120, 0.15);
+  border: 1px solid rgba(120, 120, 120, 0.3);
+  border-radius: 2px;
+  padding: 0 4px;
+  cursor: help;
+}
+.quest-total {
+  color: #f0d28e;
+  font-weight: 400;
+  font-size: 10px;
+}
+.quest-total strong {
+  color: #4caf50;
+  font-family: "Consolas", monospace;
+  font-size: 11px;
 }
 
 /* History panel */

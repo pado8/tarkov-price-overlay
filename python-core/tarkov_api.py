@@ -61,6 +61,14 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
       name
       minPlayerLevel
       trader { name }
+      objectives {
+        ... on TaskObjectiveItem {
+          type
+          count
+          foundInRaid
+          items { id }
+        }
+      }
     }
     craftsFor {
       station { name }
@@ -86,6 +94,7 @@ query AllNames($lang: LanguageCode) {
 _QUERY_ALL_PRICED = """
 query AllItems($lang: LanguageCode, $gameMode: GameMode) {
   items(lang: $lang, gameMode: $gameMode) {
+    id
     name
     shortName
     width
@@ -130,6 +139,14 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       name
       minPlayerLevel
       trader { name }
+      objectives {
+        ... on TaskObjectiveItem {
+          type
+          count
+          foundInRaid
+          items { id }
+        }
+      }
     }
     craftsFor {
       station { name }
@@ -189,11 +206,39 @@ def _build_cache_entry(item: dict) -> dict:
             }
         )
 
-    # Quest references — minimal info, just enough for "do not sell" warning.
+    # Quest references — for each task, find which objectives reference this
+    # specific item (by id) and aggregate count + FiR requirement.
+    #   - giveItem / findItem: paired objectives (find then hand in) — use max
+    #     so we don't double-count.
+    #   - plantItem: each is a separate drop point — sum.
+    #   - Any matching objective with foundInRaid=True flips the task's FiR.
+    item_id = item.get("id")
     used_in_tasks = []
     for t in item.get("usedInTasks", []) or []:
         if not t.get("name"):
             continue
+        max_carry = 0  # findItem / giveItem (paired)
+        sum_plant = 0  # plantItem (separate)
+        fir = False
+        for obj in t.get("objectives", []) or []:
+            obj_items = obj.get("items") or []
+            if not any(oi.get("id") == item_id for oi in obj_items):
+                continue
+            cnt = obj.get("count") or 0
+            otype = obj.get("type") or ""
+            if obj.get("foundInRaid"):
+                fir = True
+            if otype == "plantItem":
+                sum_plant += cnt
+            else:  # giveItem, findItem, fallback
+                if cnt > max_carry:
+                    max_carry = cnt
+        total = max_carry + sum_plant
+        if total <= 0:
+            # Item appeared in usedInTasks but no item-objective matched it
+            # (e.g. it's referenced indirectly). Still surface the task so
+            # the user sees the "used in quest" hint, just without a count.
+            total = None
         trader = t.get("trader") or {}
         used_in_tasks.append(
             {
@@ -201,6 +246,8 @@ def _build_cache_entry(item: dict) -> dict:
                 "name": t["name"],
                 "trader": trader.get("name") or "",
                 "min_level": t.get("minPlayerLevel") or 0,
+                "count": total,
+                "fir": fir,
             }
         )
 
