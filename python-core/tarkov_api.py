@@ -172,12 +172,19 @@ _refresher_started = False
 _refresher_lock = threading.Lock()
 
 
+_FLEA_MARKET_NAMES = {"Flea Market", "플리마켓", "Барахолка", "跳蚤市场", "蚤の市"}
+
+
+def _is_flea(vendor_name: str) -> bool:
+    return vendor_name in _FLEA_MARKET_NAMES
+
+
 def _build_cache_entry(item: dict) -> dict:
     sell_for_all = item.get("sellFor", []) or []
     trader_entries = [
         {"name": s["vendor"]["name"], "price": s["priceRUB"]}
         for s in sell_for_all
-        if s["vendor"]["name"] != "Flea Market" and s.get("priceRUB") is not None
+        if not _is_flea(s["vendor"]["name"]) and s.get("priceRUB") is not None
     ]
     trader_entries.sort(key=lambda e: e["price"], reverse=True)
 
@@ -284,7 +291,7 @@ def _build_cache_entry(item: dict) -> dict:
     for b in item.get("buyFor", []) or []:
         vendor = b.get("vendor") or {}
         vname = vendor.get("name") or ""
-        if vname == "Flea Market" or b.get("priceRUB") is None:
+        if _is_flea(vname) or b.get("priceRUB") is None:
             continue
         buy_for.append(
             {

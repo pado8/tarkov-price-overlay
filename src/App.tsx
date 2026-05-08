@@ -145,6 +145,18 @@ type Region = {
   lang: Lang;
   gameMode: GameMode;
   hideDelaySec: number;
+  // Display prefs — what to show in the result card. Default minimal:
+  // only flea / trader / slot price are shown.
+  show24hRange: boolean;
+  showLastTrade: boolean;
+  showWeight: boolean;
+  showBuyFor: boolean;
+  showBartersFor: boolean;
+  showBartersUsing: boolean;
+  showCraftsFor: boolean;
+  showQuests: boolean;
+  // Whether the optional <details> panels start expanded.
+  detailsOpenDefault: boolean;
 };
 
 const DEFAULT_REGION: Region = {
@@ -155,6 +167,15 @@ const DEFAULT_REGION: Region = {
   lang: "ko",
   gameMode: "regular",
   hideDelaySec: 5,
+  show24hRange: false,
+  showLastTrade: false,
+  showWeight: false,
+  showBuyFor: false,
+  showBartersFor: false,
+  showBartersUsing: false,
+  showCraftsFor: false,
+  showQuests: false,
+  detailsOpenDefault: true,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -960,6 +981,40 @@ function App() {
                 }
               />
             </div>
+            <div className="settings-section-header">
+              {t.displaySection}
+            </div>
+            {(
+              [
+                ["show24hRange", "displayRange24"],
+                ["showLastTrade", "displayLastTrade"],
+                ["showWeight", "displayWeight"],
+                ["showBuyFor", "displayBuyFor"],
+                ["showBartersFor", "displayBartersFor"],
+                ["showBartersUsing", "displayBartersUsing"],
+                ["showCraftsFor", "displayCraftsFor"],
+                ["showQuests", "displayQuests"],
+              ] as const
+            ).map(([key, labelKey]) => (
+              <div key={key} className="settings-row">
+                <label>{t[labelKey]}</label>
+                <input
+                  type="checkbox"
+                  checked={region[key]}
+                  onChange={(e) => updateRegion(key, e.target.checked)}
+                />
+              </div>
+            ))}
+            <div className="settings-row">
+              <label title={t.detailsOpenHint}>{t.detailsOpenDefault}</label>
+              <input
+                type="checkbox"
+                checked={region.detailsOpenDefault}
+                onChange={(e) =>
+                  updateRegion("detailsOpenDefault", e.target.checked)
+                }
+              />
+            </div>
             <div className="settings-row">
               <label>{t.captureRegion}</label>
               <button
@@ -1152,16 +1207,18 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.flea_price)}</span>
                   </div>
-                  {(result.flea_low_24h != null ||
-                    result.flea_high_24h != null) && (
-                    <div className="price sub-price">
-                      <span className="label">{t.fleaRange24}</span>
-                      <span className="value sub-value">
-                        {fmt(result.flea_low_24h)} ~ {fmt(result.flea_high_24h)}
-                      </span>
-                    </div>
-                  )}
-                  {result.flea_last_low != null && (
+                  {region.show24hRange &&
+                    (result.flea_low_24h != null ||
+                      result.flea_high_24h != null) && (
+                      <div className="price sub-price">
+                        <span className="label">{t.fleaRange24}</span>
+                        <span className="value sub-value">
+                          {fmt(result.flea_low_24h)} ~{" "}
+                          {fmt(result.flea_high_24h)}
+                        </span>
+                      </div>
+                    )}
+                  {region.showLastTrade && result.flea_last_low != null && (
                     <div className="price sub-price">
                       <span className="label">
                         {t.fleaLastLow}
@@ -1186,8 +1243,10 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.trader_price)}</span>
                   </div>
-                  {result.buy_for && result.buy_for.length > 0 && (
-                    <details className="all-traders" open>
+                  {region.showBuyFor &&
+                    result.buy_for &&
+                    result.buy_for.length > 0 && (
+                    <details className="all-traders" open={region.detailsOpenDefault}>
                       <summary>
                         🏪 {t.buyFor} ({result.buy_for.length})
                       </summary>
@@ -1207,8 +1266,10 @@ function App() {
                       </div>
                     </details>
                   )}
-                  {result.barters_for && result.barters_for.length > 0 && (
-                    <details className="all-traders barters" open>
+                  {region.showBartersFor &&
+                    result.barters_for &&
+                    result.barters_for.length > 0 && (
+                    <details className="all-traders barters" open={region.detailsOpenDefault}>
                       <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
                       <div className="trader-list">
                         {result.barters_for.map((b, idx) => (
@@ -1230,8 +1291,10 @@ function App() {
                       </div>
                     </details>
                   )}
-                  {result.barters_using && result.barters_using.length > 0 && (
-                    <details className="all-traders barters" open>
+                  {region.showBartersUsing &&
+                    result.barters_using &&
+                    result.barters_using.length > 0 && (
+                    <details className="all-traders barters" open={region.detailsOpenDefault}>
                       <summary>
                         🔁 {t.barterUsing} ({result.barters_using.length})
                       </summary>
@@ -1261,8 +1324,10 @@ function App() {
                       </div>
                     </details>
                   )}
-                  {result.crafts_for && result.crafts_for.length > 0 && (
-                    <details className="all-traders barters" open>
+                  {region.showCraftsFor &&
+                    result.crafts_for &&
+                    result.crafts_for.length > 0 && (
+                    <details className="all-traders barters" open={region.detailsOpenDefault}>
                       <summary>
                         🏭 {t.craftFor} ({result.crafts_for.length})
                       </summary>
@@ -1293,7 +1358,8 @@ function App() {
                       </div>
                     </details>
                   )}
-                  {result.used_in_tasks &&
+                  {region.showQuests &&
+                    result.used_in_tasks &&
                     result.used_in_tasks.length > 0 && (() => {
                       const totalCount = result.used_in_tasks.reduce(
                         (acc, q) => acc + (q.count ?? 0),
@@ -1343,7 +1409,7 @@ function App() {
                         </div>
                       );
                     })()}
-                  {(slot || (result.weight && result.weight > 0)) && (
+                  {(slot || (region.showWeight && result.weight && result.weight > 0)) && (
                     <div className="slot-price">
                       {slot && (
                         <span>
@@ -1351,21 +1417,23 @@ function App() {
                           <strong>{slot}</strong>
                         </span>
                       )}
-                      {result.weight != null && result.weight > 0 && (
-                        <span className="weight-info">
-                          {slot ? " · " : ""}⚖ {result.weight.toFixed(2)}kg
-                          {result.flea_price != null &&
-                            result.weight >= 0.05 && (
-                              <span className="weight-per">
-                                {" "}
-                                ({Math.round(
-                                  result.flea_price / result.weight
-                                ).toLocaleString()}{" "}
-                                {t.perKgUnit})
-                              </span>
-                            )}
-                        </span>
-                      )}
+                      {region.showWeight &&
+                        result.weight != null &&
+                        result.weight > 0 && (
+                          <span className="weight-info">
+                            {slot ? " · " : ""}⚖ {result.weight.toFixed(2)}kg
+                            {result.flea_price != null &&
+                              result.weight >= 0.05 && (
+                                <span className="weight-per">
+                                  {" "}
+                                  ({Math.round(
+                                    result.flea_price / result.weight
+                                  ).toLocaleString()}{" "}
+                                  {t.perKgUnit})
+                                </span>
+                              )}
+                          </span>
+                        )}
                     </div>
                   )}
                 </div>

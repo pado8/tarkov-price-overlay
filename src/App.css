@@ -482,6 +482,16 @@ html, body, #root {
   color: #666;
   font-family: "Consolas", monospace;
 }
+.settings-section-header {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(200, 170, 100, 0.15);
+  font-size: 10px;
+  color: #c8aa64;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
 
 .settings-btn,
 .reset-btn {
