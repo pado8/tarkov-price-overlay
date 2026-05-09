@@ -1078,26 +1078,19 @@ function App() {
             </div>
             <div className="settings-row">
               <label>{t.fontSize}</label>
-              <div className="font-size-control">
-                <input
-                  type="range"
-                  min="11"
-                  max="16"
-                  step="1"
-                  value={region.fontSize}
-                  onChange={(e) =>
-                    updateRegion("fontSize", parseInt(e.target.value))
-                  }
-                  onMouseUp={(e) =>
-                    setCommittedFontSize(parseInt((e.target as HTMLInputElement).value))
-                  }
-                  onKeyUp={(e) =>
-                    setCommittedFontSize(parseInt((e.target as HTMLInputElement).value))
-                  }
-                  className="font-size-slider"
-                />
-                <span className="font-size-value">{region.fontSize}px</span>
-              </div>
+              <select
+                value={region.fontSize}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value);
+                  updateRegion("fontSize", v);
+                  setCommittedFontSize(v);
+                }}
+                className="font-size-select"
+              >
+                {Array.from({ length: 16 }, (_, i) => i + 10).map((s) => (
+                  <option key={s} value={s}>{s}px</option>
+                ))}
+              </select>
             </div>
             {(
               [

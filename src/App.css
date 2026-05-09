@@ -589,22 +589,14 @@ html, body, #root {
 }
 
 /* Font size control in settings */
-.font-size-control {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.font-size-slider {
-  width: 70px;
-  accent-color: #c8aa64;
-  cursor: pointer;
-}
-.font-size-value {
-  font-family: "Consolas", monospace;
-  font-size: var(--card-fs-xs);
+.font-size-select {
+  background: #1a1a1a;
   color: #c8aa64;
-  min-width: 24px;
-  text-align: right;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: var(--card-fs-xs);
+  cursor: pointer;
 }
 
 .donate-panel {
