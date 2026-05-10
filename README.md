@@ -1,264 +1,314 @@
 # Tarkov Price Overlay
 
-> 타르코프 게임 화면에서 아이템 이름을 자동 인식해 **플리 마켓 시세·상인 가격·바터·제작·퀘스트 정보**를 투명 오버레이로 즉시 표시하는 무료 Windows 앱
+> **타르코프에서 마우스 올리고 F2** — 플리 시세 · 상인가 · 바터 · 제작 · 퀘스트 정보를 게임 위에 바로 띄워주는 무료 Windows 오버레이 앱
 
-**[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)**
+**[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · 한국어 / English
 
 ---
 
-## 주요 기능
+## ✨ 이런 분께
+
+- 매번 알트탭으로 타르코프 위키나 가격 사이트 켜기 귀찮은 분
+- 레이드 중 줍는 아이템이 팔만한 건지 즉석에서 판단하고 싶은 분
+- 하이드아웃 / 퀘스트에 쓰이는 아이템인지 미리 알고 챙기고 싶은 분
+- 바터·제작 재료 가치까지 한눈에 보고 싶은 분
+
+---
+
+## 🚀 기능 한눈에
 
 | 기능 | 설명 |
 |---|---|
-| **자동 OCR** | 단축키 하나로 게임 화면을 캡처해 아이템 이름을 자동 인식 |
-| **플리 마켓 시세** | 현재가 · 24시간 범위 · 직전 거래가 |
-| **상인 구매가** | 전 상인 최고가 비교 |
-| **바터 정보** | 이 아이템으로 얻는 바터 / 이 아이템을 쓰는 바터 |
+| **F2 한 번에** | 마우스 올린 위치 캡처 → OCR → 가격 정보 표시 (1초 내외) |
+| **플리 마켓** | 현재가 · 24h 범위 · 직전 거래가 · 칸당 가격 (₽/slot) |
+| **상인 정보** | 최고가 상인 · 구매처 · 필요 상인 레벨 |
+| **바터** | 이 아이템으로 얻는 바터 / 이 아이템이 재료인 바터 (양방향) |
 | **하이드아웃 제작** | 재료로 사용되는 제작 레시피 |
-| **퀘스트 정보** | 필요 퀘스트·수량·FiR(인레이드) 여부 |
+| **퀘스트** | 필요 퀘스트 · 수량 · FiR(인레이드) 여부 |
 | **PVP / PVE** | 게임 모드별 시세 분리 |
-| **한국어 / 영어** | UI 언어 전환 |
-| **투명 오버레이** | 게임 위에 항상 표시, 드래그로 위치 이동 |
+| **무게 효율** | ₽/kg 환산으로 운반 가치 비교 |
+| **한 / 영** | UI 언어 즉시 전환 |
+| **투명 오버레이** | 게임 위에 항상 표시, 자동 숨김, 위치 자유 이동 |
 
 ---
 
-## 스크린샷
+## 🛡️ 안전성 (밴 위험에 관해)
 
-> *(첫 조회 후 오버레이 카드가 화면에 표시됩니다)*
+타르코프 커뮤니티에서 가장 걱정하는 부분이라 정직하게 적습니다.
 
----
+이 프로그램은 **화면 캡처 + 글자 인식(OCR)** 만 사용합니다.
 
-## 다운로드 및 설치
+- ❌ 게임 프로세스 메모리 읽기/쓰기 **안 함**
+- ❌ DLL 인젝션 **안 함**
+- ❌ 게임 윈도우 후킹 / 키보드 저수준 후킹 **안 함**
+- ❌ 게임 파일 수정 **안 함**
+- ✅ 일반 Win32 데스크탑 캡처(BitBlt) + 화면 위에 겹치는 투명 윈도우 + `RegisterHotKey`(OS 표준 단축키)
 
-### 인스톨러 (권장)
+기술적으로는 **유튜브 녹화 프로그램이나 디스코드 화면 공유와 같은 카테고리**입니다. 메모리 핵 · ESP · 에임봇과는 완전히 다릅니다.
 
-1. [Releases 페이지](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)에서  
-   **`Tarkov.Price.Overlay_1.0.0_x64-setup.exe`** 다운로드
-2. 실행 후 설치 마법사를 따릅니다
-3. 시작 메뉴 또는 바탕화면 바로가기로 실행
-
-### 포터블 (설치 없이 바로 사용)
-
-1. 같은 페이지에서 **`Tarkov.Price.Overlay_1.0.0_portable.zip`** 다운로드
-2. 압축 해제 후 `tarkov-price-overlay.exe` 실행
-
-> **Windows SmartScreen 경고가 뜨는 경우**  
-> "추가 정보" → "실행"을 눌러주세요.  
-> 코드 서명 인증서 비용 문제로 서명이 없어 발생하는 경고이며, 악성코드가 아닙니다.
+다만 **BSG/BattlEye가 명시적으로 허용한 도구는 아닙니다.** 정책은 언제든 바뀔 수 있으므로 사용에 따른 책임은 본인에게 있습니다. 현재까지 동일한 방식의 오버레이 도구로 밴된 사례는 보고된 바 없으나, 100% 보장은 누구도 할 수 없습니다.
 
 ---
 
-## 사용 방법
+## 📦 다운로드
 
-### 1단계 — 앱 실행
+**[Releases 페이지](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** 에서 둘 중 하나를 받습니다:
 
-- 앱을 실행하면 **시스템 트레이(우측 하단 아이콘)** 에 등록됩니다.
-- **첫 실행 시** EasyOCR 모델을 자동 다운로드합니다 (약 1~5분, 최초 1회만).
+- **인스톨러** (`*-x64-setup.exe`) — 설치 마법사 권장
+- **포터블** (`*-portable.zip`) — 압축 풀고 `tarkov-price-overlay.exe` 바로 실행
 
-### 2단계 — 단축키 설정
+> ⚠️ **Windows SmartScreen 경고가 뜨는 경우**
+> "추가 정보" → "실행"을 눌러주세요. 코드 서명 인증서 비용 문제로 서명을 안 했을 뿐, 악성코드가 아닙니다.
 
-1. 트레이 아이콘 **우클릭 → 설정** 또는 오버레이 카드의 ⚙ 클릭
-2. **단축키** 항목 클릭 → 원하는 키 입력 (기본값: `F2`)
-3. **카드 토글 단축키**: 조회 없이 오버레이를 숨기거나 다시 표시 (기본값: `Shift+F2`)
+---
 
-### 3단계 — 아이템 시세 조회
+## 🎯 사용 방법
 
-1. 타르코프 인게임에서 **아이템 이름이 화면에 표시되도록** 합니다  
-   *(인벤토리에 마우스를 올리거나, 바닥 아이템에 조준 등)*
-2. 설정한 단축키(`F2`)를 누릅니다
-3. 잠시 후 오버레이 카드에 시세 정보가 표시됩니다
+### 1. 첫 실행
 
-### 캡처 영역 조정
+- 트레이(우측 하단)에 아이콘이 등록됩니다
+- **첫 실행 시 OCR 모델 다운로드** (약 1~5분, 1회만)
 
-인식이 잘 안 될 때는 캡처 영역을 조정합니다.
+### 2. 인게임에서
 
-| 설정 | 기본값 | 설명 |
+1. 아이템 이름이 화면에 보이게 합니다 (인벤토리 호버, 바닥 아이템 조준 등)
+2. **F2** 누름
+3. 잠시 후 오버레이 카드에 시세 정보가 뜸
+
+### 3. 인식이 잘 안 될 때
+
+설정의 **캡처 영역** 항목에서 X/Y 오프셋과 너비/높이를 조정 — 아이템 이름 텍스트가 캡처 영역 안에 들어오도록 맞추면 됩니다.
+
+| 설정 | 기본값 | 의미 |
 |---|---|---|
-| X 오프셋 | `10` | 마우스 커서 기준 캡처 시작 가로 위치 (픽셀) |
-| Y 오프셋 | `-75` | 마우스 커서 기준 캡처 시작 세로 위치 (픽셀) |
+| X 오프셋 | `10` | 마우스 커서 기준 가로 시작점 (px) |
+| Y 오프셋 | `-75` | 마우스 커서 기준 세로 시작점 (px) |
 | 너비 | `300` | 캡처 영역 너비 |
 | 높이 | `70` | 캡처 영역 높이 |
 
-아이템 이름 텍스트가 캡처 영역 안에 들어오도록 값을 조절하세요.
+### 4. 오버레이 위치 이동
 
-### 오버레이 이동
-
-- 카드 빈 곳을 **드래그**해서 원하는 위치로 옮길 수 있습니다 (위치 자동 저장).
+카드 빈 곳을 **드래그**하면 어디든 옮길 수 있습니다 (위치 자동 저장).
 
 ---
 
-## 설정 전체 항목
+## ⚙️ 전체 설정
 
 | 항목 | 설명 |
 |---|---|
 | 언어 | 한국어 / English |
-| 게임 모드 | PVP (일반) / PVE |
-| 단축키 | 가격 조회 단축키 |
-| 카드 토글 단축키 | 오버레이 표시/숨김 |
-| 소리 알림 | 조회 완료 시 알림음 |
-| 숨김 딜레이 | 카드 자동 숨김까지 대기 시간(초) |
-| 폰트 크기 | 10px ~ 25px 선택 |
-| 표시 항목 | 플리 24h 범위 / 직전 거래 / 무게·효율 / 구매처 / 바터 / 제작 / 퀘스트 개별 ON/OFF |
+| 게임 모드 | PVP / PVE (가격 데이터가 분리되어 있음) |
+| 단축키 | 가격 조회 단축키 (기본 `F2`) |
+| 카드 토글 단축키 | 오버레이 표시/숨김 (기본 `Shift+F2`) |
+| 소리 알림 | 조회 완료 시 띵 소리 |
+| 숨김 딜레이 | 카드 자동 숨김까지 대기 시간 (1~60초) |
+| 폰트 크기 | 12px ~ 20px |
+| 표시 항목 | 24h 범위 / 직전 거래 / 무게 효율 / 구매처 / 바터 / 제작 / 퀘스트 개별 ON/OFF |
 | 패널 기본 펼침 | 바터·제작·퀘스트 패널을 처음부터 펼쳐서 표시 |
 | 자동 업데이트 확인 | 실행 시 새 버전 자동 확인 |
+| 어드밴스드 모드 | OCR 오인식 직접 교정 (`misread → correct name` 매핑 저장) |
 
 ---
 
-## 자주 묻는 질문
+## ❓ 자주 묻는 질문
 
-**Q. 단축키를 눌러도 아무 반응이 없어요.**  
-A. 첫 실행 후 OCR 모델 다운로드 중일 수 있습니다(최대 5분). 이후에도 안 되면 설정에서 단축키를 다시 등록해보세요.
+**Q. F2를 눌러도 아무 반응이 없어요.**
+A. 첫 실행 후 OCR 모델 다운로드 중일 수 있습니다 (최대 5분). 이후에도 안 되면 설정에서 단축키를 다시 등록해보세요. 다른 프로그램이 F2를 점유하면 충돌할 수 있으니 다른 키로 변경도 시도해보세요.
 
-**Q. 인식 실패 또는 엉뚱한 아이템이 나와요.**  
-A. X/Y 오프셋과 너비/높이를 조정해 아이템 이름 텍스트만 캡처 영역에 들어오게 맞춰주세요.
+**Q. 인식이 잘 안 되거나 엉뚱한 아이템이 나와요.**
+A. 위 "캡처 영역" 부분 참조. 아이템 이름 텍스트만 캡처 박스 안에 들어오도록 X/Y 오프셋을 미세 조정하세요.
 
-**Q. OCR 오인식을 직접 고치고 싶어요.**  
-A. 설정 → **어드밴스드 모드** 를 켜면 오인식→정답 교정 목록을 등록할 수 있습니다.
+**Q. 같은 아이템을 자꾸 잘못 읽어요.**
+A. 설정 → **어드밴스드 모드** ON → 오인식 → 정답 매핑을 저장할 수 있습니다. 다음번부터 자동 보정.
 
-**Q. PVE 서버인데 가격이 이상해요.**  
+**Q. PVE인데 가격이 이상해요.**
 A. 설정 → **게임 모드**를 PVE로 변경하세요.
 
-**Q. 설치 시 바이러스/SmartScreen 경고가 떠요.**  
-A. 코드 서명 인증서 미적용으로 인한 경고입니다. "추가 정보 → 실행"으로 진행하세요.
+**Q. 듀얼 모니터 / 4K / 125% 배율인데 좌표가 이상해요.**
+A. Per-monitor DPI 처리되어 있어 동작합니다. 그래도 어긋나면 캡처 영역 X/Y 오프셋으로 보정하세요.
 
-**Q. 의견·버그 제보는 어디에 하나요?**  
-A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues) 또는 이메일(floe9235@gmail.com)로 보내주세요.
+**Q. 설치 시 SmartScreen / 백신 경고가 떠요.**
+A. 코드 서명 인증서 미적용 때문입니다. "추가 정보 → 실행"으로 진행하세요. 자세한 동작 원리는 위 "안전성" 섹션 참조.
+
+**Q. 밴 안 당하나요?**
+A. 위 "안전성" 섹션 참조. 화면 캡처 + OCR 방식이라 메모리 핵·ESP와는 완전히 다른 카테고리입니다. 단, BSG가 명시 허용한 건 아니므로 사용 책임은 본인에게 있습니다.
+
+**Q. 의견·버그 제보는 어디에 하나요?**
+A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues) 또는 이메일 floe9235@gmail.com
 
 ---
 
-## 후원
+## 💝 후원
 
-개발이 도움이 되셨다면 후원을 고려해주세요.  
-앱 설정 하단에서 카카오페이 QR 코드를 확인할 수 있습니다.
+개발이 도움 되셨다면 후원 부탁드립니다. 앱의 설정 → 후원하기에서 두 가지 방법 중 선택할 수 있어요:
+
+- **카카오페이** (한국)
+- **PayPal** — [paypal.me/tarkovoverlay](https://paypal.me/tarkovoverlay) (해외)
 
 ---
 
-*가격 데이터 제공: [tarkov.dev](https://tarkov.dev)*
+## 📜 라이선스 / 면책
+
+- 가격 데이터: [tarkov.dev](https://tarkov.dev) (커뮤니티 운영 EFT DB)
+- 본 도구는 비공식 도구이며 **Battlestate Games와 무관**합니다
+- *Escape from Tarkov* 및 관련 자산은 Battlestate Games Limited의 상표/저작권입니다
+- © 2026 pado
 
 ---
 ---
 
 # Tarkov Price Overlay — English Guide
 
-> A free Windows overlay app for Escape from Tarkov.  
-> Press a hotkey while in-game to instantly see **flea market prices, trader prices, barters, crafts, and quest requirements** — without leaving your game window.
+> **Hover an item in Tarkov, press F2** — instantly see flea market prices, trader prices, barters, crafts, and quest requirements as a transparent overlay on top of the game.
 
-**[⬇ Download Latest](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)**
+**[⬇ Download Latest](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · Free · Windows
 
 ---
 
-## Features
+## ✨ Who is this for?
+
+- Tired of alt-tabbing to wiki/price sites every time you pick up loot
+- Want to instantly judge whether a found item is worth selling
+- Need to know if an item is used in hideout / quest before vendoring it
+- Want barter/craft material values at a glance
+
+---
+
+## 🚀 Features
 
 | Feature | Description |
 |---|---|
-| **Auto OCR** | Captures the game screen and recognizes item names automatically |
-| **Flea market price** | Current price · 24h range · last trade price |
-| **Trader prices** | Best buy price across all traders |
-| **Barter info** | What you can get via barter / what uses this item in barters |
+| **One-key lookup** | Hover, press F2, see prices in ~1 second |
+| **Flea market** | Current price · 24h range · last trade · ₽/slot |
+| **Trader info** | Best trader price · buy-from vendors · required trader level |
+| **Barter** | Both directions — barters that produce / consume this item |
 | **Hideout crafts** | Recipes that use this item as an ingredient |
-| **Quest info** | Required quests, quantities, and FiR (Found in Raid) status |
-| **PVP / PVE mode** | Separate price data per game mode |
-| **Korean / English UI** | Switch interface language in settings |
-| **Transparent overlay** | Floats above the game, draggable to any position |
+| **Quest info** | Required quests · quantity · FiR (Found in Raid) status |
+| **PVP / PVE** | Separate price data per game mode |
+| **Weight efficiency** | ₽/kg conversion to compare carry value |
+| **Korean / English** | Switch UI language instantly |
+| **Transparent overlay** | Always-on-top, auto-hide, freely draggable |
 
 ---
 
-## Download & Install
+## 🛡️ Safety (about ban risk)
 
-### Installer (recommended)
+The biggest concern in the Tarkov community, so to be straight with you:
 
-1. Go to the [Releases page](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)
-2. Download **`Tarkov.Price.Overlay_1.0.0_x64-setup.exe`**
-3. Run the installer and follow the wizard
-4. Launch from the Start Menu or desktop shortcut
+This program uses **screen capture + OCR (text recognition) only**.
 
-### Portable (no install required)
+- ❌ Does **NOT** read/write game process memory
+- ❌ Does **NOT** inject DLLs
+- ❌ Does **NOT** hook the game window or use low-level keyboard hooks
+- ❌ Does **NOT** modify any game files
+- ✅ Uses standard Win32 desktop capture (BitBlt) + a transparent topmost window + `RegisterHotKey` (OS-level hotkey)
 
-1. From the same page, download **`Tarkov.Price.Overlay_1.0.0_portable.zip`**
-2. Extract and run `tarkov-price-overlay.exe`
+Technically this is **the same category as YouTube screen recorders or Discord screen sharing**. It is fundamentally different from memory hacks, ESP, or aimbots.
 
-> **Windows SmartScreen warning**  
-> Click "More info" → "Run anyway".  
-> This appears because the executable is not code-signed (cost reasons). The app contains no malware.
+That said, **this tool is not officially sanctioned by BSG/BattlEye**. Their policy can change, so use is at your own risk. No bans have been reported for similar OCR-based overlay tools to date, but no one can guarantee 100% safety.
 
 ---
 
-## How to Use
+## 📦 Download
 
-### Step 1 — Launch the app
+Grab one from **[Releases](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)**:
 
-- The app runs in the **system tray** (bottom-right of the taskbar).
-- **On first launch**, EasyOCR downloads its recognition model automatically — this takes **1–5 minutes** and only happens once.
+- **Installer** (`*-x64-setup.exe`) — recommended
+- **Portable** (`*-portable.zip`) — extract and run `tarkov-price-overlay.exe`
 
-### Step 2 — Set your hotkey
+> ⚠️ **Windows SmartScreen warning**
+> Click "More info" → "Run anyway". The executable is unsigned (cost reasons), but contains no malware.
 
-1. Right-click the tray icon → **Settings**, or click ⚙ on the overlay card
-2. Click the **Hotkey** field and press your desired key (default: `F2`)
-3. **Toggle card hotkey** — shows/hides the card without triggering a lookup (default: `Shift+F2`)
+---
 
-### Step 3 — Look up an item price
+## 🎯 How to Use
 
-1. In Tarkov, make sure the **item name is visible on screen**  
-   *(hover over an inventory item, aim at a ground item, etc.)*
-2. Press your hotkey (`F2` by default)
-3. The overlay card appears with price information
+### 1. First launch
 
-### Adjusting the capture region
+- Runs in the **system tray** (bottom-right)
+- **First launch downloads the OCR model** (1–5 min, one-time)
 
-If recognition is inaccurate, adjust the capture region:
+### 2. In-game
 
-| Setting | Default | Description |
+1. Make the item name visible on screen (hover inventory, aim at ground item, etc.)
+2. Press **F2**
+3. Overlay card appears with prices
+
+### 3. If recognition is off
+
+Adjust the **capture region** in settings — make sure only the item name text falls inside the capture box.
+
+| Setting | Default | Meaning |
 |---|---|---|
-| X offset | `10` | Horizontal offset from your cursor (pixels) |
-| Y offset | `-75` | Vertical offset from your cursor (pixels) |
+| X offset | `10` | Horizontal start from cursor (px) |
+| Y offset | `-75` | Vertical start from cursor (px) |
 | Width | `300` | Capture area width |
 | Height | `70` | Capture area height |
 
-Make sure only the item name text falls inside the capture box.
+### 4. Move the overlay
 
-### Moving the overlay
-
-- Drag the card to any position on screen. Position is saved automatically.
+Drag any blank area of the card to reposition. Position is auto-saved.
 
 ---
 
-## Settings Reference
+## ⚙️ Settings Reference
 
 | Setting | Description |
 |---|---|
 | Language | Korean / English |
-| Game mode | PVP (regular) / PVE |
-| Hotkey | Trigger a price lookup |
-| Toggle card hotkey | Show/hide the overlay card |
-| Sound notification | Play a sound when lookup completes |
-| Hide delay | Seconds before the card auto-hides |
-| Font size | 10px – 25px dropdown |
+| Game mode | PVP / PVE (price data is separated) |
+| Hotkey | Lookup hotkey (default `F2`) |
+| Toggle card hotkey | Show/hide overlay (default `Shift+F2`) |
+| Sound notification | Ding on lookup complete |
+| Hide delay | Auto-hide delay (1–60 seconds) |
+| Font size | 12px – 20px |
 | Display items | Toggle each section: 24h range, last trade, weight/efficiency, buy from, barters, crafts, quests |
 | Panels open by default | Expand barter/craft/quest panels on first render |
 | Auto update check | Check for new versions on startup |
+| Advanced mode | OCR correction editor (`misread → correct name` mappings) |
 
 ---
 
-## FAQ
+## ❓ FAQ
 
-**Q. Nothing happens when I press the hotkey.**  
-A. On first launch the OCR model is downloading (up to 5 min). If it still fails, re-register the hotkey in Settings.
+**Q. Nothing happens when I press F2.**
+A. The OCR model may still be downloading on first launch (up to 5 min). If it still fails, re-register the hotkey in Settings. Another program might be holding F2 — try a different key.
 
-**Q. Wrong item name or "no match" result.**  
-A. Adjust X/Y offset and width/height so only the item name text is inside the capture box.
+**Q. Wrong item name or "no match" result.**
+A. See "capture region" above. Tune X/Y offset so only the item name is inside the capture box.
 
-**Q. Can I fix recurring OCR misreads?**  
-A. Enable **Advanced mode** in Settings to access the OCR correction editor. Add `misread → correct name` mappings.
+**Q. Same item keeps getting misread.**
+A. Settings → enable **Advanced mode** → save a `misread → correct name` mapping. Auto-applied next time.
 
-**Q. I play PVE — prices look wrong.**  
-A. Set **Game mode** to PVE in Settings.
+**Q. PVE prices look wrong.**
+A. Switch **Game mode** to PVE in Settings.
 
-**Q. SmartScreen / antivirus flags the installer.**  
-A. The executable is unsigned. Click "More info → Run anyway". Source code is public.
+**Q. Dual monitor / 4K / 125% scaling — coordinates are off.**
+A. Per-monitor DPI is handled. If still off, fine-tune capture X/Y offset.
 
-**Q. Bug reports / feedback?**  
+**Q. SmartScreen / antivirus flags it.**
+A. Unsigned executable. Click "More info → Run anyway". See "Safety" section for technical details.
+
+**Q. Will I get banned?**
+A. See "Safety" section above. Screen capture + OCR is fundamentally different from memory hacks/ESP. That said, BSG has not officially sanctioned this tool, so use at your own risk.
+
+**Q. Bug reports / feedback?**
 A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/issues) or email floe9235@gmail.com.
 
 ---
 
-*Price data provided by [tarkov.dev](https://tarkov.dev) — community-maintained EFT database.*
+## 💝 Donate
+
+If this helps you, donations are appreciated. Two options in Settings → Donate:
+
+- **KakaoPay** (Korea)
+- **PayPal** — [paypal.me/tarkovoverlay](https://paypal.me/tarkovoverlay) (international)
+
+---
+
+## 📜 License / Disclaimer
+
+- Price data: [tarkov.dev](https://tarkov.dev) (community-maintained EFT database)
+- This is an **unofficial tool, not affiliated with Battlestate Games**
+- *Escape from Tarkov* and related assets are trademarks/copyright of Battlestate Games Limited
+- © 2026 pado
