@@ -47,6 +47,7 @@ async function fetchLatestRelease(): Promise<UpdateInfo | null> {
 }
 const FEEDBACK_EMAIL = "floe9235@gmail.com";
 const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
+const PAYPAL_URL = "https://paypal.me/tarkovoverlay";
 
 const hideToTray = () => {
   invoke("hide_to_tray").catch(() => {});
@@ -372,6 +373,11 @@ function App() {
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
   const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
   const [showDonate, setShowDonate] = useState(false);
+  // Default donate tab follows the user's UI language (Korean → KakaoPay first,
+  // others → PayPal first). They can flip with the tabs.
+  const [donateTab, setDonateTab] = useState<"kakao" | "paypal">(
+    region.lang === "ko" ? "kakao" : "paypal"
+  );
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
   const hideDelayRef = useRef(region.hideDelaySec);
@@ -956,46 +962,87 @@ function App() {
                 💝 {t.donate}
               </button>
             </div>
-            {showDonate && (
-              <div className="donate-panel">
-                <div className="donate-hint">{t.donateScanHint}</div>
-                <div className="donate-qr">
-                  <QRCodeSVG
-                    value={KAKAOPAY_URL}
-                    size={140}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                    level="M"
-                    includeMargin
-                  />
+            {showDonate && (() => {
+              const activeUrl = donateTab === "kakao" ? KAKAOPAY_URL : PAYPAL_URL;
+              const activeHint =
+                donateTab === "kakao" ? t.donateScanHint : t.donatePaypalHint;
+              return (
+                <div className="donate-panel">
+                  <div className="donate-tabs" role="tablist">
+                    <button
+                      role="tab"
+                      aria-selected={donateTab === "kakao"}
+                      className={`donate-tab${donateTab === "kakao" ? " active" : ""}`}
+                      onClick={() => {
+                        setDonateTab("kakao");
+                        setDonateCopied(false);
+                      }}
+                    >
+                      {t.donateTabKakao}
+                    </button>
+                    <button
+                      role="tab"
+                      aria-selected={donateTab === "paypal"}
+                      className={`donate-tab${donateTab === "paypal" ? " active" : ""}`}
+                      onClick={() => {
+                        setDonateTab("paypal");
+                        setDonateCopied(false);
+                      }}
+                    >
+                      {t.donateTabPaypal}
+                    </button>
+                  </div>
+                  <div className="donate-hint">{activeHint}</div>
+                  <div className="donate-qr">
+                    <QRCodeSVG
+                      value={activeUrl}
+                      size={140}
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                      level="M"
+                      includeMargin
+                    />
+                  </div>
+                  <div className="donate-url">{activeUrl}</div>
+                  <div className="donate-actions">
+                    {donateTab === "paypal" && (
+                      <button
+                        className="reset-btn"
+                        onClick={() =>
+                          openUrl(activeUrl).catch((e) =>
+                            log(`donate: openUrl failed — ${String(e)}`)
+                          )
+                        }
+                      >
+                        {t.donateOpen}
+                      </button>
+                    )}
+                    <button
+                      className="reset-btn"
+                      onClick={() => {
+                        navigator.clipboard
+                          .writeText(activeUrl)
+                          .then(() => {
+                            setDonateCopied(true);
+                            window.setTimeout(() => setDonateCopied(false), 1500);
+                          })
+                          .catch((e) =>
+                            log(`donate: clipboard failed — ${String(e)}`)
+                          );
+                      }}
+                    >
+                      {donateCopied ? t.donateCopied : t.donateCopyUrl}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() => setShowDonate(false)}
+                    >
+                      {t.donateClose}
+                    </button>
+                  </div>
                 </div>
-                <div className="donate-url">{KAKAOPAY_URL}</div>
-                <div className="donate-actions">
-                  <button
-                    className="reset-btn"
-                    onClick={() => {
-                      navigator.clipboard
-                        .writeText(KAKAOPAY_URL)
-                        .then(() => {
-                          setDonateCopied(true);
-                          window.setTimeout(() => setDonateCopied(false), 1500);
-                        })
-                        .catch((e) =>
-                          log(`donate: clipboard failed — ${String(e)}`)
-                        );
-                    }}
-                  >
-                    {donateCopied ? t.donateCopied : t.donateCopyUrl}
-                  </button>
-                  <button
-                    className="reset-btn"
-                    onClick={() => setShowDonate(false)}
-                  >
-                    {t.donateClose}
-                  </button>
-                </div>
-              </div>
-            )}
+              );
+            })()}
             <div className="settings-row">
               <label>{t.language}</label>
               <select

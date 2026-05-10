@@ -648,6 +648,32 @@ html, body, #root {
   border: 1px solid rgba(255, 180, 100, 0.3);
   border-radius: 4px;
 }
+.donate-tabs {
+  display: flex;
+  width: 100%;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 180, 100, 0.25);
+  margin-bottom: 2px;
+}
+.donate-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #888;
+  padding: 4px 8px;
+  font-size: var(--card-fs-sm);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.donate-tab:hover {
+  color: #ffc080;
+}
+.donate-tab.active {
+  color: #ffc080;
+  border-bottom-color: #ffc080;
+  font-weight: 600;
+}
 .donate-hint {
   font-size: var(--card-fs-sm);
   color: #ffc080;
