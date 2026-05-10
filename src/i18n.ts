@@ -104,6 +104,8 @@ export const T = {
     donateCopyUrl: "URL 복사",
     donateCopied: "복사됨!",
     donateClose: "닫기",
+    copyright: "© 2026 pado",
+    copyrightLine2: "비공식 도구 · BSG와 무관",
   },
   en: {
     title: "Tarkov Price",
@@ -207,6 +209,8 @@ export const T = {
     donateCopyUrl: "Copy URL",
     donateCopied: "Copied!",
     donateClose: "Close",
+    copyright: "© 2026 pado",
+    copyrightLine2: "Unofficial · not affiliated with BSG",
   },
 } as const;
 

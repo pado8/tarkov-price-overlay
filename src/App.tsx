@@ -193,13 +193,17 @@ function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
 }
 const WIN_BASE_W = 800;
-const WIN_BASE_H = 600;
-const WIN_DONATE_EXTRA = 300;
 const FONT_DEFAULT = 13;
+// Overlay padding (12px top + 12px bottom) — kept in sync with .overlay in App.css.
+const WIN_VPAD = 24;
+// Leave a small margin from the screen edge so the OS taskbar / window chrome
+// doesn't clip the bottom of the card at large font sizes.
+const WIN_SCREEN_MARGIN = 40;
 
-const computeWinH = (fontSize: number, donateOpen: boolean) => {
-  const base = Math.round(WIN_BASE_H * (fontSize / FONT_DEFAULT));
-  return donateOpen ? base + WIN_DONATE_EXTRA : base;
+const screenMaxH = (): number => {
+  // window.screen.availHeight is in CSS pixels which matches Tauri LogicalSize.
+  const h = typeof window !== "undefined" ? window.screen?.availHeight : 0;
+  return h && h > 0 ? Math.max(300, h - WIN_SCREEN_MARGIN) : 2000;
 };
 
 const DEFAULT_HOTKEY = "F2";
@@ -273,7 +277,12 @@ function removeCorrection(rawText: string) {
 function loadRegion(): Region {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...DEFAULT_REGION, ...JSON.parse(raw) };
+    if (raw) {
+      const merged: Region = { ...DEFAULT_REGION, ...JSON.parse(raw) };
+      // Clamp fontSize to the supported select range (12-20).
+      merged.fontSize = Math.max(12, Math.min(20, merged.fontSize));
+      return merged;
+    }
   } catch {}
   return DEFAULT_REGION;
 }
@@ -363,7 +372,6 @@ function App() {
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
   const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
   const [showDonate, setShowDonate] = useState(false);
-  const [committedFontSize, setCommittedFontSize] = useState<number>(region.fontSize);
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
   const hideDelayRef = useRef(region.hideDelaySec);
@@ -581,13 +589,34 @@ function App() {
     };
   }, []);
 
-  // Resize window when committed font size or donate panel changes.
-  // committedFontSize updates only on slider mouseUp/keyUp — avoids jitter while dragging.
+  // Resize the window to match the card's actual rendered height.
+  // ResizeObserver fires whenever the card's content changes — settings open/close,
+  // donate panel toggle, font size change, history panel, update banner, etc.
+  // Clamped to the screen's available height so very large fonts don't push the
+  // bottom of the card off-screen.
   useEffect(() => {
-    getCurrentWindow()
-      .setSize(new LogicalSize(WIN_BASE_W, computeWinH(committedFontSize, showDonate)))
-      .catch(() => {});
-  }, [committedFontSize, showDonate]);
+    const el = cardRef.current;
+    if (!el) return;
+    let raf = 0;
+    const apply = () => {
+      const h = Math.ceil(el.getBoundingClientRect().height) + WIN_VPAD;
+      const clamped = Math.min(Math.max(h, 100), screenMaxH());
+      getCurrentWindow()
+        .setSize(new LogicalSize(WIN_BASE_W, clamped))
+        .catch(() => {});
+    };
+    const ro = new ResizeObserver(() => {
+      // Coalesce bursts of resize events to one frame.
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(apply);
+    });
+    ro.observe(el);
+    apply();
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, []);
 
   // Tray icon events: left-click or "Show" menu item brings the card up.
   // "Settings" menu item brings the card up AND opens the settings panel.
@@ -596,9 +625,8 @@ function App() {
       log("React: tray-show event");
       showCard();
       setShowDonate(false);
-      getCurrentWindow()
-        .setSize(new LogicalSize(WIN_BASE_W, computeWinH(loadRegion().fontSize, false)))
-        .catch(() => {});
+      // Window size is driven by the ResizeObserver on the card; just trigger
+      // re-show and let it converge once the card content settles.
       scheduleHide();
     });
     const unlistenSettings = listen("tray-settings", () => {
@@ -1081,13 +1109,11 @@ function App() {
               <select
                 value={region.fontSize}
                 onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  updateRegion("fontSize", v);
-                  setCommittedFontSize(v);
+                  updateRegion("fontSize", parseInt(e.target.value));
                 }}
                 className="font-size-select"
               >
-                {Array.from({ length: 16 }, (_, i) => i + 10).map((s) => (
+                {Array.from({ length: 9 }, (_, i) => i + 12).map((s) => (
                   <option key={s} value={s}>{s}px</option>
                 ))}
               </select>
@@ -1191,6 +1217,10 @@ function App() {
                 </button>
               </>
             )}
+            <div className="copyright">
+              <div className="copyright-line">{t.copyright}</div>
+              <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
+            </div>
           </div>
         )}
 

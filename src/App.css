@@ -22,6 +22,11 @@ html, body, #root {
   box-sizing: border-box;
   -webkit-user-select: none;
   user-select: none;
+  /* Last-resort scroll if the card outgrows the window (large font + many
+     panels open at once on a short screen). The window is normally sized to
+     fit by a ResizeObserver, so this only kicks in when clamped by the
+     screen height. */
+  overflow-y: auto;
 }
 
 /* ── Font size tiers (derived from --card-fs set via inline style) ── */
@@ -533,6 +538,19 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  /* When the window can't grow further (clamped to screen height),
+     allow the settings panel itself to scroll so every row stays reachable.
+     ~120px reserved for header + padding above/below. */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+/* Slimmer scrollbar so it doesn't dominate the panel visually. */
+.settings::-webkit-scrollbar {
+  width: 6px;
+}
+.settings::-webkit-scrollbar-thumb {
+  background: rgba(200, 170, 100, 0.3);
+  border-radius: 3px;
 }
 .settings-row {
   display: flex;
@@ -586,6 +604,26 @@ html, body, #root {
 .donate-btn:hover {
   background: rgba(255, 180, 100, 0.18);
   color: #ffd5a0;
+}
+
+/* Copyright block at bottom of settings panel */
+.copyright {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(200, 170, 100, 0.2);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.copyright-line {
+  font-size: var(--card-fs-xxs);
+  color: #888;
+  line-height: 1.3;
+}
+.copyright-sub {
+  color: #777;
+  font-style: italic;
 }
 
 /* Font size control in settings */
