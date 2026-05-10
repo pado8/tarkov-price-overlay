@@ -25,6 +25,11 @@ struct SidecarChild(Mutex<Option<CommandChild>>);
 /// false, prevents the exit and hides to tray instead.
 struct IsQuitting(AtomicBool);
 
+/// Tracks whether we've already shown the "minimized to tray" notification
+/// this session. We only show it on the very first hide-to-tray so users
+/// learn the tray icon exists, then stop nagging on every X click.
+struct TrayNotifShown(AtomicBool);
+
 /// The two global hotkeys we manage. We store the parsed `Shortcut` so the
 /// pressed-shortcut handler can compare by equality and emit the right event
 /// without dealing with string-format normalization (e.g. "Shift+F2" vs
@@ -37,11 +42,19 @@ struct HotkeyConfig {
 struct Hotkeys(Mutex<HotkeyConfig>);
 
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
+    // Only fire the notification on the first hide-to-tray of the session.
+    // Repeating it on every X click is noisy; the user learns where the tray
+    // icon is once and that's enough.
+    if let Some(state) = app.try_state::<TrayNotifShown>() {
+        if state.0.swap(true, Ordering::SeqCst) {
+            return;
+        }
+    }
     let _ = app
         .notification()
         .builder()
         .title("Tarkov Price Overlay")
-        .body("앱이 시스템 트레이에서 실행 중입니다. 트레이 아이콘 우클릭 → 종료\nApp is running in the system tray. Right-click tray icon → Exit to quit.")
+        .body("트레이로 숨겼어요. 다시 띄우려면 단축키(F2) 또는 트레이 아이콘 클릭.\nHidden to tray. Press your hotkey or click the tray icon to show again.")
         .show();
 }
 
@@ -195,6 +208,15 @@ pub fn run() {
                         println!("[hotkey] {shortcut:?} pressed but unmapped");
                         return;
                     };
+                    // If the window is hidden (user clicked X → hide_to_tray),
+                    // bring it back so the next emit has somewhere to render.
+                    // Same pattern as the tray menu / left-click handlers.
+                    if let Some(window) = app.get_webview_window("main") {
+                        if !window.is_visible().unwrap_or(true) {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
                     let device_state = DeviceState::new();
                     let mouse = device_state.get_mouse();
                     let pos = CursorPos {
@@ -211,6 +233,7 @@ pub fn run() {
         )
         .manage(SidecarChild(Mutex::new(None)))
         .manage(IsQuitting(AtomicBool::new(false)))
+        .manage(TrayNotifShown(AtomicBool::new(false)))
         .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
         .invoke_handler(tauri::generate_handler![
             get_cursor_position,

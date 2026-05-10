@@ -655,6 +655,16 @@ function App() {
       async (event) => {
         const r = loadRegion();
         log(`React: got hotkey-lookup payload=${JSON.stringify(event.payload)} region=${JSON.stringify(r)}`);
+        // Ensure the OS window is visible — the user may have hidden it via
+        // the X button (which calls hide_to_tray → window.hide()), in which
+        // case flipping React state alone leaves the card invisible.
+        const win = getCurrentWindow();
+        try {
+          if (!(await win.isVisible())) {
+            await win.show();
+            await win.setFocus();
+          }
+        } catch {}
         showCard(); // bring card up + cancel any in-flight hide
         setShowSettings(false);
         setStatus("loading");
@@ -845,7 +855,17 @@ function App() {
             </span>
             <button
               className="settings-btn"
-              onClick={() => setHistoryVisible((v) => !v)}
+              onClick={() => {
+                setHistoryVisible((v) => {
+                  // Opening history closes settings (and the donate panel
+                  // beneath it) so the panels never stack.
+                  if (!v) {
+                    setShowSettings(false);
+                    setShowDonate(false);
+                  }
+                  return !v;
+                });
+              }}
               title={t.history}
             >
               🕒
@@ -853,7 +873,13 @@ function App() {
             <button
               className="settings-btn"
               onClick={() => setShowSettings((s) => {
-                if (s) setShowDonate(false);
+                if (s) {
+                  setShowDonate(false);
+                } else {
+                  // Opening settings closes history so settings appears at
+                  // the top of the card instead of being pushed down.
+                  setHistoryVisible(false);
+                }
                 return !s;
               })}
               title={t.settings}

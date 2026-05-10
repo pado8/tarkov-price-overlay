@@ -22,11 +22,11 @@ html, body, #root {
   box-sizing: border-box;
   -webkit-user-select: none;
   user-select: none;
-  /* Last-resort scroll if the card outgrows the window (large font + many
-     panels open at once on a short screen). The window is normally sized to
-     fit by a ResizeObserver, so this only kicks in when clamped by the
-     screen height. */
-  overflow-y: auto;
+  /* Never scroll at the overlay level — if we did, the scrollbar would
+     remain visible after the card fades out (the card collapses to opacity 0
+     but layout space is unchanged). Scroll lives on .card so it disappears
+     together with the card. */
+  overflow: hidden;
 }
 
 /* ── Font size tiers (derived from --card-fs set via inline style) ── */
@@ -46,6 +46,22 @@ html, body, #root {
   backdrop-filter: blur(4px);
   opacity: 1;
   transition: opacity 0.25s ease-out;
+  /* Cap height to viewport so very tall content (long history, all detail
+     panels expanded at large font) scrolls inside the card rather than
+     spilling past the window. Scroll bar lives here so it disappears with
+     the card on auto-hide. */
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+}
+.card::-webkit-scrollbar {
+  width: 6px;
+}
+.card::-webkit-scrollbar-thumb {
+  background: rgba(200, 170, 100, 0.3);
+  border-radius: 3px;
+}
+.card::-webkit-scrollbar-track {
+  background: transparent;
 }
 .card.card-hidden {
   opacity: 0;
@@ -397,6 +413,16 @@ html, body, #root {
   max-height: 180px;
   overflow-y: auto;
 }
+.history-list::-webkit-scrollbar {
+  width: 6px;
+}
+.history-list::-webkit-scrollbar-thumb {
+  background: rgba(200, 170, 100, 0.3);
+  border-radius: 3px;
+}
+.history-list::-webkit-scrollbar-track {
+  background: transparent;
+}
 .history-row {
   display: flex;
   justify-content: space-between;
@@ -538,19 +564,8 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* When the window can't grow further (clamped to screen height),
-     allow the settings panel itself to scroll so every row stays reachable.
-     ~120px reserved for header + padding above/below. */
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-}
-/* Slimmer scrollbar so it doesn't dominate the panel visually. */
-.settings::-webkit-scrollbar {
-  width: 6px;
-}
-.settings::-webkit-scrollbar-thumb {
-  background: rgba(200, 170, 100, 0.3);
-  border-radius: 3px;
+  /* No internal scroll — .card handles overflow at the outer level so the
+     whole card (header + panels) shares one scrollbar. */
 }
 .settings-row {
   display: flex;
