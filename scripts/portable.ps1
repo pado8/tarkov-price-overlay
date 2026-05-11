@@ -43,28 +43,20 @@ Copy-Item $serverExe $stageDir
 Copy-Item -Recurse $internalDir $stageDir
 
 # Drop a quick-start README inside the ZIP root.
+# Read the template from a separate UTF-8 file so the .ps1 itself can
+# stay ASCII-clean — Windows PowerShell 5.1 reads BOM-less .ps1 files
+# as the system code page (cp949 on Korean Windows), which corrupts any
+# Korean here-strings inline before they ever reach Set-Content.
+$readmeTemplate = Join-Path $PSScriptRoot "portable-readme.txt"
+if (-not (Test-Path $readmeTemplate)) {
+    throw "Missing readme template at $readmeTemplate"
+}
+$readmeBytes = [System.IO.File]::ReadAllBytes($readmeTemplate)
+$readmeContent = [System.Text.Encoding]::UTF8.GetString($readmeBytes).Replace("{VERSION}", $version)
 $readmePath = Join-Path $stageDir "READ_ME_FIRST.txt"
-$readmeContent = @"
-Tarkov Price Overlay (Portable v$version)
-==========================================
-
-[실행]
-- ``Tarkov Price Overlay.exe`` 더블클릭하면 끝.
-- 설치 필요 없음. 폴더 통째로 옮겨도 동작합니다.
-- ``_internal\`` 폴더와 ``tarkov-server.exe`` 는 같은 위치에 두세요.
-
-[제거]
-- 폴더 통째로 삭제하면 끝. 레지스트리/시작메뉴 흔적 없음.
-
-[사용법]
-1. 게임 인벤토리 아이템 위에 마우스 올리고 F2
-2. ⚙ 설정에서 PVP/PVE, 언어, 단축키 변경
-3. ✕ 버튼으로 종료
-
-[자세히]
-https://github.com/pado8/tarkov-price-overlay-releases
-"@
-Set-Content -Path $readmePath -Value $readmeContent -Encoding UTF8
+# Write UTF-8 with BOM so Notepad and most archive tools auto-detect it.
+$utf8WithBom = New-Object System.Text.UTF8Encoding($true)
+[System.IO.File]::WriteAllText($readmePath, $readmeContent, $utf8WithBom)
 
 Write-Host "[portable] zipping..."
 Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel Optimal

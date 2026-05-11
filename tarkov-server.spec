@@ -2,6 +2,7 @@
 # PyInstaller spec for tarkov-price-overlay Python sidecar.
 # Build with: pyinstaller tarkov-server.spec  (run from C:\project)
 
+import os
 from PyInstaller.utils.hooks import collect_all
 
 datas = []
@@ -42,7 +43,9 @@ a = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=["runtime-hook-torch.py"],
+    # Use SPECPATH so the path resolves against the .spec file's location
+    # (C:\project\), not against `pathex` entries like python-core/.
+    runtime_hooks=[os.path.join(SPECPATH, "runtime-hook-torch.py")],
     excludes=[],
     noarchive=False,
     optimize=0,

@@ -373,6 +373,71 @@ html, body, #root {
   padding: 0 4px;
   cursor: help;
 }
+
+/* Quest sync — log-based player progress overlay */
+.quest-row.completed {
+  opacity: 0.45;
+}
+.quest-row.completed .quest-name {
+  text-decoration: line-through;
+  text-decoration-color: rgba(150, 150, 150, 0.6);
+}
+.quest-row.started .quest-trader {
+  /* Subtle highlight on quests the player has actively picked up. */
+  color: #f0d28e;
+}
+.quest-status-icon {
+  font-size: var(--card-fs-xxs);
+  padding: 0 3px;
+  border-radius: 2px;
+  cursor: help;
+  font-weight: 700;
+}
+.quest-status-icon.completed {
+  color: #6fbf73;
+  background: rgba(76, 175, 80, 0.15);
+  border: 1px solid rgba(76, 175, 80, 0.35);
+}
+.quest-status-icon.started {
+  color: #f0d28e;
+  background: rgba(220, 170, 60, 0.15);
+  border: 1px solid rgba(220, 170, 60, 0.35);
+}
+.quest-completed-badge {
+  color: #6fbf73;
+  font-weight: 600;
+  font-size: var(--card-fs-xs);
+}
+
+/* Quest sync settings panel rows */
+.settings-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.quest-path-row {
+  display: flex;
+  gap: 4px;
+}
+.quest-path-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(200, 170, 100, 0.3);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: var(--card-fs-xs);
+  font-family: "Consolas", monospace;
+  border-radius: 2px;
+}
+.quest-sync-ok {
+  color: #6fbf73;
+  font-size: var(--card-fs-xs);
+  font-family: "Consolas", monospace;
+}
+.quest-sync-warn {
+  color: #ff8080;
+  font-size: var(--card-fs-xs);
+}
 .quest-total {
   color: #f0d28e;
   font-weight: 400;

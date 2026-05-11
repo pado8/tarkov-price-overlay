@@ -6,6 +6,16 @@
 
 ---
 
+## 📸 실사용 화면
+
+게임 인벤토리 위에 마우스를 올리고 F2 한 번 누르면 → 약 1초 만에 카드가 뜹니다.
+
+![메인 시세 검색 화면](assets/screenshots/01-main-lookup.png)
+
+플리 현재가 · 24h 범위 · 직전 거래가 · 상인 최고가 · 바터(양방향) · 하이드아웃 제작 · **퀘스트 필요 여부**까지 한 카드에. 무게 효율(₽/kg)·칸당 가격(₽/슬롯)도 자동 계산.
+
+---
+
 ## ✨ 이런 분께
 
 - 매번 알트탭으로 타르코프 위키나 가격 사이트 켜기 귀찮은 분
@@ -25,6 +35,7 @@
 | **바터** | 이 아이템으로 얻는 바터 / 이 아이템이 재료인 바터 (양방향) |
 | **하이드아웃 제작** | 재료로 사용되는 제작 레시피 |
 | **퀘스트** | 필요 퀘스트 · 수량 · FiR(인레이드) 여부 |
+| **검색 기록** | 최근 15개 자동 저장, 클릭 한 번으로 재조회 |
 | **PVP / PVE** | 게임 모드별 시세 분리 |
 | **무게 효율** | ₽/kg 환산으로 운반 가치 비교 |
 | **한 / 영** | UI 언어 즉시 전환 |
@@ -73,9 +84,15 @@
 
 1. 아이템 이름이 화면에 보이게 합니다 (인벤토리 호버, 바닥 아이템 조준 등)
 2. **F2** 누름
-3. 잠시 후 오버레이 카드에 시세 정보가 뜸
+3. 잠시 후 오버레이 카드에 시세 정보가 뜸 (위 첫 스크린샷처럼)
 
-### 3. 인식이 잘 안 될 때
+### 3. 검색 기록 — 시계 아이콘(🕒)으로 최근 조회 다시 보기
+
+방금 본 아이템 또 확인하고 싶을 때 캡처 다시 안 해도 됩니다. 카드 우측 상단 🕒 클릭 → 최근 15개에서 한 번 더 조회.
+
+![검색 기록 화면](assets/screenshots/02-history.png)
+
+### 4. 인식이 잘 안 될 때
 
 설정의 **캡처 영역** 항목에서 X/Y 오프셋과 너비/높이를 조정 — 아이템 이름 텍스트가 캡처 영역 안에 들어오도록 맞추면 됩니다.
 
@@ -86,13 +103,17 @@
 | 너비 | `300` | 캡처 영역 너비 |
 | 높이 | `70` | 캡처 영역 높이 |
 
-### 4. 오버레이 위치 이동
+### 5. 오버레이 위치 이동
 
 카드 빈 곳을 **드래그**하면 어디든 옮길 수 있습니다 (위치 자동 저장).
 
 ---
 
-## ⚙️ 전체 설정
+## ⚙️ 설정 & 커스터마이징
+
+기어(⚙) 아이콘 클릭하면 설정창이 펼쳐집니다.
+
+![설정 화면](assets/screenshots/03-settings.png)
 
 | 항목 | 설명 |
 |---|---|
@@ -101,12 +122,14 @@
 | 단축키 | 가격 조회 단축키 (기본 `F2`) |
 | 카드 토글 단축키 | 오버레이 표시/숨김 (기본 `Shift+F2`) |
 | 소리 알림 | 조회 완료 시 띵 소리 |
-| 숨김 딜레이 | 카드 자동 숨김까지 대기 시간 (1~60초) |
+| 표시 시간(초) | 카드 자동 숨김까지 대기 시간 (1~60초) |
 | 폰트 크기 | 12px ~ 20px |
 | 표시 항목 | 24h 범위 / 직전 거래 / 무게 효율 / 구매처 / 바터 / 제작 / 퀘스트 개별 ON/OFF |
 | 패널 기본 펼침 | 바터·제작·퀘스트 패널을 처음부터 펼쳐서 표시 |
 | 자동 업데이트 확인 | 실행 시 새 버전 자동 확인 |
-| 어드밴스드 모드 | OCR 오인식 직접 교정 (`misread → correct name` 매핑 저장) |
+| 고급 설정 | OCR 오인식 직접 교정 (`misread → correct name` 매핑 저장) |
+
+표시 항목 다 끄면 카드가 거의 비어보일 만큼 미니멀하게, 다 켜면 위 첫 스크린샷처럼 풀 정보로 — 본인 플레이 스타일 맞게 조정.
 
 ---
 
@@ -115,11 +138,20 @@
 **Q. F2를 눌러도 아무 반응이 없어요.**
 A. 첫 실행 후 OCR 모델 다운로드 중일 수 있습니다 (최대 5분). 이후에도 안 되면 설정에서 단축키를 다시 등록해보세요. 다른 프로그램이 F2를 점유하면 충돌할 수 있으니 다른 키로 변경도 시도해보세요.
 
+**Q. 바탕화면에선 F2 잘 되는데 타르코프 안에서만 무반응이에요.**
+A. 권한 차이 때문입니다. 타르코프는 BattlEye가 **관리자 권한**으로 실행시키는데, 본 앱은 일반 권한이라 Windows UIPI 정책에 의해 게임 포커스 상태에서 키 입력이 차단됩니다.
+
+**해결**: `tarkov-price-overlay.exe` 또는 바로가기 **우클릭 → "관리자 권한으로 실행"** 해주세요. 매번 누르기 귀찮으시면 바로가기 속성 → 호환성 → "관리자 권한으로 이 프로그램 실행" 체크해두면 더블클릭만으로 항상 관리자 권한으로 뜹니다.
+
+(메모리 후킹/저수준 키 후킹으로 우회 가능하지만 BattlEye 탐지 위험 때문에 안 합니다. 안전한 방식 유지하면서 작동시키려면 권한 맞춰주는 게 정답이에요.)
+
+추가로, 타르코프 그래픽 설정이 **독점 전체화면(Exclusive Fullscreen)** 일 경우는 그래픽 설정에서 **"테두리 없는 전체화면(Borderless Fullscreen)"** 으로도 바꿔주세요. 독점 전체화면은 OS 자체가 모든 외부 오버레이를 차단해서 어떤 도구도 동작 못 합니다.
+
 **Q. 인식이 잘 안 되거나 엉뚱한 아이템이 나와요.**
 A. 위 "캡처 영역" 부분 참조. 아이템 이름 텍스트만 캡처 박스 안에 들어오도록 X/Y 오프셋을 미세 조정하세요.
 
 **Q. 같은 아이템을 자꾸 잘못 읽어요.**
-A. 설정 → **어드밴스드 모드** ON → 오인식 → 정답 매핑을 저장할 수 있습니다. 다음번부터 자동 보정.
+A. 설정 → **고급 설정** ON → 오인식 → 정답 매핑을 저장할 수 있습니다. 다음번부터 자동 보정.
 
 **Q. PVE인데 가격이 이상해요.**
 A. 설정 → **게임 모드**를 PVE로 변경하세요.
@@ -133,8 +165,23 @@ A. 코드 서명 인증서 미적용 때문입니다. "추가 정보 → 실행"
 **Q. 밴 안 당하나요?**
 A. 위 "안전성" 섹션 참조. 화면 캡처 + OCR 방식이라 메모리 핵·ESP와는 완전히 다른 카테고리입니다. 단, BSG가 명시 허용한 건 아니므로 사용 책임은 본인에게 있습니다.
 
+**Q. X 누르면 어디로 가나요?**
+A. 트레이로 숨김. 다시 띄우려면 F2 또는 트레이 아이콘 클릭. 완전 종료는 트레이 아이콘 우클릭 → 종료.
+
 **Q. 의견·버그 제보는 어디에 하나요?**
 A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues) 또는 이메일 floe9235@gmail.com
+
+---
+
+## 📜 업데이트 내역 (요약)
+
+- **v1.0.4** — 카드 자동 숨김 시 스크롤바 잔존 / X 종료 후 F2 안 됨 / 트레이 알림 매번 떠서 거슬림 등 UX 버그 픽스 묶음
+- **v1.0.3** — 게임모드 표기 'PVP (일반)' → 'PVP' 단순화 + README 정리
+- **v1.0.2** — 후원 패널에 PayPal 탭 추가 (해외 유저용)
+- **v1.0.1** — 폰트 크기 변경 시 카드 잘리던 문제 픽스, 폰트 12-20px 범위 + 저작권 표시
+- **v1.0.0** — 정식 출시 (커뮤니티 배포 시작)
+
+전체 변경 내역: [Releases 페이지](https://github.com/pado8/tarkov-price-overlay-releases/releases)
 
 ---
 
@@ -155,6 +202,53 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 - © 2026 pado
 
 ---
+
+## 🛠️ 기술 스택 (개발자용)
+
+> 비슷한 EFT OCR 도구 만드시려는 분들을 위한 참고. 이 섹션은 비공개 레포 README에만 있음.
+
+**프론트엔드 / 윈도우 / 트레이**
+- [Tauri 2](https://tauri.app) + React 19 + TypeScript
+- 투명 보더리스 윈도우, 항상 위, 시스템 트레이 처리까지 다 됨
+- Electron 대비 빌드 사이즈 훨씬 작고 메모리 적게 먹음
+
+**핵심 로직 (Python 사이드카)**
+- [FastAPI](https://fastapi.tiangolo.com) (`127.0.0.1:8765`) — 로컬 HTTP 서버
+- [mss](https://python-mss.readthedocs.io) — 화면 캡처 (BitBlt 기반, 빠르고 가벼움)
+- [EasyOCR](https://github.com/JaidedAI/EasyOCR) (ko + en 동시) — 영문/한글 혼합 아이템명 잘 잡힘
+- `requests` — [tarkov.dev](https://tarkov.dev) GraphQL API 호출
+- Tauri sidecar 패턴으로 spawn, 앱 종료 시 자동 kill
+
+**가격 데이터**
+- [tarkov.dev](https://tarkov.dev) GraphQL API (무료, 무인증, 커뮤니티 운영)
+- 백그라운드 캐시 + fuzzy 매칭 (`difflib`)으로 OCR 오인식 자동 보정
+
+**빌드 / 배포**
+- PyInstaller `--onedir`로 Python 사이드카 패키징
+- Tauri bundler가 NSIS 인스톨러로 묶어줌
+- 산출물: ~310MB 인스톨러 + ~450MB 포터블 ZIP
+
+### 비슷한 도구 만들 때 미리 알면 좋은 함정들
+
+1. **듀얼 모니터 + DPI 배율 좌표계**
+   WinAPI `GetCursorPos` + Per-monitor DPI awareness 안 맞춰주면 4K/125% 환경에서 좌표 어긋남. `mss.monitors` 좌표계와 클램프 필요.
+
+2. **PyInstaller + torch 호환성**
+   torch 2.11+cpu는 frozen 환경에서 `c10.dll` 초기화 실패 (`WinError 1114`). **2.7.1+cpu**로 핀하면 정상.
+
+3. **EasyOCR 모델 첫 로드 비용**
+   모델 다운로드 + 워밍업 1~5분 걸려서 FastAPI lifespan에 미리 로드 권장.
+
+4. **한글 OCR 정확도**
+   짧은 영숫자(`FP-100` 같은 거)는 한글 OCR이 자주 헷갈림. fuzzy 매칭(cutoff 0.6)으로 보정 + 사용자 직접 교정 매핑 저장 기능 같이 두면 좋음.
+
+5. **게임 위 click-through**
+   단순 `alwaysOnTop`만으론 클릭이 카드에 막힘. 카드 영역 위에 있을 때만 클릭 캡처, 그 외엔 `setIgnoreCursorEvents(true)`로 통과시키는 region-based pass-through 처리 필요.
+
+6. **BattlEye 안전 가이드**
+   메모리 read/write, DLL 인젝션, 윈도우 후킹은 100% 탐지 → 밴. **화면 캡처 + OCR + 표준 글로벌 단축키**까지가 안전 영역.
+
+---
 ---
 
 # Tarkov Price Overlay — English Guide
@@ -162,6 +256,16 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 > **Hover an item in Tarkov, press F2** — instantly see flea market prices, trader prices, barters, crafts, and quest requirements as a transparent overlay on top of the game.
 
 **[⬇ Download Latest](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · Free · Windows
+
+---
+
+## 📸 In Action
+
+Hover an inventory item, press F2 — card appears in about a second.
+
+![Main lookup card](assets/screenshots/01-main-lookup.png)
+
+Flea current/24h range/last trade · top trader price · barters (both directions) · hideout crafts · **quest requirements** all in one card. Weight efficiency (₽/kg) and per-slot price (₽/slot) auto-calculated.
 
 ---
 
@@ -184,6 +288,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 | **Barter** | Both directions — barters that produce / consume this item |
 | **Hideout crafts** | Recipes that use this item as an ingredient |
 | **Quest info** | Required quests · quantity · FiR (Found in Raid) status |
+| **History** | Last 15 lookups auto-saved, click to re-query |
 | **PVP / PVE** | Separate price data per game mode |
 | **Weight efficiency** | ₽/kg conversion to compare carry value |
 | **Korean / English** | Switch UI language instantly |
@@ -234,7 +339,13 @@ Grab one from **[Releases](https://github.com/pado8/tarkov-price-overlay-release
 2. Press **F2**
 3. Overlay card appears with prices
 
-### 3. If recognition is off
+### 3. Recent lookups — click the 🕒 icon
+
+Want to recheck something you just looked up? Click 🕒 in the card header to see the last 15 lookups; click any entry to re-query.
+
+![History panel](assets/screenshots/02-history.png)
+
+### 4. If recognition is off
 
 Adjust the **capture region** in settings — make sure only the item name text falls inside the capture box.
 
@@ -245,13 +356,17 @@ Adjust the **capture region** in settings — make sure only the item name text 
 | Width | `300` | Capture area width |
 | Height | `70` | Capture area height |
 
-### 4. Move the overlay
+### 5. Move the overlay
 
 Drag any blank area of the card to reposition. Position is auto-saved.
 
 ---
 
-## ⚙️ Settings Reference
+## ⚙️ Settings & Customization
+
+Click the gear (⚙) icon to open settings.
+
+![Settings panel](assets/screenshots/03-settings.png)
 
 | Setting | Description |
 |---|---|
@@ -267,12 +382,21 @@ Drag any blank area of the card to reposition. Position is auto-saved.
 | Auto update check | Check for new versions on startup |
 | Advanced mode | OCR correction editor (`misread → correct name` mappings) |
 
+Turn everything off → minimal card showing just price. Turn everything on → rich card like the first screenshot. Tune to your playstyle.
+
 ---
 
 ## ❓ FAQ
 
 **Q. Nothing happens when I press F2.**
 A. The OCR model may still be downloading on first launch (up to 5 min). If it still fails, re-register the hotkey in Settings. Another program might be holding F2 — try a different key.
+
+**Q. F2 works on desktop but does nothing inside Tarkov.**
+A. Privilege mismatch. Tarkov runs as **administrator** (BattlEye requires it), but this app runs as a normal user. Windows UIPI (User Interface Privilege Isolation) blocks key delivery to lower-privilege processes while a higher-privilege window has focus.
+
+**Fix**: Right-click `tarkov-price-overlay.exe` (or its shortcut) → **"Run as administrator"**. To avoid clicking through this every launch, set the shortcut's Properties → Compatibility → "Run this program as an administrator".
+
+If you're in **Exclusive Fullscreen**, switch Tarkov's graphics setting to **"Borderless Fullscreen"** as well — exclusive fullscreen blocks every overlay tool at the OS level, regardless of privilege.
 
 **Q. Wrong item name or "no match" result.**
 A. See "capture region" above. Tune X/Y offset so only the item name is inside the capture box.
@@ -292,8 +416,23 @@ A. Unsigned executable. Click "More info → Run anyway". See "Safety" section f
 **Q. Will I get banned?**
 A. See "Safety" section above. Screen capture + OCR is fundamentally different from memory hacks/ESP. That said, BSG has not officially sanctioned this tool, so use at your own risk.
 
+**Q. Where does the X button go?**
+A. Hides to the system tray. Press F2 or click the tray icon to bring it back. Right-click the tray icon → Exit to fully quit.
+
 **Q. Bug reports / feedback?**
 A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/issues) or email floe9235@gmail.com.
+
+---
+
+## 📜 Changelog (recent)
+
+- **v1.0.4** — Fixes: scrollbar lingering after auto-hide, F2 not working after X-to-tray, tray notification spamming on every X click, etc.
+- **v1.0.3** — Game mode label simplified to 'PVP', README polish
+- **v1.0.2** — PayPal donate tab added (international users)
+- **v1.0.1** — Font-size-change card cropping fixed, font range 12–20px, copyright notice
+- **v1.0.0** — Public release
+
+Full history: [Releases](https://github.com/pado8/tarkov-price-overlay-releases/releases)
 
 ---
 

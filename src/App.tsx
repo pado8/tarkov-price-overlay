@@ -91,6 +91,21 @@ type TaskRef = {
   min_level: number;
   count: number | null;
   fir: boolean;
+  // Filled by the backend quest tracker if it found this quest in the
+  // player's EFT logs. null when the tracker is off or the quest is unseen.
+  task_status: "started" | "completed" | "failed" | null;
+};
+
+type QuestStatus = {
+  enabled: boolean;
+  install_path: string | null;
+  auto_detected_path: string | null;
+  effective_path: string | null;
+  effective_path_valid: boolean;
+  quest_count: number;
+  completed_count: number;
+  started_count: number;
+  failed_count: number;
 };
 
 type HideoutCraft = {
@@ -156,6 +171,10 @@ type Region = {
   showBartersUsing: boolean;
   showCraftsFor: boolean;
   showQuests: boolean;
+  // What to do with quests the player has already completed (per the
+  // EFT log watcher). "dim" greys them out so they're still visible but
+  // de-emphasized; "hide" filters them out entirely.
+  completedQuestDisplay: "dim" | "hide";
   // Whether the optional <details> panels start expanded.
   detailsOpenDefault: boolean;
   fontSize: number;
@@ -177,6 +196,7 @@ const DEFAULT_REGION: Region = {
   showBartersUsing: true,
   showCraftsFor: true,
   showQuests: true,
+  completedQuestDisplay: "dim",
   detailsOpenDefault: true,
   fontSize: 13,
 };
@@ -368,6 +388,8 @@ function App() {
     loadAutoCheckUpdate
   );
   const [advancedMode, setAdvancedMode] = useState<boolean>(loadAdvanced);
+  const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
+  const [questPathInput, setQuestPathInput] = useState<string>("");
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
@@ -520,6 +542,80 @@ function App() {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Quest tracker helpers — talk to the localhost FastAPI server.
+  const fetchQuestStatus = async (): Promise<boolean> => {
+    try {
+      const res = await fetch(`${PYTHON_API}/quests/status`);
+      if (!res.ok) return false;
+      const data: QuestStatus = await res.json();
+      setQuestStatus(data);
+      // Keep the user-set path field in sync with the server's view.
+      setQuestPathInput(data.install_path ?? "");
+      return true;
+    } catch (e) {
+      log(`quest: status fetch failed — ${String(e)}`);
+      return false;
+    }
+  };
+  const setQuestEnabled = async (enabled: boolean) => {
+    try {
+      const res = await fetch(`${PYTHON_API}/quests/enabled`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      });
+      if (res.ok) setQuestStatus(await res.json());
+    } catch (e) {
+      log(`quest: enabled toggle failed — ${String(e)}`);
+    }
+  };
+  const submitQuestPath = async (path: string) => {
+    try {
+      const res = await fetch(`${PYTHON_API}/quests/path`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+      if (res.ok) setQuestStatus(await res.json());
+    } catch (e) {
+      log(`quest: path set failed — ${String(e)}`);
+    }
+  };
+  const resetQuestState = async () => {
+    try {
+      const res = await fetch(`${PYTHON_API}/quests/reset`, { method: "POST" });
+      if (res.ok) setQuestStatus(await res.json());
+    } catch (e) {
+      log(`quest: reset failed — ${String(e)}`);
+    }
+  };
+
+  // Pull the quest tracker status on mount. The Python sidecar warms up
+  // EasyOCR models for several seconds before it answers HTTP, so the first
+  // fetch usually fails — back off and retry until we get a response.
+  // Settings open also re-fetches so counts stay current after gameplay.
+  useEffect(() => {
+    let cancelled = false;
+    const delays = [800, 2000, 4000, 8000, 15000, 30000];
+    const tryOnce = async (i: number) => {
+      if (cancelled) return;
+      const ok = await fetchQuestStatus();
+      if (ok || cancelled) return;
+      if (i < delays.length) {
+        window.setTimeout(() => tryOnce(i + 1), delays[i]);
+      }
+    };
+    tryOnce(0);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (showSettings) fetchQuestStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSettings]);
 
   useEffect(() => {
     // Initial state: card shown briefly so user can position it, then auto-hide.
@@ -1222,6 +1318,98 @@ function App() {
                 }
               />
             </div>
+
+            <div className="settings-section-header">
+              {t.questSyncSection}
+            </div>
+            <div className="settings-row">
+              <label title={t.questSyncEnableHint}>{t.questSyncEnable}</label>
+              <input
+                type="checkbox"
+                checked={questStatus?.enabled ?? true}
+                disabled={questStatus == null}
+                onChange={(e) => setQuestEnabled(e.target.checked)}
+              />
+            </div>
+            {questStatus == null && (
+              <div className="settings-row">
+                <label>{t.questSyncStatus}</label>
+                <span className="quest-sync-warn">{t.questSyncLoading}</span>
+              </div>
+            )}
+            {questStatus && (
+              <>
+                <div className="settings-row">
+                  <label>{t.questSyncStatus}</label>
+                  <span
+                    className={
+                      questStatus.effective_path_valid
+                        ? "quest-sync-ok"
+                        : "quest-sync-warn"
+                    }
+                  >
+                    {questStatus.effective_path_valid
+                      ? `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
+                      : t.questSyncPathMissing}
+                  </span>
+                </div>
+                <div className="settings-row settings-row-stack">
+                  <label title={t.questSyncPathHint}>{t.questSyncPath}</label>
+                  <div className="quest-path-row">
+                    <input
+                      type="text"
+                      className="quest-path-input"
+                      placeholder={
+                        questStatus.auto_detected_path ?? t.questSyncPathAuto
+                      }
+                      value={questPathInput}
+                      onChange={(e) => setQuestPathInput(e.target.value)}
+                      onBlur={() => {
+                        // Commit on blur so the user can type freely without
+                        // every keystroke triggering a backend call.
+                        if (questPathInput !== (questStatus.install_path ?? "")) {
+                          submitQuestPath(questPathInput);
+                        }
+                      }}
+                    />
+                    <button
+                      className="reset-btn"
+                      onClick={() => {
+                        setQuestPathInput("");
+                        submitQuestPath("");
+                      }}
+                      title={t.questSyncPathAutoHint}
+                    >
+                      {t.questSyncPathAutoBtn}
+                    </button>
+                  </div>
+                </div>
+                <div className="settings-row">
+                  <label title={t.questCompletedDisplayHint}>
+                    {t.questCompletedDisplay}
+                  </label>
+                  <select
+                    value={region.completedQuestDisplay}
+                    onChange={(e) =>
+                      updateRegion(
+                        "completedQuestDisplay",
+                        e.target.value as "dim" | "hide"
+                      )
+                    }
+                  >
+                    <option value="dim">{t.questCompletedDim}</option>
+                    <option value="hide">{t.questCompletedHide}</option>
+                  </select>
+                </div>
+                <div className="settings-row">
+                  <label>{t.questSyncReset}</label>
+                  <button className="reset-btn" onClick={resetQuestState}>
+                    {t.questSyncResetBtn}
+                  </button>
+                </div>
+              </>
+            )}
+
             <div className="settings-row">
               <label>{t.captureRegion}</label>
               <button
@@ -1513,50 +1701,105 @@ function App() {
                   {region.showQuests &&
                     result.used_in_tasks &&
                     result.used_in_tasks.length > 0 && (() => {
-                      const totalCount = result.used_in_tasks.reduce(
-                        (acc, q) => acc + (q.count ?? 0),
+                      // Filter out completed quests entirely if the user
+                      // chose "hide" — otherwise we keep them and just
+                      // grey them in the list. Started/failed/unknown
+                      // quests are always shown.
+                      const visibleQuests =
+                        region.completedQuestDisplay === "hide"
+                          ? result.used_in_tasks.filter(
+                              (q) => q.task_status !== "completed"
+                            )
+                          : result.used_in_tasks;
+                      if (visibleQuests.length === 0) return null;
+                      // Item-count total only sums quests the player still
+                      // needs (not completed ones), so the header reflects
+                      // what the player actually has to grind out.
+                      const remainingCount = visibleQuests.reduce(
+                        (acc, q) =>
+                          acc +
+                          (q.task_status === "completed" ? 0 : q.count ?? 0),
                         0
                       );
+                      const completedShown = visibleQuests.filter(
+                        (q) => q.task_status === "completed"
+                      ).length;
                       return (
                         <div className="quest-warning">
-                          🎯 {t.usedInTasks} ({result.used_in_tasks.length})
-                          {totalCount > 0 && (
+                          🎯 {t.usedInTasks} ({visibleQuests.length})
+                          {remainingCount > 0 && (
                             <span className="quest-total">
                               {" "}
-                              · {t.questTotal} <strong>{totalCount}</strong>
+                              · {t.questTotal} <strong>{remainingCount}</strong>
+                            </span>
+                          )}
+                          {completedShown > 0 && (
+                            <span
+                              className="quest-completed-badge"
+                              title={t.questCompletedHint}
+                            >
+                              {" "}
+                              · ✓ {completedShown}
                             </span>
                           )}
                           <div className="quest-list">
-                            {result.used_in_tasks.map((q, idx) => (
-                              <div key={q.id ?? idx} className="quest-row">
-                                <span className="quest-trader">{q.trader}</span>
-                                <span className="quest-name">{q.name}</span>
-                                <span className="quest-count">
-                                  {q.count != null && (
-                                    <span className="quest-count-num">
-                                      ×{q.count}
-                                    </span>
-                                  )}
-                                  {q.fir ? (
-                                    <span
-                                      className="quest-fir"
-                                      title={t.questFirHint}
-                                    >
-                                      {t.questFirBadge}
-                                    </span>
-                                  ) : (
-                                    q.count != null && (
+                            {visibleQuests.map((q, idx) => {
+                              const statusClass =
+                                q.task_status === "completed"
+                                  ? " completed"
+                                  : q.task_status === "started"
+                                    ? " started"
+                                    : "";
+                              return (
+                                <div
+                                  key={q.id ?? idx}
+                                  className={`quest-row${statusClass}`}
+                                >
+                                  <span className="quest-trader">{q.trader}</span>
+                                  <span className="quest-name">{q.name}</span>
+                                  <span className="quest-count">
+                                    {q.task_status === "completed" && (
                                       <span
-                                        className="quest-anyitem"
-                                        title={t.questAnyHint}
+                                        className="quest-status-icon completed"
+                                        title={t.questCompletedHint}
                                       >
-                                        {t.questAnyBadge}
+                                        ✓
                                       </span>
-                                    )
-                                  )}
-                                </span>
-                              </div>
-                            ))}
+                                    )}
+                                    {q.task_status === "started" && (
+                                      <span
+                                        className="quest-status-icon started"
+                                        title={t.questInProgressHint}
+                                      >
+                                        ▶
+                                      </span>
+                                    )}
+                                    {q.count != null && (
+                                      <span className="quest-count-num">
+                                        ×{q.count}
+                                      </span>
+                                    )}
+                                    {q.fir ? (
+                                      <span
+                                        className="quest-fir"
+                                        title={t.questFirHint}
+                                      >
+                                        {t.questFirBadge}
+                                      </span>
+                                    ) : (
+                                      q.count != null && (
+                                        <span
+                                          className="quest-anyitem"
+                                          title={t.questAnyHint}
+                                        >
+                                          {t.questAnyBadge}
+                                        </span>
+                                      )
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );

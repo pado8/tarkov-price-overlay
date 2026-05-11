@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from capture import capture_region
 from ocr import _get_reader, recognize_text
+from quest_tracker import get_tracker
 from tarkov_api import get_item_price, start_background_refresher
 
 
@@ -33,6 +34,8 @@ async def lifespan(_app: FastAPI):
     _get_reader(("ko", "en"))  # loads models once so first /lookup is fast
     print("[startup] starting price-cache background refresher…")
     start_background_refresher()
+    print("[startup] starting quest log watcher…")
+    get_tracker().start()
     print("[startup] warmup complete")
     yield
 
@@ -89,6 +92,10 @@ class TaskRef(BaseModel):
     min_level: int = 0
     count: int | None = None  # how many of THIS item this task needs
     fir: bool = False  # whether the item must be Found in Raid
+    # Quest progress for this player, derived from EFT log files when
+    # the quest tracker is enabled. None means "we don't know" (no log
+    # data, tracker disabled, or quest never seen).
+    task_status: str | None = None  # "started" | "completed" | "failed" | None
 
 
 class HideoutCraft(BaseModel):
@@ -203,6 +210,7 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
                 min_level=t.get("min_level", 0),
                 count=t.get("count"),
                 fir=t.get("fir", False),
+                task_status=get_tracker().quest_status_for(t.get("id") or ""),
             )
             for t in price.get("used_in_tasks", [])
         ],
@@ -376,6 +384,48 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             text, price = text2, price2
 
     return _build_response(text, price)
+
+
+# ─── Quest tracker endpoints ─────────────────────────────────────────
+# All localhost-only (FastAPI binds to 127.0.0.1), no auth needed.
+
+class QuestPathRequest(BaseModel):
+    path: str = ""  # empty string clears the override → back to auto-detect
+
+
+class QuestEnabledRequest(BaseModel):
+    enabled: bool
+
+
+@app.get("/quests/status")
+def quests_status() -> dict:
+    """Current state of the quest log watcher: install path validity,
+    how many quests we've seen, etc. The frontend polls this so it can
+    surface "X quests synced" or warn that the install path is wrong."""
+    return get_tracker().get_status()
+
+
+@app.post("/quests/path")
+def quests_set_path(req: QuestPathRequest) -> dict:
+    """Override the auto-detected EFT install path. Pass an empty string
+    to revert to auto-detection."""
+    return get_tracker().set_install_path(req.path)
+
+
+@app.post("/quests/enabled")
+def quests_set_enabled(req: QuestEnabledRequest) -> dict:
+    """Toggle the watcher on/off. When off, /lookup responses leave
+    `task_status` as null and no log files are read."""
+    get_tracker().set_enabled(req.enabled)
+    return get_tracker().get_status()
+
+
+@app.post("/quests/reset")
+def quests_reset() -> dict:
+    """Wipe all known quest state and re-scan from scratch. Useful after
+    a wipe or to clean up if anything got out of sync."""
+    get_tracker().reset()
+    return get_tracker().get_status()
 
 
 if __name__ == "__main__":
