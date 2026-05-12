@@ -409,6 +409,28 @@ html, body, #root {
   font-size: var(--card-fs-xs);
 }
 
+/* Hideout-need single-line row: "정수기 Lv2 ×3" */
+.hideout-need-row {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  font-size: var(--card-fs-xs);
+  padding-left: 6px;
+}
+.hideout-need-station {
+  color: #ddd;
+}
+.hideout-need-level {
+  color: #c8aa64;
+  font-family: "Consolas", monospace;
+  flex-shrink: 0;
+}
+.hideout-need-count {
+  color: #6fbf73;
+  font-family: "Consolas", monospace;
+  flex-shrink: 0;
+}
+
 /* Quest sync settings panel rows */
 .settings-row-stack {
   flex-direction: column;

@@ -115,6 +115,12 @@ type HideoutCraft = {
   items: BarterRequiredItem[];
 };
 
+type HideoutNeed = {
+  station: string;
+  level: number;
+  count: number;
+};
+
 type BarterUsing = {
   trader: string;
   level: number;
@@ -148,6 +154,7 @@ type LookupResult = {
   buy_for: BuyOffer[];
   used_in_tasks: TaskRef[];
   crafts_for: HideoutCraft[];
+  needed_for_hideout: HideoutNeed[];
   matched_from: string | null;
 };
 
@@ -170,6 +177,7 @@ type Region = {
   showBartersFor: boolean;
   showBartersUsing: boolean;
   showCraftsFor: boolean;
+  showHideoutNeeds: boolean;
   showQuests: boolean;
   // What to do with quests the player has already completed (per the
   // EFT log watcher). "dim" greys them out so they're still visible but
@@ -195,6 +203,7 @@ const DEFAULT_REGION: Region = {
   showBartersFor: true,
   showBartersUsing: true,
   showCraftsFor: true,
+  showHideoutNeeds: true,
   showQuests: true,
   completedQuestDisplay: "dim",
   detailsOpenDefault: true,
@@ -1296,6 +1305,7 @@ function App() {
                 ["showBartersFor", "displayBartersFor"],
                 ["showBartersUsing", "displayBartersUsing"],
                 ["showCraftsFor", "displayCraftsFor"],
+                ["showHideoutNeeds", "displayHideoutNeeds"],
                 ["showQuests", "displayQuests"],
               ] as const
             ).map(([key, labelKey]) => (
@@ -1693,6 +1703,24 @@ function App() {
                                 </span>
                               ))}
                             </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  {region.showHideoutNeeds &&
+                    result.needed_for_hideout &&
+                    result.needed_for_hideout.length > 0 && (
+                    <details className="all-traders barters" open={region.detailsOpenDefault}>
+                      <summary>
+                        🏗️ {t.hideoutNeed} ({result.needed_for_hideout.length})
+                      </summary>
+                      <div className="trader-list">
+                        {result.needed_for_hideout.map((n, idx) => (
+                          <div key={idx} className="hideout-need-row">
+                            <span className="hideout-need-station">{n.station}</span>
+                            <span className="hideout-need-level">Lv{n.level}</span>
+                            <span className="hideout-need-count">×{n.count}</span>
                           </div>
                         ))}
                       </div>

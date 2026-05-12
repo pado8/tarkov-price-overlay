@@ -105,6 +105,12 @@ class HideoutCraft(BaseModel):
     items: list[BarterRequiredItem] = []
 
 
+class HideoutNeed(BaseModel):
+    station: str
+    level: int = 1
+    count: int = 1  # how many of this item the upgrade requires
+
+
 class BarterUsing(BaseModel):
     trader: str
     level: int = 1
@@ -138,6 +144,7 @@ class LookupResponse(BaseModel):
     buy_for: list[BuyOffer] = []  # trader cash offers (Flea excluded)
     used_in_tasks: list[TaskRef] = []  # quests that need this item
     crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
+    needed_for_hideout: list[HideoutNeed] = []  # hideout upgrades that need this item
     matched_from: str | None = None
 
 
@@ -229,6 +236,14 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
                 ],
             )
             for c in price.get("crafts_for", [])
+        ],
+        needed_for_hideout=[
+            HideoutNeed(
+                station=n["station"],
+                level=n.get("level", 1),
+                count=n.get("count", 1),
+            )
+            for n in price.get("needed_for_hideout", [])
         ],
         matched_from=price.get("matched_from"),
     )

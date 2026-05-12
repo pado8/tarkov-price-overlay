@@ -91,6 +91,24 @@ query AllNames($lang: LanguageCode) {
 }
 """
 
+# Hideout station upgrade requirements. We invert this into
+# {item_id -> [{station, level, count}]} so a per-item lookup can answer
+# "is this needed for a hideout upgrade?" without re-walking 26 stations.
+_QUERY_HIDEOUT_STATIONS = """
+query HideoutReqs($lang: LanguageCode) {
+  hideoutStations(lang: $lang) {
+    name
+    levels {
+      level
+      itemRequirements {
+        count
+        item { id }
+      }
+    }
+  }
+}
+"""
+
 _QUERY_ALL_PRICED = """
 query AllItems($lang: LanguageCode, $gameMode: GameMode) {
   items(lang: $lang, gameMode: $gameMode) {
@@ -171,6 +189,12 @@ _price_cache_lock = threading.Lock()
 _refresher_started = False
 _refresher_lock = threading.Lock()
 
+# lang -> {item_id -> [{"station": str, "level": int, "count": int}, ...]}
+# Station names are localized (depend on lang); item ids are not. Cached
+# per lang so each catalog refresh re-uses the matching index.
+_hideout_index_cache: dict[str, dict[str, list[dict]]] = {}
+_hideout_index_lock = threading.Lock()
+
 
 _FLEA_MARKET_NAMES = {"Flea Market", "플리마켓", "Барахолка", "跳蚤市场", "蚤の市"}
 
@@ -179,7 +203,57 @@ def _is_flea(vendor_name: str) -> bool:
     return vendor_name in _FLEA_MARKET_NAMES
 
 
-def _build_cache_entry(item: dict) -> dict:
+def _fetch_hideout_index(lang: str) -> dict[str, list[dict]]:
+    """One GraphQL call → inverted {item_id: [{station, level, count}]}.
+    Returns {} on failure so callers can keep serving stale-or-missing
+    needed_for_hideout without crashing the catalog refresh."""
+    response = requests.post(
+        TARKOV_API_URL,
+        json={"query": _QUERY_HIDEOUT_STATIONS, "variables": {"lang": lang}},
+        timeout=20,
+    )
+    response.raise_for_status()
+    stations = response.json().get("data", {}).get("hideoutStations", []) or []
+    index: dict[str, list[dict]] = {}
+    for s in stations:
+        sname = s.get("name") or "?"
+        for lv in s.get("levels") or []:
+            level = lv.get("level") or 1
+            for r in lv.get("itemRequirements") or []:
+                inner = r.get("item") or {}
+                iid = inner.get("id")
+                if not iid:
+                    continue
+                index.setdefault(iid, []).append(
+                    {
+                        "station": sname,
+                        "level": level,
+                        "count": r.get("count") or 1,
+                    }
+                )
+    # Stable sort so the UI shows requirements in a predictable order.
+    for needs in index.values():
+        needs.sort(key=lambda n: (n["station"], n["level"]))
+    return index
+
+
+def _get_hideout_index(lang: str) -> dict[str, list[dict]]:
+    """Cached read; populates on first miss. Empty dict on fetch failure."""
+    with _hideout_index_lock:
+        cached = _hideout_index_cache.get(lang)
+    if cached is not None:
+        return cached
+    try:
+        idx = _fetch_hideout_index(lang)
+    except Exception as e:
+        print(f"[hideout] cold fetch failed for lang={lang}: {e!r}")
+        idx = {}
+    with _hideout_index_lock:
+        _hideout_index_cache[lang] = idx
+    return idx
+
+
+def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     sell_for_all = item.get("sellFor", []) or []
     trader_entries = [
         {"name": s["vendor"]["name"], "price": s["priceRUB"]}
@@ -328,6 +402,10 @@ def _build_cache_entry(item: dict) -> dict:
             }
         )
 
+    # Hideout upgrades that need this item. Pre-sorted by station/level inside
+    # _fetch_hideout_index, so list order is stable across calls.
+    needed_for_hideout = list(hideout_idx.get(item.get("id") or "", []))
+
     return {
         "name": item["name"],
         "short_name": item.get("shortName"),
@@ -348,6 +426,7 @@ def _build_cache_entry(item: dict) -> dict:
         "buy_for": buy_for,
         "used_in_tasks": used_in_tasks,
         "crafts_for": crafts_for,
+        "needed_for_hideout": needed_for_hideout,
     }
 
 
@@ -362,7 +441,21 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     )
     response.raise_for_status()
     items = response.json().get("data", {}).get("items", []) or []
-    by_name = {it["name"]: _build_cache_entry(it) for it in items if it.get("name")}
+    # Refresh the lang's hideout index alongside prices so cached entries
+    # always have the latest "needed for upgrade" mapping baked in.
+    try:
+        hideout_idx = _fetch_hideout_index(lang)
+        with _hideout_index_lock:
+            _hideout_index_cache[lang] = hideout_idx
+    except Exception as e:
+        print(f"[hideout] refresh failed for lang={lang}: {e!r} — using stale/empty")
+        with _hideout_index_lock:
+            hideout_idx = _hideout_index_cache.get(lang, {})
+    by_name = {
+        it["name"]: _build_cache_entry(it, hideout_idx)
+        for it in items
+        if it.get("name")
+    }
     with _price_cache_lock:
         _price_cache[(lang, game_mode)] = by_name
         _price_cache_ts[(lang, game_mode)] = time.time()
@@ -465,6 +558,7 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "buy_for": [],
         "used_in_tasks": [],
         "crafts_for": [],
+        "needed_for_hideout": [],
         "matched_from": matched_from,
     }
 
@@ -541,7 +635,7 @@ def get_item_price(
         return _empty_result(matched_from)
 
     item = items[0]
-    entry = _build_cache_entry(item)
+    entry = _build_cache_entry(item, _get_hideout_index(lang))
     # Backfill the cache with this single entry so the next lookup is hot.
     with _price_cache_lock:
         _price_cache.setdefault((lang, game_mode), {})[item["name"]] = entry

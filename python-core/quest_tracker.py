@@ -7,8 +7,10 @@ profile as reading any text file the game produced.
 
 Reference for the log format:
 - Zeliper/Tarkov-Item-Helper LogSyncService.cs
-- EFT writes to: <install>/build/Logs/log_YYYY.MM.DD_HH-MM-SS_VERSION/
-  <timestamp> <player>_push-notifications_*.log
+- Live EFT writes to: <install>/Logs/log_YYYY.MM.DD_HH-MM-SS_VERSION/
+- SPT-AKI / some custom builds use: <install>/build/Logs/...
+  We try both layouts so users on either don't have to know the difference.
+  File name pattern: <timestamp> <player>_push-notifications_*.log
 
 Quest event JSON shape:
     {
@@ -73,9 +75,54 @@ def _state_file() -> Path:
     return _state_dir() / "quest_state.json"
 
 
+# Folder name pattern: `log_2025.12.02_19-46-45_1.0.0.2.42157`
+# EFT does NOT zero-pad single-digit hours/minutes/seconds, so a 2 AM session
+# shows up as `log_2025.12.02_2-46-45_...` not `02-46-45`. Allow 1-2 digits
+# for the time components — using {2} dropped roughly a third of all folders
+# in a long-running player's history.
+_LOG_FOLDER_RE = re.compile(r"^log_(\d{4})\.(\d{2})\.(\d{2})_(\d{1,2})-(\d{1,2})-(\d{1,2})")
+
+
+# Subfolder layouts we know about, in priority order.
+# Live EFT writes directly to <install>/Logs/. SPT-AKI and a few custom
+# launchers nest it under <install>/build/Logs/. Empty tuple means "the
+# install root IS the logs root" — kept as a last-ditch fallback for users
+# who pointed at the Logs folder itself instead of the EFT install root.
+_LOGS_SUBPATHS: tuple[tuple[str, ...], ...] = (
+    ("Logs",),
+    ("build", "Logs"),
+    (),
+)
+
+
+def _resolve_logs_root(install_path: str) -> Optional[Path]:
+    """Find the actual `log_*` folder container under `install_path`.
+    Returns the Logs directory if any known layout has at least one
+    `log_YYYY.MM.DD_*` folder inside it, else None.
+
+    We require at least one matching child folder rather than just the
+    directory existing — a stray empty `Logs` next to the install root
+    shouldn't shadow the real logs further down.
+    """
+    if not install_path:
+        return None
+    base = Path(install_path)
+    for parts in _LOGS_SUBPATHS:
+        candidate = base.joinpath(*parts) if parts else base
+        if not candidate.is_dir():
+            continue
+        try:
+            for entry in candidate.iterdir():
+                if entry.is_dir() and _LOG_FOLDER_RE.match(entry.name):
+                    return candidate
+        except OSError:
+            continue
+    return None
+
+
 def _registry_install_path() -> Optional[str]:
     """Look for an explicit EFT install entry in the Windows registry.
-    Returns a path to the install root (containing build/Logs/) or None."""
+    Returns a path to the install root (containing a Logs/ subtree) or None."""
     if sys.platform != "win32":
         return None
     try:
@@ -103,34 +150,25 @@ def _registry_install_path() -> Optional[str]:
 
 
 def detect_install_path() -> Optional[str]:
-    """Try registry first, then common install dirs. Returns a directory
-    containing `build/Logs/`, or None if nothing matches."""
+    """Try registry first, then common install dirs. Returns the install
+    root that has a usable Logs subtree (any known layout), or None.
+
+    Falls back to the registry hit even without logs so the UI can show
+    "we found EFT here but no logs yet" rather than "we found nothing".
+    """
     candidate = _registry_install_path()
-    if candidate and (Path(candidate) / "build" / "Logs").is_dir():
+    if candidate and _resolve_logs_root(candidate) is not None:
         return candidate
     for path in COMMON_INSTALL_PATHS:
-        if (Path(path) / "build" / "Logs").is_dir():
+        if _resolve_logs_root(path) is not None:
             return path
-    # Sometimes the registry/path points at the launcher dir, not the EFT root.
-    # If we found a registry hit but no build/Logs, surface it anyway so the
-    # user sees something — they can correct it in the UI.
     return candidate
 
 
 def is_valid_install_path(path: str) -> bool:
-    """A path is usable if it contains build/Logs/ that we can list."""
-    if not path:
-        return False
-    p = Path(path) / "build" / "Logs"
-    return p.is_dir()
-
-
-# Folder name pattern: `log_2025.12.02_19-46-45_1.0.0.2.42157`
-# EFT does NOT zero-pad single-digit hours/minutes/seconds, so a 2 AM session
-# shows up as `log_2025.12.02_2-46-45_...` not `02-46-45`. Allow 1-2 digits
-# for the time components — using {2} dropped roughly a third of all folders
-# in a long-running player's history.
-_LOG_FOLDER_RE = re.compile(r"^log_(\d{4})\.(\d{2})\.(\d{2})_(\d{1,2})-(\d{1,2})-(\d{1,2})")
+    """A path is usable if any known layout (Logs/, build/Logs/, or the
+    path itself) has at least one log_* folder inside."""
+    return _resolve_logs_root(path) is not None
 
 
 def _folder_sort_key(folder: Path) -> tuple:
@@ -148,8 +186,8 @@ def _list_log_folders(install_path: str) -> list[Path]:
     """All `log_YYYY.MM.DD_HH-MM-SS*` folders, sorted chronologically (oldest
     first). Chronological order means later events naturally overwrite earlier
     ones in the status dict — no special-case logic needed."""
-    logs_root = Path(install_path) / "build" / "Logs"
-    if not logs_root.is_dir():
+    logs_root = _resolve_logs_root(install_path)
+    if logs_root is None:
         return []
     folders = [
         p for p in logs_root.iterdir()
