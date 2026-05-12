@@ -34,7 +34,8 @@
 | **상인 정보** | 최고가 상인 · 구매처 · 필요 상인 레벨 |
 | **바터** | 이 아이템으로 얻는 바터 / 이 아이템이 재료인 바터 (양방향) |
 | **하이드아웃 제작** | 재료로 사용되는 제작 레시피 |
-| **퀘스트** | 필요 퀘스트 · 수량 · FiR(인레이드) 여부 |
+| **하이드아웃 업그레이드** | 어떤 시설 Lv N 업그레이드에 이 아이템이 몇 개 필요한지 |
+| **퀘스트** | 필요 퀘스트 · 수량 · FiR(인레이드) 여부 · 본인 진행 상황 자동 동기화 |
 | **검색 기록** | 최근 15개 자동 저장, 클릭 한 번으로 재조회 |
 | **PVP / PVE** | 게임 모드별 시세 분리 |
 | **무게 효율** | ₽/kg 환산으로 운반 가치 비교 |
@@ -124,7 +125,7 @@
 | 소리 알림 | 조회 완료 시 띵 소리 |
 | 표시 시간(초) | 카드 자동 숨김까지 대기 시간 (1~60초) |
 | 폰트 크기 | 12px ~ 20px |
-| 표시 항목 | 24h 범위 / 직전 거래 / 무게 효율 / 구매처 / 바터 / 제작 / 퀘스트 개별 ON/OFF |
+| 표시 항목 | 24h 범위 / 직전 거래 / 무게 효율 / 구매처 / 바터 / 제작 / 하이드아웃 업그레이드 / 퀘스트 개별 ON/OFF |
 | 패널 기본 펼침 | 바터·제작·퀘스트 패널을 처음부터 펼쳐서 표시 |
 | 자동 업데이트 확인 | 실행 시 새 버전 자동 확인 |
 | 고급 설정 | OCR 오인식 직접 교정 (`misread → correct name` 매핑 저장) |
@@ -175,6 +176,8 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
+- **v1.0.6** — 퀘스트 트래커 라이브 EFT(BSG 런처) 인식 픽스 + 시세 카드에 "하이드아웃 업그레이드 재료" 패널 추가 (어떤 시설 Lv N에 몇 개 필요한지)
+- **v1.0.5** — 퀘스트 자동 동기화 (EFT 게임 로그 직접 파싱) + 포터블 README 인코딩 픽스 + 전체화면 FAQ 보강
 - **v1.0.4** — 카드 자동 숨김 시 스크롤바 잔존 / X 종료 후 F2 안 됨 / 트레이 알림 매번 떠서 거슬림 등 UX 버그 픽스 묶음
 - **v1.0.3** — 게임모드 표기 'PVP (일반)' → 'PVP' 단순화 + README 정리
 - **v1.0.2** — 후원 패널에 PayPal 탭 추가 (해외 유저용)
@@ -287,7 +290,8 @@ Flea current/24h range/last trade · top trader price · barters (both direction
 | **Trader info** | Best trader price · buy-from vendors · required trader level |
 | **Barter** | Both directions — barters that produce / consume this item |
 | **Hideout crafts** | Recipes that use this item as an ingredient |
-| **Quest info** | Required quests · quantity · FiR (Found in Raid) status |
+| **Hideout upgrade reqs** | Which station / level upgrade needs this item, and how many |
+| **Quest info** | Required quests · quantity · FiR status · auto-sync your own progress |
 | **History** | Last 15 lookups auto-saved, click to re-query |
 | **PVP / PVE** | Separate price data per game mode |
 | **Weight efficiency** | ₽/kg conversion to compare carry value |
@@ -377,7 +381,7 @@ Click the gear (⚙) icon to open settings.
 | Sound notification | Ding on lookup complete |
 | Hide delay | Auto-hide delay (1–60 seconds) |
 | Font size | 12px – 20px |
-| Display items | Toggle each section: 24h range, last trade, weight/efficiency, buy from, barters, crafts, quests |
+| Display items | Toggle each section: 24h range, last trade, weight/efficiency, buy from, barters, crafts, hideout upgrade reqs, quests |
 | Panels open by default | Expand barter/craft/quest panels on first render |
 | Auto update check | Check for new versions on startup |
 | Advanced mode | OCR correction editor (`misread → correct name` mappings) |
@@ -426,6 +430,8 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
+- **v1.0.6** — Tracker now recognizes live EFT (BSG launcher) install layout. New "Hideout upgrade requirements" panel on the lookup card.
+- **v1.0.5** — Quest auto-sync via EFT log parsing. Portable README encoding fix. Fullscreen FAQ.
 - **v1.0.4** — Fixes: scrollbar lingering after auto-hide, F2 not working after X-to-tray, tray notification spamming on every X click, etc.
 - **v1.0.3** — Game mode label simplified to 'PVP', README polish
 - **v1.0.2** — PayPal donate tab added (international users)
