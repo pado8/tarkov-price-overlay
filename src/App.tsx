@@ -2206,41 +2206,58 @@ function App() {
                         </div>
                       );
                     })()}
-                  {(slot || (region.showWeight && result.weight && result.weight > 0)) && (
-                    <div className="slot-price">
-                      {slot && (
-                        <span>
-                          📦 {result.width}×{result.height} →{" "}
-                          <strong>{slot}</strong>
-                          {region.showLootTier && lootTier && (
-                            <span
-                              className={`loot-tier loot-tier-${lootTier}`}
-                              title={t.lootTierHint}
-                            >
-                              {lootTier}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                      {region.showWeight &&
-                        result.weight != null &&
-                        result.weight > 0 && (
-                          <span className="weight-info">
-                            {slot ? " · " : ""}⚖ {result.weight.toFixed(2)}kg
-                            {result.flea_price != null &&
-                              result.weight >= 0.05 && (
-                                <span className="weight-per">
-                                  {" "}
-                                  ({Math.round(
-                                    result.flea_price / result.weight
-                                  ).toLocaleString()}{" "}
-                                  {t.perKgUnit})
+                  {(() => {
+                    const isSingleSlot = slots === 1;
+                    const showTierBadge = region.showLootTier && lootTier;
+                    const showWeightLine =
+                      region.showWeight &&
+                      result.weight != null &&
+                      result.weight > 0;
+                    // Single-slot items get the size + badge but no ₽/slot
+                    // (it's redundant with the listed price). Multi-slot
+                    // items get the full "📦 WxH → N ₽/slot [tier]" line.
+                    const showSlotLine = slot || (isSingleSlot && showTierBadge);
+                    return (
+                      (showSlotLine || showWeightLine) && (
+                        <div className="slot-price">
+                          {showSlotLine && (
+                            <span>
+                              📦 {result.width}×{result.height}
+                              {slot && (
+                                <>
+                                  {" → "}
+                                  <strong>{slot}</strong>
+                                </>
+                              )}
+                              {showTierBadge && (
+                                <span
+                                  className={`loot-tier loot-tier-${lootTier}`}
+                                  title={t.lootTierHint}
+                                >
+                                  {lootTier}
                                 </span>
                               )}
-                          </span>
-                        )}
-                    </div>
-                  )}
+                            </span>
+                          )}
+                          {showWeightLine && (
+                            <span className="weight-info">
+                              {slot || isSingleSlot ? " · " : ""}⚖ {result.weight!.toFixed(2)}kg
+                              {result.flea_price != null &&
+                                result.weight! >= 0.05 && (
+                                  <span className="weight-per">
+                                    {" "}
+                                    ({Math.round(
+                                      result.flea_price / result.weight!
+                                    ).toLocaleString()}{" "}
+                                    {t.perKgUnit})
+                                  </span>
+                                )}
+                            </span>
+                          )}
+                        </div>
+                      )
+                    );
+                  })()}
                 </div>
               );
             })()}
