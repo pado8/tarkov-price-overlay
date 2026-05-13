@@ -23,6 +23,11 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    properties {
+      __typename
+      ... on ItemPropertiesAmmo { caliber }
+      ... on ItemPropertiesWeapon { caliber }
+    }
     avg24hPrice
     low24hPrice
     high24hPrice
@@ -110,6 +115,24 @@ query HideoutReqs($lang: LanguageCode) {
 }
 """
 
+# All ammunition with the stats the matrix panel needs. Tarkov.dev returns
+# ~195 rounds across ~30 calibers — small enough to ship the full payload
+# to the frontend once at startup and let it filter client-side.
+# Localized name/shortName fall back to English; lang is supported here.
+_QUERY_AMMO = """
+query AllAmmo($lang: LanguageCode) {
+  ammo(lang: $lang) {
+    item { id name shortName }
+    caliber
+    penetrationPower
+    damage
+    fragmentationChance
+    armorDamage
+    accuracyModifier
+  }
+}
+"""
+
 _QUERY_ALL_PRICED = """
 query AllItems($lang: LanguageCode, $gameMode: GameMode) {
   items(lang: $lang, gameMode: $gameMode) {
@@ -120,6 +143,11 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    properties {
+      __typename
+      ... on ItemPropertiesAmmo { caliber }
+      ... on ItemPropertiesWeapon { caliber }
+    }
     avg24hPrice
     low24hPrice
     high24hPrice
@@ -196,6 +224,114 @@ _refresher_lock = threading.Lock()
 # per lang so each catalog refresh re-uses the matching index.
 _hideout_index_cache: dict[str, dict[str, list[dict]]] = {}
 _hideout_index_lock = threading.Lock()
+
+# lang -> {"calibers": {caliber_key: {display, rounds: [...]}}}
+# Same lifecycle as the hideout index: refreshed alongside the catalog,
+# served from cache for /ammo endpoint and inline lookup hints.
+_ammo_cache: dict[str, dict] = {}
+_ammo_cache_lock = threading.Lock()
+
+
+# Map tarkov.dev's CamelCase caliber id ("Caliber545x39") to the
+# human-readable display string ("5.45x39"). Falls back to stripping the
+# "Caliber" prefix if no specific rule matches, so future calibers don't
+# silently get hidden.
+def _caliber_display(raw: str) -> str:
+    if not raw:
+        return ""
+    s = raw[len("Caliber"):] if raw.startswith("Caliber") else raw
+    # Common shapes: "545x39", "556x45NATO", "762x54R", "12g", "127x55",
+    # "9x18PM", "366TKM", "40x46", "1143x23ACP".
+    overrides = {
+        "1143x23ACP": ".45 ACP",
+        "9x18PM":     "9x18 PM",
+        "9x18PMM":    "9x18 PMM",
+        "9x19PARA":   "9x19",
+        "9x21":       "9x21",
+        "9x33R":      ".357",
+        "9x39":       "9x39",
+        "10x25ECDC":  "10x25",
+        "127x33":     "12.7x33",
+        "127x55":     "12.7x55",
+        "127x99":     ".50 BMG",
+        "12g":        "12 gauge",
+        "20g":        "20 gauge",
+        "20x1mm":     "20x1mm",
+        "23x75":      "23x75",
+        "26x75":      "26x75",
+        "366TKM":     ".366 TKM",
+        "40mmRU":     "40mm RU",
+        "40x46":      "40x46",
+        "46x30":      "4.6x30",
+        "545x39":     "5.45x39",
+        "556x45NATO": "5.56x45 NATO",
+        "57x28":      "5.7x28",
+        "68x51":      "6.8x51",
+        "762x25TT":   "7.62x25 TT",
+        "762x35":     "7.62x35 (.300 BLK)",
+        "762x39":     "7.62x39",
+        "762x51":     "7.62x51",
+        "762x54R":    "7.62x54R",
+        "86x70":      ".338 LM",
+    }
+    return overrides.get(s, s)
+
+
+def _fetch_ammo(lang: str) -> dict:
+    """Pulls every ammo entry from tarkov.dev and groups by caliber.
+    Returns {"calibers": {caliber_raw: {display, rounds: [...]}}}.
+    Empty dict on any failure so the frontend can degrade gracefully."""
+    try:
+        response = requests.post(
+            TARKOV_API_URL,
+            json={"query": _QUERY_AMMO, "variables": {"lang": lang}},
+            timeout=20,
+        )
+        response.raise_for_status()
+        rows = (response.json().get("data") or {}).get("ammo") or []
+    except Exception as e:
+        print(f"[ammo] fetch failed for lang={lang}: {e!r}")
+        return {"calibers": {}}
+
+    by_caliber: dict[str, dict] = {}
+    for r in rows:
+        cal = r.get("caliber") or ""
+        if not cal:
+            continue
+        item = r.get("item") or {}
+        round_entry = {
+            "id": item.get("id"),
+            "name": item.get("name") or "?",
+            "short_name": item.get("shortName") or item.get("name") or "?",
+            "penetration": r.get("penetrationPower") or 0,
+            "damage": r.get("damage") or 0,
+            "fragmentation": r.get("fragmentationChance") or 0.0,
+            "armor_damage": r.get("armorDamage") or 0,
+            "accuracy_mod": r.get("accuracyModifier") or 0.0,
+        }
+        slot = by_caliber.setdefault(
+            cal, {"display": _caliber_display(cal), "rounds": []}
+        )
+        slot["rounds"].append(round_entry)
+
+    # Sort each caliber's rounds by penetration descending — that's the
+    # "best round" ordering players want to scan first.
+    for slot in by_caliber.values():
+        slot["rounds"].sort(key=lambda r: r["penetration"], reverse=True)
+
+    return {"calibers": by_caliber}
+
+
+def get_ammo(lang: str) -> dict:
+    """Cached read for the /ammo endpoint. Populates on first call."""
+    with _ammo_cache_lock:
+        cached = _ammo_cache.get(lang)
+    if cached is not None:
+        return cached
+    data = _fetch_ammo(lang)
+    with _ammo_cache_lock:
+        _ammo_cache[lang] = data
+    return data
 
 
 _FLEA_MARKET_NAMES = {"Flea Market", "플리마켓", "Барахолка", "跳蚤市场", "蚤の市"}
@@ -411,6 +547,12 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     # _fetch_hideout_index, so list order is stable across calls.
     needed_for_hideout = list(hideout_idx.get(item.get("id") or "", []))
 
+    # Caliber for ammo/weapons — drives the inline Ammo Matrix panel on the
+    # frontend. None for everything else, in which case the panel is hidden.
+    props = item.get("properties") or {}
+    caliber_raw = props.get("caliber") if isinstance(props, dict) else None
+    caliber_display = _caliber_display(caliber_raw) if caliber_raw else None
+
     return {
         "name": item["name"],
         "short_name": item.get("shortName"),
@@ -432,6 +574,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "used_in_tasks": used_in_tasks,
         "crafts_for": crafts_for,
         "needed_for_hideout": needed_for_hideout,
+        "caliber": caliber_raw,
+        "caliber_display": caliber_display,
     }
 
 
@@ -572,6 +716,8 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "used_in_tasks": [],
         "crafts_for": [],
         "needed_for_hideout": [],
+        "caliber": None,
+        "caliber_display": None,
         "matched_from": matched_from,
     }
 

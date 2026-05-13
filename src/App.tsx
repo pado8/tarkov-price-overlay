@@ -200,8 +200,35 @@ type LookupResult = {
   used_in_tasks: TaskRef[];
   crafts_for: HideoutCraft[];
   needed_for_hideout: HideoutNeed[];
+  // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
+  // panel and pre-selects the relevant caliber. null for everything else.
+  caliber: string | null;
+  caliber_display: string | null;
   matched_from: string | null;
 };
+
+type AmmoRound = {
+  id: string | null;
+  name: string;
+  short_name: string;
+  penetration: number;
+  damage: number;
+  fragmentation: number;
+  armor_damage: number;
+  accuracy_mod: number;
+};
+type AmmoCaliberData = { display: string; rounds: AmmoRound[] };
+type AmmoData = { calibers: Record<string, AmmoCaliberData> };
+
+async function fetchAmmo(lang: Lang): Promise<AmmoData | null> {
+  try {
+    const res = await fetch(`${PYTHON_API}/ammo?lang=${lang}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -245,6 +272,9 @@ type Region = {
   // Loot-tier letter badge (D/C/B/A/S) next to ₽/slot. When off, the
   // slot price renders bare. Tier rules live in computeLootTier().
   showLootTier: boolean;
+  // Ammo Matrix panel: auto-expands on the card when the lookup result is
+  // a weapon or a round. Off entirely hides the panel even on ammo/weapon.
+  showAmmoMatrix: boolean;
 };
 
 const DEFAULT_REGION: Region = {
@@ -273,6 +303,7 @@ const DEFAULT_REGION: Region = {
   fontSize: 13,
   opacity: 100,
   showLootTier: true,
+  showAmmoMatrix: true,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -465,6 +496,10 @@ function App() {
   const [adminDismissed, setAdminDismissed] = useState<boolean>(
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
   );
+  // Ammo matrix data is fetched once per language on mount/lang-change.
+  // Null while loading; {calibers: {}} after a failed fetch (we still treat
+  // both as "no matrix" for rendering).
+  const [ammoData, setAmmoData] = useState<AmmoData | null>(null);
   const [cardVisible, setCardVisible] = useState(true);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
@@ -617,6 +652,19 @@ function App() {
       clearTimeout(t);
     };
   }, []);
+
+  // Load the ammo dataset once per language. The sidecar caches it server-
+  // side; we cache it in component state so the matrix opens without a
+  // network round-trip when the user looks up a weapon/round.
+  useEffect(() => {
+    let mounted = true;
+    fetchAmmo(region.lang).then((d) => {
+      if (mounted && d) setAmmoData(d);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [region.lang]);
 
   // Update check helper.
   const checkForUpdate = async () => {
@@ -1481,6 +1529,7 @@ function App() {
                 ["showHideoutNeeds", "displayHideoutNeeds"],
                 ["showQuests", "displayQuests"],
                 ["showLootTier", "displayLootTier"],
+                ["showAmmoMatrix", "displayAmmoMatrix"],
               ] as const
             ).map(([key, labelKey]) => (
               <div key={key} className="settings-row">
@@ -1978,6 +2027,79 @@ function App() {
                       </div>
                     </details>
                   )}
+                  {region.showAmmoMatrix &&
+                    result.caliber &&
+                    ammoData?.calibers[result.caliber] && (() => {
+                      const slot = ammoData.calibers[result.caliber];
+                      const display =
+                        result.caliber_display ?? slot.display;
+                      // Highlight the current round if this lookup *is* a
+                      // round (id match). Weapon lookups won't match any
+                      // row so no highlight.
+                      const currentId = result.item_name ? result : null;
+                      return (
+                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                          <summary>
+                            🎯 {t.ammoCompare} · {display} ({slot.rounds.length})
+                          </summary>
+                          <div className="ammo-matrix">
+                            <div className="ammo-row ammo-row-head">
+                              <span className="ammo-name">{t.ammoName}</span>
+                              <span className="ammo-pen" title={t.ammoPenHint}>Pen</span>
+                              <span className="ammo-dmg" title={t.ammoDmgHint}>Dmg</span>
+                              <span className="ammo-frag" title={t.ammoFragHint}>Frag</span>
+                              <span className="ammo-ac-head" title={t.ammoAcHint}>AC1-6</span>
+                            </div>
+                            {slot.rounds.map((r) => {
+                              const isCurrent =
+                                currentId && r.name === result.item_name;
+                              return (
+                                <div
+                                  key={r.id ?? r.name}
+                                  className={`ammo-row${isCurrent ? " ammo-row-current" : ""}`}
+                                >
+                                  <span className="ammo-name">{r.short_name}</span>
+                                  <span className="ammo-pen">{r.penetration}</span>
+                                  <span className="ammo-dmg">{r.damage}</span>
+                                  <span className="ammo-frag">
+                                    {Math.round(r.fragmentation * 100)}%
+                                  </span>
+                                  <span className="ammo-ac">
+                                    {[1, 2, 3, 4, 5, 6].map((ac) => {
+                                      // Simple heuristic for the AC cell
+                                      // color: pen >= ac*10 → reliable, pen
+                                      // >= ac*7 → variable, else → unlikely.
+                                      // EFT's real penetration formula is
+                                      // probabilistic by durability — close
+                                      // enough for at-a-glance scanning.
+                                      const cls =
+                                        r.penetration >= ac * 10
+                                          ? "ac-pass"
+                                          : r.penetration >= ac * 7
+                                            ? "ac-mid"
+                                            : "ac-fail";
+                                      return (
+                                        <span
+                                          key={ac}
+                                          className={`ac-cell ${cls}`}
+                                          title={`AC${ac}`}
+                                        >
+                                          {cls === "ac-pass"
+                                            ? "●"
+                                            : cls === "ac-mid"
+                                              ? "◐"
+                                              : "○"}
+                                        </span>
+                                      );
+                                    })}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      );
+                    })()}
                   {region.showQuests &&
                     result.used_in_tasks &&
                     result.used_in_tasks.length > 0 && (() => {

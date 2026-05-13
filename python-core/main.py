@@ -156,6 +156,11 @@ class LookupResponse(BaseModel):
     used_in_tasks: list[TaskRef] = []  # quests that need this item
     crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
     needed_for_hideout: list[HideoutNeed] = []  # hideout upgrades that need this item
+    # Caliber for ammo / weapons. Raw is the tarkov.dev id ("Caliber545x39");
+    # display is the human-friendly form ("5.45x39"). Both None for non-
+    # weapon, non-ammo items, which suppresses the ammo-matrix panel.
+    caliber: str | None = None
+    caliber_display: str | None = None
     matched_from: str | None = None
 
 
@@ -257,6 +262,8 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
             )
             for n in price.get("needed_for_hideout", [])
         ],
+        caliber=price.get("caliber"),
+        caliber_display=price.get("caliber_display"),
         matched_from=price.get("matched_from"),
     )
 
@@ -264,6 +271,14 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/ammo")
+def ammo(lang: str = "en") -> dict:
+    """All ammo grouped by caliber, with the matrix-panel stats. Frontend
+    fetches once on mount and filters client-side — payload is ~30KB."""
+    from tarkov_api import get_ammo
+    return get_ammo(lang)
 
 
 @app.get("/diagnostics")

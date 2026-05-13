@@ -449,6 +449,64 @@ html, body, #root {
   font-size: var(--card-fs-xs);
 }
 
+/* Ammo matrix table: caliber-grouped rows of Pen/Dmg/Frag + AC1-6 dots */
+.ammo-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--card-fs-xs);
+  font-family: "Consolas", monospace;
+}
+.ammo-row {
+  display: grid;
+  grid-template-columns: 1fr 32px 32px 36px auto;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+}
+.ammo-row-head {
+  color: #888;
+  font-size: var(--card-fs-xxs);
+  border-bottom: 1px solid rgba(200, 170, 100, 0.2);
+  padding-bottom: 3px;
+  margin-bottom: 2px;
+}
+.ammo-row-current {
+  background: rgba(200, 170, 100, 0.18);
+  border-radius: 2px;
+}
+.ammo-name {
+  color: #ddd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ammo-row-current .ammo-name {
+  color: #f0c040;
+  font-weight: 700;
+}
+.ammo-pen, .ammo-dmg, .ammo-frag {
+  text-align: right;
+  color: #ccc;
+}
+.ammo-ac-head {
+  text-align: center;
+  color: #888;
+}
+.ammo-ac {
+  display: inline-flex;
+  gap: 2px;
+}
+.ac-cell {
+  display: inline-block;
+  width: 11px;
+  text-align: center;
+  font-weight: 700;
+}
+.ac-pass { color: #6fbf73; }
+.ac-mid  { color: #f0c040; }
+.ac-fail { color: #d05050; }
+
 /* Hideout-need single-line row: "정수기 Lv2 ×3" */
 .hideout-need-row {
   display: flex;
