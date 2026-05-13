@@ -2045,10 +2045,9 @@ function App() {
                           <div className="ammo-matrix">
                             <div className="ammo-row ammo-row-head">
                               <span className="ammo-name">{t.ammoName}</span>
-                              <span className="ammo-pen" title={t.ammoPenHint}>Pen</span>
-                              <span className="ammo-dmg" title={t.ammoDmgHint}>Dmg</span>
-                              <span className="ammo-frag" title={t.ammoFragHint}>Frag</span>
-                              <span className="ammo-ac-head" title={t.ammoAcHint}>AC1-6</span>
+                              <span className="ammo-pen" title={t.ammoPenHint}>{t.ammoColPen}</span>
+                              <span className="ammo-dmg" title={t.ammoDmgHint}>{t.ammoColDmg}</span>
+                              <span className="ammo-ac-head" title={t.ammoAcHint}>{t.ammoColAc}</span>
                             </div>
                             {slot.rounds.map((r) => {
                               const isCurrent =
@@ -2061,9 +2060,6 @@ function App() {
                                   <span className="ammo-name">{r.short_name}</span>
                                   <span className="ammo-pen">{r.penetration}</span>
                                   <span className="ammo-dmg">{r.damage}</span>
-                                  <span className="ammo-frag">
-                                    {Math.round(r.fragmentation * 100)}%
-                                  </span>
                                   <span className="ammo-ac">
                                     {[1, 2, 3, 4, 5, 6].map((ac) => {
                                       // Simple heuristic for the AC cell
@@ -2213,20 +2209,30 @@ function App() {
                       region.showWeight &&
                       result.weight != null &&
                       result.weight > 0;
-                    // Single-slot items get the size + badge but no ₽/slot
-                    // (it's redundant with the listed price). Multi-slot
-                    // items get the full "📦 WxH → N ₽/slot [tier]" line.
-                    const showSlotLine = slot || (isSingleSlot && showTierBadge);
+                    // Single-slot items show "📦 N ₽ [tier]" (size omitted
+                    // since 1×1 is implicit). Multi-slot items show the
+                    // full "📦 W×H → N ₽/slot [tier]" line.
+                    const showSlotLine =
+                      slot || (isSingleSlot && (showTierBadge || rawPrice != null));
                     return (
                       (showSlotLine || showWeightLine) && (
                         <div className="slot-price">
                           {showSlotLine && (
                             <span>
-                              📦 {result.width}×{result.height}
-                              {slot && (
+                              📦{" "}
+                              {isSingleSlot ? (
+                                rawPrice != null && (
+                                  <strong>{fmt(rawPrice)}</strong>
+                                )
+                              ) : (
                                 <>
-                                  {" → "}
-                                  <strong>{slot}</strong>
+                                  {result.width}×{result.height}
+                                  {slot && (
+                                    <>
+                                      {" → "}
+                                      <strong>{slot}</strong>
+                                    </>
+                                  )}
                                 </>
                               )}
                               {showTierBadge && (

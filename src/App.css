@@ -450,23 +450,26 @@ html, body, #root {
 }
 
 /* Ammo matrix table: caliber-grouped rows of Pen/Dmg/Frag + AC1-6 dots */
+/* Container owns the grid tracks; rows use `subgrid` so every row sizes
+   columns from the SAME source — header and data values stay aligned
+   regardless of label width (한글 vs 영문) or user font-size changes. */
 .ammo-matrix {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  row-gap: 1px;
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
 }
 .ammo-row {
   display: grid;
-  grid-template-columns: 1fr 32px 32px 36px auto;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  column-gap: 10px;
   align-items: center;
-  gap: 4px;
   padding: 2px 4px;
 }
 .ammo-row-head {
   color: #888;
-  font-size: var(--card-fs-xxs);
   border-bottom: 1px solid rgba(200, 170, 100, 0.2);
   padding-bottom: 3px;
   margin-bottom: 2px;
