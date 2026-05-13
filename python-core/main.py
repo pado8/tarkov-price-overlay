@@ -100,6 +100,9 @@ class TaskRef(BaseModel):
     min_level: int = 0
     count: int | None = None  # how many of THIS item this task needs
     fir: bool = False  # whether the item must be Found in Raid
+    # Whether this task is on the Kappa progression. Drives the loot-tier
+    # badge — Kappa items get pushed up to at least A even when ₽/slot is low.
+    kappa_required: bool = False
     # Quest progress for this player, derived from EFT log files when
     # the quest tracker is enabled. None means "we don't know" (no log
     # data, tracker disabled, or quest never seen).
@@ -225,6 +228,7 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
                 min_level=t.get("min_level", 0),
                 count=t.get("count"),
                 fir=t.get("fir", False),
+                kappa_required=t.get("kappa_required", False),
                 task_status=get_tracker().quest_status_for(t.get("id") or ""),
             )
             for t in price.get("used_in_tasks", [])

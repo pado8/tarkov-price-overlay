@@ -60,6 +60,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
       id
       name
       minPlayerLevel
+      kappaRequired
       trader { name }
       objectives {
         ... on TaskObjectiveItem {
@@ -156,6 +157,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       id
       name
       minPlayerLevel
+      kappaRequired
       trader { name }
       objectives {
         ... on TaskObjectiveItem {
@@ -329,6 +331,9 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
                 "min_level": t.get("minPlayerLevel") or 0,
                 "count": total,
                 "fir": fir,
+                # Kappa flag drives the loot-tier badge (B vs A): Kappa-required
+                # tasks boost the item to at least A even at low ₽/slot.
+                "kappa_required": bool(t.get("kappaRequired")),
             }
         )
 

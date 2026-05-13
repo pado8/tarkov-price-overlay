@@ -209,6 +209,46 @@ html, body, #root {
   color: #f0c040;
   font-family: "Consolas", monospace;
 }
+
+/* Loot tier letter badge sits next to ₽/slot. Five tiers, colored by
+   value: S(gold) / A(warm orange) / B(green) / C(trader gold) / D(grey). */
+.loot-tier {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: var(--card-fs-xs);
+  font-family: "Consolas", monospace;
+  font-weight: 700;
+  vertical-align: middle;
+  cursor: help;
+}
+.loot-tier-S {
+  background: rgba(240, 192, 64, 0.25);
+  color: #f0c040;
+  border: 1px solid rgba(240, 192, 64, 0.6);
+}
+.loot-tier-A {
+  background: rgba(255, 153, 51, 0.22);
+  color: #ff9933;
+  border: 1px solid rgba(255, 153, 51, 0.5);
+}
+.loot-tier-B {
+  background: rgba(111, 191, 115, 0.2);
+  color: #6fbf73;
+  border: 1px solid rgba(111, 191, 115, 0.5);
+}
+.loot-tier-C {
+  background: rgba(200, 170, 100, 0.18);
+  color: #c8aa64;
+  border: 1px solid rgba(200, 170, 100, 0.45);
+}
+.loot-tier-D {
+  background: rgba(140, 140, 140, 0.15);
+  color: #999;
+  border: 1px solid rgba(140, 140, 140, 0.4);
+}
+
 .weight-info {
   color: #aaa;
 }

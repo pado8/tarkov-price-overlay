@@ -26,6 +26,29 @@ type Diagnostics = {
   platform: string;
 };
 
+// Loot tier letter from ₽/slot + context flags. Five tiers (D/C/B/A/S):
+// S — ≥100k ₽/slot OR a "rare" hard-to-find item (rare flag reserved for
+//     future heuristic; currently always false).
+// A — 50k–100k ₽/slot (gap-filling pure-price band).
+// B — 30k–50k ₽/slot OR Kappa-required (Kappa boosts at least to B even
+//     at low price so collector progression items aren't graded as junk).
+// C — 10k–30k ₽/slot OR used in any quest / hideout upgrade (so quest
+//     loot never drops below C even if it's cheap).
+// D — <10k ₽/slot AND not quest/hideout/Kappa.
+type LootTier = "S" | "A" | "B" | "C" | "D";
+function computeLootTier(
+  rubPerSlot: number,
+  hasQuestOrHideout: boolean,
+  hasKappa: boolean,
+  rare: boolean
+): LootTier {
+  if (rare || rubPerSlot >= 100_000) return "S";
+  if (rubPerSlot >= 50_000) return "A";
+  if (hasKappa || rubPerSlot >= 30_000) return "B";
+  if (hasQuestOrHideout || rubPerSlot >= 10_000) return "C";
+  return "D";
+}
+
 async function fetchDiagnostics(): Promise<Diagnostics | null> {
   try {
     const res = await fetch(`${PYTHON_API}/diagnostics`);
@@ -110,6 +133,9 @@ type TaskRef = {
   min_level: number;
   count: number | null;
   fir: boolean;
+  // Whether this task is on the Kappa progression. Used by the loot-tier
+  // tier function — Kappa items get boosted to A even at low ₽/slot.
+  kappa_required: boolean;
   // Filled by the backend quest tracker if it found this quest in the
   // player's EFT logs. null when the tracker is off or the quest is unseen.
   task_status: "started" | "completed" | "failed" | null;
@@ -216,6 +242,9 @@ type Region = {
   // 20 because 0% leaves the card invisible and the user can't find the
   // settings to undo it.
   opacity: number;
+  // Loot-tier letter badge (D/C/B/A/S) next to ₽/slot. When off, the
+  // slot price renders bare. Tier rules live in computeLootTier().
+  showLootTier: boolean;
 };
 
 const DEFAULT_REGION: Region = {
@@ -243,6 +272,7 @@ const DEFAULT_REGION: Region = {
   detailsOpenDefault: true,
   fontSize: 13,
   opacity: 100,
+  showLootTier: true,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -1450,6 +1480,7 @@ function App() {
                 ["showCraftsFor", "displayCraftsFor"],
                 ["showHideoutNeeds", "displayHideoutNeeds"],
                 ["showQuests", "displayQuests"],
+                ["showLootTier", "displayLootTier"],
               ] as const
             ).map(([key, labelKey]) => (
               <div key={key} className="settings-row">
@@ -1733,6 +1764,25 @@ function App() {
                 result.width,
                 result.height
               );
+              // Compute the raw ₽/slot too (fmtSlot returns a string for
+              // display, but tier rules need the number). Mirror the same
+              // price fallback chain — flea first, then top trader.
+              const rawPrice =
+                result.flea_price ?? result.trader_price ?? null;
+              const slots =
+                (result.width ?? 0) * (result.height ?? 0);
+              const rubPerSlot =
+                rawPrice && slots > 0 ? rawPrice / slots : null;
+              const hasKappa = (result.used_in_tasks ?? []).some(
+                (q) => q.kappa_required
+              );
+              const hasQuestOrHideout =
+                (result.used_in_tasks?.length ?? 0) > 0 ||
+                (result.needed_for_hideout?.length ?? 0) > 0;
+              const lootTier =
+                rubPerSlot != null
+                  ? computeLootTier(rubPerSlot, hasQuestOrHideout, hasKappa, false)
+                  : null;
               const bestTraderName =
                 result.sell_for[0]?.name ?? null;
               return (
@@ -2040,6 +2090,14 @@ function App() {
                         <span>
                           📦 {result.width}×{result.height} →{" "}
                           <strong>{slot}</strong>
+                          {region.showLootTier && lootTier && (
+                            <span
+                              className={`loot-tier loot-tier-${lootTier}`}
+                              title={t.lootTierHint}
+                            >
+                              {lootTier}
+                            </span>
+                          )}
                         </span>
                       )}
                       {region.showWeight &&
