@@ -60,6 +60,14 @@ class CaptureRequest(BaseModel):
     mirror_x: int | None = None  # alt capture x (mirrored side), tried if primary doesn't match
     cursor_x: int | None = None  # cursor pos, used to clamp capture to that monitor
     cursor_y: int | None = None
+    # Ground-item capture region (small box under the crosshair shown when
+    # hovering an item on the floor during a raid). Tried before primary so
+    # raid pickups work without a separate hotkey. All four must be set to
+    # enable; absolute coords like primary x/y.
+    ground_x: int | None = None
+    ground_y: int | None = None
+    ground_width: int | None = None
+    ground_height: int | None = None
     # If set, skip capture/OCR entirely and look this name up directly.
     # Used by "직접 입력" / 최근 검색 재조회.
     override_text: str | None = None
@@ -254,6 +262,30 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/diagnostics")
+def diagnostics() -> dict:
+    """One-shot environment probe for the React side. Today this only
+    answers "are we admin?" so the UI can warn users that F2 won't reach
+    Tarkov when EFT runs as administrator (BattlEye) and we don't.
+
+    Add new keys here (don't break existing ones) as we surface more
+    self-diagnosis hints — UAC settings, Borderless vs Exclusive Fullscreen
+    detection, antivirus quarantine, etc.
+    """
+    is_admin: bool | None = None
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            # IsUserAnAdmin returns 0 / nonzero. Wrap in try because some
+            # locked-down environments raise rather than return 0.
+            is_admin = bool(ctypes.windll.shell32.IsUserAnAdmin())
+        except Exception as e:
+            print(f"[diagnostics] elevation probe failed: {e!r}")
+            is_admin = None
+    return {"is_admin": is_admin, "platform": sys.platform}
+
+
 @app.get("/debug/screen")
 def debug_screen() -> dict:
     with mss.mss() as sct:
@@ -360,9 +392,10 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     cursor_x = winapi_cursor[0] if winapi_cursor else req.cursor_x
     cursor_y = winapi_cursor[1] if winapi_cursor else req.cursor_y
 
-    # Re-derive primary/mirror capture origins from the trusted cursor position
-    # plus the offsets the frontend chose, so they match the same coord system
-    # as mss.monitors. (Otherwise DPI mismatch can place us on the wrong screen.)
+    # Re-derive primary/mirror/ground capture origins from the trusted cursor
+    # position plus the offsets the frontend chose, so they match the same coord
+    # system as mss.monitors. (Otherwise DPI mismatch can place us on the wrong
+    # screen.)
     if winapi_cursor and req.cursor_x is not None and req.cursor_y is not None:
         offset_x = req.x - req.cursor_x
         offset_y = req.y - req.cursor_y
@@ -373,30 +406,57 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             if req.mirror_x is not None
             else None
         )
+        if req.ground_x is not None and req.ground_y is not None:
+            g_offset_x = req.ground_x - req.cursor_x
+            g_offset_y = req.ground_y - req.cursor_y
+            ground_x_val = winapi_cursor[0] + g_offset_x
+            ground_y_val = winapi_cursor[1] + g_offset_y
+        else:
+            ground_x_val = ground_y_val = None
     else:
         primary_x, primary_y = req.x, req.y
         mirror_x_val = req.mirror_x
+        ground_x_val = req.ground_x
+        ground_y_val = req.ground_y
 
     can_clamp = cursor_x is not None and cursor_y is not None
+
+    # Build the ordered list of capture attempts. Primary (inventory hover,
+    # right of cursor) → mirror (left of cursor, opposite-side UI) → ground
+    # (small box under crosshair for raid floor items). Inventory hover is
+    # the most common case so it's first; ground is the rarer fallback.
+    # First attempt that returns a matched item wins.
+    attempts: list[tuple[str, int, int, int, int]] = []
+
     px, py, pw, ph = primary_x, primary_y, req.width, req.height
     if can_clamp:
         px, py, pw, ph = _clamp_to_monitor(px, py, pw, ph, cursor_x, cursor_y)
+    attempts.append(("primary", px, py, pw, ph))
 
-    text, price = _capture_and_lookup(
-        px, py, pw, ph, lang, game_mode, "primary", req.corrections
-    )
-
-    if price.get("name") is None and mirror_x_val is not None:
+    if mirror_x_val is not None:
         mx, my, mw_, mh_ = mirror_x_val, primary_y, req.width, req.height
         if can_clamp:
-            mx, my, mw_, mh_ = _clamp_to_monitor(
-                mx, my, mw_, mh_, cursor_x, cursor_y
-            )
-        text2, price2 = _capture_and_lookup(
-            mx, my, mw_, mh_, lang, game_mode, "mirror", req.corrections
+            mx, my, mw_, mh_ = _clamp_to_monitor(mx, my, mw_, mh_, cursor_x, cursor_y)
+        attempts.append(("mirror", mx, my, mw_, mh_))
+
+    if (
+        ground_x_val is not None
+        and ground_y_val is not None
+        and req.ground_width
+        and req.ground_height
+    ):
+        gx, gy, gw, gh = ground_x_val, ground_y_val, req.ground_width, req.ground_height
+        if can_clamp:
+            gx, gy, gw, gh = _clamp_to_monitor(gx, gy, gw, gh, cursor_x, cursor_y)
+        attempts.append(("ground", gx, gy, gw, gh))
+
+    text, price = "", {"name": None}
+    for label, ax, ay, aw, ah in attempts:
+        text, price = _capture_and_lookup(
+            ax, ay, aw, ah, lang, game_mode, label, req.corrections
         )
-        if price2.get("name") is not None:
-            text, price = text2, price2
+        if price.get("name") is not None:
+            break
 
     return _build_response(text, price)
 

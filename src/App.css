@@ -602,6 +602,25 @@ html, body, #root {
 .update-btn:hover {
   background: rgba(200, 170, 100, 0.4);
 }
+
+/* Admin elevation warning — same shape as .update-banner but warmer red
+   tone so users notice it's a "watch out" rather than a "you can update". */
+.admin-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 130, 100, 0.12);
+  border: 1px solid rgba(255, 130, 100, 0.45);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin: 6px 0;
+  font-size: var(--card-fs-xs);
+  color: #ffd0b8;
+}
+.admin-text {
+  flex: 1;
+  line-height: 1.35;
+}
 .settings-hint-inline {
   font-size: var(--card-fs-xxs);
   color: #666;
@@ -737,6 +756,42 @@ html, body, #root {
   padding: 2px 4px;
   font-size: var(--card-fs-xs);
   cursor: pointer;
+}
+
+/* Opacity: slider + click-to-edit number readout */
+.opacity-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.opacity-slider {
+  width: 90px;
+  accent-color: #c8aa64;
+  cursor: pointer;
+}
+.opacity-readout {
+  color: #c8aa64;
+  font-family: "Consolas", monospace;
+  font-size: var(--card-fs-xs);
+  min-width: 36px;
+  text-align: right;
+  cursor: pointer;
+  user-select: none;
+}
+.opacity-readout:hover {
+  color: #f0c040;
+  text-decoration: underline;
+}
+.opacity-number {
+  width: 48px;
+  background: #1a1a1a;
+  color: #c8aa64;
+  border: 1px solid #c8aa64;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: var(--card-fs-xs);
+  font-family: "Consolas", monospace;
+  text-align: right;
 }
 
 .donate-panel {

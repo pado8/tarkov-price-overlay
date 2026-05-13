@@ -451,11 +451,19 @@ def _refresh_one(lang: str, game_mode: str) -> int:
         print(f"[hideout] refresh failed for lang={lang}: {e!r} — using stale/empty")
         with _hideout_index_lock:
             hideout_idx = _hideout_index_cache.get(lang, {})
-    by_name = {
-        it["name"]: _build_cache_entry(it, hideout_idx)
-        for it in items
-        if it.get("name")
-    }
+    by_name: dict[str, dict] = {}
+    for it in items:
+        name = it.get("name")
+        if not name:
+            continue
+        entry = _build_cache_entry(it, hideout_idx)
+        by_name[name] = entry
+        # Alias by shortName too so ground-pickup OCR ("SALEWA") matches the
+        # same entry as the full inventory name ("Salewa first aid kit"). The
+        # full name takes priority on collisions; aliases are first-write-wins.
+        short = (it.get("shortName") or "").strip()
+        if short and short != name and short not in by_name:
+            by_name[short] = entry
     with _price_cache_lock:
         _price_cache[(lang, game_mode)] = by_name
         _price_cache_ts[(lang, game_mode)] = time.time()

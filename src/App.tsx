@@ -11,10 +11,29 @@ declare const __APP_VERSION__: string;
 const APP_VERSION = __APP_VERSION__;
 const UPDATE_REPO = "pado8/tarkov-price-overlay-releases";
 const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
+// One-shot dismiss for the "run as administrator" diagnostic banner. We
+// remember it forever per machine so users who already moved to elevated
+// shortcuts never see it again. Clearing localStorage brings it back.
+const ADMIN_BANNER_DISMISS_KEY = "tarkov.adminBannerDismissed";
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
   return v == null ? true : v === "true";
+}
+
+type Diagnostics = {
+  is_admin: boolean | null;
+  platform: string;
+};
+
+async function fetchDiagnostics(): Promise<Diagnostics | null> {
+  try {
+    const res = await fetch(`${PYTHON_API}/diagnostics`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 type UpdateInfo = { tag: string; url: string };
@@ -165,6 +184,12 @@ type Region = {
   offsetY: number;
   width: number;
   height: number;
+  // Ground-item capture (small box under the crosshair for raid floor items).
+  // Tried after primary/mirror as a fallback so F2 also works on dropped items.
+  groundOffsetX: number;
+  groundOffsetY: number;
+  groundWidth: number;
+  groundHeight: number;
   lang: Lang;
   gameMode: GameMode;
   hideDelaySec: number;
@@ -186,6 +211,11 @@ type Region = {
   // Whether the optional <details> panels start expanded.
   detailsOpenDefault: boolean;
   fontSize: number;
+  // Card opacity (20-100). Lets players keep the overlay readable while
+  // dimming it so it doesn't compete with the game underneath. Floors at
+  // 20 because 0% leaves the card invisible and the user can't find the
+  // settings to undo it.
+  opacity: number;
 };
 
 const DEFAULT_REGION: Region = {
@@ -193,6 +223,10 @@ const DEFAULT_REGION: Region = {
   offsetY: -75,
   width: 300,
   height: 70,
+  groundOffsetX: -80,
+  groundOffsetY: 30,
+  groundWidth: 160,
+  groundHeight: 30,
   lang: "ko",
   gameMode: "regular",
   hideDelaySec: 5,
@@ -208,6 +242,7 @@ const DEFAULT_REGION: Region = {
   completedQuestDisplay: "dim",
   detailsOpenDefault: true,
   fontSize: 13,
+  opacity: 100,
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -311,6 +346,9 @@ function loadRegion(): Region {
       const merged: Region = { ...DEFAULT_REGION, ...JSON.parse(raw) };
       // Clamp fontSize to the supported select range (12-20).
       merged.fontSize = Math.max(12, Math.min(20, merged.fontSize));
+      // Clamp opacity to safe range (20-100). 0% would hide the card with
+      // no way for the user to bring it back via the settings panel.
+      merged.opacity = Math.max(20, Math.min(100, merged.opacity ?? 100));
       return merged;
     }
   } catch {}
@@ -388,6 +426,15 @@ function App() {
   >(null);
   const recordingHotkey = recordingTarget !== null;
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
+  // Click-to-edit toggle for the opacity readout next to the slider.
+  const [opacityEditing, setOpacityEditing] = useState(false);
+  // "Run as administrator" diagnostic: shown when sidecar reports we are
+  // not elevated. Hidden once the user dismisses (persisted via
+  // ADMIN_BANNER_DISMISS_KEY).
+  const [adminInfo, setAdminInfo] = useState<Diagnostics | null>(null);
+  const [adminDismissed, setAdminDismissed] = useState<boolean>(
+    () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
+  );
   const [cardVisible, setCardVisible] = useState(true);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
@@ -524,6 +571,22 @@ function App() {
   useEffect(() => {
     localStorage.setItem(ADVANCED_KEY, String(advancedMode));
   }, [advancedMode]);
+
+  // Probe sidecar diagnostics once on mount. We re-probe ~3s later in
+  // case the sidecar wasn't ready yet (cold-start window).
+  useEffect(() => {
+    let mounted = true;
+    const probe = async () => {
+      const info = await fetchDiagnostics();
+      if (mounted && info) setAdminInfo(info);
+    };
+    probe();
+    const t = setTimeout(probe, 3000);
+    return () => {
+      mounted = false;
+      clearTimeout(t);
+    };
+  }, []);
 
   // Update check helper.
   const checkForUpdate = async () => {
@@ -784,6 +847,10 @@ function App() {
           mirror_x: event.payload.x - r.offsetX - r.width,
           cursor_x: event.payload.x,
           cursor_y: event.payload.y,
+          ground_x: event.payload.x + r.groundOffsetX,
+          ground_y: event.payload.y + r.groundOffsetY,
+          ground_width: r.groundWidth,
+          ground_height: r.groundHeight,
           corrections: loadCorrections(),
         });
         const controller = new AbortController();
@@ -944,6 +1011,10 @@ function App() {
         style={{
           "--card-fs": `${region.fontSize}px`,
           width: `${Math.round(280 * region.fontSize / FONT_DEFAULT)}px`,
+          // Auto-hide already handles the full 0→opacity transition via
+          // .card-hidden. We only dim while visible so the fade-out can
+          // still drop to 0 without fighting the user's preference.
+          opacity: cardVisible ? region.opacity / 100 : undefined,
         } as React.CSSProperties}
         onMouseEnter={() => cancelHideTimer()}
         onMouseLeave={() => {
@@ -1016,6 +1087,26 @@ function App() {
               className="settings-btn"
               onClick={() => setDismissedUpdate(updateInfo.tag)}
               title={t.updateLater}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {adminInfo &&
+          adminInfo.is_admin === false &&
+          !adminDismissed && (
+          <div className="admin-banner">
+            <span className="admin-text">
+              ⚠ {t.adminWarning}
+            </span>
+            <button
+              className="settings-btn"
+              onClick={() => {
+                localStorage.setItem(ADMIN_BANNER_DISMISS_KEY, "true");
+                setAdminDismissed(true);
+              }}
+              title={t.adminDismiss}
             >
               ✕
             </button>
@@ -1296,6 +1387,58 @@ function App() {
                 ))}
               </select>
             </div>
+            <div className="settings-row">
+              <label title={t.opacityHint}>{t.opacity}</label>
+              <div className="opacity-row">
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  step="1"
+                  value={region.opacity}
+                  onChange={(e) =>
+                    updateRegion("opacity", parseInt(e.target.value))
+                  }
+                  className="opacity-slider"
+                />
+                {opacityEditing ? (
+                  <input
+                    type="number"
+                    min="20"
+                    max="100"
+                    value={region.opacity}
+                    autoFocus
+                    onChange={(e) => {
+                      // Allow free typing; clamp on blur/Enter so the user can
+                      // delete digits while editing without snapping to 20.
+                      const n = parseInt(e.target.value);
+                      if (!isNaN(n)) updateRegion("opacity", n);
+                    }}
+                    onBlur={() => {
+                      updateRegion(
+                        "opacity",
+                        Math.max(20, Math.min(100, region.opacity || 100))
+                      );
+                      setOpacityEditing(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === "Escape") {
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    className="opacity-number"
+                  />
+                ) : (
+                  <span
+                    className="opacity-readout"
+                    title={t.opacityClickHint}
+                    onClick={() => setOpacityEditing(true)}
+                  >
+                    {region.opacity}%
+                  </span>
+                )}
+              </div>
+            </div>
             {(
               [
                 ["show24hRange", "displayRange24"],
@@ -1481,6 +1624,65 @@ function App() {
                       offsetY: DEFAULT_REGION.offsetY,
                       width: DEFAULT_REGION.width,
                       height: DEFAULT_REGION.height,
+                    }))
+                  }
+                >
+                  {t.reset}
+                </button>
+
+                <div className="settings-row" style={{ marginTop: "12px" }}>
+                  <label style={{ fontWeight: 600 }}>{t.groundCaptureRegion}</label>
+                </div>
+                <div className="settings-row">
+                  <label>{t.groundOffsetX}</label>
+                  <input
+                    type="number"
+                    value={region.groundOffsetX}
+                    onChange={(e) =>
+                      updateRegion("groundOffsetX", parseInt(e.target.value) || 0)
+                    }
+                  />
+                </div>
+                <div className="settings-row">
+                  <label>{t.groundOffsetY}</label>
+                  <input
+                    type="number"
+                    value={region.groundOffsetY}
+                    onChange={(e) =>
+                      updateRegion("groundOffsetY", parseInt(e.target.value) || 0)
+                    }
+                  />
+                </div>
+                <div className="settings-row">
+                  <label>{t.groundWidth}</label>
+                  <input
+                    type="number"
+                    value={region.groundWidth}
+                    onChange={(e) =>
+                      updateRegion("groundWidth", parseInt(e.target.value) || 1)
+                    }
+                  />
+                </div>
+                <div className="settings-row">
+                  <label>{t.groundHeight}</label>
+                  <input
+                    type="number"
+                    value={region.groundHeight}
+                    onChange={(e) =>
+                      updateRegion("groundHeight", parseInt(e.target.value) || 1)
+                    }
+                  />
+                </div>
+                <div className="settings-hint">{t.groundCaptureHint}</div>
+                <button
+                  className="reset-btn"
+                  onClick={() =>
+                    setRegion((r) => ({
+                      ...r,
+                      groundOffsetX: DEFAULT_REGION.groundOffsetX,
+                      groundOffsetY: DEFAULT_REGION.groundOffsetY,
+                      groundWidth: DEFAULT_REGION.groundWidth,
+                      groundHeight: DEFAULT_REGION.groundHeight,
                     }))
                   }
                 >
