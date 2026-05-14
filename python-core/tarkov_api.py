@@ -749,6 +749,31 @@ def _cache_lookup(
     return _empty_result(matched_from)
 
 
+def _is_junk_ocr(text: str) -> bool:
+    """Reject obvious garbage OCR before burning GraphQL calls + fuzzy
+    matching against the full 4700-item catalog. Common cause: capture
+    region misaligned for the user's resolution (QHD/4K with 1080p
+    defaults) — OCR grabs empty UI or partial chars and we'd otherwise
+    spend up to ~20s per attempt on doomed network lookups.
+
+    Heuristics (validated against the full live catalog, 4946 items × 2
+    languages → 0% full-name false positives, <1% shortName FP):
+      - n < 2: single chars are noise (longest real names are >70 chars
+        anyway; shortest real Korean items are 2 chars like 비누 / 송곳)
+      - n > 80: multi-line UI captures
+      - 0 letters in stripped text: pure digit/symbol noise ("..", "12345",
+        "*&^%"). Items with any letter (incl. "M855", "AR-15 10.3\"",
+        "비누", "5.56x45mm M855A1") pass.
+    """
+    stripped = text.strip()
+    n = len(stripped)
+    if n < 2 or n > 80:
+        return True
+    # Need at least one alphabetic char (Latin or Hangul). Anything with
+    # zero letters is reliably noise — separators, digits, punctuation.
+    return not any(c.isalpha() or "가" <= c <= "힣" for c in stripped)
+
+
 def get_item_price(
     item_name: str,
     lang: str = "ko",
@@ -772,6 +797,13 @@ def get_item_price(
                 )
                 matched_from = item_name
                 item_name = corrected
+
+    # Reject obvious junk OCR *after* corrections (so user-trained
+    # mappings still work) but *before* cold-path GraphQL + fuzzy. Spares
+    # us the 10s-per-network-call cost when capture region is misaligned.
+    if _is_junk_ocr(item_name):
+        print(f"[tarkov_api] junk OCR rejected: {item_name!r}")
+        return _empty_result(matched_from)
 
     # Fast path: in-memory cache.
     cached = _cache_lookup(item_name, lang, game_mode, matched_from)

@@ -129,7 +129,65 @@ fn hide_to_tray(app: tauri::AppHandle) {
         let _ = window.hide();
         println!("[tray] window hidden to tray");
     }
+    // Also hide the capture-region preview rectangles. They live in
+    // separate always-on-top windows, so hiding the main overlay alone
+    // leaves them floating with no UI to dismiss them.
+    for label in ["preview-primary", "preview-ground"] {
+        if let Some(w) = app.get_webview_window(label) {
+            let _ = w.hide();
+        }
+    }
     notify_minimized_to_tray(&app);
+}
+
+/// Show + position a preview-rect window (preview-primary / preview-ground).
+/// Used by the settings panel: while the user is editing capture-region
+/// offsets, a translucent red/yellow rectangle follows the cursor on screen
+/// so they can see exactly where the capture box lands. Click-through is
+/// enabled the first time the window is shown so the rectangle never blocks
+/// clicks on the game underneath.
+#[tauri::command]
+fn show_preview_rect(
+    app: tauri::AppHandle,
+    label: String,
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+) -> Result<(), String> {
+    let Some(window) = app.get_webview_window(&label) else {
+        return Err(format!("preview window '{label}' not found"));
+    };
+    // Click-through so the user can interact with the game beneath the
+    // rectangle. Idempotent on Windows, safe to call every move.
+    let _ = window.set_ignore_cursor_events(true);
+    // Only do the z-order bump on the transition from hidden -> shown.
+    // The frontend polls show_preview_rect at 10Hz; toggling alwaysOnTop
+    // 20 times/sec is wasted OS work when the window is already topmost
+    // and visible. Re-asserting on every show-from-hidden is still
+    // required so the rectangle ends up above the main overlay even if
+    // the main was focused after the previous preview session.
+    let was_visible = window.is_visible().unwrap_or(false);
+    window
+        .set_position(tauri::PhysicalPosition::new(x, y))
+        .map_err(|e| e.to_string())?;
+    window
+        .set_size(tauri::PhysicalSize::new(width, height))
+        .map_err(|e| e.to_string())?;
+    window.show().map_err(|e| e.to_string())?;
+    if !was_visible {
+        let _ = window.set_always_on_top(false);
+        let _ = window.set_always_on_top(true);
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_preview_rect(app: tauri::AppHandle, label: String) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window(&label) {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 #[tauri::command]
@@ -242,6 +300,8 @@ pub fn run() {
             register_toggle_hotkey,
             unregister_all_hotkeys,
             hide_to_tray,
+            show_preview_rect,
+            hide_preview_rect,
             exit_app
         ])
         .setup(|app| {
@@ -333,6 +393,13 @@ pub fn run() {
                 api.prevent_exit();
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let _ = window.hide();
+                }
+                // Hide preview rectangles too (same reason as hide_to_tray:
+                // they're independent windows that survive main-window hide).
+                for label in ["preview-primary", "preview-ground"] {
+                    if let Some(w) = app_handle.get_webview_window(label) {
+                        let _ = w.hide();
+                    }
                 }
                 notify_minimized_to_tray(app_handle);
             }

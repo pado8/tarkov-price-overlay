@@ -1,7 +1,50 @@
 :root {
-  font-family: "Segoe UI", system-ui, sans-serif;
+  /* ── Typography ─────────────────────────────────────────────────────
+     Segoe UI handles Latin; Pretendard / 맑은 고딕 handle Hangul. Listing
+     both Korean fonts as fallbacks means modern installs (Pretendard) win
+     when present and Win11 default (맑은 고딕) covers the rest. */
+  font-family: "Segoe UI", "Pretendard", "맑은 고딕", system-ui, sans-serif;
   font-size: 14px;
-  color: #f0f0f0;
+  color: var(--text-primary);
+
+  /* ── Color tokens ───────────────────────────────────────────────────
+     Semantic greys (4 tiers) — replaces ad-hoc #fff/#ddd/#ccc/#aaa/#999/
+     #888/#666 sprinkled across the stylesheet. Values biased BRIGHTER
+     than typical dark-theme palettes because the overlay sits on top of
+     varied/bright game UI AND the user can drop the whole card to 20%
+     opacity. Each tier needs to survive both the transparent backdrop
+     and the opacity multiplier. */
+  --text-primary: #f0f0f0;
+  --text-secondary: #d0d0d0;
+  --text-muted: #b0b0b0;
+  --text-disabled: #888;
+
+  /* Gold accent (Tarkov brand) — three border opacities + two solid tones. */
+  --gold-text: #c8aa64;
+  --gold-bright: #f0c040;
+  --gold-light: #f0d28e;
+  --border-subtle: rgba(200, 170, 100, 0.2);
+  --border-default: rgba(200, 170, 100, 0.4);
+  --border-emphasis: rgba(200, 170, 100, 0.6);
+  --bg-gold-soft: rgba(200, 170, 100, 0.18);
+  --bg-gold-chip: rgba(200, 170, 100, 0.3);
+
+  /* Status colors — unified after auditing the 6+ ad-hoc shades. */
+  --success: #6fbf73;
+  --success-dim: #4caf50;
+  --warning: #ffb060;
+  --danger: #ff7060;
+
+  /* ── Layout tokens ──────────────────────────────────────────────────
+     4px spacing scale + 3-tier radius. Every padding/gap/border-radius
+     should reference one of these unless there's a very specific reason. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
 }
 
 html, body, #root {
@@ -37,12 +80,17 @@ html, body, #root {
   --card-fs-xxs: calc(var(--card-fs) * 0.69);  /* ≈9px  at default */
   font-size: var(--card-fs);
   background: rgba(20, 20, 20, 0.85);
-  border: 1px solid rgba(200, 170, 100, 0.6);
-  border-radius: 6px;
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-lg);
   padding: 10px 14px;
   /* width set via inline style */
   box-sizing: border-box;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* Subtle dark text-shadow gives every label an outline so muted greys
+     stay legible when the user drops card opacity to 20-40% and bright
+     game UI bleeds through. Invisible on the dark card itself; pulls
+     weight only when the backdrop becomes light. */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   opacity: 1;
   transition: opacity 0.25s ease-out;
@@ -57,8 +105,8 @@ html, body, #root {
   width: 6px;
 }
 .card::-webkit-scrollbar-thumb {
-  background: rgba(200, 170, 100, 0.3);
-  border-radius: 3px;
+  background: var(--bg-gold-chip);
+  border-radius: var(--radius-sm);
 }
 .card::-webkit-scrollbar-track {
   background: transparent;
@@ -85,7 +133,7 @@ html, body, #root {
 
 .title {
   font-weight: 600;
-  color: #c8aa64;
+  color: var(--gold-text);
   font-size: var(--card-fs);
 }
 
@@ -95,10 +143,10 @@ html, body, #root {
   gap: 3px;
   background: rgba(200, 170, 100, 0.2);
   padding: 1px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--card-fs-sm);
   line-height: 1;
-  color: #c8aa64;
+  color: var(--gold-text);
 }
 
 .hotkey-icon {
@@ -132,20 +180,48 @@ html, body, #root {
 }
 
 .hint {
-  color: #999;
+  color: var(--text-muted);
   font-size: var(--card-fs-sm);
   font-style: italic;
 }
 
+.loading-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.loading-hint .hint-sub {
+  width: 100%;
+  font-size: var(--card-fs-xs);
+  color: var(--text-disabled);
+  font-style: normal;
+  margin-top: 2px;
+}
+/* Animated dual-ring spinner. Gold tint matches the brand. The
+   conic-gradient + mask trick keeps the file tiny (no SVG asset). */
+.loading-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border-default);
+  border-top-color: var(--gold-bright);
+  animation: spinner-rotate 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
 .error {
-  color: #ff6b6b;
+  color: var(--danger);
   font-size: var(--card-fs-sm);
 }
 
 .item-name {
   font-weight: 500;
   margin-bottom: 6px;
-  color: #fff;
+  color: var(--text-primary);
   word-break: break-word;
   overflow-wrap: break-word;
   line-height: 1.3;
@@ -165,11 +241,11 @@ html, body, #root {
 }
 
 .label {
-  color: #999;
+  color: var(--text-muted);
 }
 
 .value {
-  color: #4caf50;
+  color: var(--success-dim);
   font-weight: 600;
   font-family: "Consolas", monospace;
 }
@@ -181,7 +257,7 @@ html, body, #root {
 }
 .sub-value {
   font-weight: 400;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .trend {
@@ -192,7 +268,7 @@ html, body, #root {
 }
 
 .vendor-name {
-  color: #666;
+  color: var(--text-disabled);
   font-size: var(--card-fs-xs);
   font-weight: 400;
   margin-left: 4px;
@@ -203,10 +279,10 @@ html, body, #root {
   padding-top: 5px;
   border-top: 1px dashed rgba(200, 170, 100, 0.2);
   font-size: var(--card-fs);
-  color: #ccc;
+  color: var(--text-secondary);
 }
 .slot-price strong {
-  color: #f0c040;
+  color: var(--gold-bright);
   font-family: "Consolas", monospace;
 }
 
@@ -216,7 +292,7 @@ html, body, #root {
   display: inline-block;
   margin-left: 6px;
   padding: 0 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
   font-weight: 700;
@@ -225,35 +301,35 @@ html, body, #root {
 }
 .loot-tier-S {
   background: rgba(240, 192, 64, 0.25);
-  color: #f0c040;
+  color: var(--gold-bright);
   border: 1px solid rgba(240, 192, 64, 0.6);
 }
 .loot-tier-A {
   background: rgba(255, 153, 51, 0.22);
-  color: #ff9933;
+  color: var(--warning);
   border: 1px solid rgba(255, 153, 51, 0.5);
 }
 .loot-tier-B {
   background: rgba(111, 191, 115, 0.2);
-  color: #6fbf73;
+  color: var(--success);
   border: 1px solid rgba(111, 191, 115, 0.5);
 }
 .loot-tier-C {
-  background: rgba(200, 170, 100, 0.18);
-  color: #c8aa64;
+  background: var(--bg-gold-soft);
+  color: var(--gold-text);
   border: 1px solid rgba(200, 170, 100, 0.45);
 }
 .loot-tier-D {
   background: rgba(140, 140, 140, 0.15);
-  color: #999;
+  color: var(--text-muted);
   border: 1px solid rgba(140, 140, 140, 0.4);
 }
 
 .weight-info {
-  color: #aaa;
+  color: var(--text-secondary);
 }
 .weight-per {
-  color: #888;
+  color: var(--text-muted);
   font-size: var(--card-fs-xs);
 }
 
@@ -262,7 +338,7 @@ html, body, #root {
   margin-top: 2px;
 }
 .all-traders > summary {
-  color: #888;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 2px 0;
   user-select: none;
@@ -271,13 +347,13 @@ html, body, #root {
 .all-traders > summary::before {
   content: "▸ ";
   font-size: var(--card-fs-xs);
-  color: #c8aa64;
+  color: var(--gold-text);
 }
 .all-traders[open] > summary::before {
   content: "▾ ";
 }
 .all-traders > summary:hover {
-  color: #c8aa64;
+  color: var(--gold-text);
 }
 .trader-list {
   display: flex;
@@ -302,25 +378,25 @@ html, body, #root {
   border-top: none;
 }
 .barter-trader {
-  color: #c8aa64;
+  color: var(--gold-text);
   font-weight: 600;
 }
 .barter-level {
-  color: #888;
+  color: var(--text-muted);
   font-weight: 400;
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
 }
 .barter-items {
-  color: #ddd;
+  color: var(--text-primary);
   margin-left: 4px;
   word-break: break-word;
 }
 .barter-plus {
-  color: #666;
+  color: var(--text-disabled);
 }
 .barter-count {
-  color: #4caf50;
+  color: var(--success-dim);
   font-family: "Consolas", monospace;
   font-size: var(--card-fs-xs);
   margin-left: 2px;
@@ -338,8 +414,8 @@ html, body, #root {
   height: 48px;
   flex-shrink: 0;
   background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(200, 170, 100, 0.2);
-  border-radius: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   object-fit: contain;
 }
 .item-row .item-name {
@@ -354,9 +430,9 @@ html, body, #root {
   padding: 5px 8px;
   background: rgba(220, 170, 60, 0.10);
   border: 1px solid rgba(220, 170, 60, 0.35);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   font-size: var(--card-fs-sm);
-  color: #f0d28e;
+  color: var(--gold-light);
 }
 .quest-list {
   margin-top: 3px;
@@ -372,12 +448,12 @@ html, body, #root {
   align-items: center;
 }
 .quest-trader {
-  color: #c8aa64;
+  color: var(--gold-text);
   min-width: 60px;
   font-weight: 600;
 }
 .quest-name {
-  color: #ddd;
+  color: var(--text-primary);
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -390,26 +466,26 @@ html, body, #root {
   flex-shrink: 0;
 }
 .quest-count-num {
-  color: #4caf50;
+  color: var(--success-dim);
   font-family: "Consolas", monospace;
   font-weight: 600;
 }
 .quest-fir {
-  color: #ff9966;
+  color: var(--warning);
   font-size: var(--card-fs-xxs);
   background: rgba(255, 100, 60, 0.15);
   border: 1px solid rgba(255, 100, 60, 0.4);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   padding: 0 4px;
   font-weight: 600;
   cursor: help;
 }
 .quest-anyitem {
-  color: #888;
+  color: var(--text-muted);
   font-size: var(--card-fs-xxs);
   background: rgba(120, 120, 120, 0.15);
   border: 1px solid rgba(120, 120, 120, 0.3);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   padding: 0 4px;
   cursor: help;
 }
@@ -424,27 +500,27 @@ html, body, #root {
 }
 .quest-row.started .quest-trader {
   /* Subtle highlight on quests the player has actively picked up. */
-  color: #f0d28e;
+  color: var(--gold-light);
 }
 .quest-status-icon {
   font-size: var(--card-fs-xxs);
   padding: 0 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   cursor: help;
   font-weight: 700;
 }
 .quest-status-icon.completed {
-  color: #6fbf73;
+  color: var(--success);
   background: rgba(76, 175, 80, 0.15);
   border: 1px solid rgba(76, 175, 80, 0.35);
 }
 .quest-status-icon.started {
-  color: #f0d28e;
+  color: var(--gold-light);
   background: rgba(220, 170, 60, 0.15);
   border: 1px solid rgba(220, 170, 60, 0.35);
 }
 .quest-completed-badge {
-  color: #6fbf73;
+  color: var(--success);
   font-weight: 600;
   font-size: var(--card-fs-xs);
 }
@@ -469,32 +545,32 @@ html, body, #root {
   padding: 2px 4px;
 }
 .ammo-row-head {
-  color: #888;
+  color: var(--text-muted);
   border-bottom: 1px solid rgba(200, 170, 100, 0.2);
   padding-bottom: 3px;
   margin-bottom: 2px;
 }
 .ammo-row-current {
-  background: rgba(200, 170, 100, 0.18);
-  border-radius: 2px;
+  background: var(--bg-gold-soft);
+  border-radius: var(--radius-sm);
 }
 .ammo-name {
-  color: #ddd;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ammo-row-current .ammo-name {
-  color: #f0c040;
+  color: var(--gold-bright);
   font-weight: 700;
 }
 .ammo-pen, .ammo-dmg, .ammo-frag {
   text-align: right;
-  color: #ccc;
+  color: var(--text-secondary);
 }
 .ammo-ac-head {
   text-align: center;
-  color: #888;
+  color: var(--text-muted);
 }
 .ammo-ac {
   display: inline-flex;
@@ -506,9 +582,9 @@ html, body, #root {
   text-align: center;
   font-weight: 700;
 }
-.ac-pass { color: #6fbf73; }
-.ac-mid  { color: #f0c040; }
-.ac-fail { color: #d05050; }
+.ac-pass { color: var(--success); }
+.ac-mid  { color: var(--gold-bright); }
+.ac-fail { color: var(--danger); }
 
 /* Hideout-need single-line row: "정수기 Lv2 ×3" */
 .hideout-need-row {
@@ -519,15 +595,15 @@ html, body, #root {
   padding-left: 6px;
 }
 .hideout-need-station {
-  color: #ddd;
+  color: var(--text-primary);
 }
 .hideout-need-level {
-  color: #c8aa64;
+  color: var(--gold-text);
   font-family: "Consolas", monospace;
   flex-shrink: 0;
 }
 .hideout-need-count {
-  color: #6fbf73;
+  color: var(--success);
   font-family: "Consolas", monospace;
   flex-shrink: 0;
 }
@@ -545,29 +621,29 @@ html, body, #root {
 .quest-path-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(200, 170, 100, 0.3);
-  color: #fff;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   padding: 2px 6px;
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .quest-sync-ok {
-  color: #6fbf73;
+  color: var(--success);
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
 }
 .quest-sync-warn {
-  color: #ff8080;
+  color: var(--danger);
   font-size: var(--card-fs-xs);
 }
 .quest-total {
-  color: #f0d28e;
+  color: var(--gold-light);
   font-weight: 400;
   font-size: var(--card-fs-xs);
 }
 .quest-total strong {
-  color: #4caf50;
+  color: var(--success-dim);
   font-family: "Consolas", monospace;
   font-size: var(--card-fs-sm);
 }
@@ -575,8 +651,8 @@ html, body, #root {
 /* History panel */
 .history-panel {
   background: rgba(40, 40, 40, 0.6);
-  border: 1px solid rgba(200, 170, 100, 0.2);
-  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   padding: 6px 8px;
   margin: 6px 0;
   font-size: var(--card-fs-sm);
@@ -585,11 +661,11 @@ html, body, #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #999;
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 .history-empty {
-  color: #666;
+  color: var(--text-disabled);
   font-style: italic;
   font-size: var(--card-fs-xs);
   padding: 4px 0;
@@ -605,8 +681,8 @@ html, body, #root {
   width: 6px;
 }
 .history-list::-webkit-scrollbar-thumb {
-  background: rgba(200, 170, 100, 0.3);
-  border-radius: 3px;
+  background: var(--bg-gold-chip);
+  border-radius: var(--radius-sm);
 }
 .history-list::-webkit-scrollbar-track {
   background: transparent;
@@ -616,13 +692,13 @@ html, body, #root {
   justify-content: space-between;
   background: transparent;
   border: 1px solid transparent;
-  color: #ddd;
+  color: var(--text-primary);
   text-align: left;
   padding: 3px 6px;
   font-size: var(--card-fs-sm);
   cursor: pointer;
   font-family: inherit;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .history-row:hover {
   background: rgba(200, 170, 100, 0.1);
@@ -636,7 +712,7 @@ html, body, #root {
   margin-right: 6px;
 }
 .history-price {
-  color: #4caf50;
+  color: var(--success-dim);
   font-family: "Consolas", monospace;
   font-weight: 600;
 }
@@ -646,8 +722,8 @@ html, body, #root {
   margin-top: 6px;
   background: transparent;
   border: 1px dashed rgba(200, 170, 100, 0.3);
-  color: #999;
-  border-radius: 3px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
   padding: 3px 8px;
   font-size: var(--card-fs-xs);
   cursor: pointer;
@@ -655,7 +731,7 @@ html, body, #root {
   text-align: center;
 }
 .correction-btn:hover {
-  color: #c8aa64;
+  color: var(--gold-text);
   border-color: rgba(200, 170, 100, 0.5);
   background: rgba(200, 170, 100, 0.08);
 }
@@ -667,12 +743,12 @@ html, body, #root {
 .correction-input {
   flex: 1;
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(200, 170, 100, 0.4);
-  color: #fff;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   padding: 3px 6px;
   font-size: var(--card-fs-sm);
   font-family: inherit;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .correction-input:focus {
   outline: none;
@@ -685,23 +761,23 @@ html, body, #root {
   align-items: center;
   gap: 6px;
   background: rgba(200, 170, 100, 0.12);
-  border: 1px solid rgba(200, 170, 100, 0.4);
-  border-radius: 4px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
   padding: 5px 8px;
   margin: 6px 0;
   font-size: var(--card-fs-sm);
-  color: #f0e0b0;
+  color: var(--gold-light);
 }
 .update-text {
   flex: 1;
 }
 .update-btn {
   background: rgba(200, 170, 100, 0.25);
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 600;
 }
 .update-btn:hover {
-  background: rgba(200, 170, 100, 0.4);
+  background: var(--bg-gold-chip);
 }
 
 /* Admin elevation warning — same shape as .update-banner but warmer red
@@ -712,11 +788,11 @@ html, body, #root {
   gap: 6px;
   background: rgba(255, 130, 100, 0.12);
   border: 1px solid rgba(255, 130, 100, 0.45);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   padding: 5px 8px;
   margin: 6px 0;
   font-size: var(--card-fs-xs);
-  color: #ffd0b8;
+  color: var(--warning);
 }
 .admin-text {
   flex: 1;
@@ -724,7 +800,7 @@ html, body, #root {
 }
 .settings-hint-inline {
   font-size: var(--card-fs-xxs);
-  color: #666;
+  color: var(--text-disabled);
   font-family: "Consolas", monospace;
 }
 .settings-section-header {
@@ -732,7 +808,7 @@ html, body, #root {
   padding-top: 4px;
   border-top: 1px solid rgba(200, 170, 100, 0.15);
   font-size: var(--card-fs-xs);
-  color: #c8aa64;
+  color: var(--gold-text);
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -741,9 +817,9 @@ html, body, #root {
 .settings-btn,
 .reset-btn {
   background: transparent;
-  border: 1px solid rgba(200, 170, 100, 0.4);
-  color: #c8aa64;
-  border-radius: 3px;
+  border: 1px solid var(--border-default);
+  color: var(--gold-text);
+  border-radius: var(--radius-sm);
   padding: 1px 6px;
   font-size: var(--card-fs-sm);
   cursor: pointer;
@@ -755,24 +831,70 @@ html, body, #root {
 }
 .exit-btn {
   border-color: rgba(255, 100, 100, 0.5);
-  color: #ff8080;
+  color: var(--danger);
 }
 .exit-btn:hover {
   background: rgba(255, 80, 80, 0.2);
-  color: #ffb0b0;
+  color: var(--danger);
 }
 
 .settings {
   background: rgba(40, 40, 40, 0.6);
-  border: 1px solid rgba(200, 170, 100, 0.2);
-  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) 4px 0 0;
   padding: 6px 8px;
-  margin: 6px 0;
+  margin: 6px 0 0 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* No internal scroll — .card handles overflow at the outer level so the
-     whole card (header + panels) shares one scrollbar. */
+  /* User-resizable scroll container. Height is driven by the custom
+     drag-handle below (.settings-resize-handle), not CSS `resize`, so
+     the discoverability is obvious — users wouldn't otherwise find the
+     1px native SE-corner handle. Bounds enforced in the JS drag handler. */
+  height: 400px;
+  overflow-y: auto;
+}
+.settings::-webkit-scrollbar {
+  width: 6px;
+}
+.settings::-webkit-scrollbar-thumb {
+  background: var(--bg-gold-chip);
+  border-radius: var(--radius-sm);
+}
+.settings::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* Visible horizontal drag handle below the settings panel. Three grip
+   lines + ns-resize cursor make it instantly readable as "drag me". */
+.settings-resize-handle {
+  height: 14px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  margin: 0 0 6px 0;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.settings-resize-handle:hover,
+.settings-resize-handle.dragging {
+  background: rgba(60, 60, 60, 0.85);
+  border-color: rgba(200, 170, 100, 0.5);
+}
+.settings-resize-handle .grip-line {
+  width: 18px;
+  height: 2px;
+  background: rgba(200, 170, 100, 0.55);
+  border-radius: 1px;
+}
+.settings-resize-handle:hover .grip-line,
+.settings-resize-handle.dragging .grip-line {
+  background: rgba(220, 190, 110, 0.85);
 }
 .settings-row {
   display: flex;
@@ -781,7 +903,7 @@ html, body, #root {
   font-size: var(--card-fs-sm);
 }
 .settings-row label {
-  color: #999;
+  color: var(--text-muted);
   font-family: "Consolas", monospace;
 }
 .settings-row input[type="number"],
@@ -789,12 +911,12 @@ html, body, #root {
 .settings-row select {
   width: 80px;
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(200, 170, 100, 0.3);
-  color: #fff;
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   padding: 1px 4px;
   font-size: var(--card-fs-sm);
   font-family: "Consolas", monospace;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .hotkey-rec-btn {
   width: 90px;
@@ -803,7 +925,7 @@ html, body, #root {
 }
 .settings-hint {
   font-size: var(--card-fs-xs);
-  color: #666;
+  color: var(--text-disabled);
   margin-top: 2px;
   font-style: italic;
 }
@@ -821,11 +943,11 @@ html, body, #root {
 }
 .donate-btn {
   border-color: rgba(255, 180, 100, 0.5);
-  color: #ffc080;
+  color: var(--warning);
 }
 .donate-btn:hover {
   background: rgba(255, 180, 100, 0.18);
-  color: #ffd5a0;
+  color: var(--warning);
 }
 
 /* Copyright block at bottom of settings panel */
@@ -840,20 +962,20 @@ html, body, #root {
 }
 .copyright-line {
   font-size: var(--card-fs-xxs);
-  color: #888;
+  color: var(--text-muted);
   line-height: 1.3;
 }
 .copyright-sub {
-  color: #777;
+  color: var(--text-muted);
   font-style: italic;
 }
 
 /* Font size control in settings */
 .font-size-select {
   background: #1a1a1a;
-  color: #c8aa64;
+  color: var(--gold-text);
   border: 1px solid #444;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   padding: 2px 4px;
   font-size: var(--card-fs-xs);
   cursor: pointer;
@@ -867,11 +989,11 @@ html, body, #root {
 }
 .opacity-slider {
   width: 90px;
-  accent-color: #c8aa64;
+  accent-color: var(--gold-text);
   cursor: pointer;
 }
 .opacity-readout {
-  color: #c8aa64;
+  color: var(--gold-text);
   font-family: "Consolas", monospace;
   font-size: var(--card-fs-xs);
   min-width: 36px;
@@ -880,15 +1002,15 @@ html, body, #root {
   user-select: none;
 }
 .opacity-readout:hover {
-  color: #f0c040;
+  color: var(--gold-bright);
   text-decoration: underline;
 }
 .opacity-number {
   width: 48px;
   background: #1a1a1a;
-  color: #c8aa64;
+  color: var(--gold-text);
   border: 1px solid #c8aa64;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   padding: 2px 4px;
   font-size: var(--card-fs-xs);
   font-family: "Consolas", monospace;
@@ -904,7 +1026,7 @@ html, body, #root {
   padding: 8px;
   background: rgba(255, 180, 100, 0.06);
   border: 1px solid rgba(255, 180, 100, 0.3);
-  border-radius: 4px;
+  border-radius: var(--radius-md);
 }
 .donate-tabs {
   display: flex;
@@ -918,35 +1040,35 @@ html, body, #root {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #888;
+  color: var(--text-muted);
   padding: 4px 8px;
   font-size: var(--card-fs-sm);
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
 .donate-tab:hover {
-  color: #ffc080;
+  color: var(--warning);
 }
 .donate-tab.active {
-  color: #ffc080;
-  border-bottom-color: #ffc080;
+  color: var(--warning);
+  border-bottom-color: var(--warning);
   font-weight: 600;
 }
 .donate-hint {
   font-size: var(--card-fs-sm);
-  color: #ffc080;
+  color: var(--warning);
   text-align: center;
 }
 .donate-qr {
   background: #ffffff;
   padding: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   line-height: 0;
 }
 .donate-url {
   font-family: "Consolas", monospace;
   font-size: var(--card-fs-xs);
-  color: #aaa;
+  color: var(--text-secondary);
   word-break: break-all;
   text-align: center;
   user-select: text;
@@ -962,7 +1084,7 @@ html, body, #root {
 }
 .raw-text {
   font-size: var(--card-fs-sm);
-  color: #888;
+  color: var(--text-muted);
   margin-top: 4px;
   font-family: "Consolas", monospace;
   word-break: break-all;

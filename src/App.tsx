@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition, LogicalSize } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
@@ -314,6 +314,7 @@ const SOUND_KEY = "tarkov.soundOn";
 const HISTORY_KEY = "tarkov.history";
 const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const ADVANCED_KEY = "tarkov.advancedMode";
+const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 
 function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
@@ -400,6 +401,47 @@ function removeCorrection(rawText: string) {
   } catch {}
 }
 
+// Scale capture region defaults by primary-monitor width. Defaults assume
+// 1920×1080; QHD (2560×1440) and 4K (3840×2160) need bigger boxes because
+// EFT's hover tooltip itself scales with display resolution. Only scales up
+// (never below 1.0) — sub-1080p users keep the existing defaults that fit
+// in their smaller hover boxes. Primary monitor (not the window's current
+// monitor) so dual-monitor setups where the overlay sits on a secondary
+// screen still get sensible defaults for the gameplay monitor.
+function scaleRegionForMonitor(base: Region, monitorWidth: number): Region {
+  const scale = Math.max(monitorWidth / 1920, 1.0);
+  const r = Math.round;
+  return {
+    ...base,
+    offsetX: r(base.offsetX * scale),
+    offsetY: r(base.offsetY * scale),
+    width: r(base.width * scale),
+    height: r(base.height * scale),
+    groundOffsetX: r(base.groundOffsetX * scale),
+    groundOffsetY: r(base.groundOffsetY * scale),
+    groundWidth: r(base.groundWidth * scale),
+    groundHeight: r(base.groundHeight * scale),
+  };
+}
+
+// Compute scaled defaults for the primary monitor. With force=false, no-op
+// when a Region is already saved (used on first launch). With force=true,
+// always overwrite — used by the "현재 해상도로 자동 조정" button so
+// existing users with stale 1080p defaults can recover in one click.
+// Returns the new Region on apply, or null when skipped/failed.
+async function applyMonitorScaling(force: boolean): Promise<Region | null> {
+  if (!force && localStorage.getItem(STORAGE_KEY)) return null;
+  try {
+    const mon = await primaryMonitor();
+    if (!mon) return null;
+    const scaled = scaleRegionForMonitor(DEFAULT_REGION, mon.size.width);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scaled));
+    return scaled;
+  } catch {
+    return null;
+  }
+}
+
 function loadRegion(): Region {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -472,6 +514,70 @@ function eventToAccelerator(e: KeyboardEvent): string | null {
   return mods.length ? `${mods.join("+")}+${key}` : key;
 }
 
+/** Slider + click-to-edit numeric field. Same UX as the opacity row:
+ *  drag the slider for coarse adjustment, click the readout number to
+ *  switch to a focused text input for precise values. Used for all eight
+ *  capture-region offsets and sizes. */
+function SliderField(props: {
+  label: string;
+  min: number;
+  max: number;
+  value: number;
+  isEditing: boolean;
+  onChange: (n: number) => void;
+  onStartEdit: () => void;
+  onStopEdit: () => void;
+}) {
+  const { label, min, max, value, isEditing, onChange, onStartEdit, onStopEdit } = props;
+  return (
+    <div className="settings-row">
+      <label>{label}</label>
+      <div className="opacity-row">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={1}
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+          className="opacity-slider"
+        />
+        {isEditing ? (
+          <input
+            type="number"
+            value={value}
+            autoFocus
+            onChange={(e) => {
+              const n = parseInt(e.target.value);
+              if (!isNaN(n)) onChange(n);
+            }}
+            onBlur={() => {
+              // Clamp on blur so the user can transiently type out-of-range
+              // digits while editing without snapping mid-keystroke.
+              onChange(Math.max(min, Math.min(max, value)));
+              onStopEdit();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === "Escape") {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            className="opacity-number"
+          />
+        ) : (
+          <span
+            className="opacity-readout"
+            onClick={onStartEdit}
+            title="클릭해서 직접 입력 / Click to type"
+          >
+            {value}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<LookupResult | null>(null);
@@ -489,6 +595,44 @@ function App() {
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
   // Click-to-edit toggle for the opacity readout next to the slider.
   const [opacityEditing, setOpacityEditing] = useState(false);
+  // Click-to-edit toggle for capture-region slider readouts. Stores the
+  // currently-editing field name (e.g. "offsetX"). Null = all readouts
+  // are showing as click-to-edit spans.
+  const [regionEditingField, setRegionEditingField] = useState<string | null>(null);
+  // Settings panel resize: CSS `resize: vertical` lets the user drag the
+  // bottom-right corner. We attach a ResizeObserver to persist the chosen
+  // height across sessions. The initial height is applied via ref on
+  // mount (avoids fighting React state on every drag event).
+  const settingsRef = useRef<HTMLDivElement | null>(null);
+  // Anchor for the "Capture region" row so we can scroll it into view
+  // when the user clicks Edit — the section is near the bottom of the
+  // settings panel and would otherwise be hidden below the scroll
+  // fold at the default panel height.
+  const captureRegionRowRef = useRef<HTMLDivElement | null>(null);
+  // Slider bounds for capture-region offsets/sizes. Static defaults work
+  // for 1080p, but QHD/4K users hit the ±1000 offset cap before reaching
+  // the screen edge — looks to them like the rectangle "stops" with
+  // viewport space still to its right. We bump bounds to the actual
+  // monitor extent on mount.
+  const [sliderBounds, setSliderBounds] = useState({
+    offsetMax: 1500,
+    widthMax: 2000,
+    heightMax: 500,
+  });
+  useEffect(() => {
+    primaryMonitor()
+      .then((mon) => {
+        if (!mon) return;
+        setSliderBounds({
+          // offset goes both ways; allow at least the full width so the
+          // box can reach any edge from any cursor position.
+          offsetMax: Math.max(1500, mon.size.width),
+          widthMax: Math.max(2000, mon.size.width),
+          heightMax: Math.max(500, Math.floor(mon.size.height / 2)),
+        });
+      })
+      .catch(() => {});
+  }, []);
   // "Run as administrator" diagnostic: shown when sidecar reports we are
   // not elevated. Hidden once the user dismisses (persisted via
   // ADMIN_BANNER_DISMISS_KEY).
@@ -528,7 +672,222 @@ function App() {
     hideDelayRef.current = region.hideDelaySec;
   }, [region.hideDelaySec]);
 
+  // Settings panel: restore user's last-chosen height from localStorage
+  // (CSS `resize: vertical`). Effect runs whenever the panel mounts (i.e.
+  // every time showSettings flips to true). A ResizeObserver writes the
+  // height back to storage on each drag — and ALSO triggers the card's
+  // window-resize logic, because the card's own ResizeObserver doesn't
+  // fire when an inner element's height changes via inline style (the
+  // card's box stays capped at max-height, so its observed box never
+  // changes, but the natural content grew).
+  useEffect(() => {
+    if (!showSettings) return;
+    const el = settingsRef.current;
+    const cardEl = cardRef.current;
+    if (!el || !cardEl) return;
+    const stored = localStorage.getItem(SETTINGS_HEIGHT_KEY);
+    if (stored) {
+      const n = parseInt(stored);
+      if (!isNaN(n) && n >= 200 && n <= 2000) el.style.height = `${n}px`;
+    }
+    const ro = new ResizeObserver(() => {
+      const h = el.offsetHeight;
+      if (h >= 200) localStorage.setItem(SETTINGS_HEIGHT_KEY, String(h));
+      // Re-measure the card and resize the window to match the new
+      // natural content height. Uses the same formula as the card's
+      // observer so the two paths agree.
+      const ch = Math.ceil(cardEl.scrollHeight) + WIN_VPAD;
+      const clamped = Math.min(Math.max(ch, 100), screenMaxH());
+      getCurrentWindow()
+        .setSize(new LogicalSize(WIN_BASE_W, clamped))
+        .catch(() => {});
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [showSettings]);
+
+  // When the user expands the capture-region edit subsection, scroll
+  // the settings panel so the row + its inputs are visible at the top.
+  // The section sits near the bottom of a long settings panel; without
+  // this, the user clicks Edit and sees no visible change.
+  useEffect(() => {
+    if (!showCaptureRegion) return;
+    const row = captureRegionRowRef.current;
+    if (!row) return;
+    // Delay one frame so the newly-rendered subsection is laid out
+    // before we measure / scroll.
+    const id = requestAnimationFrame(() => {
+      row.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [showCaptureRegion]);
+
+  // First-launch: scale capture-region defaults to the primary monitor.
+  // 1080p users get the original defaults (scale=1.0). QHD/4K users get
+  // proportionally larger boxes so the inventory hover tooltip lands
+  // inside the capture area. No-op on subsequent launches.
+  useEffect(() => {
+    let cancelled = false;
+    applyMonitorScaling(false).then((r) => {
+      if (r && !cancelled) setRegion(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Live capture-region preview: while the user is editing offsets, two
+  // small transparent windows (red = primary, yellow = ground) follow the
+  // cursor so it's visually obvious where each capture box will land.
+  //
+  // UX nuance: while the user is dragging a slider, the cursor is on the
+  // overlay itself, not on the game — naive "follow cursor" would chase
+  // the slider, defeating the preview's purpose. So we freeze the
+  // reference position whenever the cursor enters the main overlay
+  // window's screen rect. The boxes then stay anchored at the last
+  // genuine "out in the game" cursor position while the user adjusts
+  // sliders, which is exactly when they need to see the result.
+  const previewRefRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    // Hide if settings closed, capture-region subsection closed, OR the
+    // card itself is invisible (auto-hide). Otherwise the rectangles
+    // linger on screen with no UI visible to dismiss them.
+    if (!showSettings || !showCaptureRegion || !cardVisible) {
+      previewRefRef.current = null;
+      invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
+      invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        // Defensive: bail out if the main overlay was hidden (X button,
+        // Alt+F4, tray Exit, etc.) while polling is still active. The
+        // useEffect cleanup also handles this, but state updates can
+        // race with mid-flight invokes — checking here guarantees we
+        // never call show_preview_rect after the windows were hidden
+        // natively.
+        const win = getCurrentWindow();
+        const visible = await win.isVisible();
+        if (cancelled || !visible) {
+          invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
+          invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+          return;
+        }
+        const pos = await invoke<{ x: number; y: number }>(
+          "get_cursor_position"
+        );
+        if (cancelled) return;
+        // Check whether the cursor is over the visible CARD specifically,
+        // not the whole 800×600 overlay window. The window is mostly
+        // transparent / click-through; using its bounds treats invisible
+        // empty area as "inside overlay" and freezes the preview when the
+        // user is actually pointing at the game. Use the card element's
+        // bounding rect translated to screen coordinates, accounting for
+        // DPI (getBoundingClientRect is in CSS px, cursor pos is in
+        // physical px).
+        const wp = await win.outerPosition();
+        const cardEl = cardRef.current;
+        let inside = false;
+        if (cardEl) {
+          const rect = cardEl.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          const cx = wp.x + Math.floor(rect.left * dpr);
+          const cy = wp.y + Math.floor(rect.top * dpr);
+          const cw = Math.ceil(rect.width * dpr);
+          const ch = Math.ceil(rect.height * dpr);
+          inside =
+            pos.x >= cx && pos.x < cx + cw &&
+            pos.y >= cy && pos.y < cy + ch;
+        }
+        if (!inside) {
+          previewRefRef.current = pos;
+        }
+        // First-tick fallback: if the user just clicked "Edit" their cursor
+        // is on the overlay itself, so `pos` is over our own UI and the
+        // boxes would render behind the settings panel — invisible. Use
+        // the primary monitor's center as a discoverable initial location
+        // until the user moves the cursor to the game.
+        let ref = previewRefRef.current;
+        if (!ref) {
+          if (inside) {
+            try {
+              const mon = await primaryMonitor();
+              if (mon) {
+                ref = {
+                  x: Math.floor(mon.size.width / 2),
+                  y: Math.floor(mon.size.height / 2),
+                };
+              }
+            } catch {}
+          }
+          ref = ref ?? pos;
+        }
+        if (cancelled) return;
+        await invoke("show_preview_rect", {
+          label: "preview-primary",
+          x: ref.x + region.offsetX,
+          y: ref.y + region.offsetY,
+          width: region.width,
+          height: region.height,
+        });
+        await invoke("show_preview_rect", {
+          label: "preview-ground",
+          x: ref.x + region.groundOffsetX,
+          y: ref.y + region.groundOffsetY,
+          width: region.groundWidth,
+          height: region.groundHeight,
+        });
+      } catch {}
+    };
+    tick();
+    const id = window.setInterval(tick, 100);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
+      invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+    };
+  }, [
+    showSettings,
+    showCaptureRegion,
+    cardVisible,
+    region.offsetX,
+    region.offsetY,
+    region.width,
+    region.height,
+    region.groundOffsetX,
+    region.groundOffsetY,
+    region.groundWidth,
+    region.groundHeight,
+  ]);
+
   const cardRef = useRef<HTMLDivElement | null>(null);
+  // Mirrors showSettings into a ref so scheduleHide can check the latest
+  // value without re-creating the callback on every render. While settings
+  // is open the user is actively interacting with controls (sliders,
+  // toggles) and auto-hide would yank the panel + capture-region preview
+  // boxes out from under them.
+  const settingsOpenRef = useRef(false);
+  // Tracks whether the cursor is currently inside the card rect, so we
+  // can decide whether to schedule auto-hide when settings closes. If
+  // the cursor is still on the card, the existing mouseleave handler
+  // will take over the moment it leaves; scheduling here would only
+  // wrongly hide while the user is still hovering.
+  const mouseOverCardRef = useRef(false);
+  useEffect(() => {
+    const wasOpen = settingsOpenRef.current;
+    settingsOpenRef.current = showSettings;
+    if (showSettings) {
+      cancelHideTimer();
+    } else if (wasOpen && !mouseOverCardRef.current) {
+      // Settings just closed AND the cursor isn't hovering the card —
+      // restart the auto-hide timer so the card eventually fades.
+      // Otherwise it would stay visible forever after a settings close
+      // until the user moves the mouse over and off the card.
+      scheduleHide();
+    }
+  }, [showSettings]);
   const cancelHideTimer = () => {
     if (hideTimerRef.current !== null) {
       clearTimeout(hideTimerRef.current);
@@ -537,6 +896,8 @@ function App() {
   };
   const scheduleHide = () => {
     cancelHideTimer();
+    // Don't auto-hide while settings is open — the user is mid-interaction.
+    if (settingsOpenRef.current) return;
     const ms = Math.max(1, hideDelayRef.current) * 1000;
     hideTimerRef.current = window.setTimeout(() => {
       setCardVisible(false);
@@ -844,14 +1205,18 @@ function App() {
   // Resize the window to match the card's actual rendered height.
   // ResizeObserver fires whenever the card's content changes — settings open/close,
   // donate panel toggle, font size change, history panel, update banner, etc.
-  // Clamped to the screen's available height so very large fonts don't push the
-  // bottom of the card off-screen.
+  // Uses scrollHeight (the *natural* content height, ignoring the card's
+  // max-height: calc(100vh - 24px) cap). Using getBoundingClientRect would
+  // create a feedback loop: small initial card → small window → small vh →
+  // even smaller card max-height → window stuck at ~100px forever.
+  // Clamped to screen available height so the card scrolls inside itself when
+  // content genuinely exceeds the screen.
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
     let raf = 0;
     const apply = () => {
-      const h = Math.ceil(el.getBoundingClientRect().height) + WIN_VPAD;
+      const h = Math.ceil(el.scrollHeight) + WIN_VPAD;
       const clamped = Math.min(Math.max(h, 100), screenMaxH());
       getCurrentWindow()
         .setSize(new LogicalSize(WIN_BASE_W, clamped))
@@ -863,10 +1228,21 @@ function App() {
       raf = requestAnimationFrame(apply);
     });
     ro.observe(el);
+    // Also observe children — scrollHeight changes when descendants resize
+    // (e.g. an image loading) but ResizeObserver on the card itself only
+    // fires when the card's *own* box changes. A MutationObserver on the
+    // subtree catches content additions that don't immediately reflect in
+    // the card's box.
+    const mo = new MutationObserver(() => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(apply);
+    });
+    mo.observe(el, { childList: true, subtree: true, characterData: true });
     apply();
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
+      mo.disconnect();
     };
   }, []);
 
@@ -1094,8 +1470,12 @@ function App() {
           // still drop to 0 without fighting the user's preference.
           opacity: cardVisible ? region.opacity / 100 : undefined,
         } as React.CSSProperties}
-        onMouseEnter={() => cancelHideTimer()}
+        onMouseEnter={() => {
+          mouseOverCardRef.current = true;
+          cancelHideTimer();
+        }}
         onMouseLeave={() => {
+          mouseOverCardRef.current = false;
           if (!recordingHotkey) scheduleHide();
         }}
       >
@@ -1142,7 +1522,19 @@ function App() {
             </button>
             <button
               className="settings-btn exit-btn"
-              onClick={hideToTray}
+              onClick={() => {
+                // Tear down React state before invoking the native hide so
+                // the preview-rect polling loop (which checks cardVisible
+                // & showSettings on every tick) stops *before* the Rust
+                // side hides its windows. Otherwise an in-flight tick can
+                // call show_preview_rect right after Rust hid them and the
+                // rectangles pop back into view. Reset showSettings too so
+                // a future re-show doesn't land in mid-edit state.
+                setCardVisible(false);
+                setShowSettings(false);
+                setShowCaptureRegion(false);
+                hideToTray();
+              }}
               title={t.hideToTrayTitle}
             >
               ✕
@@ -1242,7 +1634,7 @@ function App() {
         )}
 
         {showSettings && (
-          <div className="settings">
+          <div className="settings" ref={settingsRef}>
             <div className="settings-row settings-feedback-row">
               <button
                 className="reset-btn feedback-btn"
@@ -1362,6 +1754,9 @@ function App() {
                 <option value="regular">{t.gameModePvp}</option>
                 <option value="pve">{t.gameModePve}</option>
               </select>
+            </div>
+            <div className="settings-section-header">
+              {t.inputSection}
             </div>
             <div className="settings-row">
               <label>{t.hotkey}</label>
@@ -1643,6 +2038,9 @@ function App() {
               </>
             )}
 
+            <div className="settings-section-header" ref={captureRegionRowRef}>
+              {t.captureSection}
+            </div>
             <div className="settings-row">
               <label>{t.captureRegion}</label>
               <button
@@ -1654,105 +2052,80 @@ function App() {
             </div>
             {showCaptureRegion && (
               <>
-                <div className="settings-row">
-                  <label>{t.offsetX}</label>
-                  <input
-                    type="number"
-                    value={region.offsetX}
-                    onChange={(e) =>
-                      updateRegion("offsetX", parseInt(e.target.value) || 0)
-                    }
-                  />
+                <div className="settings-hint" style={{ color: "#bbb" }}>
+                  {t.previewLegend}
                 </div>
-                <div className="settings-row">
-                  <label>{t.offsetY}</label>
-                  <input
-                    type="number"
-                    value={region.offsetY}
-                    onChange={(e) =>
-                      updateRegion("offsetY", parseInt(e.target.value) || 0)
-                    }
+                {(
+                  [
+                    ["offsetX", t.offsetX, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    ["offsetY", t.offsetY, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    ["width", t.width, 50, sliderBounds.widthMax],
+                    ["height", t.height, 20, sliderBounds.heightMax],
+                  ] as const
+                ).map(([key, label, min, max]) => (
+                  <SliderField
+                    key={key}
+                    label={label}
+                    min={min}
+                    max={max}
+                    value={region[key] as number}
+                    isEditing={regionEditingField === key}
+                    onChange={(n) => updateRegion(key, n)}
+                    onStartEdit={() => setRegionEditingField(key)}
+                    onStopEdit={() => setRegionEditingField(null)}
                   />
-                </div>
-                <div className="settings-row">
-                  <label>{t.width}</label>
-                  <input
-                    type="number"
-                    value={region.width}
-                    onChange={(e) =>
-                      updateRegion("width", parseInt(e.target.value) || 1)
-                    }
-                  />
-                </div>
-                <div className="settings-row">
-                  <label>{t.height}</label>
-                  <input
-                    type="number"
-                    value={region.height}
-                    onChange={(e) =>
-                      updateRegion("height", parseInt(e.target.value) || 1)
-                    }
-                  />
-                </div>
+                ))}
                 <div className="settings-hint">{t.captureHint}</div>
-                <button
-                  className="reset-btn"
-                  onClick={() =>
-                    setRegion((r) => ({
-                      ...r,
-                      offsetX: DEFAULT_REGION.offsetX,
-                      offsetY: DEFAULT_REGION.offsetY,
-                      width: DEFAULT_REGION.width,
-                      height: DEFAULT_REGION.height,
-                    }))
-                  }
-                >
-                  {t.reset}
-                </button>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    className="reset-btn"
+                    onClick={() =>
+                      setRegion((r) => ({
+                        ...r,
+                        offsetX: DEFAULT_REGION.offsetX,
+                        offsetY: DEFAULT_REGION.offsetY,
+                        width: DEFAULT_REGION.width,
+                        height: DEFAULT_REGION.height,
+                      }))
+                    }
+                  >
+                    {t.reset}
+                  </button>
+                  <button
+                    className="reset-btn"
+                    onClick={async () => {
+                      const r = await applyMonitorScaling(true);
+                      if (r) setRegion(r);
+                    }}
+                    title={t.autoScaleHint}
+                  >
+                    {t.autoScaleToMonitor}
+                  </button>
+                </div>
 
                 <div className="settings-row" style={{ marginTop: "12px" }}>
                   <label style={{ fontWeight: 600 }}>{t.groundCaptureRegion}</label>
                 </div>
-                <div className="settings-row">
-                  <label>{t.groundOffsetX}</label>
-                  <input
-                    type="number"
-                    value={region.groundOffsetX}
-                    onChange={(e) =>
-                      updateRegion("groundOffsetX", parseInt(e.target.value) || 0)
-                    }
+                {(
+                  [
+                    ["groundOffsetX", t.groundOffsetX, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    ["groundOffsetY", t.groundOffsetY, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    ["groundWidth", t.groundWidth, 50, sliderBounds.widthMax],
+                    ["groundHeight", t.groundHeight, 20, sliderBounds.heightMax],
+                  ] as const
+                ).map(([key, label, min, max]) => (
+                  <SliderField
+                    key={key}
+                    label={label}
+                    min={min}
+                    max={max}
+                    value={region[key] as number}
+                    isEditing={regionEditingField === key}
+                    onChange={(n) => updateRegion(key, n)}
+                    onStartEdit={() => setRegionEditingField(key)}
+                    onStopEdit={() => setRegionEditingField(null)}
                   />
-                </div>
-                <div className="settings-row">
-                  <label>{t.groundOffsetY}</label>
-                  <input
-                    type="number"
-                    value={region.groundOffsetY}
-                    onChange={(e) =>
-                      updateRegion("groundOffsetY", parseInt(e.target.value) || 0)
-                    }
-                  />
-                </div>
-                <div className="settings-row">
-                  <label>{t.groundWidth}</label>
-                  <input
-                    type="number"
-                    value={region.groundWidth}
-                    onChange={(e) =>
-                      updateRegion("groundWidth", parseInt(e.target.value) || 1)
-                    }
-                  />
-                </div>
-                <div className="settings-row">
-                  <label>{t.groundHeight}</label>
-                  <input
-                    type="number"
-                    value={region.groundHeight}
-                    onChange={(e) =>
-                      updateRegion("groundHeight", parseInt(e.target.value) || 1)
-                    }
-                  />
-                </div>
+                ))}
                 <div className="settings-hint">{t.groundCaptureHint}</div>
                 <button
                   className="reset-btn"
@@ -1776,14 +2149,60 @@ function App() {
             </div>
           </div>
         )}
+        {showSettings && (
+          <div
+            className="settings-resize-handle"
+            title={t.settingsResizeHint}
+            onMouseDown={(e) => {
+              const el = settingsRef.current;
+              const cardEl = cardRef.current;
+              if (!el) return;
+              e.preventDefault();
+              const startY = e.clientY;
+              const startH = el.offsetHeight;
+              const handleEl = e.currentTarget;
+              handleEl.classList.add("dragging");
+              const onMove = (me: MouseEvent) => {
+                const newH = Math.max(
+                  200,
+                  Math.min(2000, startH + (me.clientY - startY))
+                );
+                el.style.height = `${newH}px`;
+                // Drive the window resize live during the drag so the
+                // user sees the overlay grow/shrink with the panel.
+                if (cardEl) {
+                  const ch = Math.ceil(cardEl.scrollHeight) + WIN_VPAD;
+                  const clamped = Math.min(Math.max(ch, 100), screenMaxH());
+                  getCurrentWindow()
+                    .setSize(new LogicalSize(WIN_BASE_W, clamped))
+                    .catch(() => {});
+                }
+              };
+              const onUp = () => {
+                handleEl.classList.remove("dragging");
+                document.removeEventListener("mousemove", onMove);
+                document.removeEventListener("mouseup", onUp);
+                localStorage.setItem(
+                  SETTINGS_HEIGHT_KEY,
+                  String(el.offsetHeight)
+                );
+              };
+              document.addEventListener("mousemove", onMove);
+              document.addEventListener("mouseup", onUp);
+            }}
+          >
+            <span className="grip-line" />
+            <span className="grip-line" />
+            <span className="grip-line" />
+          </div>
+        )}
 
         {!showSettings && status === "idle" && <div className="hint">{t.hintIdle}</div>}
         {!showSettings && status === "loading" && (
-          <div className="hint">
-            {t.hintLoading}
-            <div style={{ fontSize: 10, marginTop: 4, color: "#666" }}>
-              {t.hintFirstLoad}
-            </div>
+          <div className="hint loading-hint">
+            <span className="loading-spinner" aria-hidden="true" />
+            <span>{t.hintLoading}</span>
+            <div className="hint-sub">{t.hintFirstLoad}</div>
           </div>
         )}
         {!showSettings && status === "error" && <div className="error">⚠ {error}</div>}
