@@ -1,8 +1,15 @@
 # Tarkov Price Overlay
 
-> **타르코프에서 마우스 올리고 F2** — 플리 시세 · 상인가 · 바터 · 제작 · 퀘스트 정보를 게임 위에 바로 띄워주는 무료 Windows 오버레이 앱
+> **타르코프에서 마우스 올리고 F2** — 플리 시세 · 상인가 · 바터 · 제작 · 퀘스트 정보를 게임 위에 바로 띄워주는 **오픈소스 무료** Windows 오버레이 앱
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Open Source](https://img.shields.io/badge/Open-Source-brightgreen)](https://github.com/pado8/tarkov-price-overlay)
+[![Built on tarkov.dev](https://img.shields.io/badge/Built%20on-tarkov.dev-c8aa64)](https://tarkov.dev)
 
 **[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · 한국어 / English
+
+> ⚠️ **공식 다운로드는 위 링크 한 곳뿐입니다.**
+> 다른 곳에서 다운받지 마세요 — 코드는 [`pado8/tarkov-price-overlay`](https://github.com/pado8/tarkov-price-overlay)에서 공개되어 있으며, 빌드 결과물은 위 Releases 페이지에서만 배포합니다.
 
 ---
 
@@ -51,12 +58,19 @@
 
 타르코프 커뮤니티에서 가장 걱정하는 부분이라 정직하게 적습니다.
 
+### 🔓 코드 100% 공개 (오픈소스)
+- 전체 소스: [github.com/pado8/tarkov-price-overlay](https://github.com/pado8/tarkov-price-overlay)
+- MIT 라이선스 — 누구나 검토 · 빌드 · 포크 가능
+- "메모리 안 읽음, 인젝션 없음, 텔레메트리 없음"을 **코드로 직접 확인**할 수 있습니다
+
+### 동작 방식
 이 프로그램은 **화면 캡처 + 글자 인식(OCR)** 만 사용합니다.
 
 - ❌ 게임 프로세스 메모리 읽기/쓰기 **안 함**
 - ❌ DLL 인젝션 **안 함**
 - ❌ 게임 윈도우 후킹 / 키보드 저수준 후킹 **안 함**
 - ❌ 게임 파일 수정 **안 함**
+- ❌ 외부 서버로 데이터 전송 / 텔레메트리 **안 함** (시세 데이터는 tarkov.dev API 한 방향만)
 - ✅ 일반 Win32 데스크탑 캡처(BitBlt) + 화면 위에 겹치는 투명 윈도우 + `RegisterHotKey`(OS 표준 단축키)
 
 기술적으로는 **유튜브 녹화 프로그램이나 디스코드 화면 공유와 같은 카테고리**입니다. 메모리 핵 · ESP · 에임봇과는 완전히 다릅니다.
@@ -237,8 +251,20 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ---
 
+## 🤝 기여 / 빌드
+
+- 코드: [github.com/pado8/tarkov-price-overlay](https://github.com/pado8/tarkov-price-overlay)
+- 이슈 / 버그 / 기능 제안: [Issues 탭](https://github.com/pado8/tarkov-price-overlay/issues)
+- PR 환영합니다. 큰 변경은 먼저 Issue로 논의해주세요
+- 직접 빌드: [`BUILD.md`](BUILD.md) 참조 (개발 환경 + 빌드 명령)
+
+번역 / 다국어 기여도 환영 — 현재 한국어/영어 지원, 다른 언어는 [`src/i18n.ts`](src/i18n.ts) 참고.
+
+---
+
 ## 📜 라이선스 / 면책
 
+- **라이선스: [MIT](LICENSE)** — 자유롭게 사용/수정/배포 가능 (저작권 표시 유지 의무)
 - 가격 데이터: [tarkov.dev](https://tarkov.dev) (커뮤니티 운영 EFT DB)
 - 본 도구는 비공식 도구이며 **Battlestate Games와 무관**합니다
 - *Escape from Tarkov* 및 관련 자산은 Battlestate Games Limited의 상표/저작권입니다
