@@ -81,6 +81,12 @@ struct MouseHotkeyConfig {
 }
 struct MouseHotkeys(Arc<Mutex<MouseHotkeyConfig>>);
 
+/// Cooperative stop flag for the mouse poller. Set on tray Exit /
+/// exit_app / RunEvent::Exit so the thread gets one clean iteration to
+/// notice and break out instead of being abruptly terminated mid-emit.
+/// Closes the race with the installer hook's taskkill on auto-update.
+struct MouseHotkeyStop(Arc<AtomicBool>);
+
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
     // Only fire the notification on the first hide-to-tray of the session.
     // Repeating it on every X click is noisy; the user learns where the tray
@@ -201,7 +207,11 @@ fn register_toggle_mouse(app: tauri::AppHandle, button: String) -> Result<(), St
 /// X2) and emits the same `hotkey-lookup` / `hotkey-toggle` events the
 /// keyboard handler emits. Edge-triggered: only emits on the false→true
 /// transition so a held button doesn't flood the channel.
-fn spawn_mouse_hotkey_thread(app: tauri::AppHandle, cfg: Arc<Mutex<MouseHotkeyConfig>>) {
+fn spawn_mouse_hotkey_thread(
+    app: tauri::AppHandle,
+    cfg: Arc<Mutex<MouseHotkeyConfig>>,
+    stop: Arc<AtomicBool>,
+) {
     thread::spawn(move || {
         let device_state = DeviceState::new();
         let mut prev_pressed = [false; 8];
@@ -213,6 +223,10 @@ fn spawn_mouse_hotkey_thread(app: tauri::AppHandle, cfg: Arc<Mutex<MouseHotkeyCo
             MouseHotkeyButton::X2,
         ];
         loop {
+            if stop.load(Ordering::SeqCst) {
+                println!("[hotkey] mouse poller stopped");
+                return;
+            }
             let mouse = device_state.get_mouse();
             // device_query returns Vec<bool>; guard against shorter-than-expected.
             let pressed = &mouse.button_pressed;
@@ -352,6 +366,9 @@ fn exit_app(app: tauri::AppHandle) {
     if let Some(state) = app.try_state::<IsQuitting>() {
         state.0.store(true, Ordering::SeqCst);
     }
+    if let Some(state) = app.try_state::<MouseHotkeyStop>() {
+        state.0.store(true, Ordering::SeqCst);
+    }
     if let Some(state) = app.try_state::<SidecarChild>() {
         if let Some(child) = state.0.lock().unwrap().take() {
             let _ = child.kill();
@@ -451,6 +468,7 @@ pub fn run() {
         .manage(TrayNotifShown(AtomicBool::new(false)))
         .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
         .manage(MouseHotkeys(Arc::new(Mutex::new(MouseHotkeyConfig::default()))))
+        .manage(MouseHotkeyStop(Arc::new(AtomicBool::new(false))))
         .invoke_handler(tauri::generate_handler![
             get_cursor_position,
             log_msg,
@@ -469,7 +487,8 @@ pub fn run() {
             // shares the MouseHotkeys Arc so register_*_mouse takes effect
             // without restarting the thread.
             let mcfg = app.state::<MouseHotkeys>().0.clone();
-            spawn_mouse_hotkey_thread(app.handle().clone(), mcfg);
+            let mstop = app.state::<MouseHotkeyStop>().0.clone();
+            spawn_mouse_hotkey_thread(app.handle().clone(), mcfg, mstop);
 
             match spawn_sidecar(&app.handle()) {
                 Ok(child) => {
@@ -512,6 +531,9 @@ pub fn run() {
                     }
                     "exit" => {
                         if let Some(state) = app.try_state::<IsQuitting>() {
+                            state.0.store(true, Ordering::SeqCst);
+                        }
+                        if let Some(state) = app.try_state::<MouseHotkeyStop>() {
                             state.0.store(true, Ordering::SeqCst);
                         }
                         if let Some(state) = app.try_state::<SidecarChild>() {
@@ -571,6 +593,9 @@ pub fn run() {
             }
         }
         RunEvent::Exit => {
+            if let Some(state) = app_handle.try_state::<MouseHotkeyStop>() {
+                state.0.store(true, Ordering::SeqCst);
+            }
             if let Some(state) = app_handle.try_state::<SidecarChild>() {
                 if let Some(child) = state.0.lock().unwrap().take() {
                     let _ = child.kill();

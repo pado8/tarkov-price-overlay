@@ -1097,6 +1097,23 @@ function App() {
     };
   }, [region.lang, region.gameLang]);
 
+  // Re-fetch the ammo dataset when a lookup returns a caliber we don't have
+  // cached. Game patches add new calibers (e.g. .338 LM in 0.16) and without
+  // this, users would have to restart the app to see the matrix for those
+  // weapons/rounds. Guarded by the cache check so we don't refetch on every
+  // lookup.
+  useEffect(() => {
+    if (!result?.caliber) return;
+    if (ammoData?.calibers[result.caliber]) return;
+    let mounted = true;
+    fetchAmmo(getGameLang(region)).then((d) => {
+      if (mounted && d) setAmmoData(d);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [result?.caliber]);
+
   // Update check helper.
   const checkForUpdate = async () => {
     setUpdateChecking(true);
@@ -1242,6 +1259,20 @@ function App() {
       // X1/X2 trigger browser back/forward by default; we always swallow.
       e.preventDefault();
       e.stopPropagation();
+      // Conflict guard: same mouse button can't drive both slots. The Rust
+      // poller's if/else if order would silently dead-end the second slot
+      // (lookup wins, toggle never fires). Keyboard accelerators are
+      // protected by the OS rejecting duplicate registrations; mouse has no
+      // such guard, so we enforce it here. Recording stays active so the
+      // user just picks a different button.
+      const otherSlot =
+        recordingTarget === "lookup" ? toggleHotkey : hotkey;
+      if (accel === otherSlot) {
+        log(
+          `mouse hotkey ${accel} already bound to other slot — ignoring`
+        );
+        return;
+      }
       if (recordingTarget === "lookup") setHotkey(accel);
       else if (recordingTarget === "toggle") setToggleHotkey(accel);
       setRecordingTarget(null);
@@ -2566,7 +2597,15 @@ function App() {
                       // row so no highlight.
                       const currentId = result.item_name ? result : null;
                       return (
-                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                        // Always open — the ammo matrix is the headline
+                        // feature for weapon/round lookups, not a secondary
+                        // detail panel. Hiding it behind detailsOpenDefault
+                        // (regression since v1.0.7) made users assume the
+                        // panel "didn't show up" when their result was a
+                        // weapon or ammo. Other details (barters/crafts/
+                        // quests) stay user-controlled because they're
+                        // auxiliary info.
+                        <details className="all-traders barters" open>
                           <summary>
                             🎯 {t.ammoCompare} · {display} ({slot.rounds.length})
                           </summary>
@@ -2731,7 +2770,12 @@ function App() {
                       );
                     })()}
                   {(() => {
-                    const isSingleSlot = slots === 1;
+                    // `<= 1` (not `=== 1`) so items with missing width/height
+                    // metadata (rare — usually quest/special items where
+                    // tarkov.dev hasn't filled the size props) still render
+                    // the price/tier line. Without this guard, slots=0 fell
+                    // through both branches and the 📦 row vanished entirely.
+                    const isSingleSlot = slots <= 1;
                     const showTierBadge = region.showLootTier && lootTier;
                     const showWeightLine =
                       region.showWeight &&

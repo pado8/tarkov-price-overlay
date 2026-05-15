@@ -56,6 +56,14 @@ COMMON_INSTALL_PATHS = [
     r"D:\Games\Escape from Tarkov",
     r"E:\Battlestate Games\EFT",
     r"E:\Games\Escape from Tarkov",
+    # F:/G: added after multiple users with secondary game drives reported
+    # "EFT 설치 경로 못 찾음" despite valid installs — registry lookup
+    # often misses these because BSG launcher only writes its own install
+    # path, not relocated copies.
+    r"F:\Battlestate Games\EFT",
+    r"F:\Games\Escape from Tarkov",
+    r"G:\Battlestate Games\EFT",
+    r"G:\Games\Escape from Tarkov",
 ]
 
 

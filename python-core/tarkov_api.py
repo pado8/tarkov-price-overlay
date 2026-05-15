@@ -745,8 +745,12 @@ def _cache_lookup(
         entry = cache[hit]
         return {**entry, "matched_from": matched_from or item_name}
 
-    # Cache populated but no name matches → real miss.
-    return _empty_result(matched_from)
+    # Cache populated but no name matches. Return None (not an empty result)
+    # so the caller falls through to the cold-path GraphQL query — that's how
+    # newly-released items (post-cache-warmup patch additions) get found.
+    # Returning _empty_result here used to make every novel item silently
+    # invisible until app restart.
+    return None
 
 
 def _is_junk_ocr(text: str) -> bool:
