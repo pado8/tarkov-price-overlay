@@ -244,6 +244,11 @@ type Region = {
   groundWidth: number;
   groundHeight: number;
   lang: Lang;
+  // Game client language. Undefined means "follow UI language" — preserves
+  // behavior for existing users. Lets a Korean player on the English EFT
+  // client run the UI in Korean while still matching OCR against the EN
+  // catalog from tarkov.dev.
+  gameLang?: Lang;
   gameMode: GameMode;
   hideDelaySec: number;
   // Display prefs — what to show in the result card. Default minimal:
@@ -441,6 +446,8 @@ async function applyMonitorScaling(force: boolean): Promise<Region | null> {
     return null;
   }
 }
+
+const getGameLang = (r: Region): Lang => r.gameLang ?? r.lang;
 
 function loadRegion(): Region {
   try {
@@ -1019,13 +1026,13 @@ function App() {
   // network round-trip when the user looks up a weapon/round.
   useEffect(() => {
     let mounted = true;
-    fetchAmmo(region.lang).then((d) => {
+    fetchAmmo(getGameLang(region)).then((d) => {
       if (mounted && d) setAmmoData(d);
     });
     return () => {
       mounted = false;
     };
-  }, [region.lang]);
+  }, [region.lang, region.gameLang]);
 
   // Update check helper.
   const checkForUpdate = async () => {
@@ -1296,7 +1303,7 @@ function App() {
           y: event.payload.y + r.offsetY,
           width: r.width,
           height: r.height,
-          lang: r.lang,
+          lang: getGameLang(r),
           game_mode: r.gameMode,
           mirror_x: event.payload.x - r.offsetX - r.width,
           cursor_x: event.payload.x,
@@ -1419,7 +1426,7 @@ function App() {
       y: 0,
       width: 1,
       height: 1,
-      lang: r.lang,
+      lang: getGameLang(r),
       game_mode: r.gameMode,
       override_text: name,
       corrections: loadCorrections(),
@@ -1740,6 +1747,16 @@ function App() {
               <select
                 value={region.lang}
                 onChange={(e) => updateRegion("lang", e.target.value as Lang)}
+              >
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div className="settings-row" title={t.gameLanguageHint}>
+              <label>{t.gameLanguage}</label>
+              <select
+                value={getGameLang(region)}
+                onChange={(e) => updateRegion("gameLang", e.target.value as Lang)}
               >
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
