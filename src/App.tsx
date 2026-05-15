@@ -499,6 +499,48 @@ function playDing(success: boolean) {
   } catch {}
 }
 
+// Mouse-button hotkey helpers. The Rust side runs a 60Hz poller for these
+// (tauri-plugin-global-shortcut is keyboard-only). We persist the binding
+// as one of these literal strings so the same useEffect that registers
+// keyboard hotkeys can branch by prefix instead of carrying a separate type.
+type MouseHotkey = "MouseMiddle" | "MouseX1" | "MouseX2";
+
+function isMouseHotkey(s: string): s is MouseHotkey {
+  return s === "MouseMiddle" || s === "MouseX1" || s === "MouseX2";
+}
+
+/** MouseEvent.button → our hotkey string, or null for buttons we refuse to
+ *  bind. Left/right click are reserved for normal UI / game input — binding
+ *  them would steal every click. */
+function mouseEventToAccelerator(e: MouseEvent): MouseHotkey | null {
+  switch (e.button) {
+    case 1:
+      return "MouseMiddle";
+    case 3:
+      return "MouseX1";
+    case 4:
+      return "MouseX2";
+    default:
+      return null;
+  }
+}
+
+/** Pretty label for the recorded hotkey button shown in settings. Mouse
+ *  bindings get a 🖱 prefix so the user instantly tells them apart from
+ *  keyboard accelerators. */
+function formatHotkeyLabel(s: string): string {
+  switch (s) {
+    case "MouseMiddle":
+      return "🖱 휠클릭";
+    case "MouseX1":
+      return "🖱 마우스 X1";
+    case "MouseX2":
+      return "🖱 마우스 X2";
+    default:
+      return s;
+  }
+}
+
 function eventToAccelerator(e: KeyboardEvent): string | null {
   let key: string | null = null;
   const c = e.code;
@@ -979,18 +1021,39 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem(HOTKEY_KEY, hotkey);
-    invoke("register_lookup_hotkey", { accelerator: hotkey })
-      .then(() => log(`React: lookup hotkey = ${hotkey}`))
-      .catch((e) => log(`React: lookup hotkey FAILED (${hotkey}): ${e}`));
+    // Either the keyboard or the mouse slot is active per binding — clear
+    // the other one so a stale registration from a previous binding doesn't
+    // keep firing alongside the new one.
+    if (isMouseHotkey(hotkey)) {
+      invoke("register_lookup_hotkey", { accelerator: "" }).catch(() => {});
+      invoke("register_lookup_mouse", { button: hotkey })
+        .then(() => log(`React: lookup hotkey = ${hotkey} (mouse)`))
+        .catch((e) => log(`React: lookup mouse FAILED (${hotkey}): ${e}`));
+    } else {
+      invoke("register_lookup_mouse", { button: "" }).catch(() => {});
+      invoke("register_lookup_hotkey", { accelerator: hotkey })
+        .then(() => log(`React: lookup hotkey = ${hotkey}`))
+        .catch((e) => log(`React: lookup hotkey FAILED (${hotkey}): ${e}`));
+    }
   }, [hotkey]);
 
   useEffect(() => {
     localStorage.setItem(TOGGLE_HOTKEY_KEY, toggleHotkey);
-    invoke("register_toggle_hotkey", { accelerator: toggleHotkey })
-      .then(() => log(`React: toggle hotkey = ${toggleHotkey}`))
-      .catch((e) =>
-        log(`React: toggle hotkey FAILED (${toggleHotkey}): ${e}`)
-      );
+    if (isMouseHotkey(toggleHotkey)) {
+      invoke("register_toggle_hotkey", { accelerator: "" }).catch(() => {});
+      invoke("register_toggle_mouse", { button: toggleHotkey })
+        .then(() => log(`React: toggle hotkey = ${toggleHotkey} (mouse)`))
+        .catch((e) =>
+          log(`React: toggle mouse FAILED (${toggleHotkey}): ${e}`)
+        );
+    } else {
+      invoke("register_toggle_mouse", { button: "" }).catch(() => {});
+      invoke("register_toggle_hotkey", { accelerator: toggleHotkey })
+        .then(() => log(`React: toggle hotkey = ${toggleHotkey}`))
+        .catch((e) =>
+          log(`React: toggle hotkey FAILED (${toggleHotkey}): ${e}`)
+        );
+    }
   }, [toggleHotkey]);
 
   useEffect(() => {
@@ -1156,6 +1219,8 @@ function App() {
   useEffect(() => {
     if (recordingTarget === null) return;
     // Release the OS-level grab so the chosen key actually reaches the page.
+    // unregister_all_hotkeys clears both keyboard and mouse bindings, so
+    // mouse X1/X2 also stop firing while the user is recording a new one.
     invoke("unregister_all_hotkeys").catch(() => {});
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault();
@@ -1171,16 +1236,41 @@ function App() {
         setRecordingTarget(null);
       }
     };
+    const onMouse = (e: MouseEvent) => {
+      const accel = mouseEventToAccelerator(e);
+      if (!accel) return; // ignore left/right click — those are UI input
+      // X1/X2 trigger browser back/forward by default; we always swallow.
+      e.preventDefault();
+      e.stopPropagation();
+      if (recordingTarget === "lookup") setHotkey(accel);
+      else if (recordingTarget === "toggle") setToggleHotkey(accel);
+      setRecordingTarget(null);
+    };
     window.addEventListener("keydown", onKey, true);
+    window.addEventListener("mousedown", onMouse, true);
     return () => {
       window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("mousedown", onMouse, true);
       // Restore both grabs. If a hotkey changed, its useEffect will also fire
       // and re-register — duplicate registration is idempotent (each command
-      // unregisters its previous accelerator first).
-      invoke("register_lookup_hotkey", { accelerator: hotkey }).catch(() => {});
-      invoke("register_toggle_hotkey", { accelerator: toggleHotkey }).catch(
-        () => {}
-      );
+      // unregisters its previous accelerator first). Branch by binding type
+      // so we don't try to register a "MouseX1" string as a keyboard accel.
+      if (isMouseHotkey(hotkey)) {
+        invoke("register_lookup_mouse", { button: hotkey }).catch(() => {});
+      } else {
+        invoke("register_lookup_hotkey", { accelerator: hotkey }).catch(
+          () => {}
+        );
+      }
+      if (isMouseHotkey(toggleHotkey)) {
+        invoke("register_toggle_mouse", { button: toggleHotkey }).catch(
+          () => {}
+        );
+      } else {
+        invoke("register_toggle_hotkey", { accelerator: toggleHotkey }).catch(
+          () => {}
+        );
+      }
     };
   }, [recordingTarget]);
 
@@ -1784,7 +1874,9 @@ function App() {
                 }
                 title={t.hotkeyHint}
               >
-                {recordingTarget === "lookup" ? t.recordingHotkey : hotkey}
+                {recordingTarget === "lookup"
+                  ? t.recordingHotkey
+                  : formatHotkeyLabel(hotkey)}
               </button>
             </div>
             <div className="settings-row">
@@ -1798,7 +1890,7 @@ function App() {
               >
                 {recordingTarget === "toggle"
                   ? t.recordingHotkey
-                  : toggleHotkey}
+                  : formatHotkeyLabel(toggleHotkey)}
               </button>
             </div>
             <div className="settings-row">

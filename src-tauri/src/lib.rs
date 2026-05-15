@@ -1,5 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 
 use device_query::{DeviceQuery, DeviceState};
 use serde::Serialize;
@@ -41,6 +43,44 @@ struct HotkeyConfig {
 }
 struct Hotkeys(Mutex<HotkeyConfig>);
 
+/// Mouse-button hotkeys. tauri-plugin-global-shortcut is keyboard-only, so we
+/// run a tiny background polling thread (~60 Hz via device_query) for mouse
+/// side buttons and the wheel click. Same emit contract as the keyboard hotkey
+/// handler — same cursor payload, same window-show fallback — so React doesn't
+/// care which input bound the shortcut.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum MouseHotkeyButton {
+    Middle, // wheel click
+    X1,     // back / thumb-1
+    X2,     // forward / thumb-2
+}
+
+impl MouseHotkeyButton {
+    fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "MouseMiddle" => Some(Self::Middle),
+            "MouseX1" => Some(Self::X1),
+            "MouseX2" => Some(Self::X2),
+            _ => None,
+        }
+    }
+    /// device_query indexes mouse buttons 1=Left, 2=Right, 3=Middle, 4=X1, 5=X2.
+    fn device_index(self) -> usize {
+        match self {
+            Self::Middle => 3,
+            Self::X1 => 4,
+            Self::X2 => 5,
+        }
+    }
+}
+
+#[derive(Default, Clone, Copy)]
+struct MouseHotkeyConfig {
+    lookup: Option<MouseHotkeyButton>,
+    toggle: Option<MouseHotkeyButton>,
+}
+struct MouseHotkeys(Arc<Mutex<MouseHotkeyConfig>>);
+
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
     // Only fire the notification on the first hide-to-tray of the session.
     // Repeating it on every X click is noisy; the user learns where the tray
@@ -79,36 +119,146 @@ fn parse_accel(accelerator: &str) -> Result<Shortcut, String> {
         .map_err(|e| format!("parse({accelerator}) failed: {e}"))
 }
 
-#[tauri::command]
-fn register_lookup_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
-    let parsed = parse_accel(&accelerator)?;
+/// Register or clear a keyboard hotkey slot. Empty `accelerator` clears the
+/// slot — used when the user moves that slot's binding to a mouse button.
+fn apply_keyboard_hotkey(
+    app: &tauri::AppHandle,
+    slot: &str,
+    accelerator: &str,
+) -> Result<(), String> {
     let gs = app.global_shortcut();
     let state = app.state::<Hotkeys>();
     let mut cfg = state.0.lock().unwrap();
-    if let Some(old) = cfg.lookup.take() {
+    let old = match slot {
+        "lookup" => cfg.lookup.take(),
+        "toggle" => cfg.toggle.take(),
+        _ => return Err(format!("unknown slot: {slot}")),
+    };
+    if let Some(old) = old {
         let _ = gs.unregister(old);
     }
+    if accelerator.is_empty() {
+        println!("[hotkey] {slot} cleared");
+        return Ok(());
+    }
+    let parsed = parse_accel(accelerator)?;
     gs.register(parsed.clone())
-        .map_err(|e| format!("register lookup({accelerator}) failed: {e}"))?;
-    cfg.lookup = Some(parsed);
-    println!("[hotkey] lookup registered: {accelerator}");
+        .map_err(|e| format!("register {slot}({accelerator}) failed: {e}"))?;
+    match slot {
+        "lookup" => cfg.lookup = Some(parsed),
+        "toggle" => cfg.toggle = Some(parsed),
+        _ => unreachable!(),
+    }
+    println!("[hotkey] {slot} registered: {accelerator}");
     Ok(())
 }
 
 #[tauri::command]
+fn register_lookup_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
+    apply_keyboard_hotkey(&app, "lookup", &accelerator)
+}
+
+#[tauri::command]
 fn register_toggle_hotkey(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
-    let parsed = parse_accel(&accelerator)?;
-    let gs = app.global_shortcut();
-    let state = app.state::<Hotkeys>();
+    apply_keyboard_hotkey(&app, "toggle", &accelerator)
+}
+
+/// Set or clear the mouse-button hotkey for a slot. `button` is one of
+/// "MouseMiddle" | "MouseX1" | "MouseX2", or empty string to clear that slot.
+fn apply_mouse_hotkey(
+    app: &tauri::AppHandle,
+    slot: &str,
+    button: &str,
+) -> Result<(), String> {
+    let parsed = if button.is_empty() {
+        None
+    } else {
+        Some(MouseHotkeyButton::from_str(button)
+            .ok_or_else(|| format!("unknown mouse button: {button}"))?)
+    };
+    let state = app.state::<MouseHotkeys>();
     let mut cfg = state.0.lock().unwrap();
-    if let Some(old) = cfg.toggle.take() {
-        let _ = gs.unregister(old);
+    match slot {
+        "lookup" => cfg.lookup = parsed,
+        "toggle" => cfg.toggle = parsed,
+        _ => return Err(format!("unknown slot: {slot}")),
     }
-    gs.register(parsed.clone())
-        .map_err(|e| format!("register toggle({accelerator}) failed: {e}"))?;
-    cfg.toggle = Some(parsed);
-    println!("[hotkey] toggle registered: {accelerator}");
+    println!("[hotkey] mouse {slot} = {button}");
     Ok(())
+}
+
+#[tauri::command]
+fn register_lookup_mouse(app: tauri::AppHandle, button: String) -> Result<(), String> {
+    apply_mouse_hotkey(&app, "lookup", &button)
+}
+
+#[tauri::command]
+fn register_toggle_mouse(app: tauri::AppHandle, button: String) -> Result<(), String> {
+    apply_mouse_hotkey(&app, "toggle", &button)
+}
+
+/// Background poller that watches the three usable mouse buttons (middle, X1,
+/// X2) and emits the same `hotkey-lookup` / `hotkey-toggle` events the
+/// keyboard handler emits. Edge-triggered: only emits on the false→true
+/// transition so a held button doesn't flood the channel.
+fn spawn_mouse_hotkey_thread(app: tauri::AppHandle, cfg: Arc<Mutex<MouseHotkeyConfig>>) {
+    thread::spawn(move || {
+        let device_state = DeviceState::new();
+        let mut prev_pressed = [false; 8];
+        // Buttons we actually care about. Left/Right are excluded — binding
+        // them would steal normal game input and there's no good UX for it.
+        const WATCHED: &[MouseHotkeyButton] = &[
+            MouseHotkeyButton::Middle,
+            MouseHotkeyButton::X1,
+            MouseHotkeyButton::X2,
+        ];
+        loop {
+            let mouse = device_state.get_mouse();
+            // device_query returns Vec<bool>; guard against shorter-than-expected.
+            let pressed = &mouse.button_pressed;
+            for &btn in WATCHED {
+                let idx = btn.device_index();
+                let now = pressed.get(idx).copied().unwrap_or(false);
+                let was = prev_pressed[idx];
+                if now && !was {
+                    // Edge: button just went down. Decide which event slot,
+                    // if any, this button is bound to.
+                    let kind = {
+                        let c = cfg.lock().unwrap();
+                        if c.lookup == Some(btn) {
+                            Some("hotkey-lookup")
+                        } else if c.toggle == Some(btn) {
+                            Some("hotkey-toggle")
+                        } else {
+                            None
+                        }
+                    };
+                    if let Some(event_name) = kind {
+                        // Same window-revival behavior as the keyboard hotkey
+                        // path so users on a mouse binding aren't worse off
+                        // when they've X-to-tray'd the overlay.
+                        if let Some(window) = app.get_webview_window("main") {
+                            if !window.is_visible().unwrap_or(true) {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        let pos = CursorPos {
+                            x: mouse.coords.0,
+                            y: mouse.coords.1,
+                        };
+                        println!(
+                            "[hotkey] {event_name} (mouse {idx}) cursor=({}, {})",
+                            pos.x, pos.y
+                        );
+                        let _ = app.emit(event_name, pos);
+                    }
+                }
+                prev_pressed[idx] = now;
+            }
+            thread::sleep(Duration::from_millis(16));
+        }
+    });
 }
 
 #[tauri::command]
@@ -119,7 +269,14 @@ fn unregister_all_hotkeys(app: tauri::AppHandle) -> Result<(), String> {
     let mut cfg = state.0.lock().unwrap();
     cfg.lookup = None;
     cfg.toggle = None;
-    println!("[hotkey] unregistered all");
+    drop(cfg);
+    // Clear mouse bindings too — "unregister all" should mean all input
+    // sources, not just keyboard.
+    let mstate = app.state::<MouseHotkeys>();
+    let mut mcfg = mstate.0.lock().unwrap();
+    mcfg.lookup = None;
+    mcfg.toggle = None;
+    println!("[hotkey] unregistered all (keyboard + mouse)");
     Ok(())
 }
 
@@ -293,11 +450,14 @@ pub fn run() {
         .manage(IsQuitting(AtomicBool::new(false)))
         .manage(TrayNotifShown(AtomicBool::new(false)))
         .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
+        .manage(MouseHotkeys(Arc::new(Mutex::new(MouseHotkeyConfig::default()))))
         .invoke_handler(tauri::generate_handler![
             get_cursor_position,
             log_msg,
             register_lookup_hotkey,
             register_toggle_hotkey,
+            register_lookup_mouse,
+            register_toggle_mouse,
             unregister_all_hotkeys,
             hide_to_tray,
             show_preview_rect,
@@ -305,6 +465,12 @@ pub fn run() {
             exit_app
         ])
         .setup(|app| {
+            // Mouse-button hotkey poller — needs the AppHandle for emits and
+            // shares the MouseHotkeys Arc so register_*_mouse takes effect
+            // without restarting the thread.
+            let mcfg = app.state::<MouseHotkeys>().0.clone();
+            spawn_mouse_hotkey_thread(app.handle().clone(), mcfg);
+
             match spawn_sidecar(&app.handle()) {
                 Ok(child) => {
                     let state = app.state::<SidecarChild>();
