@@ -636,6 +636,15 @@ def _refresher_loop() -> None:
                     continue
                 # Tiny gap between calls so we don't slam tarkov.dev.
                 time.sleep(1)
+        # Invalidate the ammo cache after each catalog refresh so newly
+        # released calibers (game-patch additions) get picked up within the
+        # CACHE_TTL_SEC window. Without this, the React-side caliber
+        # re-fetch hits the same stale dict every time and never sees new
+        # calibers until the process restarts. Lang-keyed clear is enough
+        # since _fetch_ammo is per-lang.
+        with _ammo_cache_lock:
+            _ammo_cache.clear()
+            print("[ammo] cache invalidated for next /ammo fetch")
         time.sleep(CACHE_TTL_SEC)
 
 

@@ -641,6 +641,11 @@ function App() {
     null | "lookup" | "toggle"
   >(null);
   const recordingHotkey = recordingTarget !== null;
+  // Brief inline error shown on the recording button when the user tries to
+  // bind a mouse button that's already on the other slot. Cleared when
+  // recording ends or after a short timeout so the user gets a noticeable
+  // hint without a modal/toast layer.
+  const [hotkeyConflict, setHotkeyConflict] = useState(false);
   const [showCaptureRegion, setShowCaptureRegion] = useState(false);
   // Click-to-edit toggle for the opacity readout next to the slider.
   const [opacityEditing, setOpacityEditing] = useState(false);
@@ -1234,7 +1239,12 @@ function App() {
   }, [recordingHotkey]);
 
   useEffect(() => {
-    if (recordingTarget === null) return;
+    if (recordingTarget === null) {
+      // Recording ended (success or Esc) — clear any stale conflict marker.
+      setHotkeyConflict(false);
+      return;
+    }
+    setHotkeyConflict(false);
     // Release the OS-level grab so the chosen key actually reaches the page.
     // unregister_all_hotkeys clears both keyboard and mouse bindings, so
     // mouse X1/X2 also stop firing while the user is recording a new one.
@@ -1271,8 +1281,10 @@ function App() {
         log(
           `mouse hotkey ${accel} already bound to other slot — ignoring`
         );
+        setHotkeyConflict(true);
         return;
       }
+      setHotkeyConflict(false);
       if (recordingTarget === "lookup") setHotkey(accel);
       else if (recordingTarget === "toggle") setToggleHotkey(accel);
       setRecordingTarget(null);
@@ -1906,7 +1918,9 @@ function App() {
                 title={t.hotkeyHint}
               >
                 {recordingTarget === "lookup"
-                  ? t.recordingHotkey
+                  ? hotkeyConflict
+                    ? t.hotkeyConflict
+                    : t.recordingHotkey
                   : formatHotkeyLabel(hotkey)}
               </button>
             </div>
@@ -1920,7 +1934,9 @@ function App() {
                 title={t.toggleHotkeyHint}
               >
                 {recordingTarget === "toggle"
-                  ? t.recordingHotkey
+                  ? hotkeyConflict
+                    ? t.hotkeyConflict
+                    : t.recordingHotkey
                   : formatHotkeyLabel(toggleHotkey)}
               </button>
             </div>
