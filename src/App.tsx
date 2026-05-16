@@ -3,13 +3,14 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
 const APP_VERSION = __APP_VERSION__;
-const UPDATE_REPO = "pado8/tarkov-price-overlay-releases";
 const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
 // One-shot dismiss for the "run as administrator" diagnostic banner. We
 // remember it forever per machine so users who already moved to elevated
@@ -59,34 +60,15 @@ async function fetchDiagnostics(): Promise<Diagnostics | null> {
   }
 }
 
-type UpdateInfo = { tag: string; url: string };
+type UpdateInfo = { version: string; notes: string | null };
 
-function compareSemver(a: string, b: string): number {
-  // returns >0 if a > b, <0 if a < b, 0 if equal. Strips leading "v".
-  const pa = a.replace(/^v/, "").split(".").map((s) => parseInt(s, 10) || 0);
-  const pb = b.replace(/^v/, "").split(".").map((s) => parseInt(s, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const x = pa[i] ?? 0;
-    const y = pb[i] ?? 0;
-    if (x !== y) return x - y;
-  }
-  return 0;
-}
-
-async function fetchLatestRelease(): Promise<UpdateInfo | null> {
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/${UPDATE_REPO}/releases/latest`,
-      { headers: { Accept: "application/vnd.github+json" } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data?.tag_name || !data?.html_url) return null;
-    return { tag: data.tag_name, url: data.html_url };
-  } catch {
-    return null;
-  }
-}
+// Phases for the in-app updater UI:
+//   idle       — no update or user hasn't clicked Install yet
+//   downloading — bytes are streaming, show progress %
+//   ready      — download + signature verify done, installer is on disk;
+//                NSIS launches automatically on relaunch
+//   error      — download/verify/install threw; we surface the message
+type UpdatePhase = "idle" | "downloading" | "ready" | "error";
 const FEEDBACK_EMAIL = "floe9235@gmail.com";
 const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
 const PAYPAL_URL = "https://paypal.me/tarkovoverlay";
@@ -713,6 +695,14 @@ function App() {
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
   const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
+  const [updatePhase, setUpdatePhase] = useState<UpdatePhase>("idle");
+  const [updateProgress, setUpdateProgress] = useState<number>(0);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  // Hold the Update handle returned by check() so the Install button can
+  // call downloadAndInstall on the same object the user just saw. We keep
+  // it in a ref (not state) because mutating it shouldn't trigger renders
+  // and it's not part of the rendered UI.
+  const pendingUpdateRef = useRef<Update | null>(null);
   const [showDonate, setShowDonate] = useState(false);
   // Default donate tab follows the user's UI language (Korean → KakaoPay first,
   // others → PayPal first). They can flip with the tabs.
@@ -1119,20 +1109,70 @@ function App() {
     };
   }, [result?.caliber]);
 
-  // Update check helper.
+  // Update check + install. Uses Tauri's updater plugin: it fetches
+  // latest.json from the configured endpoint, verifies the embedded
+  // ed25519 signature against the pubkey baked into the app, and
+  // returns an Update handle whose downloadAndInstall() streams the
+  // signed installer to disk and launches it.
   const checkForUpdate = async () => {
     setUpdateChecking(true);
-    const latest = await fetchLatestRelease();
-    setUpdateChecking(false);
-    setUpdateCheckedAt(Date.now());
-    if (latest && compareSemver(latest.tag, APP_VERSION) > 0) {
-      setUpdateInfo(latest);
-      log(`update: ${APP_VERSION} -> ${latest.tag} available`);
-    } else {
+    setUpdateError(null);
+    try {
+      const update = await checkForAppUpdate();
+      setUpdateCheckedAt(Date.now());
+      if (update) {
+        pendingUpdateRef.current = update;
+        setUpdateInfo({ version: update.version, notes: update.body ?? null });
+        setUpdatePhase("idle");
+        log(`update: ${APP_VERSION} -> ${update.version} available`);
+      } else {
+        pendingUpdateRef.current = null;
+        setUpdateInfo(null);
+        log(`update: up to date (${APP_VERSION})`);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log(`update: check failed — ${msg}`);
+      setUpdateError(msg);
       setUpdateInfo(null);
-      log(
-        `update: up to date (${APP_VERSION}, latest=${latest?.tag ?? "?"})`
-      );
+    } finally {
+      setUpdateChecking(false);
+    }
+  };
+
+  const installUpdate = async () => {
+    const update = pendingUpdateRef.current;
+    if (!update) return;
+    setUpdatePhase("downloading");
+    setUpdateProgress(0);
+    setUpdateError(null);
+    let downloaded = 0;
+    let total = 0;
+    try {
+      await update.downloadAndInstall((event) => {
+        // Plugin emits three event kinds: Started (total size known),
+        // Progress (chunk bytes), Finished (download+verify done; NSIS
+        // about to spawn). We translate to a 0–100 percent so the
+        // banner can render a progress bar without remembering bytes.
+        if (event.event === "Started") {
+          total = event.data.contentLength ?? 0;
+        } else if (event.event === "Progress") {
+          downloaded += event.data.chunkLength;
+          if (total > 0) {
+            setUpdateProgress(Math.min(100, Math.round((downloaded / total) * 100)));
+          }
+        } else if (event.event === "Finished") {
+          setUpdateProgress(100);
+        }
+      });
+      setUpdatePhase("ready");
+      log(`update: installed ${update.version}, relaunching`);
+      await relaunch();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log(`update: install failed — ${msg}`);
+      setUpdateError(msg);
+      setUpdatePhase("error");
     }
   };
 
@@ -1682,24 +1722,49 @@ function App() {
           </div>
         </div>
 
-        {updateInfo && updateInfo.tag !== dismissedUpdate && (
+        {updateInfo && updateInfo.version !== dismissedUpdate && (
           <div className="update-banner">
-            <span className="update-text">
-              🆕 {t.updateAvailable} <strong>{updateInfo.tag}</strong>
-            </span>
-            <button
-              className="reset-btn update-btn"
-              onClick={() => openUrl(updateInfo.url).catch(() => {})}
-            >
-              {t.updateOpen}
-            </button>
-            <button
-              className="settings-btn"
-              onClick={() => setDismissedUpdate(updateInfo.tag)}
-              title={t.updateLater}
-            >
-              ✕
-            </button>
+            {updatePhase === "idle" && (
+              <>
+                <span className="update-text">
+                  🆕 {t.updateAvailable} <strong>v{updateInfo.version}</strong>
+                </span>
+                <button
+                  className="reset-btn update-btn"
+                  onClick={installUpdate}
+                >
+                  {t.updateInstall}
+                </button>
+                <button
+                  className="settings-btn"
+                  onClick={() => setDismissedUpdate(updateInfo.version)}
+                  title={t.updateLater}
+                >
+                  ✕
+                </button>
+              </>
+            )}
+            {updatePhase === "downloading" && (
+              <span className="update-text">
+                ⬇ {t.updateDownloading} {updateProgress}%
+              </span>
+            )}
+            {updatePhase === "ready" && (
+              <span className="update-text">✓ {t.updateRestarting}</span>
+            )}
+            {updatePhase === "error" && (
+              <>
+                <span className="update-text">
+                  ⚠ {t.updateError}: {updateError}
+                </span>
+                <button
+                  className="reset-btn update-btn"
+                  onClick={installUpdate}
+                >
+                  {t.updateRetry}
+                </button>
+              </>
+            )}
           </div>
         )}
 

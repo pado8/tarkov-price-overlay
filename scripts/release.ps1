@@ -26,6 +26,25 @@ Set-Location $root
 $ghExe = "C:\Program Files\GitHub CLI\gh.exe"
 $publicRepo = "pado8/tarkov-price-overlay-releases"
 
+# Tauri updater signing — required so the in-app updater (v1.0.10+) can
+# verify each new release's signature against the pubkey baked into the
+# app. The private key lives in $HOME\.tauri\ and is NEVER checked in.
+# The password protects the key file content; the env vars are read by
+# `tauri build` during the bundle step.
+$signingKeyPath = Join-Path $HOME ".tauri\tarkov-overlay.key"
+if (-not (Test-Path $signingKeyPath)) {
+    throw "Updater signing key not found at $signingKeyPath. Generate it once with: npx tauri signer generate -w `"$signingKeyPath`""
+}
+if (-not $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
+    $sec = Read-Host "Updater key password" -AsSecureString
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
+    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+}
+# Tauri accepts either a path or the key content. Path is simpler and
+# keeps the secret out of process listings.
+$env:TAURI_SIGNING_PRIVATE_KEY = $signingKeyPath
+
 # Validate semver-ish
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Version must be like 0.1.2 (got '$Version')"
@@ -67,6 +86,15 @@ if (-not (Test-Path $installer)) {
 }
 Write-Host "[release] installer ready: $installer"
 
+# Tauri 2 emits the .sig file alongside the installer when createUpdaterArtifacts=true
+# and TAURI_SIGNING_PRIVATE_KEY is set. The sig content (not a path) gets
+# embedded in latest.json so the in-app updater can verify the download.
+$installerSig = "$installer.sig"
+if (-not (Test-Path $installerSig)) {
+    throw "Installer signature not found at $installerSig — make sure TAURI_SIGNING_PRIVATE_KEY is set during build"
+}
+Write-Host "[release] installer signature ready: $installerSig"
+
 # 3b. Build portable ZIP from the same target/release artifacts
 Write-Host "[release] building portable ZIP..."
 & "$root\scripts\portable.ps1"
@@ -90,9 +118,33 @@ if ($LASTEXITCODE -ne 0) {
 & git tag -a $tag -m "Release $tag"
 & git push origin master --tags
 
-# 5. Create release on PUBLIC distribution repo (installer + portable ZIP)
+# 5a. Build latest.json — the manifest the in-app updater polls. GitHub's
+# /releases/latest/download/<asset> URL pattern redirects to whatever the
+# newest published release tagged. So we ship a fresh latest.json with
+# every release and the endpoint in tauri.conf.json always finds it.
+$sigContent = (Get-Content -Raw $installerSig).Trim()
+$installerUrl = "https://github.com/$publicRepo/releases/download/$tag/Tarkov.Price.Overlay_${Version}_x64-setup.exe"
+$pubDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$latestJson = [ordered]@{
+    version   = $tag
+    notes     = $Notes
+    pub_date  = $pubDate
+    platforms = [ordered]@{
+        "windows-x86_64" = [ordered]@{
+            signature = $sigContent
+            url       = $installerUrl
+        }
+    }
+} | ConvertTo-Json -Depth 5
+$latestJsonPath = "$root\src-tauri\target\release\bundle\nsis\latest.json"
+# Write without BOM so GitHub serves clean UTF-8 (PowerShell 5.1 Out-File
+# adds a BOM by default which some HTTP clients choke on).
+[IO.File]::WriteAllText($latestJsonPath, $latestJson, [Text.UTF8Encoding]::new($false))
+Write-Host "[release] latest.json written: $latestJsonPath"
+
+# 5b. Create release on PUBLIC distribution repo (installer + portable ZIP + latest.json)
 Write-Host "[release] creating GitHub Release on $publicRepo..."
-& $ghExe release create $tag $installer $portableZip `
+& $ghExe release create $tag $installer $portableZip $latestJsonPath `
     --repo $publicRepo `
     --title "Tarkov Price Overlay $tag" `
     --notes $Notes

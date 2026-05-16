@@ -16,3 +16,12 @@
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro KillRunningOverlay
 !macroend
+
+; After auto-update install completes, launch the new exe so the user
+; doesn't have to manually re-open from Start Menu. ExecShell uses the
+; current user's context (not elevated), matching how Start Menu launches
+; the app. Safe for first-time installs too — same behavior NSIS's
+; standard "Run on finish" checkbox would give.
+!macro NSIS_HOOK_POSTINSTALL
+  ExecShell "" "$INSTDIR\tarkov-price-overlay.exe"
+!macroend

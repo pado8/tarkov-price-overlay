@@ -60,6 +60,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -76,6 +77,14 @@
       "nsis": {
         "installerHooks": "installer-hooks.nsh"
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest/download/latest.json"
+      ],
+      "pubkey": "PUBKEY_PLACEHOLDER_REPLACE_AFTER_KEY_GEN"
     }
   }
 }
