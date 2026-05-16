@@ -41,8 +41,10 @@ if (-not $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD) {
     $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
 }
-# Tauri accepts either a path or the key content. Path is simpler and
-# keeps the secret out of process listings.
+# Tauri 2.11's bundle step only checks TAURI_SIGNING_PRIVATE_KEY (despite
+# `tauri signer generate` advertising a _PATH variant — that one is only
+# read by the signer subcommand). The env value accepts either the raw key
+# content OR a path to the key file; Tauri auto-detects.
 $env:TAURI_SIGNING_PRIVATE_KEY = $signingKeyPath
 
 # Validate semver-ish

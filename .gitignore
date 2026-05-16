@@ -3,22 +3,23 @@
 .claude/worktrees/
 .claude/scheduled_tasks.lock
 
-# Local-only drafts
-community-posts/
+# Local-only drafts (project-specific; subprojects can also have their own)
+/community-posts/
 
-# Logs at repo root
-*.log
+# Logs at repo root only
+/*.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Leftover build artifacts/caches at repo root from pre-reorganization layout
-# (node_modules, dist, dist-python, build-python, python-core/.venv etc.)
-# Can be safely deleted — regenerate by running npm install / build from tarkov-price-overlay/
-node_modules/
-dist/
-dist-python/
-build-python/
-python-core/
-src-tauri/
+# Leftover build artifacts/caches at repo root from pre-reorganization layout.
+# Anchored with a leading slash so they only match at the monorepo root —
+# subprojects (e.g. tarkov-price-overlay/src-tauri/) have their own .gitignore
+# that controls their build artifacts.
+/node_modules/
+/dist/
+/dist-python/
+/build-python/
+/python-core/
+/src-tauri/

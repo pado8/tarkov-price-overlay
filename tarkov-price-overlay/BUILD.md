@@ -12,7 +12,7 @@
    cargo install tauri-cli --version "^2"
    ```
 4. **Visual Studio C++ Build Tools** (Tauri Windows 빌드 필수)
-5. 프로젝트 루트(`C:\project`)에서:
+5. 프로젝트 루트(`C:\project\tarkov-price-overlay`)에서:
    ```
    python -m venv python-core\.venv
    python-core\.venv\Scripts\Activate.ps1

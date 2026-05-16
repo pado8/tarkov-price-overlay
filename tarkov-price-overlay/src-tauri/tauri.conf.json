@@ -84,7 +84,7 @@
       "endpoints": [
         "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest/download/latest.json"
       ],
-      "pubkey": "PUBKEY_PLACEHOLDER_REPLACE_AFTER_KEY_GEN"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI0QTI0NTIzQkYyNjdFRUIKUldUcmZpYS9JMFdpSkJMcFJzcXBuMGVPdUMyZytaaFdBUUJjaEZpWXVpdHZXNjgxNnBKeUxVSHMK"
     }
   }
 }
