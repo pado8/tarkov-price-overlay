@@ -75,12 +75,17 @@ try {
     $newCargo = $cargoBackup -replace '(?m)^version\s*=\s*"[^"]+"', "version = `"$Version`""
     [IO.File]::WriteAllText($cargoPath, $newCargo, [Text.UTF8Encoding]::new($false))
 
-    # tauri.conf.json — bump version AND swap the GitHub endpoint to localhost.
+    # tauri.conf.json — bump version, swap the GitHub endpoint to localhost,
+    # AND inject `dangerousInsecureTransportProtocol: true` so the updater
+    # plugin allows http://127.0.0.1 (it normally refuses non-https endpoints).
     # The endpoint regex matches any github.com .../latest.json so it's
-    # robust against the public repo URL changing.
+    # robust against the public repo URL changing. The pubkey-line replace
+    # is the cheapest place to splice in the new flag without touching the
+    # outer object braces or risking trailing-comma issues.
     $newTauri = $tauriCfgBackup `
         -replace '"version":\s*"[^"]+"', "`"version`": `"$Version`"" `
-        -replace 'https://github\.com/[^"]+/latest\.json', $testEndpoint
+        -replace 'https://github\.com/[^"]+/latest\.json', $testEndpoint `
+        -replace '("pubkey":\s*"[^"]+")', "`$1,`r`n      `"dangerousInsecureTransportProtocol`": true"
     [IO.File]::WriteAllText($tauriCfgPath, $newTauri, [Text.UTF8Encoding]::new($false))
 
     Write-Host "[test-build] running build.ps1..."
