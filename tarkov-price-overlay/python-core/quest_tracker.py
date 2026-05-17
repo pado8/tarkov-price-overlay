@@ -5,6 +5,22 @@ and parses JSON blocks for `new_message` notifications with quest-related types.
 No game memory access, no DLL injection, no process interaction — same safety
 profile as reading any text file the game produced.
 
+PVE vs PVP separation
+---------------------
+EFT writes a separate log session folder per launch, and each session is either
+PVP (regular) or PVE. Quest progress on the two servers is independent — a quest
+completed on PVE is NOT completed on PVP, and vice versa. So we detect the mode
+per session folder and keep two parallel quest-state dicts. Mode detection uses
+two signals, in order:
+
+  1. application_*.log line ~141: "|Info|application|Session mode: Pve" (or Pvp)
+  2. backend_*.log first ~20 lines: the /client/game/start request URL is either
+     gw-pve.escapefromtarkov.com or gw-pvp.escapefromtarkov.com
+
+The first signal is more reliable but only appears once per session. The second
+is a fallback. Default is "pvp" if neither is found — matches the pre-PVE
+historical assumption.
+
 Reference for the log format:
 - Zeliper/Tarkov-Item-Helper LogSyncService.cs
 - Live EFT writes to: <install>/Logs/log_YYYY.MM.DD_HH-MM-SS_VERSION/
@@ -33,7 +49,7 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 # Quest event message type codes (from EFT push-notifications schema).
 MSG_STARTED = 10
@@ -42,6 +58,9 @@ MSG_COMPLETED = 12
 
 # How often the background watcher re-checks the log folder for new entries.
 POLL_INTERVAL_SEC = 2.5
+
+GameMode = Literal["pvp", "pve"]
+MODES: tuple[GameMode, ...] = ("pvp", "pve")
 
 # Common EFT install locations to try when the user hasn't set a path manually.
 # The Steam path covers users who relocated/symlinked their install there
@@ -130,7 +149,12 @@ def _resolve_logs_root(install_path: str) -> Optional[Path]:
 
 def _registry_install_path() -> Optional[str]:
     """Look for an explicit EFT install entry in the Windows registry.
-    Returns a path to the install root (containing a Logs/ subtree) or None."""
+    Returns a path to the install root (containing a Logs/ subtree) or None.
+
+    Also checks the Steam Uninstall entry (DisplayName "Escape from Tarkov"),
+    since the BSG-launcher key is often empty when the game was installed
+    or relocated via Steam.
+    """
     if sys.platform != "win32":
         return None
     try:
@@ -151,6 +175,40 @@ def _registry_install_path() -> Optional[str]:
                         if val and Path(val).is_dir():
                             return str(val)
                     except FileNotFoundError:
+                        continue
+        except OSError:
+            continue
+    # Steam Uninstall registry — scan for a DisplayName matching EFT.
+    uninstall_roots = [
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+        (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"),
+    ]
+    for hive, subkey in uninstall_roots:
+        try:
+            with winreg.OpenKey(hive, subkey) as root:
+                i = 0
+                while True:
+                    try:
+                        sub = winreg.EnumKey(root, i)
+                    except OSError:
+                        break
+                    i += 1
+                    try:
+                        with winreg.OpenKey(root, sub) as k:
+                            try:
+                                name, _ = winreg.QueryValueEx(k, "DisplayName")
+                            except FileNotFoundError:
+                                continue
+                            if not isinstance(name, str) or "Escape from Tarkov" not in name or "Arena" in name:
+                                continue
+                            try:
+                                loc, _ = winreg.QueryValueEx(k, "InstallLocation")
+                            except FileNotFoundError:
+                                continue
+                            if loc and Path(loc).is_dir():
+                                return str(loc)
+                    except OSError:
                         continue
         except OSError:
             continue
@@ -208,6 +266,55 @@ def _list_log_folders(install_path: str) -> list[Path]:
 def _push_notification_files(folder: Path) -> list[Path]:
     """Push-notifications log files inside a single session folder."""
     return sorted(folder.glob("*push-notifications*.log"))
+
+
+# How many bytes to read from application/backend logs when sniffing the mode.
+# The "Session mode: Pve/Pvp" line lands around byte 18000-25000, and the
+# backend /client/game/start request is in the first few KB. 64 KB is enough
+# headroom for both without slurping the full multi-MB log.
+_MODE_SNIFF_BYTES = 64 * 1024
+
+_RE_SESSION_MODE = re.compile(r"Session mode:\s*(Pve|Pvp)", re.IGNORECASE)
+_RE_BACKEND_HOST = re.compile(r"https://gw-(pve|pvp)\.escapefromtarkov\.com/client/game/start", re.IGNORECASE)
+
+
+def detect_session_mode(folder: Path) -> GameMode:
+    """Inspect a single session folder and return 'pve' or 'pvp'.
+
+    Falls back to 'pvp' if neither signal is found — that's the pre-PVE
+    historical default and matches the "regular" game_mode value the
+    frontend has been sending since before PVE existed.
+    """
+    # Signal 1: application_*.log "Session mode: Pve/Pvp" line. Strongest signal
+    # because it's the game's own self-reported mode rather than inference from
+    # network traffic.
+    for app_log in folder.glob("*application_*.log"):
+        try:
+            with app_log.open("rb") as f:
+                chunk = f.read(_MODE_SNIFF_BYTES).decode("utf-8", errors="replace")
+        except OSError:
+            continue
+        m = _RE_SESSION_MODE.search(chunk)
+        if m:
+            return "pve" if m.group(1).lower() == "pve" else "pvp"
+        break  # only one application log per folder
+
+    # Signal 2: backend_*.log /client/game/start request host. The first
+    # /client/menu/locale request hits gw-pvp even on PVE (menu service is
+    # shared), so we specifically look for /client/game/start which is mode-
+    # specific.
+    for backend_log in folder.glob("*backend_*.log"):
+        try:
+            with backend_log.open("rb") as f:
+                chunk = f.read(_MODE_SNIFF_BYTES).decode("utf-8", errors="replace")
+        except OSError:
+            continue
+        m = _RE_BACKEND_HOST.search(chunk)
+        if m:
+            return "pve" if m.group(1).lower() == "pve" else "pvp"
+        break
+
+    return "pvp"
 
 
 # A push-notifications log is a sequence of JSON objects pretty-printed with
@@ -270,17 +377,31 @@ def _parse_quest_event(block: str) -> Optional[dict]:
     return {"quest_id": quest_id, "status": status, "ts": msg.get("dt", 0)}
 
 
+def _normalize_request_mode(mode: Optional[str]) -> GameMode:
+    """Map the frontend's `game_mode` values to our internal pvp/pve labels.
+    Frontend uses 'regular' for live PVP; anything unrecognized defaults to
+    PVP so old clients keep working."""
+    if mode == "pve":
+        return "pve"
+    return "pvp"
+
+
 class QuestTracker:
     """Watches EFT log folders and maintains the latest known quest status
-    per quest ID. Thread-safe accessors for the FastAPI request handlers."""
+    per quest ID, separately for PVP and PVE servers. Thread-safe accessors
+    for the FastAPI request handlers."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        # quest_id -> {"status": "started"|"completed"|"failed", "ts": int}
-        # The latest-by-`ts` event wins, so scan order doesn't matter.
-        self._status: dict[str, dict] = {}
+        # mode -> quest_id -> {"status": "started"|"completed"|"failed", "ts": int}
+        # The latest-by-`ts` event wins within a mode, so scan order doesn't matter.
+        self._status: dict[GameMode, dict[str, dict]] = {m: {} for m in MODES}
         # Per-file read offset so each poll only reads the new tail bytes.
         self._file_offsets: dict[str, int] = {}
+        # session_folder_path -> detected mode. Cached so we don't re-sniff
+        # the log header on every poll; mode is fixed for the lifetime of a
+        # session folder (game can't switch mid-raid).
+        self._folder_mode: dict[str, GameMode] = {}
         # User-configurable; falls back to auto-detect.
         self._install_path: Optional[str] = None
         # Background poll thread.
@@ -297,31 +418,61 @@ class QuestTracker:
             data = json.loads(_state_file().read_text(encoding="utf-8"))
         except (FileNotFoundError, json.JSONDecodeError, OSError):
             return
-        raw = data.get("status", {})
-        # Migrate old shape `{qid: "completed"}` → `{qid: {status, ts: 0}}`.
-        # Old entries get ts=0 so any newly seen real event will overwrite them.
-        normalized: dict[str, dict] = {}
-        for qid, val in raw.items():
-            if isinstance(val, dict):
-                normalized[qid] = {
-                    "status": val.get("status", "started"),
-                    "ts": int(val.get("ts", 0)),
-                }
-            elif isinstance(val, str):
-                normalized[qid] = {"status": val, "ts": 0}
+        # Two on-disk shapes are accepted:
+        #   New:  {"status_by_mode": {"pvp": {...}, "pve": {...}}, ...}
+        #   Old:  {"status": {qid: "completed" | {status, ts}}, ...}
+        # The old shape predates PVE support and stored a single global dict.
+        # We migrate by copying it into BOTH modes — the user's existing
+        # progress is treated as applying to whichever server they're on next.
+        # Worst case they reset one of the two modes from the UI.
+        normalized: dict[GameMode, dict[str, dict]] = {m: {} for m in MODES}
+        new_shape = data.get("status_by_mode")
+        if isinstance(new_shape, dict):
+            for mode in MODES:
+                raw = new_shape.get(mode, {})
+                if not isinstance(raw, dict):
+                    continue
+                for qid, val in raw.items():
+                    if isinstance(val, dict):
+                        normalized[mode][qid] = {
+                            "status": val.get("status", "started"),
+                            "ts": int(val.get("ts", 0)),
+                        }
+                    elif isinstance(val, str):
+                        normalized[mode][qid] = {"status": val, "ts": 0}
+        else:
+            legacy = data.get("status", {})
+            for qid, val in legacy.items():
+                if isinstance(val, dict):
+                    entry = {
+                        "status": val.get("status", "started"),
+                        "ts": int(val.get("ts", 0)),
+                    }
+                elif isinstance(val, str):
+                    entry = {"status": val, "ts": 0}
+                else:
+                    continue
+                for mode in MODES:
+                    normalized[mode][qid] = dict(entry)
+            if legacy:
+                print(
+                    f"[quest] migrated {len(legacy)} legacy quests to both "
+                    f"PVP+PVE modes (next save will use new shape)"
+                )
         with self._lock:
             self._status = normalized
             self._install_path = data.get("install_path") or None
             self._enabled = bool(data.get("enabled", True))
         print(
-            f"[quest] loaded state: {len(self._status)} quests "
+            f"[quest] loaded state: pvp={len(self._status['pvp'])}, "
+            f"pve={len(self._status['pve'])} "
             f"(install_path={self._install_path}, enabled={self._enabled})"
         )
 
     def _save_state(self) -> None:
         with self._lock:
             payload = {
-                "status": dict(self._status),
+                "status_by_mode": {m: dict(self._status[m]) for m in MODES},
                 "install_path": self._install_path,
                 "enabled": self._enabled,
             }
@@ -334,13 +485,17 @@ class QuestTracker:
 
     # ---------- public API ----------
 
+    def _count(self, mode: GameMode) -> dict:
+        counts = {"started": 0, "completed": 0, "failed": 0}
+        for entry in self._status[mode].values():
+            s = entry.get("status") if isinstance(entry, dict) else entry
+            if s in counts:
+                counts[s] += 1
+        return counts
+
     def get_status(self) -> dict:
         with self._lock:
-            counts = {"started": 0, "completed": 0, "failed": 0}
-            for entry in self._status.values():
-                s = entry.get("status") if isinstance(entry, dict) else entry
-                if s in counts:
-                    counts[s] += 1
+            counts_by_mode = {m: self._count(m) for m in MODES}
             user_path = self._install_path
             enabled = self._enabled
         auto_path = detect_install_path()
@@ -348,38 +503,52 @@ class QuestTracker:
         # auto-detected. The frontend shows this so users see a clear
         # "syncing from X" or "couldn't find EFT install".
         effective = user_path or auto_path
+        # Legacy aggregate counts — frontend code that reads
+        # completed_count/started_count without picking a mode falls back to
+        # PVP (the historical default before PVE existed). New frontend
+        # should use counts_by_mode to show mode-specific numbers. Using
+        # sum() here would double-count migrated legacy quests; using
+        # union-of-IDs would be more accurate but obscures the per-server
+        # split that's the whole point of this change.
+        agg = counts_by_mode["pvp"]
         return {
             "enabled": enabled,
             "install_path": user_path,  # user override (None if auto)
             "auto_detected_path": auto_path,
             "effective_path": effective,
             "effective_path_valid": is_valid_install_path(effective or ""),
-            "quest_count": len(counts) and (counts["started"] + counts["completed"] + counts["failed"]),
-            "completed_count": counts["completed"],
-            "started_count": counts["started"],
-            "failed_count": counts["failed"],
+            "quest_count": agg["started"] + agg["completed"] + agg["failed"],
+            "completed_count": agg["completed"],
+            "started_count": agg["started"],
+            "failed_count": agg["failed"],
+            "counts_by_mode": counts_by_mode,
         }
 
-    def quest_status_for(self, quest_id: str) -> Optional[str]:
-        """Return 'started' | 'completed' | 'failed' | None for a quest ID.
+    def quest_status_for(self, quest_id: str, game_mode: Optional[str] = None) -> Optional[str]:
+        """Return 'started' | 'completed' | 'failed' | None for a quest ID
+        in the given game mode (default: 'pvp' / regular).
+
         Returns None when the tracker is disabled, even if we have cached
         state — disable should hide the overlay entirely so the user gets
-        the un-filtered view back."""
+        the un-filtered view back.
+        """
         if not quest_id:
             return None
+        mode = _normalize_request_mode(game_mode)
         with self._lock:
             if not self._enabled:
                 return None
-            entry = self._status.get(quest_id)
+            entry = self._status[mode].get(quest_id)
             if not entry:
                 return None
             return entry.get("status") if isinstance(entry, dict) else entry
 
-    def all_status(self) -> dict[str, str]:
+    def all_status(self, game_mode: Optional[str] = None) -> dict[str, str]:
+        mode = _normalize_request_mode(game_mode)
         with self._lock:
             return {
                 qid: (entry.get("status") if isinstance(entry, dict) else entry)
-                for qid, entry in self._status.items()
+                for qid, entry in self._status[mode].items()
             }
 
     def set_install_path(self, path: str) -> dict:
@@ -389,6 +558,7 @@ class QuestTracker:
             self._install_path = normalized or None
             # Clearing the path means we should rescan everything fresh next tick.
             self._file_offsets.clear()
+            self._folder_mode.clear()
         self._save_state()
         # Trigger an immediate scan with the new path.
         self.scan_once()
@@ -404,12 +574,31 @@ class QuestTracker:
         if enabled and not was:
             self.scan_once()
 
-    def reset(self) -> None:
-        """Wipe all known quest state and re-scan from scratch.
-        Useful after a wipe or if the user wants a fresh start."""
+    def reset(self, game_mode: Optional[str] = None) -> None:
+        """Wipe known quest state and re-scan from scratch.
+
+        If `game_mode` is given ('pvp' or 'pve'), only that mode is cleared
+        and the file-offset cache is preserved (other mode's offsets still
+        valid). If omitted, both modes are wiped and we rescan everything.
+        """
         with self._lock:
-            self._status.clear()
-            self._file_offsets.clear()
+            if game_mode is None:
+                for m in MODES:
+                    self._status[m].clear()
+                self._file_offsets.clear()
+                self._folder_mode.clear()
+            else:
+                m = _normalize_request_mode(game_mode)
+                self._status[m].clear()
+                # Keep file offsets — but we still want to rescan to repopulate
+                # this mode. Cheapest correct approach: clear them too, accept
+                # the re-read cost on the other mode (idempotent: same ts wins).
+                self._file_offsets.clear()
+                # Also drop the folder->mode cache. detect_session_mode is
+                # deterministic so this rarely matters in practice, but it
+                # keeps the lifecycle consistent with the full-reset branch
+                # and avoids any chance of a stale entry surviving a reset.
+                self._folder_mode.clear()
         self._save_state()
         self.scan_once()
 
@@ -418,6 +607,15 @@ class QuestTracker:
     def _effective_install_path(self) -> Optional[str]:
         with self._lock:
             return self._install_path or detect_install_path()
+
+    def _mode_for_folder(self, folder: Path) -> GameMode:
+        key = str(folder)
+        cached = self._folder_mode.get(key)
+        if cached is not None:
+            return cached
+        mode = detect_session_mode(folder)
+        self._folder_mode[key] = mode
+        return mode
 
     def scan_once(self) -> int:
         """Read any new bytes from log files and update status. Returns the
@@ -429,6 +627,7 @@ class QuestTracker:
             return 0
         new_events = 0
         for folder in _list_log_folders(install):
+            mode = self._mode_for_folder(folder)
             for log_file in _push_notification_files(folder):
                 key = str(log_file)
                 try:
@@ -467,7 +666,7 @@ class QuestTracker:
                     new_status = event["status"]
                     new_ts = int(event.get("ts") or 0)
                     with self._lock:
-                        prev = self._status.get(qid)
+                        prev = self._status[mode].get(qid)
                         prev_ts = (
                             prev.get("ts", 0) if isinstance(prev, dict) else 0
                         )
@@ -476,7 +675,7 @@ class QuestTracker:
                         # event, and ties (same-second events) prefer the
                         # later-read one in scan order.
                         if prev is None or new_ts >= prev_ts:
-                            self._status[qid] = {
+                            self._status[mode][qid] = {
                                 "status": new_status,
                                 "ts": new_ts,
                             }
@@ -484,7 +683,10 @@ class QuestTracker:
         if new_events:
             self._save_state()
             self._last_scan_count += new_events
-            print(f"[quest] +{new_events} events (total tracked: {len(self._status)})")
+            print(
+                f"[quest] +{new_events} events "
+                f"(pvp={len(self._status['pvp'])}, pve={len(self._status['pve'])})"
+            )
         return new_events
 
     def _watch_loop(self) -> None:

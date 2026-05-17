@@ -19,6 +19,7 @@
     "notification:default",
     "updater:default",
     "process:default",
+    "dialog:allow-open",
     {
       "identifier": "shell:allow-execute",
       "allow": [

@@ -5,6 +5,7 @@ import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor } from 
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
@@ -120,7 +121,20 @@ type TaskRef = {
   kappa_required: boolean;
   // Filled by the backend quest tracker if it found this quest in the
   // player's EFT logs. null when the tracker is off or the quest is unseen.
+  // `task_status` is for the lookup's own game_mode (back-compat); newer
+  // builds also send `task_status_by_mode` so the user-picked display mode
+  // can switch the card instantly without a re-capture.
   task_status: "started" | "completed" | "failed" | null;
+  task_status_by_mode?: {
+    pvp: "started" | "completed" | "failed" | null;
+    pve: "started" | "completed" | "failed" | null;
+  };
+};
+
+type QuestModeCounts = {
+  started: number;
+  completed: number;
+  failed: number;
 };
 
 type QuestStatus = {
@@ -133,6 +147,10 @@ type QuestStatus = {
   completed_count: number;
   started_count: number;
   failed_count: number;
+  // Per-server quest progress. Older builds (pre per-mode tracker) won't
+  // send this, so the field is optional and the UI falls back to the
+  // legacy aggregate counts above.
+  counts_by_mode?: { pvp: QuestModeCounts; pve: QuestModeCounts };
 };
 
 type HideoutCraft = {
@@ -302,9 +320,17 @@ const HISTORY_KEY = "tarkov.history";
 const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const ADVANCED_KEY = "tarkov.advancedMode";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
+const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
 
 function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
+}
+
+function loadQuestDisplayMode(): "pvp" | "pve" {
+  // Default PVE — most current players run PVE-only, and matches the
+  // historical legacy migration default for single-mode users.
+  const v = localStorage.getItem(QUEST_DISPLAY_MODE_KEY);
+  return v === "pvp" ? "pvp" : "pve";
 }
 const WIN_BASE_W = 800;
 const FONT_DEFAULT = 13;
@@ -691,6 +717,9 @@ function App() {
   const [advancedMode, setAdvancedMode] = useState<boolean>(loadAdvanced);
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const [questPathInput, setQuestPathInput] = useState<string>("");
+  const [questDisplayMode, setQuestDisplayMode] = useState<"pvp" | "pve">(
+    loadQuestDisplayMode
+  );
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
@@ -1225,9 +1254,16 @@ function App() {
       log(`quest: path set failed — ${String(e)}`);
     }
   };
-  const resetQuestState = async () => {
+  const resetQuestState = async (gameMode?: "pvp" | "pve") => {
+    // Optional gameMode wipes just one server's state (used to clear the
+    // fake data the legacy migration copied into both modes for single-mode
+    // players). Omit to wipe everything and re-scan.
     try {
-      const res = await fetch(`${PYTHON_API}/quests/reset`, { method: "POST" });
+      const res = await fetch(`${PYTHON_API}/quests/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(gameMode ? { game_mode: gameMode } : {}),
+      });
       if (res.ok) setQuestStatus(await res.json());
     } catch (e) {
       log(`quest: reset failed — ${String(e)}`);
@@ -2198,7 +2234,9 @@ function App() {
                     }
                   >
                     {questStatus.effective_path_valid
-                      ? `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
+                      ? questStatus.counts_by_mode
+                        ? `✓ PVP ${questStatus.counts_by_mode.pvp.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pvp.started}${t.questSyncCountStartedShort} / PVE ${questStatus.counts_by_mode.pve.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pve.started}${t.questSyncCountStartedShort}`
+                        : `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
                       : t.questSyncPathMissing}
                   </span>
                 </div>
@@ -2231,6 +2269,31 @@ function App() {
                     >
                       {t.questSyncPathAutoBtn}
                     </button>
+                    <button
+                      className="reset-btn"
+                      onClick={async () => {
+                        const picked = await openFolderDialog({
+                          directory: true,
+                          multiple: false,
+                          title: t.questSyncPath,
+                          defaultPath:
+                            questPathInput ||
+                            questStatus.install_path ||
+                            questStatus.auto_detected_path ||
+                            undefined,
+                        });
+                        // openFolderDialog returns null on cancel — leave the
+                        // input untouched in that case so the user doesn't
+                        // accidentally wipe a working path by escaping.
+                        if (typeof picked === "string" && picked) {
+                          setQuestPathInput(picked);
+                          submitQuestPath(picked);
+                        }
+                      }}
+                      title={t.questSyncPathBrowseHint}
+                    >
+                      {t.questSyncPathBrowseBtn}
+                    </button>
                   </div>
                 </div>
                 <div className="settings-row">
@@ -2251,10 +2314,46 @@ function App() {
                   </select>
                 </div>
                 <div className="settings-row">
-                  <label>{t.questSyncReset}</label>
-                  <button className="reset-btn" onClick={resetQuestState}>
-                    {t.questSyncResetBtn}
-                  </button>
+                  <label title={t.questSyncResetHint}>{t.questSyncReset}</label>
+                  <div className="quest-path-row">
+                    <button
+                      className="reset-btn"
+                      onClick={() => resetQuestState("pvp")}
+                      title={t.questSyncResetPvpHint}
+                    >
+                      {t.questSyncResetPvpBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() => resetQuestState("pve")}
+                      title={t.questSyncResetPveHint}
+                    >
+                      {t.questSyncResetPveBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() => resetQuestState()}
+                      title={t.questSyncResetAllHint}
+                    >
+                      {t.questSyncResetBtn}
+                    </button>
+                  </div>
+                </div>
+                <div className="settings-row">
+                  <label title={t.questDisplayModeHint}>
+                    {t.questDisplayMode}
+                  </label>
+                  <select
+                    value={questDisplayMode}
+                    onChange={(e) => {
+                      const v = e.target.value === "pvp" ? "pvp" : "pve";
+                      setQuestDisplayMode(v);
+                      localStorage.setItem(QUEST_DISPLAY_MODE_KEY, v);
+                    }}
+                  >
+                    <option value="pve">PVE</option>
+                    <option value="pvp">PVP</option>
+                  </select>
                 </div>
               </>
             )}
@@ -2747,16 +2846,32 @@ function App() {
                   {region.showQuests &&
                     result.used_in_tasks &&
                     result.used_in_tasks.length > 0 && (() => {
+                      // Reproject each task's status to the user's chosen
+                      // quest-display mode. The backend sends
+                      // task_status_by_mode so we don't need a re-capture
+                      // when the user flips the dropdown — the same lookup
+                      // payload renders correctly for either server.
+                      // Older backends only send task_status (no by_mode
+                      // dict), so we fall through to the original value.
+                      const projected = result.used_in_tasks.map((q) =>
+                        q.task_status_by_mode
+                          ? {
+                              ...q,
+                              task_status:
+                                q.task_status_by_mode[questDisplayMode] ?? null,
+                            }
+                          : q
+                      );
                       // Filter out completed quests entirely if the user
                       // chose "hide" — otherwise we keep them and just
                       // grey them in the list. Started/failed/unknown
                       // quests are always shown.
                       const visibleQuests =
                         region.completedQuestDisplay === "hide"
-                          ? result.used_in_tasks.filter(
+                          ? projected.filter(
                               (q) => q.task_status !== "completed"
                             )
-                          : result.used_in_tasks;
+                          : projected;
                       if (visibleQuests.length === 0) return null;
                       // Item-count total only sums quests the player still
                       // needs (not completed ones), so the header reflects

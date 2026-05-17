@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager
 import mss
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from capture import capture_region
 from ocr import _get_reader, recognize_text
@@ -106,7 +106,11 @@ class TaskRef(BaseModel):
     # Quest progress for this player, derived from EFT log files when
     # the quest tracker is enabled. None means "we don't know" (no log
     # data, tracker disabled, or quest never seen).
+    # `task_status` is the value for the lookup's game_mode (back-compat
+    # for older overlay builds). `task_status_by_mode` has both servers so
+    # the new frontend can switch the display without re-capturing.
     task_status: str | None = None  # "started" | "completed" | "failed" | None
+    task_status_by_mode: dict[str, str | None] = Field(default_factory=dict)
 
 
 class HideoutCraft(BaseModel):
@@ -164,10 +168,14 @@ class LookupResponse(BaseModel):
     matched_from: str | None = None
 
 
-def _build_response(raw_text: str, price: dict) -> LookupResponse:
+def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> LookupResponse:
     """Single source of truth that maps a get_item_price() dict into the
     Pydantic response. Both the F2-capture and override_text paths use it,
-    so adding a field touches exactly one place going forward."""
+    so adding a field touches exactly one place going forward.
+
+    `game_mode` is forwarded to the quest tracker so task_status reflects
+    the user's current server (PVP/regular vs PVE) — quest progress is
+    independent between the two."""
     return LookupResponse(
         raw_text=raw_text,
         item_name=price.get("name"),
@@ -234,7 +242,11 @@ def _build_response(raw_text: str, price: dict) -> LookupResponse:
                 count=t.get("count"),
                 fir=t.get("fir", False),
                 kappa_required=t.get("kappa_required", False),
-                task_status=get_tracker().quest_status_for(t.get("id") or ""),
+                task_status=get_tracker().quest_status_for(t.get("id") or "", game_mode),
+                task_status_by_mode={
+                    "pvp": get_tracker().quest_status_for(t.get("id") or "", "regular"),
+                    "pve": get_tracker().quest_status_for(t.get("id") or "", "pve"),
+                },
             )
             for t in price.get("used_in_tasks", [])
         ],
@@ -403,7 +415,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             game_mode=game_mode,
             corrections=req.corrections,
         )
-        return _build_response(req.override_text, price)
+        return _build_response(req.override_text, price, game_mode)
 
     # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,
     # so it shares a coordinate space with mss). Fall back to the value the
@@ -477,7 +489,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if price.get("name") is not None:
             break
 
-    return _build_response(text, price)
+    return _build_response(text, price, game_mode)
 
 
 # ─── Quest tracker endpoints ─────────────────────────────────────────
@@ -489,6 +501,16 @@ class QuestPathRequest(BaseModel):
 
 class QuestEnabledRequest(BaseModel):
     enabled: bool
+
+
+class QuestResetRequest(BaseModel):
+    # None  -> wipe both modes (post-wipe / pre-1.0.10 migration cleanup)
+    # "pvp" -> wipe only PVP state, keep PVE intact
+    # "pve" -> wipe only PVE state, keep PVP intact
+    # Practical use: users who only played one mode before the per-mode
+    # tracker landed; legacy state was copied into BOTH modes during migration
+    # and the unused mode needs to be cleared to remove fake progress.
+    game_mode: str | None = None
 
 
 @app.get("/quests/status")
@@ -515,10 +537,12 @@ def quests_set_enabled(req: QuestEnabledRequest) -> dict:
 
 
 @app.post("/quests/reset")
-def quests_reset() -> dict:
-    """Wipe all known quest state and re-scan from scratch. Useful after
-    a wipe or to clean up if anything got out of sync."""
-    get_tracker().reset()
+def quests_reset(req: QuestResetRequest | None = None) -> dict:
+    """Wipe known quest state and re-scan from scratch. Pass `game_mode`
+    to wipe only one server's state — used after migration when a
+    single-mode player has fake progress copied into the unused mode."""
+    mode = req.game_mode if req is not None else None
+    get_tracker().reset(mode)
     return get_tracker().get_status()
 
 
