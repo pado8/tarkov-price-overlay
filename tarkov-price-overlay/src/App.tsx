@@ -1328,7 +1328,7 @@ function App() {
       const ok = await fetchQuestStatus();
       // Hideout stations ride the same retry cadence — they need the sidecar
       // to be up too, and both are cheap single GET calls.
-      fetchHideoutStations(getGameLang(region));
+      fetchHideoutStations(region.lang);
       if (ok || cancelled) return;
       if (i < delays.length) {
         window.setTimeout(() => tryOnce(i + 1), delays[i]);
@@ -1340,14 +1340,14 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const currentGameLang = getGameLang(region);
+  const currentUiLang = region.lang;
   useEffect(() => {
     if (showSettings) {
       fetchQuestStatus();
-      fetchHideoutStations(currentGameLang);
+      fetchHideoutStations(currentUiLang);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSettings, currentGameLang]);
+  }, [showSettings, currentUiLang]);
 
   useEffect(() => {
     // Initial state: card shown briefly so user can position it, then auto-hide.
@@ -2427,55 +2427,57 @@ function App() {
               </>
             )}
 
-            <div className="settings-section-header">
-              {t.hideoutLevelSection}
-            </div>
-            <div className="settings-hint" style={{ color: "#bbb", marginBottom: 4 }}>
-              {t.hideoutLevelHint}
-            </div>
-            {hideoutStations.length === 0 ? (
-              <div className="settings-row">
-                <span style={{ color: "var(--text-dim)", fontSize: "var(--card-fs-xs)" }}>
-                  {t.hideoutStationsLoading}
-                </span>
+            <details className="hideout-level-details">
+              <summary className="settings-section-header hideout-level-summary">
+                {t.hideoutLevelSection}
+              </summary>
+              <div className="settings-hint" style={{ color: "#bbb", marginBottom: 4 }}>
+                {t.hideoutLevelHint}
               </div>
-            ) : (
-              <>
-                <div className="hideout-level-grid">
-                  {hideoutStations.map((s) => {
-                    const cur = hideoutLevels[s.id] ?? 0;
-                    return (
-                      <div key={s.id} className="hideout-level-row">
-                        <span
-                          className="hideout-level-name"
-                          title={s.name}
-                          style={cur >= s.maxLevel ? { color: "var(--text-dim)", textDecoration: "line-through" } : undefined}
-                        >
-                          {s.name}
-                        </span>
-                        <button
-                          className="hd-step-btn"
-                          disabled={cur <= 0}
-                          onClick={() => updateHideoutLevel(s.id, Math.max(0, cur - 1))}
-                        >−</button>
-                        <span className="hideout-level-val">{cur}/{s.maxLevel}</span>
-                        <button
-                          className="hd-step-btn"
-                          disabled={cur >= s.maxLevel}
-                          onClick={() => updateHideoutLevel(s.id, Math.min(s.maxLevel, cur + 1))}
-                        >+</button>
-                      </div>
-                    );
-                  })}
+              {hideoutStations.length === 0 ? (
+                <div className="settings-row">
+                  <span style={{ color: "var(--text-dim)", fontSize: "var(--card-fs-xs)" }}>
+                    {t.hideoutStationsLoading}
+                  </span>
                 </div>
-                <div className="settings-row" style={{ marginTop: 4 }}>
-                  <label></label>
-                  <button className="reset-btn" onClick={resetHideoutLevels}>
-                    {t.hideoutLevelReset}
-                  </button>
-                </div>
-              </>
-            )}
+              ) : (
+                <>
+                  <div className="hideout-level-grid">
+                    {hideoutStations.map((s) => {
+                      const cur = hideoutLevels[s.id] ?? 0;
+                      return (
+                        <div key={s.id} className="hideout-level-row">
+                          <span
+                            className="hideout-level-name"
+                            title={s.name}
+                            style={cur >= s.maxLevel ? { color: "var(--text-dim)", textDecoration: "line-through" } : undefined}
+                          >
+                            {s.name}
+                          </span>
+                          <button
+                            className="hd-step-btn"
+                            disabled={cur <= 0}
+                            onClick={() => updateHideoutLevel(s.id, Math.max(0, cur - 1))}
+                          >−</button>
+                          <span className="hideout-level-val">{cur}/{s.maxLevel}</span>
+                          <button
+                            className="hd-step-btn"
+                            disabled={cur >= s.maxLevel}
+                            onClick={() => updateHideoutLevel(s.id, Math.min(s.maxLevel, cur + 1))}
+                          >+</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="settings-row" style={{ marginTop: 4 }}>
+                    <label></label>
+                    <button className="reset-btn" onClick={resetHideoutLevels}>
+                      {t.hideoutLevelReset}
+                    </button>
+                  </div>
+                </>
+              )}
+            </details>
 
             <div className="settings-section-header" ref={captureRegionRowRef}>
               {t.captureSection}

@@ -270,6 +270,7 @@ def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> L
         needed_for_hideout=[
             HideoutNeed(
                 station=n["station"],
+                station_id=n.get("station_id", ""),
                 level=n.get("level", 1),
                 count=n.get("count", 1),
             )

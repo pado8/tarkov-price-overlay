@@ -229,7 +229,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
-- **v1.0.10** — **자동 업데이트** (설정 켜두면 새 버전 알림 → '지금 설치' 한 번으로 완료) + **퀘스트 진행도 PVP/PVE 서버별 분리** (모드 전환해도 각자 데이터 유지) + 퀘스트 동기화 수동 폴더 선택 버튼 + 퀘스트 표시 모드 드롭다운 (PVP/PVE 카드 전환)
+- **v1.0.10** — **자동 업데이트** (설정 켜두면 새 버전 알림 → '지금 설치' 한 번으로 완료) + **은신처 레벨 설정** (설정에서 현재 업그레이드 레벨 직접 입력 → 완료한 시설은 카드에서 자동 흐리게/취소선 표시) + **퀘스트 진행도 PVP/PVE 서버별 분리** + 퀘스트 동기화 수동 폴더 선택 버튼 + 퀘스트 표시 모드 드롭다운
 - **v1.0.9** — 인스톨러가 실행 중인 오버레이를 자동 종료(업데이트 시 충돌 없음) + **게임 언어 분리 설정** (UI는 한국어인데 영문판 게임 하시는 분들을 위해 게임 클라이언트 언어를 따로 지정 가능) + 퀘스트 동기화 라벨 명확화
 - **v1.0.8** — QHD/4K 해상도 자동 스케일링 + 캡처 영역 **라이브 미리보기** (빨간/노란 박스가 커서 따라다님) + 슬라이더 + 텍스트 편집 UI + 설정 패널 드래그 리사이즈 + 정크 OCR 빠른 차단 (2분 멈춤 → 1초 내) + 디자인 토큰 통일 (회색 톤 가독성 ↑, 한글 폰트 명시)
 - **v1.0.7** — 탄약 매트릭스 패널(무기/탄약 캡처 시 같은 구경 비교표 자동 표시) + 땅바닥 아이템 캡처 fallback + shortName 영문 약자 매칭 + 루팅 등급 D/C/B/A/S 뱃지 + 1×1 아이템도 칸성비/등급 표시 + 관리자 권한 경고 배너
@@ -500,7 +500,7 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
-- **v1.0.10** — **Auto-update** (toggle on → get notified, click 'Install now', done) + **per-mode quest tracking** (PVP and PVE progress stored separately — switching modes keeps both histories) + manual folder picker button for quest sync + quest display mode dropdown to switch card view between PVP/PVE progress.
+- **v1.0.10** — **Auto-update** (toggle on → get notified, click 'Install now', done) + **Hideout level tracker** (set your current upgrade level per station in Settings → completed stations dim out on the price card automatically) + **per-mode quest tracking** (PVP/PVE stored separately) + manual folder picker for quest sync + quest display mode dropdown.
 - **v1.0.9** — Installer now auto-closes the running overlay before install/upgrade (no more half-uninstalled state). New **Game language** setting separate from UI language — for players running an English EFT client with a Korean UI (or vice versa). Quest-sync label clarified.
 - **v1.0.8** — QHD/4K auto-scaling on first launch + **live preview rectangles** (red/yellow boxes follow cursor) for the capture-region editor + slider-with-text fields + drag-resizable settings panel + fast junk-OCR rejection (2-minute hang → instant empty) + design-token cleanup (brighter greys for transparent-mode readability, explicit Korean font fallback).
 - **v1.0.7** — Inline ammo-comparison matrix (auto-shows on weapon/round captures, sortable by penetration with AC1-6 dots) + ground-item capture fallback + shortName alias matching for English OCR + S/A/B/C/D loot-tier badges (₽-per-slot weighted by Kappa/quest needs) + admin-rights warning banner.

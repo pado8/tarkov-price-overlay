@@ -616,6 +616,28 @@ html, body, #root {
   text-decoration: line-through;
 }
 
+/* Hideout level collapsible section */
+.hideout-level-details {
+  margin: 0;
+}
+.hideout-level-details > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.hideout-level-details > summary::-webkit-details-marker {
+  display: none;
+}
+.hideout-level-summary::after {
+  content: " ▶";
+  font-size: 9px;
+  opacity: 0.5;
+  margin-left: 4px;
+}
+.hideout-level-details[open] .hideout-level-summary::after {
+  content: " ▼";
+}
+
 /* Hideout level settings grid */
 .hideout-level-grid {
   display: grid;
@@ -628,13 +650,15 @@ html, body, #root {
   align-items: center;
   gap: 3px;
   font-size: var(--card-fs-xs);
+  min-width: 0;
 }
 .hideout-level-name {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
   color: var(--text-secondary);
+  line-height: 1.2;
 }
 .hideout-level-val {
   font-size: var(--card-fs-xxs);
