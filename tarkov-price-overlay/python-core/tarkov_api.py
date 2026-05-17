@@ -403,14 +403,24 @@ def _get_hideout_index(lang: str) -> dict[str, list[dict]]:
 
 def get_station_list(lang: str) -> list[dict]:
     """Return [{id, name, maxLevel}] for all hideout stations, sorted by name.
-    Triggers a cold fetch if the cache is empty for this lang."""
+
+    Does NOT rely on _get_hideout_index as a side-effect because that function
+    returns early on index cache-hit without touching the station-list cache.
+    Instead we fetch directly when the station list is missing or empty
+    (empty means a prior fetch failed — treat it as uncached so we retry)."""
     with _hideout_index_lock:
         cached = _hideout_station_list_cache.get(lang)
-    if cached is not None:
+    if cached:  # truthy: non-empty list means we have real data
         return cached
-    _get_hideout_index(lang)  # populates both caches as side effect
-    with _hideout_index_lock:
-        return _hideout_station_list_cache.get(lang, [])
+    try:
+        idx, station_list = _fetch_hideout_index(lang)
+        with _hideout_index_lock:
+            _hideout_index_cache[lang] = idx
+            _hideout_station_list_cache[lang] = station_list
+        return station_list
+    except Exception as e:
+        print(f"[hideout] station list fetch failed for lang={lang}: {e!r}")
+        return []
 
 
 def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
