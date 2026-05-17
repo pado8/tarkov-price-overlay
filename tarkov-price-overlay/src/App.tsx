@@ -1328,6 +1328,9 @@ function App() {
     const tryOnce = async (i: number) => {
       if (cancelled) return;
       const ok = await fetchQuestStatus();
+      // Hideout stations ride the same retry cadence — they need the sidecar
+      // to be up too, and both are cheap single GET calls.
+      fetchHideoutStations();
       if (ok || cancelled) return;
       if (i < delays.length) {
         window.setTimeout(() => tryOnce(i + 1), delays[i]);
