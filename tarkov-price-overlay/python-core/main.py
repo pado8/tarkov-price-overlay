@@ -25,7 +25,7 @@ from pydantic import BaseModel, Field
 from capture import capture_region
 from ocr import _get_reader, recognize_text
 from quest_tracker import get_tracker
-from tarkov_api import get_item_price, start_background_refresher
+from tarkov_api import get_item_price, get_station_list, start_background_refresher
 
 
 @asynccontextmanager
@@ -122,6 +122,7 @@ class HideoutCraft(BaseModel):
 
 class HideoutNeed(BaseModel):
     station: str
+    station_id: str = ""
     level: int = 1
     count: int = 1  # how many of this item the upgrade requires
 
@@ -511,6 +512,14 @@ class QuestResetRequest(BaseModel):
     # tracker landed; legacy state was copied into BOTH modes during migration
     # and the unused mode needs to be cleared to remove fake progress.
     game_mode: str | None = None
+
+
+@app.get("/hideout/stations")
+def hideout_stations(lang: str = "en") -> list:
+    """Return [{id, name, maxLevel}] for all hideout stations.
+    Used by the frontend settings panel so users can set their current
+    upgrade level per station (to dim already-completed rows on the card)."""
+    return get_station_list(lang)
 
 
 @app.get("/quests/status")

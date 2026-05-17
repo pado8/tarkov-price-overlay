@@ -20,6 +20,8 @@ const ADMIN_BANNER_DISMISS_KEY = "tarkov.adminBannerDismissed";
 // Version-pinned key: shows the auto-update feature announcement exactly once
 // for v1.0.10 upgraders, then stays dismissed forever.
 const AUTOUPDATE_ANNOUNCE_KEY = "tarkov.autoUpdateAnnounce110";
+// Hideout levels: {[stationId]: currentLevel}. Persisted across sessions.
+const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
@@ -165,8 +167,15 @@ type HideoutCraft = {
 
 type HideoutNeed = {
   station: string;
+  station_id: string;
   level: number;
   count: number;
+};
+
+type HideoutStation = {
+  id: string;
+  name: string;
+  maxLevel: number;
 };
 
 type BarterUsing = {
@@ -708,6 +717,16 @@ function App() {
   const [autoUpdateAnnounceDismissed, setAutoUpdateAnnounceDismissed] = useState<boolean>(
     () => localStorage.getItem(AUTOUPDATE_ANNOUNCE_KEY) === "true"
   );
+  const [hideoutLevels, setHideoutLevels] = useState<Record<string, number>>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(HIDEOUT_LEVELS_KEY) ?? "{}");
+      } catch {
+        return {};
+      }
+    }
+  );
+  const [hideoutStations, setHideoutStations] = useState<HideoutStation[]>([]);
   // Ammo matrix data is fetched once per language on mount/lang-change.
   // Null while loading; {calibers: {}} after a failed fetch (we still treat
   // both as "no matrix" for rendering).
@@ -1221,6 +1240,29 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Hideout levels helpers
+  const updateHideoutLevel = (stationId: string, level: number) => {
+    setHideoutLevels((prev) => {
+      const next = { ...prev, [stationId]: level };
+      localStorage.setItem(HIDEOUT_LEVELS_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+  const resetHideoutLevels = () => {
+    localStorage.removeItem(HIDEOUT_LEVELS_KEY);
+    setHideoutLevels({});
+  };
+  const fetchHideoutStations = async () => {
+    if (hideoutStations.length > 0) return;
+    try {
+      const lang = getGameLang(region);
+      const res = await fetch(`${PYTHON_API}/hideout/stations?lang=${lang}`);
+      if (res.ok) setHideoutStations(await res.json());
+    } catch {
+      // non-fatal; stations list shows as empty
+    }
+  };
+
   // Quest tracker helpers — talk to the localhost FastAPI server.
   const fetchQuestStatus = async (): Promise<boolean> => {
     try {
@@ -1298,7 +1340,10 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
-    if (showSettings) fetchQuestStatus();
+    if (showSettings) {
+      fetchQuestStatus();
+      fetchHideoutStations();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSettings]);
 
@@ -2380,6 +2425,54 @@ function App() {
               </>
             )}
 
+            <div className="settings-section-header">
+              {t.hideoutLevelSection}
+            </div>
+            <div className="settings-hint" style={{ color: "#bbb", marginBottom: 4 }}>
+              {t.hideoutLevelHint}
+            </div>
+            {hideoutStations.length === 0 ? (
+              <div className="settings-row">
+                <span className="quest-sync-warn">{t.questSyncLoading}</span>
+              </div>
+            ) : (
+              <>
+                <div className="hideout-level-grid">
+                  {hideoutStations.map((s) => {
+                    const cur = hideoutLevels[s.id] ?? 0;
+                    return (
+                      <div key={s.id} className="hideout-level-row">
+                        <span
+                          className="hideout-level-name"
+                          title={s.name}
+                          style={cur >= s.maxLevel ? { color: "var(--text-dim)", textDecoration: "line-through" } : undefined}
+                        >
+                          {s.name}
+                        </span>
+                        <button
+                          className="hd-step-btn"
+                          disabled={cur <= 0}
+                          onClick={() => updateHideoutLevel(s.id, Math.max(0, cur - 1))}
+                        >−</button>
+                        <span className="hideout-level-val">{cur}/{s.maxLevel}</span>
+                        <button
+                          className="hd-step-btn"
+                          disabled={cur >= s.maxLevel}
+                          onClick={() => updateHideoutLevel(s.id, Math.min(s.maxLevel, cur + 1))}
+                        >+</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="settings-row" style={{ marginTop: 4 }}>
+                  <label></label>
+                  <button className="reset-btn" onClick={resetHideoutLevels}>
+                    {t.hideoutLevelReset}
+                  </button>
+                </div>
+              </>
+            )}
+
             <div className="settings-section-header" ref={captureRegionRowRef}>
               {t.captureSection}
             </div>
@@ -2772,22 +2865,43 @@ function App() {
                   )}
                   {region.showHideoutNeeds &&
                     result.needed_for_hideout &&
-                    result.needed_for_hideout.length > 0 && (
-                    <details className="all-traders barters" open={region.detailsOpenDefault}>
-                      <summary>
-                        🏗️ {t.hideoutNeed} ({result.needed_for_hideout.length})
-                      </summary>
-                      <div className="trader-list">
-                        {result.needed_for_hideout.map((n, idx) => (
-                          <div key={idx} className="hideout-need-row">
-                            <span className="hideout-need-station">{n.station}</span>
-                            <span className="hideout-need-level">Lv{n.level}</span>
-                            <span className="hideout-need-count">×{n.count}</span>
+                    result.needed_for_hideout.length > 0 && (() => {
+                      const hasLevels = Object.keys(hideoutLevels).length > 0;
+                      const neededCount = hasLevels
+                        ? result.needed_for_hideout.filter(
+                            (n) => (hideoutLevels[n.station_id] ?? 0) < n.level
+                          ).length
+                        : result.needed_for_hideout.length;
+                      const total = result.needed_for_hideout.length;
+                      const countLabel = hasLevels
+                        ? `${neededCount}/${total}`
+                        : `${total}`;
+                      return (
+                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                          <summary>
+                            🏗️ {t.hideoutNeed} ({countLabel})
+                          </summary>
+                          <div className="trader-list">
+                            {result.needed_for_hideout.map((n, idx) => {
+                              const done =
+                                hasLevels &&
+                                (hideoutLevels[n.station_id] ?? 0) >= n.level;
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`hideout-need-row${done ? " done" : ""}`}
+                                >
+                                  <span className="hideout-need-station">{n.station}</span>
+                                  <span className="hideout-need-level">Lv{n.level}</span>
+                                  <span className="hideout-need-count">×{n.count}</span>
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))}
-                      </div>
-                    </details>
-                  )}
+                        </details>
+                      );
+                    })()
+                  }
                   {region.showAmmoMatrix &&
                     result.caliber &&
                     ammoData?.calibers[result.caliber] && (() => {

@@ -103,6 +103,7 @@ query AllNames($lang: LanguageCode) {
 _QUERY_HIDEOUT_STATIONS = """
 query HideoutReqs($lang: LanguageCode) {
   hideoutStations(lang: $lang) {
+    id
     name
     levels {
       level
@@ -223,6 +224,7 @@ _refresher_lock = threading.Lock()
 # Station names are localized (depend on lang); item ids are not. Cached
 # per lang so each catalog refresh re-uses the matching index.
 _hideout_index_cache: dict[str, dict[str, list[dict]]] = {}
+_hideout_station_list_cache: dict[str, list[dict]] = {}
 _hideout_index_lock = threading.Lock()
 
 # lang -> {"calibers": {caliber_key: {display, rounds: [...]}}}
@@ -341,10 +343,11 @@ def _is_flea(vendor_name: str) -> bool:
     return vendor_name in _FLEA_MARKET_NAMES
 
 
-def _fetch_hideout_index(lang: str) -> dict[str, list[dict]]:
-    """One GraphQL call → inverted {item_id: [{station, level, count}]}.
-    Returns {} on failure so callers can keep serving stale-or-missing
-    needed_for_hideout without crashing the catalog refresh."""
+def _fetch_hideout_index(lang: str) -> tuple[dict[str, list[dict]], list[dict]]:
+    """One GraphQL call → (item_index, station_list).
+    item_index: {item_id: [{station, station_id, level, count}]}
+    station_list: [{id, name, maxLevel}] sorted by name.
+    Returns ({}, []) on failure so callers keep serving stale data."""
     response = requests.post(
         TARKOV_API_URL,
         json={"query": _QUERY_HIDEOUT_STATIONS, "variables": {"lang": lang}},
@@ -353,9 +356,14 @@ def _fetch_hideout_index(lang: str) -> dict[str, list[dict]]:
     response.raise_for_status()
     stations = response.json().get("data", {}).get("hideoutStations", []) or []
     index: dict[str, list[dict]] = {}
+    station_list: list[dict] = []
     for s in stations:
+        sid = s.get("id") or ""
         sname = s.get("name") or "?"
-        for lv in s.get("levels") or []:
+        levels = s.get("levels") or []
+        max_level = max((lv.get("level") or 0 for lv in levels), default=0)
+        station_list.append({"id": sid, "name": sname, "maxLevel": max_level})
+        for lv in levels:
             level = lv.get("level") or 1
             for r in lv.get("itemRequirements") or []:
                 inner = r.get("item") or {}
@@ -365,14 +373,15 @@ def _fetch_hideout_index(lang: str) -> dict[str, list[dict]]:
                 index.setdefault(iid, []).append(
                     {
                         "station": sname,
+                        "station_id": sid,
                         "level": level,
                         "count": r.get("count") or 1,
                     }
                 )
-    # Stable sort so the UI shows requirements in a predictable order.
     for needs in index.values():
         needs.sort(key=lambda n: (n["station"], n["level"]))
-    return index
+    station_list.sort(key=lambda s: s["name"])
+    return index, station_list
 
 
 def _get_hideout_index(lang: str) -> dict[str, list[dict]]:
@@ -382,13 +391,26 @@ def _get_hideout_index(lang: str) -> dict[str, list[dict]]:
     if cached is not None:
         return cached
     try:
-        idx = _fetch_hideout_index(lang)
+        idx, station_list = _fetch_hideout_index(lang)
     except Exception as e:
         print(f"[hideout] cold fetch failed for lang={lang}: {e!r}")
-        idx = {}
+        idx, station_list = {}, []
     with _hideout_index_lock:
         _hideout_index_cache[lang] = idx
+        _hideout_station_list_cache[lang] = station_list
     return idx
+
+
+def get_station_list(lang: str) -> list[dict]:
+    """Return [{id, name, maxLevel}] for all hideout stations, sorted by name.
+    Triggers a cold fetch if the cache is empty for this lang."""
+    with _hideout_index_lock:
+        cached = _hideout_station_list_cache.get(lang)
+    if cached is not None:
+        return cached
+    _get_hideout_index(lang)  # populates both caches as side effect
+    with _hideout_index_lock:
+        return _hideout_station_list_cache.get(lang, [])
 
 
 def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
@@ -593,9 +615,10 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     # Refresh the lang's hideout index alongside prices so cached entries
     # always have the latest "needed for upgrade" mapping baked in.
     try:
-        hideout_idx = _fetch_hideout_index(lang)
+        hideout_idx, station_list = _fetch_hideout_index(lang)
         with _hideout_index_lock:
             _hideout_index_cache[lang] = hideout_idx
+            _hideout_station_list_cache[lang] = station_list
     except Exception as e:
         print(f"[hideout] refresh failed for lang={lang}: {e!r} — using stale/empty")
         with _hideout_index_lock:

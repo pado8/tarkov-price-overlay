@@ -608,6 +608,63 @@ html, body, #root {
   flex-shrink: 0;
 }
 
+/* Completed hideout station row */
+.hideout-need-row.done {
+  opacity: 0.3;
+}
+.hideout-need-row.done .hideout-need-station {
+  text-decoration: line-through;
+}
+
+/* Hideout level settings grid */
+.hideout-level-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px 10px;
+  margin: 2px 0 4px;
+}
+.hideout-level-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--card-fs-xs);
+}
+.hideout-level-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.hideout-level-val {
+  font-size: var(--card-fs-xxs);
+  color: var(--text-dim);
+  min-width: 26px;
+  text-align: center;
+  font-family: "Consolas", monospace;
+}
+.hd-step-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 3px;
+  color: var(--text-secondary);
+  font-size: var(--card-fs-xs);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.hd-step-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.hd-step-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
 /* Quest sync settings panel rows */
 .settings-row-stack {
   flex-direction: column;
