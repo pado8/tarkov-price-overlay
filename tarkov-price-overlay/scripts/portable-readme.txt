@@ -14,6 +14,12 @@ Tarkov Price Overlay (Portable v{VERSION})
 2. 설정(기어 아이콘)에서 PVP/PVE, 언어, 단축키 변경
 3. X 버튼으로 종료 (트레이로 숨김), 트레이 우클릭 → 종료로 완전 종료
 
+[자동 업데이트]
+v1.0.10부터 자동 업데이트가 지원됩니다.
+설정 → "자동 업데이트 확인" 을 켜두면 새 버전이 나올 때 카드에 알림이 뜨고
+'지금 설치'를 누르면 자동으로 설치됩니다.
+(포터블 버전도 동일하게 동작합니다)
+
 [전체화면(Fullscreen) 모드에서 F2가 안 먹는 경우]
 타르코프 그래픽 설정에서 "전체화면" → "테두리 없는 전체화면(Borderless Fullscreen)"
 으로 변경해주세요. 윈도우 표준 글로벌 단축키 방식이라
@@ -39,6 +45,11 @@ Tarkov Price Overlay (Portable v{VERSION})
 1. Hover an item in-game, press F2
 2. Open settings (gear icon) to change PVP/PVE, language, hotkeys
 3. X button hides to tray; right-click tray icon -> Exit to fully quit
+
+[Auto-update]
+From v1.0.10, auto-update is built in.
+Enable "Auto check updates" in Settings — when a new version is out, a banner
+appears on the card and 'Install now' downloads and installs it automatically.
 
 [F2 not working in fullscreen mode?]
 Switch Tarkov's graphics setting from "Fullscreen" to

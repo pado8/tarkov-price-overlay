@@ -798,6 +798,24 @@ html, body, #root {
   flex: 1;
   line-height: 1.35;
 }
+
+/* Feature announcement — blue-teal tone, one-time dismiss per version. */
+.announce-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(80, 160, 220, 0.12);
+  border: 1px solid rgba(80, 160, 220, 0.4);
+  border-radius: var(--radius-md);
+  padding: 5px 8px;
+  margin: 6px 0;
+  font-size: var(--card-fs-xs);
+  color: #7ec8f0;
+}
+.announce-text {
+  flex: 1;
+  line-height: 1.35;
+}
 .settings-hint-inline {
   font-size: var(--card-fs-xxs);
   color: var(--text-disabled);

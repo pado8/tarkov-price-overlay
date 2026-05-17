@@ -17,6 +17,9 @@ const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
 const ADMIN_BANNER_DISMISS_KEY = "tarkov.adminBannerDismissed";
+// Version-pinned key: shows the auto-update feature announcement exactly once
+// for v1.0.10 upgraders, then stays dismissed forever.
+const AUTOUPDATE_ANNOUNCE_KEY = "tarkov.autoUpdateAnnounce110";
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
@@ -701,6 +704,9 @@ function App() {
   const [adminInfo, setAdminInfo] = useState<Diagnostics | null>(null);
   const [adminDismissed, setAdminDismissed] = useState<boolean>(
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
+  );
+  const [autoUpdateAnnounceDismissed, setAutoUpdateAnnounceDismissed] = useState<boolean>(
+    () => localStorage.getItem(AUTOUPDATE_ANNOUNCE_KEY) === "true"
   );
   // Ammo matrix data is fetched once per language on mount/lang-change.
   // Null while loading; {calibers: {}} after a failed fetch (we still treat
@@ -1818,6 +1824,22 @@ function App() {
                 setAdminDismissed(true);
               }}
               title={t.adminDismiss}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {!autoUpdateAnnounceDismissed && (
+          <div className="announce-banner">
+            <span className="announce-text">{t.autoUpdateAnnounce}</span>
+            <button
+              className="settings-btn"
+              onClick={() => {
+                localStorage.setItem(AUTOUPDATE_ANNOUNCE_KEY, "true");
+                setAutoUpdateAnnounceDismissed(true);
+              }}
+              title={t.autoUpdateAnnounceDismiss}
             >
               ✕
             </button>
