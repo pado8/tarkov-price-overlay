@@ -1252,10 +1252,8 @@ function App() {
     localStorage.removeItem(HIDEOUT_LEVELS_KEY);
     setHideoutLevels({});
   };
-  const fetchHideoutStations = async () => {
-    if (hideoutStations.length > 0) return;
+  const fetchHideoutStations = async (lang: string) => {
     try {
-      const lang = getGameLang(region);
       const res = await fetch(`${PYTHON_API}/hideout/stations?lang=${lang}`);
       if (res.ok) setHideoutStations(await res.json());
     } catch {
@@ -1330,7 +1328,7 @@ function App() {
       const ok = await fetchQuestStatus();
       // Hideout stations ride the same retry cadence — they need the sidecar
       // to be up too, and both are cheap single GET calls.
-      fetchHideoutStations();
+      fetchHideoutStations(getGameLang(region));
       if (ok || cancelled) return;
       if (i < delays.length) {
         window.setTimeout(() => tryOnce(i + 1), delays[i]);
@@ -1342,13 +1340,14 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const currentGameLang = getGameLang(region);
   useEffect(() => {
     if (showSettings) {
       fetchQuestStatus();
-      fetchHideoutStations();
+      fetchHideoutStations(currentGameLang);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSettings]);
+  }, [showSettings, currentGameLang]);
 
   useEffect(() => {
     // Initial state: card shown briefly so user can position it, then auto-hide.
