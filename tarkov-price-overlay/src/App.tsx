@@ -2436,7 +2436,9 @@ function App() {
             </div>
             {hideoutStations.length === 0 ? (
               <div className="settings-row">
-                <span className="quest-sync-warn">{t.questSyncLoading}</span>
+                <span style={{ color: "var(--text-dim)", fontSize: "var(--card-fs-xs)" }}>
+                  {t.hideoutStationsLoading}
+                </span>
               </div>
             ) : (
               <>
