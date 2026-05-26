@@ -524,6 +524,13 @@ class QuestTracker:
             "counts_by_mode": counts_by_mode,
         }
 
+    def is_enabled(self) -> bool:
+        """Thread-safe read of the enabled flag. Cheaper than get_status()
+        (which probes the registry + filesystem on every call) so it's
+        usable on the /lookup hot path."""
+        with self._lock:
+            return self._enabled
+
     def quest_status_for(self, quest_id: str, game_mode: Optional[str] = None) -> Optional[str]:
         """Return 'started' | 'completed' | 'failed' | None for a quest ID
         in the given game mode (default: 'pvp' / regular).

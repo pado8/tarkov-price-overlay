@@ -229,6 +229,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
+- **v1.0.11** — **캡처 영역 설정 모달화** (청록 십자선이 마우스 기준점 표시, 슬라이더 미세 조정 가능) + **듀얼 모니터 복구** (오버레이가 분리된 모니터에 있어 안 보일 때 자동으로 주 모니터로 스냅 + 트레이 메뉴 '창 위치 복구') + **OCR 정확도 강화**: 옆 아이콘 텍스트(RatCola 등)가 같이 잡혀도 fragment 다중 후보 + best-match 점수로 의도한 아이템 선택, 짧은 fragment가 긴 카탈로그명 가로채는 케이스 차단, 캡처 박스보다 긴 아이템명도 prefix 매칭으로 식별 + **탄박스도 탄약 매트릭스 자동 표시** (탄약 팩 호버 시 같은 caliber 비교표) + **쇄빙선(0.16) 신규 caliber 지원** (.308 ME / 9.3x64 표시명 추가) + lookup 속도 미세 최적화
 - **v1.0.10** — **자동 업데이트** (설정 켜두면 새 버전 알림 → '지금 설치' 한 번으로 완료) + **은신처 레벨 설정** (설정에서 현재 업그레이드 레벨 직접 입력 → 완료한 시설은 카드에서 자동 흐리게/취소선 표시) + **퀘스트 진행도 PVP/PVE 서버별 분리** + 퀘스트 동기화 수동 폴더 선택 버튼 + 퀘스트 표시 모드 드롭다운
 - **v1.0.9** — 인스톨러가 실행 중인 오버레이를 자동 종료(업데이트 시 충돌 없음) + **게임 언어 분리 설정** (UI는 한국어인데 영문판 게임 하시는 분들을 위해 게임 클라이언트 언어를 따로 지정 가능) + 퀘스트 동기화 라벨 명확화
 - **v1.0.8** — QHD/4K 해상도 자동 스케일링 + 캡처 영역 **라이브 미리보기** (빨간/노란 박스가 커서 따라다님) + 슬라이더 + 텍스트 편집 UI + 설정 패널 드래그 리사이즈 + 정크 OCR 빠른 차단 (2분 멈춤 → 1초 내) + 디자인 토큰 통일 (회색 톤 가독성 ↑, 한글 폰트 명시)
@@ -500,6 +501,7 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
+- **v1.0.11** — **Capture-region modal** with a cyan crosshair marking the mouse reference point + finer-grained sliders (±500 offset, 1000 max) + **dual-monitor recovery** (auto-snap to primary on startup when the saved position is off-screen + new tray menu "Recover position") + **OCR robustness**: multi-candidate fragment retry with score-based selection so the actual tooltip text wins over icon-baked labels (RatCola, M882…), plus prefix fallback for long item names that exceed the capture box + **ammo-box matrix** (hovering ammo packs now opens the caliber-comparison panel) + **Icebreaker (0.16) compatibility** — new calibers `.308 ME` and `9.3x64` displayed properly + lookup hot-path micro-optimizations.
 - **v1.0.10** — **Auto-update** (toggle on → get notified, click 'Install now', done) + **Hideout level tracker** (set your current upgrade level per station in Settings → completed stations dim out on the price card automatically) + **per-mode quest tracking** (PVP/PVE stored separately) + manual folder picker for quest sync + quest display mode dropdown.
 - **v1.0.9** — Installer now auto-closes the running overlay before install/upgrade (no more half-uninstalled state). New **Game language** setting separate from UI language — for players running an English EFT client with a Korean UI (or vice versa). Quest-sync label clarified.
 - **v1.0.8** — QHD/4K auto-scaling on first launch + **live preview rectangles** (red/yellow boxes follow cursor) for the capture-region editor + slider-with-text fields + drag-resizable settings panel + fast junk-OCR rejection (2-minute hang → instant empty) + design-token cleanup (brighter greys for transparent-mode readability, explicit Korean font fallback).

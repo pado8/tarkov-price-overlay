@@ -294,6 +294,36 @@ fn unregister_all_hotkeys(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Snap the main overlay window to the primary monitor's top-left corner.
+/// Panic-button for users whose saved window position lands on a now-
+/// disconnected secondary display. The React side also does this on
+/// startup, but having a tray entry means a stranded user can recover
+/// without restarting the app.
+#[tauri::command]
+fn recover_window_position(app: tauri::AppHandle) -> Result<(), String> {
+    let Some(window) = app.get_webview_window("main") else {
+        return Err("main window not found".into());
+    };
+    let monitor = window
+        .primary_monitor()
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "no primary monitor".to_string())?;
+    let pos = monitor.position();
+    // Inset by 40px so the overlay isn't flush against the screen edge —
+    // the resize handle on the settings panel needs a little headroom.
+    window
+        .set_position(tauri::PhysicalPosition::new(pos.x + 40, pos.y + 40))
+        .map_err(|e| e.to_string())?;
+    window.show().map_err(|e| e.to_string())?;
+    let _ = window.set_focus();
+    println!(
+        "[recover] window snapped to primary monitor at ({}, {})",
+        pos.x + 40,
+        pos.y + 40
+    );
+    Ok(())
+}
+
 #[tauri::command]
 fn hide_to_tray(app: tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
@@ -303,7 +333,7 @@ fn hide_to_tray(app: tauri::AppHandle) {
     // Also hide the capture-region preview rectangles. They live in
     // separate always-on-top windows, so hiding the main overlay alone
     // leaves them floating with no UI to dismiss them.
-    for label in ["preview-primary", "preview-ground"] {
+    for label in ["preview-primary", "preview-ground", "preview-anchor"] {
         if let Some(w) = app.get_webview_window(label) {
             let _ = w.hide();
         }
@@ -481,6 +511,7 @@ pub fn run() {
             register_toggle_mouse,
             unregister_all_hotkeys,
             hide_to_tray,
+            recover_window_position,
             show_preview_rect,
             hide_preview_rect,
             exit_app
@@ -509,8 +540,18 @@ pub fn run() {
             let show_item = MenuItem::with_id(app, "show", "표시 / Show", true, None::<&str>)?;
             let settings_item =
                 MenuItem::with_id(app, "settings", "설정 / Settings", true, None::<&str>)?;
+            let recover_item = MenuItem::with_id(
+                app,
+                "recover",
+                "창 위치 복구 / Recover position",
+                true,
+                None::<&str>,
+            )?;
             let exit_item = MenuItem::with_id(app, "exit", "종료 / Exit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_item, &settings_item, &exit_item])?;
+            let menu = Menu::with_items(
+                app,
+                &[&show_item, &settings_item, &recover_item, &exit_item],
+            )?;
 
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
@@ -531,6 +572,15 @@ pub fn run() {
                             let _ = window.set_focus();
                         }
                         let _ = app.emit("tray-settings", ());
+                    }
+                    "recover" => {
+                        // Synthesize the same effect as the React-side
+                        // recover button — useful when the overlay sits
+                        // off-screen and the user can't reach it via the
+                        // UI at all.
+                        if let Err(e) = recover_window_position(app.clone()) {
+                            eprintln!("[tray] recover failed: {e}");
+                        }
                     }
                     "exit" => {
                         if let Some(state) = app.try_state::<IsQuitting>() {
@@ -587,7 +637,7 @@ pub fn run() {
                 }
                 // Hide preview rectangles too (same reason as hide_to_tray:
                 // they're independent windows that survive main-window hide).
-                for label in ["preview-primary", "preview-ground"] {
+                for label in ["preview-primary", "preview-ground", "preview-anchor"] {
                     if let Some(w) = app_handle.get_webview_window(label) {
                         let _ = w.hide();
                     }

@@ -1189,3 +1189,103 @@ html, body, #root {
   word-break: break-all;
   overflow-wrap: break-word;
 }
+
+/* Capture-region modal — rendered inside .card so the region-based click-
+   through naturally captures pointer events while the rest of the overlay
+   stays transparent. The backdrop dims the underlying settings rows so the
+   modal visually owns the card while open. */
+.capture-modal-backdrop {
+  margin: 6px 0 0 0;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--border-emphasis);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  /* Backdrop blur reinforces the "this is a focused modal" feel even when
+     the overall card opacity slider is high. Falls back gracefully on
+     browsers without backdrop-filter (just looks like a darker box). */
+  backdrop-filter: blur(2px);
+}
+.capture-modal {
+  background: rgba(28, 28, 28, 0.95);
+  border: 1px solid var(--gold-text);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.capture-modal::-webkit-scrollbar {
+  width: 6px;
+}
+.capture-modal::-webkit-scrollbar-thumb {
+  background: var(--bg-gold-chip);
+  border-radius: var(--radius-sm);
+}
+.capture-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 4px;
+}
+.capture-modal-title {
+  color: var(--gold-text);
+  font-weight: 600;
+  font-size: calc(var(--card-fs) * 1.02);
+}
+.capture-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.capture-modal-section-title {
+  margin-top: 8px;
+  padding: 4px 0 2px 0;
+  font-weight: 600;
+  font-size: var(--card-fs-sm);
+  color: var(--gold-light);
+  border-bottom: 1px dashed var(--border-subtle);
+}
+.capture-modal-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.capture-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+.capture-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  margin: 2px 0 4px 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: var(--card-fs-xs);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.capture-legend-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+.capture-legend-row > span:first-child {
+  flex: 0 0 auto;
+  line-height: 1.4;
+}
+.capture-legend-note {
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-subtle);
+  color: var(--text-muted);
+  font-style: italic;
+}

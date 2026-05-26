@@ -23,7 +23,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from capture import capture_region
-from ocr import _get_reader, recognize_text
+from ocr import _get_reader, recognize_text_fragments
 from quest_tracker import get_tracker
 from tarkov_api import get_item_price, get_station_list, start_background_refresher
 
@@ -177,6 +177,22 @@ def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> L
     `game_mode` is forwarded to the quest tracker so task_status reflects
     the user's current server (PVP/regular vs PVE) — quest progress is
     independent between the two."""
+    # Snapshot the per-mode quest status dicts once per response. The naive
+    # version called `quest_status_for(qid, mode)` three times per task
+    # (current mode + pvp + pve), each acquiring the tracker lock — for an
+    # item used in 30 tasks (e.g. wires), that's 90 lock acquisitions per
+    # lookup. Two `all_status()` calls give us flat dicts we can index
+    # without locking. When the tracker is disabled we skip the snapshot
+    # entirely and serve empty dicts so the per-task .get() returns None
+    # — preserves the legacy behavior where disable hides all sync data.
+    tracker = get_tracker()
+    if tracker.is_enabled():
+        pvp_status = tracker.all_status("regular")
+        pve_status = tracker.all_status("pve")
+    else:
+        pvp_status = {}
+        pve_status = {}
+    current_status = pve_status if game_mode == "pve" else pvp_status
     return LookupResponse(
         raw_text=raw_text,
         item_name=price.get("name"),
@@ -243,10 +259,10 @@ def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> L
                 count=t.get("count"),
                 fir=t.get("fir", False),
                 kappa_required=t.get("kappa_required", False),
-                task_status=get_tracker().quest_status_for(t.get("id") or "", game_mode),
+                task_status=current_status.get(t.get("id") or ""),
                 task_status_by_mode={
-                    "pvp": get_tracker().quest_status_for(t.get("id") or "", "regular"),
-                    "pve": get_tracker().quest_status_for(t.get("id") or "", "pve"),
+                    "pvp": pvp_status.get(t.get("id") or ""),
+                    "pve": pve_status.get(t.get("id") or ""),
                 },
             )
             for t in price.get("used_in_tasks", [])
@@ -383,10 +399,74 @@ def _capture_and_lookup(
     t0 = time.perf_counter()
     image = capture_region(x, y, width, height)
     t1 = time.perf_counter()
-    text = recognize_text(image, langs=("ko", "en"))
+    fragments = recognize_text_fragments(image, langs=("ko", "en"))
     t2 = time.perf_counter()
-    print(f"[lookup] OCR({label}): {text!r}")
-    price = get_item_price(text, lang=lang, game_mode=game_mode, corrections=corrections)
+    text = " ".join(fragments).strip()
+    print(f"[lookup] OCR({label}): {text!r} ({len(fragments)} fragments)")
+
+    # Primary attempt: fuzzy-match the joined OCR text. This works whenever
+    # the capture box is tight around the tooltip — EasyOCR returns a few
+    # lines, joining them produces a string very close to the catalog name.
+    price = get_item_price(
+        text, lang=lang, game_mode=game_mode, corrections=corrections
+    )
+
+    # Fallback: when the box catches extra non-tooltip UI (price label below
+    # the tooltip, description text, an inventory icon with baked-in text
+    # like "RatCola" next to the hovered item), the joined string drops
+    # below the fuzzy cutoff and returns no name. Try each fragment
+    # individually AND score-rank the candidates instead of returning the
+    # first one that matches — otherwise a short noise fragment that
+    # happens to be a real catalog item (e.g. "Cola") can win over the
+    # actual long tooltip fragment.
+    #
+    # Scoring: PRIMARY by source fragment length (more OCR characters
+    # = more confidence the fragment really represents an item name),
+    # secondary by matched item name length (prefer specific matches).
+    #
+    # Earlier attempt used (item_name_len, frag_len) — that backfired on
+    # ammo-trader columns where the OCR catches short labels like "M88z"
+    # (4 chars) alongside the actual tooltip "9x19mm AP 6.3" (13 chars).
+    # The short label fuzzy-mapped to "9x19mm FMJ M882 ammo pack (30 pcs)"
+    # (34-char catalog name) via the shortName alias chain, winning the
+    # score even though it was the noise column header, not the real
+    # hovered item. Switching the primary to fragment length means the
+    # longest source string wins — which is almost always the actual
+    # tooltip text in EFT's layout.
+    if price.get("name") is None and len(fragments) > 1:
+        retry_candidates: list[str] = []
+        seen = {text}
+        for f in sorted(fragments, key=len, reverse=True):
+            if f in seen or len(f) < 2:
+                continue
+            seen.add(f)
+            retry_candidates.append(f)
+            if len(retry_candidates) >= 6:
+                break
+        best_cand: tuple[str, dict] | None = None
+        best_score: tuple[int, int] = (-1, -1)
+        for cand in retry_candidates:
+            cand_price = get_item_price(
+                cand, lang=lang, game_mode=game_mode, corrections=corrections
+            )
+            cand_name = cand_price.get("name")
+            if not cand_name:
+                continue
+            score = (len(cand), len(cand_name))
+            if score > best_score:
+                best_score = score
+                best_cand = (cand, cand_price)
+        if best_cand is not None:
+            cand, cand_price = best_cand
+            print(
+                f"[lookup] OCR({label}) matched via fragment "
+                f"{cand!r} -> {cand_price['name']!r} (score={best_score})"
+            )
+            # Replace the raw text with the winning fragment so the
+            # advanced-mode "OCR" debug line shows what actually matched.
+            text = cand
+            price = cand_price
+
     t3 = time.perf_counter()
     print(
         f"[timing/{label}] capture={t1 - t0:.3f}s ocr={t2 - t1:.3f}s "

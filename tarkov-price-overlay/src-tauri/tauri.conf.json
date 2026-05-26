@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Tarkov Price Overlay",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "identifier": "com.tarkov.overlay",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -44,6 +44,21 @@
         "title": "Capture region preview (ground)",
         "width": 160,
         "height": 30,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "visible": false,
+        "focus": false
+      },
+      {
+        "label": "preview-anchor",
+        "url": "index.html?window=preview-anchor",
+        "title": "Capture region preview (anchor)",
+        "width": 24,
+        "height": 24,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, availableMonitors } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -333,6 +333,17 @@ const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const ADVANCED_KEY = "tarkov.advancedMode";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
+// Capture-region preview anchor mode. "center" pins the rectangles to the
+// primary monitor center while the user adjusts sliders (so rectangles stay
+// put for fine adjustment); "cursor" keeps the legacy cursor-following
+// behavior for users who prefer to align against a real hover. Persisted
+// because the user usually settles on one approach and keeps it.
+const PREVIEW_ANCHOR_KEY = "tarkov.previewAnchorMode";
+type PreviewAnchorMode = "center" | "cursor";
+function loadPreviewAnchorMode(): PreviewAnchorMode {
+  const v = localStorage.getItem(PREVIEW_ANCHOR_KEY);
+  return v === "cursor" ? "cursor" : "center";
+}
 
 function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
@@ -666,7 +677,12 @@ function App() {
   // recording ends or after a short timeout so the user gets a noticeable
   // hint without a modal/toast layer.
   const [hotkeyConflict, setHotkeyConflict] = useState(false);
-  const [showCaptureRegion, setShowCaptureRegion] = useState(false);
+  // Modal-style capture-region editor. When open, renders the editor as
+  // an absolute-positioned dialog over the card content and shows the
+  // preview rectangles at a stable anchor (see PREVIEW_ANCHOR_KEY).
+  const [captureModalOpen, setCaptureModalOpen] = useState(false);
+  const [previewAnchorMode, setPreviewAnchorMode] =
+    useState<PreviewAnchorMode>(loadPreviewAnchorMode);
   // Click-to-edit toggle for the opacity readout next to the slider.
   const [opacityEditing, setOpacityEditing] = useState(false);
   // Click-to-edit toggle for capture-region slider readouts. Stores the
@@ -678,35 +694,22 @@ function App() {
   // height across sessions. The initial height is applied via ref on
   // mount (avoids fighting React state on every drag event).
   const settingsRef = useRef<HTMLDivElement | null>(null);
-  // Anchor for the "Capture region" row so we can scroll it into view
-  // when the user clicks Edit — the section is near the bottom of the
-  // settings panel and would otherwise be hidden below the scroll
-  // fold at the default panel height.
-  const captureRegionRowRef = useRef<HTMLDivElement | null>(null);
-  // Slider bounds for capture-region offsets/sizes. Static defaults work
-  // for 1080p, but QHD/4K users hit the ±1000 offset cap before reaching
-  // the screen edge — looks to them like the rectangle "stops" with
-  // viewport space still to its right. We bump bounds to the actual
-  // monitor extent on mount.
-  const [sliderBounds, setSliderBounds] = useState({
-    offsetMax: 1500,
-    widthMax: 2000,
-    heightMax: 500,
-  });
-  useEffect(() => {
-    primaryMonitor()
-      .then((mon) => {
-        if (!mon) return;
-        setSliderBounds({
-          // offset goes both ways; allow at least the full width so the
-          // box can reach any edge from any cursor position.
-          offsetMax: Math.max(1500, mon.size.width),
-          widthMax: Math.max(2000, mon.size.width),
-          heightMax: Math.max(500, Math.floor(mon.size.height / 2)),
-        });
-      })
-      .catch(() => {});
-  }, []);
+  // Slider bounds for capture-region offsets/sizes. Static practical
+  // values: EFT inventory hover tooltips appear within ~500px of the
+  // cursor and rarely exceed 1000×1000 even for large backpacks. Wider
+  // ranges (full monitor extent) made the slider so coarse that small
+  // drags caused huge jumps — users couldn't dial in exact placement.
+  // Users who genuinely need values past these bounds can still type
+  // them in the click-to-edit number input (SliderField clamps to the
+  // slider min/max on blur, but the typed-while-dragging value passes
+  // through to the region state for the brief moment before the slider
+  // re-snaps it).
+  const sliderBounds = {
+    offsetMaxX: 500,
+    offsetMaxY: 500,
+    widthMax: 1000,
+    heightMax: 1000,
+  };
   // "Run as administrator" diagnostic: shown when sidecar reports we are
   // not elevated. Hidden once the user dismisses (persisted via
   // ADMIN_BANNER_DISMISS_KEY).
@@ -804,21 +807,20 @@ function App() {
     return () => ro.disconnect();
   }, [showSettings]);
 
-  // When the user expands the capture-region edit subsection, scroll
-  // the settings panel so the row + its inputs are visible at the top.
-  // The section sits near the bottom of a long settings panel; without
-  // this, the user clicks Edit and sees no visible change.
+  // Esc closes the capture-region modal. Doesn't interfere with hotkey
+  // recording (that uses key recording handlers attached only while
+  // recordingTarget != null) or other modals.
   useEffect(() => {
-    if (!showCaptureRegion) return;
-    const row = captureRegionRowRef.current;
-    if (!row) return;
-    // Delay one frame so the newly-rendered subsection is laid out
-    // before we measure / scroll.
-    const id = requestAnimationFrame(() => {
-      row.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [showCaptureRegion]);
+    if (!captureModalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setCaptureModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [captureModalOpen]);
 
   // First-launch: scale capture-region defaults to the primary monitor.
   // 1080p users get the original defaults (scale=1.0). QHD/4K users get
@@ -835,28 +837,78 @@ function App() {
   }, []);
 
   // Live capture-region preview: while the user is editing offsets, two
-  // small transparent windows (red = primary, yellow = ground) follow the
-  // cursor so it's visually obvious where each capture box will land.
+  // small transparent windows (red = primary, yellow = ground) show on the
+  // screen so it's visually obvious where each capture box will land.
   //
-  // UX nuance: while the user is dragging a slider, the cursor is on the
-  // overlay itself, not on the game — naive "follow cursor" would chase
-  // the slider, defeating the preview's purpose. So we freeze the
-  // reference position whenever the cursor enters the main overlay
-  // window's screen rect. The boxes then stay anchored at the last
-  // genuine "out in the game" cursor position while the user adjusts
-  // sliders, which is exactly when they need to see the result.
+  // Two anchor modes (see PREVIEW_ANCHOR_KEY):
+  //   "center" (default) — rectangles pin to the primary monitor center,
+  //     regardless of cursor movement. Lets the user freely move the mouse
+  //     to reach sliders or look at game UI without the preview jumping.
+  //   "cursor" (legacy) — rectangles track the cursor when it's over the
+  //     game, freezing only when the cursor enters the card. Useful for
+  //     aligning against a real inventory hover.
   const previewRefRef = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
-    // Hide if settings closed, capture-region subsection closed, OR the
-    // card itself is invisible (auto-hide). Otherwise the rectangles
-    // linger on screen with no UI visible to dismiss them.
-    if (!showSettings || !showCaptureRegion || !cardVisible) {
+    // Hide if settings closed, modal not open, OR the card itself is
+    // invisible (auto-hide). Otherwise the rectangles linger on screen
+    // with no UI to dismiss them. Modal open is the new gate — the old
+    // inline `showCaptureRegion` toggle is no longer the trigger.
+    if (!showSettings || !captureModalOpen || !cardVisible) {
       previewRefRef.current = null;
       invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
       invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+      invoke("hide_preview_rect", { label: "preview-anchor" }).catch(() => {});
       return;
     }
     let cancelled = false;
+    // Crosshair marker dimension — must match the preview-anchor window
+    // declared in tauri.conf.json. Centered on the reference point so the
+    // dot in its middle sits exactly at the simulated cursor pixel.
+    const ANCHOR_SIZE = 24;
+    // Anchor-center path: pin the reference to the primary monitor center
+    // once and show the rectangles + the crosshair marker. No polling
+    // needed — re-positions only when slider values change via deps.
+    if (previewAnchorMode === "center") {
+      (async () => {
+        try {
+          const mon = await primaryMonitor();
+          if (cancelled || !mon) return;
+          const ref = {
+            x: mon.position.x + Math.floor(mon.size.width / 2),
+            y: mon.position.y + Math.floor(mon.size.height / 2),
+          };
+          previewRefRef.current = ref;
+          await invoke("show_preview_rect", {
+            label: "preview-anchor",
+            x: ref.x - Math.floor(ANCHOR_SIZE / 2),
+            y: ref.y - Math.floor(ANCHOR_SIZE / 2),
+            width: ANCHOR_SIZE,
+            height: ANCHOR_SIZE,
+          });
+          await invoke("show_preview_rect", {
+            label: "preview-primary",
+            x: ref.x + region.offsetX,
+            y: ref.y + region.offsetY,
+            width: region.width,
+            height: region.height,
+          });
+          await invoke("show_preview_rect", {
+            label: "preview-ground",
+            x: ref.x + region.groundOffsetX,
+            y: ref.y + region.groundOffsetY,
+            width: region.groundWidth,
+            height: region.groundHeight,
+          });
+        } catch {}
+      })();
+      return () => {
+        cancelled = true;
+        invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
+        invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+        invoke("hide_preview_rect", { label: "preview-anchor" }).catch(() => {});
+      };
+    }
+    // Anchor-cursor path: keep the legacy poll loop.
     const tick = async () => {
       try {
         // Defensive: bail out if the main overlay was hidden (X button,
@@ -923,6 +975,13 @@ function App() {
         }
         if (cancelled) return;
         await invoke("show_preview_rect", {
+          label: "preview-anchor",
+          x: ref.x - Math.floor(ANCHOR_SIZE / 2),
+          y: ref.y - Math.floor(ANCHOR_SIZE / 2),
+          width: ANCHOR_SIZE,
+          height: ANCHOR_SIZE,
+        });
+        await invoke("show_preview_rect", {
           label: "preview-primary",
           x: ref.x + region.offsetX,
           y: ref.y + region.offsetY,
@@ -945,10 +1004,12 @@ function App() {
       window.clearInterval(id);
       invoke("hide_preview_rect", { label: "preview-primary" }).catch(() => {});
       invoke("hide_preview_rect", { label: "preview-ground" }).catch(() => {});
+      invoke("hide_preview_rect", { label: "preview-anchor" }).catch(() => {});
     };
   }, [
     showSettings,
-    showCaptureRegion,
+    captureModalOpen,
+    previewAnchorMode,
     cardVisible,
     region.offsetX,
     region.offsetY,
@@ -1448,15 +1509,62 @@ function App() {
 
   useEffect(() => {
     const win = getCurrentWindow();
-    try {
-      const raw = localStorage.getItem(POSITION_KEY);
-      if (raw) {
+    // Restore saved position, but only if it still lands on a connected
+    // monitor. Users running a dual-monitor setup can save the overlay on
+    // their secondary display and later boot with only the primary —
+    // without this check, the window stays at the off-screen coordinates
+    // forever (invisible, no way to reach it via the OS since the window
+    // is skipTaskbar). Snap to the primary monitor's top-left in that
+    // case so the user always gets a visible overlay on next launch.
+    (async () => {
+      try {
+        const raw = localStorage.getItem(POSITION_KEY);
+        if (!raw) return;
         const { x, y } = JSON.parse(raw);
-        if (Number.isFinite(x) && Number.isFinite(y)) {
-          win.setPosition(new PhysicalPosition(x, y)).catch(() => {});
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        let onScreen = false;
+        try {
+          const mons = await availableMonitors();
+          // Use a small margin so a window with just its top-edge visible
+          // (and the rest below the screen) doesn't count as on-screen.
+          const M = 32;
+          for (const m of mons) {
+            if (
+              x >= m.position.x - M &&
+              x < m.position.x + m.size.width - M &&
+              y >= m.position.y - M &&
+              y < m.position.y + m.size.height - M
+            ) {
+              onScreen = true;
+              break;
+            }
+          }
+        } catch {
+          // If we can't enumerate monitors, fall back to trusting the
+          // saved coords — better than wiping the user's preference.
+          onScreen = true;
         }
-      }
-    } catch {}
+        if (onScreen) {
+          await win.setPosition(new PhysicalPosition(x, y));
+          return;
+        }
+        // Off-screen recovery: snap to primary monitor top-left and rewrite
+        // the persisted position so the next launch starts clean too.
+        log(
+          `position recover: saved (${x},${y}) is off-screen — snapping to primary`
+        );
+        const primary = await primaryMonitor();
+        if (primary) {
+          const nx = primary.position.x + 40;
+          const ny = primary.position.y + 40;
+          await win.setPosition(new PhysicalPosition(nx, ny));
+          localStorage.setItem(
+            POSITION_KEY,
+            JSON.stringify({ x: nx, y: ny })
+          );
+        }
+      } catch {}
+    })();
 
     const unlistenPromise = win.listen("tauri://move", () => {
       win.outerPosition().then((pos) => {
@@ -1801,7 +1909,7 @@ function App() {
                 // a future re-show doesn't land in mid-edit state.
                 setCardVisible(false);
                 setShowSettings(false);
-                setShowCaptureRegion(false);
+                setCaptureModalOpen(false);
                 hideToTray();
               }}
               title={t.hideToTrayTitle}
@@ -1943,7 +2051,7 @@ function App() {
           </div>
         )}
 
-        {showSettings && (
+        {showSettings && !captureModalOpen && (
           <div className="settings" ref={settingsRef}>
             <div className="settings-row settings-feedback-row">
               <button
@@ -2479,27 +2587,131 @@ function App() {
               )}
             </details>
 
-            <div className="settings-section-header" ref={captureRegionRowRef}>
+            <div className="settings-section-header">
               {t.captureSection}
             </div>
             <div className="settings-row">
               <label>{t.captureRegion}</label>
               <button
                 className="reset-btn hotkey-rec-btn"
-                onClick={() => setShowCaptureRegion((s) => !s)}
+                onClick={() => setCaptureModalOpen(true)}
+                title={t.captureRegionConfigureHint}
               >
-                {showCaptureRegion ? t.hide : t.edit}
+                {t.captureRegionConfigure}
               </button>
             </div>
-            {showCaptureRegion && (
-              <>
-                <div className="settings-hint" style={{ color: "#bbb" }}>
-                  {t.previewLegend}
+            <div className="settings-row">
+              <label title={t.windowRecoverHint}>{t.windowRecover}</label>
+              <button
+                className="reset-btn"
+                onClick={async () => {
+                  // Snap the overlay to the primary monitor's top-left
+                  // area. Works as a panic-button when a previously-saved
+                  // position lands on a disconnected secondary display.
+                  try {
+                    const mon = await primaryMonitor();
+                    if (!mon) return;
+                    const win = getCurrentWindow();
+                    const x = mon.position.x + 40;
+                    const y = mon.position.y + 40;
+                    await win.setPosition(new PhysicalPosition(x, y));
+                    localStorage.setItem(
+                      POSITION_KEY,
+                      JSON.stringify({ x, y })
+                    );
+                    await win.show();
+                    await win.setFocus();
+                  } catch (e) {
+                    log(`recover position failed: ${String(e)}`);
+                  }
+                }}
+              >
+                {t.windowRecoverBtn}
+              </button>
+            </div>
+            <div className="copyright">
+              <div className="copyright-line">{t.copyright}</div>
+              <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
+            </div>
+          </div>
+        )}
+        {captureModalOpen && (
+          /* Modal-style capture-region editor. Rendered inside the card so
+             the existing region-based click-through behavior naturally
+             gives the modal pointer events while the rest of the overlay
+             stays click-through. Anchor mode controls whether the on-screen
+             preview rectangles pin to monitor center (stable) or follow
+             the cursor (legacy "find a real hover" behavior). */
+          <div className="capture-modal-backdrop">
+            <div
+              className="capture-modal"
+              role="dialog"
+              aria-labelledby="capture-modal-title"
+            >
+              <div className="capture-modal-header">
+                <span id="capture-modal-title" className="capture-modal-title">
+                  📐 {t.captureRegionTitle}
+                </span>
+                <button
+                  className="settings-btn"
+                  onClick={() => setCaptureModalOpen(false)}
+                  title={t.captureRegionCloseHint}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="capture-modal-body">
+                <div className="settings-row" title={t.previewAnchorHint}>
+                  <label>{t.previewAnchor}</label>
+                  <select
+                    value={previewAnchorMode}
+                    onChange={(e) => {
+                      const v =
+                        e.target.value === "cursor" ? "cursor" : "center";
+                      setPreviewAnchorMode(v);
+                      localStorage.setItem(PREVIEW_ANCHOR_KEY, v);
+                    }}
+                  >
+                    <option value="center">{t.previewAnchorCenter}</option>
+                    <option value="cursor">{t.previewAnchorCursor}</option>
+                  </select>
+                </div>
+                <div className="capture-legend">
+                  <div className="capture-legend-row">
+                    <span>🟦</span>
+                    <span>{t.legendAnchor}</span>
+                  </div>
+                  <div className="capture-legend-row">
+                    <span>🟥</span>
+                    <span>{t.legendPrimary}</span>
+                  </div>
+                  <div className="capture-legend-row">
+                    <span>🟨</span>
+                    <span>{t.legendGround}</span>
+                  </div>
+                  <div className="capture-legend-note">
+                    {previewAnchorMode === "center"
+                      ? t.legendNoteCenter
+                      : t.legendNoteCursor}
+                  </div>
+                </div>
+                <div className="capture-modal-section-title">
+                  {t.captureRegion}
                 </div>
                 {(
                   [
-                    ["offsetX", t.offsetX, -sliderBounds.offsetMax, sliderBounds.offsetMax],
-                    ["offsetY", t.offsetY, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    [
+                      "offsetX",
+                      t.offsetX,
+                      -sliderBounds.offsetMaxX,
+                      sliderBounds.offsetMaxX,
+                    ],
+                    [
+                      "offsetY",
+                      t.offsetY,
+                      -sliderBounds.offsetMaxY,
+                      sliderBounds.offsetMaxY,
+                    ],
                     ["width", t.width, 50, sliderBounds.widthMax],
                     ["height", t.height, 20, sliderBounds.heightMax],
                   ] as const
@@ -2517,7 +2729,7 @@ function App() {
                   />
                 ))}
                 <div className="settings-hint">{t.captureHint}</div>
-                <div style={{ display: "flex", gap: "6px" }}>
+                <div className="capture-modal-actions">
                   <button
                     className="reset-btn"
                     onClick={() =>
@@ -2543,16 +2755,30 @@ function App() {
                     {t.autoScaleToMonitor}
                   </button>
                 </div>
-
-                <div className="settings-row" style={{ marginTop: "12px" }}>
-                  <label style={{ fontWeight: 600 }}>{t.groundCaptureRegion}</label>
+                <div className="capture-modal-section-title">
+                  {t.groundCaptureRegion}
                 </div>
                 {(
                   [
-                    ["groundOffsetX", t.groundOffsetX, -sliderBounds.offsetMax, sliderBounds.offsetMax],
-                    ["groundOffsetY", t.groundOffsetY, -sliderBounds.offsetMax, sliderBounds.offsetMax],
+                    [
+                      "groundOffsetX",
+                      t.groundOffsetX,
+                      -sliderBounds.offsetMaxX,
+                      sliderBounds.offsetMaxX,
+                    ],
+                    [
+                      "groundOffsetY",
+                      t.groundOffsetY,
+                      -sliderBounds.offsetMaxY,
+                      sliderBounds.offsetMaxY,
+                    ],
                     ["groundWidth", t.groundWidth, 50, sliderBounds.widthMax],
-                    ["groundHeight", t.groundHeight, 20, sliderBounds.heightMax],
+                    [
+                      "groundHeight",
+                      t.groundHeight,
+                      20,
+                      sliderBounds.heightMax,
+                    ],
                   ] as const
                 ).map(([key, label, min, max]) => (
                   <SliderField
@@ -2568,29 +2794,35 @@ function App() {
                   />
                 ))}
                 <div className="settings-hint">{t.groundCaptureHint}</div>
-                <button
-                  className="reset-btn"
-                  onClick={() =>
-                    setRegion((r) => ({
-                      ...r,
-                      groundOffsetX: DEFAULT_REGION.groundOffsetX,
-                      groundOffsetY: DEFAULT_REGION.groundOffsetY,
-                      groundWidth: DEFAULT_REGION.groundWidth,
-                      groundHeight: DEFAULT_REGION.groundHeight,
-                    }))
-                  }
-                >
-                  {t.reset}
-                </button>
-              </>
-            )}
-            <div className="copyright">
-              <div className="copyright-line">{t.copyright}</div>
-              <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
+                <div className="capture-modal-actions">
+                  <button
+                    className="reset-btn"
+                    onClick={() =>
+                      setRegion((r) => ({
+                        ...r,
+                        groundOffsetX: DEFAULT_REGION.groundOffsetX,
+                        groundOffsetY: DEFAULT_REGION.groundOffsetY,
+                        groundWidth: DEFAULT_REGION.groundWidth,
+                        groundHeight: DEFAULT_REGION.groundHeight,
+                      }))
+                    }
+                  >
+                    {t.reset}
+                  </button>
+                </div>
+                <div className="capture-modal-footer">
+                  <button
+                    className="reset-btn"
+                    onClick={() => setCaptureModalOpen(false)}
+                  >
+                    {t.captureRegionDone}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
-        {showSettings && (
+        {showSettings && !captureModalOpen && (
           <div
             className="settings-resize-handle"
             title={t.settingsResizeHint}

@@ -23,10 +23,20 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    types
     properties {
       __typename
       ... on ItemPropertiesAmmo { caliber }
       ... on ItemPropertiesWeapon { caliber }
+    }
+    containsItems {
+      count
+      item {
+        properties {
+          __typename
+          ... on ItemPropertiesAmmo { caliber }
+        }
+      }
     }
     avg24hPrice
     low24hPrice
@@ -144,10 +154,20 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    types
     properties {
       __typename
       ... on ItemPropertiesAmmo { caliber }
       ... on ItemPropertiesWeapon { caliber }
+    }
+    containsItems {
+      count
+      item {
+        properties {
+          __typename
+          ... on ItemPropertiesAmmo { caliber }
+        }
+      }
     }
     avg24hPrice
     low24hPrice
@@ -274,7 +294,9 @@ def _caliber_display(raw: str) -> str:
         "762x39":     "7.62x39",
         "762x51":     "7.62x51",
         "762x54R":    "7.62x54R",
+        "784x49":     ".308 ME",
         "86x70":      ".338 LM",
+        "93x64":      "9.3x64",
     }
     return overrides.get(s, s)
 
@@ -581,8 +603,19 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
 
     # Caliber for ammo/weapons — drives the inline Ammo Matrix panel on the
     # frontend. None for everything else, in which case the panel is hidden.
+    # Ammo *boxes* don't have caliber on their own properties (the type is
+    # `null` from the API) but their containsItems[0] is the round they
+    # hold, which does carry caliber. Treat the box as if it has the
+    # round's caliber so the matrix shows up for the common "I picked up
+    # an ammo pack, is this any good?" lookup.
     props = item.get("properties") or {}
     caliber_raw = props.get("caliber") if isinstance(props, dict) else None
+    if not caliber_raw and "ammoBox" in (item.get("types") or []):
+        for ci in item.get("containsItems") or []:
+            inner_props = (ci.get("item") or {}).get("properties") or {}
+            if isinstance(inner_props, dict) and inner_props.get("caliber"):
+                caliber_raw = inner_props["caliber"]
+                break
     caliber_display = _caliber_display(caliber_raw) if caliber_raw else None
 
     return {
@@ -779,13 +812,44 @@ def _cache_lookup(
     if entry:
         return {**entry, "matched_from": matched_from}
 
-    # Fuzzy match against cached names
-    matches = difflib.get_close_matches(item_name, list(cache.keys()), n=1, cutoff=0.6)
+    # Fuzzy match against cached names. Re-use the pre-built names list
+    # populated by _refresh_one() so we don't rebuild list(cache.keys())
+    # (~5k entries) on every fuzzy fallback. Falls back to the live keys
+    # view when the names cache is empty (cold cache path).
+    with _names_lock:
+        names = _names_cache.get(lang)
+    if not names:
+        names = list(cache.keys())
+    matches = difflib.get_close_matches(item_name, names, n=1, cutoff=0.6)
     if matches:
         hit = matches[0]
         print(f"[cache] fuzzy: {item_name!r} -> {hit!r}")
         entry = cache[hit]
         return {**entry, "matched_from": matched_from or item_name}
+
+    # Prefix fallback for long item names that don't fit the user's capture
+    # box. When the box is narrow, OCR catches only the start of the item
+    # name (e.g. "GP-25 attachment" instead of "GP-25 attachment for the
+    # Kalashnikov system") — fuzzy ratio for a heavy right-truncation drops
+    # below cutoff so the match fails. Try matching against catalog names
+    # that START WITH the OCR text instead. Requires the captured prefix to
+    # be at least 6 chars AND to cover at least 30% of the matched name
+    # length so a short generic prefix ("5.45") can't snipe an unrelated
+    # long name. When multiple catalog names share the prefix, prefer the
+    # shortest one (most specific to the captured fragment).
+    item_stripped = item_name.strip()
+    if len(item_stripped) >= 6:
+        prefix_lower = item_stripped.lower()
+        prefix_candidates = [
+            n for n in cache
+            if n.lower().startswith(prefix_lower)
+            and len(prefix_lower) >= 0.3 * len(n)
+        ]
+        if prefix_candidates:
+            hit = min(prefix_candidates, key=len)
+            print(f"[cache] prefix: {item_name!r} -> {hit!r}")
+            entry = cache[hit]
+            return {**entry, "matched_from": matched_from or item_name}
 
     # Cache populated but no name matches. Return None (not an empty result)
     # so the caller falls through to the cold-path GraphQL query — that's how
