@@ -121,12 +121,16 @@ const loadStatsNoticeShown = (): boolean =>
 // renderer unloads (e.g. app close right after F2).
 //
 // Event types:
-//   launch — app start (one per session)
-//   lookup — F2 hotkey lookup completed (success or error)
-// (The backend still accepts ad_impression/ad_click from older clients, but
-// the in-app ad slot was replaced by a donation nudge so we no longer emit
-// them.)
-const reportEvent = (eventType: "launch" | "lookup") => {
+//   launch          — app start (one per session)
+//   lookup          — F2 lookup that returned a priced item (success)
+//   lookup_nomatch  — F2 lookup matched no item (OCR/recognition miss)
+//   lookup_noprice  — matched an item with no market price (detail = public
+//                     catalog item id, NOT raw OCR/search text)
+// The last two are post-patch breakage signals: a spike after a game update
+// surfaces new/unrecognized items in the dashboard before users report it.
+// (ad_impression/ad_click still accepted server-side for old clients.)
+type StatsEvent = "launch" | "lookup" | "lookup_nomatch" | "lookup_noprice";
+const reportEvent = (eventType: StatsEvent, detail?: string) => {
   if (!loadStatsEnabled()) return;
   fetch(STATS_ENDPOINT, {
     method: "POST",
@@ -135,6 +139,7 @@ const reportEvent = (eventType: "launch" | "lookup") => {
       install_id: ensureInstallId(),
       event_type: eventType,
       version: APP_VERSION,
+      ...(detail ? { detail } : {}),
     }),
     keepalive: true,
   }).catch(() => {});
@@ -159,11 +164,48 @@ const sendFeedback = (lang: Lang) => {
   });
 };
 
+// Downscale + compress an image blob to a JPEG data URL so feedback
+// screenshots stay small (~100KB) for the base64-in-DB store. Caps the
+// longest edge at 1280px; falls back to the original data URL if anything
+// in the canvas path throws.
+const MAX_IMG_EDGE = 1280;
+const compressImage = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, MAX_IMG_EDGE / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("no 2d context");
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      } catch (e) {
+        reject(e);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("image decode failed"));
+    };
+    img.src = url;
+  });
+
 // In-app feedback → user's own backend (api.aquapado.com → Neon). Explicit
 // user action, so NOT gated on stats consent. install_id is attached so the
 // dev can spot duplicate reports from one user; it's an anonymous UUID.
 const FEEDBACK_ENDPOINT = "https://api.aquapado.com/priceoverlay/feedback";
-const submitFeedback = async (message: string): Promise<void> => {
+const submitFeedback = async (
+  message: string,
+  image?: string | null
+): Promise<void> => {
   const res = await fetch(FEEDBACK_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -171,6 +213,7 @@ const submitFeedback = async (message: string): Promise<void> => {
       install_id: ensureInstallId(),
       version: APP_VERSION,
       message,
+      ...(image ? { image } : {}),
     }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -273,6 +316,7 @@ type BuyOffer = {
 
 type LookupResult = {
   raw_text: string;
+  item_id: string | null;
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -914,6 +958,8 @@ function App() {
   // donate panel so the two don't stack.
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
+  // Attached screenshot as a compressed JPEG data URL (null = none).
+  const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
   const [feedbackStatus, setFeedbackStatus] = useState<
     "idle" | "sending" | "sent" | "error"
   >("idle");
@@ -1893,6 +1939,17 @@ function App() {
           setHistory(addToHistory(data));
           setCorrecting(false);
           if (loadSoundOn()) playDing(data.item_name != null);
+          // Outcome telemetry (breakage detection): classify the lookup.
+          if (data.item_name == null) {
+            reportEvent("lookup_nomatch");
+          } else if (data.flea_price == null && data.trader_price == null) {
+            // Matched but untradeable / no market price — send the public
+            // catalog id so the dashboard shows WHICH items (e.g. new patch
+            // items) are surfacing as priceless.
+            reportEvent("lookup_noprice", data.item_id ?? undefined);
+          } else {
+            reportEvent("lookup");
+          }
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
@@ -1901,14 +1958,13 @@ function App() {
           );
           setStatus("error");
           if (loadSoundOn()) playDing(false);
+          // Network/abort error — count it as a generic lookup attempt.
+          reportEvent("lookup");
         } finally {
           clearTimeout(timeoutId);
           // Start the auto-hide countdown only after fetch completes,
           // so a slow OCR call doesn't make the card disappear mid-lookup.
           scheduleHide();
-          // Anonymous engagement ping (success + error both count as one
-          // "lookup attempt"). Silent if user hasn't opted in.
-          reportEvent("lookup");
         }
       }
     );
@@ -2447,11 +2503,59 @@ function App() {
                   className="feedback-textarea"
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
+                  onPaste={(e) => {
+                    // Pasting a screenshot (Win+Shift+S → Ctrl+V) attaches it.
+                    const item = Array.from(e.clipboardData.items).find((it) =>
+                      it.type.startsWith("image/")
+                    );
+                    const blob = item?.getAsFile();
+                    if (blob) {
+                      e.preventDefault();
+                      compressImage(blob)
+                        .then(setFeedbackImage)
+                        .catch((err) =>
+                          log(`feedback: image paste failed — ${String(err)}`)
+                        );
+                    }
+                  }}
                   placeholder={t.feedbackPlaceholder}
                   rows={4}
                   maxLength={4000}
                   disabled={feedbackStatus === "sending"}
                 />
+                <div className="feedback-attach-row">
+                  {feedbackImage ? (
+                    <div className="feedback-thumb">
+                      <img src={feedbackImage} alt="" />
+                      <button
+                        className="feedback-thumb-x"
+                        title={t.feedbackImageRemove}
+                        onClick={() => setFeedbackImage(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="feedback-attach-label">
+                      📎 {t.feedbackAttachImage}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f)
+                            compressImage(f)
+                              .then(setFeedbackImage)
+                              .catch((err) =>
+                                log(`feedback: image pick failed — ${String(err)}`)
+                              );
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
                 <div className="feedback-actions">
                   <span
                     className={`feedback-status${
@@ -2473,9 +2577,10 @@ function App() {
                       }
                       setFeedbackStatus("sending");
                       try {
-                        await submitFeedback(msg);
+                        await submitFeedback(msg, feedbackImage);
                         setFeedbackStatus("sent");
                         setFeedbackText("");
+                        setFeedbackImage(null);
                         // Auto-close shortly after a successful send.
                         window.setTimeout(() => {
                           setShowFeedback(false);
@@ -3324,8 +3429,19 @@ function App() {
                   : null;
               const bestTraderName =
                 result.sell_for[0]?.name ?? null;
+              // Untradeable item (e.g. new quest keycards/items from a patch):
+              // no flea AND no trader price. Show a clear notice instead of
+              // two empty "—" rows that read like a malfunction.
+              const noMarketPrice =
+                result.flea_price == null &&
+                result.trader_price == null &&
+                (result.sell_for?.length ?? 0) === 0;
               return (
                 <div className="prices">
+                  {noMarketPrice ? (
+                    <div className="no-market-note">{t.noMarketPrice}</div>
+                  ) : (
+                    <>
                   <div className="price">
                     <span className="label">
                       {t.flea}
@@ -3384,6 +3500,8 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.trader_price)}</span>
                   </div>
+                    </>
+                  )}
                   {region.showBuyFor &&
                     result.buy_for &&
                     result.buy_for.length > 0 && (

@@ -127,7 +127,9 @@ def _has_tooltip_background(hsv: np.ndarray, bbox) -> bool:
 
 
 def recognize_text_fragments(
-    image: np.ndarray, langs: tuple[str, ...] = ("ko", "en")
+    image: np.ndarray,
+    langs: tuple[str, ...] = ("ko", "en"),
+    skip_bg_filter: bool = False,
 ) -> list[str]:
     """Return OCR text fragments, filtered to keep only text that sits on
     an EFT tooltip background. Drops text painted onto neighboring
@@ -138,7 +140,14 @@ def recognize_text_fragments(
     right), which matches EFT tooltip layout (item name at the top).
     Falls back to unfiltered fragments when the filter rejects everything
     so we never break tooltips with unusual backgrounds (e.g. raid menus,
-    different game UI themes)."""
+    different game UI themes).
+
+    skip_bg_filter: set True for GROUND-loot captures. The tooltip-background
+    heuristic is tuned for the inventory tooltip's dark-grey panel; ground
+    item labels are light text painted directly on the game world (grass,
+    concrete, sky), so the filter would reject the real label as "not a
+    tooltip". For ground we keep every non-empty fragment and let the
+    length-based candidate scoring downstream pick the item name."""
     reader = _get_reader(langs)
     gray = _to_gray(image)
     # detail=1 returns (bbox, text, confidence) so we can sample the
@@ -147,6 +156,9 @@ def recognize_text_fragments(
     results = reader.readtext(gray, detail=1, paragraph=False)
     if not results:
         return []
+    # Ground loot: no tooltip background to test against — keep all text.
+    if skip_bg_filter:
+        return [t.strip() for _bbox, t, _conf in results if (t or "").strip()]
     # Convert to HSV once for background sampling. mss captures BGRA; cv2
     # has no direct BGRA→HSV so we bridge through BGR first.
     hsv = None

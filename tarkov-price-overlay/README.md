@@ -83,6 +83,7 @@
 앱 개선과 사용 규모 파악을 위해 **익명 사용 통계**만 수집합니다 (Vercel + Neon, 엔드포인트 `api.aquapado.com/priceoverlay/events`).
 
 - ✅ 수집: 앱 실행/F2 사용 횟수, 앱 버전, 국가 코드, 익명 설치 ID(무작위 UUID, 재설치 시 변경)
+- ✅ 조회 실패/시세 없음 시: 매칭된 **공개 아이템 ID**(검색어·OCR 텍스트 아님 — 패치 후 신규 아이템 자동 감지용)
 - ❌ 절대 수집 안 함: 검색한 아이템 이름, 화면, 마우스 좌표, 게임 내용, 개인정보, IP
 - ⚙️ opt-out — 기본 ON, 첫 실행 1회 안내, 설정에서 끄기 가능. 피드백(설정 → ✉)도 같은 백엔드에 저장됨
 - 🔓 수집 코드는 `src/App.tsx`의 `reportEvent` 참고
@@ -238,6 +239,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
+- **v1.1.0** — **인앱 피드백** (메일 대신 앱에서 바로 전송, **스크린샷 첨부** 가능) + **카드 크기 드래그 조절** (우측 하단 모서리로 너비·높이, 설정 패널 높이까지 한 핸들로 통합) + **거래 불가 아이템 명확 표시** (신규 퀘스트 키카드 등 플리·상인 시세 없는 아이템을 "거래 불가"로 안내 — Icebreaker 신규 아이템 대응) + **땅바닥 아이템 인식 정확도 개선** (인벤토리용 배경 필터가 땅바닥 라벨을 버리던 문제 수정) + **신규 탄약 caliber 자동 대응** (수동 추가 없이 새 caliber 자동 포맷) + **후원 안내 개선** + **익명 사용 통계** (opt-out, 설정에서 끄기 — 패치 후 신규 아이템 이슈 조기 감지용) + 닫기 시 트레이로 (트레이 우클릭 → 종료)
 - **v1.0.11** — **캡처 영역 설정 모달화** (청록 십자선이 마우스 기준점 표시, 슬라이더 미세 조정 가능) + **듀얼 모니터 복구** (오버레이가 분리된 모니터에 있어 안 보일 때 자동으로 주 모니터로 스냅 + 트레이 메뉴 '창 위치 복구') + **OCR 정확도 강화**: 옆 아이콘 텍스트(RatCola 등)가 같이 잡혀도 fragment 다중 후보 + best-match 점수로 의도한 아이템 선택, 짧은 fragment가 긴 카탈로그명 가로채는 케이스 차단, 캡처 박스보다 긴 아이템명도 prefix 매칭으로 식별 + **탄박스도 탄약 매트릭스 자동 표시** (탄약 팩 호버 시 같은 caliber 비교표) + **쇄빙선(0.16) 신규 caliber 지원** (.308 ME / 9.3x64 표시명 추가) + lookup 속도 미세 최적화
 - **v1.0.10** — **자동 업데이트** (설정 켜두면 새 버전 알림 → '지금 설치' 한 번으로 완료) + **은신처 레벨 설정** (설정에서 현재 업그레이드 레벨 직접 입력 → 완료한 시설은 카드에서 자동 흐리게/취소선 표시) + **퀘스트 진행도 PVP/PVE 서버별 분리** + 퀘스트 동기화 수동 폴더 선택 버튼 + 퀘스트 표시 모드 드롭다운
 - **v1.0.9** — 인스톨러가 실행 중인 오버레이를 자동 종료(업데이트 시 충돌 없음) + **게임 언어 분리 설정** (UI는 한국어인데 영문판 게임 하시는 분들을 위해 게임 클라이언트 언어를 따로 지정 가능) + 퀘스트 동기화 라벨 명확화
@@ -510,6 +512,7 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
+- **v1.1.0** — **In-app feedback** (posts to the DB instead of mailto; optional screenshot, pasted or picked, client-compressed) + **unified drag-resize handle** (bottom-right corner sizes card width/height; in settings it sizes the settings panel — replaces the separate ns-resize bar; absolute-positioned so it tracks the visible corner) + **"untradeable" notice** when an item has no flea AND no trader price (new quest keycards from Icebreaker read as broken otherwise) + **ground-loot OCR fix** (the tooltip-background HSV filter was dropping ground labels that sit on the game world — skipped for ground captures) + **dynamic caliber formatting** (new ammo calibers auto-format e.g. 762x51→7.62x51 without a code edit) + **opt-out anonymous stats** with lookup-outcome telemetry (nomatch/noprice + matched item id) for post-patch breakage detection + ad slot replaced with a donation nudge.
 - **v1.0.11** — **Capture-region modal** with a cyan crosshair marking the mouse reference point + finer-grained sliders (±500 offset, 1000 max) + **dual-monitor recovery** (auto-snap to primary on startup when the saved position is off-screen + new tray menu "Recover position") + **OCR robustness**: multi-candidate fragment retry with score-based selection so the actual tooltip text wins over icon-baked labels (RatCola, M882…), plus prefix fallback for long item names that exceed the capture box + **ammo-box matrix** (hovering ammo packs now opens the caliber-comparison panel) + **Icebreaker (0.16) compatibility** — new calibers `.308 ME` and `9.3x64` displayed properly + lookup hot-path micro-optimizations.
 - **v1.0.10** — **Auto-update** (toggle on → get notified, click 'Install now', done) + **Hideout level tracker** (set your current upgrade level per station in Settings → completed stations dim out on the price card automatically) + **per-mode quest tracking** (PVP/PVE stored separately) + manual folder picker for quest sync + quest display mode dropdown.
 - **v1.0.9** — Installer now auto-closes the running overlay before install/upgrade (no more half-uninstalled state). New **Game language** setting separate from UI language — for players running an English EFT client with a Korean UI (or vice versa). Quest-sync label clarified.

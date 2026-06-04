@@ -141,6 +141,7 @@ class BuyOffer(BaseModel):
 
 class LookupResponse(BaseModel):
     raw_text: str
+    item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
     width: int | None = None  # inventory grid units (1, 2, ...)
@@ -195,6 +196,7 @@ def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> L
     current_status = pve_status if game_mode == "pve" else pvp_status
     return LookupResponse(
         raw_text=raw_text,
+        item_id=price.get("id"),
         item_name=price.get("name"),
         short_name=price.get("short_name"),
         width=price.get("width"),
@@ -399,7 +401,11 @@ def _capture_and_lookup(
     t0 = time.perf_counter()
     image = capture_region(x, y, width, height)
     t1 = time.perf_counter()
-    fragments = recognize_text_fragments(image, langs=("ko", "en"))
+    # Ground labels sit on the game world, not a dark tooltip panel, so the
+    # tooltip-background filter would wrongly drop them — skip it for ground.
+    fragments = recognize_text_fragments(
+        image, langs=("ko", "en"), skip_bg_filter=(label == "ground")
+    )
     t2 = time.perf_counter()
     text = " ".join(fragments).strip()
     print(f"[lookup] OCR({label}): {text!r} ({len(fragments)} fragments)")

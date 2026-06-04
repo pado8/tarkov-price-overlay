@@ -1006,6 +1006,49 @@ html, body, #root {
 .feedback-textarea:disabled {
   opacity: 0.6;
 }
+.feedback-attach-row {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+.feedback-attach-label {
+  font-size: var(--card-fs-xs);
+  color: var(--gold-text);
+  cursor: pointer;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+}
+.feedback-attach-label:hover {
+  background: rgba(200, 170, 100, 0.1);
+}
+.feedback-thumb {
+  position: relative;
+  display: inline-block;
+}
+.feedback-thumb img {
+  max-width: 100px;
+  max-height: 70px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  display: block;
+}
+.feedback-thumb-x {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 16px;
+  height: 16px;
+  line-height: 14px;
+  text-align: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border-default);
+  background: rgba(20, 20, 20, 0.95);
+  color: var(--warning);
+  cursor: pointer;
+  font-size: 10px;
+}
 .feedback-actions {
   display: flex;
   align-items: center;
@@ -1053,6 +1096,16 @@ html, body, #root {
 
 /* Donation nudge above the feedback/donate buttons in settings. Warm
    gold tone, gentle — replaces the old ad slot. */
+/* Shown in place of the flea/trader rows when an item has no market price
+   at all (untradeable quest/keycard items) — so it reads as intentional,
+   not a lookup failure. */
+.no-market-note {
+  font-size: var(--card-fs-sm);
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 2px 0;
+}
+
 .support-note {
   font-size: var(--card-fs-xs);
   line-height: 1.4;

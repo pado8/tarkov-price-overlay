@@ -1,4 +1,5 @@
 import difflib
+import re
 import threading
 import time
 
@@ -298,7 +299,30 @@ def _caliber_display(raw: str) -> str:
         "86x70":      ".338 LM",
         "93x64":      "9.3x64",
     }
-    return overrides.get(s, s)
+    if s in overrides:
+        return overrides[s]
+    # Dynamic fallback for NEW calibers not yet in the override map (so a game
+    # patch's new ammo shows e.g. "7.62x51" instead of the raw "762x51" and
+    # never needs a manual code edit). Only reshapes the clean "<bore>x<case>"
+    # pattern; irregular shapes (12g, 366TKM, …) fall through unchanged.
+    m = re.match(r"^(\d+)x(.+)$", s)
+    if m:
+        bore, rest = m.group(1), m.group(2)
+        if len(bore) == 2:        # 57  -> 5.7
+            bore = f"{bore[0]}.{bore[1]}"
+        elif len(bore) == 3:      # 762 -> 7.62 ; 545 -> 5.45 ; 127 -> 12.7
+            # The 12.7mm family (127xNN) is the lone XY.Z exception; every
+            # other 3-digit bore is X.YZ.
+            bore = (
+                f"{bore[:2]}.{bore[2]}"
+                if bore.startswith("12")
+                else f"{bore[0]}.{bore[1:]}"
+            )
+        elif len(bore) >= 4:      # 1143 -> 11.43
+            bore = f"{bore[:-2]}.{bore[-2:]}"
+        # 1 digit (9x19) stays as-is
+        return f"{bore}x{rest}"
+    return s
 
 
 def _fetch_ammo(lang: str) -> dict:
@@ -619,6 +643,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     caliber_display = _caliber_display(caliber_raw) if caliber_raw else None
 
     return {
+        "id": item.get("id"),
         "name": item["name"],
         "short_name": item.get("shortName"),
         "width": item.get("width"),
@@ -771,6 +796,7 @@ def _query_by_name(name: str, lang: str, game_mode: str) -> list[dict]:
 
 def _empty_result(matched_from: str | None = None) -> dict:
     return {
+        "id": None,
         "name": None,
         "short_name": None,
         "width": None,
