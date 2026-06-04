@@ -391,6 +391,25 @@ fn hide_preview_rect(app: tauri::AppHandle, label: String) -> Result<(), String>
     Ok(())
 }
 
+/// True when the running .exe is part of a portable ZIP distribution.
+///
+/// portable.ps1 drops a `_portable.marker` file next to the exe at build
+/// time; NSIS installs never have it. We use that to gate the in-app
+/// auto-updater: portable users get a "open downloads page" link instead
+/// of `update.downloadAndInstall()`, which would otherwise install a
+/// *second* copy at the default NSIS path and leave the portable folder
+/// pinned at the old version with no exe replacement.
+#[tauri::command]
+fn is_portable_install() -> bool {
+    let Ok(exe_path) = std::env::current_exe() else {
+        return false;
+    };
+    let Some(exe_dir) = exe_path.parent() else {
+        return false;
+    };
+    exe_dir.join("_portable.marker").exists()
+}
+
 #[tauri::command]
 fn exit_app(app: tauri::AppHandle) {
     if let Some(state) = app.try_state::<IsQuitting>() {
@@ -514,6 +533,7 @@ pub fn run() {
             recover_window_position,
             show_preview_rect,
             hide_preview_rect,
+            is_portable_install,
             exit_app
         ])
         .setup(|app| {

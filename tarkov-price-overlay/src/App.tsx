@@ -79,10 +79,74 @@ const FEEDBACK_EMAIL = "floe9235@gmail.com";
 const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
 const PAYPAL_URL = "https://paypal.me/tarkovoverlay";
 
+// Anonymous usage stats — user-controlled, opt-in. Points at the user's
+// own Cloudflare Worker (api.aquapado.com → D1) so all data lives on their
+// own infra; no third-party analytics service is involved. Failures are
+// always silent so a network blip never affects UX.
+const STATS_ENDPOINT = "https://api.aquapado.com/priceoverlay/events";
+const INSTALL_ID_KEY = "tarkov.installId";
+const STATS_CONSENT_KEY = "tarkov.statsConsent";
+
+// Public downloads page. Portable users get sent here from the update
+// banner instead of going through `update.downloadAndInstall()`, which
+// silently installs a *second* copy at the default NSIS path and leaves
+// the portable folder's exe pinned at the old version.
+const RELEASES_PAGE_URL =
+  "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest";
+
+// Generate-once anonymous device identifier. Persists in localStorage so a
+// re-install (which wipes localStorage) re-generates a new ID — that's the
+// intended DAU-counting semantic, not a stable user ID across reinstalls.
+const ensureInstallId = (): string => {
+  let id = localStorage.getItem(INSTALL_ID_KEY);
+  if (!id) {
+    // crypto.randomUUID is available in WebView2 / Tauri's webview.
+    id = crypto.randomUUID();
+    localStorage.setItem(INSTALL_ID_KEY, id);
+  }
+  return id;
+};
+
+// Opt-out model: anonymous stats are ON by default and only suppressed when
+// the user explicitly turns them off (a brief one-time notice tells them so,
+// without blocking). Absent key = enabled.
+const STATS_NOTICE_KEY = "tarkov.statsNoticeShown";
+const loadStatsEnabled = (): boolean =>
+  localStorage.getItem(STATS_CONSENT_KEY) !== "false";
+const loadStatsNoticeShown = (): boolean =>
+  localStorage.getItem(STATS_NOTICE_KEY) === "true";
+
+// Fire-and-forget event reporter. Skips only when the user has explicitly
+// disabled stats. `keepalive: true` lets the request finish even if the
+// renderer unloads (e.g. app close right after F2).
+//
+// Event types:
+//   launch — app start (one per session)
+//   lookup — F2 hotkey lookup completed (success or error)
+// (The backend still accepts ad_impression/ad_click from older clients, but
+// the in-app ad slot was replaced by a donation nudge so we no longer emit
+// them.)
+const reportEvent = (eventType: "launch" | "lookup") => {
+  if (!loadStatsEnabled()) return;
+  fetch(STATS_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      install_id: ensureInstallId(),
+      event_type: eventType,
+      version: APP_VERSION,
+    }),
+    keepalive: true,
+  }).catch(() => {});
+};
+
 const hideToTray = () => {
   invoke("hide_to_tray").catch(() => {});
 };
 
+// Mailto fallback — kept as a secondary option for users who'd rather email
+// (e.g. to attach a screenshot). The primary path is now the in-app form
+// that POSTs to FEEDBACK_ENDPOINT so feedback lands in the DB directly.
 const sendFeedback = (lang: Lang) => {
   const t = T[lang];
   const subject = encodeURIComponent(t.feedbackSubject);
@@ -93,6 +157,23 @@ const sendFeedback = (lang: Lang) => {
   openUrl(url).catch((e) => {
     log(`feedback: openUrl failed — ${String(e)}`);
   });
+};
+
+// In-app feedback → user's own backend (api.aquapado.com → Neon). Explicit
+// user action, so NOT gated on stats consent. install_id is attached so the
+// dev can spot duplicate reports from one user; it's an anonymous UUID.
+const FEEDBACK_ENDPOINT = "https://api.aquapado.com/priceoverlay/feedback";
+const submitFeedback = async (message: string): Promise<void> => {
+  const res = await fetch(FEEDBACK_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      install_id: ensureInstallId(),
+      version: APP_VERSION,
+      message,
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 };
 
 
@@ -333,6 +414,12 @@ const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const ADVANCED_KEY = "tarkov.advancedMode";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
+// User-overridden card width (px). null = auto (scales with fontSize).
+// Set by dragging the resize handle in the card's bottom-right corner.
+const CARD_WIDTH_KEY = "tarkov.cardWidth";
+// User-overridden card height (px). null = auto (fits content, clamped to
+// screen). Set by dragging the resize handle in the card's bottom-right corner.
+const CARD_HEIGHT_KEY = "tarkov.cardHeight";
 // Capture-region preview anchor mode. "center" pins the rectangles to the
 // primary monitor center while the user adjusts sliders (so rectangles stay
 // put for fine adjustment); "cursor" keeps the legacy cursor-following
@@ -349,6 +436,22 @@ function loadAdvanced(): boolean {
   return localStorage.getItem(ADVANCED_KEY) === "true";
 }
 
+function loadCardWidth(): number | null {
+  const raw = localStorage.getItem(CARD_WIDTH_KEY);
+  if (raw == null) return null;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(CARD_W_MIN, Math.min(CARD_W_MAX, n));
+}
+
+function loadCardHeight(): number | null {
+  const raw = localStorage.getItem(CARD_HEIGHT_KEY);
+  if (raw == null) return null;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return null;
+  return Math.max(CARD_H_MIN, n);
+}
+
 function loadQuestDisplayMode(): "pvp" | "pve" {
   // Default PVE — most current players run PVE-only, and matches the
   // historical legacy migration default for single-mode users.
@@ -357,6 +460,14 @@ function loadQuestDisplayMode(): "pvp" | "pve" {
 }
 const WIN_BASE_W = 800;
 const FONT_DEFAULT = 13;
+// Card width drag-resize bounds (px). Min keeps the layout from collapsing;
+// max stays within the 800px logical window so the card never clips at the
+// right edge. Auto width (no override) is 280×fontSize/13 ≈ 280–431px.
+const CARD_W_MIN = 240;
+const CARD_W_MAX = 760;
+// Card height drag-resize floor (px). The ceiling is the screen height
+// (screenMaxH) computed at runtime. null = auto (fits content).
+const CARD_H_MIN = 80;
 // Overlay padding (12px top + 12px bottom) — kept in sync with .overlay in App.css.
 const WIN_VPAD = 24;
 // Leave a small margin from the screen edge so the OS taskbar / window chrome
@@ -720,6 +831,17 @@ function App() {
   const [autoUpdateAnnounceDismissed, setAutoUpdateAnnounceDismissed] = useState<boolean>(
     () => localStorage.getItem(AUTOUPDATE_ANNOUNCE_KEY) === "true"
   );
+  // Anonymous stats are opt-out: enabled by default, with a one-time
+  // informational notice (not a blocking consent gate).
+  const [statsEnabled, setStatsEnabled] = useState<boolean>(loadStatsEnabled);
+  const [statsNoticeShown, setStatsNoticeShown] = useState<boolean>(
+    loadStatsNoticeShown
+  );
+  // True when the running exe was launched from a portable ZIP (detected
+  // via the `_portable.marker` file dropped by portable.ps1). Portable
+  // users see a "open downloads page" link instead of the in-app NSIS
+  // installer flow, which would install a second copy elsewhere.
+  const [isPortable, setIsPortable] = useState<boolean>(false);
   const [hideoutLevels, setHideoutLevels] = useState<Record<string, number>>(
     () => {
       try {
@@ -735,6 +857,34 @@ function App() {
   // both as "no matrix" for rendering).
   const [ammoData, setAmmoData] = useState<AmmoData | null>(null);
   const [cardVisible, setCardVisible] = useState(true);
+  // User-dragged card width override (px). null = auto (scales with fontSize).
+  const [cardWidth, setCardWidth] = useState<number | null>(loadCardWidth);
+  // User-dragged card height override (px). null = auto (fits content).
+  const [cardHeight, setCardHeight] = useState<number | null>(loadCardHeight);
+  // Mirror of cardHeight for the ResizeObserver callback (closures capture a
+  // stale state value; the observer must read the current override).
+  const cardHeightRef = useRef<number | null>(cardHeight);
+  cardHeightRef.current = cardHeight;
+  // Mirrors for the window-resize observer (its closure is created once on
+  // mount with [] deps, so it must read refs to see current values rather
+  // than stale captures).
+  const showSettingsRef = useRef<boolean>(showSettings);
+  showSettingsRef.current = showSettings;
+  const captureModalOpenRef = useRef<boolean>(captureModalOpen);
+  captureModalOpenRef.current = captureModalOpen;
+  // The card-height override applies ONLY to the plain price-card view. The
+  // settings panel and the capture modal each render full-height content
+  // with their own sizing, so the override must yield to them — otherwise
+  // the card box stays locked to the dragged height while the window sizes
+  // to the sub-panel's content, leaving an empty gap or clipping it.
+  const cardHeightOverrideForResize = (): number | null =>
+    showSettingsRef.current || captureModalOpenRef.current
+      ? null
+      : cardHeightRef.current;
+  // True while the bottom-right resize handle is being dragged. Keeps the
+  // click-through poll from re-enabling pass-through when the cursor briefly
+  // leaves the card rect mid-drag (the window would otherwise eat the drag).
+  const resizingRef = useRef(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
   const [correctionInput, setCorrectionInput] = useState<string>("");
@@ -760,6 +910,13 @@ function App() {
   // it in a ref (not state) because mutating it shouldn't trigger renders
   // and it's not part of the rendered UI.
   const pendingUpdateRef = useRef<Update | null>(null);
+  // In-app feedback form (posts to the DB). Mutually exclusive with the
+  // donate panel so the two don't stack.
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<
+    "idle" | "sending" | "sent" | "error"
+  >("idle");
   const [showDonate, setShowDonate] = useState(false);
   // Default donate tab follows the user's UI language (Korean → KakaoPay first,
   // others → PayPal first). They can flip with the tabs.
@@ -834,6 +991,26 @@ function App() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Anonymous launch ping. Opt-out: fires by default, suppressed only if the
+  // user previously turned stats off. reportEvent rechecks at call-time, so
+  // toggling off mid-session also stops future pings.
+  useEffect(() => {
+    reportEvent("launch");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // One-shot check on mount: is this exe the portable distribution?
+  // Cached for the session — the marker file doesn't move while the app
+  // runs. Result drives the update-banner UI (Install vs Open page).
+  useEffect(() => {
+    invoke<boolean>("is_portable_install")
+      .then((v) => {
+        setIsPortable(v);
+        log(`portable: ${v}`);
+      })
+      .catch(() => {});
   }, []);
 
   // Live capture-region preview: while the user is editing offsets, two
@@ -1092,6 +1269,13 @@ function App() {
 
     const poll = async () => {
       if (cancelled) return;
+      // While dragging the resize handle, keep capturing cursor events even
+      // if the pointer slips outside the (shrinking) card rect.
+      if (resizingRef.current) {
+        setIgnore(false);
+        if (!cancelled) setTimeout(poll, 40);
+        return;
+      }
       try {
         const cardEl = cardRef.current;
         if (cardEl) {
@@ -1593,7 +1777,15 @@ function App() {
     if (!el) return;
     let raf = 0;
     const apply = () => {
-      const h = Math.ceil(el.scrollHeight) + WIN_VPAD;
+      // When the user has dragged an explicit card height (price-card view
+      // only — settings mode returns null), size the window to that override
+      // instead of the content's scrollHeight. Otherwise the window stays at
+      // content height and clips the dragged-taller card, making vertical
+      // resize appear to do nothing.
+      const override = cardHeightOverrideForResize();
+      const contentH =
+        override != null ? override : Math.ceil(el.scrollHeight);
+      const h = contentH + WIN_VPAD;
       const clamped = Math.min(Math.max(h, 100), screenMaxH());
       getCurrentWindow()
         .setSize(new LogicalSize(WIN_BASE_W, clamped))
@@ -1714,6 +1906,9 @@ function App() {
           // Start the auto-hide countdown only after fetch completes,
           // so a slow OCR call doesn't make the card disappear mid-lookup.
           scheduleHide();
+          // Anonymous engagement ping (success + error both count as one
+          // "lookup attempt"). Silent if user hasn't opted in.
+          reportEvent("lookup");
         }
       }
     );
@@ -1824,6 +2019,113 @@ function App() {
     }
   };
 
+  // Unified bottom-right resize handle. Horizontal always resizes the card
+  // width. Vertical is context-aware: in settings mode it resizes the
+  // settings scroll panel (folding in what used to be a separate ns-resize
+  // bar under the panel), otherwise it resizes the card height. This is the
+  // single resize affordance for every view. Double-click resets.
+  const onResizeHandleDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const inSettings = showSettings && !captureModalOpen;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const rect = cardRef.current?.getBoundingClientRect();
+    const startW =
+      rect?.width ?? Math.round((280 * region.fontSize) / FONT_DEFAULT);
+    const startH = rect?.height ?? 200;
+    const settingsEl = settingsRef.current;
+    const startSettingsH = settingsEl?.offsetHeight ?? 400;
+    const maxH = screenMaxH() - WIN_VPAD;
+    const clampW = (raw: number) =>
+      Math.max(CARD_W_MIN, Math.min(CARD_W_MAX, Math.round(raw)));
+    const clampH = (raw: number) =>
+      Math.max(CARD_H_MIN, Math.min(maxH, Math.round(raw)));
+    // Settings panel bounds match the old dedicated drag-bar (200–2000px).
+    const clampSettingsH = (raw: number) =>
+      Math.max(200, Math.min(2000, Math.round(raw)));
+    resizingRef.current = true;
+    cancelHideTimer();
+    document.body.style.cursor = "nwse-resize";
+    // rAF-throttle the updates: pointermove can fire far faster than the
+    // display refresh (gaming mice poll at 500–1000 Hz). Coalescing to one
+    // update per frame keeps the drag smooth instead of flooding React /
+    // layout with redundant work.
+    let pendingX = startX;
+    let pendingY = startY;
+    let moveRaf = 0;
+    const flushMove = () => {
+      moveRaf = 0;
+      setCardWidth(clampW(startW + (pendingX - startX)));
+      if (inSettings) {
+        // Resize the settings scroll box directly; its ResizeObserver
+        // persists the height and grows/shrinks the window to match.
+        if (settingsEl)
+          settingsEl.style.height = `${clampSettingsH(
+            startSettingsH + (pendingY - startY)
+          )}px`;
+      } else {
+        setCardHeight(clampH(startH + (pendingY - startY)));
+      }
+    };
+    const onMove = (ev: PointerEvent) => {
+      pendingX = ev.clientX;
+      pendingY = ev.clientY;
+      if (!moveRaf) moveRaf = requestAnimationFrame(flushMove);
+    };
+    const onUp = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      if (moveRaf) cancelAnimationFrame(moveRaf);
+      resizingRef.current = false;
+      document.body.style.cursor = "";
+      // Apply final exact values synchronously (the last rAF may not have
+      // flushed the very last move before pointerup).
+      const finalW = clampW(startW + (ev.clientX - startX));
+      setCardWidth(finalW);
+      try {
+        localStorage.setItem(CARD_WIDTH_KEY, String(finalW));
+      } catch {}
+      if (inSettings) {
+        const finalSH = clampSettingsH(startSettingsH + (ev.clientY - startY));
+        if (settingsEl) settingsEl.style.height = `${finalSH}px`;
+        try {
+          localStorage.setItem(SETTINGS_HEIGHT_KEY, String(finalSH));
+        } catch {}
+      } else {
+        const finalH = clampH(startH + (ev.clientY - startY));
+        setCardHeight(finalH);
+        try {
+          localStorage.setItem(CARD_HEIGHT_KEY, String(finalH));
+        } catch {}
+      }
+      scheduleHide();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+
+  const resetCardSize = () => {
+    // Width resets in every mode (the handle drives width everywhere).
+    setCardWidth(null);
+    try {
+      localStorage.removeItem(CARD_WIDTH_KEY);
+    } catch {}
+    if (showSettings && !captureModalOpen) {
+      // Settings mode: the vertical axis controls the settings panel, so
+      // reset that back to its CSS default (clear inline height + key).
+      if (settingsRef.current) settingsRef.current.style.height = "";
+      try {
+        localStorage.removeItem(SETTINGS_HEIGHT_KEY);
+      } catch {}
+    } else {
+      setCardHeight(null);
+      try {
+        localStorage.removeItem(CARD_HEIGHT_KEY);
+      } catch {}
+    }
+  };
+
   const submitCorrection = () => {
     const trimmed = correctionInput.trim();
     if (!trimmed || !result) return;
@@ -1841,7 +2143,15 @@ function App() {
         className={`card${cardVisible ? "" : " card-hidden"}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
-          width: `${Math.round(280 * region.fontSize / FONT_DEFAULT)}px`,
+          width: `${cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT)}px`,
+          // Explicit height only when the user dragged one AND we're in the
+          // plain price-card view; otherwise auto (content height, capped by
+          // max-height in CSS). Settings/capture-modal must not inherit the
+          // card-height override — they size themselves and the window-resize
+          // observer ignores the override in those modes too (kept in sync).
+          ...(cardHeight != null && !showSettings && !captureModalOpen
+            ? { height: `${cardHeight}px`, maxHeight: `${cardHeight}px` }
+            : {}),
           // Auto-hide already handles the full 0→opacity transition via
           // .card-hidden. We only dim while visible so the fade-out can
           // still drop to 0 without fighting the user's preference.
@@ -1919,19 +2229,73 @@ function App() {
           </div>
         </div>
 
+        {!statsNoticeShown && (
+          <div className="consent-banner">
+            <div className="consent-opensource">{t.statsConsentOpenSource}</div>
+            <div className="consent-text">{t.statsConsentBody}</div>
+            <div className="consent-actions">
+              <button
+                className="reset-btn consent-btn-accept"
+                onClick={() => {
+                  // "Got it" — dismiss the one-time notice; stats stay on.
+                  localStorage.setItem(STATS_NOTICE_KEY, "true");
+                  setStatsNoticeShown(true);
+                }}
+              >
+                {t.statsConsentAccept}
+              </button>
+              <button
+                className="reset-btn"
+                onClick={() => {
+                  // Turn stats off and dismiss the notice in one click.
+                  localStorage.setItem(STATS_CONSENT_KEY, "false");
+                  localStorage.setItem(STATS_NOTICE_KEY, "true");
+                  setStatsEnabled(false);
+                  setStatsNoticeShown(true);
+                }}
+              >
+                {t.statsConsentDecline}
+              </button>
+            </div>
+          </div>
+        )}
+
         {updateInfo && updateInfo.version !== dismissedUpdate && (
           <div className="update-banner">
             {updatePhase === "idle" && (
               <>
                 <span className="update-text">
                   🆕 {t.updateAvailable} <strong>v{updateInfo.version}</strong>
+                  {isPortable && (
+                    <span className="update-portable-hint">
+                      {" "}— {t.updatePortableHint}
+                    </span>
+                  )}
                 </span>
-                <button
-                  className="reset-btn update-btn"
-                  onClick={installUpdate}
-                >
-                  {t.updateInstall}
-                </button>
+                {isPortable ? (
+                  // Portable users: send them to the downloads page rather
+                  // than firing downloadAndInstall(), which would install a
+                  // second copy at the default NSIS path and leave the
+                  // portable folder untouched.
+                  <button
+                    className="reset-btn update-btn"
+                    onClick={() =>
+                      openUrl(RELEASES_PAGE_URL).catch((e) =>
+                        log(`update: open releases page failed — ${String(e)}`)
+                      )
+                    }
+                    title={t.updatePortableHint}
+                  >
+                    {t.updateOpenPage}
+                  </button>
+                ) : (
+                  <button
+                    className="reset-btn update-btn"
+                    onClick={installUpdate}
+                  >
+                    {t.updateInstall}
+                  </button>
+                )}
                 <button
                   className="settings-btn"
                   onClick={() => setDismissedUpdate(updateInfo.version)}
@@ -2053,11 +2417,15 @@ function App() {
 
         {showSettings && !captureModalOpen && (
           <div className="settings" ref={settingsRef}>
+            <div className="support-note">{t.supportNote}</div>
             <div className="settings-row settings-feedback-row">
               <button
                 className="reset-btn feedback-btn"
-                onClick={() => sendFeedback(region.lang)}
-                title={`mailto:${FEEDBACK_EMAIL}`}
+                onClick={() => {
+                  setShowFeedback((s) => !s);
+                  setFeedbackStatus("idle");
+                  setShowDonate(false);
+                }}
               >
                 ✉ {t.feedback}
               </button>
@@ -2066,12 +2434,71 @@ function App() {
                 onClick={() => {
                   setShowDonate((s) => !s);
                   setDonateCopied(false);
+                  setShowFeedback(false);
                 }}
                 title={t.donateTitle}
               >
                 💝 {t.donate}
               </button>
             </div>
+            {showFeedback && (
+              <div className="feedback-panel">
+                <textarea
+                  className="feedback-textarea"
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder={t.feedbackPlaceholder}
+                  rows={4}
+                  maxLength={4000}
+                  disabled={feedbackStatus === "sending"}
+                />
+                <div className="feedback-actions">
+                  <span
+                    className={`feedback-status${
+                      feedbackStatus === "error" ? " error" : ""
+                    }${feedbackStatus === "sent" ? " sent" : ""}`}
+                  >
+                    {feedbackStatus === "sending" && t.feedbackSending}
+                    {feedbackStatus === "sent" && t.feedbackSuccess}
+                    {feedbackStatus === "error" && t.feedbackError}
+                  </span>
+                  <button
+                    className="reset-btn feedback-send-btn"
+                    disabled={feedbackStatus === "sending"}
+                    onClick={async () => {
+                      const msg = feedbackText.trim();
+                      if (!msg) {
+                        setFeedbackStatus("error");
+                        return;
+                      }
+                      setFeedbackStatus("sending");
+                      try {
+                        await submitFeedback(msg);
+                        setFeedbackStatus("sent");
+                        setFeedbackText("");
+                        // Auto-close shortly after a successful send.
+                        window.setTimeout(() => {
+                          setShowFeedback(false);
+                          setFeedbackStatus("idle");
+                        }, 1500);
+                      } catch (err) {
+                        log(`feedback: submit failed — ${String(err)}`);
+                        setFeedbackStatus("error");
+                      }
+                    }}
+                  >
+                    {t.feedbackSend}
+                  </button>
+                </div>
+                <button
+                  className="feedback-mail-link"
+                  onClick={() => sendFeedback(region.lang)}
+                  title={`mailto:${FEEDBACK_EMAIL}`}
+                >
+                  {t.feedbackOr} {t.feedbackAltMail}
+                </button>
+              </div>
+            )}
             {showDonate && (() => {
               const activeUrl = donateTab === "kakao" ? KAKAOPAY_URL : PAYPAL_URL;
               const activeHint =
@@ -2153,6 +2580,21 @@ function App() {
                 </div>
               );
             })()}
+            <div className="settings-row" title={t.statsToggleHint}>
+              <label>{t.statsToggle}</label>
+              <input
+                type="checkbox"
+                checked={statsEnabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  localStorage.setItem(
+                    STATS_CONSENT_KEY,
+                    enabled ? "true" : "false"
+                  );
+                  setStatsEnabled(enabled);
+                }}
+              />
+            </div>
             <div className="settings-row">
               <label>{t.language}</label>
               <select
@@ -2822,53 +3264,9 @@ function App() {
             </div>
           </div>
         )}
-        {showSettings && !captureModalOpen && (
-          <div
-            className="settings-resize-handle"
-            title={t.settingsResizeHint}
-            onMouseDown={(e) => {
-              const el = settingsRef.current;
-              const cardEl = cardRef.current;
-              if (!el) return;
-              e.preventDefault();
-              const startY = e.clientY;
-              const startH = el.offsetHeight;
-              const handleEl = e.currentTarget;
-              handleEl.classList.add("dragging");
-              const onMove = (me: MouseEvent) => {
-                const newH = Math.max(
-                  200,
-                  Math.min(2000, startH + (me.clientY - startY))
-                );
-                el.style.height = `${newH}px`;
-                // Drive the window resize live during the drag so the
-                // user sees the overlay grow/shrink with the panel.
-                if (cardEl) {
-                  const ch = Math.ceil(cardEl.scrollHeight) + WIN_VPAD;
-                  const clamped = Math.min(Math.max(ch, 100), screenMaxH());
-                  getCurrentWindow()
-                    .setSize(new LogicalSize(WIN_BASE_W, clamped))
-                    .catch(() => {});
-                }
-              };
-              const onUp = () => {
-                handleEl.classList.remove("dragging");
-                document.removeEventListener("mousemove", onMove);
-                document.removeEventListener("mouseup", onUp);
-                localStorage.setItem(
-                  SETTINGS_HEIGHT_KEY,
-                  String(el.offsetHeight)
-                );
-              };
-              document.addEventListener("mousemove", onMove);
-              document.addEventListener("mouseup", onUp);
-            }}
-          >
-            <span className="grip-line" />
-            <span className="grip-line" />
-            <span className="grip-line" />
-          </div>
-        )}
+        {/* The settings panel's old dedicated ns-resize bar was removed —
+            the card's bottom-right corner handle now resizes the settings
+            panel vertically (see onResizeHandleDown's `inSettings` branch). */}
 
         {!showSettings && status === "idle" && <div className="hint">{t.hintIdle}</div>}
         {!showSettings && status === "loading" && (
@@ -3475,6 +3873,17 @@ function App() {
               </div>
             )}
           </div>
+        )}
+        {/* Bottom-right handle: drag to widen/narrow the card; double-click
+            resets to auto width. Hidden while the capture modal is open so it
+            doesn't overlap the modal's own controls. */}
+        {cardVisible && !captureModalOpen && (
+          <div
+            className="card-resize-handle"
+            title={t.cardResizeHint}
+            onPointerDown={onResizeHandleDown}
+            onDoubleClick={resetCardSize}
+          />
         )}
       </div>
     </div>

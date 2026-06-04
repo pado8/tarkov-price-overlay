@@ -58,6 +58,14 @@ $readmePath = Join-Path $stageDir "READ_ME_FIRST.txt"
 $utf8WithBom = New-Object System.Text.UTF8Encoding($true)
 [System.IO.File]::WriteAllText($readmePath, $readmeContent, $utf8WithBom)
 
+# Portable marker — the running app detects this file next to the .exe and
+# disables the in-app NSIS auto-updater path. Portable users get a "open
+# downloads page" link instead, so updating doesn't silently install a
+# *second* copy at the default NSIS path (C:\Users\<user>\AppData\Local\...)
+# leaving their portable folder stuck at the old version.
+$markerPath = Join-Path $stageDir "_portable.marker"
+[System.IO.File]::WriteAllText($markerPath, "portable build v$version`r`nDo not delete — disables auto-updater so updates don't silently install elsewhere.`r`n", $utf8WithBom)
+
 Write-Host "[portable] zipping..."
 Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
 

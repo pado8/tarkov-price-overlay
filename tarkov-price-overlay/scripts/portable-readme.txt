@@ -15,10 +15,14 @@ Tarkov Price Overlay (Portable v{VERSION})
 3. X 버튼으로 종료 (트레이로 숨김), 트레이 우클릭 → 종료로 완전 종료
 
 [자동 업데이트]
-v1.0.10부터 자동 업데이트가 지원됩니다.
-설정 → "자동 업데이트 확인" 을 켜두면 새 버전이 나올 때 카드에 알림이 뜨고
-'지금 설치'를 누르면 자동으로 설치됩니다.
-(포터블 버전도 동일하게 동작합니다)
+새 버전이 나오면 카드에 알림이 뜹니다.
+포터블 버전은 '다운로드 페이지 열기'로 안내되며, 새 포터블 ZIP을 받아
+현재 폴더에 덮어쓰면 됩니다. (인스톨러 버전은 '지금 설치'로 자동 설치)
+
+[개인정보 / 통계]
+앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 버전, 국가)만 수집합니다.
+검색한 아이템 이름·화면·개인정보·IP는 절대 수집하지 않습니다.
+설정에서 언제든 끌 수 있습니다. (오픈소스라 수집 코드를 직접 확인 가능)
 
 [전체화면(Fullscreen) 모드에서 F2가 안 먹는 경우]
 타르코프 그래픽 설정에서 "전체화면" → "테두리 없는 전체화면(Borderless Fullscreen)"
@@ -47,9 +51,16 @@ Tarkov Price Overlay (Portable v{VERSION})
 3. X button hides to tray; right-click tray icon -> Exit to fully quit
 
 [Auto-update]
-From v1.0.10, auto-update is built in.
-Enable "Auto check updates" in Settings — when a new version is out, a banner
-appears on the card and 'Install now' downloads and installs it automatically.
+When a new version is out, a banner appears on the card.
+The portable build sends you to "Open downloads page" — grab the new portable
+ZIP and overwrite the current folder. (The installer build self-installs via
+'Install now'.)
+
+[Privacy / Stats]
+To improve the app, only anonymous usage stats are collected (app launches,
+F2 lookup counts, version, country). Searched item names, screen captures,
+personal info, and IP are never collected. Turn it off anytime in Settings.
+(Open source — you can inspect the collection code yourself.)
 
 [F2 not working in fullscreen mode?]
 Switch Tarkov's graphics setting from "Fullscreen" to

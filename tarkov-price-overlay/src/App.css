@@ -85,6 +85,10 @@ html, body, #root {
   padding: 10px 14px;
   /* width set via inline style */
   box-sizing: border-box;
+  /* Containing block for the absolutely-positioned resize handle, which
+     pins to the card's *visible* bottom-right corner regardless of scroll
+     position or whether content fills the (possibly drag-enlarged) card. */
+  position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   /* Subtle dark text-shadow gives every label an outline so muted greys
      stay legible when the user drops card opacity to 20-40% and bright
@@ -110,6 +114,38 @@ html, body, #root {
 }
 .card::-webkit-scrollbar-track {
   background: transparent;
+}
+/* Card width resize handle — drag horizontally to widen/narrow the card,
+   double-click to reset to auto. position:sticky keeps it pinned to the
+   card's bottom-right corner even when tall content scrolls inside the card.
+   The diagonal stripes read as a classic resize grip (◢). */
+.card-resize-handle {
+  /* Absolute (not sticky): the containing block is .card's padding box =
+     the scroll viewport, so the handle stays glued to the visible
+     bottom-right corner whether content scrolls OR the card is dragged
+     taller than its content (sticky failed the latter — no scroll, so it
+     fell back to flowing at the content's end instead of the card bottom). */
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  user-select: none;
+  z-index: 3;
+  border-radius: 0 0 var(--radius-lg) 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0 48%,
+    rgba(200, 170, 100, 0.5) 48% 56%,
+    transparent 56% 70%,
+    rgba(200, 170, 100, 0.5) 70% 78%,
+    transparent 78%
+  );
+  transition: filter 0.15s;
+}
+.card-resize-handle:hover {
+  filter: brightness(1.5);
 }
 .card.card-hidden {
   opacity: 0;
@@ -851,6 +887,19 @@ html, body, #root {
 }
 .update-text {
   flex: 1;
+  min-width: 0;
+}
+/* Keep the CTA + dismiss buttons on one line; let the (possibly long, e.g.
+   the portable hint in EN) text block wrap and take the remaining space
+   instead of squeezing the button into a 3-line stack. */
+.update-banner .reset-btn,
+.update-banner .settings-btn {
+  flex-shrink: 0;
+}
+.update-portable-hint {
+  color: var(--text-disabled);
+  font-size: var(--card-fs-xxs);
+  font-style: italic;
 }
 .update-btn {
   background: rgba(200, 170, 100, 0.25);
@@ -878,6 +927,142 @@ html, body, #root {
 .admin-text {
   flex: 1;
   line-height: 1.35;
+}
+
+/* Anonymous-stats consent — first-launch banner asking user to opt in to
+   sending DAU + F2-lookup pings. Column layout (text on top, two buttons
+   below) because the body is longer than other banners and needs to wrap
+   cleanly. Violet tone to distinguish from update (gold), admin (red),
+   and announce (blue). */
+.consent-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(160, 130, 200, 0.12);
+  border: 1px solid rgba(160, 130, 200, 0.4);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  margin: 6px 0;
+  font-size: var(--card-fs-xs);
+  color: #c8b0e0;
+}
+.consent-opensource {
+  line-height: 1.4;
+  color: var(--gold-light);
+  font-weight: 600;
+}
+.consent-text {
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+.consent-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.consent-btn-accept {
+  background: rgba(160, 130, 200, 0.25);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.consent-btn-accept:hover {
+  background: rgba(160, 130, 200, 0.4);
+}
+
+/* Ad slot — settings panel top. Hosts CPMStar iframe when subpoolId is
+   set, otherwise renders the self-promo placeholder. Deliberately marked
+   with the "Ad" label so users immediately recognize what they're seeing
+   (Korean disclosure-rules friendly + transparent UX). */
+/* In-app feedback form — textarea + send, posts straight to the DB. */
+.feedback-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 4px 0 6px 0;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.feedback-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 56px;
+  max-height: 240px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--card-fs-sm);
+  line-height: 1.4;
+  padding: 5px 7px;
+}
+.feedback-textarea:focus {
+  outline: none;
+  border-color: var(--gold-text);
+}
+.feedback-textarea:disabled {
+  opacity: 0.6;
+}
+.feedback-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.feedback-status {
+  font-size: var(--card-fs-xs);
+  color: var(--text-muted);
+}
+.feedback-status.sent {
+  color: #6cc070;
+}
+.feedback-status.error {
+  color: var(--warning);
+}
+.feedback-send-btn {
+  margin-left: 0;
+  font-weight: 600;
+  background: rgba(200, 170, 100, 0.22);
+  color: var(--text-primary);
+}
+.feedback-send-btn:hover:not(:disabled) {
+  background: var(--bg-gold-chip);
+}
+.feedback-send-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+/* Secondary "or email" fallback — a plain text link, low emphasis. */
+.feedback-mail-link {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: var(--card-fs-xxs);
+  color: var(--text-disabled);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.feedback-mail-link:hover {
+  color: var(--text-muted);
+}
+
+/* Donation nudge above the feedback/donate buttons in settings. Warm
+   gold tone, gentle — replaces the old ad slot. */
+.support-note {
+  font-size: var(--card-fs-xs);
+  line-height: 1.4;
+  color: var(--gold-light);
+  background: rgba(200, 170, 100, 0.08);
+  border: 1px solid rgba(200, 170, 100, 0.22);
+  border-radius: var(--radius-md);
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  text-align: center;
 }
 
 /* Feature announcement — blue-teal tone, one-time dismiss per version. */
@@ -946,10 +1131,9 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* User-resizable scroll container. Height is driven by the custom
-     drag-handle below (.settings-resize-handle), not CSS `resize`, so
-     the discoverability is obvious — users wouldn't otherwise find the
-     1px native SE-corner handle. Bounds enforced in the JS drag handler. */
+  /* Scroll container. Default height; the card's bottom-right corner handle
+     resizes this panel vertically while settings are open (see
+     onResizeHandleDown's `inSettings` branch) and persists the height. */
   height: 400px;
   overflow-y: auto;
 }
@@ -965,36 +1149,6 @@ html, body, #root {
 }
 /* Visible horizontal drag handle below the settings panel. Three grip
    lines + ns-resize cursor make it instantly readable as "drag me". */
-.settings-resize-handle {
-  height: 14px;
-  cursor: ns-resize;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  background: rgba(40, 40, 40, 0.6);
-  border: 1px solid var(--border-subtle);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  margin: 0 0 6px 0;
-  user-select: none;
-  transition: background 0.15s, border-color 0.15s;
-}
-.settings-resize-handle:hover,
-.settings-resize-handle.dragging {
-  background: rgba(60, 60, 60, 0.85);
-  border-color: rgba(200, 170, 100, 0.5);
-}
-.settings-resize-handle .grip-line {
-  width: 18px;
-  height: 2px;
-  background: rgba(200, 170, 100, 0.55);
-  border-radius: 1px;
-}
-.settings-resize-handle:hover .grip-line,
-.settings-resize-handle.dragging .grip-line {
-  background: rgba(220, 190, 110, 0.85);
-}
 .settings-row {
   display: flex;
   justify-content: space-between;
