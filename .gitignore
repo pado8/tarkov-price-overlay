@@ -23,3 +23,15 @@ Thumbs.db
 /build-python/
 /python-core/
 /src-tauri/
+
+# Sibling projects living under the same root but NOT part of this repo
+# (each is its own project / has its own .git). Keeps `git status` clean so
+# the release pipeline's clean-tree check isn't blocked by unrelated work.
+/Labyrinth/
+/aquapado-api/
+/Alpha-ant's-portfolio/
+/pado8.github.io/
+/.vs/
+/.mcp.json
+/response.txt
+/tall.txt
