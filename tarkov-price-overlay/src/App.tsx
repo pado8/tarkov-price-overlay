@@ -17,9 +17,11 @@ const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
 const ADMIN_BANNER_DISMISS_KEY = "tarkov.adminBannerDismissed";
-// Version-pinned key: shows the auto-update feature announcement exactly once
-// for v1.0.10 upgraders, then stays dismissed forever.
-const AUTOUPDATE_ANNOUNCE_KEY = "tarkov.autoUpdateAnnounce110";
+// Server-driven announcement (editable live via /announcement-admin, no app
+// release). Shown at most once per local day, and again whenever the content
+// changes. ANNOUNCE_SEEN_KEY stores {id, date} of the last time we showed it.
+const ANNOUNCEMENT_ENDPOINT = "https://api.aquapado.com/priceoverlay/announcement";
+const ANNOUNCE_SEEN_KEY = "tarkov.announceSeen";
 // Hideout levels: {[stationId]: currentLevel}. Persisted across sessions.
 const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
 
@@ -872,9 +874,10 @@ function App() {
   const [adminDismissed, setAdminDismissed] = useState<boolean>(
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
   );
-  const [autoUpdateAnnounceDismissed, setAutoUpdateAnnounceDismissed] = useState<boolean>(
-    () => localStorage.getItem(AUTOUPDATE_ANNOUNCE_KEY) === "true"
-  );
+  // Server-driven announcement to show on launch (null = nothing to show).
+  const [remoteAnnounce, setRemoteAnnounce] = useState<
+    { id: number; ko: string; en: string } | null
+  >(null);
   // Anonymous stats are opt-out: enabled by default, with a one-time
   // informational notice (not a blocking consent gate).
   const [statsEnabled, setStatsEnabled] = useState<boolean>(loadStatsEnabled);
@@ -1055,6 +1058,30 @@ function App() {
       .then((v) => {
         setIsPortable(v);
         log(`portable: ${v}`);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch the server-driven announcement on launch. Show it at most once per
+  // local day, and again whenever the content (id = updated_at) changes —
+  // even same day. Marking it seen the moment we decide to show it means a
+  // same-day relaunch won't repeat it. Silent on any failure.
+  useEffect(() => {
+    fetch(ANNOUNCEMENT_ENDPOINT)
+      .then((r) => r.json())
+      .then((a) => {
+        if (!a || !a.active || (!a.ko && !a.en)) return;
+        const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
+        let seen: { id?: number; date?: string } = {};
+        try {
+          seen = JSON.parse(localStorage.getItem(ANNOUNCE_SEEN_KEY) || "{}");
+        } catch {}
+        if (seen.id === a.id && seen.date === today) return; // already shown today
+        localStorage.setItem(
+          ANNOUNCE_SEEN_KEY,
+          JSON.stringify({ id: a.id, date: today })
+        );
+        setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "" });
       })
       .catch(() => {});
   }, []);
@@ -1410,11 +1437,24 @@ function App() {
 
   // Probe sidecar diagnostics once on mount. We re-probe ~3s later in
   // case the sidecar wasn't ready yet (cold-start window).
+  const adminReportedRef = useRef(false);
   useEffect(() => {
     let mounted = true;
     const probe = async () => {
       const info = await fetchDiagnostics();
-      if (mounted && info) setAdminInfo(info);
+      if (mounted && info) {
+        setAdminInfo(info);
+        // Elevation telemetry (once/session): tag a launch event with the
+        // admin status so the dashboard can measure how many users — and
+        // especially the "never looked up" cohort — run non-elevated. That's
+        // the prime suspect for F2 silently failing against admin-elevated
+        // Tarkov (Windows UIPI). Harmless launch double-count: every funnel /
+        // DAU metric counts DISTINCT install_id, so it's unaffected.
+        if (!adminReportedRef.current && info.is_admin != null) {
+          adminReportedRef.current = true;
+          reportEvent("launch", info.is_admin ? "admin" : "user");
+        }
+      }
     };
     probe();
     const t = setTimeout(probe, 3000);
@@ -2065,11 +2105,23 @@ function App() {
       setHistory(addToHistory(data));
       setCorrecting(false);
       if (loadSoundOn()) playDing(data.item_name != null);
+      // Same outcome telemetry as the F2 path — manual ("직접 입력") and
+      // history re-lookups were previously invisible to the dashboard, which
+      // under-counted real lookup volume. (Doesn't affect the activation
+      // funnel: reaching this path requires a prior F2 result anyway.)
+      if (data.item_name == null) {
+        reportEvent("lookup_nomatch");
+      } else if (data.flea_price == null && data.trader_price == null) {
+        reportEvent("lookup_noprice", data.item_id ?? undefined);
+      } else {
+        reportEvent("lookup");
+      }
     } catch (e) {
       const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
       setError(msg);
       setStatus("error");
       if (loadSoundOn()) playDing(false);
+      reportEvent("lookup");
     } finally {
       scheduleHide();
     }
@@ -2395,6 +2447,17 @@ function App() {
             <button
               className="settings-btn"
               onClick={() => {
+                invoke("relaunch_as_admin").catch((e) =>
+                  log(`relaunch_as_admin failed: ${e}`)
+                );
+              }}
+              title={t.relaunchAsAdmin}
+            >
+              🔑 {t.relaunchAsAdmin}
+            </button>
+            <button
+              className="settings-btn"
+              onClick={() => {
                 localStorage.setItem(ADMIN_BANNER_DISMISS_KEY, "true");
                 setAdminDismissed(true);
               }}
@@ -2405,21 +2468,25 @@ function App() {
           </div>
         )}
 
-        {!autoUpdateAnnounceDismissed && (
-          <div className="announce-banner">
-            <span className="announce-text">{t.autoUpdateAnnounce}</span>
-            <button
-              className="settings-btn"
-              onClick={() => {
-                localStorage.setItem(AUTOUPDATE_ANNOUNCE_KEY, "true");
-                setAutoUpdateAnnounceDismissed(true);
-              }}
-              title={t.autoUpdateAnnounceDismiss}
-            >
-              ✕
-            </button>
-          </div>
-        )}
+        {remoteAnnounce &&
+          (region.lang === "ko"
+            ? remoteAnnounce.ko || remoteAnnounce.en
+            : remoteAnnounce.en || remoteAnnounce.ko) && (
+            <div className="announce-banner">
+              <span className="announce-text">
+                {region.lang === "ko"
+                  ? remoteAnnounce.ko || remoteAnnounce.en
+                  : remoteAnnounce.en || remoteAnnounce.ko}
+              </span>
+              <button
+                className="settings-btn"
+                onClick={() => setRemoteAnnounce(null)}
+                title={t.dismiss}
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
         {historyVisible && (
           <div className="history-panel">

@@ -427,6 +427,46 @@ fn exit_app(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+/// Relaunch the app elevated. Tarkov runs as admin (BattlEye), so a non-
+/// elevated overlay can't receive the F2 global hotkey or draw over the game
+/// (Windows UIPI) — the #1 cause of "F2 does nothing in-game". This spawns an
+/// elevated copy via the "runas" verb (UAC prompt) then quits this instance so
+/// the elevated one takes over the single-instance lock + the sidecar's port.
+#[tauri::command]
+fn relaunch_as_admin(app: tauri::AppHandle) -> Result<(), String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    // Escape single quotes for the PowerShell single-quoted string literal.
+    let exe_str = exe.to_string_lossy().replace('\'', "''");
+    std::process::Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            &format!("Start-Process -FilePath '{exe_str}' -Verb RunAs"),
+        ])
+        .spawn()
+        .map_err(|e| format!("elevated relaunch failed: {e}"))?;
+    // Quit this (non-elevated) instance so the elevated copy can grab the
+    // single-instance lock and re-bind the Python sidecar port. Same teardown
+    // as tray Exit. If the user cancels the UAC prompt nothing relaunches —
+    // they can reopen from the Start Menu (acceptable for a rare cancel).
+    if let Some(state) = app.try_state::<IsQuitting>() {
+        state.0.store(true, Ordering::SeqCst);
+    }
+    if let Some(state) = app.try_state::<MouseHotkeyStop>() {
+        state.0.store(true, Ordering::SeqCst);
+    }
+    if let Some(state) = app.try_state::<SidecarChild>() {
+        if let Some(child) = state.0.lock().unwrap().take() {
+            let _ = child.kill();
+            println!("[sidecar] killed for elevated relaunch");
+        }
+    }
+    app.exit(0);
+    Ok(())
+}
+
 fn spawn_sidecar(app: &tauri::AppHandle) -> Result<CommandChild, String> {
     let cmd = app
         .shell()
@@ -462,6 +502,26 @@ fn spawn_sidecar(app: &tauri::AppHandle) -> Result<CommandChild, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
+        // MUST be the first plugin: on a second launch this fires in the
+        // ALREADY-RUNNING instance (the new process then exits itself), so we
+        // never spawn a duplicate window / Python sidecar / tray icon. Reveal
+        // the existing window and tell the user it's already running — that's
+        // the reported bug: tray icons stacking up because users couldn't tell
+        // the app was already open.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            println!("[single-instance] second launch blocked; surfacing existing window");
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.unminimize();
+                let _ = window.set_focus();
+            }
+            let _ = app
+                .notification()
+                .builder()
+                .title("Tarkov Price Overlay")
+                .body("이미 실행 중이에요 — 트레이 아이콘을 확인하세요.\nAlready running — check the tray icon.")
+                .show();
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
@@ -534,7 +594,8 @@ pub fn run() {
             show_preview_rect,
             hide_preview_rect,
             is_portable_install,
-            exit_app
+            exit_app,
+            relaunch_as_admin
         ])
         .setup(|app| {
             // Mouse-button hotkey poller — needs the AppHandle for emits and

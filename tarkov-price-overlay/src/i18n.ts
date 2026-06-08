@@ -140,9 +140,9 @@ export const T = {
     updatePortableHint:
       "포터블 버전은 자동 설치 시 다른 폴더에 새로 설치돼요. 페이지에서 새 포터블 ZIP을 받아 현재 폴더에 덮어쓰세요.",
     adminWarning: "타르코프 안에서 F2 안 먹히면 관리자 권한으로 다시 실행하세요 (BattlEye 권한 차이 때문)",
+    relaunchAsAdmin: "관리자로 재실행",
     adminDismiss: "다시 보지 않기",
-    autoUpdateAnnounce: "🔄 v1.0.10부터 자동 업데이트 지원! 설정에서 '지금 확인'을 누르면 새 버전이 나올 때 '지금 설치'로 바로 업데이트됩니다. 이용해 주셔서 감사하고 피드백은 언제나 환영합니다!",
-    autoUpdateAnnounceDismiss: "확인",
+    dismiss: "닫기",
     autoCheckUpdate: "자동 업데이트 확인",
     update: "업데이트",
     updateCheckNow: "지금 확인",
@@ -357,9 +357,9 @@ export const T = {
     updatePortableHint:
       "Portable builds install elsewhere when auto-updated. Grab the new portable ZIP from the page and overwrite the current folder.",
     adminWarning: "If F2 doesn't work inside Tarkov, relaunch as administrator (BattlEye privilege mismatch)",
+    relaunchAsAdmin: "Relaunch as admin",
     adminDismiss: "Don't show again",
-    autoUpdateAnnounce: "🔄 Auto-update supported from v1.0.10! Click 'Check now' in Settings — when a new version is out, just hit 'Install now'. Thanks for using the app — feedback is always welcome!",
-    autoUpdateAnnounceDismiss: "Got it",
+    dismiss: "Dismiss",
     autoCheckUpdate: "Auto check updates",
     update: "Update",
     updateCheckNow: "Check now",
