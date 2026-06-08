@@ -539,6 +539,11 @@ If this helps you, donations are appreciated. Two options in Settings → Donate
 
 ---
 
+## Code Signing
+This project uses the SignPath Foundation for code signing.
+
+---
+
 ## 📜 License / Disclaimer
 
 - Price data: [tarkov.dev](https://tarkov.dev) (community-maintained EFT database)
