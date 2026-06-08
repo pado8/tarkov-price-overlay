@@ -20,7 +20,7 @@ Tarkov Price Overlay (Portable v{VERSION})
 현재 폴더에 덮어쓰면 됩니다. (인스톨러 버전은 '지금 설치'로 자동 설치)
 
 [개인정보 / 통계]
-앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 버전, 국가)만 수집합니다.
+앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 버전, 국가, 관리자 권한 여부, 조회 실패 유형)만 수집합니다.
 검색한 아이템 이름·화면·개인정보·IP는 절대 수집하지 않습니다.
 설정에서 언제든 끌 수 있습니다. (오픈소스라 수집 코드를 직접 확인 가능)
 
@@ -58,7 +58,8 @@ ZIP and overwrite the current folder. (The installer build self-installs via
 
 [Privacy / Stats]
 To improve the app, only anonymous usage stats are collected (app launches,
-F2 lookup counts, version, country). Searched item names, screen captures,
+F2 lookup counts, version, country, elevation (admin/non-admin), lookup-failure
+category). Searched item names, screen captures,
 personal info, and IP are never collected. Turn it off anytime in Settings.
 (Open source — you can inspect the collection code yourself.)
 

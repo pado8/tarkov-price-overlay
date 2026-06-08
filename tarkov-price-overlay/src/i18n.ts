@@ -131,8 +131,12 @@ export const T = {
     updateAvailable: "새 버전",
     updateOpen: "다운로드",
     updateInstall: "지금 설치",
+    updateStartTitle: "업데이트 시작",
+    updateStartGuide:
+      "이제 프로그램이 종료되고 자동으로 업데이트가 진행됩니다.\n\n설치 프로그램(셋업)이 다운로드되고 실행될 때까지 시간이 조금 걸릴 수 있어요. 셋업 창이 뜰 때까지 잠시 기다려주세요!",
     updateDownloading: "다운로드 중",
-    updateRestarting: "재시작합니다…",
+    updateRestarting:
+      "다운로드 완료! 프로그램을 종료하고 설치를 시작합니다 — 셋업 창이 뜰 때까지 잠시(최대 1분) 걸릴 수 있어요. 정상 진행 중이에요!",
     updateError: "업데이트 실패",
     updateRetry: "재시도",
     updateLater: "나중에",
@@ -348,8 +352,12 @@ export const T = {
     updateAvailable: "New version",
     updateOpen: "Download",
     updateInstall: "Install now",
+    updateStartTitle: "Starting update",
+    updateStartGuide:
+      "The app will now close and update automatically.\n\nThe installer (setup) needs a moment to download and launch — please wait for the setup window to appear!",
     updateDownloading: "Downloading",
-    updateRestarting: "Restarting…",
+    updateRestarting:
+      "Download complete! Closing and launching the installer — the setup window may take up to a minute to appear. This is normal!",
     updateError: "Update failed",
     updateRetry: "Retry",
     updateLater: "Later",

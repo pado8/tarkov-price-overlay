@@ -82,7 +82,7 @@
 ### 🔏 개인정보 / 수집 데이터
 앱 개선과 사용 규모 파악을 위해 **익명 사용 통계**만 수집합니다 (Vercel + Neon, 엔드포인트 `api.aquapado.com/priceoverlay/events`).
 
-- ✅ 수집: 앱 실행/F2 사용 횟수, 앱 버전, 국가 코드, 익명 설치 ID(무작위 UUID, 재설치 시 변경)
+- ✅ 수집: 앱 실행/F2 사용 횟수, 앱 버전, 국가 코드, 익명 설치 ID(무작위 UUID, 재설치 시 변경), 관리자 권한 실행 여부, 조회 실패 유형(empty/junk/no_match 카테고리만)
 - ✅ 조회 실패/시세 없음 시: 매칭된 **공개 아이템 ID**(검색어·OCR 텍스트 아님 — 패치 후 신규 아이템 자동 감지용)
 - ❌ 절대 수집 안 함: 검색한 아이템 이름, 화면, 마우스 좌표, 게임 내용, 개인정보, IP
 - ⚙️ opt-out — 기본 ON, 첫 실행 1회 안내, 설정에서 끄기 가능. 피드백(설정 → ✉)도 같은 백엔드에 저장됨
@@ -239,6 +239,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
+- **v1.1.1** — **중복 실행 방지** (이미 켜져 있으면 새 창 안 띄우고 기존 창을 앞으로 — 트레이 아이콘 쌓이던 문제 해결) + **F2가 게임 안에서 안 먹힐 때 '관리자로 재실행' 버튼** (타르코프가 관리자 권한이라 생기던 UIPI 키 차단을 원클릭 해결) + **업데이트 진행 안내 개선** ("프로그램 종료 후 셋업 다운로드·실행" 팝업 + 진행 메시지로 "멈춘 건지" 헷갈림 해소) + **서버 공지** (앱 재배포 없이 인앱 공지 전달) + 익명 통계에 **권한(관리자 여부)·인식실패 유형**(empty/junk/no_match) 추가 — 원인 진단용, 검색어·화면은 수집 안 함
 - **v1.1.0** — **인앱 피드백** (메일 대신 앱에서 바로 전송, **스크린샷 첨부** 가능) + **카드 크기 드래그 조절** (우측 하단 모서리로 너비·높이, 설정 패널 높이까지 한 핸들로 통합) + **거래 불가 아이템 명확 표시** (신규 퀘스트 키카드 등 플리·상인 시세 없는 아이템을 "거래 불가"로 안내 — Icebreaker 신규 아이템 대응) + **땅바닥 아이템 인식 정확도 개선** (인벤토리용 배경 필터가 땅바닥 라벨을 버리던 문제 수정) + **신규 탄약 caliber 자동 대응** (수동 추가 없이 새 caliber 자동 포맷) + **후원 안내 개선** + **익명 사용 통계** (opt-out, 설정에서 끄기 — 패치 후 신규 아이템 이슈 조기 감지용) + 닫기 시 트레이로 (트레이 우클릭 → 종료)
 - **v1.0.11** — **캡처 영역 설정 모달화** (청록 십자선이 마우스 기준점 표시, 슬라이더 미세 조정 가능) + **듀얼 모니터 복구** (오버레이가 분리된 모니터에 있어 안 보일 때 자동으로 주 모니터로 스냅 + 트레이 메뉴 '창 위치 복구') + **OCR 정확도 강화**: 옆 아이콘 텍스트(RatCola 등)가 같이 잡혀도 fragment 다중 후보 + best-match 점수로 의도한 아이템 선택, 짧은 fragment가 긴 카탈로그명 가로채는 케이스 차단, 캡처 박스보다 긴 아이템명도 prefix 매칭으로 식별 + **탄박스도 탄약 매트릭스 자동 표시** (탄약 팩 호버 시 같은 caliber 비교표) + **쇄빙선(0.16) 신규 caliber 지원** (.308 ME / 9.3x64 표시명 추가) + lookup 속도 미세 최적화
 - **v1.0.10** — **자동 업데이트** (설정 켜두면 새 버전 알림 → '지금 설치' 한 번으로 완료) + **은신처 레벨 설정** (설정에서 현재 업그레이드 레벨 직접 입력 → 완료한 시설은 카드에서 자동 흐리게/취소선 표시) + **퀘스트 진행도 PVP/PVE 서버별 분리** + 퀘스트 동기화 수동 폴더 선택 버튼 + 퀘스트 표시 모드 드롭다운
@@ -512,6 +513,7 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
+- **v1.1.1** — **single-instance** (relaunching surfaces the existing window instead of stacking duplicate tray icons) + **"Relaunch as admin" button** when F2 doesn't fire in-game (one-click fix for the Tarkov-runs-elevated UIPI mismatch) + **clearer update flow** (a popup explains the app closes and the installer needs a moment, plus progress text — no more "is it stuck?") + **server-driven announcements** (push in-app notices without an app update) + anonymous stats now include **elevation (admin/non-admin)** and **lookup-failure category** (empty/junk/no_match) for breakage diagnosis — never raw search text or screenshots.
 - **v1.1.0** — **In-app feedback** (posts to the DB instead of mailto; optional screenshot, pasted or picked, client-compressed) + **unified drag-resize handle** (bottom-right corner sizes card width/height; in settings it sizes the settings panel — replaces the separate ns-resize bar; absolute-positioned so it tracks the visible corner) + **"untradeable" notice** when an item has no flea AND no trader price (new quest keycards from Icebreaker read as broken otherwise) + **ground-loot OCR fix** (the tooltip-background HSV filter was dropping ground labels that sit on the game world — skipped for ground captures) + **dynamic caliber formatting** (new ammo calibers auto-format e.g. 762x51→7.62x51 without a code edit) + **opt-out anonymous stats** with lookup-outcome telemetry (nomatch/noprice + matched item id) for post-patch breakage detection + ad slot replaced with a donation nudge.
 - **v1.0.11** — **Capture-region modal** with a cyan crosshair marking the mouse reference point + finer-grained sliders (±500 offset, 1000 max) + **dual-monitor recovery** (auto-snap to primary on startup when the saved position is off-screen + new tray menu "Recover position") + **OCR robustness**: multi-candidate fragment retry with score-based selection so the actual tooltip text wins over icon-baked labels (RatCola, M882…), plus prefix fallback for long item names that exceed the capture box + **ammo-box matrix** (hovering ammo packs now opens the caliber-comparison panel) + **Icebreaker (0.16) compatibility** — new calibers `.308 ME` and `9.3x64` displayed properly + lookup hot-path micro-optimizations.
 - **v1.0.10** — **Auto-update** (toggle on → get notified, click 'Install now', done) + **Hideout level tracker** (set your current upgrade level per station in Settings → completed stations dim out on the price card automatically) + **per-mode quest tracking** (PVP/PVE stored separately) + manual folder picker for quest sync + quest display mode dropdown.

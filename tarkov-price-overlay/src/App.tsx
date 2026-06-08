@@ -5,7 +5,7 @@ import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, availa
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
+import { open as openFolderDialog, message } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
@@ -146,6 +146,17 @@ const reportEvent = (eventType: StatsEvent, detail?: string) => {
     keepalive: true,
   }).catch(() => {});
 };
+
+// Privacy-preserving nomatch reason for telemetry — NEVER the raw OCR text,
+// just a coarse category so the dashboard can tell a capture/alignment miss
+// ("empty" = nothing read, "junk" = too short / no letters → region likely
+// misaligned) apart from a genuine OCR misread or new item ("no_match").
+function nomatchCategory(raw?: string | null): string {
+  const t = (raw || "").trim();
+  if (!t) return "empty";
+  if (t.length < 3 || !/[a-zA-Z가-힣]/.test(t)) return "junk";
+  return "no_match";
+}
 
 const hideToTray = () => {
   invoke("hide_to_tray").catch(() => {});
@@ -1435,14 +1446,18 @@ function App() {
     localStorage.setItem(ADVANCED_KEY, String(advancedMode));
   }, [advancedMode]);
 
-  // Probe sidecar diagnostics once on mount. We re-probe ~3s later in
-  // case the sidecar wasn't ready yet (cold-start window).
+  // Probe sidecar diagnostics on mount, retrying until it answers (the sidecar
+  // can take >3s on a cold start while it loads OCR models). Drives the admin-
+  // rights banner and the elevation telemetry.
   const adminReportedRef = useRef(false);
   useEffect(() => {
     let mounted = true;
+    let tries = 0;
+    let timer: number | undefined;
     const probe = async () => {
       const info = await fetchDiagnostics();
-      if (mounted && info) {
+      if (!mounted) return;
+      if (info) {
         setAdminInfo(info);
         // Elevation telemetry (once/session): tag a launch event with the
         // admin status so the dashboard can measure how many users — and
@@ -1454,13 +1469,17 @@ function App() {
           adminReportedRef.current = true;
           reportEvent("launch", info.is_admin ? "admin" : "user");
         }
+        return; // got a result — stop retrying
       }
+      // Sidecar not ready yet: a cold start loads the OCR models first and can
+      // take well over 3s. Retry (every 2s, ~24s cap) so the admin-rights
+      // banner and the elevation telemetry don't silently miss on cold boots.
+      if (++tries < 12) timer = window.setTimeout(probe, 2000);
     };
     probe();
-    const t = setTimeout(probe, 3000);
     return () => {
       mounted = false;
-      clearTimeout(t);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -1528,6 +1547,11 @@ function App() {
   const installUpdate = async () => {
     const update = pendingUpdateRef.current;
     if (!update) return;
+    // Tell the user what's about to happen: the app closes and the installer
+    // downloads + launches with a gap before the setup window appears. Without
+    // this, that silent gap reads like the update stalled. (t is the active
+    // language strings.)
+    await message(t.updateStartGuide, { title: t.updateStartTitle, kind: "info" });
     setUpdatePhase("downloading");
     setUpdateProgress(0);
     setUpdateError(null);
@@ -1981,7 +2005,7 @@ function App() {
           if (loadSoundOn()) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
           if (data.item_name == null) {
-            reportEvent("lookup_nomatch");
+            reportEvent("lookup_nomatch", nomatchCategory(data.raw_text));
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
             // catalog id so the dashboard shows WHICH items (e.g. new patch
@@ -2110,7 +2134,7 @@ function App() {
       // under-counted real lookup volume. (Doesn't affect the activation
       // funnel: reaching this path requires a prior F2 result anyway.)
       if (data.item_name == null) {
-        reportEvent("lookup_nomatch");
+        reportEvent("lookup_nomatch", nomatchCategory(data.raw_text));
       } else if (data.flea_price == null && data.trader_price == null) {
         reportEvent("lookup_noprice", data.item_id ?? undefined);
       } else {
