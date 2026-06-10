@@ -183,7 +183,9 @@ def recognize_text_fragments(
     if not kept and rejected:
         # Filter ate everything — fall back to unfiltered. Better to OCR
         # against possible noise than to return zero fragments.
-        print("[ocr] filter rejected all fragments — falling back unfiltered")
+        # ASCII-only log text: this line once crashed the whole request with
+        # UnicodeEncodeError on a cp949 console (em-dash isn't cp949).
+        print("[ocr] filter rejected all fragments - falling back unfiltered")
         return rejected
     return kept
 

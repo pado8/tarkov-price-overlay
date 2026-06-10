@@ -67,7 +67,18 @@ $markerPath = Join-Path $stageDir "_portable.marker"
 [System.IO.File]::WriteAllText($markerPath, "portable build v$version`r`nDo not delete — disables auto-updater so updates don't silently install elsewhere.`r`n", $utf8WithBom)
 
 Write-Host "[portable] zipping..."
-Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
+# Prefer 7-Zip when installed: several times faster than Compress-Archive
+# AND produces a smaller archive (= faster user download). Falls back to
+# the built-in cmdlet so the pipeline never depends on 7-Zip.
+$sevenZip = @("$env:ProgramFiles\7-Zip\7z.exe",
+              "${env:ProgramFiles(x86)}\7-Zip\7z.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($sevenZip) {
+    Write-Host "[portable] using 7-Zip ($sevenZip)"
+    & $sevenZip a -tzip -mx=5 -bso0 -bsp1 $zipPath "$stageDir\*"
+    if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+} else {
+    Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
+}
 
 # Show summary
 $zipSize = [Math]::Round((Get-Item $zipPath).Length / 1MB, 1)

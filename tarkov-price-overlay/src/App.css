@@ -224,6 +224,12 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
 }
+/* While pinned the header can't drag the window — don't advertise it. */
+.card-pinned .header,
+.card-pinned .header .title,
+.card-pinned .header .hotkey {
+  cursor: default;
+}
 
 .hint {
   color: var(--text-muted);
@@ -910,6 +916,31 @@ html, body, #root {
   color: var(--text-disabled);
   font-size: var(--card-fs-xxs);
   font-style: italic;
+}
+/* One-line release notes inside the update banner. */
+.update-notes {
+  color: var(--text-muted);
+  font-size: var(--card-fs-xs);
+}
+/* Visual download progress bar under the percent text. */
+.update-progress-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.update-progress-track {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.update-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--gold-light, #c8aa64);
+  transition: width 0.2s ease;
 }
 .update-btn {
   background: rgba(200, 170, 100, 0.25);

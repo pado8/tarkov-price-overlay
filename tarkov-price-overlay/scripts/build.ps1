@@ -27,18 +27,62 @@
 param(
     [switch]$SkipPython,
     [switch]$SkipBundle,
-    [switch]$SkipDeps
+    [switch]$SkipDeps,
+    # Force the PyInstaller step even when the content-hash cache says the
+    # python inputs are unchanged (e.g. after swapping OCR model files,
+    # which the hash deliberately doesn't cover).
+    [switch]$ForcePython
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+# Remove-Item with retries. Freshly written PyInstaller trees get transiently
+# locked (AV scan, just-killed process still releasing DLL handles) and a
+# single failed delete used to abort the whole build mid-way — leaving a
+# stale .pybuild-hash so the NEXT build needlessly re-ran PyInstaller too.
+function Remove-DirWithRetry([string]$path, [int]$tries = 3) {
+    for ($i = 1; $i -le $tries; $i++) {
+        try {
+            if (Test-Path $path) { Remove-Item -Recurse -Force $path -ErrorAction Stop }
+            return
+        } catch {
+            if ($i -eq $tries) { throw }
+            Write-Host "[build] delete of $path blocked ($($_.Exception.Message.Split("`n")[0])) - retry $i/$($tries-1) in 3s"
+            Start-Sleep -Seconds 3
+        }
+    }
+}
 Write-Host "[build] working dir: $root"
 Write-Host ("[build] flags: SkipPython=$SkipPython SkipBundle=$SkipBundle SkipDeps=$SkipDeps")
 
 $staged = "$root\src-tauri\binaries"
 $platform = "x86_64-pc-windows-msvc"
 $stagedSidecar = "$staged\tarkov-server-$platform.exe"
+
+# ── PyInstaller content-hash cache ──────────────────────────────────────
+# The PyInstaller step is the slowest part of a full build (~3-4 min) and
+# most releases don't touch python-core at all. Hash every python input
+# (sources, spec, requirements, runtime hook); when the hash matches the
+# one recorded by the previous build AND a staged sidecar exists, skip
+# PyInstaller automatically. Model files are intentionally NOT hashed
+# (110MB, change ~never) — use -ForcePython after swapping them.
+$pyHashFile = "$staged\.pybuild-hash"
+$pyInputs = @(Get-ChildItem "$root\python-core\*.py" -ErrorAction SilentlyContinue) +
+            @(Get-Item "$root\tarkov-server.spec", "$root\runtime-hook-torch.py",
+                       "$root\python-core\requirements.txt" -ErrorAction SilentlyContinue)
+$pyHash = (($pyInputs | Sort-Object FullName | ForEach-Object {
+    (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+}) -join "|")
+$pyHash = (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UTF8.GetBytes($pyHash))) -Algorithm SHA256).Hash
+
+if (-not $SkipPython -and -not $ForcePython -and
+    (Test-Path $stagedSidecar) -and (Test-Path $pyHashFile) -and
+    ((Get-Content $pyHashFile -Raw -ErrorAction SilentlyContinue).Trim() -eq $pyHash)) {
+    Write-Host "[build] python inputs unchanged (hash match) → skipping PyInstaller (use -ForcePython to override)"
+    $SkipPython = $true
+}
 
 if ($SkipPython) {
     # Need a staged sidecar from a previous full build. Without it Tauri
@@ -65,7 +109,7 @@ if ($SkipPython) {
     # 2) PyInstaller bundle
     Write-Host "[build] running PyInstaller..."
     $distPython = "$root\dist-python"
-    if (Test-Path $distPython) { Remove-Item -Recurse -Force $distPython }
+    Remove-DirWithRetry $distPython
     & $venvPython -m PyInstaller "$root\tarkov-server.spec" `
         --distpath $distPython `
         --workpath "$root\build-python" `
@@ -78,12 +122,17 @@ if ($SkipPython) {
 
     # 3) Copy PyInstaller --onedir output into src-tauri\binaries\
     Write-Host "[build] staging sidecar files into src-tauri\binaries"
-    if (Test-Path $staged) { Remove-Item -Recurse -Force $staged }
+    Remove-DirWithRetry $staged
     New-Item -ItemType Directory -Force -Path $staged | Out-Null
     Copy-Item -Recurse -Force "$distPython\tarkov-server\*" $staged
 
     # Tauri requires a platform suffix on externalBin entries.
     Rename-Item "$staged\tarkov-server.exe" "tarkov-server-$platform.exe"
+
+    # Record the input hash so the next build can skip PyInstaller when
+    # nothing python-side changed.
+    Set-Content -Path $pyHashFile -Value $pyHash -Encoding ascii
+    Write-Host "[build] recorded python input hash for the skip cache"
 }
 
 # 4) Tauri build. --no-bundle skips NSIS (we run target\release\*.exe directly

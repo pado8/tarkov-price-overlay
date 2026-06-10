@@ -481,7 +481,7 @@ class QuestTracker:
                 json.dumps(payload, ensure_ascii=False), encoding="utf-8"
             )
         except OSError as e:
-            print(f"[quest] WARN: failed to save state — {e}")
+            print(f"[quest] WARN: failed to save state - {e}")
 
     # ---------- public API ----------
 

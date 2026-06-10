@@ -688,7 +688,7 @@ def _refresh_one(lang: str, game_mode: str) -> int:
             _hideout_index_cache[lang] = hideout_idx
             _hideout_station_list_cache[lang] = station_list
     except Exception as e:
-        print(f"[hideout] refresh failed for lang={lang}: {e!r} — using stale/empty")
+        print(f"[hideout] refresh failed for lang={lang}: {e!r} - using stale/empty")
         with _hideout_index_lock:
             hideout_idx = _hideout_index_cache.get(lang, {})
     by_name: dict[str, dict] = {}

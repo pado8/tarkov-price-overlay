@@ -79,6 +79,19 @@ if ($dirty) {
 }
 
 # 3. Full build
+# Kill any running app/sidecar first — they hold file locks on
+# target\release + binaries\_internal and the build dies with os error 5/32
+# (this bit us on v1.1.0 and v1.1.1).
+# -like: the staged sidecar runs as "tarkov-server-x86_64-pc-windows-msvc",
+# which an exact-name match misses (and it then locks _internal during build).
+$leftover = Get-Process | Where-Object { $_.ProcessName -like "tarkov-server*" -or $_.ProcessName -eq "tarkov-price-overlay" }
+if ($leftover) {
+    $leftover | ForEach-Object {
+        Write-Host "[release] killing running $($_.ProcessName) (pid $($_.Id)) before build"
+        Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+    }
+    Start-Sleep -Seconds 2
+}
 Write-Host "[release] running full build (PyInstaller + Tauri NSIS)..."
 & "$root\scripts\build.ps1"
 
@@ -150,6 +163,20 @@ Write-Host "[release] creating GitHub Release on $publicRepo..."
     --repo $publicRepo `
     --title "Tarkov Price Overlay $tag" `
     --notes $Notes
+
+# 5c. Verify the release actually exists with all three assets — `gh release
+# create` has silently failed before (v1.0.11). Catch it HERE, not days later.
+Write-Host "[release] verifying GitHub release..."
+$assets = & $ghExe release view $tag --repo $publicRepo --json assets --jq ".assets[].name" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    throw "Release $tag NOT FOUND on $publicRepo — gh release create silently failed. Re-run: gh release create $tag <assets> --repo $publicRepo"
+}
+foreach ($needle in @("setup.exe", "portable.zip", "latest.json")) {
+    if (-not ($assets | Where-Object { $_ -like "*$needle*" })) {
+        throw "Release $tag is missing asset *$needle* (found: $($assets -join ', ')). Upload it: gh release upload $tag <file> --repo $publicRepo"
+    }
+}
+Write-Host "[release] verified: $(@($assets).Count) assets present."
 
 # 6. Back to dev
 & git checkout dev

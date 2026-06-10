@@ -667,8 +667,23 @@ async function applyMonitorScaling(force: boolean): Promise<Region | null> {
     const mon = await primaryMonitor();
     if (!mon) return null;
     const scaled = scaleRegionForMonitor(DEFAULT_REGION, mon.size.width);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(scaled));
-    return scaled;
+    // Only overwrite the CAPTURE GEOMETRY. This button's job is to recompute
+    // offsets/sizes for the monitor — it must never wipe the user's other
+    // ~20 settings (lang, gameMode, fontSize, display toggles, autoHide,
+    // bgOpacity, …), which a whole-Region overwrite silently did.
+    const merged: Region = {
+      ...loadRegion(),
+      offsetX: scaled.offsetX,
+      offsetY: scaled.offsetY,
+      width: scaled.width,
+      height: scaled.height,
+      groundOffsetX: scaled.groundOffsetX,
+      groundOffsetY: scaled.groundOffsetY,
+      groundWidth: scaled.groundWidth,
+      groundHeight: scaled.groundHeight,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    return merged;
   } catch {
     return null;
   }
@@ -1029,6 +1044,14 @@ function App() {
   );
   const [donateCopied, setDonateCopied] = useState(false);
   const hideTimerRef = useRef<number | null>(null);
+  // Lookup generation counter + in-flight flag. The counter lets a late
+  // response (e.g. the 1.5s network retry losing a race against a newer F2
+  // press) detect it's stale and skip setResult/setHistory — without it the
+  // retry could overwrite a fresher result. The flag keeps auto-hide from
+  // firing mid-lookup (a settings-close used to schedule a hide DURING a
+  // slow OCR fetch and the result arrived on a hidden card).
+  const lookupSeqRef = useRef(0);
+  const lookupInFlightRef = useRef(false);
   const hideDelayRef = useRef(region.hideDelaySec);
   useEffect(() => {
     hideDelayRef.current = region.hideDelaySec;
@@ -1372,6 +1395,10 @@ function App() {
     if (!autoHideRef.current) return;
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
+    // Don't start the countdown while a lookup is still in flight — the
+    // result would land on an already-hidden card (the lookup's own finally
+    // schedules the hide once it completes).
+    if (lookupInFlightRef.current) return;
     const ms = Math.max(1, hideDelayRef.current) * 1000;
     hideTimerRef.current = window.setTimeout(() => {
       setCardVisible(false);
@@ -1639,13 +1666,22 @@ function App() {
     }
   };
 
-  // Run a single auto-check shortly after mount, if user opted in.
+  // Auto-check shortly after mount, then every 4h while running. The overlay
+  // is tray-resident and often stays up for DAYS — a single startup check
+  // meant long-running sessions never learned about new releases, which is
+  // why update adoption lagged. Periodic re-checks close that gap.
   useEffect(() => {
     if (!autoCheckUpdate) return;
     const t = window.setTimeout(() => {
       checkForUpdate();
     }, 3000);
-    return () => clearTimeout(t);
+    const iv = window.setInterval(() => {
+      checkForUpdate();
+    }, 4 * 60 * 60 * 1000);
+    return () => {
+      clearTimeout(t);
+      clearInterval(iv);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -2024,6 +2060,10 @@ function App() {
         setShowSettings(false);
         setStatus("loading");
         setError("");
+        // New lookup generation: invalidates any still-running older lookup
+        // so its late (retried) response can't overwrite this one.
+        const seq = ++lookupSeqRef.current;
+        lookupInFlightRef.current = true;
         const body = JSON.stringify({
           x: event.payload.x + r.offsetX,
           y: event.payload.y + r.offsetY,
@@ -2051,6 +2091,10 @@ function App() {
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
+          if (seq !== lookupSeqRef.current) {
+            log("React: stale lookup result discarded (newer press in flight)");
+            return;
+          }
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
           setResult(data);
           setStatus("success");
@@ -2071,8 +2115,16 @@ function App() {
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
+          if (seq !== lookupSeqRef.current) return; // stale failure — ignore
+          // Human messages for the two known cases; raw error only for the
+          // unexpected rest. "TypeError: Failed to fetch" terrified users —
+          // it's just the sidecar (re)starting.
           setError(
-            e instanceof Error && e.name === "AbortError" ? T[r.lang].timeout : msg
+            e instanceof Error && e.name === "AbortError"
+              ? T[r.lang].timeout
+              : e instanceof TypeError
+                ? T[r.lang].connError
+                : msg
           );
           setStatus("error");
           if (loadSoundOn()) playDing(false);
@@ -2080,9 +2132,13 @@ function App() {
           reportEvent("lookup");
         } finally {
           clearTimeout(timeoutId);
-          // Start the auto-hide countdown only after fetch completes,
-          // so a slow OCR call doesn't make the card disappear mid-lookup.
-          scheduleHide();
+          // Only the CURRENT generation may end the in-flight state and
+          // start the auto-hide countdown — a stale lookup's finally must
+          // not hide the card under the newer lookup still running.
+          if (seq === lookupSeqRef.current) {
+            lookupInFlightRef.current = false;
+            scheduleHide();
+          }
         }
       }
     );
@@ -2160,6 +2216,13 @@ function App() {
     setStatus("loading");
     setError("");
     if (rememberAsCorrection) saveCorrection(rememberAsCorrection, name);
+    // Same generation/in-flight discipline as the F2 path, plus a 30s abort:
+    // no OCR happens here, so a hung half-open socket (not refused — just
+    // silent) would otherwise pin the card on "loading" forever.
+    const seq = ++lookupSeqRef.current;
+    lookupInFlightRef.current = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     const body = JSON.stringify({
       x: 0,
       y: 0,
@@ -2174,10 +2237,12 @@ function App() {
       const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: LookupResult = await res.json();
+      if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won
       setResult(data);
       setStatus("success");
       setHistory(addToHistory(data));
@@ -2196,12 +2261,25 @@ function App() {
       }
     } catch (e) {
       const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-      setError(msg);
+      if (seq !== lookupSeqRef.current) return; // stale failure — ignore
+      // Same human-readable mapping as the F2 path (raw "Failed to fetch"
+      // reads like a crash; it's just the sidecar restarting).
+      setError(
+        e instanceof Error && e.name === "AbortError"
+          ? t.timeout
+          : e instanceof TypeError
+            ? t.connError
+            : msg
+      );
       setStatus("error");
       if (loadSoundOn()) playDing(false);
       reportEvent("lookup");
     } finally {
-      scheduleHide();
+      clearTimeout(timeoutId);
+      if (seq === lookupSeqRef.current) {
+        lookupInFlightRef.current = false;
+        scheduleHide();
+      }
     }
   };
 
@@ -2326,7 +2404,7 @@ function App() {
     <div className="overlay">
       <div
         ref={cardRef}
-        className={`card${cardVisible ? "" : " card-hidden"}`}
+        className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
           width: `${cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT)}px`,
@@ -2362,7 +2440,12 @@ function App() {
           <span className="title" data-tauri-drag-region={pinned ? undefined : true}>{t.title}</span>
           <div className="header-actions">
             <span className="hotkey" data-tauri-drag-region={pinned ? undefined : true}>
-              <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
+              {/* Mouse bindings carry their own 🖱 prefix from
+                  formatHotkeyLabel — the fixed ⌨︎ would read as
+                  "⌨︎ : 🖱 휠클릭". Only show it for keyboard binds. */}
+              {!isMouseHotkey(hotkey) && (
+                <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
+              )}
               <span className="hotkey-sep">:</span>
               <span className="hotkey-key">{formatHotkeyLabel(hotkey, t)}</span>
             </span>
@@ -2470,6 +2553,13 @@ function App() {
               <>
                 <span className="update-text">
                   🆕 {t.updateAvailable} <strong>v{updateInfo.version}</strong>
+                  {/* One-line release notes: seeing WHAT the update brings is
+                      the cheapest adoption nudge there is. */}
+                  {updateInfo.notes && (
+                    <span className="update-notes">
+                      {" "}— {updateInfo.notes.split("\n")[0].slice(0, 120)}
+                    </span>
+                  )}
                   {isPortable && (
                     <span className="update-portable-hint">
                       {" "}— {t.updatePortableHint}
@@ -2510,8 +2600,14 @@ function App() {
               </>
             )}
             {updatePhase === "downloading" && (
-              <span className="update-text">
+              <span className="update-text update-progress-wrap">
                 ⬇ {t.updateDownloading} {updateProgress}%
+                <span className="update-progress-track" aria-hidden="true">
+                  <span
+                    className="update-progress-fill"
+                    style={{ width: `${updateProgress}%` }}
+                  />
+                </span>
               </span>
             )}
             {updatePhase === "ready" && (
@@ -4192,7 +4288,10 @@ function App() {
         {/* Bottom-right handle: drag to widen/narrow the card; double-click
             resets to auto width. Hidden while the capture modal is open so it
             doesn't overlap the modal's own controls. */}
-        {cardVisible && !captureModalOpen && !pinned && (
+        {/* Pin hides the handle to block accidental resizes — EXCEPT while
+            settings is open: the user is deliberately interacting there and
+            this handle is the only way to size the settings panel. */}
+        {cardVisible && !captureModalOpen && (!pinned || showSettings) && (
           <div
             className="card-resize-handle"
             title={t.cardResizeHint}

@@ -21,7 +21,8 @@ if (-not (Test-Path $internalDir)) {
 }
 
 # Kill any leftover tarkov-server / tarkov-price-overlay from a previous run.
-Get-Process | Where-Object { $_.ProcessName -in @("tarkov-server", "tarkov-price-overlay") } |
+# -like also catches the staged exe's name ("tarkov-server-x86_64-...").
+Get-Process | Where-Object { $_.ProcessName -like "tarkov-server*" -or $_.ProcessName -eq "tarkov-price-overlay" } |
     ForEach-Object {
         Write-Host "[run-local] killing leftover $($_.ProcessName) (pid $($_.Id))"
         Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue

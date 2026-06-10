@@ -1,5 +1,16 @@
 import sys
 
+# Frozen exe on Korean Windows inherits a cp949 stdout/stderr. Any print()
+# whose text contains a non-cp949 character (em-dash in a log literal, some
+# item names) then raises UnicodeEncodeError *inside the request handler* and
+# 500s the lookup — a real production bug we hit. Force utf-8 with
+# replacement so logging can never crash a request again.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass  # very old runtimes / detached streams: keep going
+
 DPI_STATUS = "not-windows"
 if sys.platform == "win32":
     import ctypes
@@ -30,11 +41,11 @@ from tarkov_api import get_item_price, get_station_list, start_background_refres
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    print("[startup] warming up OCR reader (ko+en)…")
+    print("[startup] warming up OCR reader (ko+en)...")
     _get_reader(("ko", "en"))  # loads models once so first /lookup is fast
-    print("[startup] starting price-cache background refresher…")
+    print("[startup] starting price-cache background refresher...")
     start_background_refresher()
-    print("[startup] starting quest log watcher…")
+    print("[startup] starting quest log watcher...")
     get_tracker().start()
     print("[startup] warmup complete")
     yield
