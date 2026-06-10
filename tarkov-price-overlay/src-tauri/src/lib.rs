@@ -472,6 +472,37 @@ fn relaunch_as_admin(app: tauri::AppHandle) -> Result<(), String> {
 /// looping forever would just burn CPU re-loading OCR models.
 const SIDECAR_MAX_RESTARTS: u32 = 5;
 
+fn is_quitting(app: &tauri::AppHandle) -> bool {
+    app.try_state::<IsQuitting>()
+        .map(|s| s.0.load(Ordering::SeqCst))
+        // No state (shutdown teardown) → treat as quitting, never respawn.
+        .unwrap_or(true)
+}
+
+/// Schedule a sidecar respawn 2s out, respecting the consecutive-failure
+/// budget. Shared by every failure path (unexpected exit, channel closed
+/// without Terminated, spawn error) so none of them silently gives up while
+/// budget remains. Re-checks IsQuitting after the sleep — a respawn landing
+/// mid-shutdown would leak a zombie tarkov-server nothing is left to kill.
+fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
+    if next > SIDECAR_MAX_RESTARTS {
+        eprintln!(
+            "[sidecar] restart limit reached ({why}) - giving up (lookups fail until app restart)"
+        );
+        return;
+    }
+    eprintln!("[sidecar] {why} - restarting ({next}/{SIDECAR_MAX_RESTARTS}) in 2s");
+    // Plain OS thread for the delay: no tokio dep and spawn() is thread-safe.
+    thread::spawn(move || {
+        thread::sleep(Duration::from_secs(2));
+        if is_quitting(&app) {
+            println!("[sidecar] restart cancelled - app is quitting");
+            return;
+        }
+        spawn_and_watch_sidecar(app, next);
+    });
+}
+
 /// Spawn the Python sidecar and babysit it. If it dies while the app is NOT
 /// quitting (crash/OOM/AV kill), respawn after 2s so lookups self-heal instead
 /// of failing with "Failed to fetch" until an app restart — the most common
@@ -481,14 +512,19 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     let cmd = match app.shell().sidecar("tarkov-server") {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("[sidecar] sidecar() failed: {e}. App runs but /lookup will fail.");
+            // Config-level failure (bad externalBin) — retrying won't help,
+            // but it shares the budget so a fluke still gets another shot.
+            schedule_sidecar_restart(app, attempt + 1, &format!("sidecar() failed: {e}"));
             return;
         }
     };
     let (mut rx, child) = match cmd.spawn() {
         Ok(v) => v,
         Err(e) => {
-            eprintln!("[sidecar] spawn failed: {e}. App runs but /lookup will fail.");
+            // Transient spawn failures are REAL: AV scanners briefly lock
+            // fresh PyInstaller exes. Retry within the same budget instead
+            // of giving up on the very failure mode we built this for.
+            schedule_sidecar_restart(app, attempt + 1, &format!("spawn failed: {e}"));
             return;
         }
     };
@@ -496,11 +532,28 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     if let Some(state) = app.try_state::<SidecarChild>() {
         *state.0.lock().unwrap() = Some(child);
     }
+    // TOCTOU close: if the user hit Exit between our spawn and the store
+    // above, the exit path's take()+kill saw None and this child would
+    // outlive the app. The exit paths set IsQuitting BEFORE taking, so
+    // checking it after storing guarantees one side performs the kill.
+    if is_quitting(&app) {
+        if let Some(state) = app.try_state::<SidecarChild>() {
+            if let Some(c) = state.0.lock().unwrap().take() {
+                let _ = c.kill();
+                println!("[sidecar] killed right after spawn - app is quitting");
+            }
+        }
+        return;
+    }
 
     let started = std::time::Instant::now();
     // Forward sidecar stdout/stderr into our own console for debugging and
-    // watch for unexpected termination.
+    // watch for termination. `saw_terminated` covers the channel closing
+    // WITHOUT a Terminated event (e.g. plugin-side wait() error emits
+    // CommandEvent::Error then drops the sender) — the sidecar is just as
+    // dead in that case and must heal the same way.
     tauri::async_runtime::spawn(async move {
+        let mut saw_terminated = false;
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
@@ -509,43 +562,31 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
                 CommandEvent::Stderr(line) => {
                     eprintln!("[sidecar/err] {}", String::from_utf8_lossy(&line));
                 }
+                CommandEvent::Error(e) => {
+                    eprintln!("[sidecar] command event error: {e}");
+                }
                 CommandEvent::Terminated(payload) => {
-                    let quitting = app
-                        .try_state::<IsQuitting>()
-                        .map(|s| s.0.load(Ordering::SeqCst))
-                        .unwrap_or(false);
-                    println!(
-                        "[sidecar] terminated: code={:?} (quitting={quitting})",
-                        payload.code
-                    );
-                    if !quitting {
-                        let next = if started.elapsed().as_secs() >= 60 {
-                            1 // lived long enough — treat as a fresh transient crash
-                        } else {
-                            attempt + 1
-                        };
-                        if next <= SIDECAR_MAX_RESTARTS {
-                            eprintln!(
-                                "[sidecar] unexpected exit — restarting ({next}/{SIDECAR_MAX_RESTARTS}) in 2s"
-                            );
-                            let app2 = app.clone();
-                            // Plain OS thread for the delay: no tokio dep and
-                            // spawn() is thread-safe.
-                            thread::spawn(move || {
-                                thread::sleep(Duration::from_secs(2));
-                                spawn_and_watch_sidecar(app2, next);
-                            });
-                        } else {
-                            eprintln!(
-                                "[sidecar] restart limit reached — giving up (lookups fail until app restart)"
-                            );
-                        }
-                    }
+                    saw_terminated = true;
+                    println!("[sidecar] terminated: code={:?}", payload.code);
                     break;
                 }
                 _ => {}
             }
         }
+        if is_quitting(&app) {
+            return; // expected teardown — exit paths already killed it
+        }
+        let next = if started.elapsed().as_secs() >= 60 {
+            1 // lived long enough — treat as a fresh transient crash
+        } else {
+            attempt + 1
+        };
+        let why = if saw_terminated {
+            "unexpected exit"
+        } else {
+            "event channel closed without Terminated"
+        };
+        schedule_sidecar_restart(app, next, why);
     });
 }
 
