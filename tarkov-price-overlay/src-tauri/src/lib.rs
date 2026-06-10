@@ -467,17 +467,39 @@ fn relaunch_as_admin(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-fn spawn_sidecar(app: &tauri::AppHandle) -> Result<CommandChild, String> {
-    let cmd = app
-        .shell()
-        .sidecar("tarkov-server")
-        .map_err(|e| format!("sidecar() failed: {e}"))?;
-    let (mut rx, child) = cmd
-        .spawn()
-        .map_err(|e| format!("sidecar.spawn() failed: {e}"))?;
-    println!("[sidecar] tarkov-server spawned (pid via shell-plugin)");
+/// Consecutive quick-death restart cap. A sidecar that keeps dying within a
+/// minute is genuinely broken (missing _internal, port conflict, AV kill) —
+/// looping forever would just burn CPU re-loading OCR models.
+const SIDECAR_MAX_RESTARTS: u32 = 5;
 
-    // Forward sidecar stdout/stderr into our own console for debugging.
+/// Spawn the Python sidecar and babysit it. If it dies while the app is NOT
+/// quitting (crash/OOM/AV kill), respawn after 2s so lookups self-heal instead
+/// of failing with "Failed to fetch" until an app restart — the most common
+/// user-reported connection error. A sidecar that survived 60s+ resets the
+/// attempt counter (transient crash, not a crash loop).
+fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
+    let cmd = match app.shell().sidecar("tarkov-server") {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("[sidecar] sidecar() failed: {e}. App runs but /lookup will fail.");
+            return;
+        }
+    };
+    let (mut rx, child) = match cmd.spawn() {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("[sidecar] spawn failed: {e}. App runs but /lookup will fail.");
+            return;
+        }
+    };
+    println!("[sidecar] tarkov-server spawned (attempt {attempt})");
+    if let Some(state) = app.try_state::<SidecarChild>() {
+        *state.0.lock().unwrap() = Some(child);
+    }
+
+    let started = std::time::Instant::now();
+    // Forward sidecar stdout/stderr into our own console for debugging and
+    // watch for unexpected termination.
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rx.recv().await {
             match event {
@@ -488,15 +510,43 @@ fn spawn_sidecar(app: &tauri::AppHandle) -> Result<CommandChild, String> {
                     eprintln!("[sidecar/err] {}", String::from_utf8_lossy(&line));
                 }
                 CommandEvent::Terminated(payload) => {
-                    println!("[sidecar] terminated: code={:?}", payload.code);
+                    let quitting = app
+                        .try_state::<IsQuitting>()
+                        .map(|s| s.0.load(Ordering::SeqCst))
+                        .unwrap_or(false);
+                    println!(
+                        "[sidecar] terminated: code={:?} (quitting={quitting})",
+                        payload.code
+                    );
+                    if !quitting {
+                        let next = if started.elapsed().as_secs() >= 60 {
+                            1 // lived long enough — treat as a fresh transient crash
+                        } else {
+                            attempt + 1
+                        };
+                        if next <= SIDECAR_MAX_RESTARTS {
+                            eprintln!(
+                                "[sidecar] unexpected exit — restarting ({next}/{SIDECAR_MAX_RESTARTS}) in 2s"
+                            );
+                            let app2 = app.clone();
+                            // Plain OS thread for the delay: no tokio dep and
+                            // spawn() is thread-safe.
+                            thread::spawn(move || {
+                                thread::sleep(Duration::from_secs(2));
+                                spawn_and_watch_sidecar(app2, next);
+                            });
+                        } else {
+                            eprintln!(
+                                "[sidecar] restart limit reached — giving up (lookups fail until app restart)"
+                            );
+                        }
+                    }
                     break;
                 }
                 _ => {}
             }
         }
     });
-
-    Ok(child)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -605,15 +655,10 @@ pub fn run() {
             let mstop = app.state::<MouseHotkeyStop>().0.clone();
             spawn_mouse_hotkey_thread(app.handle().clone(), mcfg, mstop);
 
-            match spawn_sidecar(&app.handle()) {
-                Ok(child) => {
-                    let state = app.state::<SidecarChild>();
-                    *state.0.lock().unwrap() = Some(child);
-                }
-                Err(e) => {
-                    eprintln!("[sidecar] WARN: could not spawn — {e}. App will run but /lookup will fail until the Python server is started another way.");
-                }
-            }
+            // Self-healing sidecar: respawns on unexpected death (see
+            // spawn_and_watch_sidecar) so "Failed to fetch" recovers without
+            // an app restart.
+            spawn_and_watch_sidecar(app.handle().clone(), 0);
 
             // System tray: hidden from taskbar (skipTaskbar=true), so the
             // tray icon is the only persistent UI surface. Left-click brings

@@ -239,6 +239,24 @@ const log = (msg: string) => {
   invoke("log_msg", { msg }).catch(() => {});
 };
 
+/** fetch with ONE retry on a pure network failure ("Failed to fetch" =
+ *  connection refused). That's the window where the Python sidecar is
+ *  restarting (crash recovery) or still cold-starting — a second attempt
+ *  1.5s later usually lands. Abort (user timeout) is NOT retried. */
+async function fetchWithRetryOnce(
+  url: string,
+  init: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") throw e;
+    log(`fetch failed, retrying once in 1.5s: ${String(e)}`);
+    await new Promise((r) => setTimeout(r, 1500));
+    return fetch(url, init);
+  }
+}
+
 type TraderPrice = { name: string; price: number };
 type BarterRequiredItem = {
   name: string;
@@ -401,6 +419,9 @@ type Region = {
   gameLang?: Lang;
   gameMode: GameMode;
   hideDelaySec: number;
+  // Master auto-hide switch. Off = the card stays up until the user hides it
+  // explicitly (✕ / toggle hotkey). hideDelaySec only applies while this is on.
+  autoHide: boolean;
   // Display prefs — what to show in the result card. Default minimal:
   // only flea / trader / slot price are shown.
   show24hRange: boolean;
@@ -424,6 +445,10 @@ type Region = {
   // 20 because 0% leaves the card invisible and the user can't find the
   // settings to undo it.
   opacity: number;
+  // Card BACKGROUND opacity only (0-100). Unlike `opacity`, text/icons stay
+  // fully readable — this just fades the dark panel behind them so the game
+  // shows through. 0 is safe here (text remains visible).
+  bgOpacity: number;
   // Loot-tier letter badge (D/C/B/A/S) next to ₽/slot. When off, the
   // slot price renders bare. Tier rules live in computeLootTier().
   showLootTier: boolean;
@@ -444,6 +469,7 @@ const DEFAULT_REGION: Region = {
   lang: "ko",
   gameMode: "regular",
   hideDelaySec: 5,
+  autoHide: true,
   show24hRange: true,
   showLastTrade: true,
   showWeight: true,
@@ -457,6 +483,7 @@ const DEFAULT_REGION: Region = {
   detailsOpenDefault: true,
   fontSize: 13,
   opacity: 100,
+  bgOpacity: 85,
   showLootTier: true,
   showAmmoMatrix: true,
 };
@@ -466,6 +493,7 @@ const POSITION_KEY = "tarkov.windowPosition";
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const SOUND_KEY = "tarkov.soundOn";
+const PIN_KEY = "tarkov.pinned";
 const HISTORY_KEY = "tarkov.history";
 const CORRECTIONS_KEY = "tarkov.ocrCorrections";
 const ADVANCED_KEY = "tarkov.advancedMode";
@@ -658,6 +686,8 @@ function loadRegion(): Region {
       // Clamp opacity to safe range (20-100). 0% would hide the card with
       // no way for the user to bring it back via the settings panel.
       merged.opacity = Math.max(20, Math.min(100, merged.opacity ?? 100));
+      // bgOpacity may go to 0 (text stays visible, so it's recoverable).
+      merged.bgOpacity = Math.max(0, Math.min(100, merged.bgOpacity ?? 85));
       return merged;
     }
   } catch {}
@@ -726,15 +756,20 @@ function mouseEventToAccelerator(e: MouseEvent): MouseHotkey | null {
 
 /** Pretty label for the recorded hotkey button shown in settings. Mouse
  *  bindings get a 🖱 prefix so the user instantly tells them apart from
- *  keyboard accelerators. */
-function formatHotkeyLabel(s: string): string {
+ *  keyboard accelerators. Localized — an English UI must not show Korean
+ *  labels (user-reported bug). Structural param type (not `Strings`): the
+ *  ko/en literal objects aren't mutually assignable, plain strings are. */
+function formatHotkeyLabel(
+  s: string,
+  t: { mouseMiddle: string; mouseX1: string; mouseX2: string }
+): string {
   switch (s) {
     case "MouseMiddle":
-      return "🖱 휠클릭";
+      return t.mouseMiddle;
     case "MouseX1":
-      return "🖱 마우스 X1";
+      return t.mouseX1;
     case "MouseX2":
-      return "🖱 마우스 X2";
+      return t.mouseX2;
     default:
       return s;
   }
@@ -915,6 +950,15 @@ function App() {
   // both as "no matrix" for rendering).
   const [ammoData, setAmmoData] = useState<AmmoData | null>(null);
   const [cardVisible, setCardVisible] = useState(true);
+  // Pin: locks window move (drag region off), resize (handle hidden) and the
+  // ✕ button so a mid-raid misclick can't displace or close the overlay.
+  // Unpinning stays available in settings.
+  const [pinned, setPinned] = useState<boolean>(
+    () => localStorage.getItem(PIN_KEY) === "true"
+  );
+  useEffect(() => {
+    localStorage.setItem(PIN_KEY, String(pinned));
+  }, [pinned]);
   // User-dragged card width override (px). null = auto (scales with fontSize).
   const [cardWidth, setCardWidth] = useState<number | null>(loadCardWidth);
   // User-dragged card height override (px). null = auto (fits content).
@@ -1314,8 +1358,18 @@ function App() {
       hideTimerRef.current = null;
     }
   };
+  // Master auto-hide switch, mirrored into a ref for the stable callbacks.
+  // Turning it off mid-countdown also cancels the pending timer.
+  const autoHideRef = useRef(region.autoHide);
+  useEffect(() => {
+    autoHideRef.current = region.autoHide;
+    if (!region.autoHide) cancelHideTimer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [region.autoHide]);
   const scheduleHide = () => {
     cancelHideTimer();
+    // Auto-hide disabled: the card stays until hidden explicitly.
+    if (!autoHideRef.current) return;
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
     const ms = Math.max(1, hideDelayRef.current) * 1000;
@@ -1989,7 +2043,7 @@ function App() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000);
         try {
-          const res = await fetch(`${PYTHON_API}/lookup`, {
+          const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             signal: controller.signal,
@@ -2117,7 +2171,7 @@ function App() {
       corrections: loadCorrections(),
     });
     try {
-      const res = await fetch(`${PYTHON_API}/lookup`, {
+      const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
@@ -2288,6 +2342,9 @@ function App() {
           // .card-hidden. We only dim while visible so the fade-out can
           // still drop to 0 without fighting the user's preference.
           opacity: cardVisible ? region.opacity / 100 : undefined,
+          // Background-only opacity: fades the dark panel behind the text
+          // (consumed by .card's background rgba), text/icons stay opaque.
+          ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
         } as React.CSSProperties}
         onMouseEnter={() => {
           mouseOverCardRef.current = true;
@@ -2298,13 +2355,16 @@ function App() {
           if (!recordingHotkey) scheduleHide();
         }}
       >
-        <div className="header" data-tauri-drag-region>
-          <span className="title" data-tauri-drag-region>{t.title}</span>
+        {/* Pinned: drop the drag-region attributes so the OS can't move the
+            window via the header — that's the only move affordance in a
+            borderless window. */}
+        <div className="header" data-tauri-drag-region={pinned ? undefined : true}>
+          <span className="title" data-tauri-drag-region={pinned ? undefined : true}>{t.title}</span>
           <div className="header-actions">
-            <span className="hotkey" data-tauri-drag-region>
+            <span className="hotkey" data-tauri-drag-region={pinned ? undefined : true}>
               <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
               <span className="hotkey-sep">:</span>
-              <span className="hotkey-key">{hotkey}</span>
+              <span className="hotkey-key">{formatHotkeyLabel(hotkey, t)}</span>
             </span>
             <button
               className="settings-btn"
@@ -2339,25 +2399,37 @@ function App() {
             >
               ⚙
             </button>
-            <button
-              className="settings-btn exit-btn"
-              onClick={() => {
-                // Tear down React state before invoking the native hide so
-                // the preview-rect polling loop (which checks cardVisible
-                // & showSettings on every tick) stops *before* the Rust
-                // side hides its windows. Otherwise an in-flight tick can
-                // call show_preview_rect right after Rust hid them and the
-                // rectangles pop back into view. Reset showSettings too so
-                // a future re-show doesn't land in mid-edit state.
-                setCardVisible(false);
-                setShowSettings(false);
-                setCaptureModalOpen(false);
-                hideToTray();
-              }}
-              title={t.hideToTrayTitle}
-            >
-              ✕
-            </button>
+            {pinned ? (
+              // Pinned: replace ✕ with an inert 📌 badge so a misclick can't
+              // hide the overlay. Unpin via settings (the ⚙ stays active).
+              <span
+                className="settings-btn pinned-badge"
+                title={t.pinnedBadgeTitle}
+                aria-label={t.pinnedBadgeTitle}
+              >
+                📌
+              </span>
+            ) : (
+              <button
+                className="settings-btn exit-btn"
+                onClick={() => {
+                  // Tear down React state before invoking the native hide so
+                  // the preview-rect polling loop (which checks cardVisible
+                  // & showSettings on every tick) stops *before* the Rust
+                  // side hides its windows. Otherwise an in-flight tick can
+                  // call show_preview_rect right after Rust hid them and the
+                  // rectangles pop back into view. Reset showSettings too so
+                  // a future re-show doesn't land in mid-edit state.
+                  setCardVisible(false);
+                  setShowSettings(false);
+                  setCaptureModalOpen(false);
+                  hideToTray();
+                }}
+                title={t.hideToTrayTitle}
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
@@ -2837,7 +2909,7 @@ function App() {
                   ? hotkeyConflict
                     ? t.hotkeyConflict
                     : t.recordingHotkey
-                  : formatHotkeyLabel(hotkey)}
+                  : formatHotkeyLabel(hotkey, t)}
               </button>
             </div>
             <div className="settings-row">
@@ -2853,7 +2925,7 @@ function App() {
                   ? hotkeyConflict
                     ? t.hotkeyConflict
                     : t.recordingHotkey
-                  : formatHotkeyLabel(toggleHotkey)}
+                  : formatHotkeyLabel(toggleHotkey, t)}
               </button>
             </div>
             <div className="settings-row">
@@ -2900,12 +2972,21 @@ function App() {
                     : t.updateCheckNow}
               </button>
             </div>
+            <div className="settings-row" title={t.autoHideHint}>
+              <label>{t.autoHideToggle}</label>
+              <input
+                type="checkbox"
+                checked={region.autoHide}
+                onChange={(e) => updateRegion("autoHide", e.target.checked)}
+              />
+            </div>
             <div className="settings-row">
               <label>{t.hideDelay}</label>
               <input
                 type="number"
                 min="1"
                 max="60"
+                disabled={!region.autoHide}
                 value={region.hideDelaySec}
                 onChange={(e) =>
                   updateRegion(
@@ -2983,6 +3064,31 @@ function App() {
                   </span>
                 )}
               </div>
+            </div>
+            <div className="settings-row">
+              <label title={t.bgOpacityHint}>{t.bgOpacity}</label>
+              <div className="opacity-row">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={region.bgOpacity}
+                  onChange={(e) =>
+                    updateRegion("bgOpacity", parseInt(e.target.value))
+                  }
+                  className="opacity-slider"
+                />
+                <span className="opacity-readout">{region.bgOpacity}%</span>
+              </div>
+            </div>
+            <div className="settings-row" title={t.pinHint}>
+              <label>📌 {t.pinWindow}</label>
+              <input
+                type="checkbox"
+                checked={pinned}
+                onChange={(e) => setPinned(e.target.checked)}
+              />
             </div>
             {(
               [
@@ -4086,7 +4192,7 @@ function App() {
         {/* Bottom-right handle: drag to widen/narrow the card; double-click
             resets to auto width. Hidden while the capture modal is open so it
             doesn't overlap the modal's own controls. */}
-        {cardVisible && !captureModalOpen && (
+        {cardVisible && !captureModalOpen && !pinned && (
           <div
             className="card-resize-handle"
             title={t.cardResizeHint}

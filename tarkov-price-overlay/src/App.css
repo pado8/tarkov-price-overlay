@@ -79,7 +79,9 @@ html, body, #root {
   --card-fs-xs:  calc(var(--card-fs) * 0.77);  /* ≈10px at default */
   --card-fs-xxs: calc(var(--card-fs) * 0.69);  /* ≈9px  at default */
   font-size: var(--card-fs);
-  background: rgba(20, 20, 20, 0.85);
+  /* --card-bg-alpha is set inline from the bgOpacity setting (0-1).
+     Background-only transparency: text/icons keep full opacity. */
+  background: rgba(20, 20, 20, var(--card-bg-alpha, 0.85));
   border: 1px solid var(--border-emphasis);
   border-radius: var(--radius-lg);
   padding: 10px 14px;
@@ -213,6 +215,14 @@ html, body, #root {
 
 .header-actions .settings-btn {
   margin-left: 0;
+}
+
+/* Inert 📌 badge shown in place of ✕ while the window is pinned. */
+.pinned-badge {
+  cursor: default;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .hint {
