@@ -18,6 +18,9 @@ Tarkov Price Overlay (Portable v{VERSION})
 새 버전이 나오면 카드에 알림이 뜹니다.
 포터블 버전은 '다운로드 페이지 열기'로 안내되며, 새 포터블 ZIP을 받아
 현재 폴더에 덮어쓰면 됩니다. (인스톨러 버전은 '지금 설치'로 자동 설치)
+※ v1.1.2부터 용량이 절반 이하로 줄었습니다. 이전 버전 폴더에 덮어쓰면
+   더 이상 안 쓰는 큰 파일들이 남아 폴더가 계속 큽니다 — 기존 폴더를
+   지우고 새로 푸는 것을 권장합니다. (설정은 폴더 밖에 저장되어 안전)
 
 [개인정보 / 통계]
 앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 버전, 국가, 관리자 권한 여부, 조회 실패 유형)만 수집합니다.
@@ -55,6 +58,9 @@ When a new version is out, a banner appears on the card.
 The portable build sends you to "Open downloads page" — grab the new portable
 ZIP and overwrite the current folder. (The installer build self-installs via
 'Install now'.)
+Note: v1.1.2+ is less than half the old size. Overwriting an OLD folder
+leaves the obsolete big files behind — deleting the old folder and
+extracting fresh is recommended. (Your settings live outside the folder.)
 
 [Privacy / Stats]
 To improve the app, only anonymous usage stats are collected (app launches,

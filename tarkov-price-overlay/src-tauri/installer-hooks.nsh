@@ -11,17 +11,33 @@
 
 !macro NSIS_HOOK_PREINSTALL
   !insertmacro KillRunningOverlay
+  ; Purge dead weight left by pre-v1.1.2 installs. The in-app updater runs
+  ; NSIS in update mode, which OVERWRITES files but never runs the old
+  ; uninstaller — so the ~889MB of build-time artifacts that v1.1.2 stripped
+  ; from the bundle (torch *.lib import libraries, C++ headers, test
+  ; fixtures) would linger on disk forever, and the rewritten uninstall.exe
+  ; (new manifest) wouldn't remove them either.
+  DetailPrint "Removing obsolete files from previous versions..."
+  RMDir /r "$INSTDIR\_internal\torch\include"
+  RMDir /r "$INSTDIR\_internal\torch\test"
+  RMDir /r "$INSTDIR\_internal\torch\share"
+  Delete "$INSTDIR\_internal\torch\lib\*.lib"
+  Delete "$INSTDIR\_internal\torch\lib\*.exp"
+  Delete "$INSTDIR\_internal\torch\lib\*.pdb"
 !macroend
 
 !macro NSIS_HOOK_PREUNINSTALL
   !insertmacro KillRunningOverlay
 !macroend
 
-; After auto-update install completes, launch the new exe so the user
-; doesn't have to manually re-open from Start Menu. ExecShell uses the
-; current user's context (not elevated), matching how Start Menu launches
-; the app. Safe for first-time installs too — same behavior NSIS's
-; standard "Run on finish" checkbox would give.
+; After a MANUAL install completes, launch the new exe so the user doesn't
+; have to re-open from Start Menu. Skipped in update mode: the in-app
+; updater's /R flag already relaunches the app via .onInstSuccess — running
+; ExecShell too spawned a SECOND instance, which single-instance (v1.1.1+)
+; then killed with a confusing "already running" toast right after every
+; auto-update.
 !macro NSIS_HOOK_POSTINSTALL
-  ExecShell "" "$INSTDIR\tarkov-price-overlay.exe"
+  ${If} $UpdateMode <> 1
+    ExecShell "" "$INSTDIR\tarkov-price-overlay.exe"
+  ${EndIf}
 !macroend

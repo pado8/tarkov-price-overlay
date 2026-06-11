@@ -191,6 +191,8 @@ export const T = {
     autoHideHint: "끄면 카드가 계속 떠 있어요 (✕ 또는 카드 토글 단축키로 숨김 · 창 고정 중엔 토글 단축키만)",
     connError:
       "로컬 서버에 연결할 수 없어요 — 자동 복구 중입니다. 잠시 후 다시 F2를 눌러주세요.",
+    sidecarDead:
+      "조회 서버를 복구하지 못했어요. 트레이 아이콘 우클릭 → 종료 후 앱을 다시 실행해 주세요.",
     exit: "종료",
     hideToTrayTitle: "트레이로 숨기기 (완전 종료는 트레이 우클릭 → 종료)",
     feedback: "피드백",
@@ -426,6 +428,8 @@ export const T = {
     autoHideHint: "Off keeps the card on screen (hide via ✕ or the toggle hotkey; while pinned: toggle hotkey only)",
     connError:
       "Can't reach the local server — auto-recovering. Try F2 again in a few seconds.",
+    sidecarDead:
+      "The lookup server could not be recovered. Right-click the tray icon → Exit, then start the app again.",
     exit: "Exit",
     hideToTrayTitle: "Hide to tray (right-click tray icon → Exit to fully quit)",
     feedback: "Feedback",

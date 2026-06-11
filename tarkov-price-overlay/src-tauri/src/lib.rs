@@ -489,12 +489,25 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
         eprintln!(
             "[sidecar] restart limit reached ({why}) - giving up (lookups fail until app restart)"
         );
+        // Tell the webview so it can stop promising "auto-recovering" — at
+        // this point only an app restart brings lookups back, and the user
+        // deserves accurate instructions instead of an infinite F2 loop.
+        let _ = app.emit("sidecar-dead", ());
         return;
     }
-    eprintln!("[sidecar] {why} - restarting ({next}/{SIDECAR_MAX_RESTARTS}) in 2s");
+    // Exponential backoff (2,4,8,16,32s ≈ 62s window): a fixed 2s delay
+    // burned the whole budget in ~10s, which is SHORTER than a typical
+    // on-access AV scan of a fresh unsigned PyInstaller exe — the exact
+    // failure this retry exists for. Crash-loop protection is preserved
+    // (still a hard 5-attempt cap between healthy runs).
+    let delay = Duration::from_secs(2u64 << (next.saturating_sub(1)).min(4));
+    eprintln!(
+        "[sidecar] {why} - restarting ({next}/{SIDECAR_MAX_RESTARTS}) in {}s",
+        delay.as_secs()
+    );
     // Plain OS thread for the delay: no tokio dep and spawn() is thread-safe.
     thread::spawn(move || {
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(delay);
         if is_quitting(&app) {
             println!("[sidecar] restart cancelled - app is quitting");
             return;

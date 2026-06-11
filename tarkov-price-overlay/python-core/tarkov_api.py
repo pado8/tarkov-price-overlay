@@ -1004,7 +1004,16 @@ def get_item_price(
 
     # Cold path (cache not yet populated for this lang/mode): fall back to
     # individual GraphQL queries. Same flow as pre-v0.4.0.
-    items = _query_by_name(item_name, lang, game_mode)
+    # Network errors degrade to "no match" instead of raising: an unhandled
+    # exception here 500s the request, and during a tarkov.dev outage the
+    # zoom-out rescue feeds MORE unmatched text into this path — the stale
+    # in-memory cache keeps real lookups working, so a cold-path miss must
+    # never take the whole lookup down with it.
+    try:
+        items = _query_by_name(item_name, lang, game_mode)
+    except Exception as e:
+        print(f"[tarkov_api] cold-path query failed: {e!r} - degrading to no-match")
+        return _empty_result(matched_from)
 
     if not items:
         closest = _find_closest_name(item_name, lang)
@@ -1012,7 +1021,11 @@ def get_item_price(
             print(f"[tarkov_api] fuzzy match: {item_name!r} -> {closest!r}")
             if matched_from is None:
                 matched_from = item_name
-            items = _query_by_name(closest, lang, game_mode)
+            try:
+                items = _query_by_name(closest, lang, game_mode)
+            except Exception as e:
+                print(f"[tarkov_api] cold-path retry failed: {e!r} - degrading to no-match")
+                return _empty_result(matched_from)
 
     if not items:
         return _empty_result(matched_from)

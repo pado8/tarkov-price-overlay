@@ -1057,6 +1057,25 @@ function App() {
   // slow OCR fetch and the result arrived on a hidden card).
   const lookupSeqRef = useRef(0);
   const lookupInFlightRef = useRef(false);
+  // Abort handle of the lookup in flight. A new press ABORTS the old request
+  // (not just ignores its result): without this, spamming F2 stacked real
+  // concurrent OCR passes in the sidecar's threadpool — measured 383ms →
+  // 1078ms per pass at 4-way concurrency, exactly when the user is in-game
+  // and CPU-sensitive. The seq token still guards against stragglers.
+  const lookupAbortRef = useRef<AbortController | null>(null);
+  // Set when Rust gives up restarting the sidecar (budget exhausted). From
+  // then on "auto-recovering, try again" would be a LIE — connection errors
+  // switch to an honest "restart the app" instruction instead.
+  const sidecarDeadRef = useRef(false);
+  useEffect(() => {
+    const un = listen("sidecar-dead", () => {
+      log("React: sidecar-dead received — restart budget exhausted");
+      sidecarDeadRef.current = true;
+    });
+    return () => {
+      un.then((fn) => fn());
+    };
+  }, []);
   const hideDelayRef = useRef(region.hideDelaySec);
   useEffect(() => {
     hideDelayRef.current = region.hideDelaySec;
@@ -1614,7 +1633,15 @@ function App() {
     updatePhaseRef.current = updatePhase;
   }, [updatePhase]);
   const checkForUpdate = async () => {
-    if (updateCheckingRef.current || updatePhaseRef.current !== "idle") return;
+    // Block only while an install is genuinely in progress. "error" must
+    // NOT block: otherwise one failed download froze update checks forever
+    // (4h ticks + the manual button all silently no-oped until restart).
+    if (
+      updateCheckingRef.current ||
+      updatePhaseRef.current === "downloading" ||
+      updatePhaseRef.current === "ready"
+    )
+      return;
     updateCheckingRef.current = true;
     setUpdateChecking(true);
     setUpdateError(null);
@@ -1853,6 +1880,20 @@ function App() {
       }
       const accel = eventToAccelerator(e);
       if (accel) {
+        // Cross-slot guard (same as the mouse path below): recording the
+        // SAME key into both slots doesn't error at the OS level — the
+        // re-register sequence silently dead-ends one binding instead
+        // (unregister-all wipes both, then the duplicate register fails and
+        // that slot is simply gone until changed). Refuse and show the
+        // conflict hint; recording stays active.
+        const otherKeySlot =
+          recordingTarget === "lookup" ? toggleHotkey : hotkey;
+        if (accel === otherKeySlot) {
+          log(`hotkey ${accel} already bound to the other slot — ignoring`);
+          setHotkeyConflict(true);
+          return;
+        }
+        setHotkeyConflict(false);
         if (recordingTarget === "lookup") setHotkey(accel);
         else if (recordingTarget === "toggle") setToggleHotkey(accel);
         setRecordingTarget(null);
@@ -2101,7 +2142,12 @@ function App() {
           ground_height: r.groundHeight,
           corrections: loadCorrections(),
         });
+        // Cancel the previous in-flight lookup so rapid F2 presses don't
+        // stack concurrent OCR passes in the sidecar (CPU contention while
+        // the game is running). Its catch sees AbortError + stale seq → no-op.
+        lookupAbortRef.current?.abort();
         const controller = new AbortController();
+        lookupAbortRef.current = controller;
         const timeoutId = setTimeout(() => controller.abort(), 120000);
         try {
           const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
@@ -2119,7 +2165,14 @@ function App() {
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
           setResult(data);
           setStatus("success");
-          setHistory(addToHistory(data));
+          // Wide-rescue matches stay OUT of history: the enlarged box can
+          // read static UI captions ("BODY ARMOR", trader names…) that the
+          // match chain resolves to real-looking items — letting those into
+          // the recent list would push out genuine entries and a re-click
+          // would "confirm" the wrong item forever.
+          if (data.attempt !== "wide") {
+            setHistory(addToHistory(data));
+          }
           setCorrecting(false);
           if (loadSoundOn()) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
@@ -2136,7 +2189,13 @@ function App() {
             // items) are surfacing as priceless.
             reportEvent("lookup_noprice", data.item_id ?? undefined);
           } else {
-            reportEvent("lookup");
+            // Tag wide-rescue successes too: without it the rescue's hit
+            // rate (and its false positives) hide inside plain "lookup" and
+            // the rescue's precision can never be measured post-release.
+            reportEvent(
+              "lookup",
+              data.attempt === "wide" ? "wide" : undefined
+            );
           }
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -2149,7 +2208,9 @@ function App() {
             e instanceof Error && e.name === "AbortError"
               ? T[r.lang].timeout
               : e instanceof TypeError
-                ? T[r.lang].connError
+                ? sidecarDeadRef.current
+                  ? T[r.lang].sidecarDead
+                  : T[r.lang].connError
                 : msg
           );
           setStatus("error");
@@ -2249,7 +2310,9 @@ function App() {
     // silent) would otherwise pin the card on "loading" forever.
     const seq = ++lookupSeqRef.current;
     lookupInFlightRef.current = true;
+    lookupAbortRef.current?.abort(); // cancel any in-flight lookup (see F2 path)
     const controller = new AbortController();
+    lookupAbortRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 30000);
     const body = JSON.stringify({
       x: 0,
@@ -2298,7 +2361,9 @@ function App() {
         e instanceof Error && e.name === "AbortError"
           ? t.timeout
           : e instanceof TypeError
-            ? t.connError
+            ? sidecarDeadRef.current
+              ? t.sidecarDead
+              : t.connError
             : msg
       );
       setStatus("error");
@@ -2655,6 +2720,19 @@ function App() {
                   onClick={installUpdate}
                 >
                   {t.updateRetry}
+                </button>
+                <button
+                  className="settings-btn"
+                  onClick={() => {
+                    // Dismissable error: reset to idle so periodic checks
+                    // resume, and mute this version's banner.
+                    setUpdatePhase("idle");
+                    setUpdateError(null);
+                    setDismissedUpdate(updateInfo.version);
+                  }}
+                  title={t.updateLater}
+                >
+                  ✕
                 </button>
               </>
             )}
@@ -3729,12 +3807,15 @@ function App() {
                     : `(${t.noMatch})`)}
               </div>
             </div>
-            {/* Read NOTHING at all (78% of failed lookups in telemetry):
-                the capture box almost certainly missed the tooltip. Give an
-                actionable pointer instead of a bare "no match". */}
-            {!result.item_name && !result.raw_text.trim() && (
-              <div className="hint">{t.emptyCaptureHint}</div>
-            )}
+            {/* Capture-box-missed guidance. Two shapes of the same problem:
+                (a) nothing read at all, (b) only the WIDE rescue read text —
+                meaning the normal box missed and the enlarged one caught
+                stray screen text. Both deserve the "check your capture
+                region" pointer, not a bare "no match". */}
+            {!result.item_name &&
+              (!result.raw_text.trim() || result.attempt === "wide") && (
+                <div className="hint">{t.emptyCaptureHint}</div>
+              )}
             {result.item_name && (() => {
               const trend = trendPct(result.flea_change_48h_pct);
               const slot = fmtSlot(
@@ -4273,7 +4354,12 @@ function App() {
             {/* "직접 입력" correction UI: hidden by default; advanced
                 users can enable it from settings. Past learned corrections
                 still apply automatically regardless. */}
-            {advancedMode && !correcting && (
+            {/* No corrections from wide-rescue reads: the enlarged box often
+                grabs static UI text, and corrections are keyed on raw OCR
+                text + applied before exact cache lookups — teaching it
+                "BODY ARMOR"→item would permanently redirect (and can even
+                shadow real shortNames like "Meds"). */}
+            {advancedMode && !correcting && result.attempt !== "wide" && (
               <button
                 className="correction-btn"
                 onClick={() => {
