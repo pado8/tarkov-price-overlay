@@ -167,7 +167,12 @@ Write-Host "[release] creating GitHub Release on $publicRepo..."
 # 5c. Verify the release actually exists with all three assets — `gh release
 # create` has silently failed before (v1.0.11). Catch it HERE, not days later.
 Write-Host "[release] verifying GitHub release..."
-$assets = & $ghExe release view $tag --repo $publicRepo --json assets --jq ".assets[].name" 2>$null
+# No 2>$null here: under Windows PowerShell 5.1 + ErrorActionPreference=Stop,
+# redirecting a native command's stderr wraps it in a terminating
+# NativeCommandError BEFORE $LASTEXITCODE is checked — the friendly throw
+# below became unreachable. stderr going to console is fine; $assets only
+# captures stdout either way.
+$assets = & $ghExe release view $tag --repo $publicRepo --json assets --jq ".assets[].name"
 if ($LASTEXITCODE -ne 0) {
     throw "Release $tag NOT FOUND on $publicRepo — gh release create silently failed. Re-run: gh release create $tag <assets> --repo $publicRepo"
 }

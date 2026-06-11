@@ -880,6 +880,20 @@ def _cache_lookup(
     if entry:
         return {**entry, "matched_from": matched_from}
 
+    # Canonical confusion-fold match (0↔O, 1/i↔l, 5↔S, 8↔B, …) BEFORE fuzzy:
+    # an unambiguous fold hit is a *certain* identification of a pure
+    # character-confusion misread, while case-sensitive difflib at 0.6 can
+    # snipe those same misreads onto the WRONG item first (verified against
+    # the live catalog: e.g. 'SALEWA' fuzzy-matched 'SAW' when fuzzy ran
+    # first; canon resolves it exactly with zero mis-matches). Ambiguous
+    # folds are indexed as None and fall through to fuzzy/prefix below.
+    canon_map = _canon_cache.get((lang, game_mode))
+    if canon_map:
+        entry = canon_map.get(_canon(item_name))
+        if entry is not None:
+            print(f"[cache] canon: {item_name!r} -> {entry['name']!r}")
+            return {**entry, "matched_from": matched_from or item_name}
+
     # Fuzzy match against cached names. Re-use the pre-built names list
     # populated by _refresh_one() so we don't rebuild list(cache.keys())
     # (~5k entries) on every fuzzy fallback. Falls back to the live keys
@@ -917,17 +931,6 @@ def _cache_lookup(
             hit = min(prefix_candidates, key=len)
             print(f"[cache] prefix: {item_name!r} -> {hit!r}")
             entry = cache[hit]
-            return {**entry, "matched_from": matched_from or item_name}
-
-    # Last resort: exact match on the OCR-confusion-folded canonical form
-    # (0↔O, 1/i↔l, 5↔S, 8↔B, …). Rescues pure character-confusion misreads
-    # like "M8SS" → "M855" that fuzzy can miss on short names. Exact-only on
-    # an unambiguous fold, so it can't mis-match the way a looser fuzzy would.
-    canon_map = _canon_cache.get((lang, game_mode))
-    if canon_map:
-        entry = canon_map.get(_canon(item_name))
-        if entry is not None:
-            print(f"[cache] canon: {item_name!r} -> {entry['name']!r}")
             return {**entry, "matched_from": matched_from or item_name}
 
     # Cache populated but no name matches. Return None (not an empty result)

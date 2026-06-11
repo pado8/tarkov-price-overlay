@@ -373,6 +373,11 @@ type LookupResult = {
   caliber: string | null;
   caliber_display: string | null;
   matched_from: string | null;
+  // Capture attempt that produced this response ("primary"/"mirror"/
+  // "ground"/"wide"); null on override_text lookups. "wide" marks the
+  // zoom-out rescue path — telemetry prefixes its nomatch category with
+  // "wide_" so the dashboard can tell rescue reads from normal ones.
+  attempt?: string | null;
 };
 
 type AmmoRound = {
@@ -1599,7 +1604,18 @@ function App() {
   // ed25519 signature against the pubkey baked into the app, and
   // returns an Update handle whose downloadAndInstall() streams the
   // signed installer to disk and launches it.
+  // Refs for the periodic re-check: its interval closure is created once on
+  // mount, so it must read CURRENT state via refs — and it must never fire
+  // mid-download (a tick during "downloading" reset the phase to idle,
+  // killing the progress bar and re-arming the install button).
+  const updateCheckingRef = useRef(false);
+  const updatePhaseRef = useRef<UpdatePhase>("idle");
+  useEffect(() => {
+    updatePhaseRef.current = updatePhase;
+  }, [updatePhase]);
   const checkForUpdate = async () => {
+    if (updateCheckingRef.current || updatePhaseRef.current !== "idle") return;
+    updateCheckingRef.current = true;
     setUpdateChecking(true);
     setUpdateError(null);
     try {
@@ -1619,8 +1635,10 @@ function App() {
       const msg = e instanceof Error ? e.message : String(e);
       log(`update: check failed — ${msg}`);
       setUpdateError(msg);
-      setUpdateInfo(null);
+      // Keep any previously-seen updateInfo: a transient network failure on
+      // a periodic re-check must not erase a valid update banner for 4h.
     } finally {
+      updateCheckingRef.current = false;
       setUpdateChecking(false);
     }
   };
@@ -1671,6 +1689,9 @@ function App() {
   // meant long-running sessions never learned about new releases, which is
   // why update adoption lagged. Periodic re-checks close that gap.
   useEffect(() => {
+    // deps on the toggle: turning auto-check OFF mid-session must actually
+    // stop the 4h interval (with [] deps the mount-time closure kept firing
+    // until restart — meaningful for a tray-resident app).
     if (!autoCheckUpdate) return;
     const t = window.setTimeout(() => {
       checkForUpdate();
@@ -1683,7 +1704,7 @@ function App() {
       clearInterval(iv);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [autoCheckUpdate]);
 
   // Hideout levels helpers
   const updateHideoutLevel = (stationId: string, level: number) => {
@@ -2102,8 +2123,13 @@ function App() {
           setCorrecting(false);
           if (loadSoundOn()) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
+          // "wide_" prefix = the zoom-out rescue produced this read; without
+          // it, rescue-read text silently migrates capture-miss events from
+          // "empty" into "no_match" and the misread-vs-misaligned split on
+          // the dashboard stops meaning anything.
           if (data.item_name == null) {
-            reportEvent("lookup_nomatch", nomatchCategory(data.raw_text));
+            const pfx = data.attempt === "wide" ? "wide_" : "";
+            reportEvent("lookup_nomatch", pfx + nomatchCategory(data.raw_text));
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
             // catalog id so the dashboard shows WHICH items (e.g. new patch
@@ -2128,8 +2154,10 @@ function App() {
           );
           setStatus("error");
           if (loadSoundOn()) playDing(false);
-          // Network/abort error — count it as a generic lookup attempt.
-          reportEvent("lookup");
+          // Tag transport failures so they don't inflate the SUCCESS count:
+          // before this, cp949-500s and connection errors were reported as
+          // plain "lookup" and the dashboard's ok/fail split was wrong.
+          reportEvent("lookup", "fetch_error");
         } finally {
           clearTimeout(timeoutId);
           // Only the CURRENT generation may end the in-flight state and
@@ -2252,8 +2280,10 @@ function App() {
       // history re-lookups were previously invisible to the dashboard, which
       // under-counted real lookup volume. (Doesn't affect the activation
       // funnel: reaching this path requires a prior F2 result anyway.)
+      // "manual_" prefix: a manual-input typo is NOT an OCR misread signal —
+      // mixing them into the same buckets polluted the failure diagnostics.
       if (data.item_name == null) {
-        reportEvent("lookup_nomatch", nomatchCategory(data.raw_text));
+        reportEvent("lookup_nomatch", "manual_" + nomatchCategory(data.raw_text));
       } else if (data.flea_price == null && data.trader_price == null) {
         reportEvent("lookup_noprice", data.item_id ?? undefined);
       } else {
@@ -2273,7 +2303,7 @@ function App() {
       );
       setStatus("error");
       if (loadSoundOn()) playDing(false);
-      reportEvent("lookup");
+      reportEvent("lookup", "fetch_error");
     } finally {
       clearTimeout(timeoutId);
       if (seq === lookupSeqRef.current) {
@@ -2444,9 +2474,11 @@ function App() {
                   formatHotkeyLabel — the fixed ⌨︎ would read as
                   "⌨︎ : 🖱 휠클릭". Only show it for keyboard binds. */}
               {!isMouseHotkey(hotkey) && (
-                <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
+                <>
+                  <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
+                  <span className="hotkey-sep">:</span>
+                </>
               )}
-              <span className="hotkey-sep">:</span>
               <span className="hotkey-key">{formatHotkeyLabel(hotkey, t)}</span>
             </span>
             <button
@@ -3691,7 +3723,10 @@ function App() {
                 />
               )}
               <div className="item-name">
-                {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
+                {result.item_name ??
+                  (result.raw_text.trim()
+                    ? `(${t.noMatch}) "${result.raw_text}"`
+                    : `(${t.noMatch})`)}
               </div>
             </div>
             {/* Read NOTHING at all (78% of failed lookups in telemetry):

@@ -179,9 +179,19 @@ class LookupResponse(BaseModel):
     caliber: str | None = None
     caliber_display: str | None = None
     matched_from: str | None = None
+    # Which capture attempt produced this response: "primary" / "mirror" /
+    # "ground" / "wide" (zoom-out rescue), or None for override_text lookups.
+    # The frontend prefixes its nomatch telemetry with "wide_" so the
+    # dashboard can separate rescue-path reads from normal ones.
+    attempt: str | None = None
 
 
-def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> LookupResponse:
+def _build_response(
+    raw_text: str,
+    price: dict,
+    game_mode: str = "regular",
+    attempt: str | None = None,
+) -> LookupResponse:
     """Single source of truth that maps a get_item_price() dict into the
     Pydantic response. Both the F2-capture and override_text paths use it,
     so adding a field touches exactly one place going forward.
@@ -308,6 +318,7 @@ def _build_response(raw_text: str, price: dict, game_mode: str = "regular") -> L
         caliber=price.get("caliber"),
         caliber_display=price.get("caliber_display"),
         matched_from=price.get("matched_from"),
+        attempt=attempt,
     )
 
 
@@ -581,14 +592,22 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         attempts.append(("ground", gx, gy, gw, gh))
 
     text, price = "", {"name": None}
-    any_text = False
+    # Longest text read across attempts. On a total no-match the response
+    # must carry the most informative read — the loop overwrites `text`
+    # each attempt, so without this a primary that READ text but didn't
+    # match got masked by a blank last attempt (raw_text=""), which both
+    # showed the user a false "read nothing" hint and over-counted the
+    # "empty" telemetry class the zoom-out rescue was sized against.
+    best_text = ""
+    attempt_used = "primary"
     for label, ax, ay, aw, ah in attempts:
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections
         )
-        if text.strip():
-            any_text = True
+        if len(text.strip()) > len(best_text):
+            best_text = text.strip()
         if price.get("name") is not None:
+            attempt_used = label
             break
 
     # Zoom-out rescue: production telemetry says 78% of failed lookups read
@@ -597,7 +616,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # back blank, retry ONCE with a box grown around the primary region
     # (60% wider, 2x taller, re-centered) before giving up. Runs only on the
     # total-miss path, so the extra OCR pass costs nothing on normal lookups.
-    if price.get("name") is None and not any_text:
+    if price.get("name") is None and not best_text:
         ex = int(primary_x - req.width * 0.3)
         ey = int(primary_y - req.height * 0.5)
         ew = int(req.width * 1.6)
@@ -608,11 +627,17 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             ex, ey, ew, eh, lang, game_mode, "wide", req.corrections
         )
         # Adopt the wide result if it found a name — or at least read SOME
-        # text (better diagnostics for the user than a silent blank).
+        # text (better diagnostics for the user than a silent blank). Tag the
+        # response so telemetry can tell "rescued/read-by-wide" apart from a
+        # plain primary read — without the tag, wide adopting text silently
+        # moves capture-miss events from the "empty" bucket into "no_match"
+        # and the dashboard's misread-vs-misaligned split becomes garbage.
         if wide_price.get("name") is not None or wide_text.strip():
-            text, price = wide_text, wide_price
+            return _build_response(wide_text, wide_price, game_mode, attempt="wide")
 
-    return _build_response(text, price, game_mode)
+    # No match: report the most informative text read across attempts.
+    final_text = text if price.get("name") is not None else best_text
+    return _build_response(final_text, price, game_mode, attempt=attempt_used)
 
 
 # ─── Quest tracker endpoints ─────────────────────────────────────────

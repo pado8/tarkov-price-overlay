@@ -217,12 +217,19 @@ html, body, #root {
   margin-left: 0;
 }
 
-/* Inert 📌 badge shown in place of ✕ while the window is pinned. */
+/* Inert 📌 badge shown in place of ✕ while the window is pinned.
+   .settings-btn.pinned-badge: must out-specificity the later .settings-btn
+   rule (cursor:pointer + gold hover) or the inert badge looks clickable. */
+.settings-btn.pinned-badge,
 .pinned-badge {
   cursor: default;
   user-select: none;
   display: inline-flex;
   align-items: center;
+}
+.settings-btn.pinned-badge:hover {
+  background: transparent;
+  color: inherit;
 }
 /* While pinned the header can't drag the window — don't advertise it. */
 .card-pinned .header,

@@ -69,7 +69,9 @@ $stagedSidecar = "$staged\tarkov-server-$platform.exe"
 # PyInstaller automatically. Model files are intentionally NOT hashed
 # (110MB, change ~never) — use -ForcePython after swapping them.
 $pyHashFile = "$staged\.pybuild-hash"
-$pyInputs = @(Get-ChildItem "$root\python-core\*.py" -ErrorAction SilentlyContinue) +
+# -Exclude bench_*: benchmark scripts aren't bundled (PyInstaller follows
+# main.py imports only) so editing them must not bust the cache.
+$pyInputs = @(Get-ChildItem "$root\python-core\*.py" -Exclude "bench_*.py" -ErrorAction SilentlyContinue) +
             @(Get-Item "$root\tarkov-server.spec", "$root\runtime-hook-torch.py",
                        "$root\python-core\requirements.txt" -ErrorAction SilentlyContinue)
 $pyHash = (($pyInputs | Sort-Object FullName | ForEach-Object {
@@ -79,7 +81,7 @@ $pyHash = (Get-FileHash -InputStream ([IO.MemoryStream]::new([Text.Encoding]::UT
 
 if (-not $SkipPython -and -not $ForcePython -and
     (Test-Path $stagedSidecar) -and (Test-Path $pyHashFile) -and
-    ((Get-Content $pyHashFile -Raw -ErrorAction SilentlyContinue).Trim() -eq $pyHash)) {
+    (([string](Get-Content $pyHashFile -Raw -ErrorAction SilentlyContinue)).Trim() -eq $pyHash)) {
     Write-Host "[build] python inputs unchanged (hash match) → skipping PyInstaller (use -ForcePython to override)"
     $SkipPython = $true
 }

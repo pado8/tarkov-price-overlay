@@ -77,6 +77,7 @@ if ($sevenZip) {
     & $sevenZip a -tzip -mx=5 -bso0 -bsp1 $zipPath "$stageDir\*"
     if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
 } else {
+    Write-Host "[portable] 7-Zip not found - falling back to Compress-Archive (slower; install 7-Zip to speed this up)"
     Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
 }
 
