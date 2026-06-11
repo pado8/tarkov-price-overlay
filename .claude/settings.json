@@ -61,4 +61,8 @@
       "WebFetch"
     ]
   }
+    ,
+  "worktree": {
+    "bgIsolation": "none"
+  }
 }

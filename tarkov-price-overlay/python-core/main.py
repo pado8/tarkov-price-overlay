@@ -26,10 +26,12 @@ if sys.platform == "win32":
 
 print(f"[startup] DPI awareness: {DPI_STATUS}")
 
+import re
+import threading
 from contextlib import asynccontextmanager
 
 import mss
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -53,12 +55,36 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Tarkov Price Overlay Core", lifespan=lifespan)
 
+# Only the app's own webview may read responses. The sidecar binds to
+# 127.0.0.1, but *any* web page the user has open in a browser can still POST
+# to http://127.0.0.1:8765 — with the old allow_origins=["*"], such a page
+# could fire /lookup at arbitrary coordinates and READ BACK the OCR'd contents
+# of the user's screen (ACAO:* makes the response cross-origin-readable).
+# Restricting to the Tauri webview origin makes /lookup (a JSON POST, always
+# preflighted) un-sendable from a foreign origin. Windows Tauri 2 serves the
+# app from http://tauri.localhost; `npm run dev` serves from localhost:1420.
+_ALLOWED_ORIGIN_RE = r"^(https?://(tauri\.localhost|localhost)(:\d+)?|tauri://localhost)$"
+_allowed_origin = re.compile(_ALLOWED_ORIGIN_RE)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=_ALLOWED_ORIGIN_RE,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _reject_foreign_origin(request: Request) -> None:
+    """CSRF guard for state-changing endpoints. CORS stops a foreign page from
+    *reading* a response, but a *simple* POST (no custom headers, text/plain
+    body) is sent without a preflight — so a malicious page the user has open
+    could still wipe quest progress or repoint the EFT install path via
+    /quests/*. Browsers always attach an Origin header to a cross-origin POST,
+    so a present-but-foreign Origin is the CSRF tell. A missing Origin means a
+    non-browser caller (our own E2E / curl) — allowed."""
+    origin = request.headers.get("origin")
+    if origin and not _allowed_origin.match(origin):
+        raise HTTPException(status_code=403, detail="forbidden_origin")
 
 
 class CaptureRequest(BaseModel):
@@ -85,6 +111,12 @@ class CaptureRequest(BaseModel):
     # User-trained OCR corrections. Keys are lowercased OCR text, values are
     # the canonical item name to query GraphQL with.
     corrections: dict[str, str] = {}
+    # Monotonic per-press counter from the client (lookupSeqRef). The server
+    # uses THIS — not a ticket it assigns after the variable cursor-query +
+    # clamp work — to decide rapid-F2 supersession, so the decision reflects
+    # true press order regardless of which worker thread runs first. None for
+    # callers that don't send it (supersession is then disabled for them).
+    client_seq: int | None = None
 
 
 class TraderPrice(BaseModel):
@@ -136,6 +168,7 @@ class HideoutNeed(BaseModel):
     station_id: str = ""
     level: int = 1
     count: int = 1  # how many of this item the upgrade requires
+    fir: bool = False  # whether this upgrade requires the item Found-in-Raid
 
 
 class BarterUsing(BaseModel):
@@ -312,6 +345,7 @@ def _build_response(
                 station_id=n.get("station_id", ""),
                 level=n.get("level", 1),
                 count=n.get("count", 1),
+                fir=n.get("fir", False),
             )
             for n in price.get("needed_for_hideout", [])
         ],
@@ -503,8 +537,51 @@ def _capture_and_lookup(
     return text, price
 
 
+# Server-side supersession for rapid F2. /lookup is a *sync* endpoint, so
+# FastAPI runs each call in its own thread-pool worker — the client aborting a
+# fetch only drops the HTTP wait, the worker thread still runs all 4 captures +
+# the wide rescue to completion. Spamming F2 therefore stacked up to N full OCR
+# passes in parallel (measured 383ms -> 1078ms under contention). A worker bails
+# before its next capture once a newer press exists, so only the most recent
+# lookup keeps doing OCR work. The client already discards superseded responses
+# (lookupSeqRef + abort), so returning an empty body early is invisible.
+#
+# Ordering is keyed on the CLIENT's per-press counter (req.client_seq), NOT a
+# server-assigned ticket: a ticket claimed *after* the variable cursor-query +
+# clamp work (both GIL-releasing) could be handed out in the wrong order vs the
+# true press order, letting the NEWEST press (the one the user wants) draw a
+# lower number and falsely supersede itself. Keying on client_seq guarantees the
+# newest press always holds the highest number and can never be superseded.
+_lookup_seq = 0
+_lookup_seq_lock = threading.Lock()
+
+
+def _observe_client_seq(client_seq: int | None) -> None:
+    """Record the newest press seq the client has sent so far."""
+    global _lookup_seq
+    if client_seq is None:
+        return
+    with _lookup_seq_lock:
+        if client_seq > _lookup_seq:
+            _lookup_seq = client_seq
+
+
+def _lookup_superseded(client_seq: int | None) -> bool:
+    """True iff a strictly newer press has since arrived. None (caller sent no
+    seq) disables supersession for that request."""
+    if client_seq is None:
+        return False
+    with _lookup_seq_lock:
+        return client_seq < _lookup_seq
+
+
 @app.post("/lookup", response_model=LookupResponse)
 def lookup(req: CaptureRequest) -> LookupResponse:
+    # Register this press as early as possible (before the blocking cursor
+    # query) so an in-flight older lookup notices it on its next loop check.
+    # Done even for the override_text fast-path below, so a manual lookup also
+    # supersedes a still-running F2 capture.
+    _observe_client_seq(req.client_seq)
     winapi_cursor = _get_cursor_pos_winapi()
     print(
         f"[lookup] x={req.x} y={req.y} w={req.width} h={req.height} "
@@ -599,13 +676,21 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # showed the user a false "read nothing" hint and over-counted the
     # "empty" telemetry class the zoom-out rescue was sized against.
     best_text = ""
+    # Which attempt produced the reported text: on a match, the matching
+    # attempt; on a no-match, the attempt whose text we ended up reporting
+    # (best_text's source) — NOT a hardcoded "primary", which would mislabel
+    # ground/mirror reads in telemetry.
     attempt_used = "primary"
     for label, ax, ay, aw, ah in attempts:
+        if _lookup_superseded(req.client_seq):
+            print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
+            return _build_response(best_text, {"name": None}, game_mode, attempt="superseded")
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections
         )
         if len(text.strip()) > len(best_text):
             best_text = text.strip()
+            attempt_used = label
         if price.get("name") is not None:
             attempt_used = label
             break
@@ -616,7 +701,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # back blank, retry ONCE with a box grown around the primary region
     # (60% wider, 2x taller, re-centered) before giving up. Runs only on the
     # total-miss path, so the extra OCR pass costs nothing on normal lookups.
-    if price.get("name") is None and not best_text:
+    if price.get("name") is None and not best_text and not _lookup_superseded(req.client_seq):
         ex = int(primary_x - req.width * 0.3)
         ey = int(primary_y - req.height * 0.5)
         ew = int(req.width * 1.6)
@@ -677,14 +762,14 @@ def quests_status() -> dict:
     return get_tracker().get_status()
 
 
-@app.post("/quests/path")
+@app.post("/quests/path", dependencies=[Depends(_reject_foreign_origin)])
 def quests_set_path(req: QuestPathRequest) -> dict:
     """Override the auto-detected EFT install path. Pass an empty string
     to revert to auto-detection."""
     return get_tracker().set_install_path(req.path)
 
 
-@app.post("/quests/enabled")
+@app.post("/quests/enabled", dependencies=[Depends(_reject_foreign_origin)])
 def quests_set_enabled(req: QuestEnabledRequest) -> dict:
     """Toggle the watcher on/off. When off, /lookup responses leave
     `task_status` as null and no log files are read."""
@@ -692,7 +777,7 @@ def quests_set_enabled(req: QuestEnabledRequest) -> dict:
     return get_tracker().get_status()
 
 
-@app.post("/quests/reset")
+@app.post("/quests/reset", dependencies=[Depends(_reject_foreign_origin)])
 def quests_reset(req: QuestResetRequest | None = None) -> dict:
     """Wipe known quest state and re-scan from scratch. Pass `game_mode`
     to wipe only one server's state — used after migration when a

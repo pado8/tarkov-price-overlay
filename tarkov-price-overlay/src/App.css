@@ -538,6 +538,10 @@ html, body, #root {
   padding: 0 4px;
   font-weight: 600;
   cursor: help;
+  /* Keep the badge intact when its flex row runs out of width (quest rows
+     ellipsize the name; hideout rows ellipsize the station instead). */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .quest-anyitem {
   color: var(--text-muted);
@@ -655,6 +659,12 @@ html, body, #root {
 }
 .hideout-need-station {
   color: var(--text-primary);
+  /* Long localized station names ("비트코인 채굴 시설") must ellipsize at
+     narrow card widths so the Lv/count/FiR-badge cluster never clips past
+     the card edge — same protection .quest-name has in quest rows. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .hideout-need-level {
   color: var(--gold-text);

@@ -121,6 +121,7 @@ query HideoutReqs($lang: LanguageCode) {
       itemRequirements {
         count
         item { id }
+        attributes { type value }
       }
     }
   }
@@ -443,12 +444,24 @@ def _fetch_hideout_index(lang: str) -> tuple[dict[str, list[dict]], list[dict]]:
                 iid = inner.get("id")
                 if not iid:
                     continue
+                # Some hideout upgrade materials must be Found-in-Raid (e.g.
+                # Medical tools, Ophthalmoscope). tarkov.dev encodes this as a
+                # {type: "foundInRaid", value: "true"/"false"} attribute.
+                fir = any(
+                    (a.get("type") == "foundInRaid")
+                    and str(a.get("value")).lower() == "true"
+                    for a in (r.get("attributes") or [])
+                    if a  # schema marks list elements nullable; a None here
+                    # would AttributeError and blank the whole hideout index
+                    # for the session (it's cached on first build).
+                )
                 index.setdefault(iid, []).append(
                     {
                         "station": sname,
                         "station_id": sid,
                         "level": level,
                         "count": r.get("count") or 1,
+                        "fir": fir,
                     }
                 )
     for needs in index.values():
@@ -905,9 +918,16 @@ def _cache_lookup(
     matches = difflib.get_close_matches(item_name, names, n=1, cutoff=0.6)
     if matches:
         hit = matches[0]
-        print(f"[cache] fuzzy: {item_name!r} -> {hit!r}")
-        entry = cache[hit]
-        return {**entry, "matched_from": matched_from or item_name}
+        # cache.get (not cache[hit]): the names list and the price cache can
+        # drift out of sync across a refresh generation — names is published
+        # with the full catalog while a cold-path lookup backfills only one
+        # price entry, so fuzzy can hit a name not yet in `cache`. A bare
+        # subscript would KeyError → /lookup 500 (and poison every fuzzy
+        # lookup until the next refresh). Miss → fall through to prefix/cold.
+        entry = cache.get(hit)
+        if entry is not None:
+            print(f"[cache] fuzzy: {item_name!r} -> {hit!r}")
+            return {**entry, "matched_from": matched_from or item_name}
 
     # Prefix fallback for long item names that don't fit the user's capture
     # box. When the box is narrow, OCR catches only the start of the item
@@ -929,9 +949,13 @@ def _cache_lookup(
         ]
         if prefix_candidates:
             hit = min(prefix_candidates, key=len)
-            print(f"[cache] prefix: {item_name!r} -> {hit!r}")
-            entry = cache[hit]
-            return {**entry, "matched_from": matched_from or item_name}
+            # cache.get for the same generation-skew reason as the fuzzy path
+            # above (here a concurrent refresh could also drop the key between
+            # the comprehension and the read). Miss → fall through to cold-path.
+            entry = cache.get(hit)
+            if entry is not None:
+                print(f"[cache] prefix: {item_name!r} -> {hit!r}")
+                return {**entry, "matched_from": matched_from or item_name}
 
     # Cache populated but no name matches. Return None (not an empty result)
     # so the caller falls through to the cold-path GraphQL query — that's how

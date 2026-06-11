@@ -6,11 +6,14 @@ export const T = {
     title: "타르코프 시세",
     hintIdle: "아이템 위에 마우스 올리고 F2",
     hintLoading: "조회 중…",
-    hintFirstLoad: "첫 호출은 OCR 모델 다운로드로 1~5분 걸려요",
-    timeout: "시간 초과 (120초). 첫 호출이면 OCR 모델 다운로드 중. Python 콘솔 확인.",
+    hintFirstLoad: "첫 호출은 OCR 모델 로딩으로 잠깐 더 걸릴 수 있어요",
+    timeout: "시간 초과 (120초). 잠시 후 다시 시도해 주세요.",
+    timeoutShort: "시간 초과 (30초). 잠시 후 다시 시도해 주세요.",
     noMatch: "검색 결과 없음",
     emptyCaptureHint:
       "글자를 하나도 못 읽었어요 — 캡처 영역이 툴팁을 벗어났을 수 있어요. 설정 → 캡처 영역에서 빨간 박스가 아이템 이름 위에 오는지 확인해 주세요.",
+    wideCaptureHint:
+      "캡처 영역을 넓혀 다시 읽었지만 일치하는 아이템을 못 찾았어요. 설정 → 캡처 영역에서 빨간 박스를 아이템 이름에 맞춰 주세요.",
     noMarketPrice: "거래 불가 — 플리·상인 시세 없음 (퀘스트/특수 아이템)",
     flea: "플리",
     fleaLow24: "플리 24h 최저",
@@ -243,11 +246,14 @@ export const T = {
     title: "Tarkov Price",
     hintIdle: "Hover an item, press F2",
     hintLoading: "Looking up…",
-    hintFirstLoad: "First call: OCR model download may take 1~5 min",
-    timeout: "Timeout (120s). First call may be downloading OCR model. Check Python console.",
+    hintFirstLoad: "First call may take a few extra seconds while the OCR model loads",
+    timeout: "Timed out (120s). Please try again in a moment.",
+    timeoutShort: "Timed out (30s). Please try again in a moment.",
     noMatch: "no match",
     emptyCaptureHint:
       "Read no text at all — the capture box likely missed the tooltip. Check Settings → capture region: the red box should cover the item name.",
+    wideCaptureHint:
+      "Widened the capture box and retried, but still couldn't match an item. Align the red box to the item name in Settings → capture region.",
     noMarketPrice: "Untradeable — no flea/trader price (quest/special item)",
     flea: "Flea",
     fleaLow24: "Flea 24h low",

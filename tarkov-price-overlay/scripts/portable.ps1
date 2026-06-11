@@ -14,9 +14,20 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $releaseDir = Join-Path $root "src-tauri\target\release"
+$binDir = Join-Path $root "src-tauri\binaries"
+# Main app exe only exists in target\release (it's the Tauri Rust binary).
 $mainExe = Join-Path $releaseDir "tarkov-price-overlay.exe"
-$serverExe = Join-Path $releaseDir "tarkov-server.exe"
-$internalDir = Join-Path $releaseDir "_internal"
+# Sidecar exe + _internal: take them from src-tauri\binaries, which is the
+# *dead-weight-stripped source of truth* (build.ps1 / the .spec produce the
+# diet there). The Tauri-copied target\release\_internal is NOT usable here:
+# Tauri's resource copy never DELETES files that vanished from source, so once
+# any earlier build staged a pre-diet tree, target\release\_internal keeps the
+# orphaned torch\lib\*.lib (~820MB) + torch\include forever - making the
+# portable zip ~2.3x its real size and turning the v1.1.2 "half the size"
+# headline into a lie on the portable channel. binaries\_internal is rebuilt
+# clean each run (710MB vs 1585MB measured), so source from it.
+$serverExe = Join-Path $binDir "tarkov-server-x86_64-pc-windows-msvc.exe"
+$internalDir = Join-Path $binDir "_internal"
 
 # Read version from package.json
 $version = (Get-Content (Join-Path $root "package.json") -Raw | ConvertFrom-Json).version
@@ -26,6 +37,20 @@ foreach ($p in @($mainExe, $serverExe, $internalDir)) {
     if (-not (Test-Path $p)) {
         throw "Missing build artifact: $p. Run 'npm run tauri -- build --bundles nsis' first."
     }
+}
+
+# Guard against silently shipping a pre-diet _internal. The stripped tree is
+# ~710MB; the fat one is ~1585MB. If the source dir is anywhere near the fat
+# size the diet didn't run (or stale orphans crept back) - fail loudly rather
+# than publish a bloated portable that contradicts the release notes.
+$internalMB = [Math]::Round((Get-ChildItem -Recurse -File $internalDir | Measure-Object Length -Sum).Sum / 1MB, 0)
+Write-Host "[portable] source _internal size: ${internalMB} MB"
+if ($internalMB -gt 1100) {
+    throw "_internal is ${internalMB}MB (expected ~710MB stripped). Dead-weight strip did not apply - refusing to ship a fat portable. Re-run scripts\build.ps1."
+}
+$leftoverLib = @(Get-ChildItem -Recurse -File -Filter *.lib $internalDir).Count
+if ($leftoverLib -gt 0) {
+    throw "_internal still contains $leftoverLib .lib file(s) (dead weight). Re-run scripts\build.ps1 to re-strip."
 }
 
 $stageRoot = Join-Path $releaseDir "portable"
@@ -39,7 +64,8 @@ New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
 
 Write-Host "[portable] copying runtime files..."
 Copy-Item $mainExe (Join-Path $stageDir "Tarkov Price Overlay.exe")
-Copy-Item $serverExe $stageDir
+# Rename the triple-suffixed externalBin to the runtime name the app spawns.
+Copy-Item $serverExe (Join-Path $stageDir "tarkov-server.exe")
 Copy-Item -Recurse $internalDir $stageDir
 
 # Drop a quick-start README inside the ZIP root.
@@ -87,6 +113,13 @@ Write-Host ""
 Write-Host "[portable] done."
 Write-Host "  Output: $zipPath"
 Write-Host "  Size:   ${zipSize} MB"
+
+# Belt-and-suspenders: even after the source asserts, sanity-check the final
+# archive. A stripped tree compresses to roughly 250-400MB; anything past
+# 700MB means dead weight slipped through somewhere downstream.
+if ($zipSize -gt 700) {
+    throw "Portable zip is ${zipSize}MB - far above the expected ~250-400MB for the stripped build. Aborting before publish."
+}
 
 # Cleanup the unzipped staging dir; keep only the .zip
 Remove-Item -Recurse -Force $stageDir

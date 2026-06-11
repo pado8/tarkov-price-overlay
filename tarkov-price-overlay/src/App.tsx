@@ -325,6 +325,7 @@ type HideoutNeed = {
   station_id: string;
   level: number;
   count: number;
+  fir?: boolean;
 };
 
 type HideoutStation = {
@@ -1645,6 +1646,11 @@ function App() {
     updateCheckingRef.current = true;
     setUpdateChecking(true);
     setUpdateError(null);
+    // If we're re-checking after a prior install failure, drop the stale
+    // "error" phase now. Otherwise the banner keeps rendering the error branch
+    // ("⚠ update error: ") with an empty message for the whole network
+    // round-trip, since we just cleared updateError but not the phase.
+    if (updatePhaseRef.current === "error") setUpdatePhase("idle");
     try {
       const update = await checkForAppUpdate();
       setUpdateCheckedAt(Date.now());
@@ -2141,10 +2147,17 @@ function App() {
           ground_width: r.groundWidth,
           ground_height: r.groundHeight,
           corrections: loadCorrections(),
+          // Per-press counter so the sidecar can supersede this lookup's OCR
+          // if a newer F2 arrives mid-flight (server keys ordering on this,
+          // not a ticket it assigns after its own cursor/clamp work).
+          client_seq: seq,
         });
-        // Cancel the previous in-flight lookup so rapid F2 presses don't
-        // stack concurrent OCR passes in the sidecar (CPU contention while
-        // the game is running). Its catch sees AbortError + stale seq → no-op.
+        // Abort the previous in-flight request so its catch sees AbortError +
+        // stale seq → no-op (frees the client-side wait). Aborting alone does
+        // NOT stop the sidecar's OCR — /lookup is a sync handler that runs to
+        // completion regardless. The actual concurrent-OCR cap on rapid F2 is
+        // the server-side supersession ticket (main.py _lookup_superseded),
+        // which makes a stale worker bail before its next capture.
         lookupAbortRef.current?.abort();
         const controller = new AbortController();
         lookupAbortRef.current = controller;
@@ -2323,6 +2336,9 @@ function App() {
       game_mode: r.gameMode,
       override_text: name,
       corrections: loadCorrections(),
+      // Bump the server's seen-seq too, so a manual/history re-lookup
+      // supersedes any F2 capture still running in the sidecar.
+      client_seq: seq,
     });
     try {
       const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
@@ -2356,10 +2372,12 @@ function App() {
       const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
       if (seq !== lookupSeqRef.current) return; // stale failure — ignore
       // Same human-readable mapping as the F2 path (raw "Failed to fetch"
-      // reads like a crash; it's just the sidecar restarting).
+      // reads like a crash; it's just the sidecar restarting). AbortError here
+      // is the 30s timer (a supersession-abort would have hit the stale-seq
+      // return above), so use the 30s copy — not the 120s F2 message.
       setError(
         e instanceof Error && e.name === "AbortError"
-          ? t.timeout
+          ? t.timeoutShort
           : e instanceof TypeError
             ? sidecarDeadRef.current
               ? t.sidecarDead
@@ -3168,7 +3186,14 @@ function App() {
               </label>
               <button
                 className="reset-btn"
-                onClick={checkForUpdate}
+                onClick={() => {
+                  // Clear any earlier dismissal: a user who hid an update and
+                  // then explicitly clicks "check" wants to SEE it again —
+                  // otherwise the banner stays muted (updateInfo.version ===
+                  // dismissedUpdate) and the click looks like it did nothing.
+                  setDismissedUpdate(null);
+                  checkForUpdate();
+                }}
                 disabled={updateChecking}
               >
                 {updateChecking
@@ -3807,14 +3832,22 @@ function App() {
                     : `(${t.noMatch})`)}
               </div>
             </div>
-            {/* Capture-box-missed guidance. Two shapes of the same problem:
-                (a) nothing read at all, (b) only the WIDE rescue read text —
-                meaning the normal box missed and the enlarged one caught
-                stray screen text. Both deserve the "check your capture
-                region" pointer, not a bare "no match". */}
+            {/* Capture-box-missed guidance. Two shapes of the same problem,
+                with DIFFERENT copy so the message never contradicts the line
+                above it:
+                (a) nothing read at all → "read no text" hint.
+                (b) the WIDE rescue read some text but still didn't match →
+                    "widened and retried" hint. (The old code showed the
+                    "read NOTHING" copy here too, directly under a card that
+                    was quoting the text it just read.)
+                Both point at the capture region, not a bare "no match". */}
+            {!result.item_name && !result.raw_text.trim() && (
+              <div className="hint">{t.emptyCaptureHint}</div>
+            )}
             {!result.item_name &&
-              (!result.raw_text.trim() || result.attempt === "wide") && (
-                <div className="hint">{t.emptyCaptureHint}</div>
+              result.raw_text.trim() &&
+              result.attempt === "wide" && (
+                <div className="hint">{t.wideCaptureHint}</div>
               )}
             {result.item_name && (() => {
               const trend = trendPct(result.flea_change_48h_pct);
@@ -4063,6 +4096,14 @@ function App() {
                                   <span className="hideout-need-station">{n.station}</span>
                                   <span className="hideout-need-level">Lv{n.level}</span>
                                   <span className="hideout-need-count">×{n.count}</span>
+                                  {n.fir && (
+                                    <span
+                                      className="quest-fir"
+                                      title={t.questFirHint}
+                                    >
+                                      {t.questFirBadge}
+                                    </span>
+                                  )}
                                 </div>
                               );
                             })}
