@@ -237,6 +237,10 @@ _names_lock = threading.Lock()
 # (lang, game_mode) -> {item_name: entry_dict}
 _price_cache: dict[tuple[str, str], dict[str, dict]] = {}
 _price_cache_ts: dict[tuple[str, str], float] = {}
+# (lang, game_mode) -> {canonical_name: entry | None}. None marks an
+# AMBIGUOUS canonical form (two different items fold to the same key) —
+# never used for matching. See _canon().
+_canon_cache: dict[tuple[str, str], dict[str, dict | None]] = {}
 _price_cache_lock = threading.Lock()
 _refresher_started = False
 _refresher_lock = threading.Lock()
@@ -380,6 +384,29 @@ def get_ammo(lang: str) -> dict:
     with _ammo_cache_lock:
         _ammo_cache[lang] = data
     return data
+
+
+# OCR-confusion folding for the canonical-match fallback. Both the query and
+# every catalog name are folded the same way, so "M8SS" and "M855" land on
+# the same key. EXACT match on the folded form only — no fuzzy — so the
+# false-positive risk is limited to genuinely ambiguous folds, which the
+# index marks as None and never matches.
+_CANON_TABLE = str.maketrans(
+    {
+        "0": "o",
+        "1": "l",
+        "i": "l",
+        "|": "l",
+        "5": "s",
+        "8": "b",
+        "6": "g",
+        "2": "z",
+    }
+)
+
+
+def _canon(s: str) -> str:
+    return "".join(s.lower().translate(_CANON_TABLE).split())
 
 
 _FLEA_MARKET_NAMES = {"Flea Market", "플리마켓", "Барахолка", "跳蚤市场", "蚤の市"}
@@ -704,8 +731,23 @@ def _refresh_one(lang: str, game_mode: str) -> int:
         short = (it.get("shortName") or "").strip()
         if short and short != name and short not in by_name:
             by_name[short] = entry
+    # Canonical (OCR-confusion-folded) index for the last-resort exact match.
+    # Built once per refresh so the hot path pays a single dict lookup.
+    canon_map: dict[str, dict | None] = {}
+    for n, entry in by_name.items():
+        key = _canon(n)
+        if not key:
+            continue
+        prev = canon_map.get(key)
+        if prev is None and key in canon_map:
+            continue  # already marked ambiguous
+        if prev is not None and prev is not entry:
+            canon_map[key] = None  # two items collide → ambiguous, never match
+        else:
+            canon_map[key] = entry
     with _price_cache_lock:
         _price_cache[(lang, game_mode)] = by_name
+        _canon_cache[(lang, game_mode)] = canon_map
         _price_cache_ts[(lang, game_mode)] = time.time()
     # Reuse the populated names for fuzzy matching too (one source of truth).
     with _names_lock:
@@ -875,6 +917,17 @@ def _cache_lookup(
             hit = min(prefix_candidates, key=len)
             print(f"[cache] prefix: {item_name!r} -> {hit!r}")
             entry = cache[hit]
+            return {**entry, "matched_from": matched_from or item_name}
+
+    # Last resort: exact match on the OCR-confusion-folded canonical form
+    # (0↔O, 1/i↔l, 5↔S, 8↔B, …). Rescues pure character-confusion misreads
+    # like "M8SS" → "M855" that fuzzy can miss on short names. Exact-only on
+    # an unambiguous fold, so it can't mis-match the way a looser fuzzy would.
+    canon_map = _canon_cache.get((lang, game_mode))
+    if canon_map:
+        entry = canon_map.get(_canon(item_name))
+        if entry is not None:
+            print(f"[cache] canon: {item_name!r} -> {entry['name']!r}")
             return {**entry, "matched_from": matched_from or item_name}
 
     # Cache populated but no name matches. Return None (not an empty result)

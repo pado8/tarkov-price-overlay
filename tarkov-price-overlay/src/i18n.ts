@@ -9,6 +9,8 @@ export const T = {
     hintFirstLoad: "첫 호출은 OCR 모델 다운로드로 1~5분 걸려요",
     timeout: "시간 초과 (120초). 첫 호출이면 OCR 모델 다운로드 중. Python 콘솔 확인.",
     noMatch: "검색 결과 없음",
+    emptyCaptureHint:
+      "글자를 하나도 못 읽었어요 — 캡처 영역이 툴팁을 벗어났을 수 있어요. 설정 → 캡처 영역에서 빨간 박스가 아이템 이름 위에 오는지 확인해 주세요.",
     noMarketPrice: "거래 불가 — 플리·상인 시세 없음 (퀘스트/특수 아이템)",
     flea: "플리",
     fleaLow24: "플리 24h 최저",
@@ -242,6 +244,8 @@ export const T = {
     hintFirstLoad: "First call: OCR model download may take 1~5 min",
     timeout: "Timeout (120s). First call may be downloading OCR model. Check Python console.",
     noMatch: "no match",
+    emptyCaptureHint:
+      "Read no text at all — the capture box likely missed the tooltip. Check Settings → capture region: the red box should cover the item name.",
     noMarketPrice: "Untradeable — no flea/trader price (quest/special item)",
     flea: "Flea",
     fleaLow24: "Flea 24h low",

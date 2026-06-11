@@ -581,12 +581,36 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         attempts.append(("ground", gx, gy, gw, gh))
 
     text, price = "", {"name": None}
+    any_text = False
     for label, ax, ay, aw, ah in attempts:
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections
         )
+        if text.strip():
+            any_text = True
         if price.get("name") is not None:
             break
+
+    # Zoom-out rescue: production telemetry says 78% of failed lookups read
+    # NOTHING at all ("empty") — the capture box missed the tooltip entirely
+    # (UI-scale / resolution offsets slightly off). When every attempt came
+    # back blank, retry ONCE with a box grown around the primary region
+    # (60% wider, 2x taller, re-centered) before giving up. Runs only on the
+    # total-miss path, so the extra OCR pass costs nothing on normal lookups.
+    if price.get("name") is None and not any_text:
+        ex = int(primary_x - req.width * 0.3)
+        ey = int(primary_y - req.height * 0.5)
+        ew = int(req.width * 1.6)
+        eh = int(req.height * 2.0)
+        if can_clamp:
+            ex, ey, ew, eh = _clamp_to_monitor(ex, ey, ew, eh, cursor_x, cursor_y)
+        wide_text, wide_price = _capture_and_lookup(
+            ex, ey, ew, eh, lang, game_mode, "wide", req.corrections
+        )
+        # Adopt the wide result if it found a name — or at least read SOME
+        # text (better diagnostics for the user than a silent blank).
+        if wide_price.get("name") is not None or wide_text.strip():
+            text, price = wide_text, wide_price
 
     return _build_response(text, price, game_mode)
 

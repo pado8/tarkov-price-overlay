@@ -3694,6 +3694,12 @@ function App() {
                 {result.item_name ?? `(${t.noMatch}) "${result.raw_text}"`}
               </div>
             </div>
+            {/* Read NOTHING at all (78% of failed lookups in telemetry):
+                the capture box almost certainly missed the tooltip. Give an
+                actionable pointer instead of a bare "no match". */}
+            {!result.item_name && !result.raw_text.trim() && (
+              <div className="hint">{t.emptyCaptureHint}</div>
+            )}
             {result.item_name && (() => {
               const trend = trendPct(result.flea_change_48h_pct);
               const slot = fmtSlot(

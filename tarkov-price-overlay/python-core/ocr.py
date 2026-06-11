@@ -153,7 +153,10 @@ def recognize_text_fragments(
     # detail=1 returns (bbox, text, confidence) so we can sample the
     # surrounding pixels per text region. paragraph=False keeps each
     # detection separate so we can filter individually.
-    results = reader.readtext(gray, detail=1, paragraph=False)
+    # mag_ratio=1.5: game tooltip text is small (~12-16px); upscaling the
+    # detector input reads it more accurately (synthetic bench: 75→78/80
+    # names read correctly, +23ms on a tooltip-sized box — see bench_ocr.py).
+    results = reader.readtext(gray, detail=1, paragraph=False, mag_ratio=1.5)
     if not results:
         return []
     # Ground loot: no tooltip background to test against — keep all text.
