@@ -3867,7 +3867,7 @@ function App() {
                   }}
                 />
               )}
-              <div className="item-name">
+              <div className="item-name" title={result.item_name ?? undefined}>
                 {result.item_name ??
                   (result.raw_text.trim()
                     ? `(${t.noMatch}) "${result.raw_text}"`
@@ -4028,7 +4028,7 @@ function App() {
                             </div>
                             <div className="barter-items">
                               {b.items.map((it, i) => (
-                                <span key={i} className="barter-item">
+                                <span key={i} className="barter-item" title={it.name}>
                                   {i > 0 && <span className="barter-plus"> + </span>}
                                   {it.short_name ?? it.name}
                                   <span className="barter-count">×{it.count}</span>
@@ -4057,7 +4057,7 @@ function App() {
                             <div className="barter-items">
                               {t.barterUsingArrow}{" "}
                               {u.rewards.map((it, i) => (
-                                <span key={i} className="barter-item">
+                                <span key={i} className="barter-item" title={it.name}>
                                   {i > 0 && (
                                     <span className="barter-plus">, </span>
                                   )}
@@ -4091,7 +4091,7 @@ function App() {
                             </div>
                             <div className="barter-items">
                               {c.items.map((it, i) => (
-                                <span key={i} className="barter-item">
+                                <span key={i} className="barter-item" title={it.name}>
                                   {i > 0 && (
                                     <span className="barter-plus"> + </span>
                                   )}
@@ -4192,7 +4192,7 @@ function App() {
                                   key={r.id ?? r.name}
                                   className={`ammo-row${isCurrent ? " ammo-row-current" : ""}`}
                                 >
-                                  <span className="ammo-name">{r.short_name}</span>
+                                  <span className="ammo-name" title={r.name}>{r.short_name}</span>
                                   <span className="ammo-pen">{r.penetration}</span>
                                   <span className="ammo-dmg">{r.damage}</span>
                                   <span className="ammo-ac">
