@@ -1478,6 +1478,14 @@ function App() {
     if (!autoHideRef.current) return;
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
+    // Cursor parked on the card keeps it alive. Without this, any
+    // scheduleHide fired while the user is ALREADY hovering (lookup
+    // finally, tray-show, hotkey-recording end) starts a countdown that
+    // nothing cancels — the poll/DOM enter handlers only cancel on an
+    // enter *transition*, which already happened — so the card vanished
+    // under the cursor. mouseleave/the poll restart the countdown when
+    // the cursor actually leaves.
+    if (mouseOverCardRef.current) return;
     // Don't start the countdown while a lookup is still in flight — the
     // result would land on an already-hidden card (the lookup's own finally
     // schedules the hide once it completes).
@@ -1502,6 +1510,11 @@ function App() {
     if (!cardVisible) {
       // Hidden: full pass-through.
       win.setIgnoreCursorEvents(true).catch(() => {});
+      // The poll is stopped, so the ref can't refresh — clear it. A stale
+      // `true` here would make scheduleHide() skip the countdown on the
+      // next show even when the cursor is nowhere near the card, leaving
+      // the card up forever.
+      mouseOverCardRef.current = false;
       return;
     }
 
