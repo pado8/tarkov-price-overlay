@@ -52,6 +52,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     bartersFor {
       trader { name }
       level
+      taskUnlock { id name }
       requiredItems {
         count
         item { name shortName }
@@ -60,6 +61,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     bartersUsing {
       trader { name }
       level
+      taskUnlock { id name }
       rewardItems {
         count
         item { name shortName }
@@ -184,6 +186,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     bartersFor {
       trader { name }
       level
+      taskUnlock { id name }
       requiredItems {
         count
         item { name shortName }
@@ -192,6 +195,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     bartersUsing {
       trader { name }
       level
+      taskUnlock { id name }
       rewardItems {
         count
         item { name shortName }
@@ -509,6 +513,16 @@ def get_station_list(lang: str) -> list[dict]:
         return []
 
 
+def _task_unlock_ref(barter: dict) -> dict | None:
+    """taskUnlock on a barter → {"id", "name"} or None when the barter has
+    no quest gate. The id is passed verbatim to the quest tracker later, so
+    no normalization here."""
+    tu = barter.get("taskUnlock") or {}
+    if not tu.get("id"):
+        return None
+    return {"id": tu["id"], "name": tu.get("name") or ""}
+
+
 def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     sell_for_all = item.get("sellFor", []) or []
     trader_entries = [
@@ -539,6 +553,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
             {
                 "trader": trader.get("name") or "?",
                 "level": b.get("level") or 1,
+                "task_unlock": _task_unlock_ref(b),
                 "items": items_list,
             }
         )
@@ -614,6 +629,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
             {
                 "trader": trader.get("name") or "?",
                 "level": b.get("level") or 1,
+                "task_unlock": _task_unlock_ref(b),
                 "rewards": rewards,
             }
         )

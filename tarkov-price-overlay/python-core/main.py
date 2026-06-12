@@ -130,9 +130,22 @@ class BarterRequiredItem(BaseModel):
     count: float = 1
 
 
+class TaskUnlockRef(BaseModel):
+    """Quest gate on a barter (tarkov.dev taskUnlock). `status` mirrors
+    TaskRef.task_status semantics for the lookup's game_mode; status_by_mode
+    carries both servers so the frontend can re-project on mode switch
+    without a re-capture."""
+
+    id: str
+    name: str
+    status: str | None = None  # "started" | "completed" | "failed" | None
+    status_by_mode: dict[str, str | None] = Field(default_factory=dict)
+
+
 class Barter(BaseModel):
     trader: str
     level: int = 1
+    task_unlock: TaskUnlockRef | None = None
     items: list[BarterRequiredItem] = []
 
 
@@ -174,6 +187,7 @@ class HideoutNeed(BaseModel):
 class BarterUsing(BaseModel):
     trader: str
     level: int = 1
+    task_unlock: TaskUnlockRef | None = None
     rewards: list[BarterRequiredItem] = []
 
 
@@ -248,6 +262,25 @@ def _build_response(
         pvp_status = {}
         pve_status = {}
     current_status = pve_status if game_mode == "pve" else pvp_status
+
+    def _unlock_ref(b: dict) -> TaskUnlockRef | None:
+        """Barter's quest gate + the player's progress on it. The quest id
+        comes straight from tarkov.dev (no normalization) so it indexes the
+        same status dicts used_in_tasks already uses."""
+        tu = b.get("task_unlock")
+        if not tu or not tu.get("id"):
+            return None
+        qid = tu["id"]
+        return TaskUnlockRef(
+            id=qid,
+            name=tu.get("name") or "",
+            status=current_status.get(qid),
+            status_by_mode={
+                "pvp": pvp_status.get(qid),
+                "pve": pve_status.get(qid),
+            },
+        )
+
     return LookupResponse(
         raw_text=raw_text,
         item_id=price.get("id"),
@@ -272,6 +305,7 @@ def _build_response(
             Barter(
                 trader=b["trader"],
                 level=b.get("level", 1),
+                task_unlock=_unlock_ref(b),
                 items=[
                     BarterRequiredItem(
                         name=it["name"],
@@ -287,6 +321,7 @@ def _build_response(
             BarterUsing(
                 trader=u["trader"],
                 level=u.get("level", 1),
+                task_unlock=_unlock_ref(u),
                 rewards=[
                     BarterRequiredItem(
                         name=it["name"],

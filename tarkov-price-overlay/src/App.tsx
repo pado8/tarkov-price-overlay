@@ -278,9 +278,24 @@ type BarterRequiredItem = {
   short_name: string | null;
   count: number;
 };
+// Quest gate on a barter (tarkov.dev taskUnlock). status mirrors
+// TaskRef.task_status for the lookup's game_mode; status_by_mode lets the
+// badge re-project when the user flips the quest-display mode, same as
+// the quest list. Older backends don't send this — keep it optional.
+type TaskUnlockRef = {
+  id: string;
+  name: string;
+  status?: "started" | "completed" | "failed" | null;
+  status_by_mode?: {
+    pvp: "started" | "completed" | "failed" | null;
+    pve: "started" | "completed" | "failed" | null;
+  };
+};
+
 type Barter = {
   trader: string;
   level: number;
+  task_unlock?: TaskUnlockRef | null;
   items: BarterRequiredItem[];
 };
 
@@ -352,6 +367,7 @@ type HideoutStation = {
 type BarterUsing = {
   trader: string;
   level: number;
+  task_unlock?: TaskUnlockRef | null;
   rewards: BarterRequiredItem[];
 };
 
@@ -4025,6 +4041,22 @@ function App() {
                           <div key={idx} className="barter-row">
                             <div className="barter-trader">
                               {b.trader} <span className="barter-level">Lv{b.level}</span>
+                              {(() => {
+                                const tu = b.task_unlock;
+                                if (!tu) return null;
+                                const st = tu.status_by_mode
+                                  ? tu.status_by_mode[questDisplayMode] ?? null
+                                  : tu.status ?? null;
+                                const done = st === "completed";
+                                return (
+                                  <span
+                                    className={`barter-quest-lock${done ? " unlocked" : ""}`}
+                                    title={done ? t.barterQuestUnlockedHint : t.barterQuestLockHint}
+                                  >
+                                    {done ? "✓" : "🔒"} {tu.name}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div className="barter-items">
                               {b.items.map((it, i) => (
@@ -4053,6 +4085,22 @@ function App() {
                             <div className="barter-trader">
                               {u.trader}{" "}
                               <span className="barter-level">Lv{u.level}</span>
+                              {(() => {
+                                const tu = u.task_unlock;
+                                if (!tu) return null;
+                                const st = tu.status_by_mode
+                                  ? tu.status_by_mode[questDisplayMode] ?? null
+                                  : tu.status ?? null;
+                                const done = st === "completed";
+                                return (
+                                  <span
+                                    className={`barter-quest-lock${done ? " unlocked" : ""}`}
+                                    title={done ? t.barterQuestUnlockedHint : t.barterQuestLockHint}
+                                  >
+                                    {done ? "✓" : "🔒"} {tu.name}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             <div className="barter-items">
                               {t.barterUsingArrow}{" "}

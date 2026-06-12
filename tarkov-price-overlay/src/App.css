@@ -458,6 +458,17 @@ html, body, #root {
 .barter-item {
   cursor: help;
 }
+/* Quest gate badge on a barter row. Red = quest not completed yet (the
+   barter is still locked for this player), green = completed/unlocked. */
+.barter-quest-lock {
+  color: var(--danger);
+  font-size: var(--card-fs-xs);
+  margin-left: 6px;
+  word-break: keep-all;
+}
+.barter-quest-lock.unlocked {
+  color: var(--success-dim);
+}
 .barter-count {
   color: var(--success-dim);
   font-family: "Consolas", monospace;
