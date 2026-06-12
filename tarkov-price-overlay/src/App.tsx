@@ -404,6 +404,10 @@ type LookupResult = {
   // panel and pre-selects the relevant caliber. null for everything else.
   caliber: string | null;
   caliber_display: string | null;
+  // Set when the lookup was an ammo PACK: the round inside it, so the
+  // matrix can highlight that row. Optional — older backends omit them.
+  ammo_pack_round_id?: string | null;
+  ammo_pack_round_name?: string | null;
   matched_from: string | null;
   // Capture attempt that produced this response ("primary"/"mirror"/
   // "ground"/"wide"); null on override_text lookups. "wide" marks the
@@ -4208,10 +4212,13 @@ function App() {
                       const slot = ammoData.calibers[result.caliber];
                       const display =
                         result.caliber_display ?? slot.display;
-                      // Highlight the current round if this lookup *is* a
-                      // round (id match). Weapon lookups won't match any
-                      // row so no highlight.
-                      const currentId = result.item_name ? result : null;
+                      // Highlight the current round when the lookup IS a
+                      // round (name match) or an ammo PACK (the round it
+                      // contains — id match first, localized-name fallback
+                      // for stale caches without the id). Weapon lookups
+                      // match no row, so no highlight.
+                      const packRoundId = result.ammo_pack_round_id ?? null;
+                      const packRoundName = result.ammo_pack_round_name ?? null;
                       return (
                         // Always open — the ammo matrix is the headline
                         // feature for weapon/round lookups, not a secondary
@@ -4233,8 +4240,12 @@ function App() {
                               <span className="ammo-ac-head" title={t.ammoAcHint}>{t.ammoColAc}</span>
                             </div>
                             {slot.rounds.map((r) => {
-                              const isCurrent =
-                                currentId && r.name === result.item_name;
+                              const isCurrent = !!(
+                                r.name === result.item_name ||
+                                (packRoundId
+                                  ? r.id === packRoundId
+                                  : packRoundName && r.name === packRoundName)
+                              );
                               return (
                                 <div
                                   key={r.id ?? r.name}

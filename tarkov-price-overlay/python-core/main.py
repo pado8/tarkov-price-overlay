@@ -225,6 +225,11 @@ class LookupResponse(BaseModel):
     # weapon, non-ammo items, which suppresses the ammo-matrix panel.
     caliber: str | None = None
     caliber_display: str | None = None
+    # When the looked-up item is an ammo PACK, these identify the round
+    # inside it so the matrix can highlight that row (id match first, name
+    # as fallback). Both None for non-pack lookups.
+    ammo_pack_round_id: str | None = None
+    ammo_pack_round_name: str | None = None
     matched_from: str | None = None
     # Which capture attempt produced this response: "primary" / "mirror" /
     # "ground" / "wide" (zoom-out rescue), or None for override_text lookups.
@@ -386,6 +391,8 @@ def _build_response(
         ],
         caliber=price.get("caliber"),
         caliber_display=price.get("caliber_display"),
+        ammo_pack_round_id=price.get("ammo_pack_round_id"),
+        ammo_pack_round_name=price.get("ammo_pack_round_name"),
         matched_from=price.get("matched_from"),
         attempt=attempt,
     )

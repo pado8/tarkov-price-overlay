@@ -33,6 +33,9 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     containsItems {
       count
       item {
+        id
+        name
+        shortName
         properties {
           __typename
           ... on ItemPropertiesAmmo { caliber }
@@ -167,6 +170,9 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     containsItems {
       count
       item {
+        id
+        name
+        shortName
         properties {
           __typename
           ... on ItemPropertiesAmmo { caliber }
@@ -690,11 +696,19 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     # an ammo pack, is this any good?" lookup.
     props = item.get("properties") or {}
     caliber_raw = props.get("caliber") if isinstance(props, dict) else None
+    # For packs we also remember WHICH round is inside, so the frontend can
+    # highlight that row in the matrix. A pack could in principle hold more
+    # than one round type; we surface only the first (representative) one.
+    ammo_pack_round_id = None
+    ammo_pack_round_name = None
     if not caliber_raw and "ammoBox" in (item.get("types") or []):
         for ci in item.get("containsItems") or []:
-            inner_props = (ci.get("item") or {}).get("properties") or {}
+            inner_item = ci.get("item") or {}
+            inner_props = inner_item.get("properties") or {}
             if isinstance(inner_props, dict) and inner_props.get("caliber"):
                 caliber_raw = inner_props["caliber"]
+                ammo_pack_round_id = inner_item.get("id")
+                ammo_pack_round_name = inner_item.get("name")
                 break
     caliber_display = _caliber_display(caliber_raw) if caliber_raw else None
 
@@ -722,6 +736,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "needed_for_hideout": needed_for_hideout,
         "caliber": caliber_raw,
         "caliber_display": caliber_display,
+        "ammo_pack_round_id": ammo_pack_round_id,
+        "ammo_pack_round_name": ammo_pack_round_name,
     }
 
 
