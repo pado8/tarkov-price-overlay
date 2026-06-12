@@ -36,7 +36,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from capture import capture_region
-from ocr import _get_reader, recognize_text_fragments
+from ocr import _get_reader, is_price_or_status_line, recognize_text_fragments
 from quest_tracker import get_tracker
 from tarkov_api import get_item_price, get_station_list, start_background_refresher
 
@@ -506,6 +506,17 @@ def _capture_and_lookup(
     fragments = recognize_text_fragments(
         image, langs=("ko", "en"), skip_bg_filter=(label == "ground")
     )
+    # Trade-menu noise: drop price labels ("98,000₽", "#####₽") and trader
+    # status lines before joining, so they neither sink the fuzzy match nor
+    # become retry candidates below. Applied on every path (not just trade)
+    # — the patterns only fire on price/status shapes, so there's nothing
+    # to false-positive on elsewhere. If EVERYTHING looks like price noise,
+    # keep the original fragments: a failed lookup with honest raw_text
+    # beats returning an empty capture.
+    price_noise = [f for f in fragments if is_price_or_status_line(f)]
+    if price_noise and len(price_noise) < len(fragments):
+        print(f"[lookup] OCR({label}) dropped price/status fragments: {price_noise!r}")
+        fragments = [f for f in fragments if not is_price_or_status_line(f)]
     t2 = time.perf_counter()
     text = " ".join(fragments).strip()
     print(f"[lookup] OCR({label}): {text!r} ({len(fragments)} fragments)")

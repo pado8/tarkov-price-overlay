@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 
@@ -124,6 +125,31 @@ def _has_tooltip_background(hsv: np.ndarray, bbox) -> bool:
         median_s < _TOOLTIP_S_MAX
         and _TOOLTIP_V_MIN <= median_v <= _TOOLTIP_V_MAX
     )
+
+
+# Trade-screen noise detection. In the Trading menu the capture box often
+# catches the price label under the item name ("98,000₽", "₽ 123", masked
+# "#####₽") or a trader status line ("The trader cannot buy this item",
+# Russian "Пусто"/"Недостаточно..."). Joined with the name they sink the
+# fuzzy match, and as retry candidates they can fuzzy-map to the wrong
+# item. No single regex covers all the formats, so this is a pattern list
+# — any hit marks the fragment as price/status noise.
+_PRICE_STATUS_PATTERNS = [
+    re.compile(r"^\d[\d,\.\s]*\s*[₽$€]$"),  # "98,000₽", "123 $"
+    re.compile(r"^[₽$€]\s*\d"),  # "₽ 123"
+    re.compile(r"^#+\s*[₽$€]?"),  # "#####₽" (price masked by EFT)
+    re.compile(r"The trader", re.IGNORECASE),  # "The trader cannot buy…"
+    re.compile(r"(Пусто|Недостаточ)"),  # Russian trader status copy
+]
+
+
+def is_price_or_status_line(text: str) -> bool:
+    """True when an OCR fragment looks like a trade-screen price label or
+    trader status line rather than an item name. Content-based on purpose:
+    in the trade grid a price can sit on the same row as a name, so bbox
+    position alone can't separate them."""
+    t = (text or "").strip()
+    return any(p.search(t) for p in _PRICE_STATUS_PATTERNS)
 
 
 def recognize_text_fragments(
