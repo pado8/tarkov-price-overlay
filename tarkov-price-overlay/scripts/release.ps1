@@ -159,10 +159,16 @@ Write-Host "[release] latest.json written: $latestJsonPath"
 
 # 5b. Create release on PUBLIC distribution repo (installer + portable ZIP + latest.json)
 Write-Host "[release] creating GitHub Release on $publicRepo..."
+# Pass notes via a file, NOT `--notes $Notes`: multi-line notes with quotes /
+# special chars got mangled when handed to gh as a native-command argument
+# (v1.1.2 release: "no matches found for `to`" — gh treated fragments as asset
+# globs and the release didn't get created). A file is parse-proof.
+$ghNotesFile = Join-Path $env:TEMP "ghrelease-notes-$tag.txt"
+[IO.File]::WriteAllText($ghNotesFile, $Notes, [Text.UTF8Encoding]::new($false))
 & $ghExe release create $tag $installer $portableZip $latestJsonPath `
     --repo $publicRepo `
     --title "Tarkov Price Overlay $tag" `
-    --notes $Notes
+    --notes-file $ghNotesFile
 
 # 5c. Verify the release actually exists with all three assets — `gh release
 # create` has silently failed before (v1.0.11). Catch it HERE, not days later.
