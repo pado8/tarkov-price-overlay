@@ -2120,8 +2120,11 @@ function App() {
         const win = getCurrentWindow();
         try {
           if (!(await win.isVisible())) {
-            await win.show();
-            await win.setFocus();
+            // Passive reveal: show WITHOUT taking focus, so ESC/Tab keep going
+            // to the game. A plain show()+setFocus() stole focus — after the
+            // card auto-hid, the next F2 made the overlay swallow the keypress
+            // until you clicked back in-game (reported on 1.1.1/1.1.2).
+            await invoke("show_overlay_passive");
           }
         } catch {}
         showCard(); // bring card up + cancel any in-flight hide
@@ -2258,8 +2261,8 @@ function App() {
       try {
         const visible = await win.isVisible();
         if (!visible) {
-          await win.show();
-          await win.setFocus();
+          // Passive reveal (no focus steal) — same reason as the F2 path.
+          await invoke("show_overlay_passive");
         }
       } catch {}
       // Internal card visibility flip.

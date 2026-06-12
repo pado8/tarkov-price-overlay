@@ -19,6 +19,46 @@ struct CursorPos {
     y: i32,
 }
 
+/// Reveal the main overlay window WITHOUT activating it, so it never steals
+/// keyboard/mouse focus from the foreground game. A plain `window.show()` runs
+/// ShowWindow(SW_SHOW) which ACTIVATES the window — that's what made ESC/Tab go
+/// to the overlay instead of Tarkov after the card auto-hid and a hotkey
+/// re-revealed it (reported on 1.1.1/1.1.2). SW_SHOWNOACTIVATE makes it visible
+/// (it stays topmost, so it's still above the game) while leaving focus with
+/// the game. Clicking the overlay still activates it normally, so settings /
+/// correction typing is unaffected. Falls back to a normal show off-Windows or
+/// if the HWND can't be obtained.
+#[cfg(windows)]
+fn reveal_overlay_no_activate(window: &tauri::WebviewWindow) {
+    #[link(name = "user32")]
+    extern "system" {
+        fn ShowWindow(hwnd: isize, n_cmd_show: i32) -> i32;
+    }
+    const SW_SHOWNOACTIVATE: i32 = 4;
+    match window.hwnd() {
+        Ok(hwnd) => unsafe {
+            ShowWindow(hwnd.0 as isize, SW_SHOWNOACTIVATE);
+        },
+        Err(_) => {
+            let _ = window.show();
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn reveal_overlay_no_activate(window: &tauri::WebviewWindow) {
+    let _ = window.show();
+}
+
+/// Frontend-invokable passive reveal — used by the F2 / toggle handlers so a
+/// re-shown price card doesn't pull focus off the game.
+#[tauri::command]
+fn show_overlay_passive(app: tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        reveal_overlay_no_activate(&window);
+    }
+}
+
 /// Holds the spawned Python sidecar so we can kill it on app exit.
 struct SidecarChild(Mutex<Option<CommandChild>>);
 
@@ -250,11 +290,11 @@ fn spawn_mouse_hotkey_thread(
                     if let Some(event_name) = kind {
                         // Same window-revival behavior as the keyboard hotkey
                         // path so users on a mouse binding aren't worse off
-                        // when they've X-to-tray'd the overlay.
+                        // when they've X-to-tray'd the overlay. Passive reveal
+                        // (no activation) so it doesn't steal focus from the game.
                         if let Some(window) = app.get_webview_window("main") {
                             if !window.is_visible().unwrap_or(true) {
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                                reveal_overlay_no_activate(&window);
                             }
                         }
                         let pos = CursorPos {
@@ -658,11 +698,14 @@ pub fn run() {
                     };
                     // If the window is hidden (user clicked X → hide_to_tray),
                     // bring it back so the next emit has somewhere to render.
-                    // Same pattern as the tray menu / left-click handlers.
+                    // If the window is hidden (user clicked X → hide_to_tray),
+                    // bring it back so the next emit has somewhere to render.
+                    // Passive reveal (no activation): a normal show()+set_focus()
+                    // here stole focus from the game, so ESC/Tab went to the
+                    // overlay instead of closing the inventory (1.1.1/1.1.2 bug).
                     if let Some(window) = app.get_webview_window("main") {
                         if !window.is_visible().unwrap_or(true) {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                            reveal_overlay_no_activate(&window);
                         }
                     }
                     let device_state = DeviceState::new();
@@ -699,7 +742,8 @@ pub fn run() {
             hide_preview_rect,
             is_portable_install,
             exit_app,
-            relaunch_as_admin
+            relaunch_as_admin,
+            show_overlay_passive
         ])
         .setup(|app| {
             // Mouse-button hotkey poller — needs the AppHandle for emits and
