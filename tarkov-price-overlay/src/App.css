@@ -469,6 +469,17 @@ html, body, #root {
 .barter-quest-lock.unlocked {
   color: var(--success-dim);
 }
+/* Craft the user can't run yet (station level too low). Stays readable
+   and hoverable — just visually demoted, no pointer-events block. */
+.barter-row.craft-locked {
+  opacity: 0.5;
+}
+.craft-lock-badge {
+  color: var(--danger);
+  font-size: var(--card-fs-xs);
+  margin-left: 6px;
+  word-break: keep-all;
+}
 .barter-count {
   color: var(--success-dim);
   font-family: "Consolas", monospace;

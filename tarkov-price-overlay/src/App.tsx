@@ -345,6 +345,9 @@ type QuestStatus = {
 
 type HideoutCraft = {
   station: string;
+  // Hideout station id — same id space as HideoutStation/hideoutLevels,
+  // so we can tell whether the user's station level allows this craft.
+  station_id: string;
   level: number;
   duration_sec: number;
   items: BarterRequiredItem[];
@@ -941,6 +944,11 @@ function App() {
     null | "lookup" | "toggle"
   >(null);
   const recordingHotkey = recordingTarget !== null;
+  // Mirror into a ref so the click-through poll (a stable [cardVisible] effect)
+  // can read the current recording state without going stale — while recording
+  // a hotkey we must not auto-hide the card.
+  const recordingHotkeyRef = useRef(recordingHotkey);
+  recordingHotkeyRef.current = recordingHotkey;
   // Brief inline error shown on the recording button when the user tries to
   // bind a mouse button that's already on the other slot. Cleared when
   // recording ends or after a short timeout so the user gets a noticeable
@@ -1506,6 +1514,14 @@ function App() {
     };
     // Start in pass-through; the first poll will flip it if cursor is on card.
     setIgnore(true);
+    // Assume cursor-off-card until the first poll proves otherwise, so a
+    // cursor that's already resting on the card when it appears is seen as a
+    // clean enter-transition that cancels the auto-hide.
+    mouseOverCardRef.current = false;
+    // Pad (physical px) added around the card rect for the inside-test, so a
+    // cursor parked on the edge — or fractional-DPI rounding (e.g. 125%) —
+    // doesn't flip the on-card state and wrongly trigger the hide.
+    const EDGE_PAD = 6;
 
     const poll = async () => {
       if (cancelled) return;
@@ -4127,38 +4143,62 @@ function App() {
                   )}
                   {region.showCraftsFor &&
                     result.crafts_for &&
-                    result.crafts_for.length > 0 && (
-                    <details className="all-traders barters" open={region.detailsOpenDefault}>
-                      <summary>
-                        🏭 {t.craftFor} ({result.crafts_for.length})
-                      </summary>
-                      <div className="trader-list">
-                        {result.crafts_for.map((c, idx) => (
-                          <div key={idx} className="barter-row">
-                            <div className="barter-trader">
-                              {c.station}{" "}
-                              <span className="barter-level">
-                                Lv{c.level} · {fmtDuration(c.duration_sec)}
-                              </span>
-                            </div>
-                            <div className="barter-items">
-                              {c.items.map((it, i) => (
-                                <span key={i} className="barter-item" title={it.name}>
-                                  {i > 0 && (
-                                    <span className="barter-plus"> + </span>
-                                  )}
-                                  {it.short_name ?? it.name}
-                                  <span className="barter-count">
-                                    ×{it.count}
-                                  </span>
-                                </span>
-                              ))}
-                            </div>
+                    result.crafts_for.length > 0 && (() => {
+                      // Same convention as needed_for_hideout: when the user
+                      // hasn't set any station levels we treat everything as
+                      // available instead of locking the whole list.
+                      const hasLevels = Object.keys(hideoutLevels).length > 0;
+                      return (
+                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                          <summary>
+                            🏭 {t.craftFor} ({result.crafts_for.length})
+                          </summary>
+                          <div className="trader-list">
+                            {result.crafts_for.map((c, idx) => {
+                              const locked =
+                                hasLevels &&
+                                !!c.station_id &&
+                                (hideoutLevels[c.station_id] ?? 0) < c.level;
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`barter-row${locked ? " craft-locked" : ""}`}
+                                >
+                                  <div className="barter-trader">
+                                    {c.station}{" "}
+                                    <span className="barter-level">
+                                      Lv{c.level} · {fmtDuration(c.duration_sec)}
+                                    </span>
+                                    {locked && (
+                                      <span
+                                        className="craft-lock-badge"
+                                        title={t.craftLockedHint}
+                                      >
+                                        🔒 Lv{c.level} {t.craftLockedBadge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="barter-items">
+                                    {c.items.map((it, i) => (
+                                      <span key={i} className="barter-item" title={it.name}>
+                                        {i > 0 && (
+                                          <span className="barter-plus"> + </span>
+                                        )}
+                                        {it.short_name ?? it.name}
+                                        <span className="barter-count">
+                                          ×{it.count}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))}
-                      </div>
-                    </details>
-                  )}
+                        </details>
+                      );
+                    })()
+                  }
                   {region.showHideoutNeeds &&
                     result.needed_for_hideout &&
                     result.needed_for_hideout.length > 0 && (() => {

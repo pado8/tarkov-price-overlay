@@ -93,7 +93,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
       }
     }
     craftsFor {
-      station { name }
+      station { id name }
       level
       duration
       requiredItems {
@@ -230,7 +230,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       }
     }
     craftsFor {
-      station { name }
+      station { id name }
       level
       duration
       requiredItems {
@@ -677,6 +677,9 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         crafts_for.append(
             {
                 "station": station.get("name") or "?",
+                # Same id space as the hideout station list, so the frontend
+                # can compare against the user's per-station levels.
+                "station_id": station.get("id") or "",
                 "level": c.get("level") or 1,
                 "duration_sec": c.get("duration") or 0,
                 "items": items_list,

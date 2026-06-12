@@ -171,6 +171,7 @@ class TaskRef(BaseModel):
 
 class HideoutCraft(BaseModel):
     station: str
+    station_id: str = ""  # hideout station id — matches get_station_list ids
     level: int = 1
     duration_sec: int = 0
     items: list[BarterRequiredItem] = []
@@ -366,6 +367,7 @@ def _build_response(
         crafts_for=[
             HideoutCraft(
                 station=c["station"],
+                station_id=c.get("station_id", ""),
                 level=c.get("level", 1),
                 duration_sec=c.get("duration_sec", 0),
                 items=[
