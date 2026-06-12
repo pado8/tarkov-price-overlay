@@ -128,10 +128,25 @@ const loadStatsNoticeShown = (): boolean =>
 //   lookup_nomatch  — F2 lookup matched no item (OCR/recognition miss)
 //   lookup_noprice  — matched an item with no market price (detail = public
 //                     catalog item id, NOT raw OCR/search text)
-// The last two are post-patch breakage signals: a spike after a game update
-// surfaces new/unrecognized items in the dashboard before users report it.
+//   hotkey          — the lookup hotkey binding at session start (detail =
+//                     "default" | "custom_key" | "custom_mouse"). Lets the
+//                     dashboard tell how many "never looked up" users simply
+//                     REBOUND the key off F2 (so they're not really inactive —
+//                     they press a different key) vs. a real activation gap.
+//   hotkey_fail     — registering the lookup hotkey threw (detail = the
+//                     accelerator that failed). A remapped key that collides
+//                     with another app's global shortcut silently does nothing,
+//                     which looks identical to "never tried" in the funnel.
+// lookup_nomatch/noprice are post-patch breakage signals: a spike after a game
+// update surfaces new/unrecognized items before users report it.
 // (ad_impression/ad_click still accepted server-side for old clients.)
-type StatsEvent = "launch" | "lookup" | "lookup_nomatch" | "lookup_noprice";
+type StatsEvent =
+  | "launch"
+  | "lookup"
+  | "lookup_nomatch"
+  | "lookup_noprice"
+  | "hotkey"
+  | "hotkey_fail";
 const reportEvent = (eventType: StatsEvent, detail?: string) => {
   if (!loadStatsEnabled()) return;
   fetch(STATS_ENDPOINT, {
@@ -759,6 +774,16 @@ function isMouseHotkey(s: string): s is MouseHotkey {
   return s === "MouseMiddle" || s === "MouseX1" || s === "MouseX2";
 }
 
+/** Coarse classification of the lookup hotkey for anonymous telemetry — never
+ *  the raw key, just whether the user is on the default F2, a custom keyboard
+ *  key, or a mouse button. Powers the "are the 'never pressed F2' users just
+ *  people who rebound the key?" analysis. */
+function hotkeyKind(hk: string): "default" | "custom_key" | "custom_mouse" {
+  if (hk === DEFAULT_HOTKEY) return "default";
+  if (isMouseHotkey(hk)) return "custom_mouse";
+  return "custom_key";
+}
+
 /** MouseEvent.button → our hotkey string, or null for buttons we refuse to
  *  bind. Left/right click are reserved for normal UI / game input — binding
  *  them would steal every click. */
@@ -1150,6 +1175,11 @@ function App() {
   // toggling off mid-session also stops future pings.
   useEffect(() => {
     reportEvent("launch");
+    // Hotkey binding at session start (default / custom_key / custom_mouse).
+    // Read straight from storage so it reflects the persisted choice, not a
+    // mid-session edit. Lets the dashboard split the "never looked up" cohort
+    // into "rebound the key" vs. a true activation gap.
+    reportEvent("hotkey", hotkeyKind(loadHotkey()));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1512,12 +1542,21 @@ function App() {
       invoke("register_lookup_hotkey", { accelerator: "" }).catch(() => {});
       invoke("register_lookup_mouse", { button: hotkey })
         .then(() => log(`React: lookup hotkey = ${hotkey} (mouse)`))
-        .catch((e) => log(`React: lookup mouse FAILED (${hotkey}): ${e}`));
+        .catch((e) => {
+          log(`React: lookup mouse FAILED (${hotkey}): ${e}`);
+          // A binding that won't register silently does nothing — the user
+          // presses their key and nothing happens, which is indistinguishable
+          // from "never tried" in the funnel. Surface it.
+          reportEvent("hotkey_fail", hotkey);
+        });
     } else {
       invoke("register_lookup_mouse", { button: "" }).catch(() => {});
       invoke("register_lookup_hotkey", { accelerator: hotkey })
         .then(() => log(`React: lookup hotkey = ${hotkey}`))
-        .catch((e) => log(`React: lookup hotkey FAILED (${hotkey}): ${e}`));
+        .catch((e) => {
+          log(`React: lookup hotkey FAILED (${hotkey}): ${e}`);
+          reportEvent("hotkey_fail", hotkey);
+        });
     }
   }, [hotkey]);
 
