@@ -1539,10 +1539,14 @@ function App() {
           if (rect.width > 0 && rect.height > 0) {
             const winPos = await win.outerPosition();
             const dpr = window.devicePixelRatio || 1;
-            const left = winPos.x + rect.left * dpr;
-            const top = winPos.y + rect.top * dpr;
-            const right = left + rect.width * dpr;
-            const bottom = top + rect.height * dpr;
+            // Whole-pixel, padded rect (see EDGE_PAD) so the inside-test
+            // doesn't oscillate on the card edge at fractional DPI.
+            const left = winPos.x + Math.floor(rect.left * dpr) - EDGE_PAD;
+            const top = winPos.y + Math.floor(rect.top * dpr) - EDGE_PAD;
+            const right =
+              winPos.x + Math.ceil((rect.left + rect.width) * dpr) + EDGE_PAD;
+            const bottom =
+              winPos.y + Math.ceil((rect.top + rect.height) * dpr) + EDGE_PAD;
             const cursor = await invoke<{ x: number; y: number }>(
               "get_cursor_position"
             );
@@ -1552,6 +1556,20 @@ function App() {
               cursor.y >= top &&
               cursor.y < bottom;
             setIgnore(!inside);
+            // Drive auto-hide from the poll — the single source of truth for
+            // "cursor on card". The card's DOM mouseenter/mouseleave fire
+            // unreliably because the window is click-through most of the time,
+            // so a cursor that lands on the card and stops never cancelled the
+            // hide (the original bug: hovering didn't keep the card alive).
+            // Edge-triggered so the timer isn't restarted every 40ms.
+            if (inside !== mouseOverCardRef.current) {
+              mouseOverCardRef.current = inside;
+              if (inside) {
+                cancelHideTimer();
+              } else if (!recordingHotkeyRef.current) {
+                scheduleHide();
+              }
+            }
           }
         }
       } catch {}
@@ -1561,6 +1579,7 @@ function App() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardVisible]);
 
   const t = T[region.lang];
@@ -3588,7 +3607,7 @@ function App() {
               </>
             )}
 
-            <details className="hideout-level-details">
+            <details className="hideout-level-details" open>
               <summary className="settings-section-header hideout-level-summary">
                 {t.hideoutLevelSection}
               </summary>
