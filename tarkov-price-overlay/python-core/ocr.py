@@ -138,8 +138,18 @@ _PRICE_STATUS_PATTERNS = [
     re.compile(r"^\d[\d,\.\s]*\s*[₽$€]$"),  # "98,000₽", "123 $"
     re.compile(r"^[₽$€]\s*\d"),  # "₽ 123"
     re.compile(r"^#+\s*[₽$€]?"),  # "#####₽" (price masked by EFT)
+    # EFT's ₽ glyph very often OCRs as a Latin "P", so a trade price like
+    # "₽27 356" comes back as "P27 356" and slips past the currency patterns
+    # above. Catch P/₽/$/€ + a multi-digit run (≥4 digits with an internal
+    # separator). The ≥4-digit floor keeps real short names like "P226" /
+    # "PB" safe, and the per-call guard (drops only when SOME fragments
+    # survive) protects a lone price-shaped name anyway.
+    re.compile(r"^[P₽$€]\s?\d[\d,\.\s]{2,}\d$"),  # "P27 356", "P12,345"
     re.compile(r"The trader", re.IGNORECASE),  # "The trader cannot buy…"
     re.compile(r"(Пусто|Недостаточ)"),  # Russian trader status copy
+    # Korean trader status copy (the reported case: Korean game language).
+    # "이 아이템을 구매/판매할 수 없습니다", "거래 불가", "상인이 취급하지 않는".
+    re.compile(r"(구매할 수 없|판매할 수 없|거래\s*불가|취급하지\s*않)"),
 ]
 
 

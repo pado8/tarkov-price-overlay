@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, availableMonitors } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, currentMonitor, availableMonitors } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -96,10 +96,19 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 const RELEASES_PAGE_URL =
   "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest";
 
-// Generate-once anonymous device identifier. Persists in localStorage so a
-// re-install (which wipes localStorage) re-generates a new ID — that's the
-// intended DAU-counting semantic, not a stable user ID across reinstalls.
+// Anonymous device identifier. The canonical copy lives in a machine-wide file
+// (%PROGRAMDATA%\TarkovPriceOverlay\install_id, written by the Rust backend),
+// so it stays stable across reinstalls, WebView2 cache wipes, portable↔installer
+// switches, and second Windows accounts — i.e. ONE id per physical PC. See the
+// resolve_install_id command in lib.rs. localStorage holds a mirror so reads are
+// synchronous; initInstallId() reconciles the two at startup.
+//
+// `cachedInstallId` is the reconciled machine id once initInstallId resolves.
+// Until then (and if the backend is unavailable) ensureInstallId falls back to
+// the localStorage value, generating one if absent.
+let cachedInstallId: string | null = null;
 const ensureInstallId = (): string => {
+  if (cachedInstallId) return cachedInstallId;
   let id = localStorage.getItem(INSTALL_ID_KEY);
   if (!id) {
     // crypto.randomUUID is available in WebView2 / Tauri's webview.
@@ -107,6 +116,27 @@ const ensureInstallId = (): string => {
     localStorage.setItem(INSTALL_ID_KEY, id);
   }
   return id;
+};
+
+// Resolve the machine-wide id via the Rust backend, seeding it with the current
+// localStorage id so an existing user's identity is PROMOTED (not reset) on the
+// first run of this build. Caches the result and mirrors it back into
+// localStorage so both stores agree. Must be awaited before the first reported
+// event so a reinstalled PC reports its original id, not a fresh localStorage
+// one. Failures keep the localStorage id (telemetry still works).
+const initInstallId = async (): Promise<void> => {
+  const seed = ensureInstallId();
+  try {
+    const id = await invoke<string>("resolve_install_id", { candidate: seed });
+    if (id && id.length >= 8) {
+      cachedInstallId = id;
+      localStorage.setItem(INSTALL_ID_KEY, id);
+    } else {
+      cachedInstallId = seed;
+    }
+  } catch {
+    cachedInstallId = seed;
+  }
 };
 
 // Opt-out model: anonymous stats are ON by default and only suppressed when
@@ -1202,12 +1232,17 @@ function App() {
   // user previously turned stats off. reportEvent rechecks at call-time, so
   // toggling off mid-session also stops future pings.
   useEffect(() => {
-    reportEvent("launch");
-    // Hotkey binding at session start (default / custom_key / custom_mouse).
-    // Read straight from storage so it reflects the persisted choice, not a
-    // mid-session edit. Lets the dashboard split the "never looked up" cohort
-    // into "rebound the key" vs. a true activation gap.
-    reportEvent("hotkey", hotkeyKind(loadHotkey()));
+    // Resolve the machine-wide install id FIRST so a reinstalled PC reports its
+    // original id instead of a fresh localStorage one (see initInstallId).
+    void (async () => {
+      await initInstallId();
+      reportEvent("launch");
+      // Hotkey binding at session start (default / custom_key / custom_mouse).
+      // Read straight from storage so it reflects the persisted choice, not a
+      // mid-session edit. Lets the dashboard split the "never looked up" cohort
+      // into "rebound the key" vs. a true activation gap.
+      reportEvent("hotkey", hotkeyKind(loadHotkey()));
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1433,6 +1468,11 @@ function App() {
   ]);
 
   const cardRef = useRef<HTMLDivElement | null>(null);
+  // Window-height ceiling for the card's current on-screen position, and a
+  // handle to the resize-recompute fn so the move listener can refresh it when
+  // the window is dragged (see the window-resize effect + id20 fix).
+  const maxWinHRef = useRef<number>(screenMaxH());
+  const applyRef = useRef<(() => void) | null>(null);
   // Mirrors showSettings into a ref so scheduleHide can check the latest
   // value without re-creating the callback on every render. While settings
   // is open the user is actively interacting with controls (sliders,
@@ -2132,6 +2172,9 @@ function App() {
           JSON.stringify({ x: pos.x, y: pos.y })
         );
       }).catch(() => {});
+      // Window moved → its top edge changed → recompute the height ceiling so
+      // settings stay reachable wherever the user parks the overlay (id20).
+      applyRef.current?.();
     });
     return () => {
       unlistenPromise.then((fn) => fn());
@@ -2145,8 +2188,8 @@ function App() {
   // max-height: calc(100vh - 24px) cap). Using getBoundingClientRect would
   // create a feedback loop: small initial card → small window → small vh →
   // even smaller card max-height → window stuck at ~100px forever.
-  // Clamped to screen available height so the card scrolls inside itself when
-  // content genuinely exceeds the screen.
+  // Clamped to the space BELOW the window's top edge so the card scrolls
+  // inside itself when content exceeds what fits on-screen from there.
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -2161,11 +2204,41 @@ function App() {
       const contentH =
         override != null ? override : Math.ceil(el.scrollHeight);
       const h = contentH + WIN_VPAD;
-      const clamped = Math.min(Math.max(h, 100), screenMaxH());
+      const clamped = Math.min(Math.max(h, 100), maxWinHRef.current);
       getCurrentWindow()
         .setSize(new LogicalSize(WIN_BASE_W, clamped))
         .catch(() => {});
     };
+    // Recompute the window-height ceiling for the window's CURRENT position.
+    // The old code capped at the full screen height regardless of where the
+    // window sat, so a window placed low on screen grew past the bottom edge
+    // and its lower settings became unreachable (1.1.4 user report). We cap at
+    // the space from the window's top to the bottom of the monitor it's on —
+    // computed per-monitor so it's correct on multi-monitor / DPI-scaled
+    // setups (top relative to the window's own monitor, logical px).
+    const recompute = async () => {
+      try {
+        const win = getCurrentWindow();
+        const [pos, mon] = await Promise.all([
+          win.outerPosition(),
+          currentMonitor(),
+        ]);
+        if (mon) {
+          const scale = mon.scaleFactor || 1;
+          const relTopLogical = (pos.y - mon.position.y) / scale;
+          const monHLogical = mon.size.height / scale;
+          const availBelow = monHLogical - relTopLogical - WIN_SCREEN_MARGIN;
+          maxWinHRef.current = Math.max(300, Math.min(screenMaxH(), availBelow));
+        } else {
+          maxWinHRef.current = screenMaxH();
+        }
+      } catch {
+        maxWinHRef.current = screenMaxH();
+      }
+      apply();
+    };
+    // Let the move listener trigger a recompute when the user drags the window.
+    applyRef.current = recompute;
     const ro = new ResizeObserver(() => {
       // Coalesce bursts of resize events to one frame.
       if (raf) cancelAnimationFrame(raf);
@@ -2182,11 +2255,12 @@ function App() {
       raf = requestAnimationFrame(apply);
     });
     mo.observe(el, { childList: true, subtree: true, characterData: true });
-    apply();
+    recompute();
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
       mo.disconnect();
+      applyRef.current = null;
     };
   }, []);
 
@@ -2623,8 +2697,48 @@ function App() {
     lookupByName(trimmed, rawKey);
   };
 
+  // Full-name hover tooltip. The native `title` attribute renders the label at
+  // the OS cursor hotspot, so the cursor itself covered the name (1.1.4 user
+  // report). This replaces it with a fixed-position label offset UP-right of
+  // the cursor. It must live OUTSIDE .card: .card's `backdrop-filter` makes it
+  // a containing block AND clips via overflow, which would trap/clip a fixed
+  // child. Driven by event delegation — any descendant carrying data-fullname
+  // shows its value.
+  const [hoverTip, setHoverTip] = useState<
+    { text: string; x: number; y: number } | null
+  >(null);
+  const hoverElRef = useRef<HTMLElement | null>(null);
+  const onCardMouseMove = (e: React.MouseEvent) => {
+    const el = (e.target as HTMLElement)?.closest?.(
+      "[data-fullname]"
+    ) as HTMLElement | null;
+    // Anchor to the hovered element (not the cursor): only re-render when the
+    // target changes, and the label sits ABOVE the name so the cursor never
+    // covers it. getBoundingClientRect is viewport-relative = fixed coords.
+    if (el === hoverElRef.current) return;
+    hoverElRef.current = el;
+    const text = el?.dataset.fullname;
+    if (el && text) {
+      const r = el.getBoundingClientRect();
+      setHoverTip({ text, x: r.left, y: r.top });
+    } else {
+      setHoverTip(null);
+    }
+  };
+
   return (
     <div className="overlay">
+      {hoverTip && (
+        <div
+          className="hover-fullname"
+          style={{
+            left: Math.max(4, Math.min(hoverTip.x, window.innerWidth - 228)),
+            top: Math.max(4, hoverTip.y - 26),
+          }}
+        >
+          {hoverTip.text}
+        </div>
+      )}
       <div
         ref={cardRef}
         className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}`}
@@ -2651,8 +2765,11 @@ function App() {
           mouseOverCardRef.current = true;
           cancelHideTimer();
         }}
+        onMouseMove={onCardMouseMove}
         onMouseLeave={() => {
           mouseOverCardRef.current = false;
+          hoverElRef.current = null;
+          setHoverTip(null);
           if (!recordingHotkey) scheduleHide();
         }}
       >
@@ -3935,7 +4052,7 @@ function App() {
                   }}
                 />
               )}
-              <div className="item-name" title={result.item_name ?? undefined}>
+              <div className="item-name" data-fullname={result.item_name ?? undefined}>
                 {result.item_name ??
                   (result.raw_text.trim()
                     ? `(${t.noMatch}) "${result.raw_text}"`
@@ -4112,7 +4229,7 @@ function App() {
                             </div>
                             <div className="barter-items">
                               {b.items.map((it, i) => (
-                                <span key={i} className="barter-item" title={it.name}>
+                                <span key={i} className="barter-item" data-fullname={it.name}>
                                   {i > 0 && <span className="barter-plus"> + </span>}
                                   {it.short_name ?? it.name}
                                   <span className="barter-count">×{it.count}</span>
@@ -4157,7 +4274,7 @@ function App() {
                             <div className="barter-items">
                               {t.barterUsingArrow}{" "}
                               {u.rewards.map((it, i) => (
-                                <span key={i} className="barter-item" title={it.name}>
+                                <span key={i} className="barter-item" data-fullname={it.name}>
                                   {i > 0 && (
                                     <span className="barter-plus">, </span>
                                   )}
@@ -4212,7 +4329,7 @@ function App() {
                                   </div>
                                   <div className="barter-items">
                                     {c.items.map((it, i) => (
-                                      <span key={i} className="barter-item" title={it.name}>
+                                      <span key={i} className="barter-item" data-fullname={it.name}>
                                         {i > 0 && (
                                           <span className="barter-plus"> + </span>
                                         )}
@@ -4323,7 +4440,7 @@ function App() {
                                   key={r.id ?? r.name}
                                   className={`ammo-row${isCurrent ? " ammo-row-current" : ""}`}
                                 >
-                                  <span className="ammo-name" title={r.name}>{r.short_name}</span>
+                                  <span className="ammo-name" data-fullname={r.name}>{r.short_name}</span>
                                   <span className="ammo-pen">{r.penetration}</span>
                                   <span className="ammo-dmg">{r.damage}</span>
                                   <span className="ammo-ac">

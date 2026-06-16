@@ -72,6 +72,25 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* Full-name hover label. Fixed-position (offset up-right of the cursor by the
+   inline left/top) so the cursor never covers it, and rendered as a sibling of
+   .card so .card's backdrop-filter containing block + overflow can't clip it. */
+.hover-fullname {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  max-width: 220px;
+  background: rgba(20, 22, 27, 0.97);
+  color: #f0e6d2;
+  border: 1px solid var(--border-emphasis, #4a4f5c);
+  border-radius: var(--radius-sm, 4px);
+  padding: 2px 7px;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: normal;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
 /* ── Font size tiers (derived from --card-fs set via inline style) ── */
 .card {
   --card-fs: 13px;

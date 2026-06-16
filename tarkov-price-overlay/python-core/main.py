@@ -551,6 +551,12 @@ def _capture_and_lookup(
     # longest source string wins — which is almost always the actual
     # tooltip text in EFT's layout.
     if price.get("name") is None and len(fragments) > 1:
+        # Original detection order = EasyOCR top-to-bottom, left-to-right,
+        # which mirrors EFT's layout (the hovered item's own name line comes
+        # first). Used as the tiebreak below. First occurrence wins on dupes.
+        order: dict[str, int] = {}
+        for i, f in enumerate(fragments):
+            order.setdefault(f, i)
         retry_candidates: list[str] = []
         seen = {text}
         for f in sorted(fragments, key=len, reverse=True):
@@ -560,8 +566,9 @@ def _capture_and_lookup(
             retry_candidates.append(f)
             if len(retry_candidates) >= 6:
                 break
-        best_cand: tuple[str, dict] | None = None
-        best_score: tuple[int, int] = (-1, -1)
+        # Resolve each candidate to (fragment, price, source_len, order_idx,
+        # matched_name_len).
+        matches: list[tuple[str, dict, int, int, int]] = []
         for cand in retry_candidates:
             cand_price = get_item_price(
                 cand, lang=lang, game_mode=game_mode, corrections=corrections
@@ -569,15 +576,30 @@ def _capture_and_lookup(
             cand_name = cand_price.get("name")
             if not cand_name:
                 continue
-            score = (len(cand), len(cand_name))
-            if score > best_score:
-                best_score = score
-                best_cand = (cand, cand_price)
+            matches.append(
+                (cand, cand_price, len(cand), order.get(cand, 10_000), len(cand_name))
+            )
+        best_cand: tuple[str, dict] | None = None
+        if matches:
+            # The longest source fragment is usually the real tooltip name —
+            # this is what fixed the ammo-trader "M88z" short-noise case (a
+            # 4-char column header losing to the 13-char tooltip). BUT when the
+            # box catches a ROW OF INVENTORY ICONS, several fragments are
+            # near-equal-length real short-names (CPU fan / Prokill / SAS /
+            # Chainlet) and pure length picks a NEIGHBOR over the hovered item
+            # (the 1.1.4 regression). So restrict to candidates within 2 chars
+            # of the longest, then prefer the one that appeared FIRST in
+            # detection order (top-left ≈ the item under the cursor), breaking
+            # any remaining tie by the more specific (longer) catalog name.
+            max_len = max(m[2] for m in matches)
+            near = [m for m in matches if m[2] >= max_len - 2]
+            winner = min(near, key=lambda m: (m[3], -m[4]))
+            best_cand = (winner[0], winner[1])
         if best_cand is not None:
             cand, cand_price = best_cand
             print(
                 f"[lookup] OCR({label}) matched via fragment "
-                f"{cand!r} -> {cand_price['name']!r} (score={best_score})"
+                f"{cand!r} -> {cand_price['name']!r}"
             )
             # Replace the raw text with the winning fragment so the
             # advanced-mode "OCR" debug line shows what actually matched.
