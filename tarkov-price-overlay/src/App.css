@@ -912,44 +912,6 @@ html, body, #root {
   font-weight: 600;
 }
 
-/* Correction (직접 입력) */
-.correction-btn {
-  margin-top: 6px;
-  background: transparent;
-  border: 1px dashed rgba(200, 170, 100, 0.3);
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
-  padding: 3px 8px;
-  font-size: var(--card-fs-xs);
-  cursor: pointer;
-  width: 100%;
-  text-align: center;
-}
-.correction-btn:hover {
-  color: var(--gold-text);
-  border-color: rgba(200, 170, 100, 0.5);
-  background: rgba(200, 170, 100, 0.08);
-}
-.correction-input-row {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-}
-.correction-input {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--border-default);
-  color: var(--text-primary);
-  padding: 3px 6px;
-  font-size: var(--card-fs-sm);
-  font-family: inherit;
-  border-radius: var(--radius-sm);
-}
-.correction-input:focus {
-  outline: none;
-  border-color: rgba(200, 170, 100, 0.7);
-}
-
 /* Update banner */
 .update-banner {
   display: flex;
@@ -1491,15 +1453,6 @@ html, body, #root {
   margin-left: 0;
   padding: 2px 10px;
 }
-.raw-text {
-  font-size: var(--card-fs-sm);
-  color: var(--text-muted);
-  margin-top: 4px;
-  font-family: "Consolas", monospace;
-  word-break: break-all;
-  overflow-wrap: break-word;
-}
-
 /* Capture-region modal — rendered inside .card so the region-based click-
    through naturally captures pointer events while the rest of the overlay
    stays transparent. The backdrop dims the underlying settings rows so the

@@ -569,8 +569,6 @@ const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const SOUND_KEY = "tarkov.soundOn";
 const PIN_KEY = "tarkov.pinned";
 const HISTORY_KEY = "tarkov.history";
-const CORRECTIONS_KEY = "tarkov.ocrCorrections";
-const ADVANCED_KEY = "tarkov.advancedMode";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
 // User-overridden card width (px). null = auto (scales with fontSize).
@@ -589,10 +587,6 @@ type PreviewAnchorMode = "center" | "cursor";
 function loadPreviewAnchorMode(): PreviewAnchorMode {
   const v = localStorage.getItem(PREVIEW_ANCHOR_KEY);
   return v === "cursor" ? "cursor" : "center";
-}
-
-function loadAdvanced(): boolean {
-  return localStorage.getItem(ADVANCED_KEY) === "true";
 }
 
 function loadCardWidth(): number | null {
@@ -676,34 +670,6 @@ function addToHistory(result: LookupResult): HistoryEntry[] {
 function clearHistory() {
   try {
     localStorage.removeItem(HISTORY_KEY);
-  } catch {}
-}
-
-function loadCorrections(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(CORRECTIONS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") return parsed;
-    }
-  } catch {}
-  return {};
-}
-
-function saveCorrection(rawText: string, correctedName: string) {
-  if (!rawText.trim() || !correctedName.trim()) return;
-  const c = loadCorrections();
-  c[rawText.trim().toLowerCase()] = correctedName.trim();
-  try {
-    localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(c));
-  } catch {}
-}
-
-function removeCorrection(rawText: string) {
-  const c = loadCorrections();
-  delete c[rawText.trim().toLowerCase()];
-  try {
-    localStorage.setItem(CORRECTIONS_KEY, JSON.stringify(c));
   } catch {}
 }
 
@@ -1093,12 +1059,9 @@ function App() {
   const resizingRef = useRef(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
-  const [correctionInput, setCorrectionInput] = useState<string>("");
-  const [correcting, setCorrecting] = useState<boolean>(false);
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     loadAutoCheckUpdate
   );
-  const [advancedMode, setAdvancedMode] = useState<boolean>(loadAdvanced);
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const [questPathInput, setQuestPathInput] = useState<string>("");
   const [questDisplayMode, setQuestDisplayMode] = useState<"pvp" | "pve">(
@@ -1694,10 +1657,6 @@ function App() {
   useEffect(() => {
     localStorage.setItem(UPDATE_CHECK_KEY, String(autoCheckUpdate));
   }, [autoCheckUpdate]);
-
-  useEffect(() => {
-    localStorage.setItem(ADVANCED_KEY, String(advancedMode));
-  }, [advancedMode]);
 
   // Probe sidecar diagnostics on mount, retrying until it answers (the sidecar
   // can take >3s on a cold start while it loads OCR models). Drives the admin-
@@ -2330,7 +2289,6 @@ function App() {
           ground_y: event.payload.y + r.groundOffsetY,
           ground_width: r.groundWidth,
           ground_height: r.groundHeight,
-          corrections: loadCorrections(),
           // Per-press counter so the sidecar can supersede this lookup's OCR
           // if a newer F2 arrives mid-flight (server keys ordering on this,
           // not a ticket it assigns after its own cursor/clamp work).
@@ -2370,7 +2328,6 @@ function App() {
           if (data.attempt !== "wide") {
             setHistory(addToHistory(data));
           }
-          setCorrecting(false);
           if (loadSoundOn()) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
           // "wide_" prefix = the zoom-out rescue produced this read; without
@@ -2494,14 +2451,12 @@ function App() {
   const updateRegion = <K extends keyof Region>(key: K, value: Region[K]) =>
     setRegion((r) => ({ ...r, [key]: value }));
 
-  // Direct-name lookup (skips capture+OCR). Used by recent-history click and
-  // by "직접 입력" correction submit.
-  const lookupByName = async (name: string, rememberAsCorrection?: string) => {
+  // Direct-name lookup (skips capture+OCR). Used by recent-history re-lookup.
+  const lookupByName = async (name: string) => {
     const r = loadRegion();
     showCard();
     setStatus("loading");
     setError("");
-    if (rememberAsCorrection) saveCorrection(rememberAsCorrection, name);
     // Same generation/in-flight discipline as the F2 path, plus a 30s abort:
     // no OCR happens here, so a hung half-open socket (not refused — just
     // silent) would otherwise pin the card on "loading" forever.
@@ -2519,7 +2474,6 @@ function App() {
       lang: getGameLang(r),
       game_mode: r.gameMode,
       override_text: name,
-      corrections: loadCorrections(),
       // Bump the server's seen-seq too, so a manual/history re-lookup
       // supersedes any F2 capture still running in the sidecar.
       client_seq: seq,
@@ -2537,7 +2491,6 @@ function App() {
       setResult(data);
       setStatus("success");
       setHistory(addToHistory(data));
-      setCorrecting(false);
       if (loadSoundOn()) playDing(data.item_name != null);
       // Same outcome telemetry as the F2 path — manual ("직접 입력") and
       // history re-lookups were previously invisible to the dashboard, which
@@ -2685,16 +2638,6 @@ function App() {
         localStorage.removeItem(CARD_HEIGHT_KEY);
       } catch {}
     }
-  };
-
-  const submitCorrection = () => {
-    const trimmed = correctionInput.trim();
-    if (!trimmed || !result) return;
-    const rawKey = result.raw_text || result.item_name || "";
-    if (!rawKey) return;
-    setCorrectionInput("");
-    setCorrecting(false);
-    lookupByName(trimmed, rawKey);
   };
 
   // Full-name hover tooltip. The native `title` attribute renders the label at
@@ -3393,14 +3336,6 @@ function App() {
                 type="checkbox"
                 checked={autoCheckUpdate}
                 onChange={(e) => setAutoCheckUpdate(e.target.checked)}
-              />
-            </div>
-            <div className="settings-row">
-              <label title={t.advancedModeHint}>{t.advancedMode}</label>
-              <input
-                type="checkbox"
-                checked={advancedMode}
-                onChange={(e) => setAdvancedMode(e.target.checked)}
               />
             </div>
             <div className="settings-row">
@@ -4671,76 +4606,6 @@ function App() {
                 </div>
               );
             })()}
-            {/* OCR diagnostic lines (matched_from arrow, raw OCR text)
-                are advanced-mode only — regular users only see the final
-                resolved item, not the noisy OCR plumbing. */}
-            {advancedMode && result.item_name && result.matched_from && (
-              <div className="raw-text">
-                {t.correctedFrom}: "{result.matched_from}" → "{result.item_name}"
-              </div>
-            )}
-            {advancedMode && !result.item_name && result.raw_text && (
-              <div className="raw-text">{t.ocr}: {result.raw_text}</div>
-            )}
-            {/* "직접 입력" correction UI: hidden by default; advanced
-                users can enable it from settings. Past learned corrections
-                still apply automatically regardless. */}
-            {/* No corrections from wide-rescue reads: the enlarged box often
-                grabs static UI text, and corrections are keyed on raw OCR
-                text + applied before exact cache lookups — teaching it
-                "BODY ARMOR"→item would permanently redirect (and can even
-                shadow real shortNames like "Meds"). */}
-            {advancedMode && !correcting && result.attempt !== "wide" && (
-              <button
-                className="correction-btn"
-                onClick={() => {
-                  setCorrecting(true);
-                  setCorrectionInput(result.item_name ?? result.raw_text ?? "");
-                }}
-                title={t.correctionHint}
-              >
-                ✏️ {t.correctionPrompt}
-              </button>
-            )}
-            {advancedMode && correcting && (
-              <div className="correction-input-row">
-                <input
-                  type="text"
-                  className="correction-input"
-                  autoFocus
-                  value={correctionInput}
-                  onChange={(e) => setCorrectionInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") submitCorrection();
-                    else if (e.key === "Escape") {
-                      setCorrecting(false);
-                      setCorrectionInput("");
-                    }
-                  }}
-                  placeholder={t.correctionPlaceholder}
-                />
-                <button
-                  className="reset-btn"
-                  onClick={submitCorrection}
-                  disabled={!correctionInput.trim()}
-                >
-                  {t.correctionSubmit}
-                </button>
-                {result.raw_text && loadCorrections()[result.raw_text.toLowerCase()] && (
-                  <button
-                    className="reset-btn"
-                    onClick={() => {
-                      removeCorrection(result.raw_text);
-                      setCorrecting(false);
-                      setCorrectionInput("");
-                    }}
-                    title={t.correctionForget}
-                  >
-                    🗑
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         )}
         {/* Bottom-right handle: drag to widen/narrow the card; double-click
