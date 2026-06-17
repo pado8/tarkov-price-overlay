@@ -3265,6 +3265,7 @@ function App() {
               >
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
+                <option value="ru">Русский</option>
               </select>
             </div>
             <div className="settings-row" title={t.gameLanguageHint}>
@@ -3275,6 +3276,7 @@ function App() {
               >
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
+                <option value="ru">Русский</option>
               </select>
             </div>
             <div className="settings-row">

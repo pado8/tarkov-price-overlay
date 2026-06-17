@@ -92,7 +92,7 @@ class CaptureRequest(BaseModel):
     y: int
     width: int
     height: int
-    lang: str = "ko"  # "ko" | "en"
+    lang: str = "ko"  # "ko" | "en" | "ru"
     game_mode: str = "regular"  # "regular" (PVP) | "pve"
     mirror_x: int | None = None  # alt capture x (mirrored side), tried if primary doesn't match
     cursor_x: int | None = None  # cursor pos, used to clamp capture to that monitor
@@ -503,8 +503,13 @@ def _capture_and_lookup(
     t1 = time.perf_counter()
     # Ground labels sit on the game world, not a dark tooltip panel, so the
     # tooltip-background filter would wrongly drop them — skip it for ground.
+    # OCR language set follows the game-client language. The Russian client
+    # shows Cyrillic item names; EasyOCR can't mix Korean + Cyrillic in one
+    # reader, so use ("ru","en") for the RU client and ("ko","en") otherwise
+    # (English client names are Latin and read fine with the ko+en reader).
+    ocr_langs = ("ru", "en") if lang == "ru" else ("ko", "en")
     fragments = recognize_text_fragments(
-        image, langs=("ko", "en"), skip_bg_filter=(label == "ground")
+        image, langs=ocr_langs, skip_bg_filter=(label == "ground")
     )
     # Trade-menu noise: drop price labels ("98,000₽", "#####₽") and trader
     # status lines before joining, so they neither sink the fuzzy match nor
@@ -666,7 +671,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         f"front_cursor=({req.cursor_x},{req.cursor_y}) "
         f"winapi_cursor={winapi_cursor}"
     )
-    lang = req.lang if req.lang in ("ko", "en") else "ko"
+    lang = req.lang if req.lang in ("ko", "en", "ru") else "ko"
     game_mode = req.game_mode if req.game_mode in ("regular", "pve") else "regular"
 
     # Direct-name lookup path: skip capture+OCR, use the supplied text.
