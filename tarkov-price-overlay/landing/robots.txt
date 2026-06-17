@@ -1,0 +1,10 @@
+# 타르코프 시세 오버레이 — robots.txt
+User-agent: *
+Allow: /
+
+# 네이버 검색로봇
+User-agent: Yeti
+Allow: /
+
+Sitemap: https://tarkov.aquapado.com/sitemap.xml
+Host: https://tarkov.aquapado.com
