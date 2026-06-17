@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tarkov Price Overlay — flea &amp; trader prices in-game with F2 | Free download</title>
+<meta name="description" content="Hover an item in Escape from Tarkov and press F2 — see flea market prices, trader prices, barters, hideout crafts, and quest requirements as a transparent overlay in about a second. Free, open-source Windows app. Screen capture + OCR, no memory reading." />
+<meta name="keywords" content="tarkov price overlay, escape from tarkov price checker, eft flea market prices, tarkov overlay, tarkov price app, eft price overlay, tarkov item prices, tarkov ocr, tarkov flea checker" />
+<link rel="canonical" href="https://tarkov.aquapado.com/en" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta name="theme-color" content="#c8aa64" />
+<meta name="author" content="pado" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+<link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/" />
+<link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/en" />
+<link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Tarkov Price Overlay" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:locale:alternate" content="ko_KR" />
+<meta property="og:url" content="https://tarkov.aquapado.com/en" />
+<meta property="og:title" content="Tarkov Price Overlay — flea &amp; trader prices in-game with F2" />
+<meta property="og:description" content="Hover an item, press F2 — flea, trader, barter, craft &amp; quest info on top of your game in about a second. Free, open-source, Windows." />
+<meta property="og:image" content="https://tarkov.aquapado.com/og-en.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Tarkov Price Overlay — real-time price card on top of the game" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Tarkov Price Overlay — flea &amp; trader prices in-game with F2" />
+<meta name="twitter:description" content="Hover an item, press F2 — flea, trader, barter, craft &amp; quest on top of your game. Free, open-source." />
+<meta name="twitter:image" content="https://tarkov.aquapado.com/og-en.png" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Tarkov Price Overlay",
+  "operatingSystem": "Windows",
+  "applicationCategory": "GameApplication",
+  "softwareVersion": "1.1.4",
+  "url": "https://tarkov.aquapado.com/en",
+  "downloadUrl": "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest",
+  "image": "https://tarkov.aquapado.com/og-en.png",
+  "screenshot": "https://tarkov.aquapado.com/screenshots/01-main-lookup.png",
+  "description": "A free, open-source Windows overlay for Escape from Tarkov. Hover an item, press F2, and see flea market prices, trader prices, barters, hideout crafts, and quest requirements as a transparent card. Uses screen capture and OCR only — it does not read game memory.",
+  "inLanguage": ["en", "ko"],
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "author": { "@type": "Person", "name": "pado", "url": "https://aquapado.com/" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "Flea market price, 24h range, last trade",
+    "Best trader price and buy-from vendors",
+    "Barters (both directions)",
+    "Hideout crafts and upgrade requirements",
+    "Quest auto-sync",
+    "Ammo comparison matrix",
+    "OCR item recognition",
+    "PVP/PVE split"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is Tarkov Price Overlay free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, completely free and MIT open-source. You can review the full code on GitHub and build it yourself." } },
+    { "@type": "Question", "name": "Will I get banned for using this overlay?", "acceptedAnswer": { "@type": "Answer", "text": "It uses screen capture and OCR only; it does not read game memory or inject DLLs. It is the same category as YouTube screen recorders or Discord screen sharing, and fundamentally different from memory hacks, ESP, or aimbots. That said, it is not officially sanctioned by BSG, so use is at your own risk. No bans have been reported for similar OCR-based overlays to date." } },
+    { "@type": "Question", "name": "F2 does nothing inside the game.", "acceptedAnswer": { "@type": "Answer", "text": "Tarkov runs as administrator, so right-click the app and choose Run as administrator for the hotkey to reach the game. Also set the game's graphics to Borderless Fullscreen, since exclusive fullscreen blocks all overlays at the OS level." } },
+    { "@type": "Question", "name": "Windows SmartScreen or antivirus flags the installer.", "acceptedAnswer": { "@type": "Answer", "text": "The executable is unsigned for cost reasons, not malware. Click More info then Run anyway. The behavior and full source are open on GitHub." } },
+    { "@type": "Question", "name": "Which game does it work with?", "acceptedAnswer": { "@type": "Answer", "text": "It is a Windows overlay for Escape from Tarkov. It shows PVP and PVE prices separately." } }
+  ]
+}
+</script>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="nav"><div class="wrap nav-in">
+  <a class="brand" href="/en"><img src="/favicon.png" alt="Tarkov Price Overlay icon" />Tarkov Price Overlay</a>
+  <div class="nav-right">
+    <a class="nav-lang" href="/" hreflang="ko">한국어</a>
+    <a class="nav-cta" href="https://github.com/pado8/tarkov-price-overlay-releases/releases/latest" rel="noopener">⬇ Download</a>
+  </div>
+</div></header>
+
+<section class="hero"><div class="wrap hero-grid">
+  <div>
+    <span class="eyebrow">● Free · Open Source · Windows</span>
+    <h1>Tarkov prices on your screen,<br>one press of <span class="kbd">F2</span></h1>
+    <p class="lead">Hover an item and press <b class="gold">F2</b> — flea market prices, trader prices, barters, hideout crafts, and quest requirements appear as a transparent card in about a second. No more alt-tabbing to a wiki.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/pado8/tarkov-price-overlay-releases/releases/latest" rel="noopener">⬇ Download latest</a>
+      <a class="btn btn-ghost" href="https://github.com/pado8/tarkov-price-overlay" rel="noopener">Source (GitHub)</a>
+    </div>
+    <div class="trust">
+      <span><b>Screen capture + OCR</b></span>
+      <span><b>No</b> memory reading</span>
+      <span><b>MIT</b> open source</span>
+    </div>
+  </div>
+  <div class="hero-shot">
+    <img src="/screenshots/01-main-lookup.png" width="445" height="608" alt="Tarkov Price Overlay main card — flea price, trader price, barters, crafts, quest info" loading="eager" />
+  </div>
+</div>
+<div class="wrap"><div class="ban-callout">
+  <p class="ban-big">🛡️ It uses none of the actions that get you banned<br>— built to carry no ban risk</p>
+  <p class="ban-small">It is a completely different category from memory hacks, ESP, or aimbots, and no bans have been reported for OCR-based overlays like this to date. That said, it is not officially sanctioned by BSG, so 100% can't be guaranteed and use is at your own risk. The code is 100% open on <a class="gold" href="https://github.com/pado8/tarkov-price-overlay" rel="noopener">GitHub</a> for anyone to inspect.</p>
+</div></div>
+</section>
+
+<section><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">Features</div>
+    <h2>Everything you need on one card</h2>
+    <p>Decide instantly whether loot is worth selling or keeping</p>
+  </div>
+  <div class="feat">
+    <div class="card"><div class="ic">💰</div><h3>Flea market</h3><p>Current price · 24h range · last trade · per-slot price (₽/slot), all auto-calculated.</p></div>
+    <div class="card"><div class="ic">🏪</div><h3>Trader info</h3><p>Best-price trader · buy-from vendors · required trader level at a glance.</p></div>
+    <div class="card"><div class="ic">🔄</div><h3>Barter (both ways)</h3><p>Barters that produce this item and barters that consume it. Quest-locked barters get a 🔒 badge.</p></div>
+    <div class="card"><div class="ic">🏠</div><h3>Hideout craft &amp; upgrade</h3><p>Craft recipes, plus which station Lv N upgrade needs this item and how many.</p></div>
+    <div class="card"><div class="ic">🎯</div><h3>Quest auto-sync</h3><p>Reads your EFT log to detect your own progress — done / in-progress / not-started by color.</p></div>
+    <div class="card"><div class="ic">🔫</div><h3>Ammo comparison matrix</h3><p>On weapon/ammo capture, compares the whole caliber by penetration &amp; damage in one table.</p></div>
+    <div class="card"><div class="ic">⭐</div><h3>Loot tier</h3><p>Auto S/A/B/C/D grade from ₽/slot weighted by Kappa &amp; quest needs.</p></div>
+    <div class="card"><div class="ic">⚖️</div><h3>Weight efficiency · PVP/PVE</h3><p>₽/kg carry value, prices split by game mode, instant Korean/English switch.</p></div>
+    <div class="card"><div class="ic">🔄</div><h3>Auto-update</h3><p>Banner when a new version is out → one-click install. Keeps your last 15 lookups.</p></div>
+  </div>
+</div></section>
+
+<section style="padding-top:18px"><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">In action</div>
+    <h2>See it on real items</h2>
+    <p>Hover an inventory item, press F2 → about a second</p>
+  </div>
+  <div class="gal">
+    <div class="shot"><img src="/screenshots/02-history.png" alt="History — recheck recently looked-up items" loading="lazy"/><span>History (last 15)</span></div>
+    <div class="shot"><img src="/screenshots/04-ammo.png" alt="Ammo comparison matrix — penetration &amp; damage by caliber" loading="lazy"/><span>Ammo comparison matrix</span></div>
+    <div class="shot"><img src="/screenshots/03-settings.png" alt="Settings — hotkeys, display items, capture region" loading="lazy"/><span>Detailed settings</span></div>
+    <div class="shot"><img src="/screenshots/06-quest.png" alt="Quest tracker — your own progress shown automatically" loading="lazy"/><span>Quest tracker</span></div>
+  </div>
+</div></section>
+
+<section style="padding-top:18px"><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">Getting started</div>
+    <h2>Three steps</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><h3>Download &amp; install</h3><p>Installer or portable ZIP from Releases. First launch downloads the OCR model once (1–5 min).</p></div>
+    <div class="step"><h3>Run as administrator</h3><p>Tarkov runs elevated, so run the overlay as admin too — otherwise the hotkey won't reach the game.</p></div>
+    <div class="step"><h3>Press F2 in-game</h3><p>Make the item name visible, press F2. Drag any blank area of the card to move it (auto-saved).</p></div>
+  </div>
+</div></section>
+
+<section class="safety"><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">Safety</div>
+    <h2>Ban risk, honestly</h2>
+    <p>Screen capture + OCR only — the same category as YouTube recorders or Discord screen share</p>
+  </div>
+  <div class="safe-grid">
+    <div class="safe-col no">
+      <h3>❌ What it does NOT do</h3>
+      <ul>
+        <li>Read/write game process memory</li>
+        <li>Inject DLLs</li>
+        <li>Hook the game window / low-level keyboard</li>
+        <li>Modify any game files</li>
+        <li>Send your searches, screen, personal data, or IP</li>
+      </ul>
+    </div>
+    <div class="safe-col yes">
+      <h3>✅ What it does</h3>
+      <ul>
+        <li>Standard Win32 screen capture (BitBlt)</li>
+        <li>A transparent topmost overlay window</li>
+        <li>OS-level hotkey (RegisterHotKey)</li>
+        <li>Fetch prices from the tarkov.dev public API</li>
+        <li>Anonymous usage stats (optional, can be disabled)</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">FAQ</div>
+    <h2>Frequently asked</h2>
+  </div>
+  <div class="faq">
+    <details open><summary>Is it free?</summary><p>Yes, completely free and MIT open-source. You can review the full code on GitHub and build it yourself.</p></details>
+    <details><summary>Will I get banned?</summary><p>It uses screen capture and OCR only; it doesn't read game memory or inject. It's a fundamentally different category from memory hacks and ESP. BSG hasn't officially sanctioned it, so use is at your own risk — and no bans have been reported for similar OCR-based overlays to date.</p></details>
+    <details><summary>F2 does nothing inside the game.</summary><p>Tarkov runs as administrator, so right-click the app → "Run as administrator" for the hotkey to reach the game. Also switch the game's graphics to "Borderless Fullscreen" (exclusive fullscreen blocks every overlay at the OS level). If it still fails, rebind the hotkey in Settings.</p></details>
+    <details><summary>SmartScreen / antivirus warning on install.</summary><p>The executable is unsigned for cost reasons, not malware. Click "More info → Run anyway". The behavior and full source are open on GitHub.</p></details>
+    <details><summary>Dual monitor / 4K / 125% scaling — coordinates are off.</summary><p>Per-monitor DPI is handled. If it's still off, fine-tune the capture X/Y offset in Settings, or hit "Auto-fit resolution".</p></details>
+    <details><summary>PVE prices look wrong.</summary><p>Switch Game mode to PVE in Settings. PVP and PVE price data are stored separately.</p></details>
+  </div>
+</div></section>
+
+<section class="dl" id="download"><div class="wrap">
+  <div class="sec-head">
+    <div class="kicker">Download</div>
+    <h2>Get it now — Windows</h2>
+    <p>The only official download is the GitHub Releases page below</p>
+  </div>
+  <div class="dl-cards">
+    <div class="dl-card">
+      <h3>🧩 Installer</h3>
+      <p><code>*-x64-setup.exe</code> · setup wizard (recommended)</p>
+      <a class="btn btn-primary" href="https://github.com/pado8/tarkov-price-overlay-releases/releases/latest" rel="noopener">Get installer</a>
+    </div>
+    <div class="dl-card">
+      <h3>📦 Portable</h3>
+      <p><code>*-portable.zip</code> · extract and run</p>
+      <a class="btn btn-ghost" href="https://github.com/pado8/tarkov-price-overlay-releases/releases/latest" rel="noopener">Get portable</a>
+    </div>
+  </div>
+  <p class="smartscreen">If Windows SmartScreen warns on install, click "More info → Run anyway". Price data comes from the <a class="gold" href="https://tarkov.dev" rel="noopener">tarkov.dev</a> community API.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="foot-in">
+    <div>© 2026 pado · <a href="https://aquapado.com/">aquapado.com</a> · <a href="/" hreflang="ko">한국어</a></div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <a href="https://github.com/pado8/tarkov-price-overlay" rel="noopener">Source code</a>
+      <a href="https://github.com/pado8/tarkov-price-overlay-releases/releases" rel="noopener">All versions</a>
+      <a href="https://github.com/pado8/tarkov-price-overlay-releases/issues" rel="noopener">Report a bug</a>
+    </div>
+  </div>
+  <p class="disc">This is an unofficial tool, not affiliated with Battlestate Games. <i>Escape from Tarkov</i> and related assets are trademarks/copyright of Battlestate Games Limited. License: MIT.</p>
+</div></footer>
+
+</body>
+</html>
