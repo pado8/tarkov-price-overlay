@@ -242,5 +242,14 @@
   <p class="disc">This is an unofficial tool, not affiliated with Battlestate Games. <i>Escape from Tarkov</i> and related assets are trademarks/copyright of Battlestate Games Limited. License: MIT.</p>
 </div></footer>
 
+<!-- Vercel Web Analytics (cookieless, free) — referrers/pageviews + download clicks -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>
+document.addEventListener('click',function(e){
+  var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
+  if(t){window.va('event',{name:'download_click',target:/\/latest/.test(t.href)?'latest':'list'});}
+});
+</script>
 </body>
 </html>
