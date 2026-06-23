@@ -246,10 +246,17 @@
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
 <script defer src="/_vercel/insights/script.js"></script>
 <script>
-document.addEventListener('click',function(e){
-  var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
-  if(t){window.va('event',{name:'download_click',target:/\/latest/.test(t.href)?'latest':'list'});}
-});
+(function(){
+  var API="https://api.aquapado.com/priceoverlay/web";
+  function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
+  beacon({kind:"view",path:location.pathname,ref:document.referrer});
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
+    if(t){var tg=/\/latest/.test(t.href)?'latest':'list';
+      if(window.va)window.va('event',{name:'download_click',target:tg});
+      beacon({kind:"download",path:location.pathname,ref:document.referrer,target:tg});}
+  });
+})();
 </script>
 </body>
 </html>
