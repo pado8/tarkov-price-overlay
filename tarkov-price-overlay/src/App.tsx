@@ -177,20 +177,97 @@ type StatsEvent =
   | "lookup_noprice"
   | "hotkey"
   | "hotkey_fail";
-const reportEvent = (eventType: StatsEvent, detail?: string) => {
-  if (!loadStatsEnabled()) return;
+// Telemetry is BATCHED to spare the stats DB's serverless compute budget.
+// Every event used to be its own POST → its own INSERT → its own wake of the
+// (autosuspending) Postgres compute, so a busy raid kept the DB awake all
+// session. Now the high-frequency lookup events are buffered and flushed as a
+// single multi-row write. Low-frequency signals (launch / hotkey, ~once per
+// session) still fire immediately so DAU and binding stats stay reliable even
+// if a session ends abruptly. Failures are always silent.
+type EventPayload = {
+  install_id: string;
+  event_type: StatsEvent;
+  version: string;
+  detail?: string;
+};
+
+// Only the per-lookup family is frequent enough to be worth batching.
+const BATCHED_EVENTS = new Set<StatsEvent>([
+  "lookup",
+  "lookup_nomatch",
+  "lookup_noprice",
+]);
+const STATS_MAX_BATCH = 25; // flush early when a heavy session fills the buffer
+const STATS_FLUSH_MS = 10 * 60 * 1000; // …otherwise flush at most every 10 min
+
+let statsQueue: EventPayload[] = [];
+let statsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function postStats(body: string, beacon = false): void {
+  // On teardown use sendBeacon with text/plain so it isn't blocked by a CORS
+  // preflight the page can't complete while unloading; the Edge function parses
+  // the body as JSON regardless of content-type.
+  if (beacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
+    try {
+      navigator.sendBeacon(STATS_ENDPOINT, new Blob([body], { type: "text/plain" }));
+      return;
+    } catch {
+      /* fall through to fetch */
+    }
+  }
   fetch(STATS_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      install_id: ensureInstallId(),
-      event_type: eventType,
-      version: APP_VERSION,
-      ...(detail ? { detail } : {}),
-    }),
+    body,
     keepalive: true,
   }).catch(() => {});
+}
+
+function flushStats(beacon = false): void {
+  if (statsFlushTimer != null) {
+    clearTimeout(statsFlushTimer);
+    statsFlushTimer = null;
+  }
+  if (!statsQueue.length) return;
+  const batch = statsQueue;
+  statsQueue = [];
+  postStats(JSON.stringify({ events: batch }), beacon);
+}
+
+const reportEvent = (eventType: StatsEvent, detail?: string) => {
+  if (!loadStatsEnabled()) return;
+  const payload: EventPayload = {
+    install_id: ensureInstallId(),
+    event_type: eventType,
+    version: APP_VERSION,
+    ...(detail ? { detail } : {}),
+  };
+  // Low-frequency, high-value signals go out immediately (single-event body —
+  // the endpoint still accepts this shape for back-compat).
+  if (!BATCHED_EVENTS.has(eventType)) {
+    postStats(JSON.stringify(payload));
+    return;
+  }
+  statsQueue.push(payload);
+  if (statsQueue.length >= STATS_MAX_BATCH) {
+    flushStats();
+  } else if (statsFlushTimer == null) {
+    statsFlushTimer = setTimeout(() => {
+      statsFlushTimer = null;
+      flushStats();
+    }, STATS_FLUSH_MS);
+  }
 };
+
+// Flush buffered lookups when the window is hidden (tray-minimize) or the app
+// closes, so a session's last events aren't lost. visibilitychange is more
+// reliable than beforeunload in WebView2.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushStats(true);
+  });
+  window.addEventListener("beforeunload", () => flushStats(true));
+}
 
 // Privacy-preserving nomatch reason for telemetry — NEVER the raw OCR text,
 // just a coarse category so the dashboard can tell a capture/alignment miss
