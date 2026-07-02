@@ -1069,7 +1069,7 @@ function App() {
   );
   // Server-driven announcement to show on launch (null = nothing to show).
   const [remoteAnnounce, setRemoteAnnounce] = useState<
-    { id: number; ko: string; en: string } | null
+    { id: number; ko: string; en: string; ru: string } | null
   >(null);
   // Anonymous stats are opt-out: enabled by default, with a one-time
   // informational notice (not a blocking consent gate).
@@ -1306,7 +1306,7 @@ function App() {
     fetch(ANNOUNCEMENT_ENDPOINT)
       .then((r) => r.json())
       .then((a) => {
-        if (!a || !a.active || (!a.ko && !a.en)) return;
+        if (!a || !a.active || (!a.ko && !a.en && !a.ru)) return;
         const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
         let seen: { id?: number; date?: string } = {};
         try {
@@ -1317,7 +1317,7 @@ function App() {
           ANNOUNCE_SEEN_KEY,
           JSON.stringify({ id: a.id, date: today })
         );
-        setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "" });
+        setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "", ru: a.ru ?? "" });
       })
       .catch(() => {});
   }, []);
@@ -3038,12 +3038,16 @@ function App() {
         {remoteAnnounce &&
           (region.lang === "ko"
             ? remoteAnnounce.ko || remoteAnnounce.en
-            : remoteAnnounce.en || remoteAnnounce.ko) && (
+            : region.lang === "ru"
+              ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
+              : remoteAnnounce.en || remoteAnnounce.ko) && (
             <div className="announce-banner">
               <span className="announce-text">
                 {region.lang === "ko"
                   ? remoteAnnounce.ko || remoteAnnounce.en
-                  : remoteAnnounce.en || remoteAnnounce.ko}
+                  : region.lang === "ru"
+                    ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
+                    : remoteAnnounce.en || remoteAnnounce.ko}
               </span>
               <button
                 className="settings-btn"
