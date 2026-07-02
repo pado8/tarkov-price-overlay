@@ -75,3 +75,7 @@ src-tauri/icons/ios/
 # $HOME\.tauri\tarkov-overlay.key, this is a guard against project-local copies.
 *.key
 *.key.pub
+
+# Local-only drafts & test artifacts (never in the public repo)
+/marketing-plans/
+/_test_items.png

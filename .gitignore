@@ -2,6 +2,7 @@
 .claude/settings.local.json
 .claude/worktrees/
 .claude/scheduled_tasks.lock
+.claude/commands/
 
 # Local-only drafts (project-specific; subprojects can also have their own)
 /community-posts/
@@ -32,6 +33,7 @@ Thumbs.db
 /Alpha-ant's-portfolio/
 /pado8.github.io/
 /auto-tapper/
+/ktx-calendar/
 /.vs/
 /.mcp.json
 /response.txt
