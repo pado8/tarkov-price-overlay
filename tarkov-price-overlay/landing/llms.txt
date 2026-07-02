@@ -1,0 +1,23 @@
+# Tarkov Price Overlay (타르코프 시세 오버레이)
+
+> Free, open-source Windows overlay for Escape from Tarkov. Hover an item in-game and press F2 — flea market price, trader prices, barters, hideout crafts, and quest requirements appear as a transparent card in about 1 second. Uses screen capture + OCR only; it never reads game memory or injects code (same category as OBS/Discord overlays, fundamentally different from cheats). UI in Korean, English, and Russian (beta). Price data from the community-run tarkov.dev API. MIT licensed.
+
+Key facts:
+- Platform: Windows 10/11 desktop app (Tauri + React + Python/EasyOCR)
+- Price: free, no account, no ads walls; MIT open source
+- Safety: screen capture + OCR only — no memory reading, no DLL injection, no game-file modification; no bans reported for this class of overlay, though it is not officially endorsed by BSG
+- Features: flea market price / 24h range / price-per-slot, best trader to sell, barters (both directions), hideout craft & upgrade requirements with FiR flags, quest auto-sync from EFT logs, ammo comparison matrix, loot tier rating, PVP/PVE price split, auto-update
+- Languages: Korean, English, Russian (beta, incl. Cyrillic item-name OCR)
+
+## Pages
+- [Korean landing](https://tarkov.aquapado.com/): 타르코프 시세 오버레이 — F2로 플리·상인가 즉시 확인
+- [English landing](https://tarkov.aquapado.com/en): Tarkov Price Overlay — flea & trader prices in-game with F2
+- [Russian landing](https://tarkov.aquapado.com/ru): Оверлей цен Тарков — цены барахолки и торговцев по F2
+- [Download (GitHub Releases)](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest): installer and portable ZIP
+- [Source code](https://github.com/pado8/tarkov-price-overlay): full source, MIT license
+
+## Common questions
+- "Is there a Tarkov price checker overlay that works in-game?" — Yes, this app shows prices on top of the game with one hotkey, no alt-tab to a wiki or website.
+- "Will it get me banned?" — It only captures the screen and reads text (OCR). It does not touch game memory or files. Use at your own discretion; BSG has not officially endorsed any third-party tool.
+- "Does it work with PVE?" — Yes, PVP and PVE prices are separate and switchable.
+- "Is it free?" — Completely free and open source (MIT).
