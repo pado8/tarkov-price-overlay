@@ -21,6 +21,7 @@
     "process:default",
     "dialog:allow-open",
     "dialog:allow-message",
+    "dialog:allow-ask",
     {
       "identifier": "shell:allow-execute",
       "allow": [

@@ -101,7 +101,12 @@ export const T = {
     questSyncResetPvpHint: "PVP 진행도 동기화",
     questSyncResetPveBtn: "PVE",
     questSyncResetPveHint: "PVE 진행도 동기화",
-    questSyncResetAllHint: "두 서버 모두 동기화 + 로그 전체 재스캔",
+    questSyncResetAllHint: "두 서버 모두 동기화 + 로그 전체 재스캔 (와이프 리셋 해제)",
+    questWipeReset: "와이프 리셋",
+    questWipeResetHint:
+      "와이프·시즌 시작으로 인게임 퀘스트가 초기화됐을 때 — 지금 이전의 옛 로그 기록을 무시하고 새로 동기화합니다. 실수로 눌렀다면 '수동 동기화'가 전체 기록을 복원",
+    questWipeResetConfirm:
+      "지금 이전의 퀘스트 기록을 모두 무시하고 새 시즌 기준으로 다시 동기화할까요?\n(되돌리기: 수동 동기화)",
     questDisplayMode: "퀘스트 표시",
     questDisplayModeHint: "시세 카드에서 어느 서버 진행도 기준으로 퀘스트를 표시할지",
     settings: "설정",
@@ -334,9 +339,14 @@ export const T = {
     questSyncResetPvpHint: "Sync PVP progress",
     questSyncResetPveBtn: "PVE",
     questSyncResetPveHint: "Sync PVE progress",
-    questSyncResetAllHint: "Sync both servers + rescan all logs",
+    questSyncResetAllHint: "Sync both servers + rescan all logs (also clears wipe reset)",
     questSyncReset: "Manual sync",
     questSyncResetBtn: "All",
+    questWipeReset: "Wipe reset",
+    questWipeResetHint:
+      "After an EFT wipe/season reset — ignores quest history from before this moment and syncs fresh. Clicked by accident? 'Manual sync' restores the full history",
+    questWipeResetConfirm:
+      "Ignore all quest history from before now and re-sync for the new season?\n(Undo: Manual sync)",
     questDisplayMode: "Quest display",
     questDisplayModeHint: "Which server's quest progress should the price cards reflect",
     settings: "Settings",
@@ -569,9 +579,14 @@ export const T = {
     questSyncResetPvpHint: "Синхронизировать прогресс PVP",
     questSyncResetPveBtn: "PVE",
     questSyncResetPveHint: "Синхронизировать прогресс PVE",
-    questSyncResetAllHint: "Синхронизировать оба сервера + пересканировать все логи",
+    questSyncResetAllHint: "Синхронизировать оба сервера + пересканировать все логи (снимает сброс после вайпа)",
     questSyncReset: "Ручная синхронизация",
     questSyncResetBtn: "Все",
+    questWipeReset: "Сброс (вайп)",
+    questWipeResetHint:
+      "После вайпа/старта сезона — игнорирует историю квестов до этого момента и синхронизирует заново. Нажали случайно? «Ручная синхронизация» вернёт всю историю",
+    questWipeResetConfirm:
+      "Игнорировать всю историю квестов до этого момента и синхронизировать заново для нового сезона?\n(Отменить: ручная синхронизация)",
     questDisplayMode: "Показ квестов",
     questDisplayModeHint: "Прогресс квестов какого сервера отражать на карточках цен",
     settings: "Настройки",

@@ -826,6 +826,10 @@ class QuestResetRequest(BaseModel):
     # tracker landed; legacy state was copied into BOTH modes during migration
     # and the unused mode needs to be cleared to remove fake progress.
     game_mode: str | None = None
+    # True -> WIPE RESET: also ignore log events from before this moment, so
+    # old logs can't resurrect pre-wipe progress. For EFT wipes/season resets.
+    # A later plain reset (from_now=False) clears the watermark again (undo).
+    from_now: bool = False
 
 
 @app.get("/hideout/stations")
@@ -863,9 +867,11 @@ def quests_set_enabled(req: QuestEnabledRequest) -> dict:
 def quests_reset(req: QuestResetRequest | None = None) -> dict:
     """Wipe known quest state and re-scan from scratch. Pass `game_mode`
     to wipe only one server's state — used after migration when a
-    single-mode player has fake progress copied into the unused mode."""
+    single-mode player has fake progress copied into the unused mode.
+    Pass `from_now=true` for a wipe reset (ignore pre-existing log events)."""
     mode = req.game_mode if req is not None else None
-    get_tracker().reset(mode)
+    from_now = req.from_now if req is not None else False
+    get_tracker().reset(mode, from_now=from_now)
     return get_tracker().get_status()
 
 

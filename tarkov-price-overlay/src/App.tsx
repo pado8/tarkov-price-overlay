@@ -5,7 +5,7 @@ import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, curren
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { open as openFolderDialog, message } from "@tauri-apps/plugin-dialog";
+import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import "./App.css";
@@ -1982,20 +1982,35 @@ function App() {
       log(`quest: path set failed — ${String(e)}`);
     }
   };
-  const resetQuestState = async (gameMode?: "pvp" | "pve") => {
+  const resetQuestState = async (gameMode?: "pvp" | "pve", fromNow = false) => {
     // Optional gameMode wipes just one server's state (used to clear the
     // fake data the legacy migration copied into both modes for single-mode
     // players). Omit to wipe everything and re-scan.
+    // fromNow=true is the WIPE RESET: sets a watermark so pre-existing log
+    // events are ignored — for EFT wipes/season resets where old logs would
+    // otherwise resurrect last season's progress. A plain reset undoes it.
     try {
       const res = await fetch(`${PYTHON_API}/quests/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(gameMode ? { game_mode: gameMode } : {}),
+        body: JSON.stringify({
+          ...(gameMode ? { game_mode: gameMode } : {}),
+          from_now: fromNow,
+        }),
       });
       if (res.ok) setQuestStatus(await res.json());
     } catch (e) {
       log(`quest: reset failed — ${String(e)}`);
     }
+  };
+  const wipeResetQuests = async (gameMode?: "pvp" | "pve") => {
+    // Destructive-ish (recoverable via plain reset) → native yes/no first.
+    const scope = gameMode ? gameMode.toUpperCase() : t.questSyncResetBtn;
+    const yes = await ask(`${t.questWipeResetConfirm}\n\n(${scope})`, {
+      title: t.questWipeReset,
+      kind: "warning",
+    });
+    if (yes) await resetQuestState(gameMode, true);
   };
 
   // Pull the quest tracker status on mount. The Python sidecar warms up
@@ -3731,6 +3746,32 @@ function App() {
                       className="reset-btn"
                       onClick={() => resetQuestState()}
                       title={t.questSyncResetAllHint}
+                    >
+                      {t.questSyncResetBtn}
+                    </button>
+                  </div>
+                </div>
+                <div className="settings-row">
+                  <label title={t.questWipeResetHint}>{t.questWipeReset}</label>
+                  <div className="quest-path-row">
+                    <button
+                      className="reset-btn"
+                      onClick={() => wipeResetQuests("pvp")}
+                      title={t.questWipeResetHint}
+                    >
+                      {t.questSyncResetPvpBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() => wipeResetQuests("pve")}
+                      title={t.questWipeResetHint}
+                    >
+                      {t.questSyncResetPveBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() => wipeResetQuests()}
+                      title={t.questWipeResetHint}
                     >
                       {t.questSyncResetBtn}
                     </button>

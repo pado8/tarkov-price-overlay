@@ -396,6 +396,13 @@ class QuestTracker:
         # mode -> quest_id -> {"status": "started"|"completed"|"failed", "ts": int}
         # The latest-by-`ts` event wins within a mode, so scan order doesn't matter.
         self._status: dict[GameMode, dict[str, dict]] = {m: {} for m in MODES}
+        # mode -> epoch seconds; log events with ts BEFORE this are ignored.
+        # 0 = no watermark (default). Set by the "wipe reset" — after an EFT
+        # wipe/season reset the in-game progress is fresh but the old log
+        # folders still hold pre-wipe completions, so a plain rescan would just
+        # resurrect stale state. The watermark makes "start over from now"
+        # actually stick while keeping the log-derived design.
+        self._ignore_before: dict[GameMode, int] = {m: 0 for m in MODES}
         # Per-file read offset so each poll only reads the new tail bytes.
         self._file_offsets: dict[str, int] = {}
         # session_folder_path -> detected mode. Cached so we don't re-sniff
@@ -459,8 +466,17 @@ class QuestTracker:
                     f"[quest] migrated {len(legacy)} legacy quests to both "
                     f"PVP+PVE modes (next save will use new shape)"
                 )
+        ignore_before: dict[GameMode, int] = {m: 0 for m in MODES}
+        raw_ignore = data.get("ignore_before")
+        if isinstance(raw_ignore, dict):
+            for mode in MODES:
+                try:
+                    ignore_before[mode] = max(0, int(raw_ignore.get(mode, 0)))
+                except (TypeError, ValueError):
+                    pass
         with self._lock:
             self._status = normalized
+            self._ignore_before = ignore_before
             self._install_path = data.get("install_path") or None
             self._enabled = bool(data.get("enabled", True))
         print(
@@ -473,6 +489,7 @@ class QuestTracker:
         with self._lock:
             payload = {
                 "status_by_mode": {m: dict(self._status[m]) for m in MODES},
+                "ignore_before": dict(self._ignore_before),
                 "install_path": self._install_path,
                 "enabled": self._enabled,
             }
@@ -496,6 +513,7 @@ class QuestTracker:
     def get_status(self) -> dict:
         with self._lock:
             counts_by_mode = {m: self._count(m) for m in MODES}
+            ignore_before = dict(self._ignore_before)
             user_path = self._install_path
             enabled = self._enabled
         auto_path = detect_install_path()
@@ -522,6 +540,9 @@ class QuestTracker:
             "started_count": agg["started"],
             "failed_count": agg["failed"],
             "counts_by_mode": counts_by_mode,
+            # epoch seconds per mode; >0 means a wipe reset is active and log
+            # events before that moment are ignored. UI can show "새 시즌 기준".
+            "ignore_before_by_mode": ignore_before,
         }
 
     def is_enabled(self) -> bool:
@@ -581,31 +602,36 @@ class QuestTracker:
         if enabled and not was:
             self.scan_once()
 
-    def reset(self, game_mode: Optional[str] = None) -> None:
+    def reset(self, game_mode: Optional[str] = None, from_now: bool = False) -> None:
         """Wipe known quest state and re-scan from scratch.
 
         If `game_mode` is given ('pvp' or 'pve'), only that mode is cleared
         and the file-offset cache is preserved (other mode's offsets still
         valid). If omitted, both modes are wiped and we rescan everything.
+
+        `from_now=True` is the WIPE RESET: it also sets an ignore-watermark
+        at the current time, so pre-existing log events won't repopulate the
+        cleared state. Use after an EFT wipe/season reset, when the in-game
+        progress is fresh but old logs still hold last season's completions.
+        A plain reset (`from_now=False`) CLEARS the watermark again and
+        re-derives everything from the full log history — that doubles as the
+        undo for an accidental wipe reset.
         """
+        target_modes: tuple[GameMode, ...] = (
+            MODES if game_mode is None else (_normalize_request_mode(game_mode),)
+        )
+        watermark = int(time.time()) if from_now else 0
         with self._lock:
-            if game_mode is None:
-                for m in MODES:
-                    self._status[m].clear()
-                self._file_offsets.clear()
-                self._folder_mode.clear()
-            else:
-                m = _normalize_request_mode(game_mode)
+            for m in target_modes:
                 self._status[m].clear()
-                # Keep file offsets — but we still want to rescan to repopulate
-                # this mode. Cheapest correct approach: clear them too, accept
-                # the re-read cost on the other mode (idempotent: same ts wins).
-                self._file_offsets.clear()
-                # Also drop the folder->mode cache. detect_session_mode is
-                # deterministic so this rarely matters in practice, but it
-                # keeps the lifecycle consistent with the full-reset branch
-                # and avoids any chance of a stale entry surviving a reset.
-                self._folder_mode.clear()
+                self._ignore_before[m] = watermark
+            # Rescan from byte 0 either way. For a wipe reset the watermark
+            # (not the offset cache) is what keeps old events out; for a plain
+            # reset the full re-read is the whole point. Offsets are shared
+            # across modes, so single-mode resets re-read the other mode's
+            # files too — idempotent (same ts wins), just a little I/O.
+            self._file_offsets.clear()
+            self._folder_mode.clear()
         self._save_state()
         self.scan_once()
 
@@ -673,6 +699,11 @@ class QuestTracker:
                     new_status = event["status"]
                     new_ts = int(event.get("ts") or 0)
                     with self._lock:
+                        # Wipe-reset watermark: events from before the user's
+                        # declared fresh-start moment are pre-wipe history and
+                        # must not resurrect stale progress.
+                        if new_ts < self._ignore_before[mode]:
+                            continue
                         prev = self._status[mode].get(qid)
                         prev_ts = (
                             prev.get("ts", 0) if isinstance(prev, dict) else 0
