@@ -650,6 +650,21 @@ class QuestTracker:
             MODES if game_mode is None else (_normalize_request_mode(game_mode),)
         )
         watermark = int(time.time()) if from_now else 0
+        if from_now:
+            # One-deep safety net before the destructive path. A plain reset
+            # re-derives state from logs, but entries whose log folders have
+            # since been deleted (launcher cleanups) are NOT recoverable that
+            # way — observed live: 3 of 379 completed quests lost on a
+            # wipe→plain-reset round trip. Keep the pre-wipe snapshot so that
+            # worst case is a manual file restore, not permanent loss.
+            try:
+                src = _state_file()
+                if src.exists():
+                    (_state_dir() / "quest_state.pre-wipe.json").write_bytes(
+                        src.read_bytes()
+                    )
+            except OSError as e:
+                print(f"[quest] WARN: pre-wipe backup failed - {e}")
         with self._lock:
             for m in target_modes:
                 self._status[m].clear()

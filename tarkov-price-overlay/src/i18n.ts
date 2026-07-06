@@ -104,7 +104,7 @@ export const T = {
     questSyncResetAllHint: "두 서버 모두 동기화 + 로그 전체 재스캔 (와이프 리셋 해제)",
     questWipeReset: "와이프 리셋",
     questWipeResetHint:
-      "와이프·시즌 시작으로 인게임 퀘스트가 초기화됐을 때 — 지금 이전의 옛 로그 기록을 무시하고 새로 동기화합니다. 실수로 눌렀다면 '수동 동기화'가 전체 기록을 복원",
+      "와이프·시즌 시작으로 인게임 퀘스트가 초기화됐을 때 — 지금 이전의 옛 로그 기록을 무시하고 새로 동기화합니다. 실수로 눌렀다면 '수동 동기화'가 로그에 남아있는 기록을 복원",
     questWipeResetConfirm:
       "지금 이전의 퀘스트 기록을 모두 무시하고 새 시즌 기준으로 다시 동기화할까요?\n(되돌리기: 수동 동기화)",
     questDisplayMode: "퀘스트 표시",
@@ -344,7 +344,7 @@ export const T = {
     questSyncResetBtn: "All",
     questWipeReset: "Wipe reset",
     questWipeResetHint:
-      "After an EFT wipe/season reset — ignores quest history from before this moment and syncs fresh. Clicked by accident? 'Manual sync' restores the full history",
+      "After an EFT wipe/season reset — ignores quest history from before this moment and syncs fresh. Clicked by accident? 'Manual sync' restores what remains in your logs",
     questWipeResetConfirm:
       "Ignore all quest history from before now and re-sync for the new season?\n(Undo: Manual sync)",
     questDisplayMode: "Quest display",
@@ -584,7 +584,7 @@ export const T = {
     questSyncResetBtn: "Все",
     questWipeReset: "Сброс (вайп)",
     questWipeResetHint:
-      "После вайпа/старта сезона — игнорирует историю квестов до этого момента и синхронизирует заново. Нажали случайно? «Ручная синхронизация» вернёт всю историю",
+      "После вайпа/старта сезона — игнорирует историю квестов до этого момента и синхронизирует заново. Нажали случайно? «Ручная синхронизация» вернёт то, что осталось в логах",
     questWipeResetConfirm:
       "Игнорировать всю историю квестов до этого момента и синхронизировать заново для нового сезона?\n(Отменить: ручная синхронизация)",
     questDisplayMode: "Показ квестов",
