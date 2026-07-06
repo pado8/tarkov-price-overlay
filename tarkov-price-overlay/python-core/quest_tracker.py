@@ -274,20 +274,42 @@ def _push_notification_files(folder: Path) -> list[Path]:
 # headroom for both without slurping the full multi-MB log.
 _MODE_SNIFF_BYTES = 64 * 1024
 
-_RE_SESSION_MODE = re.compile(r"Session mode:\s*(Pve|Pvp)", re.IGNORECASE)
-_RE_BACKEND_HOST = re.compile(r"https://gw-(pve|pvp)\.escapefromtarkov\.com/client/game/start", re.IGNORECASE)
+# Capture ANY mode word, not just Pve|Pvp. EFT 1.1.0 (2026-07 seasonal system)
+# introduces an opt-in seasonal realm with its own fresh-start character — if
+# those sessions self-report a NEW mode label, silently defaulting them to
+# "pvp" would pollute the user's permanent-PVP quest state with seasonal
+# events. Unknown labels are classified "unknown" and their quest events are
+# ignored until we ship real support for the new mode.
+_RE_SESSION_MODE = re.compile(r"Session mode:\s*([A-Za-z0-9_]+)", re.IGNORECASE)
+_RE_BACKEND_HOST = re.compile(r"https://gw-([a-z0-9_-]+)\.escapefromtarkov\.com/client/game/start", re.IGNORECASE)
+
+# What scanning classifies a session folder as. "unknown" = a mode label we
+# don't recognize (likely a new game mode) — quest events from those folders
+# are skipped rather than guessed into the wrong bucket.
+SessionMode = Literal["pvp", "pve", "unknown"]
 
 
-def detect_session_mode(folder: Path) -> GameMode:
-    """Inspect a single session folder and return 'pve' or 'pvp'.
+def _classify_mode_word(word: str) -> SessionMode:
+    w = word.lower()
+    if w == "pve":
+        return "pve"
+    if w in ("pvp", "regular"):
+        return "pvp"
+    return "unknown"
 
-    Falls back to 'pvp' if neither signal is found — that's the pre-PVE
-    historical default and matches the "regular" game_mode value the
-    frontend has been sending since before PVE existed.
+
+def detect_session_mode(folder: Path) -> SessionMode:
+    """Inspect a single session folder and return 'pve', 'pvp', or 'unknown'.
+
+    Falls back to 'pvp' only when NO mode signal is found at all — that's the
+    pre-PVE historical default and matches the "regular" game_mode value the
+    frontend has been sending since before PVE existed. A signal that IS found
+    but isn't a known label returns 'unknown' (new game mode — don't guess).
     """
-    # Signal 1: application_*.log "Session mode: Pve/Pvp" line. Strongest signal
+    # Signal 1: application_*.log "Session mode: X" line. Strongest signal
     # because it's the game's own self-reported mode rather than inference from
-    # network traffic.
+    # network traffic. If present, it's authoritative — including for labels
+    # we don't recognize.
     for app_log in folder.glob("*application_*.log"):
         try:
             with app_log.open("rb") as f:
@@ -296,7 +318,7 @@ def detect_session_mode(folder: Path) -> GameMode:
             continue
         m = _RE_SESSION_MODE.search(chunk)
         if m:
-            return "pve" if m.group(1).lower() == "pve" else "pvp"
+            return _classify_mode_word(m.group(1))
         break  # only one application log per folder
 
     # Signal 2: backend_*.log /client/game/start request host. The first
@@ -311,7 +333,7 @@ def detect_session_mode(folder: Path) -> GameMode:
             continue
         m = _RE_BACKEND_HOST.search(chunk)
         if m:
-            return "pve" if m.group(1).lower() == "pve" else "pvp"
+            return _classify_mode_word(m.group(1))
         break
 
     return "pvp"
@@ -407,8 +429,9 @@ class QuestTracker:
         self._file_offsets: dict[str, int] = {}
         # session_folder_path -> detected mode. Cached so we don't re-sniff
         # the log header on every poll; mode is fixed for the lifetime of a
-        # session folder (game can't switch mid-raid).
-        self._folder_mode: dict[str, GameMode] = {}
+        # session folder (game can't switch mid-raid). "unknown" folders are
+        # cached too — their quest events are skipped (new-mode guard).
+        self._folder_mode: dict[str, SessionMode] = {}
         # User-configurable; falls back to auto-detect.
         self._install_path: Optional[str] = None
         # Background poll thread.
@@ -514,6 +537,9 @@ class QuestTracker:
         with self._lock:
             counts_by_mode = {m: self._count(m) for m in MODES}
             ignore_before = dict(self._ignore_before)
+            unknown_folders = sum(
+                1 for v in self._folder_mode.values() if v == "unknown"
+            )
             user_path = self._install_path
             enabled = self._enabled
         auto_path = detect_install_path()
@@ -543,6 +569,9 @@ class QuestTracker:
             # epoch seconds per mode; >0 means a wipe reset is active and log
             # events before that moment are ignored. UI can show "새 시즌 기준".
             "ignore_before_by_mode": ignore_before,
+            # Session folders whose game mode we couldn't classify (likely a
+            # new mode after a game update). >0 = time to add mode support.
+            "unknown_mode_folders": unknown_folders,
         }
 
     def is_enabled(self) -> bool:
@@ -641,7 +670,7 @@ class QuestTracker:
         with self._lock:
             return self._install_path or detect_install_path()
 
-    def _mode_for_folder(self, folder: Path) -> GameMode:
+    def _mode_for_folder(self, folder: Path) -> SessionMode:
         key = str(folder)
         cached = self._folder_mode.get(key)
         if cached is not None:
@@ -661,6 +690,11 @@ class QuestTracker:
         new_events = 0
         for folder in _list_log_folders(install):
             mode = self._mode_for_folder(folder)
+            if mode == "unknown":
+                # New/unrecognized game mode (e.g. a future seasonal realm).
+                # Guessing a bucket would corrupt permanent progress — skip
+                # and surface via get_status so we notice and add support.
+                continue
             for log_file in _push_notification_files(folder):
                 key = str(log_file)
                 try:
