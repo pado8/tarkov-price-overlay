@@ -1,0 +1,17 @@
+# 뚝딱툴즈 (DdukddakTools)
+
+> 파일이 서버에 올라가지 않는 한국어 무료 웹 도구 모음. 모든 파일 처리(이미지 변환·압축, PDF 합치기·분할, 동영상 GIF 변환)가 WebAssembly로 사용자의 브라우저 안에서 실행된다. 업로드가 없으므로 개인정보 유출 위험이 없고 대기 시간이 0초다. 가입·설치·용량 제한 없음.
+
+## 도구
+- [HEIC JPG 변환](https://tools.aquapado.com/heic-to-jpg/): 아이폰 HEIC 사진을 JPG로 일괄 변환
+- [이미지 용량 줄이기](https://tools.aquapado.com/image-compress/): 해상도 유지 사진 압축
+- [이미지 형식 변환](https://tools.aquapado.com/image-convert/): JPG·PNG·WebP 상호 변환
+- [PDF 합치기](https://tools.aquapado.com/pdf-merge/): 여러 PDF를 순서대로 병합
+- [PDF 분할](https://tools.aquapado.com/pdf-split/): 페이지 추출·낱장 분리
+- [JPG PDF 변환](https://tools.aquapado.com/jpg-to-pdf/): 이미지 여러 장을 한 PDF로
+- [동영상 GIF 변환](https://tools.aquapado.com/video-to-gif/): MP4 등 영상을 움짤로 (FFmpeg WASM)
+- [유튜브 썸네일 추출](https://tools.aquapado.com/youtube-thumbnail/): 영상 URL로 고화질 썸네일 저장
+
+## 정보
+- [소개](https://tools.aquapado.com/about/)
+- [개인정보처리방침](https://tools.aquapado.com/privacy/)
