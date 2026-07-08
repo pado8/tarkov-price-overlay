@@ -491,6 +491,30 @@ def _clamp_to_monitor(
     return x, y, width, height
 
 
+def _monitor_center_box(
+    cursor_x: int, cursor_y: int, width: int, height: int
+) -> tuple[int, int, int, int] | None:
+    """A (width x height) box centered on the monitor that holds the cursor.
+
+    For centered, cursor-independent UI notifications — specifically the
+    inventory-full "공간 부족 (아이템)" / "No space (Item)" label EFT shows dead
+    center when your bag is full and you look at a ground/container item. That
+    text sits AT the crosshair (screen center), which falls in the gap between
+    the primary capture box (above the cursor) and the ground box (below it),
+    so no cursor-relative attempt ever catches it. Returns None if the cursor
+    isn't on any known monitor."""
+    with mss.mss() as sct:
+        for m in sct.monitors[1:]:
+            mx, my, mw, mh = m["left"], m["top"], m["width"], m["height"]
+            if mx <= cursor_x < mx + mw and my <= cursor_y < my + mh:
+                w = min(width, mw)
+                h = min(height, mh)
+                x = mx + mw // 2 - w // 2
+                y = my + mh // 2 - h // 2
+                return x, y, w, h
+    return None
+
+
 def _capture_and_lookup(
     x: int,
     y: int,
@@ -777,6 +801,19 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if can_clamp:
             gx, gy, gw, gh = _clamp_to_monitor(gx, gy, gw, gh, cursor_x, cursor_y)
         attempts.append(("ground", gx, gy, gw, gh))
+
+    # Inventory-full "공간 부족 (아이템)" notification shows dead-center on screen
+    # (at the crosshair), which none of the cursor-relative boxes above — nor
+    # the zoom-out rescue below — reach. Add a monitor-center box as the LAST
+    # attempt: the loop only gets here when every cursor-relative box missed, so
+    # it costs nothing on normal lookups. _capture_and_lookup's
+    # unwrap_nospace_item() then pulls the item name out of the "공간 부족 (X)"
+    # wrapper read here. Sized generously (a wide line, tolerant of the text
+    # sitting a bit above/below true center) — tune with in-game data if needed.
+    if can_clamp:
+        cbox = _monitor_center_box(cursor_x, cursor_y, 720, 160)
+        if cbox is not None:
+            attempts.append(("center", *cbox))
 
     text, price = "", {"name": None}
     # Longest text read across attempts. On a total no-match the response
