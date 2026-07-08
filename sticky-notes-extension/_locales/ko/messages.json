@@ -1,0 +1,30 @@
+{
+  "appName": { "message": "스티키 메모" },
+  "appDesc": { "message": "어떤 웹페이지에든 포스트잇 메모를 붙이세요. 내용과 위치가 자동 저장되고, 사이트별/전역 표시를 선택할 수 있습니다." },
+
+  "noteScopeSite": { "message": "이 사이트" },
+  "noteScopeGlobal": { "message": "모든 사이트" },
+  "noteScopeToggleTip": { "message": "표시 범위 전환 (이 사이트 ↔ 모든 사이트)" },
+  "noteColorTip": { "message": "색상 변경" },
+  "noteDeleteTip": { "message": "메모 삭제" },
+  "noteDeleteConfirm": { "message": "이 메모를 삭제할까요?" },
+  "confirmDelete": { "message": "삭제" },
+  "confirmCancel": { "message": "취소" },
+  "notePlaceholder": { "message": "메모를 입력하세요…" },
+
+  "popupNewNote": { "message": "새 메모" },
+  "popupShowToggle": { "message": "메모 표시" },
+  "popupSiteSection": { "message": "이 사이트 메모" },
+  "popupGlobalSection": { "message": "전역 메모" },
+  "popupEmpty": { "message": "메모가 없습니다" },
+  "popupEmptyNote": { "message": "(빈 메모)" },
+  "popupUnavailable": { "message": "이 페이지에서는 메모를 사용할 수 없습니다 (브라우저 내부 페이지, 웹스토어 등). 일반 웹페이지에서 열어주세요." },
+  "popupOptions": { "message": "옵션" },
+
+  "optionsTitle": { "message": "스티키 메모 옵션" },
+  "optionsDefaultScope": { "message": "새 메모의 기본 표시 범위" },
+  "optionsScopeSiteDesc": { "message": "이 사이트에서만 — 메모를 만든 사이트에서만 보입니다" },
+  "optionsScopeGlobalDesc": { "message": "모든 사이트에서 — 어떤 페이지를 열어도 항상 보입니다" },
+  "optionsSaved": { "message": "저장됨" },
+  "optionsPrivacyNote": { "message": "모든 메모는 이 브라우저의 로컬 저장소(chrome.storage.local)에만 저장되며, 외부 서버로 전송되지 않습니다." }
+}

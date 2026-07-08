@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1 data-i18n="optionsTitle"></h1>
+
+  <fieldset>
+    <legend data-i18n="optionsDefaultScope"></legend>
+    <label>
+      <input type="radio" name="defaultScope" value="site">
+      <span data-i18n="optionsScopeSiteDesc"></span>
+    </label>
+    <label>
+      <input type="radio" name="defaultScope" value="global">
+      <span data-i18n="optionsScopeGlobalDesc"></span>
+    </label>
+  </fieldset>
+
+  <p class="privacy" data-i18n="optionsPrivacyNote"></p>
+
+  <div id="saved" data-i18n="optionsSaved" hidden></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

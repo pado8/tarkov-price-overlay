@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="../icons/icon32.png" alt="" width="20" height="20">
+    <h1 data-i18n="appName"></h1>
+    <label class="switch" title="">
+      <span class="switch-label" data-i18n="popupShowToggle"></span>
+      <input type="checkbox" id="visibleToggle">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <button id="newNoteBtn" class="primary">
+    <span class="plus">+</span> <span data-i18n="popupNewNote"></span>
+  </button>
+
+  <div id="notice" hidden data-i18n="popupUnavailable"></div>
+
+  <section id="siteSection">
+    <h2><span data-i18n="popupSiteSection"></span> <span id="siteHost" class="host"></span></h2>
+    <ul id="siteList"></ul>
+  </section>
+
+  <section id="globalSection">
+    <h2 data-i18n="popupGlobalSection"></h2>
+    <ul id="globalList"></ul>
+  </section>
+
+  <footer>
+    <a href="#" id="optionsLink" data-i18n="popupOptions"></a>
+    <span id="version"></span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

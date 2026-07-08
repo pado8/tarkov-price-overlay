@@ -1,0 +1,30 @@
+{
+  "appName": { "message": "Sticky Notes" },
+  "appDesc": { "message": "Put sticky notes on any webpage. Content and position are saved automatically, with per-site or global visibility." },
+
+  "noteScopeSite": { "message": "This site" },
+  "noteScopeGlobal": { "message": "All sites" },
+  "noteScopeToggleTip": { "message": "Toggle scope (this site ↔ all sites)" },
+  "noteColorTip": { "message": "Change color" },
+  "noteDeleteTip": { "message": "Delete note" },
+  "noteDeleteConfirm": { "message": "Delete this note?" },
+  "confirmDelete": { "message": "Delete" },
+  "confirmCancel": { "message": "Cancel" },
+  "notePlaceholder": { "message": "Write a note…" },
+
+  "popupNewNote": { "message": "New note" },
+  "popupShowToggle": { "message": "Show notes" },
+  "popupSiteSection": { "message": "Notes on this site" },
+  "popupGlobalSection": { "message": "Global notes" },
+  "popupEmpty": { "message": "No notes yet" },
+  "popupEmptyNote": { "message": "(empty note)" },
+  "popupUnavailable": { "message": "Notes aren't available on this page (browser-internal pages, the Web Store, etc.). Please open a regular webpage." },
+  "popupOptions": { "message": "Options" },
+
+  "optionsTitle": { "message": "Sticky Notes Options" },
+  "optionsDefaultScope": { "message": "Default scope for new notes" },
+  "optionsScopeSiteDesc": { "message": "This site only — visible only on the site where the note was created" },
+  "optionsScopeGlobalDesc": { "message": "All sites — always visible on every page" },
+  "optionsSaved": { "message": "Saved" },
+  "optionsPrivacyNote": { "message": "All notes are stored only in this browser's local storage (chrome.storage.local) and are never sent to any external server." }
+}
