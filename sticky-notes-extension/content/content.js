@@ -98,8 +98,18 @@
 
   // ---------- 메모 렌더링 ----------
 
+  // 접힘 상태를 요소에 반영 (렌더 시 + onChanged 동기화 시 공용)
+  function applyCollapsed(el, note) {
+    el.classList.toggle('collapsed', !!note.collapsed);
+    const btn = el.querySelector('.collapse-btn');
+    if (btn) {
+      btn.textContent = note.collapsed ? '▸' : '▾'; // ▸ / ▾
+      btn.title = t(note.collapsed ? 'noteExpandTip' : 'noteCollapseTip');
+    }
+  }
+
   function renderNote(note) {
-    if (noteEls.has(note.id)) return;
+    if (noteEls.has(note.id) || note.hidden) return;
     ensureLayer();
     clampPos(note);
 
@@ -140,13 +150,23 @@
       palette.appendChild(dot);
     }
 
+    const collapseBtn = document.createElement('button');
+    collapseBtn.className = 'collapse-btn';
+    collapseBtn.type = 'button';
+
+    const hideBtn = document.createElement('button');
+    hideBtn.className = 'hide-btn';
+    hideBtn.type = 'button';
+    hideBtn.title = t('noteHideTip');
+    hideBtn.textContent = '👁'; // 👁
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-btn';
     deleteBtn.type = 'button';
     deleteBtn.title = t('noteDeleteTip');
     deleteBtn.textContent = '×';
 
-    header.append(scopeBadge, space, colorBtn, deleteBtn);
+    header.append(scopeBadge, space, collapseBtn, colorBtn, hideBtn, deleteBtn);
 
     const textarea = document.createElement('textarea');
     textarea.className = 'note-text';
@@ -177,6 +197,7 @@
     el.append(header, textarea, resizeHandle, confirmBar, palette);
     layer.appendChild(el);
     noteEls.set(note.id, { el, textarea });
+    applyCollapsed(el, note);
 
     // --- 이벤트 ---
 
@@ -203,6 +224,20 @@
       el.dataset.scope = note.scope;
       scopeBadge.textContent = t(note.scope === 'global' ? 'noteScopeGlobal' : 'noteScopeSite');
       saveNote(note);
+    });
+
+    // 접기/펼치기
+    collapseBtn.addEventListener('click', () => {
+      note.collapsed = !note.collapsed;
+      applyCollapsed(el, note);
+      saveNote(note);
+    });
+
+    // 가리기 — 다시 보이려면 팝업 목록의 "보이게 하기"
+    hideBtn.addEventListener('click', () => {
+      note.hidden = true;
+      saveNote(note);
+      removeNoteEl(note.id);
     });
 
     // 색상 팔레트
@@ -304,7 +339,7 @@
   function updateNoteEl(note) {
     const entry = noteEls.get(note.id);
     if (!entry) return;
-    if (!matchesPage(note)) {
+    if (!matchesPage(note) || note.hidden) {
       removeNoteEl(note.id);
       return;
     }
@@ -324,6 +359,7 @@
     el.style.top = note.y + 'px';
     el.style.width = (note.w || DEFAULT_W) + 'px';
     el.style.height = (note.h || DEFAULT_H) + 'px';
+    applyCollapsed(el, note);
   }
 
   // ---------- 생성 ----------
@@ -340,6 +376,8 @@
       color: COLORS[count % COLORS.length],
       scope: settings.defaultScope === 'global' ? 'global' : 'site',
       domain: settings.defaultScope === 'global' ? '' : HOSTNAME,
+      hidden: false,
+      collapsed: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -361,7 +399,7 @@
     const all = await chrome.storage.local.get(null);
     if (all.settings) settings = Object.assign(settings, all.settings);
     for (const [key, value] of Object.entries(all)) {
-      if (key.startsWith(NOTE_PREFIX) && value && matchesPage(value)) {
+      if (key.startsWith(NOTE_PREFIX) && value && matchesPage(value) && !value.hidden) {
         renderNote(value);
       }
     }
@@ -383,7 +421,7 @@
         removeNoteEl(key.slice(NOTE_PREFIX.length));
       } else if (noteEls.has(note.id)) {
         updateNoteEl(note);
-      } else if (matchesPage(note)) {
+      } else if (matchesPage(note) && !note.hidden) {
         renderNote(note);
       }
     }

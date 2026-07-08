@@ -19,7 +19,9 @@ scripts/package.ps1    등록용 zip 생성 (dist/에 출력, store·scripts·sv
 
 ## 데이터 모델 (chrome.storage.local)
 
-- `note_<uuid>` → `{ id, text, x, y, w, h, color, scope: "site"|"global", domain, createdAt, updatedAt }`
+- `note_<uuid>` → `{ id, text, x, y, w, h, color, scope: "site"|"global", domain, hidden, collapsed, createdAt, updatedAt }`
+  - `hidden`: 메모별 가리기 (페이지에서 제거, 팝업 목록의 "보이게 하기"로 복구)
+  - `collapsed`: 접기 (헤더만 표시)
   - `scope: "site"`면 `domain === location.hostname`인 페이지에서만 표시. `"global"`이면 항상 표시(domain은 빈 문자열).
   - 메모당 키 1개 — 키 입력 debounce(300ms) 저장 시 다른 메모를 덮어쓰지 않기 위함.
 - `settings` → `{ defaultScope, notesVisible }`

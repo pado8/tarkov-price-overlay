@@ -126,6 +126,32 @@ const STICKY_NOTES_CSS = `
 .palette button[data-color="blue"]   { background: #85c2f5; }
 .palette button[data-color="purple"] { background: #c3a8f5; }
 
+.collapse-btn,
+.hide-btn {
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  color: rgba(0, 0, 0, 0.5) !important;
+  flex-shrink: 0;
+}
+.collapse-btn:hover,
+.hide-btn:hover {
+  background: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 접힌 상태: 헤더만 남긴다 */
+.note.collapsed {
+  min-height: 0;
+  height: auto !important;
+}
+.note.collapsed .note-text,
+.note.collapsed .resize-handle {
+  display: none;
+}
+.note.collapsed .note-header {
+  border-radius: 6px;
+}
+
 .delete-btn {
   font-size: 16px;
   width: 22px;

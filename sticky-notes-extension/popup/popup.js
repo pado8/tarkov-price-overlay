@@ -62,6 +62,25 @@
         preview.classList.add('empty-text');
       }
 
+      // 가리기/보이게 하기 토글
+      const eye = document.createElement('button');
+      eye.className = 'eye';
+      eye.type = 'button';
+      if (note.hidden) {
+        li.classList.add('hidden-note');
+        eye.classList.add('show-btn');
+        eye.textContent = t('popupShowNote');
+      } else {
+        eye.textContent = '👁';
+        eye.title = t('noteHideTip');
+      }
+      eye.addEventListener('click', (e) => {
+        e.stopPropagation();
+        note.hidden = !note.hidden;
+        note.updatedAt = Date.now();
+        chrome.storage.local.set({ [NOTE_PREFIX + note.id]: note });
+      });
+
       const del = document.createElement('button');
       del.className = 'del';
       del.type = 'button';
@@ -84,12 +103,12 @@
         }
       });
 
-      // 항목 클릭 → 현재 탭에서 해당 메모 강조
+      // 항목 클릭 → 현재 탭에서 해당 메모 강조 (가려진 메모는 페이지에 없음)
       li.addEventListener('click', () => {
-        sendToTab({ type: 'focus', id: note.id });
+        if (!note.hidden) sendToTab({ type: 'focus', id: note.id });
       });
 
-      li.append(dot, preview, del);
+      li.append(dot, preview, eye, del);
       ul.appendChild(li);
     }
   }

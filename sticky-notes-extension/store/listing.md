@@ -32,7 +32,8 @@
   만든 후에도 배지 클릭 한 번으로 전환
 • 5가지 색상 — 용도별로 메모를 색으로 구분
 • 한눈에 관리 — 팝업에서 현재 사이트 메모와 전역 메모 목록 확인·삭제
-• 잠시 숨기기 — 토글 하나로 모든 메모를 숨겼다가 다시 표시
+• 접기 — 헤더만 남기고 메모를 착착 접어 화면을 넓게
+• 잠시 가리기 — 메모별 가리기 버튼, 또는 토글 하나로 전체 숨김. 팝업에서 언제든 다시 표시
 
 개인정보
 모든 메모는 브라우저 로컬 저장소에만 저장되며 외부로 전송되지 않습니다.
@@ -52,7 +53,8 @@ Features
   switchable anytime with a single click on the badge
 • 5 colors — organize notes by purpose
 • Manage at a glance — the popup lists this site's notes and your global notes
-• Hide temporarily — one toggle hides and restores all notes
+• Collapse — fold a note down to its header to free up space
+• Hide temporarily — hide individual notes or all of them at once, and bring them back anytime from the popup
 
 Privacy
 All notes are stored only in your browser's local storage and never leave your device.
