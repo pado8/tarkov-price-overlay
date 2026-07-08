@@ -36,7 +36,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from capture import capture_region
-from ocr import _get_reader, is_price_or_status_line, recognize_text_fragments
+from ocr import (
+    _get_reader,
+    is_price_or_status_line,
+    recognize_text_fragments,
+    unwrap_nospace_item,
+)
 from quest_tracker import get_tracker
 from tarkov_api import get_item_price, get_station_list, start_background_refresher
 
@@ -532,6 +537,29 @@ def _capture_and_lookup(
     price = get_item_price(
         text, lang=lang, game_mode=game_mode, corrections=corrections
     )
+
+    # Inventory-full pickup tooltip: "공간 부족 (프로피탈)" / "No space (X)" /
+    # "Нет места (X)" shows centered when the bag is full and you look at a
+    # ground/container item. The name is wrapped in parens after a status
+    # prefix, so the raw OCR fuzzy-fails. Recover the parenthesized name and
+    # match that. Checked BEFORE the multi-fragment retry below because the
+    # whole tooltip is usually one OCR fragment (that retry needs len>1), and
+    # only adopted when the inner text resolves — so it can't hurt normal names.
+    if price.get("name") is None:
+        for src in (text, *fragments):
+            inner = unwrap_nospace_item(src)
+            if not inner:
+                continue
+            inner_price = get_item_price(
+                inner, lang=lang, game_mode=game_mode, corrections=corrections
+            )
+            if inner_price.get("name"):
+                print(
+                    f"[lookup] OCR({label}) unwrapped inventory-full tooltip "
+                    f"{src!r} -> {inner!r} -> {inner_price['name']!r}"
+                )
+                text, price = inner, inner_price
+                break
 
     # Fallback: when the box catches extra non-tooltip UI (price label below
     # the tooltip, description text, an inventory icon with baked-in text

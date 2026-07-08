@@ -162,6 +162,41 @@ def is_price_or_status_line(text: str) -> bool:
     return any(p.search(t) for p in _PRICE_STATUS_PATTERNS)
 
 
+# Inventory-full pickup tooltip. When your bag is full and you look at a
+# ground/container item, EFT shows a centered "<no-space> (ItemName)" label
+# instead of the normal name tooltip — reported KO case: "공간 부족 (프로피탈)".
+# The item name is wrapped in parens after a status prefix, so the raw OCR
+# fuzzy-fails. We strip the prefix + brackets to recover the name. Unlike the
+# price/status filter above (which DROPS noise fragments), here the name lives
+# INSIDE the noise, so dropping would leave nothing — we EXTRACT instead.
+#
+# Gated on a known no-space prefix so it can't fire on legitimate parenthesized
+# catalog names (e.g. ammo packs "... ammo pack (50 pcs)"), which have no such
+# prefix. The caller further guards by only using the result if it resolves to
+# a real item. KO is confirmed from a user screenshot; EN/RU cover BSG's
+# standard localizations (best-effort — refine if a client uses other copy).
+_NOSPACE_PREFIX = re.compile(
+    r"^\s*(?:"
+    r"공간\s*[이가]?\s*부족"  # KO (confirmed): "공간 부족" / "공간이 부족"
+    r"|not\s*enough\s*(?:free\s*)?space|no\s*(?:free\s*)?space|insufficient\s*space|no\s*room"  # EN
+    r"|недостаточно\s*(?:свободного\s*)?места|нет\s*места|не\s*хватает\s*места"  # RU
+    r")\s*",
+    re.IGNORECASE,
+)
+
+
+def unwrap_nospace_item(text: str) -> str | None:
+    """If `text` is the inventory-full pickup tooltip '<no-space> (ItemName)',
+    return the ItemName, else None. Tolerant of OCR dropping/mangling the
+    brackets around the name."""
+    t = (text or "").strip()
+    m = _NOSPACE_PREFIX.match(t)
+    if not m:
+        return None
+    inner = t[m.end():].strip().strip("()[]{}<>（）ㅁ ").strip()
+    return inner or None
+
+
 def recognize_text_fragments(
     image: np.ndarray,
     langs: tuple[str, ...] = ("ko", "en"),
