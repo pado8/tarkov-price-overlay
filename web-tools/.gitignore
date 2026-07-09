@@ -4,3 +4,5 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 public/__test/
+
+.vercel

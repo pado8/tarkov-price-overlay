@@ -1,5 +1,14 @@
 import Link from 'next/link';
-import { SITE_DESC, SITE_NAME, SITE_URL, TOOLS } from '@/lib/tools';
+import {
+  CATEGORY_LABELS,
+  SITE_DESC,
+  SITE_NAME,
+  SITE_URL,
+  TOOLS,
+  type ToolCategory,
+} from '@/lib/tools';
+
+const CATEGORY_ORDER: ToolCategory[] = ['image', 'pdf', 'video', 'life'];
 
 export default function Home() {
   const siteLd = {
@@ -25,20 +34,25 @@ export default function Home() {
         </p>
       </section>
 
-      <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {TOOLS.map((t) => (
-          <li key={t.slug}>
-            <Link
-              href={`/${t.slug}/`}
-              className="block h-full rounded-2xl border border-gray-200 p-5 transition-all hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md"
-            >
-              <span className="text-2xl" aria-hidden>{t.icon}</span>
-              <h2 className="mt-2 text-lg font-bold text-gray-900">{t.name}</h2>
-              <p className="mt-1 text-sm text-gray-500">{t.short}</p>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {CATEGORY_ORDER.map((cat) => (
+        <section key={cat} className="mt-10">
+          <h2 className="text-lg font-bold text-gray-900">{CATEGORY_LABELS[cat]}</h2>
+          <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {TOOLS.filter((t) => t.category === cat).map((t) => (
+              <li key={t.slug}>
+                <Link
+                  href={`/${t.slug}/`}
+                  className="block h-full rounded-2xl border border-gray-200 p-5 transition-all hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md"
+                >
+                  <span className="text-2xl" aria-hidden>{t.icon}</span>
+                  <h3 className="mt-2 text-lg font-bold text-gray-900">{t.name}</h3>
+                  <p className="mt-1 text-sm text-gray-500">{t.short}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
 
       <section className="mt-14 rounded-2xl bg-gray-50 p-6">
         <h2 className="text-lg font-bold text-gray-900">왜 {SITE_NAME}인가요?</h2>

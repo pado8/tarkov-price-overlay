@@ -85,6 +85,17 @@
 3. 승인 후: `ads.txt` 배치, 자동광고 대신 **수동 슬롯 2개**(도구 아래 + 콘텐츠 사이)로 시작 — 도구 UX 해치면 재방문 죽는다
 4. 보조 수익 후보(승인 지연 시): 쿠팡 파트너스 배너
 
+### AdSense 신청 직전 체크리스트 (Phase 3 완료 시점 상태)
+
+- [x] 도구 15개 이상 (16종) + 페이지당 사용법·FAQ 실질 텍스트 800자+
+- [x] privacy(광고 쿠키 조항 포함)/about/contact 페이지
+- [x] sitemap.xml / robots.txt / 페이지별 canonical·메타
+- [ ] 커스텀 도메인 연결 (`tools.aquapado.com` — DNS 사용자 작업 대기)
+- [ ] GSC 등록 + 색인 확인 (도메인 연결 후, 최소 수 페이지 색인까지 1~2주)
+- [ ] 약간의 실트래픽 (승인 확률에 도움 — 색인 후 신청 권장)
+- [ ] AdSense 계정 생성 → 사이트 추가 → 검토 요청 (사용자)
+- 신청 후: 승인되면 `ads.txt` 배치 + `AdSlot` 컴포넌트에 실코드 연결 (Claude)
+
 ## 7. 단계 및 마일스톤
 
 | 단계 | 내용 | 완료 기준 |
@@ -97,9 +108,16 @@
 
 **KPI**: 색인 페이지 수 → 월 PV(1차 목표 10,000) → AdSense 승인 → 월 수익
 
+### 진행 로그
+
+- **2026-07-08 Phase 0+1 완료**: 이름 뚝딱툴즈 확정, MVP 8종 구현·실파일 검증·dev 커밋(fa5494f)
+- **2026-07-09 Phase 2 완료(DNS 제외)**: Vercel 프로덕션 배포(`web-tools-lac.vercel.app`, 프로젝트 aquapados-projects/web-tools), 도메인 `tools.aquapado.com` 프로젝트에 연결됨 — **사용자 DNS 대기: hosting.co.kr에 `A tools → 76.76.21.21`**. IndexNow 키 발급·키파일 배포(`147fba7cc5bfaec15992b8c99a0e5a94.txt`), 제출은 DNS 연결 후 `python scripts/indexnow.py`
+- **2026-07-09 Phase 3 완료**: 도구 8종 추가(모자이크·파비콘·OCR·PDF→이미지·영상압축·QR·글자수·디데이) → 총 16종, 홈 카테고리 4분류, 전 신규 도구 실파일 브라우저 검증, AdSense 체크리스트 작성. 재배포 완료
+
 ## 8. 리스크 및 함정 (구현 전 필독)
 
 - **ffmpeg.wasm 멀티스레드 금지**: 멀티스레드 코어는 SharedArrayBuffer가 필요해 COOP/COEP 헤더(cross-origin isolation)를 강제하는데, 이러면 **AdSense 스크립트·외부 임베드가 깨진다.** 반드시 싱글스레드 코어(`@ffmpeg/core` st) 사용. 느려도 광고와 공존이 우선.
+- **pdf.js 렌더는 `intent: 'print'` 필수**: 기본(display) 인텐트는 requestAnimationFrame 스케줄링을 써서 **탭이 백그라운드면 렌더가 영원히 멈춘다.** print 인텐트는 rAF 없이 완주. 또한 워커는 same-origin 제약이 있어 CDN 워커를 blob URL로 감싸야 한다 (`components/tools/PdfToImage.tsx` 참조).
 - **Vercel 대역폭**: ffmpeg 코어(~32MB)는 반드시 CDN(jsDelivr) 로드 + 페이지 진입이 아닌 "파일 선택 시" lazy load.
 - **대용량 파일 메모리**: 브라우저 탭 메모리 한계(모바일 특히). 파일 크기 상한(예: 이미지 50MB, 영상 500MB) + 초과 시 친절한 안내.
 - **Safari/모바일**: heic2any·ffmpeg.wasm 모바일 Safari 동작 확인 필수. 모바일 트래픽이 절반 이상일 것.
