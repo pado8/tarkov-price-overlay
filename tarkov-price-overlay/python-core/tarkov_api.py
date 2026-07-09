@@ -1025,12 +1025,29 @@ def _is_junk_ocr(text: str) -> bool:
     return not any(c.isalpha() or "가" <= c <= "힣" for c in stripped)
 
 
+def has_price_cache(lang: str, game_mode: str) -> bool:
+    """True when the full-catalog price cache for this (lang, mode) is
+    populated — i.e. a cache miss is meaningful (the item almost certainly
+    isn't on the server either, barring a brand-new patch item)."""
+    return bool(_price_cache.get((lang, game_mode)))
+
+
 def get_item_price(
     item_name: str,
     lang: str = "ko",
     game_mode: str = "regular",
     corrections: dict[str, str] | None = None,
+    allow_cold: bool = True,
 ) -> dict:
+    """allow_cold=False: on a cache miss, return no-match WITHOUT the
+    cold-path GraphQL round trip — honored only while the catalog cache is
+    populated (a full snapshot makes the network re-check redundant except
+    for brand-new patch items). The /lookup capture flow passes False for
+    its many per-fragment probes and spends the network budget ONCE at the
+    end on the best-read candidates (main._cold_rescue). Previously every
+    no-match string cost a 0.3-1s round trip, multiplied across attempts ×
+    fragments — the dominant latency behind a user's ~7s lookups. Cold-start
+    behavior (cache not yet populated) is unchanged: network as before."""
     if not item_name:
         return _empty_result()
 
@@ -1060,6 +1077,12 @@ def get_item_price(
     cached = _cache_lookup(item_name, lang, game_mode, matched_from)
     if cached is not None:
         return cached
+
+    # Cache-only probe: the caller defers the network to a single end-of-
+    # request rescue. Only honored when the cache holds the full catalog —
+    # with an empty cache (cold start) the network below is the only source.
+    if not allow_cold and has_price_cache(lang, game_mode):
+        return _empty_result(matched_from)
 
     # Cold path (cache not yet populated for this lang/mode): fall back to
     # individual GraphQL queries. Same flow as pre-v0.4.0.

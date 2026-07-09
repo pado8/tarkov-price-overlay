@@ -43,7 +43,12 @@ from ocr import (
     unwrap_nospace_item,
 )
 from quest_tracker import get_tracker
-from tarkov_api import get_item_price, get_station_list, start_background_refresher
+from tarkov_api import (
+    get_item_price,
+    get_station_list,
+    has_price_cache,
+    start_background_refresher,
+)
 
 
 @asynccontextmanager
@@ -524,6 +529,7 @@ def _capture_and_lookup(
     game_mode: str,
     label: str,
     corrections: dict[str, str],
+    rescue_pool: list[str] | None = None,
 ) -> tuple[str, dict]:
     import time
 
@@ -555,11 +561,22 @@ def _capture_and_lookup(
     text = " ".join(fragments).strip()
     print(f"[lookup] OCR({label}): {text!r} ({len(fragments)} fragments)")
 
+    # Everything read here is a candidate for the end-of-request cold rescue
+    # (single deferred network try for brand-new patch items — see
+    # _cold_rescue). Collected BEFORE matching so no-match strings are kept.
+    if rescue_pool is not None:
+        if text:
+            rescue_pool.append(text)
+        rescue_pool.extend(f for f in fragments if f)
+
     # Primary attempt: fuzzy-match the joined OCR text. This works whenever
     # the capture box is tight around the tooltip — EasyOCR returns a few
     # lines, joining them produces a string very close to the catalog name.
+    # allow_cold=False: cache-only — the many probes in this flow must not
+    # each pay a GraphQL round trip (that multiplied into ~7s lookups).
     price = get_item_price(
-        text, lang=lang, game_mode=game_mode, corrections=corrections
+        text, lang=lang, game_mode=game_mode, corrections=corrections,
+        allow_cold=False,
     )
 
     # Inventory-full pickup tooltip: "공간 부족 (프로피탈)" / "No space (X)" /
@@ -574,8 +591,11 @@ def _capture_and_lookup(
             inner = unwrap_nospace_item(src)
             if not inner:
                 continue
+            if rescue_pool is not None:
+                rescue_pool.append(inner)
             inner_price = get_item_price(
-                inner, lang=lang, game_mode=game_mode, corrections=corrections
+                inner, lang=lang, game_mode=game_mode, corrections=corrections,
+                allow_cold=False,
             )
             if inner_price.get("name"):
                 print(
@@ -628,7 +648,8 @@ def _capture_and_lookup(
         matches: list[tuple[str, dict, int, int, int]] = []
         for cand in retry_candidates:
             cand_price = get_item_price(
-                cand, lang=lang, game_mode=game_mode, corrections=corrections
+                cand, lang=lang, game_mode=game_mode, corrections=corrections,
+                allow_cold=False,
             )
             cand_name = cand_price.get("name")
             if not cand_name:
@@ -669,6 +690,42 @@ def _capture_and_lookup(
         f"price_lookup={t3 - t2:.3f}s total={t3 - t0:.3f}s"
     )
     return text, price
+
+
+def _cold_rescue(
+    rescue_pool: list[str],
+    lang: str,
+    game_mode: str,
+    corrections: dict[str, str],
+) -> tuple[str, dict] | None:
+    """One deferred cold-path (network) try after ALL cache-only probes
+    failed. This is what preserves brand-new patch items (in the ≤10min gap
+    before the catalog cache refreshes) now that the in-flow probes are
+    cache-only: pick the most promising read strings and let the server
+    substring search / fuzzy have one shot. Capped at 2 candidates so the
+    worst-case lookup pays ≤2 round trips instead of the old one-per-string
+    (which multiplied into ~7s). Only runs when the cache is populated —
+    on a true cold start the in-flow probes already went to the network."""
+    if not has_price_cache(lang, game_mode):
+        return None
+    seen: set[str] = set()
+    candidates: list[str] = []
+    for s in sorted((s.strip() for s in rescue_pool), key=len, reverse=True):
+        if len(s) < 3 or s in seen:
+            continue
+        seen.add(s)
+        candidates.append(s)
+        if len(candidates) >= 2:
+            break
+    for cand in candidates:
+        price = get_item_price(
+            cand, lang=lang, game_mode=game_mode, corrections=corrections,
+            allow_cold=True,
+        )
+        if price.get("name") is not None:
+            print(f"[lookup] cold rescue matched {cand!r} -> {price['name']!r}")
+            return cand, price
+    return None
 
 
 # Server-side supersession for rapid F2. /lookup is a *sync* endpoint, so
@@ -828,12 +885,16 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # (best_text's source) — NOT a hardcoded "primary", which would mislabel
     # ground/mirror reads in telemetry.
     attempt_used = "primary"
+    # Every string read across ALL attempts, for the single deferred cold-
+    # rescue at the end (in-flow probes are cache-only — see _cold_rescue).
+    rescue_pool: list[str] = []
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
             return _build_response(best_text, {"name": None}, game_mode, attempt="superseded")
         text, price = _capture_and_lookup(
-            ax, ay, aw, ah, lang, game_mode, label, req.corrections
+            ax, ay, aw, ah, lang, game_mode, label, req.corrections,
+            rescue_pool=rescue_pool,
         )
         if len(text.strip()) > len(best_text):
             best_text = text.strip()
@@ -856,7 +917,8 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if can_clamp:
             ex, ey, ew, eh = _clamp_to_monitor(ex, ey, ew, eh, cursor_x, cursor_y)
         wide_text, wide_price = _capture_and_lookup(
-            ex, ey, ew, eh, lang, game_mode, "wide", req.corrections
+            ex, ey, ew, eh, lang, game_mode, "wide", req.corrections,
+            rescue_pool=rescue_pool,
         )
         # Adopt the wide result if it found a name — or at least read SOME
         # text (better diagnostics for the user than a silent blank). Tag the
@@ -865,7 +927,18 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         # moves capture-miss events from the "empty" bucket into "no_match"
         # and the dashboard's misread-vs-misaligned split becomes garbage.
         if wide_price.get("name") is not None or wide_text.strip():
+            if wide_price.get("name") is None:
+                rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
+                if rescued is not None:
+                    return _build_response(rescued[0], rescued[1], game_mode, attempt="wide")
             return _build_response(wide_text, wide_price, game_mode, attempt="wide")
+
+    # Deferred cold-path: one network shot at the best-read strings, for
+    # brand-new patch items the (≤10min-stale) catalog cache can't know yet.
+    if price.get("name") is None and rescue_pool and not _lookup_superseded(req.client_seq):
+        rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
+        if rescued is not None:
+            return _build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used)
 
     # No match: report the most informative text read across attempts.
     final_text = text if price.get("name") is not None else best_text
