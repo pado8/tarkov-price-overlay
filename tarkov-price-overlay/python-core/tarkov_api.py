@@ -771,14 +771,32 @@ def _refresh_one(lang: str, game_mode: str) -> int:
         name = it.get("name")
         if not name:
             continue
-        entry = _build_cache_entry(it, hideout_idx)
-        by_name[name] = entry
-        # Alias by shortName too so ground-pickup OCR ("SALEWA") matches the
-        # same entry as the full inventory name ("Salewa first aid kit"). The
-        # full name takes priority on collisions; aliases are first-write-wins.
+        by_name[name] = _build_cache_entry(it, hideout_idx)
+    # Alias by shortName too so ground-pickup / inventory-full ("공간 부족
+    # (MP9)") OCR matches the same entry as the full inventory name. Short
+    # names COLLIDE across items — e.g. ko "MP9" is shared by the B&T MP9 gun,
+    # its suppressor AND its stock — and the old first-write-wins arbitrarily
+    # gave "MP9" to the suppressor (user report: aimed at an MP9 on the
+    # ground, card showed a wrong item). Resolution: a gun beats non-gun
+    # items for the alias (ground/no-space labels are shortName-based and a
+    # bare "MP9"-style label is far more often the weapon than one of its
+    # mods); among equals, first write wins. A full catalog name is never
+    # shadowed by an alias.
+    alias_pick: dict[str, tuple[bool, str]] = {}  # short -> (is_gun, full_name)
+    for it in items:
+        name = it.get("name")
+        if not name:
+            continue
         short = (it.get("shortName") or "").strip()
-        if short and short != name and short not in by_name:
-            by_name[short] = entry
+        if not short or short == name:
+            continue
+        is_gun = "gun" in (it.get("types") or [])
+        cur = alias_pick.get(short)
+        if cur is None or (is_gun and not cur[0]):
+            alias_pick[short] = (is_gun, name)
+    for short, (_is_gun, full_name) in alias_pick.items():
+        if short not in by_name:
+            by_name[short] = by_name[full_name]
     # Canonical (OCR-confusion-folded) index for the last-resort exact match.
     # Built once per refresh so the hot path pays a single dict lookup.
     canon_map: dict[str, dict | None] = {}
