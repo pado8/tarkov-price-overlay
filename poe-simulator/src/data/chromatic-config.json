@@ -32,5 +32,16 @@
     { "minNonWhite": 2, "cost": 5, "status": "confirmed" },
     { "minNonWhite": 3, "cost": 20, "status": "confirmed" },
     { "minNonWhite": 4, "cost": 75, "status": "confirmed" }
-  ]
+  ],
+  "omen": {
+    "name": "Omen of Trichromatism",
+    "effect": "색채 오브 사용 시 소모되어 R/G/B 소켓 각 1개 이상 보장 (구 Omen of Blanching 리네임)",
+    "status": "confirmed",
+    "source": "poedb Omen_of_Trichromatism",
+    "defaultPriceInChromatics": {
+      "value": 10,
+      "status": "assumed",
+      "notes": "징조 시장가의 색채 오브 환산 기본값 — 시장가라 UI에서 사용자 입력으로 덮어씀"
+    }
+  }
 }

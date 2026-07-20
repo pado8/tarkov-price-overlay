@@ -96,6 +96,10 @@ const dict: Record<Lang, Record<string, string>> = {
     ch_best: "BEST",
     ch_nonwhite_chance: "Non-white chance / socket (%)",
     ch_nonwhite_note: "Auto = assumed base + quality bonus. Override with a measured value once the league is live.",
+    ch_method_omen: "Chromatic + Omen of Trichromatism",
+    ch_omen_price: "Omen price (in Chromatics)",
+    ch_omen_note:
+      "Omen of Trichromatism guarantees at least one R, G and B socket on the next Chromatic (confirmed). Its price is market-driven — enter your league's rate.",
     ch_rules:
       "Confirmed rules: sockets are White by default · a Chromatic forces one non-white socket, others roll normally · gems gain +10% quality in matching coloured sockets · Chromatics are rarer and no longer vendor-purchasable.",
     ch_desired_invalid: "Desired sockets exceed the socket count.",
@@ -191,6 +195,10 @@ const dict: Record<Lang, Record<string, string>> = {
     ch_best: "최적",
     ch_nonwhite_chance: "소켓당 비백색 확률 (%)",
     ch_nonwhite_note: "비워두면 자동(가정 기본값+퀄리티 보너스). 리그 오픈 후 실측값으로 덮어쓰세요.",
+    ch_method_omen: "색채 + 삼색의 징조",
+    ch_omen_price: "징조 가격 (색채 환산)",
+    ch_omen_note:
+      "삼색의 징조(Omen of Trichromatism)는 다음 색채 오브에 R/G/B 각 1개 이상을 보장합니다(확정). 가격은 시장가라 리그 시세를 직접 입력하세요.",
     ch_rules:
       "확정 룰: 소켓 기본값은 백색 · 색채 오브는 비백색 1개를 강제하고 나머지는 일반 롤 · 젬 색과 소켓 색이 일치하면 젬 퀄리티 +10% · 색채 오브는 더 희귀해지고 상점 구매 불가.",
     ch_desired_invalid: "원하는 소켓 수가 전체 소켓 수를 초과합니다.",

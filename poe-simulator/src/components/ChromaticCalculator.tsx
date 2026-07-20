@@ -6,6 +6,7 @@ import chromaticConfig from "@/data/chromatic-config.json";
 
 const P = chromaticConfig.params;
 const BENCH = chromaticConfig.benchOptions;
+const OMEN = chromaticConfig.omen;
 const TRIALS = 30000;
 
 type Color = "R" | "G" | "B";
@@ -15,8 +16,8 @@ interface Method {
   labelKey: string;
   labelVars?: Record<string, number>;
   costPerTry: number;
-  forcedNonWhite: number; // 색채=1(0개일 때만), 벤치=k개 강제
-  isBench: boolean;
+  kind: "chrom" | "bench" | "omen";
+  forcedNonWhite: number; // bench=k개 강제, chrom/omen에선 미사용
 }
 
 interface MethodResult extends Method {
@@ -45,7 +46,7 @@ function rollOnce(
   const counts = { R: 0, G: 0, B: 0 };
   let nonWhite = 0;
 
-  if (m.isBench) {
+  if (m.kind === "bench") {
     // 벤치: 비백색 k개 강제, 나머지 소켓은 일반 롤
     const forced = Math.min(m.forcedNonWhite, sockets);
     for (let s = 0; s < forced; s++) {
@@ -53,6 +54,18 @@ function rollOnce(
       nonWhite++;
     }
     for (let s = forced; s < sockets; s++) {
+      if (Math.random() < pNonWhite) {
+        counts[pickColor()]++;
+        nonWhite++;
+      }
+    }
+  } else if (m.kind === "omen") {
+    // 색채 + 삼색의 징조: R/G/B 각 1개 보장, 나머지 소켓은 일반 롤 (confirmed)
+    counts.R++;
+    counts.G++;
+    counts.B++;
+    nonWhite = 3;
+    for (let s = 3; s < sockets; s++) {
       if (Math.random() < pNonWhite) {
         counts[pickColor()]++;
         nonWhite++;
@@ -122,6 +135,7 @@ export default function ChromaticCalculator() {
   const [wantB, setWantB] = useState(3);
   const [wantAny, setWantAny] = useState(0);
   const [pOverride, setPOverride] = useState<string>(""); // 비었으면 자동 계산
+  const [omenPrice, setOmenPrice] = useState(OMEN.defaultPriceInChromatics.value); // 징조 시장가 (색채 환산)
 
   const autoP = Math.min(1, P.baseNonWhiteChance.value + quality * P.qualityBonusPerPoint.value);
   const pNonWhite = pOverride.trim() !== "" && !isNaN(Number(pOverride))
@@ -139,15 +153,27 @@ export default function ChromaticCalculator() {
     if (totalW <= 0) return [];
 
     const methods: Method[] = [
-      { id: "chrom", labelKey: "ch_method_chrom", costPerTry: 1, forcedNonWhite: 1, isBench: false },
+      { id: "chrom", labelKey: "ch_method_chrom", costPerTry: 1, forcedNonWhite: 0, kind: "chrom" },
       ...BENCH.filter((b) => b.minNonWhite <= sockets).map((b) => ({
         id: `bench${b.minNonWhite}`,
         labelKey: "ch_method_bench",
         labelVars: { n: b.minNonWhite },
         costPerTry: b.cost,
         forcedNonWhite: b.minNonWhite,
-        isBench: true,
+        kind: "bench" as const,
       })),
+      // 삼색의 징조: R/G/B 각 1개 보장이라 소켓 3개 이상에서만 의미
+      ...(sockets >= 3
+        ? [
+            {
+              id: "omen",
+              labelKey: "ch_method_omen",
+              costPerTry: 1 + omenPrice,
+              forcedNonWhite: 0,
+              kind: "omen" as const,
+            },
+          ]
+        : []),
     ];
 
     const want = { R: wantR, G: wantG, B: wantB, anyNonWhite: wantAny };
@@ -167,7 +193,7 @@ export default function ChromaticCalculator() {
         };
       })
       .sort((a, b) => a.avgCost - b.avgCost);
-  }, [strReq, dexReq, intReq, sockets, wantR, wantG, wantB, wantAny, pNonWhite, invalid]);
+  }, [strReq, dexReq, intReq, sockets, wantR, wantG, wantB, wantAny, pNonWhite, invalid, omenPrice]);
 
   const bestId = results[0]?.avgCost !== Infinity ? results[0]?.id : undefined;
 
@@ -210,6 +236,8 @@ export default function ChromaticCalculator() {
                 />
               </label>
               <p className="text-[10px] leading-relaxed text-zinc-500">{t("ch_nonwhite_note")}</p>
+              <NumInput label={t("ch_omen_price")} value={omenPrice} setValue={setOmenPrice} min={0} max={9999} />
+              <p className="text-[10px] leading-relaxed text-zinc-500">{t("ch_omen_note")}</p>
             </div>
           </div>
 
