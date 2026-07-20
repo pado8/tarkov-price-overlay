@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useLang, useT } from "@/lib/i18n";
 import { parseItemText, SAMPLE_ITEMS, type ParsedItem } from "@/lib/itemParser";
+import { translateModWith, useModTranslator } from "@/lib/modTranslate";
 import {
   canApply,
   currencyName,
@@ -51,8 +52,9 @@ const RARITY_CLS: Record<string, string> = {
   Unknown: "text-zinc-400",
 };
 
-function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
+function ItemCard({ item, compact, modMap }: { item: ParsedItem; compact?: boolean; modMap: Record<string, string> | null }) {
   const t = useT();
+  const tr = (m: string) => translateModWith(modMap, m);
   const r = item.requirements;
   const reqText = [
     r.str ? `${t("attr_str")} ${r.str}` : "",
@@ -85,7 +87,7 @@ function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
         <div className="mt-2 border-t border-zinc-800 pt-1.5">
           {item.implicits.map((m, i) => (
             <p key={i} className="text-xs text-zinc-400">
-              {m}
+              {tr(m)}
             </p>
           ))}
         </div>
@@ -96,7 +98,7 @@ function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
         ) : (
           item.explicits.map((m, i) => (
             <p key={i} className="text-xs text-sky-300">
-              {m}
+              {tr(m)}
             </p>
           ))
         )}
@@ -109,6 +111,7 @@ function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
 export default function AllflameSimulator() {
   const t = useT();
   const { lang } = useLang();
+  const modMap = useModTranslator(lang);
 
   const [pasteText, setPasteText] = useState("");
   const [item, setItem] = useState<ParsedItem | null>(null);
@@ -244,7 +247,7 @@ export default function AllflameSimulator() {
               </>
             ) : (
               <>
-                <ItemCard item={item} />
+                <ItemCard item={item} modMap={modMap} />
                 <button
                   onClick={() => {
                     ghostsPendingRef.current = false;
@@ -318,7 +321,7 @@ export default function AllflameSimulator() {
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {ghosts.map((g, i) => (
                   <div key={i} className="flex flex-col">
-                    <ItemCard item={g} compact />
+                    <ItemCard item={g} compact modMap={modMap} />
                     <button
                       onClick={() => pickGhost(g)}
                       className="mt-1.5 rounded bg-amber-600 px-2 py-1.5 text-xs font-medium text-black transition-colors hover:bg-amber-500"

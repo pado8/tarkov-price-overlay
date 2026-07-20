@@ -88,7 +88,8 @@
 - 색채 오브의 "나머지 소켓 일반 롤"이 재롤인지 유지인지 실검증 필요 — 현재 모델은 **전체 재롤 + 비백색 0개면 1개 강제**. 다르면 `simulateChromatic()` 수정.
 
 ### 데이터 갱신 공통
-- 유니크 목록 갱신: `node scripts/fetch-uniques.mjs` (3.29 신규 유니크 반영. poe.ninja 리그명이 바뀌므로 필요시 스크립트의 league 파라미터를 신규 리그명으로 — Standard 유지도 무방).
+- 유니크 목록 갱신: `node scripts/fetch-uniques.mjs` (3.29 신규 유니크 반영 + 카카오 거래 데이터로 name_ko/baseType_ko 보강. poe.ninja 리그명이 바뀌므로 필요시 스크립트의 league 파라미터를 신규 리그명으로 — Standard 유지도 무방).
+- **모드 한글 번역 맵 갱신: `node scripts/fetch-mods.mjs`** → `public/data/mods-ko.json`(약 1.1MB, 9040종). 글로벌+카카오 거래 stats를 로케일 무관 id로 조인, 숫자→`#` 정규화. 런타임 `src/lib/modTranslate.ts`가 한국어일 때만 fetch(1회 캐시)해 아이템 모드를 공식 한글로 치환(미매칭=영문 폴백). 리그 오픈 후 신규 모드 반영하려면 재실행.
 - **poe.ninja API 주의**: 구 `api/data/itemoverview`는 404. 현행: `https://poe.ninja/poe1/api/economy/stash/current/item/overview?league=Standard&type=UniqueArmour`.
 
 ## 5. 코드 맵 (빠른 참조)
