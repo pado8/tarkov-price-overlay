@@ -68,9 +68,10 @@
 - `excludedFromPool`: Ancient Orb로 안 나오는 보스 전용 유니크 목록. poedb 유니크 페이지의 drop source, 또는 Ancient Orb 관련 데이터마이닝 참조.
 - `fatelornUniques`: Fatelorn 유니크 목록(3.28+ 신규 카테고리) — poedb에서 Fatelorn 검색.
 
-### ④ allflame.json — 베스퍼 수치
+### ④ allflame.json — 베스퍼 수치 + 정식 모드 풀
 - `config.ghostCopies`, `intangibilityTiers`(화폐별 무형화 %), `sulphurCostTiers` 를 실측/데이터마이닝 값으로 교체하고 `status: "confirmed"` + notes 갱신.
-- 화폐별 개별 수치가 나오면 tier 방식 대신 `currencies[]`에 per-currency 필드 추가하는 리팩터 고려 (AllflameSimulator.tsx의 `tierValue()` 수정 필요).
+- 화폐별 개별 수치가 나오면 tier 방식 대신 `vesper.ts`의 VESPER_CURRENCIES에 per-currency 필드 추가.
+- **정식 모드 풀 주입 (큰 작업)**: 현재 신규/재굴림 모드는 `generic-mods.json` 간이 풀(방어구 공통 20종) 근사. 제대로 하려면 RePoE-fork(`https://repoe-fork.github.io/` — mods.min.json + base_items.min.json)에서 아이템 클래스·태그·ilvl별 접두/접미 풀을 빌드 스크립트로 추출해 교체. craftofexile 코어에 해당하는 작업이라 별도 세션 잡을 것. Brinehook's Ducat 메커니즘 공개 시 vesper.ts에 구현.
 
 ### ⑤ chromatic-config.json — 소켓 확률 공식
 - `baseNonWhiteChance`, `qualityBonusPerPoint`, `itemLevelScaling`, `colorWeightBase` 교체.
@@ -88,7 +89,10 @@
 | `src/lib/i18n.tsx` | LangProvider + useT(). **새 UI 문자열은 dict.en/ko 양쪽에 추가** |
 | `src/lib/enshrouding.ts` | 인슈라우딩 룰 엔진. 적격성 reasons는 i18n 키로 반환 |
 | `src/components/Simulator.tsx` | 인슈라우딩 UI |
-| `src/components/AllflameSimulator.tsx` | 올플레임 UI. 무형화는 `intangRef`로 미러링(배칭 대응 — 지우면 연속클릭 버그 재발) |
+| `src/components/AllflameSimulator.tsx` | 올플레임 UI: 아이템 붙여넣기 → 화폐/두캇 클릭 → 고스트 미리보기 택1. 무형화는 `intangRef`로 미러링(배칭 대응 — 지우면 연속클릭 버그 재발) |
+| `src/lib/itemParser.ts` | 인게임 Ctrl+C 아이템 텍스트 파서 + SAMPLE_ITEM_TEXT(데모용 예시 레어) |
+| `src/lib/vesper.ts` | 베스퍼 크래프팅 엔진: 화폐 16종 정의(적용조건 canApply·두캇 포함), applyCurrency, generateGhosts(Kishara=4개 각기 다른 원본모드 유지) |
+| `src/data/generic-mods.json` | **간이 모드 풀 (placeholder)** — 방어구 공통 접두 8/접미 12. 정식 모드 풀 주입 전 근사용 |
 | `src/components/ChromaticCalculator.tsx` | 색채 계산기. siveran(https://siveran.github.io/calc.html) 방식 방법 비교표 — 색채 스팸 vs 벤치 ≥2/3/4를 몬테카를로 30k/방법으로 돌려 평균 비용 랭킹. 비백색 확률 % 수동 오버라이드 입력 있음(리그 오픈 후 실측값 넣는 용도) |
 | `src/components/Header.tsx` | 네비 + 언어 토글 |
 | `scripts/fetch-uniques.mjs` | poe.ninja → uniques.json 생성기 |

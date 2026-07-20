@@ -2,15 +2,17 @@
 
 import { useRef, useState } from "react";
 import { useLang, useT } from "@/lib/i18n";
+import { parseItemText, SAMPLE_ITEM_TEXT, type ParsedItem } from "@/lib/itemParser";
+import {
+  canApply,
+  generateGhosts,
+  RESET_DUCAT_ODDS,
+  tierIntangibility,
+  tierSulphur,
+  VESPER_CURRENCIES,
+  type VesperCurrency,
+} from "@/lib/vesper";
 import allflameData from "@/data/allflame.json";
-
-type Tier = "low" | "medium" | "high";
-
-interface Currency {
-  name: string;
-  tier: Tier;
-  excluded?: boolean;
-}
 
 interface LogEntry {
   id: number;
@@ -20,65 +22,140 @@ interface LogEntry {
   intangibilityAfter: number;
 }
 
-const CFG = allflameData.config;
-const CURRENCIES = allflameData.currencies as Currency[];
 const DUCATS = allflameData.ducats;
 
-const TIER_KEY: Record<Tier, string> = { low: "tier_low", medium: "tier_medium", high: "tier_high" };
-const TIER_CLS: Record<Tier, string> = {
+const TIER_KEY: Record<string, string> = { low: "tier_low", medium: "tier_medium", high: "tier_high" };
+const TIER_CLS: Record<string, string> = {
   low: "text-emerald-400",
   medium: "text-amber-400",
   high: "text-red-400",
 };
+const RARITY_CLS: Record<string, string> = {
+  Normal: "text-zinc-200",
+  Magic: "text-sky-400",
+  Rare: "text-yellow-300",
+  Unique: "text-orange-400",
+  Unknown: "text-zinc-400",
+};
 
-function tierValue(map: Record<string, unknown>, tier: Tier): number {
-  return Number(map[tier]) || 0;
+function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
+  const r = item.requirements;
+  const reqText = [r.str ? `Str ${r.str}` : "", r.dex ? `Dex ${r.dex}` : "", r.int ? `Int ${r.int}` : ""]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <div className="rounded border border-zinc-700 bg-zinc-950/80 p-3 text-sm">
+      <p className={`font-semibold ${RARITY_CLS[item.rarity]}`}>{item.name}</p>
+      {item.baseType !== item.name && <p className={`${RARITY_CLS[item.rarity]} text-xs`}>{item.baseType}</p>}
+      <p className="mt-1 text-[11px] text-zinc-500">
+        {compact ? (
+          <>
+            {item.rarity}
+            {reqText && ` · ${reqText}`}
+          </>
+        ) : (
+          <>
+            {item.rarity} · iLvl {item.itemLevel || "?"}
+            {item.quality > 0 && ` · Q${item.quality}%`}
+            {item.sockets && ` · ${item.sockets}`}
+            {reqText && ` · ${reqText}`}
+          </>
+        )}
+      </p>
+      {item.implicits.length > 0 && (
+        <div className="mt-2 border-t border-zinc-800 pt-1.5">
+          {item.implicits.map((m, i) => (
+            <p key={i} className="text-xs text-zinc-400">
+              {m}
+            </p>
+          ))}
+        </div>
+      )}
+      <div className="mt-2 border-t border-zinc-800 pt-1.5">
+        {item.explicits.length === 0 ? (
+          <p className="text-xs italic text-zinc-600">—</p>
+        ) : (
+          item.explicits.map((m, i) => (
+            <p key={i} className="text-xs text-sky-300">
+              {m}
+            </p>
+          ))
+        )}
+      </div>
+      {item.corrupted && <p className="mt-1.5 text-xs font-medium text-red-500">Corrupted</p>}
+    </div>
+  );
 }
 
 export default function AllflameSimulator() {
   const t = useT();
   const { lang } = useLang();
+
+  const [pasteText, setPasteText] = useState("");
+  const [item, setItem] = useState<ParsedItem | null>(null);
+  const [parseError, setParseError] = useState(false);
+
+  const [ghosts, setGhosts] = useState<ParsedItem[] | null>(null);
+  const [ghostCurrency, setGhostCurrency] = useState<string>("");
+
   const [intangibility, setIntangibility] = useState(0);
   const [sulphur, setSulphur] = useState(0);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [destroyed, setDestroyed] = useState(false);
   const [ducatMsg, setDucatMsg] = useState<"saved" | "destroyed" | null>(null);
-
-  // React 배칭으로 같은 틱에 연속 클릭 시 상태가 낡지 않도록 ref로 미러링
   const intangRef = useRef(0);
 
-  const applyCraft = (c: Currency) => {
-    if (destroyed || c.excluded) return;
+  const importItem = (text: string) => {
+    const parsed = parseItemText(text);
+    if ("error" in parsed) {
+      setParseError(true);
+      return;
+    }
+    setParseError(false);
+    setItem(parsed);
+    setGhosts(null);
+    setDestroyed(false);
+    setDucatMsg(null);
+    // 무형화는 아이템(베이스) 단위 → 새 아이템이면 리셋
+    intangRef.current = 0;
+    setIntangibility(0);
+    setLog([]);
+  };
+
+  const craft = (c: VesperCurrency) => {
+    if (!item || destroyed || ghosts) return;
+    if (!canApply(item, c).ok) return;
     const cur = intangRef.current;
     const single = Math.random() * 100 < cur;
-    const after = Math.min(100, cur + tierValue(CFG.intangibilityTiers, c.tier));
+    const after = Math.min(100, cur + tierIntangibility(c.tier));
     intangRef.current = after;
+    const g = generateGhosts(item, c, single);
+    setGhosts(g);
+    setGhostCurrency(c.name);
+    setIntangibility(after);
+    setSulphur((s) => s + tierSulphur(c.tier));
     setLog((l) => [
-      { id: Date.now() + l.length, currency: c.name, single, ghosts: single ? 1 : CFG.ghostCopies.value, intangibilityAfter: after },
+      { id: Date.now() + l.length, currency: c.name, single, ghosts: g.length, intangibilityAfter: after },
       ...l,
     ]);
-    setIntangibility(after);
-    setSulphur((s) => s + tierValue(CFG.sulphurCostTiers, c.tier));
     setDucatMsg(null);
   };
 
-  const freshBase = () => {
-    intangRef.current = 0;
-    setIntangibility(0);
-    setSulphur(0);
-    setLog([]);
-    setDestroyed(false);
-    setDucatMsg(null);
+  const pickGhost = (g: ParsedItem) => {
+    setItem(g);
+    setGhosts(null);
   };
 
   const resetDucat = () => {
-    if (destroyed) return;
-    if (Math.random() < CFG.resetDucatOdds.value) {
+    if (destroyed || !item || ghosts) return;
+    if (Math.random() < RESET_DUCAT_ODDS) {
       intangRef.current = 0;
       setIntangibility(0);
       setDucatMsg("saved");
     } else {
       setDestroyed(true);
+      setItem(null);
+      setGhosts(null);
       setDucatMsg("destroyed");
     }
   };
@@ -94,40 +171,128 @@ export default function AllflameSimulator() {
         ⚠ {t("af_banner")}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        {/* 좌측: 화폐 선택 */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-          <h2 className="mb-3 font-semibold text-zinc-200">{t("af_currency")}</h2>
-          <ul className="space-y-1">
-            {CURRENCIES.map((c) => (
-              <li key={c.name}>
+      <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+        {/* 좌측: 아이템 + 화폐 */}
+        <section className="space-y-4">
+          {/* 아이템 불러오기 / 카드 */}
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
+            <h2 className="mb-3 font-semibold text-zinc-200">{t("af_item_title")}</h2>
+            {!item ? (
+              <>
+                <textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  placeholder={t("af_paste_placeholder")}
+                  rows={7}
+                  className="w-full rounded border border-zinc-700 bg-zinc-950 px-2.5 py-2 font-mono text-[11px] text-zinc-300 placeholder-zinc-600 focus:border-amber-600 focus:outline-none"
+                />
+                {parseError && (
+                  <p className="mt-1 rounded border border-red-800 bg-red-950/50 px-2 py-1 text-xs text-red-300">
+                    {t("af_parse_error")}
+                  </p>
+                )}
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => importItem(pasteText)}
+                    disabled={!pasteText.trim()}
+                    className="rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {t("af_import_btn")}
+                  </button>
+                  <button
+                    onClick={() => importItem(SAMPLE_ITEM_TEXT)}
+                    className="rounded bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
+                  >
+                    {t("af_sample_btn")}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <ItemCard item={item} />
                 <button
-                  onClick={() => applyCraft(c)}
-                  disabled={destroyed || c.excluded}
-                  className={`flex w-full items-center justify-between gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors ${
-                    c.excluded || destroyed
-                      ? "cursor-not-allowed text-zinc-600"
-                      : "text-zinc-300 hover:bg-zinc-800"
-                  }`}
-                  title={c.excluded ? t("af_excluded") : t("af_apply")}
+                  onClick={() => {
+                    setItem(null);
+                    setGhosts(null);
+                    setPasteText("");
+                  }}
+                  className="mt-2 rounded bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
                 >
-                  <span>{c.name}</span>
-                  {c.excluded ? (
-                    <span className="text-[10px] text-red-500">✕ {t("af_excluded")}</span>
-                  ) : (
-                    <span className={`text-[10px] ${TIER_CLS[c.tier]}`}>
-                      +{tierValue(CFG.intangibilityTiers, c.tier)}% · {t(TIER_KEY[c.tier])}
-                    </span>
-                  )}
+                  {t("af_reimport")}
                 </button>
-              </li>
-            ))}
-          </ul>
+              </>
+            )}
+            {destroyed && (
+              <p className="mt-2 rounded border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-300">
+                💥 {t("af_destroyed")}
+              </p>
+            )}
+          </div>
+
+          {/* 화폐 목록 */}
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
+            <h2 className="mb-3 font-semibold text-zinc-200">{t("af_currency")}</h2>
+            <ul className="space-y-1">
+              {VESPER_CURRENCIES.map((c) => {
+                const applicable = item ? canApply(item, c) : { ok: false, reason: undefined };
+                const blocked = !item || destroyed || !!ghosts || !applicable.ok;
+                return (
+                  <li key={c.id}>
+                    <button
+                      onClick={() => craft(c)}
+                      disabled={blocked}
+                      title={!item ? t("af_no_item") : applicable.reason ?? t("af_apply")}
+                      className={`flex w-full items-center justify-between gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors ${
+                        blocked ? "cursor-not-allowed text-zinc-600" : "text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                    >
+                      <span>
+                        {c.ducat && <span className="mr-1 text-[10px] text-amber-500">◆</span>}
+                        {c.name}
+                      </span>
+                      {c.disabled ? (
+                        <span className="text-[10px] text-red-500">✕</span>
+                      ) : (
+                        <span className={`text-[10px] ${TIER_CLS[c.tier]}`}>
+                          +{tierIntangibility(c.tier)}% · {t(TIER_KEY[c.tier])}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </section>
 
-        {/* 우측: 상태 + 로그 + 두캇 */}
+        {/* 우측: 고스트 / 상태 / 로그 / 두캇 */}
         <section className="space-y-4">
-          {/* 세션 상태 */}
+          {/* 고스트 미리보기 */}
+          {ghosts && (
+            <div className="rounded-lg border border-amber-700 bg-zinc-900/80 p-4">
+              <h2 className="mb-1 font-semibold text-amber-300">
+                {t("af_ghost_title")} <span className="text-sm font-normal text-zinc-400">({ghostCurrency})</span>
+              </h2>
+              <p className="mb-3 text-xs text-zinc-500">
+                {ghosts.length === 1 ? t("af_single_outcome") : t("af_ghost_note")}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {ghosts.map((g, i) => (
+                  <div key={i} className="flex flex-col">
+                    <ItemCard item={g} compact />
+                    <button
+                      onClick={() => pickGhost(g)}
+                      className="mt-1.5 rounded bg-amber-600 px-2 py-1.5 text-xs font-medium text-black transition-colors hover:bg-amber-500"
+                    >
+                      {t("af_ghost_pick")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 상태 */}
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
             <h2 className="mb-3 font-semibold text-zinc-200">{t("af_state")}</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -152,14 +317,8 @@ export default function AllflameSimulator() {
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
-                onClick={freshBase}
-                className="rounded bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
-              >
-                {t("af_reset_recomb")}
-              </button>
-              <button
                 onClick={resetDucat}
-                disabled={destroyed}
+                disabled={destroyed || !item || !!ghosts}
                 className="rounded bg-red-900/60 px-3 py-1.5 text-xs font-medium text-red-200 transition-colors hover:bg-red-900 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {t("af_reset_ducat")}
@@ -170,20 +329,15 @@ export default function AllflameSimulator() {
                 ✓ {t("af_ducat_saved")}
               </p>
             )}
-            {destroyed && (
-              <p className="mt-2 rounded border border-red-800 bg-red-950/50 px-3 py-2 text-xs text-red-300">
-                💥 {t("af_destroyed")}
-              </p>
-            )}
           </div>
 
-          {/* 제작 로그 */}
+          {/* 로그 */}
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
             <h2 className="mb-3 font-semibold text-zinc-200">{t("af_log")}</h2>
             {log.length === 0 ? (
               <p className="text-sm text-zinc-500">—</p>
             ) : (
-              <ul className="max-h-64 space-y-1 overflow-y-auto pr-1 text-sm">
+              <ul className="max-h-52 space-y-1 overflow-y-auto pr-1 text-sm">
                 {log.map((e) => (
                   <li
                     key={e.id}
@@ -193,8 +347,8 @@ export default function AllflameSimulator() {
                   >
                     <span>{e.currency}</span>
                     <span className="text-xs">
-                      {e.single ? t("af_single_outcome") : `${e.ghosts} ${t("af_ghosts")}`} ·{" "}
-                      {t("af_intangibility")} {e.intangibilityAfter}%
+                      {e.single ? t("af_single_outcome") : `${e.ghosts} ${t("af_ghosts")}`} · {t("af_intangibility")}{" "}
+                      {e.intangibilityAfter}%
                     </span>
                   </li>
                 ))}

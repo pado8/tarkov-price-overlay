@@ -1,0 +1,28 @@
+{
+  "_comment": "간이 모드 풀 (placeholder). 정식 모드 풀(RePoE/데이터마이닝, 태그·티어·가중치 포함) 주입 전까지 방어구 공통 접두/접미 대표 모드로 시뮬레이션. status: placeholder — 3.29 실데이터로 교체 대상.",
+  "status": "placeholder",
+  "prefixes": [
+    { "text": "+{v} to maximum Life", "min": 60, "max": 99 },
+    { "text": "+{v} to maximum Mana", "min": 35, "max": 79 },
+    { "text": "{v}% increased Armour", "min": 43, "max": 115 },
+    { "text": "{v}% increased Evasion Rating", "min": 43, "max": 115 },
+    { "text": "{v}% increased Energy Shield", "min": 43, "max": 115 },
+    { "text": "+{v} to maximum Energy Shield", "min": 30, "max": 60 },
+    { "text": "+{v} to Armour", "min": 120, "max": 460 },
+    { "text": "+{v} to Evasion Rating", "min": 120, "max": 460 }
+  ],
+  "suffixes": [
+    { "text": "+{v}% to Fire Resistance", "min": 24, "max": 45 },
+    { "text": "+{v}% to Cold Resistance", "min": 24, "max": 45 },
+    { "text": "+{v}% to Lightning Resistance", "min": 24, "max": 45 },
+    { "text": "+{v}% to Chaos Resistance", "min": 11, "max": 35 },
+    { "text": "+{v} to Strength", "min": 23, "max": 55 },
+    { "text": "+{v} to Dexterity", "min": 23, "max": 55 },
+    { "text": "+{v} to Intelligence", "min": 23, "max": 55 },
+    { "text": "+{v} to all Attributes", "min": 10, "max": 16 },
+    { "text": "{v}% increased Rarity of Items found", "min": 11, "max": 28 },
+    { "text": "{v}% increased Stun and Block Recovery", "min": 11, "max": 28 },
+    { "text": "{v}% of Physical Damage from Hits taken as Fire Damage", "min": 4, "max": 10 },
+    { "text": "Regenerate {v} Life per second", "min": 16, "max": 48 }
+  ]
+}
