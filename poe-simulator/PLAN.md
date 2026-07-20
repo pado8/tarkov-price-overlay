@@ -5,9 +5,9 @@
 
 ## 0. 세션 제약 (중요)
 
-- **이 프로젝트는 현재 로컬 전용.** 사용자와의 약속: 대화 내용·작업물을 외부로 내보내지 않음 → **git push / PR / Vercel 배포 / Artifact 게시 금지**. 커밋은 로컬 `dev` 브랜치까지만.
-- 웹에서 **읽어오는 것**(검색·API 호출·문서 열람)은 허용됨.
-- 배포는 사용자가 명시적으로 결정할 때만 진행 (TODO #7).
+- **2026-07-20 사용자 결정으로 런칭됨.** Vercel 프로덕션 라이브: https://poe-simulator.vercel.app (프로젝트 `aquapados-projects/poe-simulator`, `poe-simulator/` 폴더에서 `vercel deploy --prod`). 커스텀 도메인 `poe.aquapado.com` 프로젝트에 추가됨 — **DNS(CNAME)는 사용자 몫**(hosting.co.kr, 대시보드 고유 CNAME 값 확인 필요).
+- git push / PR은 여전히 금지 (모노레포 로컬 전용). 커밋은 로컬 `dev`까지만, 배포는 vercel CLI 직접 업로드.
+- **한글 용어는 docs/TRANSLATION.md 규칙 준수** — 용어집(docs/poe-glossary.json) 우선, 추측 금지, 미확정은 docs/TODO-terms.md.
 
 ## 1. 프로젝트 배경
 
@@ -23,7 +23,7 @@
   - **/allflame**: 인게임 Ctrl+C 아이템 붙여넣기 → 화폐 16종(두캇 포함) → 고스트 미리보기 택1. 무형화=점감 모델(기본)·유황·로그. 새 모드는 간이 풀 근사.
   - **/chromatic**: 원하는 소켓 입력 → 색채 스팸 vs 벤치 3종 vs 삼색의 징조 5개 방법을 평균 비용으로 랭킹(몬테카를로 30k/방법). 비백색 확률·징조 가격 수동 입력 가능.
 - 사용자 피드백 반영 완료: 색채=siveran식 비교표, 올플레임=아이템 기반, 징조 추가, 방송 검토 1건 수정.
-- **번역(i18n 문구)은 사용자가 별도 프로그램으로 처리 예정** — 새 키 추가만 하고 문구 품질은 신경쓰지 말 것.
+- **한글화 전면 교정 완료 (`c02310e`, 07-20)**: docs/ 용어집 기반 감사→교정 (색채의 오브·홈·하얀색·고유·고정 속성·두카트·작업대·휩싸는 수정·삼색성의 징조). 데이터 레이어 en/ko 쌍(화폐 name_ko·크리스탈 name_ko·슬롯/등급/능력치 i18n), canApply 사유 i18n 키화, 색채 계산기 하이드레이션 수정(마운트 후 몬테카를로). 미확정 용어 = docs/TODO-terms.md (리그 오픈 후 poedb.tw/kr 재확인 → 용어집 이관 + 코드 교정).
 - 프로덕션 빌드 클린(8페이지 정적). **주의: dev 서버 실행 중 `npm run build` 하면 .next 캐시 충돌로 500 → 서버 중지 후 빌드하거나 빌드 후 .next 삭제+재시작.**
 - 실행: 프리뷰 서버 `poe-simulator`(포트 3100, 루트 `.claude/launch.json`에 등록됨 — launch.json은 gitignore) 또는 `npm run dev`.
 
@@ -118,5 +118,5 @@
 1. **[7/24 이후] 데이터 주입 5건** — 위 런북 ①~⑤
 2. 역방향 조회: 원하는 흔적 모드 → 어떤 원본 유니크를 인슈라우딩해야 하나 (vestigial.json 채워진 뒤에만 의미 있음)
 3. UI 다듬기: 모바일 반응형 점검, 유니크 리스트 가상화(성능), OG/SEO 메타
-4. 배포 (사용자 결정 대기 — §0 제약 참조): Vercel + 도메인(예: poe.aquapado.com), 배포 시 GGG 팬 도구 가이드라인 준수 확인
+4. ~~배포~~ **완료 (07-20)**: https://poe-simulator.vercel.app 라이브. 남은 것 = poe.aquapado.com DNS(사용자, hosting.co.kr) + 새 배포는 `vercel deploy --prod`. GGG 무관 고지 푸터 확인됨
 5. 색채 계산기: 닫힌 형태 확률식으로 교체 검토(몬테카를로 대신) — 공식 확정되면 정확도·성능 모두 이득
