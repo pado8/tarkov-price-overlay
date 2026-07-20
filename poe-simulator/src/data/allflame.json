@@ -16,7 +16,12 @@
       "status": "assumed",
       "notes": "화폐 등급별 망자의 유황 비용 — 수치 미공개"
     },
-    "resetDucatOdds": { "value": 0.5, "status": "reported", "notes": "50% 무형화 전체 제거 / 50% 아이템 파괴" }
+    "resetDucatOdds": { "value": 0.5, "status": "reported", "notes": "50% 무형화 전체 제거 / 50% 아이템 파괴" },
+    "intangibilityModel": {
+      "value": "reduction",
+      "status": "reported",
+      "notes": "라이브 방송 정리(epiccarry 등): '제작할수록 결과 개수가 점감'. aoeah는 '단일 결과가 될 확률 누적'으로 상충 — 방송 표현을 기본으로 채택. 'chance'로 바꾸면 확률 모델. 리그에서 실측 후 확정"
+    }
   },
   "currencies": [
     { "name": "Orb of Transmutation", "tier": "low" },

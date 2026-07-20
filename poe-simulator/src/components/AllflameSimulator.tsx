@@ -6,6 +6,10 @@ import { parseItemText, SAMPLE_ITEM_TEXT, type ParsedItem } from "@/lib/itemPars
 import {
   canApply,
   generateGhosts,
+  GHOST_COPIES,
+  KISHARA_COPIES,
+  outcomeCount,
+  previewOutcomeCount,
   RESET_DUCAT_ODDS,
   tierIntangibility,
   tierSulphur,
@@ -104,6 +108,8 @@ export default function AllflameSimulator() {
   const [destroyed, setDestroyed] = useState(false);
   const [ducatMsg, setDucatMsg] = useState<"saved" | "destroyed" | null>(null);
   const intangRef = useRef(0);
+  // 같은 틱 연속 클릭이 고스트 대기 상태(state)를 우회하지 못하도록 ref로도 가드
+  const ghostsPendingRef = useRef(false);
 
   const importItem = (text: string) => {
     const parsed = parseItemText(text);
@@ -112,6 +118,7 @@ export default function AllflameSimulator() {
       return;
     }
     setParseError(false);
+    ghostsPendingRef.current = false;
     setItem(parsed);
     setGhosts(null);
     setDestroyed(false);
@@ -123,25 +130,28 @@ export default function AllflameSimulator() {
   };
 
   const craft = (c: VesperCurrency) => {
-    if (!item || destroyed || ghosts) return;
+    if (!item || destroyed || ghosts || ghostsPendingRef.current) return;
     if (!canApply(item, c).ok) return;
+    ghostsPendingRef.current = true;
     const cur = intangRef.current;
-    const single = Math.random() * 100 < cur;
+    // 방송 기준: 무형화가 쌓일수록 이번 제작의 고스트 개수가 점감
+    const count = outcomeCount(c.id === "kishara" ? KISHARA_COPIES : GHOST_COPIES, cur);
     const after = Math.min(100, cur + tierIntangibility(c.tier));
     intangRef.current = after;
-    const g = generateGhosts(item, c, single);
+    const g = generateGhosts(item, c, count);
     setGhosts(g);
     setGhostCurrency(c.name);
     setIntangibility(after);
     setSulphur((s) => s + tierSulphur(c.tier));
     setLog((l) => [
-      { id: Date.now() + l.length, currency: c.name, single, ghosts: g.length, intangibilityAfter: after },
+      { id: Date.now() + l.length, currency: c.name, single: count === 1, ghosts: g.length, intangibilityAfter: after },
       ...l,
     ]);
     setDucatMsg(null);
   };
 
   const pickGhost = (g: ParsedItem) => {
+    ghostsPendingRef.current = false;
     setItem(g);
     setGhosts(null);
   };
@@ -153,6 +163,7 @@ export default function AllflameSimulator() {
       setIntangibility(0);
       setDucatMsg("saved");
     } else {
+      ghostsPendingRef.current = false;
       setDestroyed(true);
       setItem(null);
       setGhosts(null);
@@ -212,6 +223,7 @@ export default function AllflameSimulator() {
                 <ItemCard item={item} />
                 <button
                   onClick={() => {
+                    ghostsPendingRef.current = false;
                     setItem(null);
                     setGhosts(null);
                     setPasteText("");
@@ -303,8 +315,11 @@ export default function AllflameSimulator() {
                 </p>
               </div>
               <div className="rounded bg-zinc-950/60 p-3">
-                <p className="text-xs text-zinc-500">{t("af_single_risk")}</p>
-                <p className="text-xl font-bold text-zinc-100">{intangibility}%</p>
+                <p className="text-xs text-zinc-500">{t("af_next_ghosts")}</p>
+                <p className="text-xl font-bold text-zinc-100">
+                  {previewOutcomeCount(GHOST_COPIES, intangibility)}
+                  <span className="text-sm font-normal text-zinc-500"> / {GHOST_COPIES}</span>
+                </p>
               </div>
               <div className="rounded bg-zinc-950/60 p-3">
                 <p className="text-xs text-zinc-500">{t("af_sulphur_spent")}</p>

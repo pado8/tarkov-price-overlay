@@ -46,6 +46,25 @@ export function tierSulphur(tier: Tier): number {
 }
 export const RESET_DUCAT_ODDS: number = CFG.resetDucatOdds.value;
 
+/** 무형화 모델: "reduction"(방송: 결과 개수 점감) | "chance"(단일 결과 확률) — allflame.json에서 전환 */
+const INTANG_MODEL: string =
+  (CFG as unknown as { intangibilityModel?: { value: string } }).intangibilityModel?.value ?? "reduction";
+
+/** 현재 무형화 수치에서 이번 제작의 고스트 개수 (chance 모델은 랜덤 — 렌더에서 쓰지 말 것) */
+export function outcomeCount(base: number, intangibility: number): number {
+  if (INTANG_MODEL === "chance") {
+    return Math.random() * 100 < intangibility ? 1 : base;
+  }
+  return previewOutcomeCount(base, intangibility);
+}
+
+/** 표시용 결정적 예상 개수: reduction=점감 공식, chance=기본 개수(발동 전 기준) */
+export function previewOutcomeCount(base: number, intangibility: number): number {
+  if (INTANG_MODEL === "chance") return base;
+  // reduction: 무형화 비율만큼 결과 개수 점감 (최소 1)
+  return Math.max(1, Math.ceil(base * (1 - intangibility / 100)));
+}
+
 // ---------- 간이 모드 풀 ----------
 
 interface GenericMod {
@@ -215,18 +234,16 @@ export function applyCurrency(item: ParsedItem, c: VesperCurrency): ParsedItem {
   return v;
 }
 
-/** 고스트 미리보기 생성. 무형화 발동(single) 시 1개, Kishara는 4개(각각 다른 모드 유지) */
-export function generateGhosts(item: ParsedItem, c: VesperCurrency, single: boolean): ParsedItem[] {
+/** 고스트 미리보기 생성. count = outcomeCount() 결과. Kishara는 각각 다른 원본 모드 유지 */
+export function generateGhosts(item: ParsedItem, c: VesperCurrency, count: number): ParsedItem[] {
   if (c.id === "kishara") {
-    // 서로 다른 원본 모드를 유지하는 4개 (모드 수보다 많으면 중복 허용)
+    // 서로 다른 원본 모드를 유지 (모드 수보다 많으면 중복 허용)
     const shuffled = [...item.explicits].sort(() => Math.random() - 0.5);
-    const count = single ? 1 : KISHARA_COPIES;
     return Array.from({ length: count }, (_, i) => {
       const v = clone(item);
       v.explicits = [shuffled[i % shuffled.length]];
       return v;
     });
   }
-  const count = single ? 1 : GHOST_COPIES;
   return Array.from({ length: count }, () => applyCurrency(item, c));
 }
