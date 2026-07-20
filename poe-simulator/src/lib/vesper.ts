@@ -10,29 +10,35 @@ export type Tier = "low" | "medium" | "high";
 export interface VesperCurrency {
   id: string;
   name: string;
+  name_ko?: string; // 카카오 공식 한글명 (docs/poe-glossary.json). 미확정 고유명사(두캇 등)는 영문 유지
   tier: Tier;
   ducat?: boolean;
-  disabled?: string; // 사용 불가 사유 (i18n 키 아님, 짧은 설명)
+  disabled?: string; // 사용 불가 사유 (i18n 키)
 }
 
 export const VESPER_CURRENCIES: VesperCurrency[] = [
-  { id: "transmute", name: "Orb of Transmutation", tier: "low" },
-  { id: "alt", name: "Orb of Alteration", tier: "low" },
-  { id: "aug", name: "Orb of Augmentation", tier: "low" },
-  { id: "alch", name: "Orb of Alchemy", tier: "low" },
-  { id: "scour", name: "Orb of Scouring", tier: "low" },
-  { id: "chaos", name: "Chaos Orb", tier: "medium" },
-  { id: "regal", name: "Regal Orb", tier: "medium" },
-  { id: "essence", name: "Essence (reforge)", tier: "medium" },
-  { id: "fossil", name: "Fossil (reforge)", tier: "medium" },
-  { id: "annul", name: "Orb of Annulment", tier: "high" },
-  { id: "exalt", name: "Exalted Orb", tier: "high" },
-  { id: "divine", name: "Divine Orb", tier: "high" },
+  { id: "transmute", name: "Orb of Transmutation", name_ko: "변형의 오브", tier: "low" },
+  { id: "alt", name: "Orb of Alteration", name_ko: "변화의 오브", tier: "low" },
+  { id: "aug", name: "Orb of Augmentation", name_ko: "확장의 오브", tier: "low" },
+  { id: "alch", name: "Orb of Alchemy", name_ko: "연금술의 오브", tier: "low" },
+  { id: "scour", name: "Orb of Scouring", name_ko: "정제의 오브", tier: "low" },
+  { id: "chaos", name: "Chaos Orb", name_ko: "카오스 오브", tier: "medium" },
+  { id: "regal", name: "Regal Orb", name_ko: "제왕의 오브", tier: "medium" },
+  { id: "essence", name: "Essence (reforge)", name_ko: "에센스", tier: "medium" },
+  { id: "fossil", name: "Fossil (reforge)", name_ko: "화석", tier: "medium" },
+  { id: "annul", name: "Orb of Annulment", name_ko: "소멸의 오브", tier: "high" },
+  { id: "exalt", name: "Exalted Orb", name_ko: "엑잘티드 오브", tier: "high" },
+  { id: "divine", name: "Divine Orb", name_ko: "신성한 오브", tier: "high" },
   { id: "kishara", name: "Kishara's Ducat", tier: "high", ducat: true },
   { id: "genteel", name: "Genteel's Ducat", tier: "medium", ducat: true },
-  { id: "brinehook", name: "Brinehook's Ducat", tier: "high", ducat: true, disabled: "mechanics undisclosed" },
-  { id: "vaal", name: "Vaal Orb", tier: "high", disabled: "not usable with Vesper" },
+  { id: "brinehook", name: "Brinehook's Ducat", tier: "high", ducat: true, disabled: "af_undisclosed" },
+  { id: "vaal", name: "Vaal Orb", name_ko: "바알 오브", tier: "high", disabled: "af_excluded" },
 ];
+
+/** 현재 언어에 맞는 화폐 표시명 */
+export function currencyName(c: VesperCurrency, lang: string): string {
+  return lang === "ko" && c.name_ko ? c.name_ko : c.name;
+}
 
 const CFG = allflameData.config;
 export const GHOST_COPIES: number = CFG.ghostCopies.value;
@@ -119,45 +125,46 @@ function jiggleNumbers(mod: string): string {
 
 // ---------- 적용 가능 여부 ----------
 
+/** reason은 i18n 키 — 컴포넌트에서 t(reason)으로 표시 */
 export function canApply(item: ParsedItem, c: VesperCurrency): { ok: boolean; reason?: string } {
   if (c.disabled) return { ok: false, reason: c.disabled };
-  if (item.corrupted) return { ok: false, reason: "corrupted" };
+  if (item.corrupted) return { ok: false, reason: "ens_corrupted" };
   const mods = item.explicits.length;
   switch (c.id) {
     case "transmute":
-      return item.rarity === "Normal" ? { ok: true } : { ok: false, reason: "requires Normal" };
+      return item.rarity === "Normal" ? { ok: true } : { ok: false, reason: "req_normal" };
     case "alt":
-      return item.rarity === "Magic" ? { ok: true } : { ok: false, reason: "requires Magic" };
+      return item.rarity === "Magic" ? { ok: true } : { ok: false, reason: "req_magic" };
     case "aug":
-      return item.rarity === "Magic" && mods < 2 ? { ok: true } : { ok: false, reason: "requires Magic, <2 mods" };
+      return item.rarity === "Magic" && mods < 2 ? { ok: true } : { ok: false, reason: "req_magic_open" };
     case "alch":
-      return item.rarity === "Normal" ? { ok: true } : { ok: false, reason: "requires Normal" };
+      return item.rarity === "Normal" ? { ok: true } : { ok: false, reason: "req_normal" };
     case "regal":
-      return item.rarity === "Magic" ? { ok: true } : { ok: false, reason: "requires Magic" };
+      return item.rarity === "Magic" ? { ok: true } : { ok: false, reason: "req_magic" };
     case "chaos":
-      return item.rarity === "Rare" ? { ok: true } : { ok: false, reason: "requires Rare" };
+      return item.rarity === "Rare" ? { ok: true } : { ok: false, reason: "req_rare" };
     case "scour":
       return (item.rarity === "Magic" || item.rarity === "Rare")
         ? { ok: true }
-        : { ok: false, reason: "requires Magic/Rare" };
+        : { ok: false, reason: "req_magic_rare" };
     case "annul":
       return (item.rarity === "Magic" || item.rarity === "Rare") && mods > 0
         ? { ok: true }
-        : { ok: false, reason: "requires mods" };
+        : { ok: false, reason: "req_has_mods" };
     case "exalt":
-      return item.rarity === "Rare" && mods < 6 ? { ok: true } : { ok: false, reason: "requires Rare, <6 mods" };
+      return item.rarity === "Rare" && mods < 6 ? { ok: true } : { ok: false, reason: "req_rare_open" };
     case "divine":
-      return mods > 0 ? { ok: true } : { ok: false, reason: "requires mods" };
+      return mods > 0 ? { ok: true } : { ok: false, reason: "req_has_mods" };
     case "essence":
     case "fossil":
-      return item.rarity !== "Unique" ? { ok: true } : { ok: false, reason: "not on Unique" };
+      return item.rarity !== "Unique" ? { ok: true } : { ok: false, reason: "req_not_unique" };
     case "kishara":
-      return item.rarity === "Rare" && mods >= 2 ? { ok: true } : { ok: false, reason: "requires Rare, 2+ mods" };
+      return item.rarity === "Rare" && mods >= 2 ? { ok: true } : { ok: false, reason: "req_rare_2mods" };
     case "genteel": {
       const r = item.requirements;
       return (r.str ?? 0) + (r.dex ?? 0) + (r.int ?? 0) > 0
         ? { ok: true }
-        : { ok: false, reason: "requires attribute requirement" };
+        : { ok: false, reason: "req_attr" };
     }
     default:
       return { ok: false, reason: "unknown" };

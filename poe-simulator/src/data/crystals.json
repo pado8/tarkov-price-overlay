@@ -1,11 +1,12 @@
 {
   "_comment": "3.29 인슈라우딩 크리스탈 5종 ↔ 방어구 슬롯 대응. confirmed=공개 자료로 확인됨. 미확인 슬롯은 리그 시작(2026-07-24) 후 확정.",
+  "_nameKoNote": "Enshrouding Crystal=휩싸는 수정(용어집). 접두 중 카루이/마라케스/템플러/바알은 용어집 상징 항목에서 파생, 임페리얼은 추정(docs/TODO-terms.md) — 카카오 패치 후 poedb.tw/kr 재확인.",
   "crystals": [
-    { "name": "Karui Enshrouding Crystal",    "slot": null,          "confirmed": false },
-    { "name": "Imperial Enshrouding Crystal", "slot": "Boots",       "confirmed": true, "source": "poedb" },
-    { "name": "Maraketh Enshrouding Crystal", "slot": "Body Armour", "confirmed": true, "source": "aoeah 3.29 guide" },
-    { "name": "Templar Enshrouding Crystal",  "slot": null,          "confirmed": false },
-    { "name": "Vaal Enshrouding Crystal",     "slot": null,          "confirmed": false }
+    { "name": "Karui Enshrouding Crystal",    "name_ko": "카루이 휩싸는 수정",    "slot": null,          "confirmed": false },
+    { "name": "Imperial Enshrouding Crystal", "name_ko": "임페리얼 휩싸는 수정",  "slot": "Boots",       "confirmed": true, "source": "poedb" },
+    { "name": "Maraketh Enshrouding Crystal", "name_ko": "마라케스 휩싸는 수정",  "slot": "Body Armour", "confirmed": true, "source": "aoeah 3.29 guide" },
+    { "name": "Templar Enshrouding Crystal",  "name_ko": "템플러 휩싸는 수정",    "slot": null,          "confirmed": false },
+    { "name": "Vaal Enshrouding Crystal",     "name_ko": "바알 휩싸는 수정",      "slot": null,          "confirmed": false }
   ],
   "unassignedSlots": ["Helmet", "Gloves", "Shield"]
 }

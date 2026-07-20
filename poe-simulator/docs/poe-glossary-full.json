@@ -1,0 +1,1357 @@
+{
+  "화폐": [
+    {
+      "en": "Chaos Orb",
+      "ko": "카오스 오브",
+      "note": "기축 화폐. 약칭: 카오스 [poedb 확인]"
+    },
+    {
+      "en": "Divine Orb",
+      "ko": "신성한 오브",
+      "note": "약칭: 디바인/디바 [poedb 확인]"
+    },
+    {
+      "en": "Exalted Orb",
+      "ko": "엑잘티드 오브",
+      "note": "약칭: 엑잘 [poedb 확인]"
+    },
+    {
+      "en": "Mirror of Kalandra",
+      "ko": "칼란드라의 거울",
+      "note": "최고가 화폐. 약칭: 미러 [poedb 확인]"
+    },
+    {
+      "en": "Mirror Shard",
+      "ko": "거울 파편",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Orb of Alchemy",
+      "ko": "연금술의 오브",
+      "note": "약칭: 알케"
+    },
+    {
+      "en": "Orb of Alteration",
+      "ko": "변화의 오브",
+      "note": "약칭: 알트 [poedb 확인]"
+    },
+    {
+      "en": "Orb of Transmutation",
+      "ko": "변형의 오브",
+      "note": ""
+    },
+    {
+      "en": "Orb of Augmentation",
+      "ko": "확장의 오브",
+      "note": ""
+    },
+    {
+      "en": "Orb of Scouring",
+      "ko": "정제의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Orb of Regret",
+      "ko": "후회의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Orb of Annulment",
+      "ko": "소멸의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Orb of Fusing",
+      "ko": "연결의 오브",
+      "note": "약칭: 퓨징 [poedb 확인]"
+    },
+    {
+      "en": "Jeweller's Orb",
+      "ko": "쥬얼러 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Chromatic Orb",
+      "ko": "색채의 오브",
+      "note": "3.29부터 홈 1개를 하얀색이 아닌 색으로 변경. 약칭: 크롬 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Blessed Orb",
+      "ko": "축복의 오브",
+      "note": ""
+    },
+    {
+      "en": "Regal Orb",
+      "ko": "제왕의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Vaal Orb",
+      "ko": "바알 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Ancient Orb",
+      "ko": "고대의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Awakener's Orb",
+      "ko": "각성자의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Sacred Orb",
+      "ko": "성스러운 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Fracturing Orb",
+      "ko": "분열의 오브",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Veiled Chaos Orb",
+      "ko": "장막의 카오스 오브",
+      "note": "[poedb 확인] Veiled = 장막의"
+    },
+    {
+      "en": "Tainted (currency)",
+      "ko": "더럽혀진",
+      "note": "예: 더럽혀진 색채의 오브 [poedb 확인]"
+    },
+    {
+      "en": "Blacksmith's Whetstone",
+      "ko": "대장장이의 숫돌",
+      "note": ""
+    },
+    {
+      "en": "Armourer's Scrap",
+      "ko": "방어구 장인의 고철",
+      "note": ""
+    },
+    {
+      "en": "Glassblower's Bauble",
+      "ko": "유리직공의 방울",
+      "note": ""
+    },
+    {
+      "en": "Gemcutter's Prism",
+      "ko": "세공사의 프리즘",
+      "note": "약칭: GCP [poedb 확인]"
+    },
+    {
+      "en": "Cartographer's Chisel",
+      "ko": "지도제작자의 끌",
+      "note": ""
+    },
+    {
+      "en": "Scroll of Wisdom",
+      "ko": "지혜의 두루마리",
+      "note": ""
+    },
+    {
+      "en": "Portal Scroll",
+      "ko": "차원문 두루마리",
+      "note": ""
+    },
+    {
+      "en": "Sextant",
+      "ko": "육분의",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Scarab",
+      "ko": "갑충석",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Fossil",
+      "ko": "화석",
+      "note": "탐광 화폐 [poedb 확인]"
+    },
+    {
+      "en": "Resonator",
+      "ko": "공명기",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Essence",
+      "ko": "에센스",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Oil",
+      "ko": "성유",
+      "note": "역병 화폐 [poedb 확인]"
+    },
+    {
+      "en": "Catalyst",
+      "ko": "기폭제",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Omen",
+      "ko": "징조",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Tattoo",
+      "ko": "문신",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Lifeforce",
+      "ko": "생기 결정",
+      "note": "수확 화폐 [poedb 확인]"
+    },
+    {
+      "en": "Stacked Deck",
+      "ko": "카드 묶음",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Enshrouding Crystal",
+      "ko": "휩싸는 수정",
+      "note": "3.29 신규 화폐. 카루이/제국/마라케스/템플러/바알 5종, 군단 장군 드랍 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Ducat",
+      "ko": "두카트",
+      "note": "해저에서 획득. 아이템 변형용 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Delirium Orb",
+      "ko": "무궁한 환영의 오브",
+      "note": "3.29부터 획득 불가 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Abyssal Delirium Orb",
+      "ko": "심연의 환영의 오브",
+      "note": "3.29부터 획득 불가 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Abyss Scarab of Edifice",
+      "ko": "수정의 심연 갑충석",
+      "note": "구 \"건축물의 심연 갑충석\" [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Omen of Trichromacy",
+      "ko": "삼색성의 징조",
+      "note": "구 \"표백의 징조\" [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Trarthan Scarab",
+      "ko": "트라투스 갑충석",
+      "note": "[카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "아이템": [
+    {
+      "en": "Body Armour",
+      "ko": "갑옷",
+      "note": "방어구 슬롯 [poedb 확인]"
+    },
+    {
+      "en": "Helmet",
+      "ko": "투구",
+      "note": "방어구 슬롯 [poedb 확인]"
+    },
+    {
+      "en": "Gloves",
+      "ko": "장갑",
+      "note": "방어구 슬롯 [poedb 확인]"
+    },
+    {
+      "en": "Boots",
+      "ko": "장화",
+      "note": "방어구 슬롯 [poedb 확인]"
+    },
+    {
+      "en": "Shield",
+      "ko": "방패",
+      "note": "방어구 슬롯 [poedb 확인]"
+    },
+    {
+      "en": "Currency",
+      "ko": "화폐",
+      "note": "아이템 카테고리명 [poedb 확인]"
+    },
+    {
+      "en": "Divination Card",
+      "ko": "점술 카드",
+      "note": "[poedb 확인: 점술]"
+    },
+    {
+      "en": "Prefix",
+      "ko": "접두어",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Suffix",
+      "ko": "접미어",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Implicit",
+      "ko": "고정 속성",
+      "note": "커뮤니티: 고정옵. Enchantment는 \"인챈트 속성\" [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Corrupted",
+      "ko": "타락한",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Fractured",
+      "ko": "분열된",
+      "note": "[poedb 확인: 분열된 화석]"
+    },
+    {
+      "en": "Synthesised",
+      "ko": "합성된",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Quality",
+      "ko": "퀄리티",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Socket",
+      "ko": "홈",
+      "note": "3.29부터 기본 하얀색 홈. 커뮤니티: 소켓 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Link",
+      "ko": "연결",
+      "note": "예: 6-link = 6연결. 약칭: 6링"
+    },
+    {
+      "en": "Unique",
+      "ko": "고유",
+      "note": "고유 아이템 = 유니크"
+    },
+    {
+      "en": "Rare",
+      "ko": "희귀",
+      "note": ""
+    },
+    {
+      "en": "Magic",
+      "ko": "마법",
+      "note": ""
+    },
+    {
+      "en": "Normal",
+      "ko": "일반",
+      "note": ""
+    },
+    {
+      "en": "Flask",
+      "ko": "플라스크",
+      "note": ""
+    },
+    {
+      "en": "Jewel",
+      "ko": "주얼",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Cluster Jewel",
+      "ko": "클러스터 주얼",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Incubator",
+      "ko": "인큐베이터",
+      "note": "3.29부터 획득 불가. 스탠다드 기존분·배양된 아이템은 유지 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Enshrouded Item",
+      "ko": "휩싸인 아이템",
+      "note": "휩싸는 수정 사용 결과. 끝없는 분쟁의 영토에서 충전 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Vestigial Unique",
+      "ko": "흔적 고정 속성",
+      "note": "정식 표기는 Vestigial implicit. 변환 결과물에 남는 원본 속성 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Abyssal Jewel",
+      "ko": "심연 주얼",
+      "note": "3.29부터 심연 전용(탐광 심연 환경 예외) [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Stygian Vise",
+      "ko": "명계의 조임쇠",
+      "note": "3.29부터 심연에서만 획득 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Allflame Ember",
+      "ko": "올플레임 잉걸불",
+      "note": "3.29: 연합 지휘자가 쿨레막의 올플레임 잉걸불만 드랍 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "White Socket",
+      "ko": "하얀색 홈",
+      "note": "3.29부터 기본값. 젬 색상 무관 장착 가능 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Triad Grip",
+      "ko": "삼합의 손아귀",
+      "note": "3.29: 홈 색상→장착 젬 색상 기준으로 변경 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Warrant",
+      "ko": "소환장",
+      "note": "용병 재대결권. 거래 가능 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Enchantment",
+      "ko": "인챈트 속성",
+      "note": "Implicit(고정 속성)과 구분 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "파편": [
+    {
+      "en": "Timeless Emblem",
+      "ko": "무궁한 상징",
+      "note": "예: 무궁한 마라케스 상징 [poedb 확인]"
+    },
+    {
+      "en": "Simulacrum",
+      "ko": "복제된 영토",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Timeless Splinter",
+      "ko": "무궁한 파편",
+      "note": "3.29부터 군단 인카운터·아틀라스 탐험가 완료 지도에서만 드랍 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Unrelenting Timeless Emblem",
+      "ko": "가차없는 무궁한 상징",
+      "note": "3.29에서 제거. 보유분은 일반 무궁한 상징으로 전환 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Eternal Emblem",
+      "ko": "무궁한 영원의 상징",
+      "note": "3.29 속성 개편 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Karui Emblem",
+      "ko": "무궁한 카루이 상징",
+      "note": "3.29 속성 개편 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Maraketh Emblem",
+      "ko": "무궁한 마라케스 상징",
+      "note": "3.29 속성 개편 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Templar Emblem",
+      "ko": "무궁한 템플러 상징",
+      "note": "3.29 속성 개편 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Timeless Vaal Emblem",
+      "ko": "무궁한 바알 상징",
+      "note": "3.29 속성 개편 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "능력치": [
+    {
+      "en": "Strength",
+      "ko": "힘",
+      "note": ""
+    },
+    {
+      "en": "Dexterity",
+      "ko": "민첩",
+      "note": ""
+    },
+    {
+      "en": "Intelligence",
+      "ko": "지능",
+      "note": ""
+    },
+    {
+      "en": "Life",
+      "ko": "생명력",
+      "note": "커뮤니티: 피통"
+    },
+    {
+      "en": "Mana",
+      "ko": "마나",
+      "note": ""
+    },
+    {
+      "en": "Energy Shield",
+      "ko": "에너지 보호막",
+      "note": "약칭: ES/보호막"
+    },
+    {
+      "en": "Armour",
+      "ko": "방어도",
+      "note": ""
+    },
+    {
+      "en": "Evasion",
+      "ko": "회피",
+      "note": ""
+    },
+    {
+      "en": "Block",
+      "ko": "막기",
+      "note": ""
+    },
+    {
+      "en": "Suppress Spell Damage",
+      "ko": "주문 피해 억제",
+      "note": "약칭: 주문 억제"
+    },
+    {
+      "en": "Resistance",
+      "ko": "저항",
+      "note": "화염/냉기/번개/카오스 저항"
+    }
+  ],
+  "피해": [
+    {
+      "en": "Physical Damage",
+      "ko": "물리 피해",
+      "note": ""
+    },
+    {
+      "en": "Elemental Damage",
+      "ko": "원소 피해",
+      "note": ""
+    },
+    {
+      "en": "Fire / Cold / Lightning / Chaos",
+      "ko": "화염 / 냉기 / 번개 / 카오스",
+      "note": ""
+    },
+    {
+      "en": "Damage over Time",
+      "ko": "지속 피해",
+      "note": "약칭: 도트(DoT)"
+    },
+    {
+      "en": "Hit",
+      "ko": "명중",
+      "note": "Accuracy(정확도)와 구분. 예: 명중 및 상태 이상 피해 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Accuracy",
+      "ko": "정확도",
+      "note": "Hit(명중)와 구분 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Critical Strike",
+      "ko": "치명타",
+      "note": "약칭: 크리"
+    },
+    {
+      "en": "Attack Speed",
+      "ko": "공격 속도",
+      "note": "약칭: 공속"
+    },
+    {
+      "en": "Cast Speed",
+      "ko": "시전 속도",
+      "note": ""
+    },
+    {
+      "en": "More",
+      "ko": "증폭",
+      "note": "승연산. \"증가(increased)\"와 반드시 구분 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Less",
+      "ko": "감폭",
+      "note": "승연산 감소. \"감소(reduced)\"와 구분 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Increased",
+      "ko": "증가",
+      "note": "합연산 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Reduced",
+      "ko": "감소",
+      "note": "합연산 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Critical Strike Multiplier",
+      "ko": "치명타 피해 배율",
+      "note": "[카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "상태 이상": [
+    {
+      "en": "Ignite",
+      "ko": "점화",
+      "note": ""
+    },
+    {
+      "en": "Chill",
+      "ko": "냉각",
+      "note": ""
+    },
+    {
+      "en": "Freeze",
+      "ko": "동결",
+      "note": "\"빙결\" 아님. 예: 25% 확률로 동결 유발 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Shock",
+      "ko": "감전",
+      "note": ""
+    },
+    {
+      "en": "Poison",
+      "ko": "중독",
+      "note": ""
+    },
+    {
+      "en": "Bleed",
+      "ko": "출혈",
+      "note": ""
+    },
+    {
+      "en": "Blind",
+      "ko": "실명",
+      "note": ""
+    },
+    {
+      "en": "Taunt",
+      "ko": "도발",
+      "note": ""
+    },
+    {
+      "en": "Sap",
+      "ko": "위축",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Hinder",
+      "ko": "이동 방해",
+      "note": "[카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "키워드": [
+    {
+      "en": "Aura",
+      "ko": "오라",
+      "note": ""
+    },
+    {
+      "en": "Curse",
+      "ko": "저주",
+      "note": ""
+    },
+    {
+      "en": "Hex",
+      "ko": "사술",
+      "note": "저주의 하위 분류"
+    },
+    {
+      "en": "Mark",
+      "ko": "징표",
+      "note": "저주 하위 분류. 예: 징표 찍힌 적 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Totem",
+      "ko": "토템",
+      "note": ""
+    },
+    {
+      "en": "Trap",
+      "ko": "덫",
+      "note": "\"함정\" 아님. 예: 덫 및 지뢰 투척 시간 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Mine",
+      "ko": "지뢰",
+      "note": ""
+    },
+    {
+      "en": "Minion",
+      "ko": "소환수",
+      "note": ""
+    },
+    {
+      "en": "Golem",
+      "ko": "골렘",
+      "note": ""
+    },
+    {
+      "en": "Herald",
+      "ko": "전령",
+      "note": ""
+    },
+    {
+      "en": "Brand",
+      "ko": "낙인",
+      "note": ""
+    },
+    {
+      "en": "Channelling",
+      "ko": "집중 유지",
+      "note": "\"정신 집중\" 아님. 예: 집중 유지 주문 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Skill Gem",
+      "ko": "스킬 젬",
+      "note": ""
+    },
+    {
+      "en": "Support Gem",
+      "ko": "보조 젬",
+      "note": ""
+    },
+    {
+      "en": "Awakened (gem)",
+      "ko": "각성한",
+      "note": "예: 각성한 육분의 [poedb 확인]"
+    },
+    {
+      "en": "Eldritch",
+      "ko": "섬뜩한",
+      "note": "예: 섬뜩한 불씨/영액 [poedb 확인]"
+    },
+    {
+      "en": "Minion Pact Support",
+      "ko": "소환수 맹약",
+      "note": "3.29에서 \"교감 보조\"로 개편 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Communion Support",
+      "ko": "교감 보조",
+      "note": "구 소환수 맹약. 영구 소환수 하나당 주문에 물리 피해 추가 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Archmage Support",
+      "ko": "대마법사",
+      "note": "3.29 너프: 마나 8-14%(기존 10-16%) [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Blade Vortex",
+      "ko": "칼날 소용돌이",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Ethereal Knives",
+      "ko": "천상의 단도",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Bladefall",
+      "ko": "칼날비",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Exceptional (gem)",
+      "ko": "특출난",
+      "note": "예: 특출난 스킬 젬 / 특출난 보조 젬 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Transfigured (gem)",
+      "ko": "변성",
+      "note": "예: 나선의 신성한 망치 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Mana-Infused Staff",
+      "ko": "마나 주입 지팡이",
+      "note": "3.29 신규 지능/힘 스킬 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Avoid",
+      "ko": "긴급회피",
+      "note": "예: 원소 상태 이상 긴급회피 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Fork",
+      "ko": "갈래",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Chain",
+      "ko": "연쇄",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Pierce",
+      "ko": "꿰뚫기",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Onslaught",
+      "ko": "맹공",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Elusive",
+      "ko": "도피",
+      "note": "[카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "오라 스킬": [
+    {
+      "en": "Grace",
+      "ko": "우아함",
+      "note": ""
+    },
+    {
+      "en": "Determination",
+      "ko": "결의",
+      "note": ""
+    },
+    {
+      "en": "Discipline",
+      "ko": "수양",
+      "note": ""
+    },
+    {
+      "en": "Hatred",
+      "ko": "증오",
+      "note": "[poedb 확인: 증오의 에센스]"
+    },
+    {
+      "en": "Anger",
+      "ko": "분노",
+      "note": "[poedb 확인: 분노의 에센스]"
+    },
+    {
+      "en": "Wrath",
+      "ko": "진노",
+      "note": "[poedb 확인: 진노의 에센스]"
+    },
+    {
+      "en": "Haste",
+      "ko": "신속",
+      "note": ""
+    },
+    {
+      "en": "Zealotry",
+      "ko": "광신",
+      "note": ""
+    },
+    {
+      "en": "Malevolence",
+      "ko": "적의",
+      "note": ""
+    },
+    {
+      "en": "Pride",
+      "ko": "오만",
+      "note": ""
+    },
+    {
+      "en": "Vitality",
+      "ko": "활력",
+      "note": ""
+    },
+    {
+      "en": "Clarity",
+      "ko": "명료함",
+      "note": ""
+    },
+    {
+      "en": "Precision",
+      "ko": "정밀함",
+      "note": ""
+    },
+    {
+      "en": "Purity of Elements",
+      "ko": "원소의 순수함",
+      "note": "오라 스킬 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "키스톤": [
+    {
+      "en": "Chaos Inoculation",
+      "ko": "카오스 면역",
+      "note": "약칭: CI"
+    },
+    {
+      "en": "Mind over Matter",
+      "ko": "물질보다 정신",
+      "note": "약칭: MoM"
+    },
+    {
+      "en": "Resolute Technique",
+      "ko": "불굴의 기술",
+      "note": "약칭: RT"
+    },
+    {
+      "en": "Elemental Overload",
+      "ko": "원소 과부하",
+      "note": "약칭: EO"
+    },
+    {
+      "en": "Pain Attunement",
+      "ko": "고통 조율",
+      "note": ""
+    },
+    {
+      "en": "Vaal Pact",
+      "ko": "바알 서약",
+      "note": ""
+    },
+    {
+      "en": "Blood Magic",
+      "ko": "피의 마법",
+      "note": ""
+    },
+    {
+      "en": "Avatar of Fire",
+      "ko": "화염의 화신",
+      "note": ""
+    },
+    {
+      "en": "Point Blank",
+      "ko": "근접 사격",
+      "note": ""
+    },
+    {
+      "en": "Acrobatics",
+      "ko": "곡예",
+      "note": ""
+    },
+    {
+      "en": "Eldritch Battery",
+      "ko": "섬뜩한 배터리",
+      "note": "확인 필요 (poedb 대조)"
+    }
+  ],
+  "엔드게임": [
+    {
+      "en": "Map",
+      "ko": "지도",
+      "note": "[poedb 확인] 커뮤니티: 맵"
+    },
+    {
+      "en": "Atlas",
+      "ko": "아틀라스",
+      "note": ""
+    },
+    {
+      "en": "Atlas Anomaly",
+      "ko": "아틀라스 이형",
+      "note": "키락이 명명. 지도 아이템 불필요, 아틀라스 트리 영향 없음 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "엔드게임 보스": [
+    {
+      "en": "Shaper",
+      "ko": "쉐이퍼",
+      "note": "[poedb 확인: 쉐이퍼의 엑잘티드 오브]"
+    },
+    {
+      "en": "Elder",
+      "ko": "엘더",
+      "note": "[poedb 확인: 우버 엘더 조각]"
+    },
+    {
+      "en": "Sirus",
+      "ko": "시루스",
+      "note": "[poedb 확인: 각성의 조각]"
+    },
+    {
+      "en": "The Maven",
+      "ko": "메이븐",
+      "note": "[poedb 확인: 메이븐의 끌]"
+    },
+    {
+      "en": "The Searing Exarch",
+      "ko": "타오르는 총주교",
+      "note": "확인 필요 (관련 파편명: 불길의 조각)"
+    },
+    {
+      "en": "The Eater of Worlds",
+      "ko": "세계의 포식자",
+      "note": "확인 필요 (관련 파편명: 포식의 조각)"
+    },
+    {
+      "en": "Kulemak",
+      "ko": "쿨레막",
+      "note": "심연 구덩이 아래에 거하는 존재. 연합 지휘자가 관련 잉걸불 드랍 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "리그 메커니즘": [
+    {
+      "en": "Breach",
+      "ko": "균열",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Abyss",
+      "ko": "심연",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Legion",
+      "ko": "군단",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Blight",
+      "ko": "역병",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Heist",
+      "ko": "강탈",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Harvest",
+      "ko": "수확",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Expedition",
+      "ko": "탐험",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Delve",
+      "ko": "탐광",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Ritual",
+      "ko": "의식",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Sanctum",
+      "ko": "성역",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Delirium",
+      "ko": "환영",
+      "note": "환영의 오브 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Incursion",
+      "ko": "기습",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Betrayal",
+      "ko": "배신",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Ultimatum",
+      "ko": "결전",
+      "note": "[poedb 확인: 결전 갑충석]"
+    },
+    {
+      "en": "Bestiary",
+      "ko": "야수 도감",
+      "note": "3.29 부적 개편으로 부적 주 획득처 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Beyond",
+      "ko": "이계",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Strongbox",
+      "ko": "금고",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Shrine",
+      "ko": "성소",
+      "note": "[poedb 확인] Sanctum(성역)과 구분"
+    },
+    {
+      "en": "Archnemesis",
+      "ko": "강적",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Settlers",
+      "ko": "정착자들",
+      "note": "[poedb 확인] 3.25 리그"
+    },
+    {
+      "en": "Necropolis",
+      "ko": "강령의 도시",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Domain of Timeless Conflict",
+      "ko": "끝없는 분쟁의 영토",
+      "note": "군단 최종 지역. 3.29에서 난이도·보상 상향 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Legion General",
+      "ko": "군단 장군",
+      "note": "3.29부터 휩싸는 수정 드랍, 무궁한 파편 드랍량 증가 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Legion Sergeant",
+      "ko": "병장",
+      "note": "군단 인카운터. 3.29부터 파편 드랍 확률↓·중첩↑ [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Crystal of Permutation",
+      "ko": "치환의 수정",
+      "note": "끝없는 분쟁의 영토에 4개. 휩싸인 아이템 투입처 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Curse of the Allflame",
+      "ko": "올플레임의 저주",
+      "note": "3.29 챌린지 리그. 2026-07-25 05:00(KST) 시작 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Valerie",
+      "ko": "발레리",
+      "note": "해적 선장 NPC [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "The Sovereign",
+      "ko": "군왕호",
+      "note": "발레리의 배 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Chart",
+      "ko": "해도",
+      "note": "리그 입장권. 지도에서 획득 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Voyage",
+      "ko": "항해",
+      "note": "해도를 연결한 대규모 해저 탐사 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Legion Monolith",
+      "ko": "고대의 돌기둥",
+      "note": "군단 인카운터 시작 오브젝트 (표기 재확인 권장)"
+    },
+    {
+      "en": "Abyssal Pit",
+      "ko": "심연 구덩이",
+      "note": "3.29부터 접근 전 이미 열려 있음 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Mercenaries of Trarthus",
+      "ko": "트라투스의 용병",
+      "note": "3.29 기본 리그 편입 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Talisman",
+      "ko": "부적",
+      "note": "3.29 개편. 고정 속성 → 인챈트 속성 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "클래스": [
+    {
+      "en": "Marauder",
+      "ko": "머라우더",
+      "note": ""
+    },
+    {
+      "en": "Duelist",
+      "ko": "듀얼리스트",
+      "note": ""
+    },
+    {
+      "en": "Ranger",
+      "ko": "레인저",
+      "note": ""
+    },
+    {
+      "en": "Shadow",
+      "ko": "쉐도우",
+      "note": "카카오 표기는 \"쉐도우\" [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Witch",
+      "ko": "위치",
+      "note": ""
+    },
+    {
+      "en": "Templar",
+      "ko": "템플러",
+      "note": "[poedb 확인: 템플러 관측기]"
+    },
+    {
+      "en": "Scion",
+      "ko": "사이온",
+      "note": ""
+    }
+  ],
+  "전직": [
+    {
+      "en": "Juggernaut",
+      "ko": "저거너트",
+      "note": ""
+    },
+    {
+      "en": "Berserker",
+      "ko": "버서커",
+      "note": ""
+    },
+    {
+      "en": "Chieftain",
+      "ko": "치프틴",
+      "note": ""
+    },
+    {
+      "en": "Slayer",
+      "ko": "슬레이어",
+      "note": ""
+    },
+    {
+      "en": "Gladiator",
+      "ko": "글래디에이터",
+      "note": ""
+    },
+    {
+      "en": "Champion",
+      "ko": "챔피언",
+      "note": ""
+    },
+    {
+      "en": "Deadeye",
+      "ko": "데드아이",
+      "note": ""
+    },
+    {
+      "en": "Pathfinder",
+      "ko": "패스파인더",
+      "note": ""
+    },
+    {
+      "en": "Warden",
+      "ko": "워든",
+      "note": "구 Raider(레이더) 대체"
+    },
+    {
+      "en": "Assassin",
+      "ko": "어쌔신",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Saboteur",
+      "ko": "사보추어",
+      "note": "확인 필요 (표기 대조)"
+    },
+    {
+      "en": "Trickster",
+      "ko": "트릭스터",
+      "note": ""
+    },
+    {
+      "en": "Necromancer",
+      "ko": "네크로맨서",
+      "note": ""
+    },
+    {
+      "en": "Elementalist",
+      "ko": "엘리멘탈리스트",
+      "note": ""
+    },
+    {
+      "en": "Occultist",
+      "ko": "오컬티스트",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Inquisitor",
+      "ko": "인퀴지터",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Hierophant",
+      "ko": "하이로펀트",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Guardian",
+      "ko": "가디언",
+      "note": ""
+    },
+    {
+      "en": "Ascendant",
+      "ko": "어센던트",
+      "note": ""
+    },
+    {
+      "en": "Luminary",
+      "ko": "루미너리",
+      "note": "3.29 신규 사이온 전직. 용병 영구 고용 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Reliquarian",
+      "ko": "렐리쿼리언",
+      "note": "3.29 주요 패시브 배치 변경 [카카오 3.29 패치노트 확인]"
+    }
+  ],
+  "시스템": [
+    {
+      "en": "League",
+      "ko": "리그",
+      "note": ""
+    },
+    {
+      "en": "Standard",
+      "ko": "스탠다드",
+      "note": ""
+    },
+    {
+      "en": "Hardcore",
+      "ko": "하드코어",
+      "note": ""
+    },
+    {
+      "en": "Ascendancy",
+      "ko": "전직",
+      "note": "어센던시 = 전직 [poedb 확인: 전직 클래스]"
+    },
+    {
+      "en": "Passive Skill Tree",
+      "ko": "패시브 스킬 트리",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Labyrinth",
+      "ko": "미궁",
+      "note": "약칭: 랩"
+    },
+    {
+      "en": "Bandit",
+      "ko": "산적",
+      "note": "액트2 산적 퀘스트"
+    },
+    {
+      "en": "Pantheon",
+      "ko": "판테온",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Vendor Recipe",
+      "ko": "상인 레시피",
+      "note": "poedb 표기: 거래 조합"
+    },
+    {
+      "en": "Crafting Bench",
+      "ko": "작업대",
+      "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Gold",
+      "ko": "금화",
+      "note": "3.25+ 화폐 [poedb 확인: Gold]"
+    }
+  ]
+}

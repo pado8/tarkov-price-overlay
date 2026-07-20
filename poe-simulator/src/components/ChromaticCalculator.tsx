@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 import chromaticConfig from "@/data/chromatic-config.json";
 
@@ -135,7 +135,10 @@ export default function ChromaticCalculator() {
   const [wantB, setWantB] = useState(3);
   const [wantAny, setWantAny] = useState(0);
   const [pOverride, setPOverride] = useState<string>(""); // 비었으면 자동 계산
-  const [omenPrice, setOmenPrice] = useState(OMEN.defaultPriceInChromatics.value); // 징조 시장가 (색채 환산)
+  const [omenPrice, setOmenPrice] = useState(OMEN.defaultPriceInChromatics.value); // 징조 시장가 (색채의 오브 환산)
+  // 몬테카를로 결과가 SSR/클라이언트에서 달라 하이드레이션 불일치 → 마운트 후에만 계산
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const autoP = Math.min(1, P.baseNonWhiteChance.value + quality * P.qualityBonusPerPoint.value);
   const pNonWhite = pOverride.trim() !== "" && !isNaN(Number(pOverride))
@@ -146,7 +149,7 @@ export default function ChromaticCalculator() {
   const invalid = desiredTotal > sockets || desiredTotal === 0;
 
   const results: MethodResult[] = useMemo(() => {
-    if (invalid) return [];
+    if (!mounted || invalid) return [];
     const base = P.colorWeightBase.value;
     const weights = { R: strReq + base, G: dexReq + base, B: intReq + base };
     const totalW = weights.R + weights.G + weights.B;
@@ -193,7 +196,7 @@ export default function ChromaticCalculator() {
         };
       })
       .sort((a, b) => a.avgCost - b.avgCost);
-  }, [strReq, dexReq, intReq, sockets, wantR, wantG, wantB, wantAny, pNonWhite, invalid, omenPrice]);
+  }, [strReq, dexReq, intReq, sockets, wantR, wantG, wantB, wantAny, pNonWhite, invalid, omenPrice, mounted]);
 
   const bestId = results[0]?.avgCost !== Infinity ? results[0]?.id : undefined;
 
@@ -217,9 +220,9 @@ export default function ChromaticCalculator() {
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
             <h2 className="mb-3 font-semibold text-zinc-200">{t("ch_req")}</h2>
             <div className="space-y-2">
-              <NumInput label="STR" value={strReq} setValue={setStrReq} min={0} max={999} accent="text-red-400" />
-              <NumInput label="DEX" value={dexReq} setValue={setDexReq} min={0} max={999} accent="text-emerald-400" />
-              <NumInput label="INT" value={intReq} setValue={setIntReq} min={0} max={999} accent="text-sky-400" />
+              <NumInput label={t("attr_str")} value={strReq} setValue={setStrReq} min={0} max={999} accent="text-red-400" />
+              <NumInput label={t("attr_dex")} value={dexReq} setValue={setDexReq} min={0} max={999} accent="text-emerald-400" />
+              <NumInput label={t("attr_int")} value={intReq} setValue={setIntReq} min={0} max={999} accent="text-sky-400" />
               <NumInput label={t("ch_quality")} value={quality} setValue={setQuality} min={0} max={30} />
               <NumInput label={t("ch_sockets")} value={sockets} setValue={setSockets} min={1} max={6} />
               <label className="flex items-center justify-between gap-2 text-sm">

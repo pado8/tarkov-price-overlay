@@ -10,9 +10,17 @@ import {
   getOutputPool,
   getVestigial,
 } from "@/lib/enshrouding";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 
 const SLOTS: Slot[] = ["Body Armour", "Helmet", "Gloves", "Boots", "Shield"];
+
+const SLOT_KEY: Record<Slot, string> = {
+  "Body Armour": "slot_body",
+  Helmet: "slot_helmet",
+  Gloves: "slot_gloves",
+  Boots: "slot_boots",
+  Shield: "slot_shield",
+};
 
 const STATUS_KEY: Record<string, { key: string; cls: string }> = {
   confirmed: { key: "ens_status_confirmed", cls: "bg-emerald-900 text-emerald-300 border-emerald-700" },
@@ -22,6 +30,7 @@ const STATUS_KEY: Record<string, { key: string; cls: string }> = {
 
 export default function Simulator() {
   const t = useT();
+  const { lang } = useLang();
   const [slot, setSlot] = useState<Slot>("Body Armour");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UniqueItem | null>(null);
@@ -69,7 +78,7 @@ export default function Simulator() {
                   slot === s ? "bg-amber-600 text-black" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
                 }`}
               >
-                {s}
+                {t(SLOT_KEY[s])}
               </button>
             ))}
           </div>
@@ -118,7 +127,7 @@ export default function Simulator() {
                   <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-semibold text-amber-300">{selected.name}</h2>
                     <p className="text-sm text-zinc-400">
-                      {selected.baseType} · {selected.slot}
+                      {selected.baseType} · {t(SLOT_KEY[selected.slot])}
                     </p>
                     <label className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
                       <input
@@ -132,7 +141,9 @@ export default function Simulator() {
                   </div>
                   <div className="text-right text-xs text-zinc-400">
                     <p className="font-medium text-zinc-300">{t("ens_required_crystal")}</p>
-                    <p className="mt-0.5 text-amber-400">{crystal ? crystal.name : t("ens_crystal_unknown")}</p>
+                    <p className="mt-0.5 text-amber-400">
+                      {crystal ? (lang === "ko" && crystal.name_ko ? crystal.name_ko : crystal.name) : t("ens_crystal_unknown")}
+                    </p>
                     {crystal && !crystal.confirmed && <p className="text-zinc-500">{t("ens_unconfirmed")}</p>}
                   </div>
                 </div>
@@ -201,8 +212,7 @@ export default function Simulator() {
       </div>
 
       <footer className="mt-8 border-t border-zinc-800 pt-4 text-xs text-zinc-600">
-        Item data: poe.ninja (Standard) · fetched {DATA_FETCHED_AT.slice(0, 10)} · {t("data_pending")} ·{" "}
-        {t("footer_disclaimer")}
+        {t("footer_data", { d: DATA_FETCHED_AT.slice(0, 10) })} · {t("data_pending")} · {t("footer_disclaimer")}
       </footer>
     </div>
   );

@@ -5,6 +5,7 @@ import { useLang, useT } from "@/lib/i18n";
 import { parseItemText, SAMPLE_ITEM_TEXT, type ParsedItem } from "@/lib/itemParser";
 import {
   canApply,
+  currencyName,
   generateGhosts,
   GHOST_COPIES,
   KISHARA_COPIES,
@@ -27,8 +28,16 @@ interface LogEntry {
 }
 
 const DUCATS = allflameData.ducats;
+const CUR_BY_ID = Object.fromEntries(VESPER_CURRENCIES.map((c) => [c.id, c]));
 
 const TIER_KEY: Record<string, string> = { low: "tier_low", medium: "tier_medium", high: "tier_high" };
+const RARITY_KEY: Record<string, string> = {
+  Normal: "rarity_normal",
+  Magic: "rarity_magic",
+  Rare: "rarity_rare",
+  Unique: "rarity_unique",
+  Unknown: "rarity_unknown",
+};
 const TIER_CLS: Record<string, string> = {
   low: "text-emerald-400",
   medium: "text-amber-400",
@@ -43,10 +52,16 @@ const RARITY_CLS: Record<string, string> = {
 };
 
 function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
+  const t = useT();
   const r = item.requirements;
-  const reqText = [r.str ? `Str ${r.str}` : "", r.dex ? `Dex ${r.dex}` : "", r.int ? `Int ${r.int}` : ""]
+  const reqText = [
+    r.str ? `${t("attr_str")} ${r.str}` : "",
+    r.dex ? `${t("attr_dex")} ${r.dex}` : "",
+    r.int ? `${t("attr_int")} ${r.int}` : "",
+  ]
     .filter(Boolean)
     .join(" ");
+  const rarityText = t(RARITY_KEY[item.rarity] ?? "rarity_unknown");
   return (
     <div className="rounded border border-zinc-700 bg-zinc-950/80 p-3 text-sm">
       <p className={`font-semibold ${RARITY_CLS[item.rarity]}`}>{item.name}</p>
@@ -54,12 +69,12 @@ function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
       <p className="mt-1 text-[11px] text-zinc-500">
         {compact ? (
           <>
-            {item.rarity}
+            {rarityText}
             {reqText && ` · ${reqText}`}
           </>
         ) : (
           <>
-            {item.rarity} · iLvl {item.itemLevel || "?"}
+            {rarityText} · iLvl {item.itemLevel || "?"}
             {item.quality > 0 && ` · Q${item.quality}%`}
             {item.sockets && ` · ${item.sockets}`}
             {reqText && ` · ${reqText}`}
@@ -86,7 +101,7 @@ function ItemCard({ item, compact }: { item: ParsedItem; compact?: boolean }) {
           ))
         )}
       </div>
-      {item.corrupted && <p className="mt-1.5 text-xs font-medium text-red-500">Corrupted</p>}
+      {item.corrupted && <p className="mt-1.5 text-xs font-medium text-red-500">{t("item_corrupted")}</p>}
     </div>
   );
 }
@@ -140,11 +155,11 @@ export default function AllflameSimulator() {
     intangRef.current = after;
     const g = generateGhosts(item, c, count);
     setGhosts(g);
-    setGhostCurrency(c.name);
+    setGhostCurrency(c.id);
     setIntangibility(after);
     setSulphur((s) => s + tierSulphur(c.tier));
     setLog((l) => [
-      { id: Date.now() + l.length, currency: c.name, single: count === 1, ghosts: g.length, intangibilityAfter: after },
+      { id: Date.now() + l.length, currency: c.id, single: count === 1, ghosts: g.length, intangibilityAfter: after },
       ...l,
     ]);
     setDucatMsg(null);
@@ -253,14 +268,14 @@ export default function AllflameSimulator() {
                     <button
                       onClick={() => craft(c)}
                       disabled={blocked}
-                      title={!item ? t("af_no_item") : applicable.reason ?? t("af_apply")}
+                      title={!item ? t("af_no_item") : applicable.reason ? t(applicable.reason) : t("af_apply")}
                       className={`flex w-full items-center justify-between gap-2 rounded px-2.5 py-1.5 text-left text-sm transition-colors ${
                         blocked ? "cursor-not-allowed text-zinc-600" : "text-zinc-300 hover:bg-zinc-800"
                       }`}
                     >
                       <span>
                         {c.ducat && <span className="mr-1 text-[10px] text-amber-500">◆</span>}
-                        {c.name}
+                        {currencyName(c, lang)}
                       </span>
                       {c.disabled ? (
                         <span className="text-[10px] text-red-500">✕</span>
@@ -283,7 +298,10 @@ export default function AllflameSimulator() {
           {ghosts && (
             <div className="rounded-lg border border-amber-700 bg-zinc-900/80 p-4">
               <h2 className="mb-1 font-semibold text-amber-300">
-                {t("af_ghost_title")} <span className="text-sm font-normal text-zinc-400">({ghostCurrency})</span>
+                {t("af_ghost_title")}{" "}
+                <span className="text-sm font-normal text-zinc-400">
+                  ({CUR_BY_ID[ghostCurrency] ? currencyName(CUR_BY_ID[ghostCurrency], lang) : ghostCurrency})
+                </span>
               </h2>
               <p className="mb-3 text-xs text-zinc-500">
                 {ghosts.length === 1 ? t("af_single_outcome") : t("af_ghost_note")}
@@ -360,7 +378,7 @@ export default function AllflameSimulator() {
                       e.single ? "bg-red-950/40 text-red-300" : "bg-zinc-950/60 text-zinc-300"
                     }`}
                   >
-                    <span>{e.currency}</span>
+                    <span>{CUR_BY_ID[e.currency] ? currencyName(CUR_BY_ID[e.currency], lang) : e.currency}</span>
                     <span className="text-xs">
                       {e.single ? t("af_single_outcome") : `${e.ghosts} ${t("af_ghosts")}`} · {t("af_intangibility")}{" "}
                       {e.intangibilityAfter}%

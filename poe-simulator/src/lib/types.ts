@@ -24,6 +24,7 @@ export interface VestigialEntry {
 
 export interface CrystalInfo {
   name: string;
+  name_ko?: string;
   slot: Slot | null;
   confirmed: boolean;
   source?: string;
