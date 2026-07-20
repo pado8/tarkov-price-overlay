@@ -2,7 +2,9 @@ export type Slot = "Body Armour" | "Helmet" | "Gloves" | "Boots" | "Shield";
 
 export interface UniqueItem {
   name: string;
+  name_ko?: string | null;
   baseType: string;
+  baseType_ko?: string | null;
   slot: Slot;
   icon: string;
   levelRequired: number;

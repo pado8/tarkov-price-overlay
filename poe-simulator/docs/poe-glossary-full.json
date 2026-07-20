@@ -796,6 +796,11 @@
       "en": "Elusive",
       "ko": "도피",
       "note": "[카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Thorns",
+      "ko": "가시",
+      "note": "3.29에서 지도 반사 속성을 대체. 확인 필요 (표기 대조)"
     }
   ],
   "오라 스킬": [
@@ -1352,6 +1357,158 @@
       "en": "Gold",
       "ko": "금화",
       "note": "3.25+ 화폐 [poedb 확인: Gold]"
+    }
+  ],
+  "스킬": [
+    {
+      "en": "Summon Raging Spirit",
+      "ko": "격노의 유령 소환",
+      "note": "약칭: SRS [poedb 확인]"
+    },
+    {
+      "en": "Raise Spectre",
+      "ko": "망령 소환",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Righteous Fire",
+      "ko": "정의의 화염",
+      "note": "약칭: RF [poedb 확인]"
+    },
+    {
+      "en": "Earthshatter",
+      "ko": "지면 분쇄",
+      "note": "\"대지 분쇄\" 아님 [poedb 확인]"
+    },
+    {
+      "en": "Earthshatter of Prominence",
+      "ko": "출중의 지면 분쇄",
+      "note": "변성 젬 [poedb 확인]"
+    },
+    {
+      "en": "Earthbreaker Support",
+      "ko": "대지 분쇄자 보조",
+      "note": "보조 젬. Earthshatter(지면 분쇄)와 구분 [poedb 확인]"
+    },
+    {
+      "en": "Toxic Rain",
+      "ko": "맹독성 비",
+      "note": "약칭: TR [poedb 확인]"
+    },
+    {
+      "en": "Lightning Arrow",
+      "ko": "번개 화살",
+      "note": "약칭: LA [poedb 확인]"
+    },
+    {
+      "en": "Armageddon Brand",
+      "ko": "종말의 낙인",
+      "note": "\"아마겟돈 낙인\" 아님 [poedb 확인]"
+    },
+    {
+      "en": "Wintertide Brand",
+      "ko": "겨울의 낙인",
+      "note": "Winter Orb(겨울 보주)와 구분 [poedb 확인]"
+    },
+    {
+      "en": "Winter Orb",
+      "ko": "겨울 보주",
+      "note": "3.29 대폭 상향 [poedb 확인]"
+    },
+    {
+      "en": "Crackling Lance",
+      "ko": "치직대는 창",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Crackling Lance of Disintegration",
+      "ko": "분해의 치직대는 창",
+      "note": "변성 젬 [poedb 확인]"
+    },
+    {
+      "en": "Blight (skill)",
+      "ko": "황폐",
+      "note": "리그 메커니즘 Blight(역병)와 반드시 구분 [poedb 확인]"
+    },
+    {
+      "en": "Blight of Contagion",
+      "ko": "전염의 황폐",
+      "note": "변성 젬 [poedb 확인]"
+    },
+    {
+      "en": "Contagion",
+      "ko": "전염",
+      "note": "[poedb 확인]"
+    },
+    {
+      "en": "Storm Burst",
+      "ko": "폭풍 점사",
+      "note": "3.29 젬 자체는 상향, 토템 세팅은 하향 [poedb 확인]"
+    },
+    {
+      "en": "Holy Hammers of Spirals",
+      "ko": "나선의 신성한 망치",
+      "note": "3.29 신규 변성 젬 [카카오 3.29 패치노트 확인]"
+    },
+    {
+      "en": "Divine Ire",
+      "ko": "신성한 분노",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Ballista Totem Support",
+      "ko": "발리스타 토템 보조",
+      "note": "3.29 감폭 상향(너프). 확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Spell Totem Support",
+      "ko": "주문 토템 보조",
+      "note": "3.29 감폭 상향(너프). 확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Blastchain Mine Support",
+      "ko": "연쇄 폭발 지뢰 보조",
+      "note": "3.29 감폭 상향(너프) [커뮤니티 표기]"
+    },
+    {
+      "en": "Hexblast",
+      "ko": "사술 작렬",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Ice Nova",
+      "ko": "얼음 회오리",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Kinetic Blast",
+      "ko": "운동 폭발",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Explosive Arrow",
+      "ko": "폭발 화살",
+      "note": "확인 필요 (poedb 대조)"
+    },
+    {
+      "en": "Pact of Beidat",
+      "ko": "베이다트의 맹약",
+      "note": "3.29 신규 특출난 스킬 젬. 확인 필요 (표기 대조)"
+    },
+    {
+      "en": "Pact of Ghorr",
+      "ko": "고르의 맹약",
+      "note": "3.29 신규 특출난 스킬 젬. 확인 필요 (표기 대조)"
+    },
+    {
+      "en": "Pact of K'tash",
+      "ko": "크타쉬의 맹약",
+      "note": "3.29 신규 특출난 스킬 젬. 확인 필요 (표기 대조)"
+    },
+    {
+      "en": "Pact of Lycia",
+      "ko": "리키아의 맹약",
+      "note": "3.29 신규 특출난 스킬 젬. 확인 필요 (표기 대조)"
     }
   ]
 }

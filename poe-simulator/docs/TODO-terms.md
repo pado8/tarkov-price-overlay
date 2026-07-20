@@ -13,6 +13,7 @@
 | Ghost (preview) / ghostly copy | 고스트 (미리보기) | |
 | Fatelorn | Fatelorn (영문 유지) | 3.28+ 유니크 카테고리 |
 | Enshrouding (메커니즘 단독 명사) | 휩싸는 수정 (아이템명으로 대체 표기) | 용어집엔 '휩싸는 수정'/'휩싸인 아이템'만 존재 |
+| Foulborn (유니크 접두 변형) | Foulborn + 한글명 (접두 영문 유지) | 3.29 신규. 카카오 거래 데이터(3.28)에 미등재 → 리그 오픈 후 재확인. uniques.json의 name_ko는 "Foulborn "+안쪽 한글명으로 조합됨 |
 | Imperial (Enshrouding Crystal 접두) | 임페리얼 (추정) | poedb kr 페이지 존재하나 한글명 미표기 |
 | Kishara's Ducat | Kishara's Ducat (영문 유지) | |
 | Genteel's Ducat | Genteel's Ducat (영문 유지) | |

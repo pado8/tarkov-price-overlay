@@ -22,6 +22,10 @@ const SLOT_KEY: Record<Slot, string> = {
   Shield: "slot_shield",
 };
 
+/** 언어에 맞는 유니크명/베이스명 (ko 미매핑 시 영문 폴백) */
+const uName = (u: UniqueItem, lang: string) => (lang === "ko" && u.name_ko ? u.name_ko : u.name);
+const uBase = (u: UniqueItem, lang: string) => (lang === "ko" && u.baseType_ko ? u.baseType_ko : u.baseType);
+
 const STATUS_KEY: Record<string, { key: string; cls: string }> = {
   confirmed: { key: "ens_status_confirmed", cls: "bg-emerald-900 text-emerald-300 border-emerald-700" },
   reported: { key: "ens_status_reported", cls: "bg-amber-900 text-amber-300 border-amber-700" },
@@ -42,14 +46,22 @@ export default function Simulator() {
   const slotUniques = useMemo(() => {
     const q = search.trim().toLowerCase();
     return ALL_UNIQUES.filter(
-      (u) => u.slot === slot && (!q || u.name.toLowerCase().includes(q) || u.baseType.toLowerCase().includes(q)),
+      (u) =>
+        u.slot === slot &&
+        (!q ||
+          u.name.toLowerCase().includes(q) ||
+          u.baseType.toLowerCase().includes(q) ||
+          (u.name_ko ?? "").toLowerCase().includes(q) ||
+          (u.baseType_ko ?? "").toLowerCase().includes(q)),
     );
   }, [slot, search]);
 
   const pool = useMemo(() => {
     if (!selected) return [];
     const q = poolSearch.trim().toLowerCase();
-    return getOutputPool(selected).filter((u) => !q || u.name.toLowerCase().includes(q));
+    return getOutputPool(selected).filter(
+      (u) => !q || u.name.toLowerCase().includes(q) || (u.name_ko ?? "").toLowerCase().includes(q),
+    );
   }, [selected, poolSearch]);
 
   const eligibility = selected ? getEligibility(selected, { corrupted }) : null;
@@ -102,8 +114,8 @@ export default function Simulator() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={u.icon} alt="" className="h-8 w-8 shrink-0 object-contain" loading="lazy" />
                   <span className="min-w-0">
-                    <span className="block truncate font-medium">{u.name}</span>
-                    <span className="block truncate text-xs text-zinc-500">{u.baseType}</span>
+                    <span className="block truncate font-medium">{uName(u, lang)}</span>
+                    <span className="block truncate text-xs text-zinc-500">{uBase(u, lang)}</span>
                   </span>
                 </button>
               </li>
@@ -125,9 +137,9 @@ export default function Simulator() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={selected.icon} alt="" className="h-16 w-16 object-contain" />
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-semibold text-amber-300">{selected.name}</h2>
+                    <h2 className="text-lg font-semibold text-amber-300">{uName(selected, lang)}</h2>
                     <p className="text-sm text-zinc-400">
-                      {selected.baseType} · {t(SLOT_KEY[selected.slot])}
+                      {uBase(selected, lang)} · {t(SLOT_KEY[selected.slot])}
                     </p>
                     <label className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
                       <input
@@ -197,11 +209,11 @@ export default function Simulator() {
                     <li
                       key={u.detailsId}
                       className="flex items-center gap-2 rounded bg-zinc-950/60 px-2 py-1.5 text-xs text-zinc-300"
-                      title={`${u.name} — ${u.baseType}`}
+                      title={`${uName(u, lang)} — ${uBase(u, lang)}`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={u.icon} alt="" className="h-7 w-7 shrink-0 object-contain" loading="lazy" />
-                      <span className="truncate">{u.name}</span>
+                      <span className="truncate">{uName(u, lang)}</span>
                     </li>
                   ))}
                 </ul>

@@ -1,4 +1,5 @@
 // poe.ninja에서 유니크 방어구 목록을 수집해 src/data/uniques.json 생성
+// + 카카오(공식 한글) 거래 데이터로 이름/베이스 한글명(name_ko, baseType_ko) 보강
 // 실행: node scripts/fetch-uniques.mjs
 // Standard 리그를 소스로 사용 (역대 유니크가 가장 완전함)
 
@@ -12,14 +13,71 @@ const OUT = join(__dirname, "..", "src", "data", "uniques.json");
 const API =
   "https://poe.ninja/poe1/api/economy/stash/current/item/overview?league=Standard&type=UniqueArmour";
 
+// 공식 한글명: 글로벌(EN) + 카카오(KR) 거래 데이터를 카테고리별로 대조.
+// 두 로케일은 카테고리 순서·항목 순서가 동일 → 유니크 항목(flags.unique)만 뽑아 인덱스로 zip.
+// 유니크 부분집합은 전 카테고리에서 개수가 완전히 일치함(검증됨). 베이스 타입은
+// 유니크 항목의 type 필드에서 파생(내가 필요한 베이스는 전부 유니크를 가지므로 100% 커버).
+const TRADE_EN = "https://www.pathofexile.com/api/trade/data/items";
+const TRADE_KR = "https://poe.game.daum.net/api/trade/data/items"; // → poe.kakaogames.com 리다이렉트
+
+// 3.29 신규 접두 변형: 한글명 미확정이므로 영문 접두 유지 + 안쪽 유니크 한글명 조합
+const NEW_PREFIXES = ["Foulborn "];
+
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36";
+
+async function fetchJson(url, extraHeaders = {}) {
+  const res = await fetch(url, {
+    redirect: "follow",
+    headers: { "User-Agent": UA, Accept: "application/json", ...extraHeaders },
+  });
+  if (!res.ok) throw new Error(`${url} → ${res.status}`);
+  return res.json();
+}
+
+async function buildKoMaps() {
+  let en, kr;
+  try {
+    [en, kr] = await Promise.all([
+      fetchJson(TRADE_EN),
+      fetchJson(TRADE_KR, { Referer: "https://poe.game.daum.net/trade/search/Standard" }),
+    ]);
+  } catch (e) {
+    console.warn(`⚠ 한글명 보강 건너뜀 (거래 데이터 실패): ${e.message}`);
+    return { nameMap: {}, baseMap: {} };
+  }
+  const krById = Object.fromEntries(kr.result.map((c) => [c.id, c]));
+  const nameMap = {};
+  const baseMap = {};
+  for (const cat of en.result) {
+    const k = krById[cat.id];
+    if (!k) continue;
+    const eu = cat.entries.filter((x) => x.flags?.unique && x.name);
+    const ku = k.entries.filter((x) => x.flags?.unique && x.name);
+    if (eu.length !== ku.length) continue; // 정합 안 되는 카테고리는 스킵(유니크는 실측상 항상 정합)
+    for (let i = 0; i < eu.length; i++) {
+      if (eu[i].name) nameMap[eu[i].name] = ku[i].name;
+      if (eu[i].type && ku[i].type) baseMap[eu[i].type] = ku[i].type;
+    }
+  }
+  return { nameMap, baseMap };
+}
+
+/** 유니크 영문명 → 한글명. Foulborn 등 신규 접두는 접두(영문)+안쪽 한글명으로 조합 */
+function koName(enName, nameMap) {
+  if (nameMap[enName]) return nameMap[enName];
+  for (const p of NEW_PREFIXES) {
+    if (enName.startsWith(p) && nameMap[enName.slice(p.length)]) {
+      return p + nameMap[enName.slice(p.length)];
+    }
+  }
+  return null; // UI에서 영문 폴백
+}
+
 // 인슈라우딩 대상 슬롯 5종 (3.29: 장신구·무기 불가)
 const SLOTS = ["Body Armour", "Helmet", "Gloves", "Boots", "Shield"];
 
-const res = await fetch(API, {
-  headers: { "User-Agent": "poe-enshrouding-sim/0.1 (data build script)" },
-});
-if (!res.ok) throw new Error(`poe.ninja API ${res.status}`);
-const { lines } = await res.json();
+const { lines } = await fetchJson(API, { "User-Agent": "poe-enshrouding-sim/0.1 (data build script)" });
+const { nameMap, baseMap } = await buildKoMaps();
 
 const seen = new Set();
 const uniques = [];
@@ -31,7 +89,9 @@ for (const l of lines) {
   seen.add(key);
   uniques.push({
     name: l.name,
+    name_ko: koName(l.name, nameMap),
     baseType: l.baseType,
+    baseType_ko: baseMap[l.baseType] ?? null,
     slot: l.itemType,
     icon: l.icon,
     levelRequired: l.levelRequired ?? 0,
@@ -46,8 +106,10 @@ for (const l of lines) {
 uniques.sort((a, b) => a.slot.localeCompare(b.slot) || a.name.localeCompare(b.name));
 
 mkdirSync(dirname(OUT), { recursive: true });
-writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: "poe.ninja Standard", uniques }, null, 1));
+writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: "poe.ninja Standard + Kakao trade (ko)", uniques }, null, 1));
 
 const bySlot = {};
 for (const u of uniques) bySlot[u.slot] = (bySlot[u.slot] ?? 0) + 1;
+const koCount = uniques.filter((u) => u.name_ko).length;
 console.log(`total: ${uniques.length}`, bySlot);
+console.log(`한글명 매핑: 이름 ${koCount}/${uniques.length}, 베이스 ${uniques.filter((u) => u.baseType_ko).length}/${uniques.length}`);
