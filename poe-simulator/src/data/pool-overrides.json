@@ -1,0 +1,6 @@
+{
+  "_comment": "변환 결과 풀 보정 데이터. 결과 풀 = 같은 슬롯 유니크 중 Ancient Orb로 획득 가능한 것(보스 전용 제외). poe.ninja에는 드랍 출처 플래그가 없어 보스/리그 전용 제외 목록을 여기서 수동 관리한다. 리그 시작 후 데이터마이닝으로 정밀화.",
+  "excludedFromPool": [],
+  "fatelornUniques": [],
+  "notes": "excludedFromPool: Ancient Orb 풀에서 제외되는 유니크 이름 목록(보스 전용 등). fatelornUniques: 인슈라우딩 자체가 불가능한 Fatelorn 유니크 목록."
+}

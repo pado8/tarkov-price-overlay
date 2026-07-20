@@ -1,0 +1,23 @@
+{
+  "_comment": "유니크별 흔적(Vestigial) 암시적 모드 데이터. 리그 시작(2026-07-24) 후 poedb/데이터마이닝으로 채운다. key=유니크 이름. status: confirmed(데이터마이닝 확정) | reported(커뮤니티 보고) | unknown",
+  "_schema": {
+    "mod": "흔적 암시적 모드 텍스트 (범위 표기 포함, 예: '+(200-300) to maximum Life')",
+    "status": "confirmed | reported | unknown",
+    "source": "출처 URL 또는 설명",
+    "notes": "비고"
+  },
+  "entries": {
+    "Kaom's Heart": {
+      "mod": null,
+      "status": "reported",
+      "source": "aoeah 3.29 preview — 생명력 수치가 비례 축소되어 이전된다고 보고됨, 수치 미공개",
+      "notes": "원본의 대표 모드(생명력)가 축소 이전되는 예시로 언급"
+    },
+    "Shaper's Touch": {
+      "mod": null,
+      "status": "reported",
+      "source": "aoeah 3.29 preview — 모드가 여러 개인 유니크는 그중 하나가 무작위 선택된다고 보고됨",
+      "notes": "다중 모드 유니크의 무작위 선택 예시로 언급"
+    }
+  }
+}

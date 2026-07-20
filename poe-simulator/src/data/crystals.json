@@ -1,0 +1,11 @@
+{
+  "_comment": "3.29 인슈라우딩 크리스탈 5종 ↔ 방어구 슬롯 대응. confirmed=공개 자료로 확인됨. 미확인 슬롯은 리그 시작(2026-07-24) 후 확정.",
+  "crystals": [
+    { "name": "Karui Enshrouding Crystal",    "slot": null,          "confirmed": false },
+    { "name": "Imperial Enshrouding Crystal", "slot": "Boots",       "confirmed": true, "source": "poedb" },
+    { "name": "Maraketh Enshrouding Crystal", "slot": "Body Armour", "confirmed": true, "source": "aoeah 3.29 guide" },
+    { "name": "Templar Enshrouding Crystal",  "slot": null,          "confirmed": false },
+    { "name": "Vaal Enshrouding Crystal",     "slot": null,          "confirmed": false }
+  ],
+  "unassignedSlots": ["Helmet", "Gloves", "Shield"]
+}
