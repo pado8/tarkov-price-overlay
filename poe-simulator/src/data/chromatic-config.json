@@ -1,0 +1,36 @@
+{
+  "_comment": "3.29 소켓/색채 오브 리워크 파라미터. 룰은 패치노트로 확정됐으나 확률 공식은 미공개 → status: confirmed(패치노트 확정) / assumed(가정값, 데이터마이닝 후 교체).",
+  "params": {
+    "baseNonWhiteChance": {
+      "value": 0.1,
+      "status": "assumed",
+      "notes": "소켓 1개가 비백색으로 롤될 기본 확률 — '작은 확률'로만 공개, 수치 미공개"
+    },
+    "qualityBonusPerPoint": {
+      "value": 0.005,
+      "status": "assumed",
+      "notes": "퀄리티 1%당 비백색 확률 증가 — '퀄리티가 높을수록 증가'만 확정, 수치 미공개"
+    },
+    "itemLevelScaling": {
+      "value": 0,
+      "status": "assumed",
+      "notes": "아이템 레벨 스케일링 — '아이템 레벨이 높을수록 증가' 확정, 공식 미공개라 MVP에선 0으로 두고 퀄리티만 반영"
+    },
+    "colorWeightBase": {
+      "value": 10,
+      "status": "assumed",
+      "notes": "색상 가중치 = 해당 능력치 요구 + base. '능력치 요구에 비례'는 확정, 상수 미공개 (구 색채 공식 관례값)"
+    },
+    "chromaticForcesOneNonWhite": {
+      "value": true,
+      "status": "confirmed",
+      "notes": "색채 오브는 소켓 1개를 비백색으로 강제, 나머지는 일반 롤"
+    },
+    "gemQualityBonusOnMatch": { "value": 10, "status": "confirmed", "notes": "젬 색 = 소켓 색 일치 시 젬 퀄리티 +10%" }
+  },
+  "benchOptions": [
+    { "minNonWhite": 2, "cost": 5, "status": "confirmed" },
+    { "minNonWhite": 3, "cost": 20, "status": "confirmed" },
+    { "minNonWhite": 4, "cost": 75, "status": "confirmed" }
+  ]
+}

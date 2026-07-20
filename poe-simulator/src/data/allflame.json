@@ -1,0 +1,62 @@
+{
+  "_comment": "3.29 올플레임(베스퍼) 크래프팅 데이터. 룰은 공개 자료로 확인됐으나 수치는 전부 미공개 → status: assumed(가정값)/reported(보고됨)/confirmed(확정). 리그 시작(2026-07-24) 후 데이터마이닝으로 교체.",
+  "config": {
+    "ghostCopies": { "value": 3, "status": "assumed", "notes": "제작당 고스트 미리보기 개수 — 공식 수치 미공개" },
+    "intangibilityTiers": {
+      "low": 5,
+      "medium": 10,
+      "high": 20,
+      "status": "assumed",
+      "notes": "화폐 등급별 무형화 증가량(%) — '고가 화폐일수록 크다'만 보고됨, 수치 미공개"
+    },
+    "sulphurCostTiers": {
+      "low": 10,
+      "medium": 25,
+      "high": 60,
+      "status": "assumed",
+      "notes": "화폐 등급별 망자의 유황 비용 — 수치 미공개"
+    },
+    "resetDucatOdds": { "value": 0.5, "status": "reported", "notes": "50% 무형화 전체 제거 / 50% 아이템 파괴" }
+  },
+  "currencies": [
+    { "name": "Orb of Transmutation", "tier": "low" },
+    { "name": "Orb of Alteration", "tier": "low" },
+    { "name": "Orb of Augmentation", "tier": "low" },
+    { "name": "Orb of Alchemy", "tier": "low" },
+    { "name": "Orb of Scouring", "tier": "low" },
+    { "name": "Chaos Orb", "tier": "medium" },
+    { "name": "Regal Orb", "tier": "medium" },
+    { "name": "Essence", "tier": "medium" },
+    { "name": "Fossil", "tier": "medium" },
+    { "name": "Orb of Annulment", "tier": "high" },
+    { "name": "Exalted Orb", "tier": "high" },
+    { "name": "Divine Orb", "tier": "high" },
+    { "name": "Vaal Orb", "tier": "high", "excluded": true }
+  ],
+  "ducats": [
+    {
+      "name": "Kishara's Ducat",
+      "status": "reported",
+      "effect_en": "Creates four ghostly copies; each retains one original modifier — isolate a strong mod.",
+      "effect_ko": "고스트 사본 4개 생성, 각각 원본 모드 1개씩 유지 — 강한 모드 분리용."
+    },
+    {
+      "name": "Genteel's Ducat",
+      "status": "reported",
+      "effect_en": "Swaps one attribute requirement for another (STR↔DEX↔INT), bypassing hybrid restrictions.",
+      "effect_ko": "능력치 요구 하나를 다른 능력치로 교체 (힘↔민첩↔지능), 하이브리드 제한 우회."
+    },
+    {
+      "name": "Brinehook's Ducat",
+      "status": "reported",
+      "effect_en": "Grants mysterious divine Aspects — mechanics undisclosed.",
+      "effect_ko": "신비한 신성 Aspect 부여 — 상세 메커니즘 미공개."
+    },
+    {
+      "name": "Intangibility-Reset Ducat",
+      "status": "reported",
+      "effect_en": "50/50 gamble: removes all Intangibility, or destroys the item.",
+      "effect_ko": "50/50 도박: 무형화 전체 제거 또는 아이템 파괴."
+    }
+  ]
+}

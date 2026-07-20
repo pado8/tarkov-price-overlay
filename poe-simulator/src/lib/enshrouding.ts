@@ -12,11 +12,11 @@ const VESTIGIAL_ENTRIES = (vestigialData as unknown as { entries: Record<string,
 const EXCLUDED_FROM_POOL = new Set((poolOverrides as { excludedFromPool: string[] }).excludedFromPool);
 const FATELORN = new Set((poolOverrides as { fatelornUniques: string[] }).fatelornUniques);
 
-/** 3.29 규칙: 방어구 5슬롯만, 타락 불가, Fatelorn 불가 */
+/** 3.29 규칙: 방어구 5슬롯만, 타락 불가, Fatelorn 불가. reasons는 i18n 키. */
 export function getEligibility(item: UniqueItem, opts: { corrupted: boolean }): Eligibility {
   const reasons: string[] = [];
-  if (opts.corrupted) reasons.push("Corrupted Uniques cannot be Enshrouded");
-  if (FATELORN.has(item.name)) reasons.push("Fatelorn Uniques cannot be Enshrouded");
+  if (opts.corrupted) reasons.push("reason_corrupted");
+  if (FATELORN.has(item.name)) reasons.push("reason_fatelorn");
   return { eligible: reasons.length === 0, reasons };
 }
 
