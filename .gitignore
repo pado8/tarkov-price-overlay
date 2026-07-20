@@ -8,6 +8,10 @@
 # Local-only drafts (project-specific; subprojects can also have their own)
 /community-posts/
 
+# Root CLAUDE.md is local-only workspace instructions (covers private sibling
+# projects) — kept out of this public repo. Subproject CLAUDE.md files stay tracked.
+/CLAUDE.md
+
 # Logs at repo root only
 /*.log
 
