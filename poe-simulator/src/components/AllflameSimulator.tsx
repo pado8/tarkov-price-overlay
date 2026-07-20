@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLang, useT } from "@/lib/i18n";
-import { parseItemText, SAMPLE_ITEM_TEXT, type ParsedItem } from "@/lib/itemParser";
+import { parseItemText, SAMPLE_ITEMS, type ParsedItem } from "@/lib/itemParser";
 import {
   canApply,
   currencyName,
@@ -225,12 +225,21 @@ export default function AllflameSimulator() {
                   >
                     {t("af_import_btn")}
                   </button>
-                  <button
-                    onClick={() => importItem(SAMPLE_ITEM_TEXT)}
-                    className="rounded bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
-                  >
-                    {t("af_sample_btn")}
-                  </button>
+                </div>
+                <div className="mt-3 border-t border-zinc-800 pt-3">
+                  <p className="mb-1.5 text-[11px] text-zinc-500">{t("af_sample_hint")}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {SAMPLE_ITEMS.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => importItem(s.text)}
+                        title={lang === "ko" ? s.note_ko ?? s.note : s.note}
+                        className="rounded bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:bg-zinc-700"
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (

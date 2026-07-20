@@ -1,20 +1,21 @@
 {
-  "_comment": "3.29 올플레임(베스퍼) 크래프팅 데이터. 룰은 공개 자료로 확인됐으나 수치는 전부 미공개 → status: assumed(가정값)/reported(보고됨)/confirmed(확정). 리그 시작(2026-07-24) 후 데이터마이닝으로 교체.",
+  "_comment": "3.29 올플레임(베스퍼) 크래프팅 데이터. 룰은 공개 자료로 확인됐으나 수치는 대부분 미공개 → status: assumed(가정값)/reported(보고됨)/confirmed(확정). 리그 시작(2026-07-24) 후 데이터마이닝으로 교체.",
+  "_reveal": "공식 라이브 리빌(KR, youtube Sp3INL721x0 베스퍼 구간) 관측값: 화석 리포지=고스트 3개 'Creates three ghostly copies'(확정), 아이템에 무형화(Intangibility) %가 직접 표시되며 관측 범위 8~12%, 화석 리포지 1회 유황 비용 9600(망자의 유황), 고스트 선택 버튼=Make Real, UI명=Allflame Crafting.",
   "config": {
-    "ghostCopies": { "value": 3, "status": "assumed", "notes": "제작당 고스트 미리보기 개수 — 공식 수치 미공개" },
+    "ghostCopies": { "value": 3, "status": "confirmed", "notes": "공식 리빌 화석 리포지에서 'Creates three ghostly copies' 확정(2026-07)" },
     "intangibilityTiers": {
       "low": 5,
       "medium": 10,
       "high": 20,
       "status": "assumed",
-      "notes": "화폐 등급별 무형화 증가량(%) — '고가 화폐일수록 크다'만 보고됨, 수치 미공개"
+      "notes": "화폐 등급별 무형화 증가량(%) — '고가 화폐일수록 크다'만 보고됨. 리빌에서 아이템 무형화 관측값 8~12%(누적치). 등급별 증가량 자체는 미공개라 가정 유지"
     },
     "sulphurCostTiers": {
       "low": 10,
       "medium": 25,
       "high": 60,
       "status": "assumed",
-      "notes": "화폐 등급별 망자의 유황 비용 — 수치 미공개"
+      "notes": "화폐 등급별 망자의 유황 비용 — 대부분 미공개. 리빌 관측: 화석 리포지(강한 제작) 1회 9600. 단일 관측점이라 tier 표는 가정 유지, 리그 실측 후 교체"
     },
     "resetDucatOdds": { "value": 0.5, "status": "reported", "notes": "50% 무형화 전체 제거 / 50% 아이템 파괴" },
     "intangibilityModel": {

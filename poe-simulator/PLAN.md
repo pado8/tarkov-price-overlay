@@ -43,6 +43,7 @@
 - 두캇 4종: Kishara's(고스트 4개, 각각 원본 모드 1개 유지), Genteel's(능력치 요구 교체 STR↔DEX↔INT), Brinehook's(신성 Aspect, 상세 미공개), Intangibility-Reset(50/50).
 - 유황은 거래 가능, 리그 컨텐츠 전반에서 드랍.
 - **무형화 해석 상충 (07-20 라이브 방송 검토)**: 방송 정리(epiccarry 등)는 "제작할수록 결과 개수 점감", aoeah는 "단일 결과가 될 확률 누적". **방송 표현(reduction)을 기본 채택** — `allflame.json intangibilityModel`로 chance 모델 전환 가능. 리그 실측으로 확정할 것.
+- **공식 라이브 리빌(KR) 관측 (youtube Sp3INL721x0, 베스퍼 구간, 프레임 분석)**: ①고스트 개수=**3 확정**(화석 리포지 "Creates three ghostly copies"), Kishara=4 확정. ②무형화는 **아이템에 % 라인으로 직접 표시·누적**(관측 8~12%). ③화석 리포지 1회 유황 비용=**9600**(단일 관측점). ④UI: "Allflame Crafting" 창, 고스트 선택 버튼="Make Real". ⑤등장 실제 아이템(시뮬 샘플로 주입, `itemParser.ts SAMPLE_ITEMS`): Demon Bite(Convoking Wand)·Tempest Twine(Leather Belt)·Armageddon League(Sorcerer Boots)·Corsair Sword. → `allflame.json _reveal`/`ghostCopies:confirmed`에 반영.
 - 방송 검토 결과 인슈라우딩·색채는 시뮬레이터와 모순 없음 (색채 오브 "비백색 1개 보장" 재확인, Brinehook은 방송에서도 의도적 비공개).
 
 ### 색채 오브 리워크 (→ /chromatic)
