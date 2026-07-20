@@ -88,7 +88,7 @@
 | `src/lib/enshrouding.ts` | 인슈라우딩 룰 엔진. 적격성 reasons는 i18n 키로 반환 |
 | `src/components/Simulator.tsx` | 인슈라우딩 UI |
 | `src/components/AllflameSimulator.tsx` | 올플레임 UI. 무형화는 `intangRef`로 미러링(배칭 대응 — 지우면 연속클릭 버그 재발) |
-| `src/components/ChromaticCalculator.tsx` | 색채 계산기. `simulateChromatic()` = 몬테카를로 50k |
+| `src/components/ChromaticCalculator.tsx` | 색채 계산기. siveran(https://siveran.github.io/calc.html) 방식 방법 비교표 — 색채 스팸 vs 벤치 ≥2/3/4를 몬테카를로 30k/방법으로 돌려 평균 비용 랭킹. 비백색 확률 % 수동 오버라이드 입력 있음(리그 오픈 후 실측값 넣는 용도) |
 | `src/components/Header.tsx` | 네비 + 언어 토글 |
 | `scripts/fetch-uniques.mjs` | poe.ninja → uniques.json 생성기 |
 

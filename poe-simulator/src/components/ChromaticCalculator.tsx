@@ -6,19 +6,35 @@ import chromaticConfig from "@/data/chromatic-config.json";
 
 const P = chromaticConfig.params;
 const BENCH = chromaticConfig.benchOptions;
-const TRIALS = 50000;
+const TRIALS = 30000;
 
 type Color = "R" | "G" | "B";
 
-/** 3.29 모델: 각 소켓은 비백색 확률 p로 롤, 비백색이면 능력치 가중치로 색 결정. 색채 오브는 비백색 0개면 1개를 강제. */
-function simulateChromatic(
+interface Method {
+  id: string;
+  labelKey: string;
+  labelVars?: Record<string, number>;
+  costPerTry: number;
+  forcedNonWhite: number; // 색채=1(0개일 때만), 벤치=k개 강제
+  isBench: boolean;
+}
+
+interface MethodResult extends Method {
+  p: number;
+  avgAttempts: number;
+  avgCost: number;
+  stdAttempts: number;
+}
+
+/** 한 번의 시도(색채 1회 or 벤치 1회)를 시뮬레이션해 성공 여부 반환 */
+function rollOnce(
   sockets: number,
   weights: Record<Color, number>,
+  totalW: number,
   pNonWhite: number,
+  m: Method,
   want: { R: number; G: number; B: number; anyNonWhite: number },
-): number {
-  const totalW = weights.R + weights.G + weights.B;
-  if (totalW <= 0) return 0;
+): boolean {
   const pickColor = (): Color => {
     const r = Math.random() * totalW;
     if (r < weights.R) return "R";
@@ -26,31 +42,42 @@ function simulateChromatic(
     return "B";
   };
 
-  let success = 0;
-  for (let i = 0; i < TRIALS; i++) {
-    const counts = { R: 0, G: 0, B: 0 };
-    let nonWhite = 0;
+  const counts = { R: 0, G: 0, B: 0 };
+  let nonWhite = 0;
+
+  if (m.isBench) {
+    // 벤치: 비백색 k개 강제, 나머지 소켓은 일반 롤
+    const forced = Math.min(m.forcedNonWhite, sockets);
+    for (let s = 0; s < forced; s++) {
+      counts[pickColor()]++;
+      nonWhite++;
+    }
+    for (let s = forced; s < sockets; s++) {
+      if (Math.random() < pNonWhite) {
+        counts[pickColor()]++;
+        nonWhite++;
+      }
+    }
+  } else {
+    // 색채 오브: 전체 일반 롤, 비백색 0개면 1개 강제 (confirmed)
     for (let s = 0; s < sockets; s++) {
       if (Math.random() < pNonWhite) {
         counts[pickColor()]++;
         nonWhite++;
       }
     }
-    // 색채 오브: 비백색 1개 강제 (confirmed)
     if (nonWhite === 0) {
       counts[pickColor()]++;
       nonWhite = 1;
     }
-    if (
-      counts.R >= want.R &&
-      counts.G >= want.G &&
-      counts.B >= want.B &&
-      nonWhite >= want.anyNonWhite + want.R + want.G + want.B
-    ) {
-      success++;
-    }
   }
-  return success / TRIALS;
+
+  return (
+    counts.R >= want.R &&
+    counts.G >= want.G &&
+    counts.B >= want.B &&
+    nonWhite >= want.anyNonWhite + want.R + want.G + want.B
+  );
 }
 
 function NumInput({
@@ -94,27 +121,61 @@ export default function ChromaticCalculator() {
   const [wantG, setWantG] = useState(0);
   const [wantB, setWantB] = useState(3);
   const [wantAny, setWantAny] = useState(0);
+  const [pOverride, setPOverride] = useState<string>(""); // 비었으면 자동 계산
+
+  const autoP = Math.min(1, P.baseNonWhiteChance.value + quality * P.qualityBonusPerPoint.value);
+  const pNonWhite = pOverride.trim() !== "" && !isNaN(Number(pOverride))
+    ? Math.max(0, Math.min(100, Number(pOverride))) / 100
+    : autoP;
 
   const desiredTotal = wantR + wantG + wantB + wantAny;
   const invalid = desiredTotal > sockets || desiredTotal === 0;
 
-  const pSuccess = useMemo(() => {
-    if (invalid) return 0;
-    const pNonWhite = Math.min(1, P.baseNonWhiteChance.value + quality * P.qualityBonusPerPoint.value);
+  const results: MethodResult[] = useMemo(() => {
+    if (invalid) return [];
     const base = P.colorWeightBase.value;
-    return simulateChromatic(
-      sockets,
-      { R: strReq + base, G: dexReq + base, B: intReq + base },
-      pNonWhite,
-      { R: wantR, G: wantG, B: wantB, anyNonWhite: wantAny },
-    );
-  }, [strReq, dexReq, intReq, quality, sockets, wantR, wantG, wantB, wantAny, invalid]);
+    const weights = { R: strReq + base, G: dexReq + base, B: intReq + base };
+    const totalW = weights.R + weights.G + weights.B;
+    if (totalW <= 0) return [];
 
-  const expected = pSuccess > 0 ? Math.ceil(1 / pSuccess) : Infinity;
-  const benchApplicable = wantR === 0 && wantG === 0 && wantB === 0 && wantAny >= 2;
+    const methods: Method[] = [
+      { id: "chrom", labelKey: "ch_method_chrom", costPerTry: 1, forcedNonWhite: 1, isBench: false },
+      ...BENCH.filter((b) => b.minNonWhite <= sockets).map((b) => ({
+        id: `bench${b.minNonWhite}`,
+        labelKey: "ch_method_bench",
+        labelVars: { n: b.minNonWhite },
+        costPerTry: b.cost,
+        forcedNonWhite: b.minNonWhite,
+        isBench: true,
+      })),
+    ];
+
+    const want = { R: wantR, G: wantG, B: wantB, anyNonWhite: wantAny };
+    return methods
+      .map((m) => {
+        let success = 0;
+        for (let i = 0; i < TRIALS; i++) {
+          if (rollOnce(sockets, weights, totalW, pNonWhite, m, want)) success++;
+        }
+        const p = success / TRIALS;
+        return {
+          ...m,
+          p,
+          avgAttempts: p > 0 ? 1 / p : Infinity,
+          avgCost: p > 0 ? m.costPerTry / p : Infinity,
+          stdAttempts: p > 0 ? Math.sqrt(1 - p) / p : Infinity,
+        };
+      })
+      .sort((a, b) => a.avgCost - b.avgCost);
+  }, [strReq, dexReq, intReq, sockets, wantR, wantG, wantB, wantAny, pNonWhite, invalid]);
+
+  const bestId = results[0]?.avgCost !== Infinity ? results[0]?.id : undefined;
+
+  const fmt = (n: number, digits = 1) =>
+    n === Infinity ? t("ch_never") : n >= 10000 ? `~${Math.round(n).toLocaleString()}` : `${n.toFixed(digits)}`;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-4 py-6">
       <header className="mb-4">
         <h1 className="text-2xl font-bold text-amber-400">{t("ch_title")}</h1>
         <p className="mt-1 text-sm text-zinc-400">{t("ch_sub")}</p>
@@ -124,7 +185,7 @@ export default function ChromaticCalculator() {
         ⚠ {t("ch_banner")}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-[280px_1fr]">
         {/* 입력 */}
         <section className="space-y-4">
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
@@ -135,6 +196,20 @@ export default function ChromaticCalculator() {
               <NumInput label="INT" value={intReq} setValue={setIntReq} min={0} max={999} accent="text-sky-400" />
               <NumInput label={t("ch_quality")} value={quality} setValue={setQuality} min={0} max={30} />
               <NumInput label={t("ch_sockets")} value={sockets} setValue={setSockets} min={1} max={6} />
+              <label className="flex items-center justify-between gap-2 text-sm">
+                <span className="text-zinc-300">{t("ch_nonwhite_chance")}</span>
+                <input
+                  type="number"
+                  value={pOverride}
+                  placeholder={(autoP * 100).toFixed(1)}
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  onChange={(e) => setPOverride(e.target.value)}
+                  className="w-20 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-right text-sm text-zinc-200 placeholder-zinc-600 focus:border-amber-600 focus:outline-none"
+                />
+              </label>
+              <p className="text-[10px] leading-relaxed text-zinc-500">{t("ch_nonwhite_note")}</p>
             </div>
           </div>
 
@@ -154,46 +229,55 @@ export default function ChromaticCalculator() {
           </div>
         </section>
 
-        {/* 결과 */}
+        {/* 방법 비교 테이블 */}
         <section className="space-y-4">
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-            <h2 className="mb-3 font-semibold text-zinc-200">{t("ch_result")}</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded bg-zinc-950/60 p-3">
-                <p className="text-xs text-zinc-500">{t("ch_p_per_orb")}</p>
-                <p className="text-2xl font-bold text-zinc-100">
-                  {invalid ? "—" : `${(pSuccess * 100).toFixed(2)}%`}
-                </p>
+            <h2 className="mb-1 font-semibold text-zinc-200">{t("ch_compare_title")}</h2>
+            <p className="mb-3 text-xs text-zinc-500">{t("ch_compare_note")}</p>
+            {invalid ? (
+              <p className="py-8 text-center text-sm text-zinc-500">{t("ch_desired_invalid")}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[540px] text-sm">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
+                      <th className="py-2 pr-2 font-medium">{t("ch_method")}</th>
+                      <th className="py-2 pr-2 text-right font-medium">{t("ch_success")}</th>
+                      <th className="py-2 pr-2 text-right font-medium">{t("ch_avg_cost")}</th>
+                      <th className="py-2 pr-2 text-right font-medium">{t("ch_avg_attempts")}</th>
+                      <th className="py-2 pr-2 text-right font-medium">{t("ch_cost_per_try")}</th>
+                      <th className="py-2 text-right font-medium">{t("ch_std")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((r) => (
+                      <tr
+                        key={r.id}
+                        className={`border-b border-zinc-800/60 ${
+                          r.id === bestId ? "bg-emerald-950/40 text-emerald-200" : "text-zinc-300"
+                        }`}
+                      >
+                        <td className="py-2 pr-2">
+                          {t(r.labelKey, r.labelVars)}
+                          {r.id === bestId && (
+                            <span className="ml-2 rounded border border-emerald-700 px-1.5 py-0.5 text-[10px] text-emerald-400">
+                              {t("ch_best")}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-2 text-right">
+                          {r.p === 0 ? "0%" : r.p < 0.0001 ? "<0.01%" : `${(r.p * 100).toFixed(2)}%`}
+                        </td>
+                        <td className="py-2 pr-2 text-right font-semibold text-amber-400">{fmt(r.avgCost)}</td>
+                        <td className="py-2 pr-2 text-right">{fmt(r.avgAttempts)}</td>
+                        <td className="py-2 pr-2 text-right">{r.costPerTry}</td>
+                        <td className="py-2 text-right">{fmt(r.stdAttempts)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="rounded bg-zinc-950/60 p-3">
-                <p className="text-xs text-zinc-500">{t("ch_expected")}</p>
-                <p className="text-2xl font-bold text-amber-400">
-                  {invalid ? "—" : expected === Infinity ? t("ch_never") : `~${expected}`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-            <h2 className="mb-2 font-semibold text-zinc-200">{t("ch_bench")}</h2>
-            <p className="mb-3 text-xs text-zinc-500">{t("ch_bench_note")}</p>
-            <ul className="space-y-1 text-sm">
-              {BENCH.map((b) => (
-                <li
-                  key={b.minNonWhite}
-                  className={`flex items-center justify-between rounded px-2.5 py-1.5 ${
-                    benchApplicable && wantAny === b.minNonWhite
-                      ? "bg-emerald-950/50 text-emerald-300"
-                      : "bg-zinc-950/60 text-zinc-300"
-                  }`}
-                >
-                  <span>{t(`ch_bench_${b.minNonWhite}`)}</span>
-                  <span className="rounded border border-emerald-800 px-1.5 py-0.5 text-[10px] text-emerald-400">
-                    confirmed
-                  </span>
-                </li>
-              ))}
-            </ul>
+            )}
           </div>
 
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 text-xs leading-relaxed text-zinc-400">

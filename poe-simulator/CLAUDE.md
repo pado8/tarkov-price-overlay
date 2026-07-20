@@ -7,7 +7,7 @@ Path of Exile 3.29 "Curse of the Allflame" 시뮬레이터 3종 모음 (craftofe
 - `/` 홈 — 도구 3종 카드
 - `/enshrouding` — 인슈라우딩 시뮬레이터 (군단 리워크 유니크 변환)
 - `/allflame` — 올플레임 크래프팅 시뮬레이터 (베스퍼·무형화·유황·두캇)
-- `/chromatic` — 색채 오브 계산기 (소켓 리워크, 몬테카를로 50k)
+- `/chromatic` — 색채 오브 계산기 (소켓 리워크, siveran/Vorici식 방법 비교표: 색채 스팸 vs 벤치 3종 평균 비용 랭킹, 몬테카를로 30k/방법)
 
 ## 개념 1: 인슈라우딩 (군단 리워크)
 
