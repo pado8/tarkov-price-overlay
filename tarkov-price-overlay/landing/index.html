@@ -262,7 +262,7 @@
 (function(){
   var API="https://api.aquapado.com/priceoverlay/web";
   function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  beacon({kind:"view",path:location.pathname,ref:document.referrer});
+  // 페이지뷰는 Vercel Web Analytics가 집계함 → Neon 컴퓨트 절약 위해 view 비콘 제거. 다운로드(전환)만 소스별로 Neon에 기록.
   document.addEventListener('click',function(e){
     var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
     if(t){var tg=/\/latest/.test(t.href)?'latest':'list';
