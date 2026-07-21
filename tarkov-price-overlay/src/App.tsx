@@ -1635,8 +1635,22 @@ function App() {
         if (cardEl) {
           const rect = cardEl.getBoundingClientRect();
           if (rect.width > 0 && rect.height > 0) {
-            const winPos = await win.outerPosition();
-            const dpr = window.devicePixelRatio || 1;
+            const [winPos, winScale] = await Promise.all([
+              win.outerPosition(),
+              win.scaleFactor(),
+            ]);
+            // CSS→physical conversion uses the WINDOW's authoritative scale
+            // factor (the monitor the card is actually on), NOT
+            // window.devicePixelRatio. WebView2's devicePixelRatio can lag
+            // when the window moves between different-DPI monitors or report
+            // the primary monitor's scale on a secondary — either makes the
+            // computed card rect the wrong size, so the inside-test reads a
+            // cursor that's visually ON the card as "outside" → the card
+            // won't capture the wheel (scroll leaks to the game) AND
+            // auto-hide fires. The window-fit logic already switched to the
+            // per-monitor scaleFactor for this exact reason (id20); the
+            // click-through poll was the last holdout on devicePixelRatio.
+            const dpr = winScale || window.devicePixelRatio || 1;
             // Whole-pixel, padded rect (see EDGE_PAD) so the inside-test
             // doesn't oscillate on the card edge at fractional DPI.
             const left = winPos.x + Math.floor(rect.left * dpr) - EDGE_PAD;
