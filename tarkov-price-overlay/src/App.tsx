@@ -197,8 +197,13 @@ const BATCHED_EVENTS = new Set<StatsEvent>([
   "lookup_nomatch",
   "lookup_noprice",
 ]);
-const STATS_MAX_BATCH = 25; // flush early when a heavy session fills the buffer
-const STATS_FLUSH_MS = 10 * 60 * 1000; // …otherwise flush at most every 10 min
+// 2026-07-21: Neon 무료 컴퓨트 재소진(21일 만에) 대응으로 flush 주기 10→30분.
+// autosuspend Postgres는 write가 올 때마다 깨어나 그때부터 유휴 타이머만큼
+// 과금되므로, wake 횟수(=flush 횟수)를 줄이는 게 핵심 레버. 주기를 늘리면
+// 버퍼가 상한에 먼저 차 조기 flush로 되돌아가므로 상한도 25→60으로 올린다
+// (한 세션의 lookup은 대개 수십 건 — 60이면 대부분 시간 flush로 처리).
+const STATS_MAX_BATCH = 60; // flush early only when a very heavy session fills the buffer
+const STATS_FLUSH_MS = 30 * 60 * 1000; // …otherwise flush at most every 30 min
 
 let statsQueue: EventPayload[] = [];
 let statsFlushTimer: ReturnType<typeof setTimeout> | null = null;
