@@ -11,6 +11,7 @@ import {
   getVestigial,
 } from "@/lib/enshrouding";
 import { useLang, useT } from "@/lib/i18n";
+import { translateModWith, useModTranslator } from "@/lib/modTranslate";
 
 const SLOTS: Slot[] = ["Body Armour", "Helmet", "Gloves", "Boots", "Shield"];
 
@@ -35,11 +36,21 @@ const STATUS_KEY: Record<string, { key: string; cls: string }> = {
 export default function Simulator() {
   const t = useT();
   const { lang } = useLang();
+  const modMap = useModTranslator(lang);
+  const tr = (m: string) => translateModWith(modMap, m);
   const [slot, setSlot] = useState<Slot>("Body Armour");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<UniqueItem | null>(null);
   const [corrupted, setCorrupted] = useState(false);
   const [poolSearch, setPoolSearch] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const slotTotal = useMemo(() => ALL_UNIQUES.filter((u) => u.slot === slot).length, [slot]);
 
@@ -159,6 +170,20 @@ export default function Simulator() {
                     {crystal && !crystal.confirmed && <p className="text-zinc-500">{t("ens_unconfirmed")}</p>}
                   </div>
                 </div>
+                {(selected.implicits.length > 0 || selected.explicits.length > 0) && (
+                  <div className="mt-3 border-t border-zinc-800 pt-2">
+                    {selected.implicits.map((m, i) => (
+                      <p key={`i${i}`} className="text-xs text-zinc-400">
+                        {tr(m)}
+                      </p>
+                    ))}
+                    {selected.explicits.map((m, i) => (
+                      <p key={`e${i}`} className="text-xs text-sky-300">
+                        {tr(m)}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {eligibility && !eligibility.eligible && (
                   <div className="mt-3 rounded border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
                     {eligibility.reasons.map((r) => (
@@ -203,19 +228,44 @@ export default function Simulator() {
                     className="w-48 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-xs text-zinc-200 placeholder-zinc-500 focus:border-amber-600 focus:outline-none"
                   />
                 </div>
-                <p className="mb-3 text-xs text-zinc-500">{t("ens_pool_note")}</p>
-                <ul className="grid max-h-[420px] grid-cols-2 gap-1 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
-                  {pool.map((u) => (
-                    <li
-                      key={u.detailsId}
-                      className="flex items-center gap-2 rounded bg-zinc-950/60 px-2 py-1.5 text-xs text-zinc-300"
-                      title={`${uName(u, lang)} — ${uBase(u, lang)}`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={u.icon} alt="" className="h-7 w-7 shrink-0 object-contain" loading="lazy" />
-                      <span className="truncate">{uName(u, lang)}</span>
-                    </li>
-                  ))}
+                <p className="mb-3 text-xs text-zinc-500">
+                  {t("ens_pool_note")} <span className="text-zinc-400">{t("ens_pool_click")}</span>
+                </p>
+                <ul className="grid max-h-[520px] grid-cols-2 items-start gap-1 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
+                  {pool.map((u) => {
+                    const open = expanded.has(u.detailsId);
+                    return (
+                      <li key={u.detailsId} className="rounded bg-zinc-950/60">
+                        <button
+                          onClick={() => toggleExpand(u.detailsId)}
+                          className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-xs text-zinc-300 transition-colors hover:bg-zinc-900"
+                          title={`${uName(u, lang)} — ${uBase(u, lang)}`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={u.icon} alt="" className="h-7 w-7 shrink-0 object-contain" loading="lazy" />
+                          <span className="min-w-0 flex-1 truncate">{uName(u, lang)}</span>
+                          <span className={`shrink-0 text-[10px] text-zinc-600 transition-transform ${open ? "rotate-180" : ""}`}>
+                            ▾
+                          </span>
+                        </button>
+                        {open && (
+                          <div className="border-t border-zinc-800/80 px-2 py-1.5">
+                            <p className="mb-1 text-[10px] text-zinc-500">{uBase(u, lang)}</p>
+                            {[...u.implicits].map((m, i) => (
+                              <p key={`i${i}`} className="text-[11px] leading-snug text-zinc-400">
+                                {tr(m)}
+                              </p>
+                            ))}
+                            {u.explicits.map((m, i) => (
+                              <p key={`e${i}`} className="text-[11px] leading-snug text-sky-300">
+                                {tr(m)}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </>

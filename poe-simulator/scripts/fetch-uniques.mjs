@@ -47,16 +47,27 @@ async function buildKoMaps() {
   }
   const krById = Object.fromEntries(kr.result.map((c) => [c.id, c]));
   const nameMap = {};
-  const baseMap = {};
+  const baseMap = {}; // 전체 베이스 타입 영문→한글 (유니크 명·베이스 표기 + 붙여넣기 아이템 베이스 번역용)
   for (const cat of en.result) {
     const k = krById[cat.id];
     if (!k) continue;
+    // (a) 유니크 항목: 이름 + 베이스. 유니크 부분집합은 전 카테고리 개수 정합(검증됨).
     const eu = cat.entries.filter((x) => x.flags?.unique && x.name);
     const ku = k.entries.filter((x) => x.flags?.unique && x.name);
-    if (eu.length !== ku.length) continue; // 정합 안 되는 카테고리는 스킵(유니크는 실측상 항상 정합)
-    for (let i = 0; i < eu.length; i++) {
-      if (eu[i].name) nameMap[eu[i].name] = ku[i].name;
-      if (eu[i].type && ku[i].type) baseMap[eu[i].type] = ku[i].type;
+    if (eu.length === ku.length) {
+      for (let i = 0; i < eu.length; i++) {
+        if (eu[i].name) nameMap[eu[i].name] = ku[i].name;
+        if (eu[i].type && ku[i].type && !(eu[i].type in baseMap)) baseMap[eu[i].type] = ku[i].type;
+      }
+    }
+    // (b) 비유니크 베이스 항목: 개수 일치 카테고리만 index zip(armour/monster/graft는 1개씩 어긋나 스킵).
+    //     유니크 없는 베이스(예: Convoking Wand)까지 커버.
+    const eb = cat.entries.filter((x) => !(x.flags?.unique));
+    const kb = k.entries.filter((x) => !(x.flags?.unique));
+    if (eb.length === kb.length) {
+      for (let i = 0; i < eb.length; i++) {
+        if (eb[i].type && kb[i].type && !(eb[i].type in baseMap)) baseMap[eb[i].type] = kb[i].type;
+      }
     }
   }
   return { nameMap, baseMap };
@@ -108,8 +119,14 @@ uniques.sort((a, b) => a.slot.localeCompare(b.slot) || a.name.localeCompare(b.na
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: "poe.ninja Standard + Kakao trade (ko)", uniques }, null, 1));
 
+// 전체 베이스 타입 영문→한글 맵 (붙여넣기/샘플 아이템 베이스 번역용). public 정적 에셋으로 fetch.
+const BASES_OUT = join(__dirname, "..", "public", "data", "bases-ko.json");
+mkdirSync(dirname(BASES_OUT), { recursive: true });
+writeFileSync(BASES_OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: "pathofexile.com + kakaogames trade items", bases: baseMap }));
+
 const bySlot = {};
 for (const u of uniques) bySlot[u.slot] = (bySlot[u.slot] ?? 0) + 1;
 const koCount = uniques.filter((u) => u.name_ko).length;
 console.log(`total: ${uniques.length}`, bySlot);
 console.log(`한글명 매핑: 이름 ${koCount}/${uniques.length}, 베이스 ${uniques.filter((u) => u.baseType_ko).length}/${uniques.length}`);
+console.log(`bases-ko.json: ${Object.keys(baseMap).length}종`);

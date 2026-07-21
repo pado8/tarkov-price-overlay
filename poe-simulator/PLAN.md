@@ -89,7 +89,8 @@
 
 ### 데이터 갱신 공통
 - 유니크 목록 갱신: `node scripts/fetch-uniques.mjs` (3.29 신규 유니크 반영 + 카카오 거래 데이터로 name_ko/baseType_ko 보강. poe.ninja 리그명이 바뀌므로 필요시 스크립트의 league 파라미터를 신규 리그명으로 — Standard 유지도 무방).
-- **모드 한글 번역 맵 갱신: `node scripts/fetch-mods.mjs`** → `public/data/mods-ko.json`(약 1.1MB, 9040종). 글로벌+카카오 거래 stats를 로케일 무관 id로 조인, 숫자→`#` 정규화. 런타임 `src/lib/modTranslate.ts`가 한국어일 때만 fetch(1회 캐시)해 아이템 모드를 공식 한글로 치환(미매칭=영문 폴백). 리그 오픈 후 신규 모드 반영하려면 재실행.
+- **모드 한글 번역 맵 갱신: `node scripts/fetch-mods.mjs`** → `public/data/mods-ko.json`(약 1.1MB, 9040종). 글로벌+카카오 거래 stats를 로케일 무관 id로 조인, 숫자→`#` 정규화(범위 `(60-80)`도 한 토큰). 런타임 `src/lib/modTranslate.ts`가 한국어일 때만 fetch(1회 캐시)해 아이템 모드를 공식 한글로 치환(미매칭=영문 폴백, 유니크 모드 실측 커버리지 ~88%·나머지는 레거시/삭제 스탯). 인슈라우딩(선택 아이템+결과 풀 클릭 펼침)·올플레임(붙여넣기/고스트) 양쪽 적용. 리그 오픈 후 신규 모드 반영하려면 재실행.
+- **베이스 타입 한글 맵: `node scripts/fetch-uniques.mjs`가 함께 생성** → `public/data/bases-ko.json`(3203종). 카카오 items의 유니크 type(전 카테고리 정합) + 비유니크 베이스(정합 카테고리 index zip)로 구성. 올플레임 붙여넣기/샘플 아이템 베이스 번역(`useBaseTranslator`). 실제 KR 클라 붙여넣기는 이미 한글이라 그대로 통과.
 - **poe.ninja API 주의**: 구 `api/data/itemoverview`는 404. 현행: `https://poe.ninja/poe1/api/economy/stash/current/item/overview?league=Standard&type=UniqueArmour`.
 
 ## 5. 코드 맵 (빠른 참조)

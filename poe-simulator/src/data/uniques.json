@@ -1,5 +1,5 @@
 {
- "fetchedAt": "2026-07-20T12:55:16.610Z",
+ "fetchedAt": "2026-07-21T04:34:08.604Z",
  "source": "poe.ninja Standard + Kakao trade (ko)",
  "uniques": [
   {
@@ -192,18 +192,20 @@
    "slot": "Body Armour",
    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Ccmlza3dyYXAiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/4a3c7d71e6/Briskwrap.png",
    "levelRequired": 9,
-   "implicits": [],
+   "implicits": [
+    "Item sells for much more to vendors"
+   ],
    "explicits": [
-    "(5-15)% increased Dexterity",
+    "15% increased Dexterity",
     "(5-10)% increased Attack Speed",
     "+(120-180) to Evasion Rating",
     "+(30-40)% to Cold Resistance",
     "5% increased Movement Speed",
-    "(20-96)% increased Mana Recovery from Flasks"
+    "(20-98)% increased Mana Recovery from Flasks"
    ],
    "flavourText": "\"I carry neither food nor drink. I rely on the charity\nof my fellow wayfarers. Dead men are generous men.\"\n- Taruk of the Wildmen",
    "isReplica": false,
-   "detailsId": "briskwrap-strapped-leather"
+   "detailsId": "briskwrap-strapped-leather-6l"
   },
   {
    "name": "Bronn's Lithe",
@@ -380,22 +382,21 @@
    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Db3NwcmlzV2lsbCIsInciOjIsImgiOjMsInNjYWxlIjoxfV0/e7801b1322/CosprisWill.png",
    "levelRequired": 68,
    "implicits": [
-    "3% increased Movement Speed",
-    "Item sells for much more to vendors"
+    "3% increased Movement Speed"
    ],
    "explicits": [
     "(120-200)% increased Evasion Rating",
     "+(17-53)% to Chaos Resistance",
     "You can apply an additional Curse",
-    "Your Curses can apply to Hexproof Enemies",
     "Your Hexes can affect Hexproof Enemies",
+    "Your Curses can apply to Hexproof Enemies",
     "Poison Cursed Enemies on hit",
     "60% chance to Poison on Hit against Cursed Enemies",
     "Always Poison on Hit against Cursed Enemies"
    ],
    "flavourText": "Curse their vile Council,\nThey cast me aside as if I am some bastard child.\nIf they only knew the power I possess.",
    "isReplica": false,
-   "detailsId": "cospris-will-assassins-garb-6l"
+   "detailsId": "cospris-will-assassins-garb-5l"
   },
   {
    "name": "Craiceann's Carapace",
@@ -518,7 +519,7 @@
    ],
    "flavourText": "The victorious know only leadership,\nthe rest only servitude.",
    "isReplica": false,
-   "detailsId": "demigods-dominance-golden-mantle"
+   "detailsId": "demigods-dominance-golden-mantle-6l"
   },
   {
    "name": "Dendrobate",
@@ -687,14 +688,14 @@
    "explicits": [
     "+(30-40) to Intelligence",
     "(120-140)% increased Energy Shield",
-    "Regenerate (80.1-100) Energy Shield per second",
+    "Regenerate (80.2-100) Energy Shield per second",
     "Enemies affected by your Spider's Webs deal 10% reduced Damage",
     "Enemies affected by your Spider's Webs have -10% to All Resistances",
     "(50-70)% increased Aspect of the Spider Area of Effect"
    ],
    "flavourText": "The First of the Night was the first explorer\nIt was she who first braved night's terrors\nand found comfort in silence and solace.",
    "isReplica": false,
-   "detailsId": "fenumus-shroud-widowsilk-robe-6l"
+   "detailsId": "fenumus-shroud-widowsilk-robe-5l"
   },
   {
    "name": "Fleshcrafter",
@@ -730,13 +731,13 @@
    "implicits": [],
    "explicits": [
     "(180-220)% increased Armour and Energy Shield",
-    "+(60-79) to maximum Life",
+    "+(63-80) to maximum Life",
     "Gain up to maximum Endurance Charges when you take a Critical Strike",
     "Your nearby party members maximum Endurance Charges is equal to yours"
    ],
    "flavourText": "Nothing stops the pain like a courageous rush into battle.",
    "isReplica": false,
-   "detailsId": "foulborn-ambus-charge-max-endurance-crusader-chainmail-5l"
+   "detailsId": "foulborn-ambus-charge-max-endurance-crusader-chainmail-6l"
   },
   {
    "name": "Foulborn Ashrend",
@@ -791,7 +792,7 @@
    ],
    "flavourText": "It is safer to be feared than to be loved.",
    "isReplica": false,
-   "detailsId": "foulborn-bramblejack-armour-plate-vest-5l"
+   "detailsId": "foulborn-bramblejack-armour-plate-vest-6l"
   },
   {
    "name": "Foulborn Bronn's Lithe",
@@ -878,13 +879,12 @@
    "levelRequired": 18,
    "implicits": [],
    "explicits": [
-    "+(50-74)% to Fire Resistance",
     "Reflects 100 Fire Damage to Melee Attackers",
     "40% of Physical Damage taken as Fire Damage"
    ],
    "flavourText": "He who sows an ember shall reap an inferno.",
    "isReplica": false,
-   "detailsId": "foulborn-cloak-of-flame-ignited-damage-scholars-robe-6l"
+   "detailsId": "foulborn-cloak-of-flame-fire-leech-ignited-damage-scholars-robe"
   },
   {
    "name": "Foulborn Cospri's Will",
@@ -898,14 +898,14 @@
     "3% increased Movement Speed"
    ],
    "explicits": [
-    "(152-200)% increased Evasion Rating",
+    "(155-198)% increased Evasion Rating",
     "+(31-53)% to Chaos Resistance",
     "You can apply an additional Curse",
     "Your Hexes can affect Hexproof Enemies"
    ],
    "flavourText": "Curse their vile Council,\nThey cast me aside as if I am some bastard child.\nIf they only knew the power I possess.",
    "isReplica": false,
-   "detailsId": "foulborn-cospris-will-wither-on-hit-assassins-garb"
+   "detailsId": "foulborn-cospris-will-wither-on-hit-assassins-garb-6l"
   },
   {
    "name": "Foulborn Death's Oath",
@@ -976,15 +976,15 @@
    "baseType_ko": "실크 조끼",
    "slot": "Body Armour",
    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9HaG9zdHdlYXZlIiwidyI6MiwiaCI6Mywic2NhbGUiOjEsIm11dGF0ZWQiOnRydWV9XQ/cacbc0765b/Ghostweave.png",
-   "levelRequired": 11,
+   "levelRequired": 16,
    "implicits": [],
    "explicits": [
-    "+(106-200) to maximum Energy Shield",
-    "+(51-100) to maximum Life"
+    "+(106-199) to maximum Energy Shield",
+    "+(66-96) to maximum Life"
    ],
    "flavourText": "Faith springs abundant at the edge of death.",
    "isReplica": false,
-   "detailsId": "foulborn-ghostwrithe-chaos-recoup-life-to-shield-silken-vest-5l"
+   "detailsId": "foulborn-ghostwrithe-chaos-recoup-life-to-shield-silken-vest-6l"
   },
   {
    "name": "Foulborn Greed's Embrace",
@@ -1133,14 +1133,14 @@
    "implicits": [],
    "explicits": [
     "+160 Dexterity Requirement",
-    "(201-250)% increased Armour",
-    "+(60-100) to maximum Life",
+    "(200-247)% increased Armour",
+    "+(60-97) to maximum Life",
     "0.4% of Physical Attack Damage Leeched as Mana",
     "Enemy Projectiles Pierce you"
    ],
    "flavourText": "\"The Virtue Gems are a gift from the land, \nour land, and we will not let our gifts\nbe destroyed by savages.\"\n- Marceus Lioneye",
    "isReplica": false,
-   "detailsId": "foulborn-lioneyes-vision-projectile-avoidance-crusader-plate-5l"
+   "detailsId": "foulborn-lioneyes-vision-projectile-avoidance-crusader-plate-6l"
   },
   {
    "name": "Foulborn Queen of the Forest",
@@ -1152,17 +1152,17 @@
    "levelRequired": 59,
    "implicits": [],
    "explicits": [
-    "(201-238)% increased Evasion Rating",
-    "+(60-70) to maximum Life",
-    "+(6-10)% to Fire Resistance",
-    "+(26-40)% to Cold Resistance",
-    "+(11-25)% to Lightning Resistance",
+    "(200-234)% increased Evasion Rating",
+    "+(61-70) to maximum Life",
+    "+(6-9)% to Fire Resistance",
+    "+(31-40)% to Cold Resistance",
+    "+(12-22)% to Lightning Resistance",
     "1% increased Movement Speed per 600 Evasion Rating, up to 75%",
-    "-(50-40) Physical Damage taken from Hits by Animals"
+    "-(49-41) Physical Damage taken from Hits by Animals"
    ],
    "flavourText": "Shedding away her regal past, \nshe forged a new destiny. \nSacrificing the ephemeral joys of man, \nshe embraced the eternal grasp of nature. \nSeizing her one true wish, \nshe found peace at last.",
    "isReplica": false,
-   "detailsId": "foulborn-queen-of-the-forest-damage-taken-destiny-leather-5l"
+   "detailsId": "foulborn-queen-of-the-forest-damage-taken-destiny-leather-6l"
   },
   {
    "name": "Foulborn Shavronne's Wrappings",
@@ -1176,7 +1176,7 @@
     "(3-10)% increased Spell Damage"
    ],
    "explicits": [
-    "(101-148)% increased Energy Shield",
+    "(100-148)% increased Energy Shield",
     "+(30-40)% to Lightning Resistance",
     "Reflects 1 to 250 Lightning Damage to Melee Attackers",
     "Chaos Damage taken does not bypass Energy Shield"
@@ -1195,12 +1195,11 @@
    "levelRequired": 0,
    "implicits": [],
    "explicits": [
-    "Sockets cannot be modified",
-    "100% increased Global Defences"
+    "Sockets cannot be modified"
    ],
    "flavourText": "We happily give our limbs.\nA net woven to keep safe the bones of the Lords.",
    "isReplica": false,
-   "detailsId": "foulborn-skin-of-the-loyal-gem-quality-simple-robe-6l"
+   "detailsId": "foulborn-skin-of-the-loyal-gem-quality-resistances-simple-robe-6l"
   },
   {
    "name": "Foulborn Solaris Lorica",
@@ -1286,13 +1285,13 @@
    "implicits": [],
    "explicits": [
     "Socketed Gems are Supported by Level 29 Added Chaos Damage",
-    "+(20-29) to Intelligence",
-    "(228-250)% increased Energy Shield",
+    "+(21-30) to Intelligence",
+    "(212-250)% increased Energy Shield",
     "10% increased maximum Life"
    ],
    "flavourText": "My Soul is your Strength\nMy Price is your Blood",
    "isReplica": false,
-   "detailsId": "foulborn-the-covenant-blood-magic-spidersilk-robe-5l"
+   "detailsId": "foulborn-the-covenant-blood-magic-spidersilk-robe-6l"
   },
   {
    "name": "Foulborn The Fourth Vow",
@@ -1362,13 +1361,13 @@
    "levelRequired": 65,
    "implicits": [],
    "explicits": [
-    "(10-15)% increased Dexterity",
-    "+(40-60) to maximum Life",
+    "(11-14)% increased Dexterity",
+    "+(42-57) to maximum Life",
     "Arctic Armour has no Reservation"
    ],
    "flavourText": "We dance in the white, like water,\ncolliding as many and emerging as one.",
    "isReplica": false,
-   "detailsId": "foulborn-the-snowblind-grace-life-evasion-purity-of-ice-zodiac-leather-5l"
+   "detailsId": "foulborn-the-snowblind-grace-life-evasion-purity-of-ice-zodiac-leather-6l"
   },
   {
    "name": "Foulborn Tinkerskin",
@@ -1401,13 +1400,13 @@
    "levelRequired": 53,
    "implicits": [],
    "explicits": [
-    "(67-98)% increased Armour",
+    "(62-100)% increased Armour",
     "Recover (1-3)% of Life on Kill",
     "(30-40)% increased Stun and Block Recovery"
    ],
    "flavourText": "The world will end in a divine stomach once Kitava has eaten all that lives.",
    "isReplica": false,
-   "detailsId": "foulborn-utulas-hunger-no-defence-es-majestic-plate-5l"
+   "detailsId": "foulborn-utulas-hunger-no-defence-es-majestic-plate-6l"
   },
   {
    "name": "Foulborn Victario's Influence",
@@ -1439,14 +1438,14 @@
    "levelRequired": 59,
    "implicits": [],
    "explicits": [
-    "(200-220)% increased Energy Shield",
+    "(202-220)% increased Energy Shield",
     "+(20-30) to maximum Mana",
     "Minions have 20% reduced maximum Life",
     "Minions deal 15% increased Damage"
    ],
    "flavourText": "Reap what others have sown\nMuster them from their graves\nParade them for your pleasure\nZealots in mortis enslaved",
    "isReplica": false,
-   "detailsId": "foulborn-vis-mortis-unholy-might-necromancer-silks-5l"
+   "detailsId": "foulborn-vis-mortis-unholy-might-necromancer-silks-6l"
   },
   {
    "name": "Foulborn Voll's Protector",
@@ -2267,7 +2266,7 @@
    ],
    "flavourText": "\"Better... stronger... more vital... and then... failure. Always, failure.\nWhat key fundamental secret are we missing?\"",
    "isReplica": true,
-   "detailsId": "replica-loreweave-elegant-ringmail-5l"
+   "detailsId": "replica-loreweave-elegant-ringmail-6l"
   },
   {
    "name": "Replica Perfect Form",
@@ -2317,7 +2316,7 @@
    ],
    "flavourText": "\"Further research must be done on Prototype #282.\nThere is power here, if it can be tapped.\"",
    "isReplica": true,
-   "detailsId": "replica-restless-ward-carnal-armour"
+   "detailsId": "replica-restless-ward-carnal-armour-6l"
   },
   {
    "name": "Replica Shroud of the Lightless",
@@ -2401,7 +2400,7 @@
    ],
    "flavourText": "The First of the Sky was the Last of the First.\nIt was he who showed us that our limits are self-imposed,\nthat what we take for law may just be an illusion.",
    "isReplica": false,
-   "detailsId": "saqawals-nest-blood-raiment-6l"
+   "detailsId": "saqawals-nest-blood-raiment-5l"
   },
   {
    "name": "Servant of Decay",
@@ -2463,12 +2462,12 @@
     "10% faster start of Energy Shield Recharge",
     "+(30-40)% to Lightning Resistance",
     "Reflects 1 to 250 Lightning Damage to Melee Attackers",
-    "Chaos Damage does not bypass Energy Shield",
-    "Chaos Damage taken does not bypass Energy Shield"
+    "Chaos Damage taken does not bypass Energy Shield",
+    "Chaos Damage does not bypass Energy Shield"
    ],
    "flavourText": "Shavronne's apparel became ever more extravagant\nas her body and soul became ever more corrupted.",
    "isReplica": false,
-   "detailsId": "shavronnes-wrappings-occultists-vestment-5l"
+   "detailsId": "shavronnes-wrappings-occultists-vestment-6l"
   },
   {
    "name": "Shroud of the Lightless",
@@ -2592,7 +2591,7 @@
    "baseType": "Carnal Armour",
    "baseType_ko": "육욕의 갑옷",
    "slot": "Body Armour",
-   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9DaHJvbm9tYW5jZXJBcm1vdXIiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/12a9d49478/ChronomancerArmour.png",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9DaHJvbm9tYW5jZXJBcm1vdXIiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MSwicmVsaWMiOjEyfV0/f054fc7574/ChronomancerArmour.png",
    "levelRequired": 71,
    "implicits": [
     "+(20-25) to maximum Mana"
@@ -2808,7 +2807,9 @@
    "slot": "Body Armour",
    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9Jcm9uSGVhcnQgRmluYWwiLCJ3IjoyLCJoIjozLCJzY2FsZSI6MX1d/113c4e83b6/IronHeart%20Final.png",
    "levelRequired": 59,
-   "implicits": [],
+   "implicits": [
+    "Item sells for much more to vendors"
+   ],
    "explicits": [
     "+1% Chance to Block Attack Damage per 50 Strength",
     "Chance to Block Spell Damage is Unlucky",
@@ -2819,7 +2820,7 @@
    ],
    "flavourText": "\"Stand steadfast in the face of destruction.\nThe Council cannot afford to falter.\"\n- Mauritius, the Iron Heart",
    "isReplica": false,
-   "detailsId": "the-iron-fortress-crusader-plate-5l"
+   "detailsId": "the-iron-fortress-crusader-plate-6l"
   },
   {
    "name": "The Ivory Tower",
@@ -2973,26 +2974,6 @@
   {
    "name": "The Snowblind Grace",
    "name_ko": "설맹의 은총",
-   "baseType": "Zodiac Leather",
-   "baseType_ko": "성좌의 가죽 갑옷",
-   "slot": "Body Armour",
-   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9UaGVTbm93YmxpbmRHcmFjZSIsInciOjIsImgiOjMsInNjYWxlIjoxfV0/1f9378f004/TheSnowblindGrace.png",
-   "levelRequired": 65,
-   "implicits": [],
-   "explicits": [
-    "(10-15)% increased Dexterity",
-    "(80-100)% increased Evasion Rating",
-    "+(40-60) to maximum Life",
-    "50% increased Arctic Armour Buff Effect",
-    "Arctic Armour has no Reservation"
-   ],
-   "flavourText": "We dance in the white, like water,\ncolliding as many and emerging as one.",
-   "isReplica": false,
-   "detailsId": "the-snowblind-grace-zodiac-leather-6l"
-  },
-  {
-   "name": "The Snowblind Grace",
-   "name_ko": "설맹의 은총",
    "baseType": "Coronal Leather",
    "baseType_ko": "광환의 가죽 갑옷",
    "slot": "Body Armour",
@@ -3012,6 +2993,26 @@
    "flavourText": "We dance in the white, like water,\ncolliding as many and emerging as one.",
    "isReplica": false,
    "detailsId": "the-snowblind-grace-coronal-leather"
+  },
+  {
+   "name": "The Snowblind Grace",
+   "name_ko": "설맹의 은총",
+   "baseType": "Zodiac Leather",
+   "baseType_ko": "성좌의 가죽 갑옷",
+   "slot": "Body Armour",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb2R5QXJtb3Vycy9UaGVTbm93YmxpbmRHcmFjZSIsInciOjIsImgiOjMsInNjYWxlIjoxfV0/1f9378f004/TheSnowblindGrace.png",
+   "levelRequired": 65,
+   "implicits": [],
+   "explicits": [
+    "(10-15)% increased Dexterity",
+    "(80-100)% increased Evasion Rating",
+    "+(40-60) to maximum Life",
+    "50% increased Arctic Armour Buff Effect",
+    "Arctic Armour has no Reservation"
+   ],
+   "flavourText": "We dance in the white, like water,\ncolliding as many and emerging as one.",
+   "isReplica": false,
+   "detailsId": "the-snowblind-grace-zodiac-leather-6l"
   },
   {
    "name": "Thousand Ribbons",
@@ -3173,7 +3174,7 @@
    ],
    "flavourText": "Although a great leader during the war,\nVoll proved disastrous in times of peace.",
    "isReplica": false,
-   "detailsId": "volls-protector-holy-chainmail-5l"
+   "detailsId": "volls-protector-holy-chainmail-6l"
   },
   {
    "name": "Wall of Brambles",
@@ -3637,30 +3638,6 @@
   {
    "name": "Doryani's Delusion",
    "name_ko": "도리아니의 기만",
-   "baseType": "Sorcerer Boots",
-   "baseType_ko": "악령술사 장화",
-   "slot": "Boots",
-   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Eb3JpeWFuaXNCbHVlIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/0288b52fee/DoriyanisBlue.png",
-   "levelRequired": 67,
-   "implicits": [],
-   "explicits": [
-    "Grants Level 25 Purity of Lightning Skill",
-    "Grants Level 25 Purity of Fire Skill",
-    "Grants Level 25 Purity of Ice Skill",
-    "Adds (1-3) to (68-72) Lightning Damage to Spells and Attacks",
-    "Adds (25-30) to (40-45) Cold Damage to Spells and Attacks",
-    "Adds (25-30) to (40-45) Fire Damage to Spells and Attacks",
-    "(150-220)% increased Energy Shield",
-    "+(60-70) to maximum Life",
-    "30% increased Movement Speed"
-   ],
-   "flavourText": "\"Every day we choose safety or knowledge. \nLive and stagnate, or risk death for truth.\nI would rather see the end of the Vaal\nthan help it tread water.\" \n- Doryani, Queen's Thaumaturgist",
-   "isReplica": false,
-   "detailsId": "doryanis-delusion-sorcerer-boots"
-  },
-  {
-   "name": "Doryani's Delusion",
-   "name_ko": "도리아니의 기만",
    "baseType": "Slink Boots",
    "baseType_ko": "송아지 가죽 장화",
    "slot": "Boots",
@@ -3681,6 +3658,30 @@
    "flavourText": "\"Every day we choose safety or knowledge. \nLive and stagnate, or risk death for truth.\nI would rather see the end of the Vaal\nthan help it tread water.\" \n- Doryani, Queen's Thaumaturgist",
    "isReplica": false,
    "detailsId": "doryanis-delusion-slink-boots"
+  },
+  {
+   "name": "Doryani's Delusion",
+   "name_ko": "도리아니의 기만",
+   "baseType": "Sorcerer Boots",
+   "baseType_ko": "악령술사 장화",
+   "slot": "Boots",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9Cb290cy9Eb3JpeWFuaXNCbHVlIiwidyI6MiwiaCI6Miwic2NhbGUiOjF9XQ/0288b52fee/DoriyanisBlue.png",
+   "levelRequired": 67,
+   "implicits": [],
+   "explicits": [
+    "Grants Level 25 Purity of Lightning Skill",
+    "Grants Level 25 Purity of Fire Skill",
+    "Grants Level 25 Purity of Ice Skill",
+    "Adds (1-3) to (68-72) Lightning Damage to Spells and Attacks",
+    "Adds (25-30) to (40-45) Cold Damage to Spells and Attacks",
+    "Adds (25-30) to (40-45) Fire Damage to Spells and Attacks",
+    "(150-220)% increased Energy Shield",
+    "+(60-70) to maximum Life",
+    "30% increased Movement Speed"
+   ],
+   "flavourText": "\"Every day we choose safety or knowledge. \nLive and stagnate, or risk death for truth.\nI would rather see the end of the Vaal\nthan help it tread water.\" \n- Doryani, Queen's Thaumaturgist",
+   "isReplica": false,
+   "detailsId": "doryanis-delusion-sorcerer-boots"
   },
   {
    "name": "Duskblight",
@@ -5330,6 +5331,26 @@
    "flavourText": "\"Nothing is more natural than competition.\nOne feasts, another starves.\nOne blossoms, another withers.\nAnd one cannot catch the golden sunlight\nwithout casting a bitter shadow.\"\n- Cadiro Perandus",
    "isReplica": false,
    "detailsId": "allelopathy-satin-gloves"
+  },
+  {
+   "name": "Architect's Hand",
+   "name_ko": "건축가의 손길",
+   "baseType": "Strapped Mitts",
+   "baseType_ko": "끈 미트",
+   "slot": "Gloves",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9HbG92ZXMvQXJjaGl0ZWN0c0hhbmQiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/8f303b6f98/ArchitectsHand.png",
+   "levelRequired": 16,
+   "implicits": [],
+   "explicits": [
+    "+(30-40) to Dexterity",
+    "(100-247)% increased Evasion and Energy Shield",
+    "(20-30)% reduced Trap Throwing Speed",
+    "Skills used by Traps have (10-20)% increased Area of Effect",
+    "Increases and Reductions to Cast Speed also Apply to Trap Throwing Speed"
+   ],
+   "flavourText": "Great works take time.\n\n<default>{This item can be transformed on the Altar of Sacrifice along with Vial of Dominance}",
+   "isReplica": false,
+   "detailsId": "architects-hand-strapped-mitts"
   },
   {
    "name": "Architect's Hand",
@@ -7801,18 +7822,20 @@
    "slot": "Gloves",
    "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9HbG92ZXMvUGFsZUNvdW5jaWxHbG92ZXMiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/3271f5441a/PaleCouncilGloves.png",
    "levelRequired": 43,
-   "implicits": [],
+   "implicits": [
+    "Item sells for much more to vendors"
+   ],
    "explicits": [
-    "Adds (16-20) to (25-30) Fire Damage to Spells and Attacks",
+    "Adds (1-3) to (42-47) Lightning Damage to Spells and Attacks",
     "+(50-70) to maximum Life",
-    "+(30-40)% to Fire Resistance",
-    "Your Fire Damage can Poison",
+    "+(30-40)% to Lightning Resistance",
+    "Your Lightning Damage can Poison",
     "50% less Poison Duration",
-    "Fire Skills have 20% chance to Poison on Hit"
+    "Lightning Skills have 20% chance to Poison on Hit"
    ],
    "flavourText": "You do not cease to be when you die\nany more than the caterpillar ceases to be when it cocoons.\nCome, let me show you.",
    "isReplica": false,
-   "detailsId": "volkuurs-guidance-fire-zealot-gloves"
+   "detailsId": "volkuurs-guidance-lightning-zealot-gloves"
   },
   {
    "name": "Winds of Change",
@@ -8106,6 +8129,23 @@
    "flavourText": "An eye for an eye makes the whole world dead.",
    "isReplica": false,
    "detailsId": "blood-price-reaver-helmet"
+  },
+  {
+   "name": "Cadigan's Crown",
+   "name_ko": "캐디건의 왕관",
+   "baseType": "Runic Crown",
+   "baseType_ko": "룬 왕관",
+   "slot": "Helmet",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0FkYXB0YXRpb25IZWxtZXRVbmlxdWUiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/693ad15174/AdaptationHelmetUnique.png",
+   "levelRequired": 68,
+   "implicits": [],
+   "explicits": [
+    "Never deal Critical Strikes",
+    "Battlemage"
+   ],
+   "flavourText": "Cadigan the Third ruled dispassionately\nthrough the iron might of artifice.",
+   "isReplica": false,
+   "detailsId": "cadigans-crown-runic-crown"
   },
   {
    "name": "Chitus' Apex",
@@ -9010,7 +9050,7 @@
    "implicits": [],
    "explicits": [
     "+(20-30) to Strength",
-    "+(205-299) to Armour",
+    "+(201-299) to Armour",
     "Cannot Leech when on Low Life"
    ],
    "flavourText": "May you never hear it toll.",
@@ -9031,12 +9071,11 @@
     "16% increased Attack Speed",
     "(150-200)% increased Armour and Evasion",
     "+(15-25)% to Chaos Resistance",
-    "20% increased Movement Speed",
     "Mercury Footprints"
    ],
    "flavourText": "Swift as thought are the actions of Man \nwhen borne on wings of divine providence.",
    "isReplica": false,
-   "detailsId": "foulborn-devotos-devotion-suppress-nightmare-bascinet"
+   "detailsId": "foulborn-devotos-devotion-suppress-movement-attack-nightmare-bascinet"
   },
   {
    "name": "Foulborn Doedre's Scorn",
@@ -9302,11 +9341,11 @@
    "implicits": [],
    "explicits": [
     "+(26-30)% to all Elemental Resistances",
-    "Your Fire Damage can Shock but not Ignite"
+    "Your Lightning Damage can Freeze but not Shock"
    ],
    "flavourText": "\"The ice seared his naked feet\nAs the lightning stilled his heart,\nBut it was the flames upon his lover's face\nThat roused him to vengeance.\"\n- From 'The Three Dragons' by Victario of Sarn",
    "isReplica": false,
-   "detailsId": "foulborn-the-three-dragons-chaos-freeze-chaos-ignite-golden-mask"
+   "detailsId": "foulborn-the-three-dragons-chaos-shock-chaos-ignite-golden-mask"
   },
   {
    "name": "Foulborn Veil of the Night",
@@ -9455,32 +9494,6 @@
    "flavourText": "In the battle for honour, Geofri won.\nNot so, the battle for survival.",
    "isReplica": false,
    "detailsId": "geofris-crest-great-crown"
-  },
-  {
-   "name": "Geofri's Legacy",
-   "name_ko": "조프리의 유산",
-   "baseType": "Great Crown",
-   "baseType_ko": "대형 왕관",
-   "slot": "Helmet",
-   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0dlb2ZyaXNDcmVzdCIsInciOjIsImgiOjIsInNjYWxlIjoxfV0/4daae52cf5/GeofrisCrest.png",
-   "levelRequired": 53,
-   "implicits": [
-    "Item sells for much more to vendors"
-   ],
-   "explicits": [
-    "+1 to Level of Socketed Gems",
-    "(60-150)% increased Armour and Energy Shield",
-    "+(15-30)% to Fire Resistance",
-    "+(15-30)% to Cold Resistance",
-    "+(15-29)% to Lightning Resistance",
-    "+(20-30)% to Chaos Resistance",
-    "+1 to maximum number of Summoned Holy Relics",
-    "Summoned Holy Relics have (20-25)% reduced Cooldown Recovery Speed",
-    "Summoned Holy Relics have (20-25)% reduced Cooldown Recovery Rate"
-   ],
-   "flavourText": "\"Though Geofri's beacon was extinguished,\nhis embers may yet light our way.\"\n- Victario, The People's Poet",
-   "isReplica": false,
-   "detailsId": "geofris-legacy-great-crown"
   },
   {
    "name": "Goldrim",
@@ -9950,7 +9963,6 @@
     "25% increased Effect of Socketed Jewels",
     "Socketed Skill Gems get a (92-96)% Mana Multiplier",
     "(4-5)% Chance to Block Spell Damage",
-    "+(151-246) to Accuracy Rating",
     "(1-2)% chance to Dodge Attack Hits",
     "+(2-6)% to Quality of Socketed Projectile Gems",
     "+1% to maximum Lightning Resistance",
@@ -10035,7 +10047,8 @@
     "2% Chance to Block Attack Damage",
     "+(6-12) to all Attributes",
     "(15-25)% increased Damage with Hits and Ailments against Abyssal Monsters",
-    "Socketed Skill Gems get a (92-96)% Cost & Reservation Multiplier"
+    "Socketed Skill Gems get a (92-96)% Cost & Reservation Multiplier",
+    "+(151-246) to Accuracy Rating"
    ],
    "explicits": [
     "+(25-30) to all Attributes",
@@ -10966,6 +10979,26 @@
    "flavourText": "The single well-placed arrow that changes the world\nmust be preceded by ten thousand practice shots.",
    "isReplica": false,
    "detailsId": "the-fledgling-lacquered-helmet"
+  },
+  {
+   "name": "The Formless Flame",
+   "name_ko": "무형의 불꽃",
+   "baseType": "Siege Helmet",
+   "baseType_ko": "공성 투구",
+   "slot": "Helmet",
+   "icon": "https://web.poecdn.com/gen/image/WzI1LDE0LHsiZiI6IjJESXRlbXMvQXJtb3Vycy9IZWxtZXRzL0Zvcm1sZXNzSW5GbGFtZXMiLCJ3IjoyLCJoIjoyLCJzY2FsZSI6MX1d/baa0d0009b/FormlessInFlames.png",
+   "levelRequired": 48,
+   "implicits": [],
+   "explicits": [
+    "+(100-120) to Armour",
+    "+(40-100) to maximum Life",
+    "-(196-20) Fire Damage taken from Hits",
+    "Armour is increased by Overcapped Fire Resistance",
+    "Armour is increased by Uncapped Fire Resistance"
+   ],
+   "flavourText": "Our skin turns to ash\nand we are swallowed by his brilliant red light.",
+   "isReplica": false,
+   "detailsId": "the-formless-flame-siege-helmet"
   },
   {
    "name": "The Formless Flame",
@@ -12286,13 +12319,14 @@
    "implicits": [],
    "explicits": [
     "(10-15)% Chance to Block Spell Damage",
-    "(121-160)% increased Energy Shield",
+    "(120-160)% increased Energy Shield",
     "10% increased maximum Life",
-    "Sacrifice 10% of your Life when you Use or Trigger a Spell Skill"
+    "Sacrifice 10% of your Life when you Use or Trigger a Spell Skill",
+    "5% increased Spell Damage per 100 Player Maximum Life"
    ],
    "flavourText": "The Vaal emptied their slaves of beating hearts,\nand left a mountain of twitching dead.",
    "isReplica": false,
-   "detailsId": "foulborn-rathpith-globe-dot-per-life-ailment-per-life-titanium-spirit-shield"
+   "detailsId": "foulborn-rathpith-globe-dot-per-life-titanium-spirit-shield"
   },
   {
    "name": "Foulborn Rise of the Phoenix",

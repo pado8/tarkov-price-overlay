@@ -72,6 +72,7 @@ const dict: Record<Lang, Record<string, string>> = {
     ens_filter: "Filter outcomes…",
     ens_pool_note:
       "Same-slot Uniques obtainable via the Ancient Orb pool. Boss-exclusive filtering will be refined once 3.29 data is datamined.",
+    ens_pool_click: "Click an item to see its modifiers.",
     ens_source: "Source",
     reason_corrupted: "Corrupted Uniques cannot be Enshrouded",
     reason_fatelorn: "Fatelorn Uniques cannot be Enshrouded",
@@ -211,6 +212,7 @@ const dict: Record<Lang, Record<string, string>> = {
     ens_filter: "결과 필터…",
     ens_pool_note:
       "같은 슬롯에서 고대의 오브로 획득 가능한 고유 아이템 풀입니다. 보스 전용 제외 목록은 3.29 데이터마이닝 후 정밀화됩니다.",
+    ens_pool_click: "항목을 클릭하면 모드를 볼 수 있습니다.",
     ens_source: "출처",
     reason_corrupted: "타락한 고유 아이템은 변환할 수 없습니다",
     reason_fatelorn: "Fatelorn 고유 아이템은 변환할 수 없습니다",
