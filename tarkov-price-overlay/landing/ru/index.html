@@ -262,7 +262,7 @@
 (function(){
   var API="https://api.aquapado.com/priceoverlay/web";
   function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  beacon({kind:"view",path:location.pathname,ref:document.referrer});
+  // Просмотры считает Vercel Web Analytics → убрали view-маяк ради экономии Neon. В Neon пишем только загрузки (конверсии), по источнику.
   document.addEventListener('click',function(e){
     var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
     if(t){var tg=/\/latest/.test(t.href)?'latest':'list';

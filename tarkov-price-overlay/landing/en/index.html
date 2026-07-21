@@ -261,7 +261,7 @@
 (function(){
   var API="https://api.aquapado.com/priceoverlay/web";
   function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  beacon({kind:"view",path:location.pathname,ref:document.referrer});
+  // Pageviews are counted by Vercel Web Analytics → drop the view beacon to save Neon compute. Only downloads (conversions) are logged to Neon, by source.
   document.addEventListener('click',function(e){
     var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
     if(t){var tg=/\/latest/.test(t.href)?'latest':'list';
