@@ -745,18 +745,36 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
 
 
 def _refresh_one(lang: str, game_mode: str) -> int:
-    response = requests.post(
-        TARKOV_API_URL,
-        json={
-            "query": _QUERY_ALL_PRICED,
-            "variables": {"lang": lang, "gameMode": game_mode},
-        },
-        timeout=30,
-    )
-    response.raise_for_status()
-    items = response.json().get("data", {}).get("items", []) or []
+    # Primary source: tarkov.dev GraphQL. When it's down (the 2026-07 multi-day
+    # 503 "GraphQL server unavailable", the-hideout/tarkov-api#474), fall back to
+    # json.tarkov.dev — the maintainer-recommended live source that tarkov.dev
+    # itself is built on. The fallback yields the same item shape so the rest of
+    # this function (entry build, alias, canon) is unchanged; only barter/quest/
+    # craft/hideout enrichments are absent in fallback mode.
+    source = "graphql"
+    try:
+        response = requests.post(
+            TARKOV_API_URL,
+            json={
+                "query": _QUERY_ALL_PRICED,
+                "variables": {"lang": lang, "gameMode": game_mode},
+            },
+            timeout=30,
+        )
+        response.raise_for_status()
+        items = response.json().get("data", {}).get("items", []) or []
+        if not items:
+            raise RuntimeError("GraphQL returned an empty item list")
+    except Exception as e:
+        print(f"[cache] GraphQL failed for ({lang},{game_mode}): {e!r} - trying json.tarkov.dev fallback")
+        import tarkov_json_fallback
+        items = tarkov_json_fallback.fetch_catalog(lang, game_mode)
+        source = "json-fallback"
     # Refresh the lang's hideout index alongside prices so cached entries
-    # always have the latest "needed for upgrade" mapping baked in.
+    # always have the latest "needed for upgrade" mapping baked in. This is a
+    # GraphQL call too, so during a GraphQL outage it fails and we serve the
+    # stale/empty hideout index (fallback price entries then carry no hideout
+    # panel, which is the intended lean-mode degradation).
     try:
         hideout_idx, station_list = _fetch_hideout_index(lang)
         with _hideout_index_lock:
@@ -818,7 +836,7 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     # Reuse the populated names for fuzzy matching too (one source of truth).
     with _names_lock:
         _names_cache[lang] = list(by_name.keys())
-    print(f"[cache] refreshed ({lang},{game_mode}) - {len(by_name)} items")
+    print(f"[cache] refreshed ({lang},{game_mode}) - {len(by_name)} items [{source}]")
     return len(by_name)
 
 
