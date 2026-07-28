@@ -43,3 +43,9 @@ Thumbs.db
 /.mcp.json
 /response.txt
 /tall.txt
+
+# sibling projects split out to their own private repos (2026-07-28)
+poe-simulator/
+poe-price-overlay/
+stream-game/
+메모장/
