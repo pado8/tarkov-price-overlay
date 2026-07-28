@@ -188,90 +188,146 @@ type EventPayload = {
   install_id: string;
   event_type: StatsEvent;
   version: string;
+  /** Occurrence time, stamped at enqueue. The server trusts this (within a
+   *  sane window) so events that sat in the retry queue — even across a
+   *  restart — are still filed on the day they actually happened. */
+  ts: number;
   detail?: string;
 };
 
-// Only the per-lookup family is frequent enough to be worth batching.
-const BATCHED_EVENTS = new Set<StatsEvent>([
-  "lookup",
-  "lookup_nomatch",
-  "lookup_noprice",
-]);
-// 2026-07-21: Neon 무료 컴퓨트 재소진(21일 만에) 대응으로 flush 주기 10→30분.
-// autosuspend Postgres는 write가 올 때마다 깨어나 그때부터 유휴 타이머만큼
-// 과금되므로, wake 횟수(=flush 횟수)를 줄이는 게 핵심 레버. 주기를 늘리면
-// 버퍼가 상한에 먼저 차 조기 flush로 되돌아가므로 상한도 25→60으로 올린다
-// (한 세션의 lookup은 대개 수십 건 — 60이면 대부분 시간 flush로 처리).
-const STATS_MAX_BATCH = 60; // flush early only when a very heavy session fills the buffer
-const STATS_FLUSH_MS = 30 * 60 * 1000; // …otherwise flush at most every 30 min
+// ── Durable, schedule-aligned telemetry queue ─────────────────────────────
+// 2026-07: the stats DB (Neon free tier) burned through its monthly compute
+// twice. Two root causes, both fixed here:
+//
+//  1. LOSS — the old queue lived in memory and was cleared the moment a POST
+//     was fired. A failed request (DB down: the 07-21→07-28 outage returned
+//     500 on every insert) silently dropped a whole batch, and closing the app
+//     dropped whatever hadn't flushed. Now the queue is persisted and entries
+//     are removed only after the server confirms the write.
+//  2. QUOTA — an autosuspending Postgres bills from the moment a write wakes
+//     it until it idles back out (~5 min). Clients each ran their own timer, so
+//     wakes were spread across the clock and the compute effectively never
+//     slept. Flushes are now ALIGNED to wall-clock boundaries: every client
+//     writes inside the same short window, so the DB wakes a couple of times an
+//     hour instead of continuously. That is the single biggest lever we have.
+//
+// Everything (including launch/hotkey) goes through the queue — a random-time
+// "immediate" send is exactly the isolated wake we're trying to avoid, and
+// delaying it costs nothing now that occurrence time travels with the event.
+const STATS_FLUSH_MS = 30 * 60 * 1000; // aligned window: :00 and :30
+// Small jitter so a few hundred clients don't hit the edge in the same
+// millisecond; still well inside one DB wake window.
+const STATS_JITTER_MS = 20_000;
+// Safety valve: a marathon session shouldn't hold thousands of rows in memory.
+const STATS_MAX_BATCH = 200; // max rows sent per request (server caps at 100/req anyway)
+const STATS_QUEUE_CAP = 500; // drop oldest beyond this (bounded localStorage)
+const STATS_QUEUE_KEY = "tarkov.stats.queue";
 
 let statsQueue: EventPayload[] = [];
 let statsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+let statsFlushInFlight = false;
 
-function postStats(body: string, beacon = false): void {
-  // On teardown use sendBeacon with text/plain so it isn't blocked by a CORS
-  // preflight the page can't complete while unloading; the Edge function parses
-  // the body as JSON regardless of content-type.
-  if (beacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
-    try {
-      navigator.sendBeacon(STATS_ENDPOINT, new Blob([body], { type: "text/plain" }));
-      return;
-    } catch {
-      /* fall through to fetch */
+function loadStatsQueue(): void {
+  try {
+    const raw = localStorage.getItem(STATS_QUEUE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      statsQueue = parsed.filter(
+        (e) => e && typeof e.install_id === "string" && typeof e.event_type === "string"
+      );
     }
+  } catch {
+    /* corrupt entry — start clean rather than break startup */
   }
-  fetch(STATS_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-    keepalive: true,
-  }).catch(() => {});
 }
 
-function flushStats(beacon = false): void {
-  if (statsFlushTimer != null) {
-    clearTimeout(statsFlushTimer);
-    statsFlushTimer = null;
+function persistStatsQueue(): void {
+  try {
+    if (!statsQueue.length) localStorage.removeItem(STATS_QUEUE_KEY);
+    else localStorage.setItem(STATS_QUEUE_KEY, JSON.stringify(statsQueue));
+  } catch {
+    /* quota/serialization failure must never break the app */
   }
-  if (!statsQueue.length) return;
-  const batch = statsQueue;
-  statsQueue = [];
-  postStats(JSON.stringify({ events: batch }), beacon);
+}
+
+/** POST a batch. Resolves true only when the server accepted it, so the caller
+ *  knows whether the events may be dropped from the queue. */
+async function postStats(events: EventPayload[]): Promise<boolean> {
+  try {
+    const r = await fetch(STATS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ events }),
+      keepalive: true,
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function flushStats(): Promise<void> {
+  if (statsFlushInFlight || !statsQueue.length) return;
+  statsFlushInFlight = true;
+  try {
+    // Snapshot the head of the queue; anything enqueued mid-flight stays put.
+    const batch = statsQueue.slice(0, STATS_MAX_BATCH);
+    const ok = await postStats(batch);
+    if (ok) {
+      statsQueue = statsQueue.slice(batch.length);
+      persistStatsQueue();
+    }
+    // On failure the queue is untouched — the next aligned window retries.
+  } finally {
+    statsFlushInFlight = false;
+  }
+}
+
+/** Milliseconds until the next wall-clock-aligned flush window. */
+function msToNextFlushWindow(): number {
+  const now = Date.now();
+  const next = Math.ceil(now / STATS_FLUSH_MS) * STATS_FLUSH_MS;
+  return next - now + Math.floor(Math.random() * STATS_JITTER_MS);
+}
+
+function scheduleStatsFlush(): void {
+  if (statsFlushTimer != null) return;
+  statsFlushTimer = setTimeout(async () => {
+    statsFlushTimer = null;
+    await flushStats();
+    // Anything left means the send failed (or arrived mid-flight): keep the
+    // cadence so the next window retries. New events re-arm the timer
+    // themselves, so an empty queue simply stops scheduling.
+    if (statsQueue.length) scheduleStatsFlush();
+  }, msToNextFlushWindow());
 }
 
 const reportEvent = (eventType: StatsEvent, detail?: string) => {
   if (!loadStatsEnabled()) return;
-  const payload: EventPayload = {
+  statsQueue.push({
     install_id: ensureInstallId(),
     event_type: eventType,
     version: APP_VERSION,
+    ts: Date.now(),
     ...(detail ? { detail } : {}),
-  };
-  // Low-frequency, high-value signals go out immediately (single-event body —
-  // the endpoint still accepts this shape for back-compat).
-  if (!BATCHED_EVENTS.has(eventType)) {
-    postStats(JSON.stringify(payload));
-    return;
+  });
+  if (statsQueue.length > STATS_QUEUE_CAP) {
+    statsQueue = statsQueue.slice(statsQueue.length - STATS_QUEUE_CAP);
   }
-  statsQueue.push(payload);
-  if (statsQueue.length >= STATS_MAX_BATCH) {
-    flushStats();
-  } else if (statsFlushTimer == null) {
-    statsFlushTimer = setTimeout(() => {
-      statsFlushTimer = null;
-      flushStats();
-    }, STATS_FLUSH_MS);
-  }
+  persistStatsQueue();
+  scheduleStatsFlush();
 };
 
-// Flush buffered lookups when the window is hidden (tray-minimize) or the app
-// closes, so a session's last events aren't lost. visibilitychange is more
-// reliable than beforeunload in WebView2.
-if (typeof document !== "undefined") {
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") flushStats(true);
-  });
-  window.addEventListener("beforeunload", () => flushStats(true));
+// Startup: adopt anything a previous session couldn't deliver (app closed
+// before a window, or the DB was down) and put it on the next window.
+if (typeof window !== "undefined") {
+  loadStatsQueue();
+  if (statsQueue.length) scheduleStatsFlush();
+  // Persist-only on teardown. We deliberately do NOT fire a send here: an
+  // unload-time POST is an isolated, random-time DB wake, and the queue now
+  // survives to the next launch anyway.
+  window.addEventListener("beforeunload", persistStatsQueue);
 }
 
 // Privacy-preserving nomatch reason for telemetry — NEVER the raw OCR text,
