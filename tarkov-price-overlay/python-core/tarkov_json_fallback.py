@@ -64,18 +64,221 @@ def _get_cached(path: str) -> dict:
 
 def _get_locale(path: str) -> dict:
     """Translation-key -> localized string map. Falls back to English on any
-    failure (a missing/404 locale must not blank every name)."""
+    failure (a missing/404 locale must not blank every name).
+
+    Cached like the raw dumps: a refresh cycle resolves names for 4
+    (lang, game_mode) combos and would otherwise re-download the same small
+    locale files a dozen times per pass."""
     try:
-        return (_get(path) or {}).get("data") or {}
+        return (_get_cached(path) or {}).get("data") or {}
     except Exception:
         return {}
 
 
-def fetch_catalog(lang: str, game_mode: str) -> list[dict]:
-    """Fetch the whole catalog from json.tarkov.dev and return it as a list of
-    items in the GraphQL shape `_build_cache_entry` reads. Raises on hard
-    failure (items dump unreachable) so the caller keeps serving stale cache
-    instead of overwriting it with nothing."""
+def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
+                       trader_name: dict) -> dict:
+    """Reverse indexes so a lookup can answer "what else does this item do?".
+
+    json.tarkov.dev serves these as separate flat datasets keyed by id, while
+    `_build_cache_entry` expects them already attached per item in the GraphQL
+    shape (bartersFor/bartersUsing/craftsFor/usedInTasks). We invert them once
+    per refresh — a few hundred rows each, so the cost is negligible next to
+    the item dump — and hand back per-item lists.
+
+    Every dataset here is optional: a failure degrades that one panel to empty
+    rather than losing the whole (far more valuable) price catalog.
+    """
+    def loc_name(key):
+        if key is None:
+            return None
+        v = item_loc.get(key) or en_loc.get(key) or key
+        return v.strip() if isinstance(v, str) else v
+
+    out = {
+        "barters_for": {},    # item_id -> [GraphQL bartersFor entries]
+        "barters_using": {},  # item_id -> [GraphQL bartersUsing entries]
+        "crafts_for": {},     # item_id -> [GraphQL craftsFor entries]
+        "tasks_for": {},      # item_id -> [GraphQL usedInTasks entries]
+        "hideout_index": {},  # item_id -> [{station, station_id, level, count, fir}]
+        "stations": [],       # [{id, name, maxLevel}]
+    }
+
+    # Item id -> {name, shortName} for barter/craft ingredient lists.
+    def item_ref(iid: str, items: dict) -> dict | None:
+        it = items.get(iid)
+        if not isinstance(it, dict):
+            return None
+        return {"name": loc_name(it.get("name")), "shortName": loc_name(it.get("shortName"))}
+
+    items_doc = _get_cached(f"{mode}/items")
+    items = ((items_doc.get("data") or {}).get("items")) or {}
+
+    # ── tasks: names are translated, so pull the locale like items do ──
+    task_name: dict[str, str] = {}
+    try:
+        tasks_doc = _get_cached(f"{mode}/tasks")
+        tasks = ((tasks_doc.get("data") or {}).get("tasks")) or {}
+        t_loc = _get_locale(f"{mode}/tasks_{lang}")
+        t_en = t_loc if lang == "en" else _get_locale(f"{mode}/tasks_en")
+
+        def t_name(key):
+            v = t_loc.get(key) or t_en.get(key) or key
+            return v.strip() if isinstance(v, str) else v
+
+        for tid, task in tasks.items():
+            if not isinstance(task, dict):
+                continue
+            nm = t_name(task.get("name"))
+            task_name[tid] = nm
+            # Objectives carry plain item-id strings; the entry builder expects
+            # objects with an `id`, and only item-bearing objectives matter.
+            objs = []
+            referenced: set[str] = set()
+            for o in task.get("objectives") or []:
+                ids = o.get("items")
+                if not isinstance(ids, list) or not ids:
+                    continue
+                objs.append({
+                    "type": o.get("type") or "",
+                    "count": o.get("count") or 0,
+                    "foundInRaid": bool(o.get("foundInRaid")),
+                    "items": [{"id": s} for s in ids if isinstance(s, str)],
+                })
+                referenced.update(s for s in ids if isinstance(s, str))
+            if not referenced:
+                continue
+            entry = {
+                "id": tid,
+                "name": nm,
+                "minPlayerLevel": task.get("minPlayerLevel") or 0,
+                "kappaRequired": bool(task.get("kappaRequired")),
+                "trader": {"name": trader_name.get(task.get("trader"), "")},
+                "objectives": objs,
+            }
+            for iid in referenced:
+                out["tasks_for"].setdefault(iid, []).append(entry)
+    except Exception as e:
+        print(f"[fallback] tasks enrichment skipped ({lang},{mode}): {e!r}")
+
+    def task_unlock_ref(tid):
+        if not tid:
+            return None
+        return {"id": tid, "name": task_name.get(tid, "")}
+
+    # ── barters: offeredItem = what you get, requiredItems = what you pay ──
+    try:
+        barters = (_get_cached(f"{mode}/barters").get("data")) or []
+        for b in barters:
+            if not isinstance(b, dict):
+                continue
+            trader = {"name": trader_name.get(b.get("trader"), "?")}
+            level = b.get("minTraderLevel") or 1
+            unlock = task_unlock_ref(b.get("taskUnlock"))
+            req = []
+            for ri in b.get("requiredItems") or []:
+                ref = item_ref(ri.get("item"), items)
+                if ref:
+                    req.append({"count": ri.get("count") or 1, "item": ref})
+            offered = b.get("offeredItem") or {}
+            oid = offered.get("item")
+            # bartersFor: this barter yields the item
+            if oid and req:
+                out["barters_for"].setdefault(oid, []).append({
+                    "trader": trader, "level": level, "taskUnlock": unlock,
+                    "requiredItems": req,
+                })
+            # bartersUsing: the item is an ingredient → show what it buys
+            oref = item_ref(oid, items) if oid else None
+            if oref:
+                reward = [{"count": offered.get("count") or 1, "item": oref}]
+                for ri in b.get("requiredItems") or []:
+                    iid = ri.get("item")
+                    if iid:
+                        out["barters_using"].setdefault(iid, []).append({
+                            "trader": trader, "level": level, "taskUnlock": unlock,
+                            "rewardItems": reward,
+                        })
+    except Exception as e:
+        print(f"[fallback] barters enrichment skipped ({mode}): {e!r}")
+
+    # ── hideout: station names are translated; also feeds craft station names ──
+    station_name: dict[str, str] = {}
+    try:
+        h_data = (_get_cached(f"{mode}/hideout").get("data")) or {}
+        h_loc = _get_locale(f"{mode}/hideout_{lang}")
+        h_en = h_loc if lang == "en" else _get_locale(f"{mode}/hideout_en")
+
+        def s_name(key):
+            v = h_loc.get(key) or h_en.get(key) or key
+            return v.strip() if isinstance(v, str) else v
+
+        for sid, st in h_data.items():
+            if not isinstance(st, dict):
+                continue
+            nm = s_name(st.get("name")) or "?"
+            station_name[sid] = nm
+            levels = st.get("levels") or []
+            out["stations"].append({
+                "id": sid, "name": nm,
+                "maxLevel": max((lv.get("level") or 0 for lv in levels), default=0),
+            })
+            for lv in levels:
+                level = lv.get("level") or 1
+                for r in lv.get("itemRequirements") or []:
+                    iid = r.get("item")
+                    if not iid:
+                        continue
+                    attrs = r.get("attributes") or {}
+                    out["hideout_index"].setdefault(iid, []).append({
+                        "station": nm, "station_id": sid, "level": level,
+                        "count": r.get("count") or 1,
+                        "fir": bool(attrs.get("foundInRaid")),
+                    })
+        for needs in out["hideout_index"].values():
+            needs.sort(key=lambda n: (n["station"], n["level"]))
+        out["stations"].sort(key=lambda s: s["name"])
+    except Exception as e:
+        print(f"[fallback] hideout enrichment skipped ({lang},{mode}): {e!r}")
+
+    # ── crafts: productItem = what the station makes ──
+    try:
+        crafts = (_get_cached(f"{mode}/crafts").get("data")) or []
+        for c in crafts:
+            if not isinstance(c, dict):
+                continue
+            product = (c.get("productItem") or {}).get("item")
+            if not product:
+                continue
+            req = []
+            for ri in c.get("requiredItems") or []:
+                ref = item_ref(ri.get("item"), items)
+                if ref:
+                    req.append({"count": ri.get("count") or 1, "item": ref})
+            if not req:
+                continue
+            sid = c.get("station")
+            out["crafts_for"].setdefault(product, []).append({
+                "station": {"id": sid or "", "name": station_name.get(sid, "?")},
+                "level": c.get("level") or 1,
+                "duration": c.get("duration") or 0,
+                "requiredItems": req,
+            })
+    except Exception as e:
+        print(f"[fallback] crafts enrichment skipped ({mode}): {e!r}")
+
+    return out
+
+
+def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dict]]:
+    """Fetch the whole catalog from json.tarkov.dev.
+
+    Returns (items, hideout_index, station_list) where `items` are in the
+    GraphQL shape `_build_cache_entry` reads — including the barter/quest/craft
+    enrichments — and the hideout pair mirrors `_fetch_hideout_index` so the
+    caller can serve the hideout panel too while GraphQL is unreachable.
+
+    Raises on hard failure (items dump unreachable) so the caller keeps serving
+    stale cache instead of overwriting it with nothing."""
     mode = "pve" if game_mode == "pve" else "regular"
 
     items_doc = _get_cached(f"{mode}/items")
@@ -112,6 +315,15 @@ def fetch_catalog(lang: str, game_mode: str) -> list[dict]:
         nm = (t or {}).get("name")
         resolved = trader_loc.get(nm) or trader_en.get(nm) or nm or "?"
         trader_name[tid] = resolved.strip() if isinstance(resolved, str) else resolved
+
+    # Barter / quest / craft / hideout panels. Best-effort: if these datasets
+    # fail we still return prices (the previous "lean mode" behaviour).
+    try:
+        enrich = _build_enrichments(mode, lang, en_loc, item_loc, trader_name)
+    except Exception as e:
+        print(f"[fallback] enrichments unavailable ({lang},{mode}): {e!r}")
+        enrich = {"barters_for": {}, "barters_using": {}, "crafts_for": {},
+                  "tasks_for": {}, "hideout_index": {}, "stations": []}
 
     out: list[dict] = []
     for iid, it in items.items():
@@ -178,14 +390,12 @@ def fetch_catalog(lang: str, game_mode: str) -> list[dict]:
             "changeLast48hPercent": it.get("changeLast48hPercent"),
             "sellFor": sell_for,
             "buyFor": buy_for,
-            # Enrichments unavailable in lean fallback mode — the card degrades
-            # gracefully (price shows; barter/quest/craft/hideout panels hide).
-            "bartersFor": [],
-            "bartersUsing": [],
-            "usedInTasks": [],
-            "craftsFor": [],
+            "bartersFor": enrich["barters_for"].get(iid, []),
+            "bartersUsing": enrich["barters_using"].get(iid, []),
+            "usedInTasks": enrich["tasks_for"].get(iid, []),
+            "craftsFor": enrich["crafts_for"].get(iid, []),
         })
 
     if not out:
         raise RuntimeError("json.tarkov.dev fallback produced no usable items")
-    return out
+    return out, enrich["hideout_index"], enrich["stations"]

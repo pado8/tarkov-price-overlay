@@ -752,6 +752,10 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     # this function (entry build, alias, canon) is unchanged; only barter/quest/
     # craft/hideout enrichments are absent in fallback mode.
     source = "graphql"
+    # Set only on the fallback path: the JSON source supplies the hideout index
+    # itself, so we must not fall through to the (also-unreachable) GraphQL
+    # hideout query below and blank the panel.
+    fb_hideout: tuple[dict, list] | None = None
     try:
         response = requests.post(
             TARKOV_API_URL,
@@ -768,22 +772,28 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     except Exception as e:
         print(f"[cache] GraphQL failed for ({lang},{game_mode}): {e!r} - trying json.tarkov.dev fallback")
         import tarkov_json_fallback
-        items = tarkov_json_fallback.fetch_catalog(lang, game_mode)
+        items, fb_idx, fb_stations = tarkov_json_fallback.fetch_catalog(lang, game_mode)
+        fb_hideout = (fb_idx, fb_stations)
         source = "json-fallback"
     # Refresh the lang's hideout index alongside prices so cached entries
-    # always have the latest "needed for upgrade" mapping baked in. This is a
-    # GraphQL call too, so during a GraphQL outage it fails and we serve the
-    # stale/empty hideout index (fallback price entries then carry no hideout
-    # panel, which is the intended lean-mode degradation).
-    try:
-        hideout_idx, station_list = _fetch_hideout_index(lang)
+    # always have the latest "needed for upgrade" mapping baked in. On the
+    # fallback path it arrived with the catalog; otherwise it's its own
+    # GraphQL call.
+    if fb_hideout is not None:
+        hideout_idx, station_list = fb_hideout
         with _hideout_index_lock:
             _hideout_index_cache[lang] = hideout_idx
             _hideout_station_list_cache[lang] = station_list
-    except Exception as e:
-        print(f"[hideout] refresh failed for lang={lang}: {e!r} - using stale/empty")
-        with _hideout_index_lock:
-            hideout_idx = _hideout_index_cache.get(lang, {})
+    else:
+        try:
+            hideout_idx, station_list = _fetch_hideout_index(lang)
+            with _hideout_index_lock:
+                _hideout_index_cache[lang] = hideout_idx
+                _hideout_station_list_cache[lang] = station_list
+        except Exception as e:
+            print(f"[hideout] refresh failed for lang={lang}: {e!r} - using stale/empty")
+            with _hideout_index_lock:
+                hideout_idx = _hideout_index_cache.get(lang, {})
     by_name: dict[str, dict] = {}
     for it in items:
         name = it.get("name")
