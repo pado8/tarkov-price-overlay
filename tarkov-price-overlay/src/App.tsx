@@ -557,6 +557,8 @@ type LookupResult = {
   height: number | null;
   weight: number | null;
   icon: string | null;
+  /** Fandom wiki page. Null for items the catalog has no page for. */
+  wiki: string | null;
   flea_price: number | null;
   flea_low_24h: number | null;
   flea_high_24h: number | null;
@@ -4192,6 +4194,24 @@ function App() {
                     ? `(${t.noMatch}) "${result.raw_text}"`
                     : `(${t.noMatch})`)}
               </div>
+              {/* Wiki shortcut (asked for twice via in-app feedback). Opens in
+                  the default browser — never inside the overlay, which is a
+                  transparent always-on-top window. Only rendered when the
+                  catalog actually has a page for this item. */}
+              {result.wiki && (
+                <button
+                  className="wiki-btn"
+                  title={t.wikiLink}
+                  aria-label={t.wikiLink}
+                  onClick={() =>
+                    openUrl(result.wiki!).catch((e) =>
+                      log(`wiki: openUrl failed — ${String(e)}`)
+                    )
+                  }
+                >
+                  📖
+                </button>
+              )}
             </div>
             {/* Capture-box-missed guidance. Two shapes of the same problem,
                 with DIFFERENT copy so the message never contradicts the line

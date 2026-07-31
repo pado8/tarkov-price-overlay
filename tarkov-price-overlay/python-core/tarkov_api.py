@@ -24,6 +24,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    wikiLink
     types
     properties {
       __typename
@@ -161,6 +162,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     height
     weight
     gridImageLink
+    wikiLink
     types
     properties {
       __typename
@@ -723,6 +725,9 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "height": item.get("height"),
         "weight": item.get("weight"),
         "icon": item.get("gridImageLink"),
+        # Fandom wiki page for the item — surfaced as a link button on the card
+        # (requested twice via in-app feedback). Present in both sources.
+        "wiki": item.get("wikiLink"),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_high_24h": item.get("high24hPrice"),

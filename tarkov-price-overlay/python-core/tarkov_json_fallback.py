@@ -379,6 +379,7 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
             "height": it.get("height"),
             "weight": it.get("weight"),
             "gridImageLink": it.get("gridImageLink"),
+            "wikiLink": it.get("wikiLink"),
             "types": it.get("types") or [],
             "properties": gql_props,
             "containsItems": contains,

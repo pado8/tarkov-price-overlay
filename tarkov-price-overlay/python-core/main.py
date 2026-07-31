@@ -217,6 +217,7 @@ class LookupResponse(BaseModel):
     height: int | None = None
     weight: float | None = None  # kg
     icon: str | None = None  # gridImageLink (webp URL)
+    wiki: str | None = None  # Fandom wiki page (card link button)
     flea_price: int | None
     flea_low_24h: int | None = None
     flea_high_24h: int | None = None
@@ -306,6 +307,7 @@ def _build_response(
         height=price.get("height"),
         weight=price.get("weight"),
         icon=price.get("icon"),
+        wiki=price.get("wiki"),
         flea_price=price.get("flea"),
         flea_low_24h=price.get("flea_low_24h"),
         flea_high_24h=price.get("flea_high_24h"),
