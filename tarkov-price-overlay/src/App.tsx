@@ -219,7 +219,10 @@ const STATS_FLUSH_MS = 30 * 60 * 1000; // aligned window: :00 and :30
 // millisecond; still well inside one DB wake window.
 const STATS_JITTER_MS = 20_000;
 // Safety valve: a marathon session shouldn't hold thousands of rows in memory.
-const STATS_MAX_BATCH = 200; // max rows sent per request (server caps at 100/req anyway)
+// MUST NOT exceed the server's 100/req cap: the server silently truncates the
+// list but still returns 200, and flushStats drops the WHOLE batch from the
+// queue on success — anything past the cap would be lost, not retried.
+const STATS_MAX_BATCH = 100; // max rows sent per request (= server cap)
 const STATS_QUEUE_CAP = 500; // drop oldest beyond this (bounded localStorage)
 const STATS_QUEUE_KEY = "tarkov.stats.queue";
 
