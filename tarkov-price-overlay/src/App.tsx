@@ -460,6 +460,7 @@ type TaskUnlockRef = {
   status_by_mode?: {
     pvp: "started" | "completed" | "failed" | null;
     pve: "started" | "completed" | "failed" | null;
+    season?: "started" | "completed" | "failed" | null;
   };
 };
 
@@ -489,6 +490,7 @@ type TaskRef = {
   task_status_by_mode?: {
     pvp: "started" | "completed" | "failed" | null;
     pve: "started" | "completed" | "failed" | null;
+    season?: "started" | "completed" | "failed" | null;
   };
 };
 
@@ -511,7 +513,7 @@ type QuestStatus = {
   // Per-server quest progress. Older builds (pre per-mode tracker) won't
   // send this, so the field is optional and the UI falls back to the
   // legacy aggregate counts above.
-  counts_by_mode?: { pvp: QuestModeCounts; pve: QuestModeCounts };
+  counts_by_mode?: { pvp: QuestModeCounts; pve: QuestModeCounts; season?: QuestModeCounts };
 };
 
 type HideoutCraft = {
@@ -748,11 +750,11 @@ function loadCardHeight(): number | null {
   return Math.max(CARD_H_MIN, n);
 }
 
-function loadQuestDisplayMode(): "pvp" | "pve" {
+function loadQuestDisplayMode(): "pvp" | "pve" | "season" {
   // Default PVE — most current players run PVE-only, and matches the
   // historical legacy migration default for single-mode users.
   const v = localStorage.getItem(QUEST_DISPLAY_MODE_KEY);
-  return v === "pvp" ? "pvp" : "pve";
+  return v === "pvp" ? "pvp" : v === "season" ? "season" : "pve";
 }
 const WIN_BASE_W = 800;
 const FONT_DEFAULT = 13;
@@ -1207,7 +1209,7 @@ function App() {
   );
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const [questPathInput, setQuestPathInput] = useState<string>("");
-  const [questDisplayMode, setQuestDisplayMode] = useState<"pvp" | "pve">(
+  const [questDisplayMode, setQuestDisplayMode] = useState<"pvp" | "pve" | "season">(
     loadQuestDisplayMode
   );
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
@@ -2062,7 +2064,7 @@ function App() {
       log(`quest: path set failed — ${String(e)}`);
     }
   };
-  const resetQuestState = async (gameMode?: "pvp" | "pve", fromNow = false) => {
+  const resetQuestState = async (gameMode?: "pvp" | "pve" | "season", fromNow = false) => {
     // Optional gameMode wipes just one server's state (used to clear the
     // fake data the legacy migration copied into both modes for single-mode
     // players). Omit to wipe everything and re-scan.
@@ -2083,9 +2085,9 @@ function App() {
       log(`quest: reset failed — ${String(e)}`);
     }
   };
-  const wipeResetQuests = async (gameMode?: "pvp" | "pve") => {
+  const wipeResetQuests = async (gameMode?: "pvp" | "pve" | "season") => {
     // Destructive-ish (recoverable via plain reset) → native yes/no first.
-    const scope = gameMode ? gameMode.toUpperCase() : t.questSyncResetBtn;
+    const scope = gameMode === "season" ? t.gameModeSeason : gameMode ? gameMode.toUpperCase() : t.questSyncResetBtn;
     const yes = await ask(`${t.questWipeResetConfirm}\n\n(${scope})`, {
       title: t.questWipeReset,
       kind: "warning",
@@ -3728,7 +3730,7 @@ function App() {
                   >
                     {questStatus.effective_path_valid
                       ? questStatus.counts_by_mode
-                        ? `✓ PVP ${questStatus.counts_by_mode.pvp.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pvp.started}${t.questSyncCountStartedShort} / PVE ${questStatus.counts_by_mode.pve.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pve.started}${t.questSyncCountStartedShort}`
+                        ? `✓ PVP ${questStatus.counts_by_mode.pvp.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pvp.started}${t.questSyncCountStartedShort} / PVE ${questStatus.counts_by_mode.pve.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pve.started}${t.questSyncCountStartedShort}${questStatus.counts_by_mode.season && questStatus.counts_by_mode.season.completed + questStatus.counts_by_mode.season.started > 0 ? ` / ${t.gameModeSeason} ${questStatus.counts_by_mode.season.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.season.started}${t.questSyncCountStartedShort}` : ""}`
                         : `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
                       : t.questSyncPathMissing}
                   </span>
@@ -3825,6 +3827,13 @@ function App() {
                     </button>
                     <button
                       className="reset-btn"
+                      onClick={() => resetQuestState("season")}
+                      title={t.questSyncResetSeasonHint}
+                    >
+                      {t.questSyncResetSeasonBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
                       onClick={() => resetQuestState()}
                       title={t.questSyncResetAllHint}
                     >
@@ -3851,6 +3860,13 @@ function App() {
                     </button>
                     <button
                       className="reset-btn"
+                      onClick={() => wipeResetQuests("season")}
+                      title={t.questWipeResetHint}
+                    >
+                      {t.questSyncResetSeasonBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
                       onClick={() => wipeResetQuests()}
                       title={t.questWipeResetHint}
                     >
@@ -3865,13 +3881,15 @@ function App() {
                   <select
                     value={questDisplayMode}
                     onChange={(e) => {
-                      const v = e.target.value === "pvp" ? "pvp" : "pve";
+                      const raw = e.target.value;
+                      const v = raw === "pvp" ? "pvp" : raw === "season" ? "season" : "pve";
                       setQuestDisplayMode(v);
                       localStorage.setItem(QUEST_DISPLAY_MODE_KEY, v);
                     }}
                   >
                     <option value="pve">PVE</option>
                     <option value="pvp">PVP</option>
+                    <option value="season">{t.gameModeSeason}</option>
                   </select>
                 </div>
               </>

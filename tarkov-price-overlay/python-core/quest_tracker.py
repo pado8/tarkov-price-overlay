@@ -13,7 +13,7 @@ completed on PVE is NOT completed on PVP, and vice versa. So we detect the mode
 per session folder and keep two parallel quest-state dicts. Mode detection uses
 two signals, in order:
 
-  1. application_*.log line ~141: "|Info|application|Session mode: Pve" (or Pvp)
+  1. application_*.log line ~141: "|Info|application|Session mode: Pve" (1.1+: Regular=영구PVP, PvpSeason=시즌; 구버전은 Pvp)
   2. backend_*.log first ~20 lines: the /client/game/start request URL is either
      gw-pve.escapefromtarkov.com or gw-pvp.escapefromtarkov.com
 
@@ -59,8 +59,8 @@ MSG_COMPLETED = 12
 # How often the background watcher re-checks the log folder for new entries.
 POLL_INTERVAL_SEC = 2.5
 
-GameMode = Literal["pvp", "pve"]
-MODES: tuple[GameMode, ...] = ("pvp", "pve")
+GameMode = Literal["pvp", "pve", "season"]
+MODES: tuple[GameMode, ...] = ("pvp", "pve", "season")
 
 # Common EFT install locations to try when the user hasn't set a path manually.
 # The Steam path covers users who relocated/symlinked their install there
@@ -279,14 +279,18 @@ _MODE_SNIFF_BYTES = 64 * 1024
 # those sessions self-report a NEW mode label, silently defaulting them to
 # "pvp" would pollute the user's permanent-PVP quest state with seasonal
 # events. Unknown labels are classified "unknown" and their quest events are
-# ignored until we ship real support for the new mode.
-_RE_SESSION_MODE = re.compile(r"Session mode:\s*([A-Za-z0-9_]+)", re.IGNORECASE)
+# ignored. (2026-08-18: 시즌은 "season" 모드로 정식 지원 — 실로그 확정 라벨은
+# PvpSeason. 문자클래스는 미래의 구두점 포함 라벨 대비 [^\s|]+ 로 완화 —
+# EFT 로그는 파이프(|) 구분이라 안전. TarkovMonitor a0c5e82와 동일 조치.)
+_RE_SESSION_MODE = re.compile(r"Session mode:\s*([^\s|]+)", re.IGNORECASE)
 _RE_BACKEND_HOST = re.compile(r"https://gw-([a-z0-9_-]+)\.escapefromtarkov\.com/client/game/start", re.IGNORECASE)
 
 # What scanning classifies a session folder as. "unknown" = a mode label we
 # don't recognize (likely a new game mode) — quest events from those folders
-# are skipped rather than guessed into the wrong bucket.
-SessionMode = Literal["pvp", "pve", "unknown"]
+# are skipped rather than guessed into the wrong bucket. "mixed" = one folder
+# self-reported two DIFFERENT modes (재시작 없이 표준↔시즌 캐릭터 전환 시 실관측
+# 보고) — 어느 버킷인지 단정할 수 없어 unknown처럼 통째로 스킵한다.
+SessionMode = Literal["pvp", "pve", "season", "unknown", "mixed"]
 
 
 def _classify_mode_word(word: str) -> SessionMode:
@@ -295,6 +299,12 @@ def _classify_mode_word(word: str) -> SessionMode:
         return "pve"
     if w in ("pvp", "regular"):
         return "pvp"
+    # 시즌 래더 (EFT 1.1+). 실로그 확정값은 "PvpSeason"(application 로그),
+    # "pvp-season"은 backend 게이트웨이 호스트 슬러그(Signal 2 폴백).
+    # "seasonal"/"szn"은 TarkovMonitor가 방어적으로 수용하는 별칭(실관측
+    # 0건) — 무해하여 동승. docs/SEASON_PHASE2.md 참조.
+    if w in ("pvpseason", "pvp-season", "seasonal", "szn"):
+        return "season"
     return "unknown"
 
 
@@ -316,9 +326,17 @@ def detect_session_mode(folder: Path) -> SessionMode:
                 chunk = f.read(_MODE_SNIFF_BYTES).decode("utf-8", errors="replace")
         except OSError:
             continue
-        m = _RE_SESSION_MODE.search(chunk)
-        if m:
-            return _classify_mode_word(m.group(1))
+        words = _RE_SESSION_MODE.findall(chunk)
+        if words:
+            # 재시작 없이 캐릭터를 전환하면 한 폴더에 모드 라인이 여러 개
+            # 남는다는 실관측 보고(단일 소스)가 있다. 첫 라인 하나로 폴더를
+            # 확정하면 반대쪽 버킷이 오염되므로, 서로 다른 모드가 섞이면
+            # "mixed"로 분류해 통째로 스킵한다(64KB 스니프 창 한정의 최소
+            # 방어 — get_status의 mixed_mode_folders로 노출).
+            classified = {_classify_mode_word(w) for w in words}
+            if len(classified) > 1:
+                return "mixed"
+            return classified.pop()
         break  # only one application log per folder
 
     # Signal 2: backend_*.log /client/game/start request host. The first
@@ -400,11 +418,14 @@ def _parse_quest_event(block: str) -> Optional[dict]:
 
 
 def _normalize_request_mode(mode: Optional[str]) -> GameMode:
-    """Map the frontend's `game_mode` values to our internal pvp/pve labels.
-    Frontend uses 'regular' for live PVP; anything unrecognized defaults to
-    PVP so old clients keep working."""
+    """Map the frontend's `game_mode` values to our internal mode labels.
+    Frontend uses 'regular' for live PVP; 카탈로그 쪽 이름 "pvp-season"도
+    트래커 내부명 "season"으로 흡수한다(이름 체계가 다른 유일한 지점).
+    anything unrecognized defaults to PVP so old clients keep working."""
     if mode == "pve":
         return "pve"
+    if mode in ("season", "pvp-season"):
+        return "season"
     return "pvp"
 
 
@@ -482,7 +503,8 @@ class QuestTracker:
                     entry = {"status": val, "ts": 0}
                 else:
                     continue
-                for mode in MODES:
+                # 레거시 상태는 시즌 도입 전 데이터라 pvp/pve에만 복사한다.
+                for mode in ("pvp", "pve"):
                     normalized[mode][qid] = dict(entry)
             if legacy:
                 print(
@@ -504,7 +526,8 @@ class QuestTracker:
             self._enabled = bool(data.get("enabled", True))
         print(
             f"[quest] loaded state: pvp={len(self._status['pvp'])}, "
-            f"pve={len(self._status['pve'])} "
+            f"pve={len(self._status['pve'])}, "
+            f"season={len(self._status['season'])} "
             f"(install_path={self._install_path}, enabled={self._enabled})"
         )
 
@@ -540,6 +563,9 @@ class QuestTracker:
             unknown_folders = sum(
                 1 for v in self._folder_mode.values() if v == "unknown"
             )
+            mixed_folders = sum(
+                1 for v in self._folder_mode.values() if v == "mixed"
+            )
             user_path = self._install_path
             enabled = self._enabled
         auto_path = detect_install_path()
@@ -572,6 +598,10 @@ class QuestTracker:
             # Session folders whose game mode we couldn't classify (likely a
             # new mode after a game update). >0 = time to add mode support.
             "unknown_mode_folders": unknown_folders,
+            # 한 세션 폴더에서 서로 다른 모드 라인이 발견된 수(혼합 세션).
+            # >0이면 재시작 없는 캐릭터 전환이 실재한다는 뜻 — 해당 세션의
+            # 퀘스트 이벤트는 안전하게 버려진다.
+            "mixed_mode_folders": mixed_folders,
         }
 
     def is_enabled(self) -> bool:
@@ -705,10 +735,10 @@ class QuestTracker:
         new_events = 0
         for folder in _list_log_folders(install):
             mode = self._mode_for_folder(folder)
-            if mode == "unknown":
-                # New/unrecognized game mode (e.g. a future seasonal realm).
-                # Guessing a bucket would corrupt permanent progress — skip
-                # and surface via get_status so we notice and add support.
+            if mode not in MODES:
+                # "unknown"(미인식 라벨) 또는 "mixed"(한 폴더에 상이 모드) —
+                # 어느 버킷인지 단정하면 영구 진행도가 오염되므로 스킵하고
+                # get_status 카운터로 노출만 한다.
                 continue
             for log_file in _push_notification_files(folder):
                 key = str(log_file)
