@@ -1,5 +1,5 @@
 export type Lang = "ko" | "en" | "ru";
-export type GameMode = "regular" | "pve";
+export type GameMode = "regular" | "pve" | "pvp-season";
 
 export const T = {
   ko: {
@@ -123,6 +123,7 @@ export const T = {
     gameMode: "게임 모드",
     gameModePvp: "PVP",
     gameModePve: "PVE",
+    gameModeSeason: "시즌",
     hotkey: "단축키",
     toggleHotkey: "카드 토글 단축키",
     toggleHotkeyHint: "카드 보기/숨기기 토글 (예: Shift+F2)",
@@ -364,6 +365,7 @@ export const T = {
     gameMode: "Game mode",
     gameModePvp: "PVP",
     gameModePve: "PVE",
+    gameModeSeason: "Season",
     hotkey: "Hotkey",
     toggleHotkey: "Toggle card hotkey",
     toggleHotkeyHint: "Show/hide card toggle (e.g. Shift+F2)",
@@ -605,6 +607,7 @@ export const T = {
     gameMode: "Режим игры",
     gameModePvp: "PVP",
     gameModePve: "PVE",
+    gameModeSeason: "Сезон",
     hotkey: "Горячая клавиша",
     toggleHotkey: "Клавиша показа карточки",
     toggleHotkeyHint: "Показать/скрыть карточку (напр. Shift+F2)",

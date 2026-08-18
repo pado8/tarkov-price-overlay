@@ -754,14 +754,19 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     # 503 "GraphQL server unavailable", the-hideout/tarkov-api#474), fall back to
     # json.tarkov.dev — the maintainer-recommended live source that tarkov.dev
     # itself is built on. The fallback yields the same item shape so the rest of
-    # this function (entry build, alias, canon) is unchanged; only barter/quest/
-    # craft/hideout enrichments are absent in fallback mode.
+    # this function (entry build, alias, canon) is unchanged. (v1.2.4부터
+    # 폴백도 바터/퀘스트/제작/은신처 enrichment full parity — 과거 주석 정정.)
     source = "graphql"
     # Set only on the fallback path: the JSON source supplies the hideout index
     # itself, so we must not fall through to the (also-unreachable) GraphQL
     # hideout query below and blank the panel.
     fb_hideout: tuple[dict, list] | None = None
     try:
+        if game_mode == "pvp-season":
+            # 시즌 래더(2026-08)는 GraphQL 스키마보다 늦게 생겨 GameMode
+            # enum에 없다 — json.tarkov.dev(/pvp-season/*)가 유일한 공급원.
+            # raise로 아래 폴백 경로(다른 장애와 동일 경로)로 라우팅한다.
+            raise RuntimeError("pvp-season is served by json.tarkov.dev only")
         response = requests.post(
             TARKOV_API_URL,
             json={
@@ -859,7 +864,7 @@ def _refresher_loop() -> None:
     """Periodic warm-up + refresh of all (lang, game_mode) catalogs."""
     while True:
         for lang in ("ko", "en"):
-            for game_mode in ("regular", "pve"):
+            for game_mode in ("regular", "pve", "pvp-season"):
                 try:
                     _refresh_one(lang, game_mode)
                 except Exception as e:
@@ -923,6 +928,11 @@ def _find_closest_name(text: str, lang: str, cutoff: float = 0.6) -> str | None:
 
 
 def _query_by_name(name: str, lang: str, game_mode: str) -> list[dict]:
+    if game_mode == "pvp-season":
+        # 시즌 모드는 GraphQL enum에 없어 이 POST가 항상 실패한다 — 조회
+        # 핫패스에서 10초 타임아웃을 기다리느니 빈 결과(→no-match)로 즉시
+        # 강등한다. 시즌 시세는 워밍된 json 카탈로그가 전담한다.
+        return []
     response = requests.post(
         TARKOV_API_URL,
         json={

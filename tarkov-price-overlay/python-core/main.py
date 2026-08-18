@@ -103,7 +103,7 @@ class CaptureRequest(BaseModel):
     width: int
     height: int
     lang: str = "ko"  # "ko" | "en" | "ru"
-    game_mode: str = "regular"  # "regular" (PVP) | "pve"
+    game_mode: str = "regular"  # "regular" (PVP) | "pve" | "pvp-season" (시즌 래더)
     mirror_x: int | None = None  # alt capture x (mirrored side), tried if primary doesn't match
     cursor_x: int | None = None  # cursor pos, used to clamp capture to that monitor
     cursor_y: int | None = None
@@ -272,13 +272,25 @@ def _build_response(
     # entirely and serve empty dicts so the per-task .get() returns None
     # — preserves the legacy behavior where disable hides all sync data.
     tracker = get_tracker()
-    if tracker.is_enabled():
+    # 시즘 래더는 별도 와이프라 PVP/PVE 진행도가 적용되지 않는다 — 시즘
+    # 조회에서는 status_by_mode까지 전부 비워, 시즘 퀵스트에 다른 프로필의
+    # 진행색이 입혀지는 오해를 막는다(2단계 시즘 로그 감지 전까지).
+    if tracker.is_enabled() and game_mode != "pvp-season":
         pvp_status = tracker.all_status("regular")
         pve_status = tracker.all_status("pve")
     else:
         pvp_status = {}
         pve_status = {}
-    current_status = pve_status if game_mode == "pve" else pvp_status
+    if game_mode == "pve":
+        current_status = pve_status
+    elif game_mode == "pvp-season":
+        # 시즌 래더는 연중 PVP 프로필과 와이프가 분리돼 있어 트래커의 PVP
+        # 진행도를 그대로 보여주면 틀린다. 로그 기반 시즌 세션 감지(2단계)가
+        # 붙기 전까지는 개인 진행 상태를 비워 둔다 — 퀘스트 필요 여부 자체는
+        # 시즌 카탈로그(usedInTasks)에서 그대로 표시되고, 완료/진행 색만 없다.
+        current_status = {}
+    else:
+        current_status = pvp_status
 
     def _unlock_ref(b: dict) -> TaskUnlockRef | None:
         """Barter's quest gate + the player's progress on it. The quest id
@@ -783,7 +795,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         f"winapi_cursor={winapi_cursor}"
     )
     lang = req.lang if req.lang in ("ko", "en", "ru") else "ko"
-    game_mode = req.game_mode if req.game_mode in ("regular", "pve") else "regular"
+    game_mode = req.game_mode if req.game_mode in ("regular", "pve", "pvp-season") else "regular"
 
     # Direct-name lookup path: skip capture+OCR, use the supplied text.
     # Triggered by 최근 검색 재조회 / 직접 입력 correction submit.

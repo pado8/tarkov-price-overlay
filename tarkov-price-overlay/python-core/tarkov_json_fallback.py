@@ -279,7 +279,10 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
 
     Raises on hard failure (items dump unreachable) so the caller keeps serving
     stale cache instead of overwriting it with nothing."""
-    mode = "pve" if game_mode == "pve" else "regular"
+    # v1.2.3 당시에는 모드가 2종이라 이항이 안전했지만, pvp-season(2026-08)까지
+    # regular로 조용히 강등하면 시즌 조회가 엉뚱한 경제의 시세를 보여준다
+    # (실측: 업스트림 3,273개 중 3,198개가 모드간 상이). 화이트리스트로 수용.
+    mode = game_mode if game_mode in ("pve", "pvp-season") else "regular"
 
     items_doc = _get_cached(f"{mode}/items")
     items = ((items_doc.get("data") or {}).get("items")) or {}

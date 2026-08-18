@@ -3463,6 +3463,7 @@ function App() {
               >
                 <option value="regular">{t.gameModePvp}</option>
                 <option value="pve">{t.gameModePve}</option>
+                <option value="pvp-season">{t.gameModeSeason}</option>
               </select>
             </div>
             <div className="settings-section-header">
