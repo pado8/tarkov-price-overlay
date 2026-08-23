@@ -403,3 +403,58 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
     if not out:
         raise RuntimeError("json.tarkov.dev fallback produced no usable items")
     return out, enrich["hideout_index"], enrich["stations"]
+
+
+def fetch_ammo(lang: str) -> list[dict]:
+    """탄약 매트릭스용 데이터를 json.tarkov.dev에서 가져와 GraphQL `ammo` 쿼리와
+    같은 행 모양으로 돌려준다.
+
+    v1.2.4의 full parity 때 items/quests/barters/crafts/hideout은 폴백을 붙였지만
+    **`/ammo`만 GraphQL 전용으로 남아 있었다** — 그래서 2026-07-21 GraphQL 장애
+    이후 탄약 비교표가 계속 비어 있었고, 08-18 사용자 제보(#45 "탄약 매트릭스
+    표시가 안돼요")로 드러났다.
+
+    다행히 items 덤프의 탄약 아이템(properties.propertiesType ==
+    "ItemPropertiesAmmo")이 매트릭스에 필요한 6개 필드를 모두 갖고 있어,
+    별도 데이터셋 없이 이미 받아둔 카탈로그에서 뽑아낼 수 있다.
+    """
+    mode = "regular"  # 탄약 스탯은 게임 모드와 무관
+    items_doc = _get_cached(f"{mode}/items")
+    items = ((items_doc.get("data") or {}).get("items")) or {}
+    if not items:
+        raise RuntimeError("json.tarkov.dev returned no items for ammo")
+
+    item_loc = _get_locale(f"{mode}/items_{lang}")
+    en_loc = item_loc if lang == "en" else _get_locale(f"{mode}/items_en")
+
+    def loc(key):
+        if key is None:
+            return None
+        v = item_loc.get(key) or en_loc.get(key) or key
+        return v.strip() if isinstance(v, str) else v
+
+    rows: list[dict] = []
+    for iid, it in items.items():
+        if not isinstance(it, dict):
+            continue
+        p = it.get("properties") or {}
+        if not isinstance(p, dict) or p.get("propertiesType") != "ItemPropertiesAmmo":
+            continue
+        if not p.get("caliber"):
+            continue
+        rows.append({
+            "item": {
+                "id": it.get("id") or iid,
+                "name": loc(it.get("name")),
+                "shortName": loc(it.get("shortName")),
+            },
+            "caliber": p.get("caliber"),
+            "penetrationPower": p.get("penetrationPower"),
+            "damage": p.get("damage"),
+            "fragmentationChance": p.get("fragmentationChance"),
+            "armorDamage": p.get("armorDamage"),
+            "accuracyModifier": p.get("accuracyModifier"),
+        })
+    if not rows:
+        raise RuntimeError("json.tarkov.dev fallback produced no ammo rows")
+    return rows

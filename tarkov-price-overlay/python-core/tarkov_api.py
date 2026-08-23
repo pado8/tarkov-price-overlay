@@ -355,8 +355,17 @@ def _fetch_ammo(lang: str) -> dict:
         response.raise_for_status()
         rows = (response.json().get("data") or {}).get("ammo") or []
     except Exception as e:
-        print(f"[ammo] fetch failed for lang={lang}: {e!r}")
-        return {"calibers": {}}
+        # GraphQL이 죽어 있으면(2026-07~ 장기 장애) json 폴백에서 같은 행 모양을
+        # 뽑아온다. 이게 없어서 탄약 매트릭스만 장애 내내 비어 있었고 사용자
+        # 제보(#45)로 드러났다 — items/quests/barters는 폴백이 있는데 /ammo만
+        # 빠져 있었다.
+        print(f"[ammo] GraphQL failed for lang={lang}: {e!r} - trying json.tarkov.dev fallback")
+        try:
+            import tarkov_json_fallback
+            rows = tarkov_json_fallback.fetch_ammo(lang)
+        except Exception as e2:
+            print(f"[ammo] fallback also failed for lang={lang}: {e2!r}")
+            return {"calibers": {}}
 
     by_caliber: dict[str, dict] = {}
     for r in rows:
