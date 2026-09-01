@@ -77,15 +77,132 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "타르코프 시세 오버레이는 무료인가요?", "acceptedAnswer": { "@type": "Answer", "text": "네, 완전 무료이며 MIT 라이선스 오픈소스입니다. GitHub에서 전체 코드를 확인하고 직접 빌드할 수도 있습니다." } },
-    { "@type": "Question", "name": "이 오버레이를 쓰면 밴당하나요?", "acceptedAnswer": { "@type": "Answer", "text": "화면 캡처와 OCR(글자 인식)만 사용하고 게임 메모리를 읽거나 DLL 인젝션을 하지 않습니다. 유튜브 녹화나 디스코드 화면공유와 같은 카테고리로, 메모리 핵·ESP·에임봇과는 완전히 다릅니다. 다만 BSG가 공식 허용한 도구는 아니므로 사용 책임은 본인에게 있습니다." } },
-    { "@type": "Question", "name": "F2를 눌러도 게임 안에서 반응이 없어요.", "acceptedAnswer": { "@type": "Answer", "text": "타르코프는 관리자 권한으로 실행되므로, 프로그램도 우클릭 → '관리자 권한으로 실행'으로 켜야 게임 포커스 상태에서 단축키가 전달됩니다. 또한 그래픽 설정을 '테두리 없는 전체화면'으로 바꿔주세요." } },
-    { "@type": "Question", "name": "설치 시 Windows SmartScreen 경고가 떠요.", "acceptedAnswer": { "@type": "Answer", "text": "코드 서명 인증서 비용 문제로 서명을 안 했을 뿐 악성코드가 아닙니다. '추가 정보' → '실행'을 눌러 진행하세요. 코드는 GitHub에 전부 공개되어 있습니다." } },
-    { "@type": "Question", "name": "어떤 게임에서 쓸 수 있나요?", "acceptedAnswer": { "@type": "Answer", "text": "Escape from Tarkov(타르코프) 전용 Windows 오버레이입니다. PVP와 PVE 시세를 분리해서 보여줍니다." } }
+    {
+      "@type": "Question",
+      "name": "무료인가요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "네, 완전 무료이며 MIT 라이선스 오픈소스입니다. GitHub에서 전체 코드를 확인하고 직접 빌드할 수도 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "어떤 정보를 보여주나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "플리마켓 현재가·24시간 범위·직전 거래가·칸당 가격(₽/슬롯), 최고가 상인과 구매처, 양방향 교환(바터), 은신처 제작 레시피와 업그레이드 필요 개수, 이 아이템이 필요한 퀘스트와 본인 진행 상황, 같은 구경 탄약 비교표, 무게 효율(₽/kg), 루팅 등급까지 한 카드에 표시됩니다. 표시 항목은 설정에서 개별로 켜고 끌 수 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "이거 쓰면 밴당하나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "화면 캡처와 OCR만 사용하고 게임 메모리를 읽거나 인젝션하지 않습니다. 메모리 핵·ESP와는 완전히 다른 카테고리입니다. 다만 BSG가 공식 허용한 도구는 아니므로 사용 책임은 본인에게 있고, 동일 방식 오버레이로 밴된 사례는 현재까지 보고된 바 없습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "아이템이 인식이 안 되거나 엉뚱한 게 나와요.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "가장 흔한 원인은 캡처 영역이 아이템 이름을 벗어난 것입니다. 설정 → 캡처 영역을 열면 커서를 따라다니는 박스가 보이는데, 그 안에 아이템 이름 글자가 들어오도록 X/Y 오프셋을 맞춰주세요. QHD·4K는 \"해상도 자동 조정\" 한 번이면 됩니다. 특정 아이템만 계속 틀리게 읽히면 설정에서 오인식 → 정답 매핑을 저장해 다음부터 자동 보정할 수 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "F2를 눌러도 게임 안에서 반응이 없어요.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "타르코프는 관리자 권한으로 실행되므로, 본 앱도 우클릭 → \"관리자 권한으로 실행\"해야 단축키가 전달됩니다. 또한 그래픽 설정을 \"테두리 없는 전체화면\"으로 바꿔주세요(독점 전체화면은 모든 오버레이를 OS가 차단). 그래도 안 되면 설정에서 단축키를 다른 키로 변경."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "설치할 때 SmartScreen / 백신 경고가 떠요.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "코드 서명 인증서 비용 문제로 서명을 안 했을 뿐 악성코드가 아닙니다. \"추가 정보\" → \"실행\"으로 진행하세요. 동작 원리와 전체 코드는 공개되어 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "듀얼 모니터 / 4K / 125% 배율인데 좌표가 어긋나요.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Per-monitor DPI가 처리되어 동작합니다. 그래도 어긋나면 설정 → 캡처 영역에서 X/Y 오프셋을 미세 조정하거나 \"해상도 자동 조정\"을 누르세요."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "PVE인데 가격이 이상해요.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "설정 → 게임 모드를 PVE로 변경하세요. PVP와 PVE 시세 데이터가 분리되어 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "업데이트는 어떻게 하나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "앱을 켤 때 새 버전을 자동으로 확인하고, 있으면 카드에 알림이 뜹니다. \"지금 설치\"를 누르면 알아서 받아 설치합니다. 수동으로 하려면 GitHub Releases에서 최신 인스톨러를 다시 실행하면 되고, 자동 확인은 설정에서 끌 수 있습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "시세 데이터는 어디서 오나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "커뮤니티가 운영하는 공개 API tarkov.dev에서 가져옵니다. 게임 메모리나 계정 정보는 전혀 쓰지 않습니다. 제공처에 장애가 생기면 자동으로 예비 소스로 전환해 시세 조회가 계속되도록 되어 있습니다."
+      }
+    }
   ]
 }
 </script>
 <link rel="stylesheet" href="/styles.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "타르코프에서 아이템 시세 확인하는 법",
+  "totalTime": "PT5M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "tool": [
+    {
+      "@type": "HowToTool",
+      "name": "Tarkov Price Overlay"
+    }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "다운로드 & 설치",
+      "text": "GitHub Releases에서 인스톨러 또는 포터블 ZIP을 받습니다. 첫 실행 때 OCR 모델을 1회 내려받습니다(1~5분).",
+      "url": "https://tarkov.aquapado.com/#download"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "관리자 권한으로 실행",
+      "text": "타르코프가 관리자 권한으로 돌기 때문에, 오버레이도 우클릭 → 관리자 권한으로 실행해야 게임 안에서 단축키가 전달됩니다.",
+      "url": "https://tarkov.aquapado.com/#download"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "인게임에서 F2",
+      "text": "아이템 이름이 화면에 보이게 한 뒤 F2를 누르면 시세 카드가 뜹니다. 카드 빈 곳을 드래그해 위치를 옮길 수 있습니다(자동 저장).",
+      "url": "https://tarkov.aquapado.com/#download"
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -205,11 +322,15 @@
   </div>
   <div class="faq">
     <details open><summary>무료인가요?</summary><p>네, 완전 무료이며 MIT 라이선스 오픈소스입니다. GitHub에서 전체 코드를 확인하고 직접 빌드할 수도 있습니다.</p></details>
+    <details><summary>어떤 정보를 보여주나요?</summary><p>플리마켓 현재가·24시간 범위·직전 거래가·칸당 가격(₽/슬롯), 최고가 상인과 구매처, 양방향 교환(바터), 은신처 제작 레시피와 업그레이드 필요 개수, 이 아이템이 필요한 퀘스트와 본인 진행 상황, 같은 구경 탄약 비교표, 무게 효율(₽/kg), 루팅 등급까지 한 카드에 표시됩니다. 표시 항목은 설정에서 개별로 켜고 끌 수 있습니다.</p></details>
     <details><summary>이거 쓰면 밴당하나요?</summary><p>화면 캡처와 OCR만 사용하고 게임 메모리를 읽거나 인젝션하지 않습니다. 메모리 핵·ESP와는 완전히 다른 카테고리입니다. 다만 BSG가 공식 허용한 도구는 아니므로 사용 책임은 본인에게 있고, 동일 방식 오버레이로 밴된 사례는 현재까지 보고된 바 없습니다.</p></details>
+    <details><summary>아이템이 인식이 안 되거나 엉뚱한 게 나와요.</summary><p>가장 흔한 원인은 캡처 영역이 아이템 이름을 벗어난 것입니다. 설정 → 캡처 영역을 열면 커서를 따라다니는 박스가 보이는데, 그 안에 아이템 이름 글자가 들어오도록 X/Y 오프셋을 맞춰주세요. QHD·4K는 "해상도 자동 조정" 한 번이면 됩니다. 특정 아이템만 계속 틀리게 읽히면 설정에서 오인식 → 정답 매핑을 저장해 다음부터 자동 보정할 수 있습니다.</p></details>
     <details><summary>F2를 눌러도 게임 안에서 반응이 없어요.</summary><p>타르코프는 관리자 권한으로 실행되므로, 본 앱도 우클릭 → "관리자 권한으로 실행"해야 단축키가 전달됩니다. 또한 그래픽 설정을 "테두리 없는 전체화면"으로 바꿔주세요(독점 전체화면은 모든 오버레이를 OS가 차단). 그래도 안 되면 설정에서 단축키를 다른 키로 변경.</p></details>
     <details><summary>설치할 때 SmartScreen / 백신 경고가 떠요.</summary><p>코드 서명 인증서 비용 문제로 서명을 안 했을 뿐 악성코드가 아닙니다. "추가 정보" → "실행"으로 진행하세요. 동작 원리와 전체 코드는 공개되어 있습니다.</p></details>
     <details><summary>듀얼 모니터 / 4K / 125% 배율인데 좌표가 어긋나요.</summary><p>Per-monitor DPI가 처리되어 동작합니다. 그래도 어긋나면 설정 → 캡처 영역에서 X/Y 오프셋을 미세 조정하거나 "해상도 자동 조정"을 누르세요.</p></details>
     <details><summary>PVE인데 가격이 이상해요.</summary><p>설정 → 게임 모드를 PVE로 변경하세요. PVP와 PVE 시세 데이터가 분리되어 있습니다.</p></details>
+    <details><summary>업데이트는 어떻게 하나요?</summary><p>앱을 켤 때 새 버전을 자동으로 확인하고, 있으면 카드에 알림이 뜹니다. "지금 설치"를 누르면 알아서 받아 설치합니다. 수동으로 하려면 GitHub Releases에서 최신 인스톨러를 다시 실행하면 되고, 자동 확인은 설정에서 끌 수 있습니다.</p></details>
+    <details><summary>시세 데이터는 어디서 오나요?</summary><p>커뮤니티가 운영하는 공개 API tarkov.dev에서 가져옵니다. 게임 메모리나 계정 정보는 전혀 쓰지 않습니다. 제공처에 장애가 생기면 자동으로 예비 소스로 전환해 시세 조회가 계속되도록 되어 있습니다.</p></details>
   </div>
 </div></section>
 

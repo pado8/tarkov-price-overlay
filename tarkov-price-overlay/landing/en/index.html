@@ -76,15 +76,132 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "Is Tarkov Price Overlay free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, completely free and MIT open-source. You can review the full code on GitHub and build it yourself." } },
-    { "@type": "Question", "name": "Will I get banned for using this overlay?", "acceptedAnswer": { "@type": "Answer", "text": "It uses screen capture and OCR only; it does not read game memory or inject DLLs. It is the same category as YouTube screen recorders or Discord screen sharing, and fundamentally different from memory hacks, ESP, or aimbots. That said, it is not officially sanctioned by BSG, so use is at your own risk. No bans have been reported for similar OCR-based overlays to date." } },
-    { "@type": "Question", "name": "F2 does nothing inside the game.", "acceptedAnswer": { "@type": "Answer", "text": "Tarkov runs as administrator, so right-click the app and choose Run as administrator for the hotkey to reach the game. Also set the game's graphics to Borderless Fullscreen, since exclusive fullscreen blocks all overlays at the OS level." } },
-    { "@type": "Question", "name": "Windows SmartScreen or antivirus flags the installer.", "acceptedAnswer": { "@type": "Answer", "text": "The executable is unsigned for cost reasons, not malware. Click More info then Run anyway. The behavior and full source are open on GitHub." } },
-    { "@type": "Question", "name": "Which game does it work with?", "acceptedAnswer": { "@type": "Answer", "text": "It is a Windows overlay for Escape from Tarkov. It shows PVP and PVE prices separately." } }
+    {
+      "@type": "Question",
+      "name": "Is it free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, completely free and MIT open-source. You can review the full code on GitHub and build it yourself."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What information does it show?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Flea market current price, 24h range, last trade, price per slot, the best trader to sell to and where to buy, barters in both directions, hideout crafts and upgrade requirements, which quests need the item plus your own progress, an ammo comparison table for the same caliber, weight efficiency (RUB/kg) and a loot tier - all on one card. Every row can be toggled on or off in Settings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will I get banned?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It uses screen capture and OCR only; it doesn't read game memory or inject. It's a fundamentally different category from memory hacks and ESP. BSG hasn't officially sanctioned it, so use is at your own risk — and no bans have been reported for similar OCR-based overlays to date."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "An item isn't recognized, or the wrong one shows up.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The usual cause is the capture box missing the item name. Open Settings -> Capture region: a box follows your cursor, so nudge the X/Y offsets until the item's name sits inside it. On QHD/4K just press \"Auto-scale for resolution\". If one specific item is always misread, save a misread -> correct-name mapping in Settings and it will be fixed automatically from then on."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "F2 does nothing inside the game.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Tarkov runs as administrator, so right-click the app → \"Run as administrator\" for the hotkey to reach the game. Also switch the game's graphics to \"Borderless Fullscreen\" (exclusive fullscreen blocks every overlay at the OS level). If it still fails, rebind the hotkey in Settings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SmartScreen / antivirus warning on install.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The executable is unsigned for cost reasons, not malware. Click \"More info → Run anyway\". The behavior and full source are open on GitHub."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Dual monitor / 4K / 125% scaling — coordinates are off.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Per-monitor DPI is handled. If it's still off, fine-tune the capture X/Y offset in Settings, or hit \"Auto-fit resolution\"."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "PVE prices look wrong.",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Switch Game mode to PVE in Settings. PVP and PVE price data are stored separately."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do updates work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The app checks for a new version on launch and shows a notice on the card when one exists; click \"Install now\" and it downloads and installs itself. You can also run the latest installer from GitHub Releases over the top, or turn the automatic check off in Settings."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where does the price data come from?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "From tarkov.dev, a community-run public API. No game memory and no account data are used. If that source has an outage, the app automatically switches to a backup source so lookups keep working."
+      }
+    }
   ]
 }
 </script>
 <link rel="stylesheet" href="/styles.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to check item prices in Escape from Tarkov",
+  "totalTime": "PT5M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0"
+  },
+  "tool": [
+    {
+      "@type": "HowToTool",
+      "name": "Tarkov Price Overlay"
+    }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Download and install",
+      "text": "Grab the installer or portable ZIP from GitHub Releases. The OCR model downloads once on first launch (1-5 minutes).",
+      "url": "https://tarkov.aquapado.com/en/#download"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Run as administrator",
+      "text": "Tarkov runs elevated, so right-click the overlay and choose Run as administrator, otherwise the hotkey never reaches the game.",
+      "url": "https://tarkov.aquapado.com/en/#download"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Press F2 in game",
+      "text": "Make the item's name visible and press F2 - the price card appears. Drag an empty part of the card to move it (position is saved).",
+      "url": "https://tarkov.aquapado.com/en/#download"
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -204,11 +321,15 @@
   </div>
   <div class="faq">
     <details open><summary>Is it free?</summary><p>Yes, completely free and MIT open-source. You can review the full code on GitHub and build it yourself.</p></details>
+    <details><summary>What information does it show?</summary><p>Flea market current price, 24h range, last trade, price per slot, the best trader to sell to and where to buy, barters in both directions, hideout crafts and upgrade requirements, which quests need the item plus your own progress, an ammo comparison table for the same caliber, weight efficiency (RUB/kg) and a loot tier - all on one card. Every row can be toggled on or off in Settings.</p></details>
     <details><summary>Will I get banned?</summary><p>It uses screen capture and OCR only; it doesn't read game memory or inject. It's a fundamentally different category from memory hacks and ESP. BSG hasn't officially sanctioned it, so use is at your own risk — and no bans have been reported for similar OCR-based overlays to date.</p></details>
+    <details><summary>An item isn't recognized, or the wrong one shows up.</summary><p>The usual cause is the capture box missing the item name. Open Settings -&gt; Capture region: a box follows your cursor, so nudge the X/Y offsets until the item's name sits inside it. On QHD/4K just press "Auto-scale for resolution". If one specific item is always misread, save a misread -&gt; correct-name mapping in Settings and it will be fixed automatically from then on.</p></details>
     <details><summary>F2 does nothing inside the game.</summary><p>Tarkov runs as administrator, so right-click the app → "Run as administrator" for the hotkey to reach the game. Also switch the game's graphics to "Borderless Fullscreen" (exclusive fullscreen blocks every overlay at the OS level). If it still fails, rebind the hotkey in Settings.</p></details>
     <details><summary>SmartScreen / antivirus warning on install.</summary><p>The executable is unsigned for cost reasons, not malware. Click "More info → Run anyway". The behavior and full source are open on GitHub.</p></details>
     <details><summary>Dual monitor / 4K / 125% scaling — coordinates are off.</summary><p>Per-monitor DPI is handled. If it's still off, fine-tune the capture X/Y offset in Settings, or hit "Auto-fit resolution".</p></details>
     <details><summary>PVE prices look wrong.</summary><p>Switch Game mode to PVE in Settings. PVP and PVE price data are stored separately.</p></details>
+    <details><summary>How do updates work?</summary><p>The app checks for a new version on launch and shows a notice on the card when one exists; click "Install now" and it downloads and installs itself. You can also run the latest installer from GitHub Releases over the top, or turn the automatic check off in Settings.</p></details>
+    <details><summary>Where does the price data come from?</summary><p>From tarkov.dev, a community-run public API. No game memory and no account data are used. If that source has an outage, the app automatically switches to a backup source so lookups keep working.</p></details>
   </div>
 </div></section>
 

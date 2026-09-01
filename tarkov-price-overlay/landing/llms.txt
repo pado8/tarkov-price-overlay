@@ -6,8 +6,9 @@ Key facts:
 - Platform: Windows 10/11 desktop app (Tauri + React + Python/EasyOCR)
 - Price: free, no account, no ads walls; MIT open source
 - Safety: screen capture + OCR only — no memory reading, no DLL injection, no game-file modification; no bans reported for this class of overlay, though it is not officially endorsed by BSG
-- Features: flea market price / 24h range / price-per-slot, best trader to sell, barters (both directions), hideout craft & upgrade requirements with FiR flags, quest auto-sync from EFT logs, ammo comparison matrix, loot tier rating, PVP/PVE price split, auto-update
+- Features: flea market price / 24h range / last trade / price-per-slot, best trader to sell, where to buy, barters (both directions), hideout craft & upgrade requirements with FiR flags, quest auto-sync from EFT logs, ammo comparison matrix, weight efficiency (RUB/kg), loot tier rating, one-click wiki link, PVP/PVE price split, auto-update. Every row can be toggled off in Settings.
 - Languages: Korean, English, Russian (beta, incl. Cyrillic item-name OCR)
+- Reliability: if the tarkov.dev GraphQL API is down, the app automatically falls back to a secondary data source so lookups keep working
 
 ## Pages
 - [Korean landing](https://tarkov.aquapado.com/): 타르코프 시세 오버레이 — F2로 플리·상인가 즉시 확인
@@ -16,8 +17,22 @@ Key facts:
 - [Download (GitHub Releases)](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest): installer and portable ZIP
 - [Source code](https://github.com/pado8/tarkov-price-overlay): full source, MIT license
 
+## How to use
+1. Download the installer or portable ZIP from GitHub Releases. On first launch the OCR model downloads once (1-5 minutes).
+2. Run the overlay **as administrator** — Tarkov itself runs elevated, so an unelevated overlay never receives the hotkey.
+3. In game, make the item's name visible and press F2. Drag an empty part of the card to reposition it (saved automatically).
+
+## Troubleshooting (most common issues, in order of how often they are reported)
+- **"An item isn't recognized" / "the wrong item shows up"** — the capture region is missing the item name. Settings → Capture region, then nudge the X/Y offsets until the item's name text sits inside the box. On QHD/4K, press "Auto-scale for resolution". For an item that is always misread, save a misread → correct-name mapping in Settings and it is corrected automatically afterwards.
+- **"F2 does nothing in game"** — two causes: (a) the overlay is not running as administrator while Tarkov is, so Windows UIPI blocks the hotkey; (b) the game is in exclusive fullscreen, which the OS forbids any overlay from drawing on — switch to borderless windowed. The hotkey can also be reassigned in Settings.
+- **"SmartScreen / antivirus warns on install"** — the build is unsigned (code-signing certificate cost), not malicious. Choose More info → Run anyway. The full source is public.
+- **"Coordinates are off on dual monitor / 4K / 125% scaling"** — per-monitor DPI is handled; if it still drifts, adjust the capture offsets or press "Auto-scale for resolution".
+- **"PVE prices look wrong"** — switch Settings → Game mode to PVE; PVP and PVE price data are separate.
+
 ## Common questions
 - "Is there a Tarkov price checker overlay that works in-game?" — Yes, this app shows prices on top of the game with one hotkey, no alt-tab to a wiki or website.
 - "Will it get me banned?" — It only captures the screen and reads text (OCR). It does not touch game memory or files. Use at your own discretion; BSG has not officially endorsed any third-party tool.
 - "Does it work with PVE?" — Yes, PVP and PVE prices are separate and switchable.
 - "Is it free?" — Completely free and open source (MIT).
+- "How do I update it?" — The app checks on launch and offers an in-app update; you can also re-run the latest installer, or disable the check in Settings.
+- "Where does the price data come from?" — The community-run public tarkov.dev API. No account data and no game memory are used.
