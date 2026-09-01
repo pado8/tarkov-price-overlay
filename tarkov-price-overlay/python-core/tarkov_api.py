@@ -539,6 +539,35 @@ def get_station_list(lang: str) -> list[dict]:
         return []
 
 
+def _norm_barter_count(raw) -> tuple[float | int, bool]:
+    """바터 요구 개수를 정수로 정규화하고, 올림했는지 여부를 함께 돌려준다.
+
+    tarkov.dev의 barters 덤프는 요구 개수 일부를 소수로 준다 — 실측 1,062건 중
+    313건이고 **전부 레프(Ref)의 GP 코인** 한 종류였다. 위키의 실제 레프 바터
+    목록(은신처 키 ×100, 무기케이스 ×220, 아이템케이스 ×150, THICC ×500 …)은
+    전부 정수이고 우리 덤프의 정수 18건과 일치한다. 즉 소수 쪽은 바터가 아니라
+    레프의 **GP코인 판매가**가 환산돼 섞여 들어온 것이다. 값들이 1.2/1.23/1.24/
+    1.25/1.26처럼 연속적으로 퍼져 있어 '노이즈 낀 정수'도 아니다.
+
+    가격이라면 필요한 건 "최소 몇 개를 들고 가야 하나"이므로 **올림**한다.
+    0.42개를 건넬 수는 없으니 1개, 155.1이면 156개. 모자라는 것보다 하나 남는
+    쪽이 안전하다. 올림한 경우 approx=True를 돌려 카드가 "~"를 붙이게 한다.
+
+    ⚠️ 제작(craft)에는 쓰지 않는다. 제작의 유일한 소수는 정수기의
+    물 필터 ×0.66인데, 이건 필터 내구도를 66% 쓴다는 **진짜 소수**라서
+    올림하면 없는 소모량을 지어내는 셈이 된다.
+    """
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        return 1, False
+    if v <= 0:
+        return 1, False
+    if v == int(v):
+        return int(v), False
+    return math.ceil(v), True
+
+
 def _task_unlock_ref(barter: dict) -> dict | None:
     """taskUnlock on a barter → {"id", "name"} or None when the barter has
     no quest gate. The id is passed verbatim to the quest tracker later, so
@@ -565,11 +594,13 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         for ri in b.get("requiredItems", []) or []:
             inner = ri.get("item") or {}
             if inner.get("name"):
+                cnt, approx = _norm_barter_count(ri.get("count"))
                 items_list.append(
                     {
                         "name": inner["name"],
                         "short_name": inner.get("shortName"),
-                        "count": ri.get("count") or 1,
+                        "count": cnt,
+                        "approx": approx or None,
                     }
                 )
         if not items_list:
@@ -664,8 +695,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         for ri in b.get("requiredItems", []) or []:
             if (ri.get("item") or {}).get("id") == item_id:
                 need_raw += float(ri.get("count") or 1)
-        need = math.ceil(need_raw) if need_raw > 0 else 0
-        need_approx = need > 0 and float(need) != need_raw
+        need, need_approx = _norm_barter_count(need_raw) if need_raw > 0 else (0, False)
         trader = b.get("trader") or {}
         barters_using.append(
             {

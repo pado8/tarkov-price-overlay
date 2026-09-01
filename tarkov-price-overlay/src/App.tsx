@@ -448,6 +448,11 @@ type BarterRequiredItem = {
   name: string;
   short_name: string | null;
   count: number;
+  // Set when the source figure was fractional and the sidecar rounded up.
+  // Only ever true for barter requirements (Ref's GP coin pricing) — craft
+  // counts are passed through untouched because their one fractional value
+  // is a real partial-resource cost.
+  approx?: boolean | null;
 };
 // Quest gate on a barter (tarkov.dev taskUnlock). status mirrors
 // TaskRef.task_status for the lookup's game_mode; status_by_mode lets the
@@ -4415,7 +4420,13 @@ function App() {
                                 <span key={i} className="barter-item" data-fullname={it.name}>
                                   {i > 0 && <span className="barter-plus"> + </span>}
                                   {it.short_name ?? it.name}
-                                  <span className="barter-count">×{it.count}</span>
+                                  <span
+                                    className="barter-count"
+                                    title={it.approx ? t.barterNeedApproxHint : undefined}
+                                  >
+                                    ×{it.approx ? "~" : ""}
+                                    {it.count}
+                                  </span>
                                 </span>
                               ))}
                             </div>
