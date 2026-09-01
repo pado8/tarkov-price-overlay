@@ -120,12 +120,28 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
 .foot-in a:hover{color:var(--gold)}
 .disc{margin-top:14px;font-size:12px;color:#6f6b60;max-width:70ch}
 
+/* voices (실사용자 반응) */
+.proof{display:flex;justify-content:center;gap:34px;flex-wrap:wrap;margin:0 0 30px;padding:0;list-style:none}
+.proof li{text-align:center}
+.proof b{display:block;font-size:27px;font-weight:800;color:var(--gold);line-height:1.15}
+.proof span{font-size:12.5px;color:var(--muted)}
+.voices{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.voice{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column}
+.voice p{margin:0 0 12px;font-size:14.5px;color:#d9d5c9;line-height:1.62}
+.voice p::before{content:'\201C';color:var(--gold-dim);font-weight:800;margin-right:1px}
+.voice p::after{content:'\201D';color:var(--gold-dim);font-weight:800;margin-left:1px}
+.voice cite{margin-top:auto;font-style:normal;font-size:12.5px;color:var(--muted)}
+.voice cite b{color:var(--gold-dim);font-weight:700}
+.voice-note{text-align:center;color:var(--muted);font-size:12.5px;margin:0;line-height:1.6}
+.voice-note a{color:var(--gold-dim);border-bottom:1px solid var(--line2)}
+.voice-note a:hover{color:var(--gold)}
+
 @media(max-width:860px){
   .hero-grid{grid-template-columns:1fr;gap:28px}
   .hero-shot{order:-1}
   h1{font-size:33px}
   .feat{grid-template-columns:1fr 1fr}
   .gal{grid-template-columns:1fr 1fr}
-  .steps,.safe-grid,.dl-cards{grid-template-columns:1fr}
+  .steps,.safe-grid,.dl-cards,.voices{grid-template-columns:1fr}
 }
 @media(max-width:480px){ .feat{grid-template-columns:1fr} }
