@@ -1,4 +1,5 @@
 import difflib
+import math
 import re
 import threading
 import time
@@ -66,6 +67,10 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
       trader { name }
       level
       taskUnlock { id name }
+      requiredItems {
+        count
+        item { id }
+      }
       rewardItems {
         count
         item { name shortName }
@@ -204,6 +209,10 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       trader { name }
       level
       taskUnlock { id name }
+      requiredItems {
+        count
+        item { id }
+      }
       rewardItems {
         count
         item { name shortName }
@@ -641,12 +650,32 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
                 )
         if not rewards:
             continue
+        # How many of THIS item the barter consumes. Without it the panel isn't
+        # actionable: GP coin alone appears in 331 barters, and "→ GPU ×1" says
+        # nothing about whether you need 5 coins or 25 (피드백 #46). Summed in
+        # case an item ever shows up as two separate required rows.
+        #
+        # tarkov.dev reports some requirements as fractions — measured 313 of
+        # 1,062 rows, every one of them GP coin (Ref's currency). You can't hand
+        # over 0.42 of a coin, so round UP (carrying one spare beats coming up
+        # short) and flag it so the card renders "~156" rather than pretending
+        # the figure is exact.
+        need_raw = 0.0
+        for ri in b.get("requiredItems", []) or []:
+            if (ri.get("item") or {}).get("id") == item_id:
+                need_raw += float(ri.get("count") or 1)
+        need = math.ceil(need_raw) if need_raw > 0 else 0
+        need_approx = need > 0 and float(need) != need_raw
         trader = b.get("trader") or {}
         barters_using.append(
             {
                 "trader": trader.get("name") or "?",
                 "level": b.get("level") or 1,
                 "task_unlock": _task_unlock_ref(b),
+                # None when the source didn't carry counts (older cache) so the
+                # UI can omit the badge instead of showing a wrong ×0.
+                "need_count": need or None,
+                "need_approx": need_approx or None,
                 "rewards": rewards,
             }
         )

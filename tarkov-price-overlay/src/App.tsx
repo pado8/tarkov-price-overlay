@@ -544,6 +544,13 @@ type BarterUsing = {
   trader: string;
   level: number;
   task_unlock?: TaskUnlockRef | null;
+  // How many of the looked-up item this barter consumes. Optional because a
+  // cache written by an older sidecar has no counts — render nothing then
+  // rather than a misleading ×0.
+  need_count?: number | null;
+  // Set when the source figure was fractional (GP coin barters) and we
+  // rounded up, so the badge shows "~" instead of claiming precision.
+  need_approx?: boolean | null;
   rewards: BarterRequiredItem[];
 };
 
@@ -4448,6 +4455,19 @@ function App() {
                               })()}
                             </div>
                             <div className="barter-items">
+                              {u.need_count != null && (
+                                <span
+                                  className="barter-need"
+                                  title={
+                                    u.need_approx
+                                      ? t.barterNeedApproxHint
+                                      : t.barterNeedHint
+                                  }
+                                >
+                                  ×{u.need_approx ? "~" : ""}
+                                  {u.need_count}
+                                </span>
+                              )}{" "}
                               {t.barterUsingArrow}{" "}
                               {u.rewards.map((it, i) => (
                                 <span key={i} className="barter-item" data-fullname={it.name}>

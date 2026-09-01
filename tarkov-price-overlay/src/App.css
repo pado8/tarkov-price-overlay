@@ -1573,3 +1573,13 @@ html, body, #root {
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* 이 아이템으로 교환: 교환이 소모하는 '내 아이템' 개수.
+   보상 개수(.barter-count)와 색으로 구분한다 — 내가 내주는 쪽이라
+   경고색 계열, 보상은 성공색 계열. (피드백 #46) */
+.barter-need {
+  color: var(--warning);
+  font-family: "Consolas", monospace;
+  font-size: var(--card-fs-xs);
+  font-weight: 700;
+}

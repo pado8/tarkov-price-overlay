@@ -196,6 +196,12 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
                     if iid:
                         out["barters_using"].setdefault(iid, []).append({
                             "trader": trader, "level": level, "taskUnlock": unlock,
+                            # Same shape as the GraphQL query so the cache
+                            # builder reads how many of THIS item the barter
+                            # needs identically on both paths (피드백 #46).
+                            "requiredItems": [
+                                {"count": ri.get("count") or 1, "item": {"id": iid}}
+                            ],
                             "rewardItems": reward,
                         })
     except Exception as e:
