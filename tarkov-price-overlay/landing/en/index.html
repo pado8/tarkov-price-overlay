@@ -482,7 +482,24 @@
 (function(){
   var API="https://api.aquapado.com/priceoverlay/web";
   function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  // Pageviews are counted by Vercel Web Analytics → drop the view beacon to save Neon compute. Only downloads (conversions) are logged to Neon, by source.
+  // view: bots excluded, once per session per path. Vercel Analytics counts
+  // pageviews too, but view→download conversion by source needs views in the
+  // same table as downloads. Server-side kill switch = WEB_VIEW_OFF in web.ts.
+  try{
+    var UA=navigator.userAgent||"";
+    var isBot=/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor|curl|wget|python-requests|facebookexternalhit|embedly/i.test(UA);
+    var VKEY="vw:"+location.pathname;
+    var sendView=function(){
+      try{if(sessionStorage.getItem(VKEY)==="1")return;sessionStorage.setItem(VKEY,"1");}catch(e){}
+      beacon({kind:"view",path:location.pathname,ref:document.referrer});
+    };
+    if(!isBot){
+      if(document.visibilityState==="visible")sendView();
+      else document.addEventListener("visibilitychange",function h(){
+        if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",h);sendView();}
+      });
+    }
+  }catch(e){}
   document.addEventListener('click',function(e){
     var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
     if(t){var tg=/\/latest/.test(t.href)?'latest':'list';

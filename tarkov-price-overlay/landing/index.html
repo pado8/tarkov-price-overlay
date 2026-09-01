@@ -483,7 +483,24 @@
 (function(){
   var API="https://api.aquapado.com/priceoverlay/web";
   function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  // 페이지뷰는 Vercel Web Analytics가 집계함 → Neon 컴퓨트 절약 위해 view 비콘 제거. 다운로드(전환)만 소스별로 Neon에 기록.
+  // view: 봇 제외 + 경로별 세션 1회만 기록. 페이지뷰 자체는 Vercel
+  // Analytics도 세지만, 유입원별 전환율(뷰→다운로드)을 보려면 download와
+  // 같은 테이블에 있어야 한다. 서버측 비상 정지 = web.ts의 WEB_VIEW_OFF.
+  try{
+    var UA=navigator.userAgent||"";
+    var isBot=/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor|curl|wget|python-requests|facebookexternalhit|embedly/i.test(UA);
+    var VKEY="vw:"+location.pathname;
+    var sendView=function(){
+      try{if(sessionStorage.getItem(VKEY)==="1")return;sessionStorage.setItem(VKEY,"1");}catch(e){}
+      beacon({kind:"view",path:location.pathname,ref:document.referrer});
+    };
+    if(!isBot){
+      if(document.visibilityState==="visible")sendView();
+      else document.addEventListener("visibilitychange",function h(){
+        if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",h);sendView();}
+      });
+    }
+  }catch(e){}
   document.addEventListener('click',function(e){
     var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
     if(t){var tg=/\/latest/.test(t.href)?'latest':'list';
