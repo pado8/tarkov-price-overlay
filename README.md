@@ -16,6 +16,19 @@
   <img src="https://tarkov.aquapado.com/screenshots/01-main-lookup.png" width="360" alt="타르코프 시세 오버레이 메인 카드 — 플리 시세, 상인가, 바터, 제작, 퀘스트 정보" />
 </p>
 
+## 한눈에 / At a glance
+
+| | |
+|---|---|
+| **무엇인가 / What** | Escape from Tarkov 아이템 시세를 게임 위에 띄우는 오버레이. 아이템에 마우스를 올리고 **F2** → 약 1초 만에 카드 / An overlay that shows EFT item prices on top of the game — hover, press F2, card appears in ~1s |
+| **플랫폼 / Platform** | Windows 10 · 11 데스크톱 앱 |
+| **가격 / Price** | 완전 무료 · 계정 불필요 · 광고 없음 / Free, no account, no ads |
+| **라이선스 / License** | MIT 오픈소스 |
+| **시세 출처 / Data** | 커뮤니티 공개 API [tarkov.dev](https://tarkov.dev) — 장애 시 예비 소스로 자동 전환 / auto-fails over during outages |
+| **언어 / Languages** | 한국어 · English · Русский(베타) |
+| **동작 방식 / How** | 화면 캡처 + OCR만. 게임 메모리 미접근, DLL 인젝션 없음 / screen capture + OCR only, no memory reading or injection |
+| **다운로드 / Download** | [Releases 최신 버전](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest) — 공식 배포처는 이곳뿐 |
+
 ## 이게 뭔가요?
 
 Escape from Tarkov(타르코프)에서 인벤토리 아이템에 마우스를 올리고 **F2**를 누르면, 그 아이템의 **플리마켓 시세·상인 최고가·바터·하이드아웃 제작 재료·퀘스트 필요 여부**가 투명 카드로 게임 위에 바로 뜹니다. 시세 확인하려고 알트탭으로 브라우저·위키 열 필요가 없어요.

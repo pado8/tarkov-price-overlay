@@ -49,7 +49,9 @@
 | **검색 기록** | 최근 15개 자동 저장, 클릭 한 번으로 재조회 |
 | **PVP / PVE** | 게임 모드별 시세 분리 |
 | **무게 효율** | ₽/kg 환산으로 운반 가치 비교 |
-| **한 / 영** | UI 언어 즉시 전환 |
+| **한 / 영 / 러** | UI 언어 즉시 전환 (한국어 · English · Русский 베타) |
+| **📖 위키 링크** | 카드에서 바로 해당 아이템 위키 페이지 열기 |
+| **장애 자동 대응** | 시세 원본(tarkov.dev)이 다운되면 예비 소스로 자동 전환해 조회 계속 |
 | **자동 업데이트** | 새 버전 나오면 카드에 알림 → 한 번 클릭으로 설치 (설정에서 on/off) |
 | **투명 오버레이** | 게임 위에 항상 표시, 자동 숨김, 위치 자유 이동 |
 
@@ -198,6 +200,22 @@ EFT 게임 로그를 직접 파싱해서 본인이 어떤 퀘스트를 완료/�
 ---
 
 ## ❓ 자주 묻는 질문
+
+**Q. 이 프로그램은 무엇인가요?**
+A. Escape from Tarkov를 하면서 아이템 시세를 알트탭 없이 확인하는 Windows 오버레이입니다. 게임 안에서 아이템에 마우스를 올리고 F2를 누르면 화면 위에 반투명 카드가 떠서 플리마켓 시세, 상인 최고가와 구매처, 양방향 바터, 은신처 제작·업그레이드 필요 개수, 그 아이템이 필요한 퀘스트와 본인 진행 상황까지 한 번에 보여줍니다.
+
+**Q. 무료인가요?**
+A. 네. 완전 무료이고 계정도 필요 없으며 광고도 없습니다. MIT 라이선스 오픈소스입니다.
+
+**Q. 게임 안에서 진짜로 작동하나요? 알트탭 안 해도 되나요?**
+A. 네, 게임 위에 그려지는 투명 오버레이라 알트탭이 필요 없습니다. 타르코프 그래픽 설정을 "테두리 없는 전체화면"으로 두고(독점 전체화면은 OS가 모든 오버레이를 차단), 앱을 관리자 권한으로 실행해야 단축키가 게임에 전달됩니다.
+
+**Q. 시세 데이터는 어디서 오나요? 그 서버가 죽으면 어떻게 되나요?**
+A. 커뮤니티가 운영하는 공개 API tarkov.dev에서 가져옵니다. 게임 메모리나 계정 정보는 전혀 쓰지 않습니다. 장애가 생기면 자동으로 예비 데이터 소스로 전환해 조회가 계속됩니다.
+
+**Q. 어떤 언어를 지원하나요?**
+A. UI는 한국어·영어·러시아어(베타)입니다. 아이템 인식은 게임 클라이언트 언어를 읽으므로 설정의 언어를 게임 언어와 맞춰주세요.
+
 
 **Q. F2를 눌러도 아무 반응이 없어요.**
 A. 첫 실행 후 OCR 모델 다운로드 중일 수 있습니다 (최대 5분). 이후에도 안 되면 설정에서 단축키를 다시 등록해보세요. 다른 프로그램이 F2를 점유하면 충돌할 수 있으니 다른 키로 변경도 시도해보세요.
@@ -385,7 +403,9 @@ Flea current/24h range/last trade · top trader price · barters (both direction
 | **History** | Last 15 lookups auto-saved, click to re-query |
 | **PVP / PVE** | Separate price data per game mode |
 | **Weight efficiency** | ₽/kg conversion to compare carry value |
-| **Korean / English** | Switch UI language instantly |
+| **KO / EN / RU** | Switch UI language instantly (Korean · English · Russian beta) |
+| **📖 Wiki link** | Open the item's wiki page straight from the card |
+| **Outage resilience** | If tarkov.dev goes down, it fails over to a backup source and keeps working |
 | **Auto-update** | In-app update banner → one-click install when a new version is out (toggle in settings) |
 | **Transparent overlay** | Always-on-top, auto-hide, freely draggable |
 
@@ -465,7 +485,7 @@ Click the gear (⚙) icon to open settings.
 
 | Setting | Description |
 |---|---|
-| Language | Korean / English |
+| Language | Korean / English / Russian (beta) |
 | Game mode | PVP / PVE (price data is separated) |
 | Hotkey | Lookup hotkey (default `F2`) |
 | Toggle card hotkey | Show/hide overlay (default `Shift+F2`) |
@@ -482,6 +502,22 @@ Turn everything off → minimal card showing just price. Turn everything on → 
 ---
 
 ## ❓ FAQ
+
+**Q. What is this?**
+A. A Windows overlay that shows Escape from Tarkov item prices without alt-tabbing. Hover an item in game, press F2, and a translucent card appears over the game with flea market price, the best trader to sell to and where to buy, barters in both directions, hideout crafts and upgrade requirements, and which quests need the item plus your own progress.
+
+**Q. Is it free?**
+A. Yes — completely free, no account, no ads. MIT-licensed open source.
+
+**Q. Does it really work in-game? No alt-tabbing?**
+A. Yes, it draws as a transparent overlay on top of the game. Set Tarkov's graphics to **borderless fullscreen** (exclusive fullscreen makes Windows block every overlay) and run the app **as administrator** so the hotkey reaches the game.
+
+**Q. Where does the price data come from? What if that server goes down?**
+A. From tarkov.dev, a community-run public API. No game memory and no account data are used. If it has an outage, the app switches to a backup data source automatically and keeps working.
+
+**Q. Which languages are supported?**
+A. Korean, English and Russian (beta). Item recognition reads your game client's language, so set the app's language to match the game.
+
 
 **Q. Nothing happens when I press F2.**
 A. The OCR model may still be downloading on first launch (up to 5 min). If it still fails, re-register the hotkey in Settings. Another program might be holding F2 — try a different key.
