@@ -7,7 +7,7 @@ import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-upda
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
-import { T, type Lang, type GameMode } from "./i18n";
+import { T, type Lang, type GameLang, type GameMode } from "./i18n";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -24,6 +24,23 @@ const ANNOUNCEMENT_ENDPOINT = "https://api.aquapado.com/priceoverlay/announcemen
 const ANNOUNCE_SEEN_KEY = "tarkov.announceSeen";
 // Hideout levels: {[stationId]: currentLevel}. Persisted across sessions.
 const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
+
+type RemoteAnnouncement = { id: number; ko: string; en: string; ru: string };
+
+function getRemoteAnnouncementText(
+  lang: Lang,
+  announcement: RemoteAnnouncement
+): string {
+  switch (lang) {
+    case "ko":
+      return announcement.ko || announcement.en;
+    case "ru":
+      return announcement.ru || announcement.en || announcement.ko;
+    case "en":
+    case "zh":
+      return announcement.en || announcement.ko;
+  }
+}
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
@@ -607,7 +624,7 @@ type AmmoRound = {
 type AmmoCaliberData = { display: string; rounds: AmmoRound[] };
 type AmmoData = { calibers: Record<string, AmmoCaliberData> };
 
-async function fetchAmmo(lang: Lang): Promise<AmmoData | null> {
+async function fetchAmmo(lang: GameLang): Promise<AmmoData | null> {
   try {
     const res = await fetch(`${PYTHON_API}/ammo?lang=${lang}`);
     if (!res.ok) return null;
@@ -631,11 +648,11 @@ type Region = {
   groundWidth: number;
   groundHeight: number;
   lang: Lang;
-  // Game client language. Undefined means "follow UI language" — preserves
-  // behavior for existing users. Lets a Korean player on the English EFT
-  // client run the UI in Korean while still matching OCR against the EN
-  // catalog from tarkov.dev.
-  gameLang?: Lang;
+  // Game client language. Undefined means "follow UI language" for the
+  // supported game languages; the Chinese UI falls back to the EN catalog.
+  // This lets a Korean player on the English EFT client run the UI in Korean
+  // while still matching OCR against the EN catalog from tarkov.dev.
+  gameLang?: GameLang;
   gameMode: GameMode;
   hideDelaySec: number;
   // Master auto-hide switch. Off = the card stays up until the user hides it
@@ -874,7 +891,8 @@ async function applyMonitorScaling(force: boolean): Promise<Region | null> {
   }
 }
 
-const getGameLang = (r: Region): Lang => r.gameLang ?? r.lang;
+const getGameLang = (r: Region): GameLang =>
+  r.gameLang ?? (r.lang === "zh" ? "en" : r.lang);
 
 function loadRegion(): Region {
   try {
@@ -1136,9 +1154,8 @@ function App() {
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
   );
   // Server-driven announcement to show on launch (null = nothing to show).
-  const [remoteAnnounce, setRemoteAnnounce] = useState<
-    { id: number; ko: string; en: string; ru: string } | null
-  >(null);
+  const [remoteAnnounce, setRemoteAnnounce] =
+    useState<RemoteAnnouncement | null>(null);
   // Anonymous stats are opt-out: enabled by default, with a one-time
   // informational notice (not a blocking consent gate).
   const [statsEnabled, setStatsEnabled] = useState<boolean>(loadStatsEnabled);
@@ -1758,6 +1775,9 @@ function App() {
   }, [cardVisible]);
 
   const t = T[region.lang];
+  const announcementText = remoteAnnounce
+    ? getRemoteAnnouncementText(region.lang, remoteAnnounce)
+    : "";
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(region));
@@ -3132,29 +3152,20 @@ function App() {
           </div>
         )}
 
-        {remoteAnnounce &&
-          (region.lang === "ko"
-            ? remoteAnnounce.ko || remoteAnnounce.en
-            : region.lang === "ru"
-              ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
-              : remoteAnnounce.en || remoteAnnounce.ko) && (
-            <div className="announce-banner">
-              <span className="announce-text">
-                {region.lang === "ko"
-                  ? remoteAnnounce.ko || remoteAnnounce.en
-                  : region.lang === "ru"
-                    ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
-                    : remoteAnnounce.en || remoteAnnounce.ko}
-              </span>
-              <button
-                className="settings-btn"
-                onClick={() => setRemoteAnnounce(null)}
-                title={t.dismiss}
-              >
-                ✕
-              </button>
-            </div>
-          )}
+        {announcementText && (
+          <div className="announce-banner">
+            <span className="announce-text">
+              {announcementText}
+            </span>
+            <button
+              className="settings-btn"
+              onClick={() => setRemoteAnnounce(null)}
+              title={t.dismiss}
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {historyVisible && (
           <div className="history-panel">
@@ -3444,13 +3455,14 @@ function App() {
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="zh">简体中文</option>
               </select>
             </div>
             <div className="settings-row" title={t.gameLanguageHint}>
               <label>{t.gameLanguage}</label>
               <select
                 value={getGameLang(region)}
-                onChange={(e) => updateRegion("gameLang", e.target.value as Lang)}
+                onChange={(e) => updateRegion("gameLang", e.target.value as GameLang)}
               >
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
