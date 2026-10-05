@@ -440,6 +440,26 @@ def _canon(s: str) -> str:
     return "".join(s.lower().translate(_CANON_TABLE).split())
 
 
+# 라틴과 모양이 똑같은 키릴 글자 → 라틴. 업스트림 ko 로케일 일부 이름에 키릴이
+# 섞여 있다(약칭 'АK-74N'의 А, 'ТТ 855A1'의 ТТ, 'МЕ4' — 2026-10 실측 28키).
+# 게임 화면에선 라틴과 구분이 안 되고 ko/en OCR은 라틴으로만 읽으므로 정확
+# 일치가 실패하고, fuzzy가 엉뚱한 아이템(AKS-74N·낱발 탄·.308 ME)을 집었다.
+_CYR_LOOKALIKE = str.maketrans(
+    {
+        "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M", "Н": "H", "О": "O",
+        "Р": "P", "С": "C", "Т": "T", "Х": "X", "У": "Y",
+        "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x",
+        "і": "i", "ј": "j", "ѕ": "s",
+    }
+)
+_CYRILLIC_RE = re.compile(r"[Ѐ-ӿ]")
+
+# 탄약 매트릭스용 구경 보정: 무기의 구경 문자열이 탄 쪽 키와 다른 경우.
+# PP-9 "Klin"은 무기가 Caliber9x18PMM인데 장전 가능한 14종이 전부
+# Caliber9x18PM이라(json 덤프 allowedAmmo로 확인) 표가 한 번도 뜨지 않았다.
+_CALIBER_MATRIX_ALIAS = {"Caliber9x18PMM": "Caliber9x18PM"}
+
+
 _FLEA_MARKET_NAMES = {"Flea Market", "플리마켓", "Барахолка", "跳蚤市场", "蚤の市"}
 
 
@@ -783,6 +803,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
                 ammo_pack_round_id = inner_item.get("id")
                 ammo_pack_round_name = inner_item.get("name")
                 break
+    caliber_raw = _CALIBER_MATRIX_ALIAS.get(caliber_raw, caliber_raw)
     caliber_display = _caliber_display(caliber_raw) if caliber_raw else None
 
     return {
@@ -903,6 +924,16 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     for short, (_is_gun, full_name) in alias_pick.items():
         if short not in by_name:
             by_name[short] = by_name[full_name]
+    # 키릴이 섞인 이름에 라틴 별칭을 더한다(_CYR_LOOKALIKE 참고). 기존 키는
+    # 절대 가리지 않고, 바꾼 뒤에도 키릴이 남으면(진짜 러시아어 단어) 건너뛴다.
+    # ru는 키릴 OCR로 읽으므로 대상이 아니다.
+    if lang != "ru":
+        for n in list(by_name.keys()):
+            if not _CYRILLIC_RE.search(n):
+                continue
+            latin = n.translate(_CYR_LOOKALIKE)
+            if latin != n and not _CYRILLIC_RE.search(latin) and latin not in by_name:
+                by_name[latin] = by_name[n]
     # Canonical (OCR-confusion-folded) index for the last-resort exact match.
     # Built once per refresh so the hot path pays a single dict lookup.
     canon_map: dict[str, dict | None] = {}
