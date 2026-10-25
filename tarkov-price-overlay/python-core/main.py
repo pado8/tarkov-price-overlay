@@ -138,6 +138,8 @@ class BarterRequiredItem(BaseModel):
     name: str
     short_name: str | None = None
     count: float = 1
+    # 레프 GP코인처럼 판매가 환산 소수를 올림한 개수면 True (카드에 "×~N")
+    approx: bool | None = None
 
 
 class TaskUnlockRef(BaseModel):
@@ -200,6 +202,10 @@ class BarterUsing(BaseModel):
     level: int = 1
     task_unlock: TaskUnlockRef | None = None
     rewards: list[BarterRequiredItem] = []
+    # 이 교환에 조회한 아이템이 몇 개 필요한지(피드백 #46). 이 칸이 모델에 없어서
+    # tarkov_api가 계산한 값이 응답에서 조용히 버려졌었다(2026-10-25 실행본 시험으로 발견).
+    need_count: int | None = None
+    need_approx: bool | None = None
 
 
 class BuyOffer(BaseModel):
@@ -341,6 +347,7 @@ def _build_response(
                         name=it["name"],
                         short_name=it.get("short_name"),
                         count=it.get("count", 1),
+                        approx=it.get("approx"),
                     )
                     for it in b.get("items", [])
                 ],
@@ -352,6 +359,8 @@ def _build_response(
                 trader=u["trader"],
                 level=u.get("level", 1),
                 task_unlock=_unlock_ref(u),
+                need_count=u.get("need_count"),
+                need_approx=u.get("need_approx"),
                 rewards=[
                     BarterRequiredItem(
                         name=it["name"],
