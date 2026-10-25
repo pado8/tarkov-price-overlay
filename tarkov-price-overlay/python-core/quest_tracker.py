@@ -290,7 +290,16 @@ _RE_BACKEND_HOST = re.compile(r"https://gw-([a-z0-9_-]+)\.escapefromtarkov\.com/
 # are skipped rather than guessed into the wrong bucket. "mixed" = one folder
 # self-reported two DIFFERENT modes (재시작 없이 표준↔시즌 캐릭터 전환 시 실관측
 # 보고) — 어느 버킷인지 단정할 수 없어 unknown처럼 통째로 스킵한다.
-SessionMode = Literal["pvp", "pve", "season", "unknown", "mixed"]
+SessionMode = Literal["pvp", "pve", "season", "unknown", "mixed", "pending"]
+
+# 막 시작된 세션 폴더에 모드 신호가 아직 없을 때 판정을 미루는 시간.
+# 게임은 폴더를 실행 즉시 만들지만 "Session mode: X" 줄은 로그인 뒤 12~20초에
+# 쓴다(2026-10-25 실측: 1.2.5 두 세션 12s·19s, 1.0.6 12s). 트래커는 2.5초마다
+# 훑으므로 그 틈에 폴더를 먼저 보고 "신호 없음 → pvp"로 캐시해 버렸고, 그 세션의
+# 퀘스트 이벤트가 전부 PVP 버킷으로 들어갔다(PVE 사용자 실사례). 로그인 대기열이
+# 길어도 넉넉하도록 30분. 이보다 오래됐는데도 신호가 없으면 PVE 이전 시절 로그로
+# 보고 기존처럼 pvp로 확정한다.
+_MODE_PENDING_GRACE_SEC = 30 * 60
 
 
 def _classify_mode_word(word: str) -> SessionMode:
@@ -315,7 +324,31 @@ def detect_session_mode(folder: Path) -> SessionMode:
     pre-PVE historical default and matches the "regular" game_mode value the
     frontend has been sending since before PVE existed. A signal that IS found
     but isn't a known label returns 'unknown' (new game mode — don't guess).
+
+    트래커 스캔은 이 함수 대신 `_detect_mode_signal`을 써서 "신호 없음"을
+    구분한다(막 시작된 세션을 pvp로 오판해 캐시하지 않도록).
     """
+    return _detect_mode_signal(folder) or "pvp"
+
+
+def _folder_age_sec(folder: Path) -> float:
+    """세션 폴더가 만들어진 뒤 지난 시간(초). 폴더 이름의 로컬 시각을 쓰고,
+    이름을 못 읽으면 폴더 생성 시각으로 대신한다."""
+    m = _LOG_FOLDER_RE.match(folder.name)
+    if m:
+        y, mo, d, h, mi, s = (int(g) for g in m.groups())
+        try:
+            return time.time() - time.mktime((y, mo, d, h, mi, s, 0, 0, -1))
+        except (OverflowError, ValueError):
+            pass
+    try:
+        return time.time() - folder.stat().st_ctime
+    except OSError:
+        return float("inf")
+
+
+def _detect_mode_signal(folder: Path) -> Optional[SessionMode]:
+    """detect_session_mode의 본체. 모드 신호가 하나도 없으면 None."""
     # Signal 1: application_*.log "Session mode: X" line. Strongest signal
     # because it's the game's own self-reported mode rather than inference from
     # network traffic. If present, it's authoritative — including for labels
@@ -354,7 +387,7 @@ def detect_session_mode(folder: Path) -> SessionMode:
             return _classify_mode_word(m.group(1))
         break
 
-    return "pvp"
+    return None
 
 
 # A push-notifications log is a sequence of JSON objects pretty-printed with
@@ -720,7 +753,15 @@ class QuestTracker:
         cached = self._folder_mode.get(key)
         if cached is not None:
             return cached
-        mode = detect_session_mode(folder)
+        mode = _detect_mode_signal(folder)
+        if mode is None:
+            # 신호 없음. 막 시작된 세션이면 모드 줄이 아직 안 써졌을 뿐이므로
+            # 캐시하지 않고 "pending"을 돌려준다 — scan_once가 이 폴더를 건너뛰어
+            # 오프셋도 그대로라, 신호가 생긴 다음 폴링에서 처음부터 올바른 버킷에
+            # 읽힌다. (_MODE_PENDING_GRACE_SEC 참고)
+            if _folder_age_sec(folder) < _MODE_PENDING_GRACE_SEC:
+                return "pending"
+            mode = "pvp"  # 오래된 무신호 폴더 = PVE 이전 시절 로그(역사적 기본값)
         self._folder_mode[key] = mode
         return mode
 
