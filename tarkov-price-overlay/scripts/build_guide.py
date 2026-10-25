@@ -1,20 +1,26 @@
 """타르코프 가이드(카파템·열쇠·퀘스트 필요템) 정적 페이지 생성기.
 
 데이터: json.tarkov.dev (앱 시세 폴백과 같은 공식 소스, 한국어 로케일 포함).
-출력:   landing/guide/{index,kappa,keys,quests}/index.html  (각 페이지에 데이터 내장)
+출력:   landing/guide/{kappa,keys,quests}/index.html  (각 페이지에 데이터 내장)
+        + guide_static.py가 만드는 정적 페이지 전부(퀘스트 상세 500여 개·상인별·필요 아이템·
+          퀘스트 전용 아이템·은신처·초반 가이드·프레스티지·맵·보스·가이드 홈) + landing/sitemap.xml
 
 실행:   python-core/.venv/Scripts/python.exe scripts/build_guide.py
 다시 돌리면 최신 패치 데이터로 갱신된다(열쇠 목록 '최신화'가 이것).
+개발 중엔 GUIDE_CACHE=<폴더> 를 주면 받은 JSON을 그 폴더에 두고 재사용한다(배포용 빌드엔 쓰지 말 것).
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 import time
 from pathlib import Path
 
 import requests
+
+import guide_static
 
 BASE = "https://json.tarkov.dev"
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,9 +34,56 @@ MAP_ORDER = ["customs", "factory", "woods", "shoreline", "interchange", "reserve
 
 
 def get(path: str):
+    cache = os.environ.get("GUIDE_CACHE")
+    if cache:
+        f = Path(cache) / (path.replace("/", "_") + ".json")
+        if f.exists() and f.stat().st_size > 0:
+            return json.loads(f.read_text(encoding="utf-8")).get("data")
     r = requests.get(f"{BASE}/{path}", timeout=120)
     r.raise_for_status()
+    if cache:
+        (Path(cache) / (path.replace("/", "_") + ".json")).write_bytes(r.content)
     return r.json().get("data")
+
+
+SITEMAP_HEAD = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+"""
+
+
+def write_sitemap(guide_urls: list[str], stamp: str) -> None:
+    """랜딩 3개(언어 대체 주소 포함) + 가이드 전 페이지. 랜딩 lastmod는 기존 값을 유지한다."""
+    sm = ROOT / "landing" / "sitemap.xml"
+    old = sm.read_text(encoding="utf-8") if sm.exists() else ""
+
+    def old_lastmod(loc):
+        m = re.search(r"<loc>" + re.escape(loc) + r"</loc>.*?<lastmod>([^<]+)</lastmod>", old, re.S)
+        return m.group(1) if m else stamp
+
+    alts = ['<xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/" />',
+            '<xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/en" />',
+            '<xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/ru" />',
+            '<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/" />']
+    nl = chr(10)
+    out = [SITEMAP_HEAD.rstrip(nl)]
+    for loc, pri in (("https://tarkov.aquapado.com/", "1.0"), ("https://tarkov.aquapado.com/en", "0.9"),
+                     ("https://tarkov.aquapado.com/ru", "0.9")):
+        out += ["  <url>", f"    <loc>{loc}</loc>"] + [f"    {a}" for a in alts] + [
+            f"    <lastmod>{old_lastmod(loc)}</lastmod>", "    <changefreq>weekly</changefreq>",
+            f"    <priority>{pri}</priority>", "  </url>"]
+
+    def pri_of(u):
+        if u == "/guide/":
+            return "0.9"
+        return "0.8" if u.count("/") <= 3 else "0.6"
+
+    for u in sorted(set(guide_urls), key=lambda u: (u.count("/"), u)):
+        out += ["  <url>", f"    <loc>https://tarkov.aquapado.com{u}</loc>", f"    <lastmod>{stamp}</lastmod>",
+                "    <changefreq>weekly</changefreq>", f"    <priority>{pri_of(u)}</priority>", "  </url>"]
+    out.append("</urlset>")
+    sm.write_text(nl.join(out) + nl, encoding="utf-8")
+    print(f"[guide] sitemap: {len(set(guide_urls)) + 3} URL")
 
 
 def main() -> int:
@@ -41,14 +94,17 @@ def main() -> int:
     loc_items_en = get("regular/items_en") or {}
     # 퀘스트는 모드마다 조금 다르다(23개가 [PVP ZONE]/[PVE ZONE] 판으로 갈림, 프레스티지
     # 퀘스트는 일반판에만) → 두 모드의 합집합으로 만들고 퀘스트마다 속한 모드를 단다.
-    tasks_reg = get("regular/tasks")["tasks"]
-    tasks_pve = get("pve/tasks")["tasks"]
+    tasks_doc_reg = get("regular/tasks")
+    tasks_doc_pve = get("pve/tasks")
+    tasks_reg = tasks_doc_reg["tasks"]
+    tasks_pve = tasks_doc_pve["tasks"]
     tasks = {**tasks_pve, **tasks_reg}
     task_modes = {tid: [m for m, src in (("pvp", tasks_reg), ("pve", tasks_pve)) if tid in src]
                   for tid in tasks}
     loc_tasks = {**(get("pve/tasks_ko") or {}), **(get("regular/tasks_ko") or {})}
     loc_tasks_en = {**(get("pve/tasks_en") or {}), **(get("regular/tasks_en") or {})}
-    maps = get("regular/maps")["maps"]
+    maps_doc = get("regular/maps")
+    maps = maps_doc["maps"]
     loc_maps = get("regular/maps_ko") or {}
     traders = get("regular/traders")
     loc_traders = get("regular/traders_ko") or {}
@@ -177,6 +233,7 @@ def main() -> int:
             "give": give,
             "keys": sorted(set(keys)),
             "req": [r["task"] for r in t.get("taskRequirements") or [] if r.get("task") in tasks],
+            "slug": t.get("normalizedName"),
         })
     trader_order = ["프라퍼", "테라피스트", "스키어", "피스키퍼", "메카닉", "래그맨", "예거", "펜스", "레프", "등대지기"]
     qlist.sort(key=lambda q: (trader_order.index(q["tr"]) if q["tr"] in trader_order else 99, q["lv"], q["n"]))
@@ -223,6 +280,23 @@ def main() -> int:
         return {i: item_cache[i] for i in ids if i in item_cache}
 
     stamp = time.strftime("%Y-%m-%d")
+    # ── 정적 페이지용 컨텍스트 — 퀘스트 목록 템플릿에도 같은 '구분 표시'를 쓰려고 먼저 만든다 ──
+    ctx = guide_static.Ctx(
+        stamp=stamp, items=items_reg, items_pve=items_pve, loc_items=loc_items, loc_items_en=loc_items_en,
+        tasks_reg=tasks_reg, tasks_pve=tasks_pve, loc_tasks=loc_tasks, loc_tasks_en=loc_tasks_en,
+        quest_items={**(tasks_doc_pve.get("questItems") or {}), **(tasks_doc_reg.get("questItems") or {})},
+        achievements={**(tasks_doc_pve.get("achievements") or {}), **(tasks_doc_reg.get("achievements") or {})},
+        prestige_reg=tasks_doc_reg.get("prestige") or [], prestige_pve=tasks_doc_pve.get("prestige") or [],
+        maps=maps, loc_maps=loc_maps, mobs=maps_doc.get("mobs") or {},
+        traders=traders, loc_traders=loc_traders,
+        hideout_reg=get("regular/hideout") or {}, hideout_pve=get("pve/hideout") or {},
+        loc_hideout=get("regular/hideout_ko") or {},
+        crafts_reg=get("regular/crafts") or [], crafts_pve=get("pve/crafts") or [],
+    )
+    for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
+        suf = ctx.display_suffix.get(q["id"])
+        if suf:
+            q["n"] = f'{q["n"]} ({suf})'
     pages = {
         "kappa": {"items": kappa, "req": col_req},
         "keys": {"maps": key_maps,
@@ -240,14 +314,13 @@ def main() -> int:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(page, encoding="utf-8")
         print(f"[guide] {name}: {len(page) / 1024:.0f} KB")
-    hub = (ROOT / "scripts" / "guide_templates" / "index.html").read_text(encoding="utf-8")
-    hub = (hub.replace("__STAMP__", stamp)
-              .replace("__N_KAPPA__", str(len(kappa)))
-              .replace("__N_KEYS__", str(len(pages["keys"]["items"])))
-              .replace("__N_QUESTS__",
-                       "PVP " + str(sum(1 for q in qlist if "pvp" in q["modes"])) +
-                       " / PVE " + str(sum(1 for q in qlist if "pve" in q["modes"]))))
-    (OUT / "index.html").write_text(hub, encoding="utf-8")
+    # ── 정적 페이지(퀘스트 상세·상인별·아이템·은신처·초반·프레스티지·맵·보스·가이드 홈) ──
+    collector_ids = {k["id"] for k in kappa}
+    guide_urls = ["/guide/kappa/", "/guide/keys/", "/guide/quests/"]
+    guide_urls += guide_static.build_all(ctx, OUT, collector_ids, {
+        "kappa": len(kappa), "keys": len(pages["keys"]["items"])})
+    print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개")
+    write_sitemap(guide_urls, stamp)
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")
     (OUT / "guide.css").write_text(css, encoding="utf-8")
     print(f"[guide] 완료 {time.time() - t0:.1f}s → {OUT}")

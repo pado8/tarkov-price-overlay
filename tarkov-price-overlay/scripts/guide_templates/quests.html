@@ -36,7 +36,7 @@
 <body>
 <div class="top"><div class="wrap">
   <a class="brand" href="/guide/">탈콥 가이드</a>
-  <nav><a href="/guide/kappa/">카파템</a><a href="/guide/keys/">열쇠</a><a class="on" href="/guide/quests/">퀘스트 필요템</a><a href="/">시세 오버레이</a></nav>
+  <nav><a href="/guide/start/">초반 가이드</a><a class="on" href="/guide/quests/">퀘스트</a><a href="/guide/items/">필요 아이템</a><a href="/guide/hideout/">은신처</a><a href="/guide/maps/">맵</a><a href="/guide/bosses/">보스</a><a href="/guide/kappa/">카파템</a><a href="/guide/keys/">열쇠</a><a href="/guide/prestige/">프레스티지</a><a href="/">시세 오버레이</a></nav>
 </div></div>
 <main class="wrap">
   <h1>퀘스트 필요템 정리</h1>
@@ -116,7 +116,7 @@
       if (x.tr !== lastTr) { if (lastTr !== null) html += "</div>"; html += "<h3 class=\"tr-h\">" + esc(x.tr) + "</h3><div class=\"box\" style=\"padding:0\">"; lastTr = x.tr; }
       var isDone = !!done[x.id];
       html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
-        "<div class=\"qn\">" + esc(x.n) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
+        "<div class=\"qn\">" + (x.slug ? "<a href=\"/guide/quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
         (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
         "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + " · " + esc(x.map || "아무 지역") +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
