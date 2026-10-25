@@ -6,6 +6,8 @@
 [![Open Source](https://img.shields.io/badge/Open-Source-brightgreen)](https://github.com/pado8/tarkov-price-overlay)
 [![Built on tarkov.dev](https://img.shields.io/badge/Built%20on-tarkov.dev-c8aa64)](https://tarkov.dev)
 
+> 🌐 **공식 사이트: [tarkov.aquapado.com](https://tarkov.aquapado.com)** — 다운로드·사용법·자주 묻는 질문·[탈콥 가이드(카파템·열쇠·퀘스트)](https://tarkov.aquapado.com/guide/)·[서비스 상태](https://tarkov.aquapado.com/status/)는 공식 사이트에서 확인하세요. 이 페이지는 소스 코드와 개발 기록입니다.
+
 **[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · 한국어 / English
 
 > ⚠️ **공식 다운로드는 위 링크 한 곳뿐입니다.**

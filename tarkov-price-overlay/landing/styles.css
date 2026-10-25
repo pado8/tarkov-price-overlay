@@ -149,4 +149,16 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
 /* 상단 메뉴의 가이드 링크: 줄바꿈 금지, 좁은 화면에선 숨김(하단 링크로 대체) */
 .nav-guide{white-space:nowrap}
 @media(max-width:560px){ .nav-guide{display:none} }
+/* 상단 탭 줄 (2026-10-26) — 서비스 상태를 맨 위에서 바로 찾게. 좁은 화면은 가로 스크롤 */
+.tabs{display:flex;gap:2px;height:40px;align-items:stretch;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{display:flex;align-items:center;gap:7px;padding:0 14px;font-size:14px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs a:hover{color:var(--text)}
+.tabs a.on{color:var(--gold);border-bottom-color:var(--gold)}
+.sdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b675c;flex:none}
+.sdot.ok{background:#5fbf6a;box-shadow:0 0 0 3px #5fbf6a26}
+.sdot.warn{background:#e0b341;box-shadow:0 0 0 3px #e0b34126}
+.sdot.bad{background:#e05a4f;box-shadow:0 0 0 3px #e05a4f26}
+@media(max-width:560px){ .tabs a{padding:0 11px;font-size:13px} }
+@media(max-width:520px){ .brand-t{display:none} }
 .nav-cta{white-space:nowrap}

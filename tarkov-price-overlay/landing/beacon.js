@@ -9,6 +9,9 @@
 // 옮겨 다닌 뒤의 다운로드도 처음 유입원(구글)과 첫 페이지(가이드)로 잡힌다.
 // 캠페인 표식: 링크에 ?src=dc1 (또는 utm_source) 를 붙이면 그 값이 남는다.
 (function () {
+  // 운영 주소에서만 보낸다. 로컬 미리보기·vercel.app 주소는 유입원이 비어 'direct'로
+  // 섞여 들어갔다(2026-10-26 발견). 비콘 자체를 시험할 땐 주소에 ?beacon=test.
+  if (location.hostname !== "tarkov.aquapado.com" && !/[?&]beacon=test\b/.test(location.search)) return;
   var API = "https://api.aquapado.com/priceoverlay/web";
   function beacon(b) {
     try { navigator.sendBeacon(API, new Blob([JSON.stringify(b)], { type: "text/plain" })); } catch (e) {}

@@ -44,12 +44,30 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Tarkov Price Overlay",
+  "alternateName": [
+    "Tarkov Price Overlay",
+    "타르코프 시세 오버레이",
+    "탈콥 시세 오버레이"
+  ],
+  "url": "https://tarkov.aquapado.com/",
+  "inLanguage": "en"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Tarkov Price Overlay",
   "operatingSystem": "Windows",
   "applicationCategory": "GameApplication",
   "softwareVersion": "1.2.5",
   "url": "https://tarkov.aquapado.com/en",
+  "sameAs": [
+    "https://github.com/pado8/tarkov-price-overlay",
+    "https://github.com/pado8/tarkov-price-overlay-releases"
+  ],
   "downloadUrl": "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest",
   "image": "https://tarkov.aquapado.com/og-en.png",
   "screenshot": "https://tarkov.aquapado.com/screenshots/01-main-lookup.png",
@@ -285,13 +303,15 @@
 <body>
 
 <header class="nav"><div class="wrap nav-in">
-  <a class="brand" href="/en"><img src="/favicon.png" width="28" height="28" alt="Tarkov Price Overlay icon" />Tarkov Price Overlay</a>
+  <a class="brand" href="/en"><img src="/favicon.png" width="28" height="28" alt="Tarkov Price Overlay icon" /><span class="brand-t">Tarkov Price Overlay</span></a>
   <div class="nav-right">
     <a class="nav-lang" href="/" hreflang="ko">한국어</a>
     <a class="nav-lang" href="/ru" hreflang="ru">RU</a>
     <a class="nav-cta" href="https://github.com/pado8/tarkov-price-overlay-releases/releases/latest" rel="noopener">⬇ Download</a>
   </div>
-</div></header>
+</div>
+<nav class="tabs wrap" aria-label="Site menu"><a class="on" href="/en" aria-current="page">Price overlay</a><a href="/status/?lang=en"><i class="sdot" aria-hidden="true"></i><span>Service status</span></a></nav>
+</header>
 
 <section class="hero"><div class="wrap hero-grid">
   <div>
@@ -480,5 +500,6 @@
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
 <script defer src="/_vercel/insights/script.js"></script>
 <script src="/beacon.js"></script>
+<script src="/status-dot.js" defer></script>
 </body>
 </html>
