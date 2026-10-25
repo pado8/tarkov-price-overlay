@@ -50,7 +50,15 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("items", "/guide/items/", "필요 아이템"), ("hideout", "/guide/hideout/", "은신처"),
        ("maps", "/guide/maps/", "맵"), ("bosses", "/guide/bosses/", "보스"),
        ("kappa", "/guide/kappa/", "카파템"), ("keys", "/guide/keys/", "열쇠"),
-       ("prestige", "/guide/prestige/", "프레스티지"), ("overlay", "/", "시세 오버레이")]
+       ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
+       ("prestige", "/guide/prestige/", "프레스티지"), ("patch", "/guide/patch/", "패치 요약"),
+       ("overlay", "/", "시세 오버레이")]
+
+
+def nav_html(active: str) -> str:
+    """가이드 상단 메뉴 — 정적 페이지와 템플릿 페이지(카파·열쇠·퀘스트)가 같은 걸 쓴다"""
+    on = ' class="on"'
+    return "<nav>" + "".join(f'<a{on if k == active else ""} href="{h}">{l}</a>' for k, h, l in NAV) + "</nav>"
 
 
 def e(s) -> str:
@@ -437,8 +445,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
          og_type: str = "article", extra_head: str = "", scripts: str = "") -> str:
     url = SITE + path
     crumbs = crumbs or []
-    on = ' class="on"'
-    navhtml = "".join(f'<a{on if key == nav else ""} href="{href}">{label}</a>' for key, href, label in NAV)
+    navhtml = nav_html(nav)[len("<nav>"):-len("</nav>")]
     crumb_html = ""
     ld = []
     if crumbs:
@@ -1719,7 +1726,10 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/hideout/", "은신처", "시설별 단계 재료·조건·효과·제작 · 남은 재료 계산기", f'{counts.get("stations", 0)}개 시설'),
         ("/guide/maps/", "맵 정보", "보스 출현 확률·탈출구·트랜짓·맵별 퀘스트", f'{counts.get("maps", 0)}개'),
         ("/guide/bosses/", "보스 총정리", "출현 맵·확률·위치·호위", f'{counts.get("bosses", 0)}종'),
+        ("/guide/crafts/", "제작 수익표", "은신처 제작 재료비·판매가·시간당 이익 순위", f'{counts.get("crafts", 0)}개'),
+        ("/guide/ammo/", "탄약표", "구경별 관통력·데미지·방어구 피해·상인 구매처", f'{counts.get("ammo", 0)}종'),
         ("/guide/prestige/", "프레스티지", "PVE·PVP 단계별 조건과 보상", "1.2.0 PVE 반영"),
+        ("/guide/patch/", "패치 요약", "1.0.5~1.2.5 주요 변경 한국어 정리", "2026-05~10"),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
         ("/guide/keys/", "맵별 열쇠", "여는 곳·퀘스트 필요 키·시세", f'{counts.get("keys", 0)}개'),
     ]
@@ -1732,6 +1742,247 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
     title = "탈콥 가이드 — 타르코프 퀘스트·은신처·필요 아이템·맵·보스·카파템 한국어 정리"
     desc = "타르코프(Escape from Tarkov) 한국어 가이드: 초반 투어 진행, 전체 퀘스트 목표·필요템, 퀘스트·은신처 필요 아이템 총정리, 은신처 단계별 재료, 맵별 보스·탈출구, 프레스티지, 카파템, 맵별 열쇠."
     return "/guide/", page(ctx, path="/guide/", title=title, desc=desc, body=body, nav="", og_type="website")
+
+
+# ─────────────────────────────────────────────────────────────
+# 가격 도우미 · 은신처 제작 수익 · 탄약표 · 패치 요약
+# ─────────────────────────────────────────────────────────────
+
+def _raw(ctx: Ctx, iid, mode):
+    src = ctx.items_pve if mode == "pve" else ctx.items
+    return src.get(iid) or ctx.items.get(iid) or {}
+
+
+def buy_price(ctx: Ctx, iid, mode="pvp"):
+    """살 때 드는 값: 플리 24시간 평균과 상인 판매가 중 싼 쪽(₽). 돈 아이템은 환산가."""
+    if iid == "5449016a4bdc2d6f028b456f":
+        return 1.0
+    it = _raw(ctx, iid, mode)
+    cands = []
+    if it.get("avg24hPrice") and "noFlea" not in (it.get("types") or []):
+        cands.append(it["avg24hPrice"])
+    for o in it.get("buyFromTrader") or []:
+        if o.get("priceRUB"):
+            cands.append(o["priceRUB"])
+    return min(cands) if cands else None
+
+
+def sell_value(ctx: Ctx, iid, mode="pvp"):
+    """팔 때 받는 값: 플리 24시간 평균(거래 가능하면), 아니면 상인 최고 매입가(₽). 수수료 미반영."""
+    it = _raw(ctx, iid, mode)
+    if it.get("avg24hPrice") and "noFlea" not in (it.get("types") or []):
+        return it["avg24hPrice"]
+    best = max((o.get("priceRUB") or 0 for o in it.get("sellToTrader") or []), default=0)
+    return best or None
+
+
+def craft_calc(ctx: Ctx, c: dict, mode: str):
+    p = c.get("productItem") or {}
+    val = sell_value(ctx, p.get("item"), mode)
+    if val is None:
+        return None
+    value = val * (p.get("count") or 1)
+    cost = 0.0
+    for r in c.get("requiredItems") or []:
+        if (r.get("attributes") or {}).get("tool"):
+            continue  # 도구는 돌려받는다
+        bp = buy_price(ctx, r.get("item"), mode)
+        if bp is None:
+            return None
+        cost += bp * (r.get("count") or 1)
+    profit = value - cost
+    hours = (c.get("duration") or 0) / 3600
+    return {"value": value, "cost": cost, "profit": profit, "per_h": profit / hours if hours > 0 else None}
+
+
+CRAFTS_JS = """<script>
+(function(){var MK="guide.mode";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+var mode=L(MK,"pvp"),rows=[].slice.call(document.querySelectorAll("#ctbl tbody tr"));
+function f(n){return n===""||n==null||isNaN(+n)?"—":Math.round(+n).toLocaleString("ko-KR")+"₽"}
+function seg(v){document.querySelectorAll("#cmode button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)})}
+function render(){var q=document.getElementById("cq").value.trim().toLowerCase(),st=document.getElementById("cst").value,pos=document.getElementById("cpos").checked,p=mode==="pve"?"e":"p";
+rows.forEach(function(r){var d=r.dataset,ok=true;if(q&&d.s.indexOf(q)<0)ok=false;if(st&&d.st!==st)ok=false;if(pos&&!(+d[p+"pr"]>0))ok=false;r.style.display=ok?"":"none";
+var c=r.querySelectorAll("td.m");c[0].textContent=f(d[p+"co"]);c[1].textContent=f(d[p+"va"]);c[2].textContent=f(d[p+"pr"]);c[3].textContent=f(d[p+"ph"]);
+c[2].className="m n "+(+d[p+"pr"]>0?"up":"down");c[3].className="m n "+(+d[p+"ph"]>0?"up":"down");});
+var tb=document.querySelector("#ctbl tbody");rows.slice().sort(function(a,b){return(+b.dataset[p+"ph"]||-1e12)-(+a.dataset[p+"ph"]||-1e12)}).forEach(function(r){tb.appendChild(r)});}
+seg(mode);document.getElementById("cmode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;try{localStorage.setItem(MK,JSON.stringify(v))}catch(x){}seg(v);render()});
+["cst","cpos"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("cq").addEventListener("input",render);render();})();
+</script>"""
+
+
+def crafts_page(ctx: Ctx) -> tuple[str, str]:
+    unlock = craft_unlocks(ctx)
+    rows = []
+    for c in ctx.crafts_reg:
+        a, b = craft_calc(ctx, c, "pvp"), craft_calc(ctx, c, "pve")
+        rows.append((c, a, b))
+    rows.sort(key=lambda r: -(r[1]["per_h"] if r[1] and r[1]["per_h"] is not None else -1e12))
+    st_opts = sorted({c.get("station") for c, _, _ in rows}, key=lambda s: ctx.station_name(s))
+    trs = []
+    for c, a, b in rows:
+        p = c.get("productItem") or {}
+        pid = p.get("item")
+        it = ctx.item(pid) or {}
+        mats = []
+        for r in c.get("requiredItems") or []:
+            tool = (r.get("attributes") or {}).get("tool")
+            mats.append(ctx.chip(r.get("item"), r.get("count"), extra=' <span class="badge b-any">도구</span>' if tool else ""))
+        q = unlock.get((c.get("station"), c.get("level"), pid))
+        lock = ('<div class="osub">해금: ' + ", ".join(ctx.task_link(x) for x in q) + "</div>") if q else ""
+
+        def num(d, k):
+            return "" if not d or d.get(k) is None else f"{d[k]:.0f}"
+        names = " ".join([it.get("n") or "", it.get("en") or ""] + [(ctx.item(r.get("item")) or {}).get("n") or "" for r in c.get("requiredItems") or []]).lower()
+        trs.append(f'<tr data-s="{e(names)}" data-st="{e(c.get("station"))}" '
+                   f'data-pco="{num(a, "cost")}" data-pva="{num(a, "value")}" data-ppr="{num(a, "profit")}" data-pph="{num(a, "per_h")}" '
+                   f'data-eco="{num(b, "cost")}" data-eva="{num(b, "value")}" data-epr="{num(b, "profit")}" data-eph="{num(b, "per_h")}">'
+                   f'<td>{ctx.chip(pid, p.get("count"))}{lock}</td><td class="small nw">{ctx.station_link(c.get("station"), c.get("level"))}</td>'
+                   f'<td class="n">{fmt_dur(c.get("duration"))}</td><td><div class="chips">{"".join(mats)}</div></td>'
+                   '<td class="m n"></td><td class="m n"></td><td class="m n"></td><td class="m n"></td></tr>')
+    opts = '<option value="">모든 시설</option>' + "".join(f'<option value="{e(s)}">{e(ctx.station_name(s))}</option>' for s in st_opts)
+    body = f"""<h1>은신처 제작 수익표 <span class="h1en">Crafting profit</span></h1>
+<p class="sub">제작 {len(trs)}개 · 시간당 이익 순 · 시세 기준 {e(ctx.stamp)} (tarkov.dev 24시간 평균)</p>
+<div class="note">이익 = 결과물 판매가 − 재료 구입비. 결과물은 플리 24시간 평균가(플리 거래 불가면 상인 최고 매입가), 재료는 플리 평균가와 상인 판매가 중 싼 쪽으로 계산했습니다.
+<b>도구</b> 표시 재료는 돌려받으므로 비용에서 뺐습니다. <b>연료비·플리 수수료(1.1.0부터 인상)·판매 시간은 빠져 있으니</b> 실제 이익은 이보다 작습니다. 시세는 하루에도 크게 움직이니 참고용으로만 보세요.</div>
+<div class="controls"><input type="search" id="cq" placeholder="결과물·재료 이름 검색" aria-label="검색" /><select id="cst" aria-label="시설">{opts}</select>
+<div class="seg" id="cmode"><button data-v="pvp" class="on">PVP 시세</button><button data-v="pve">PVE 시세</button></div>
+<label class="chk"><input type="checkbox" id="cpos" /> 이익 나는 것만</label></div>
+<div class="box tbl" style="padding:4px 8px"><table class="tot" id="ctbl"><thead><tr><th>결과물</th><th>시설</th><th class="n">시간</th><th>재료</th><th class="n">재료비</th><th class="n">판매가</th><th class="n">이익</th><th class="n">시간당</th></tr></thead><tbody>
+{"".join(trs)}
+</tbody></table></div>
+<p class="small muted">시설별 단계 조건과 레시피는 <a href="/guide/hideout/">은신처</a>에서 볼 수 있습니다.</p>"""
+    path = "/guide/crafts/"
+    title = "타르코프 은신처 제작 수익표 — 시간당 이익 순위·재료비·판매가 | 탈콥 가이드"
+    desc = f"타르코프 은신처 제작 {len(trs)}개의 재료비·판매가·이익·시간당 이익을 tarkov.dev 시세로 계산해 정렬. PVP·PVE 시세 전환, 시설별 필터. 기준 {ctx.stamp}."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="crafts", crumbs=[("제작 수익", None)], scripts=CRAFTS_JS)
+
+
+CAL_OVERRIDES = {"1143x23ACP": ".45 ACP", "9x18PM": "9x18 PM", "9x18PMM": "9x18 PMM", "9x19PARA": "9x19", "9x33R": ".357",
+                 "127x33": "12.7x33", "127x55": "12.7x55", "127x99": ".50 BMG", "12g": "12 게이지", "20g": "20 게이지",
+                 "366TKM": ".366 TKM", "40mmRU": "40mm (RU)", "46x30": "4.6x30", "556x45NATO": "5.56x45 NATO", "57x28": "5.7x28",
+                 "762x25TT": "7.62x25 TT", "762x35": "7.62x35 (.300 BLK)", "784x49": ".308 ME", "86x70": ".338 LM", "725": "72.5mm"}
+CAL_ORDER = ["545x39", "556x45NATO", "762x39", "762x51", "762x54R", "9x19PARA", "9x39", "366TKM", "46x30", "57x28",
+             "1143x23ACP", "9x18PM", "9x21", "762x25TT", "12g", "20g", "23x75", "127x55", "86x70", "68x51", "58x42", "762x35"]
+
+
+def cal_name(raw: str) -> str:
+    """앱(tarkov_api._caliber_display)과 같은 규칙 — 'Caliber545x39' → '5.45x39'"""
+    s = raw[len("Caliber"):] if raw.startswith("Caliber") else raw
+    if s in CAL_OVERRIDES:
+        return CAL_OVERRIDES[s]
+    m = re.match(r"^(\d+)x(.+)$", s)
+    if not m:
+        return s
+    bore, rest = m.group(1), m.group(2)
+    if len(bore) == 2:
+        bore = f"{bore[0]}.{bore[1]}"
+    elif len(bore) == 3:
+        bore = f"{bore[:2]}.{bore[2]}" if bore.startswith("12") else f"{bore[0]}.{bore[1:]}"
+    elif len(bore) >= 4:
+        bore = f"{bore[:-2]}.{bore[-2:]}"
+    return f"{bore}x{rest}"
+
+
+def ammo_page(ctx: Ctx) -> tuple[str, str]:
+    by_cal: dict[str, list] = {}
+    for iid, it in ctx.items.items():
+        if "ammo" not in (it.get("types") or []):
+            continue
+        p = it.get("properties") or {}
+        cal = p.get("caliber") if isinstance(p, dict) else None
+        if not cal:
+            continue
+        by_cal.setdefault(cal[len("Caliber"):] if cal.startswith("Caliber") else cal, []).append(iid)
+    order = [c for c in CAL_ORDER if c in by_cal] + sorted(c for c in by_cal if c not in CAL_ORDER)
+    toc, secs = [], []
+    for cal in order:
+        name = cal_name(cal)
+        toc.append(f'<a href="#c-{e(cal)}">{e(name)}</a>')
+        rows = []
+        for iid in sorted(by_cal[cal], key=lambda i: -(((ctx.items[i].get("properties") or {}).get("penetrationPower")) or 0)):
+            it = ctx.items[iid]
+            p = it.get("properties") or {}
+            info = ctx.item(iid) or {}
+            pen = p.get("penetrationPower") or 0
+            dmg = p.get("damage") or 0
+            pc = p.get("projectileCount") or 1
+            dmg_txt = f"{pc}×{dmg}" if pc > 1 else f"{dmg}"
+            cls = "p6" if pen >= 60 else "p5" if pen >= 50 else "p4" if pen >= 40 else "p3" if pen >= 30 else "p2" if pen >= 20 else "p1"
+            offers = sorted(it.get("buyFromTrader") or [], key=lambda o: (o.get("minTraderLevel") or 9, o.get("priceRUB") or 0))
+            buy = ""
+            if offers:
+                o = offers[0]
+                buy = (f'{e(ctx.trader_name(o.get("trader")))} LL{o.get("minTraderLevel") or 1} · {fmt_int(o.get("priceRUB"))}₽'
+                       + (' <span class="muted">(퀘스트 해금)</span>' if o.get("taskUnlock") else ""))
+            tracer = ' <span class="badge b-any">예광</span>' if p.get("tracer") else ""
+            short = info.get("s") or info.get("n")
+            icon = f'<img class="icon sm" loading="lazy" alt="" src="{e(info.get("img"))}" />' if info.get("img") else ""
+            rows.append(f'<tr><td><span class="itn">{icon}<span><b>{e(short)}</b>{tracer}'
+                        f'<div class="muted small">{e(info.get("n"))}</div></span></span></td>'
+                        f'<td class="n">{dmg_txt}</td><td class="n pen {cls}">{pen}</td><td class="n">{p.get("armorDamage") or 0}%</td>'
+                        f'<td class="n">{fmt_int((p.get("fragmentationChance") or 0) * 100)}%</td><td class="n">{fmt_int(p.get("initialSpeed") or 0)}</td>'
+                        f'<td class="small">{buy or "<span class=muted>상인 판매 없음</span>"}</td></tr>')
+        secs.append(f'<h2 class="sec" id="c-{e(cal)}">{e(name)} <span class="muted small">{len(rows)}종</span></h2>'
+                    '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th>탄</th><th class="n">데미지</th><th class="n">관통력</th>'
+                    '<th class="n">방어구 피해</th><th class="n">파편화</th><th class="n">초속(m/s)</th><th>상인 구매</th></tr></thead><tbody>'
+                    + "".join(rows) + "</tbody></table></div>")
+    n_ammo = sum(len(v) for v in by_cal.values())
+    body = (f'<h1>탄약표 <span class="h1en">Ammo chart</span></h1>'
+            f'<p class="sub">구경 {len(order)}종 · 탄 {n_ammo}종 · 관통력 높은 순 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note">관통력 색은 대략적인 기준입니다 — 방어 등급 N 방어구는 내구도가 충분할 때 관통력 약 N×10 이상에서 잘 뚫립니다'
+            '(<span class="pen p3">30</span> 3등급 · <span class="pen p4">40</span> 4등급 · <span class="pen p5">50</span> 5등급 · <span class="pen p6">60</span> 6등급). '
+            '현재 탄약은 모두 <b>플리마켓 거래가 막혀 있어</b> 상인 구매가와 해금 등급을 함께 적었습니다(가장 낮은 등급 기준).</div>'
+            f'<nav class="toc">{"".join(toc)}</nav>' + "".join(secs)
+            + '<p class="small muted">게임 안에서는 시세 오버레이로 탄약에 F2를 누르면 같은 구경 탄 비교표가 바로 뜹니다.</p>')
+    path = "/guide/ammo/"
+    title = "타르코프 탄약표 — 구경별 관통력·데미지·방어구 피해·상인 구매처 | 탈콥 가이드"
+    desc = f"타르코프 탄약 {n_ammo}종을 구경별로 관통력 순 정리: 데미지, 관통력, 방어구 피해, 파편화, 초속, 상인 구매 등급·가격. 5.45·5.56·7.62·9x19·12게이지 등. 기준 {ctx.stamp}."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="ammo", crumbs=[("탄약표", None)])
+
+
+PATCHES = [
+    ("1.2.5", "2026-10-16·20", [
+        "PVE: PMC 봇이 총소리에 반응하는 거리·엄폐 시간 단축 등 행동 조정",
+        "이벤트 퀘스트 라인 완료 업적 추가, 이벤트 보스 Scourge와 경호원 약화(체력·시야·원거리 명중률·발견 속도)",
+        "블랙 디비전 순간이동 버그, RShG-2 장전 해제로 막히던 문제 등 수정"]),
+    ("1.2.0", "2026-10-06", [
+        "<b>PVE 프레스티지 6단계</b> — PVE 1단계는 PVP보다 조건 완화, 장비 일부·스킬/숙련 최대 50% 이월 (<a href=\"/guide/prestige/\">프레스티지</a>)",
+        "EXFIL Brothers 추천 프로그램(신규 친구와 함께하면 경험치 +5%와 보상)",
+        "PVE 봇: USEC·BEAR 봇끼리 협력 확률↑, 일부 봇은 접근 전까지 중립, 봇 수·장비가 레벨과 진영에 맞게 조정",
+        "세관: 탈출구 추가, 잠긴 상자 보상 보장, 새 열쇠 <b>ZB-1013 열쇠·경비 초소 열쇠</b> · 인터체인지: 루팅 장소 추가, ULTRA 단독 매장 계산대는 열쇠 불필요",
+        "편의: 거래 화면 Ctrl+좌클릭으로 구매/판매 전환, 런스루 탈출 표시, 드럼 탄창 개선, 친구 고정"]),
+    ("1.1.5", "2026-09-08·15", [
+        "<b>등대 개편</b>: 로그가 산장 지역으로 이동, 정수장 거치 화기·지뢰 제거, BTR 순찰, 산악 지하 통로, 마킹룸 이동",
+        "<b>등대지기 해금 체인 '빛을 향해' 전면 개편</b>: 투어로 등대 해금 + 펜스·레프 제외 전 상인 LL3 + 펜스 평판 2.0 + 메카닉에게 문의",
+        "쇄빙선: 해안선·등대에서 입장, 루블 대신 '수닥-투닥' 수리 키트(래그맨 'Pay the Fare!' 보상) 필요",
+        "퀘스트에 지금 제출 가능한 아이템 표시, 달러·유로 구매가 인하",
+        "시즌 캐릭터 전용 리그(주간 경험치 순위, 50명 그룹) — 09-15"]),
+    ("1.1.0 KORD BREACH", "2026-08-03", [
+        "<b>시즌 시스템</b>: 별도 서버의 시즌 캐릭터(4~6개월마다 초기화), 전역·개인 수정자, 시즌 보상은 모든 모드에 영구 해금, 무료 배틀패스(테라그룹 문서)",
+        "<b>사이드 퀘스트 개편</b>: 상인 등급(LL)별 2~4개 묶음으로 해금, 일부만 연쇄. 스캐브 처치 목표에서 보스·레이더·로그 제외, 분대 공유 진행",
+        "<b>경제</b>: 상인 판매가 평균 +25%, 상인 매입가 평균 −20%, 플리마켓 수수료 3%→5%",
+        "상인 등급: 판매액 조건 삭제, 평판·레벨 조건 재조정 / 일부 탄약·탄창 해금 등급 1단계 하향",
+        "은신처: 1~3단계 일부 완화(일부 인레이드 조건 해제·건설 시간 단축), 많은 시설에 돈 요구 추가, 무기 빌드는 작업대 없이도 가능",
+        "보험: 예거 보험 추가(가장 빠르고 비쌈), 프라퍼·테라피스트 반환 빨라짐",
+        "신규: QBZ-191·Howa Type 20·HK 416A5, <b>5.8x42 구경</b>, 자물쇠 달린 문·상자, 모드 선택 화면, Arena→시즌 진행 동기화"]),
+    ("1.0.6", "2026-07-03", ["퀘스트 화면에서 이름·목표·지역·상인으로 검색", "Expansion Hub 준비(유료 상점)"]),
+    ("1.0.5", "2026-05-25", ["<b>쇄빙선(Icebreaker)</b>: 1~3인 PvE 탐사 지역 + 스토리 챕터 '보레아스'",
+                             "레이드 중 퀘스트 아이템 근처에 가면 방향 표시"]),
+]
+
+
+def patch_page(ctx: Ctx) -> tuple[str, str]:
+    secs = "".join(f'<section class="box"><h2>{e(v)} <span class="muted small">{e(d)}</span></h2><ul class="plain">'
+                   + "".join(f"<li>{x}</li>" for x in items) + "</ul></section>" for v, d, items in PATCHES)
+    body = ('<h1>패치 요약 <span class="h1en">1.0.5 → 1.2.5</span></h1>'
+            f'<p class="sub">2026년 5월~10월 주요 변경 · 현재 게임 버전 1.2.5 · 정리 {e(ctx.stamp)}</p>'
+            '<div class="note">공식 패치 노트(위키 Changelog 모음)를 읽고 플레이에 영향이 큰 것만 골라 한국어로 요약했습니다. 원문은 '
+            '<a href="https://escapefromtarkov.fandom.com/wiki/Changelog" rel="noopener" target="_blank">공식 위키 Changelog</a>에서 볼 수 있습니다.</div>'
+            + secs)
+    path = "/guide/patch/"
+    title = "타르코프 패치 요약 1.0.5~1.2.5 — 시즌·퀘스트 개편·PVE 프레스티지·경제 변경 | 탈콥 가이드"
+    desc = "타르코프 2026년 5~10월 패치 한국어 요약: 1.1.0 KORD BREACH(시즌·사이드 퀘스트 묶음 해금·플리 수수료 5%), 1.1.5 등대 개편·등대지기 체인, 1.2.0 PVE 프레스티지, 1.2.5."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="patch", crumbs=[("패치 요약", None)])
 
 
 def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> list[str]:
@@ -1772,8 +2023,16 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     p, h = bosses_page(ctx)
     write(out, p, h, urls)
     bosses_n = h.count('class="box boss"')
+    p, h = crafts_page(ctx)
+    write(out, p, h, urls)
+    crafts_n = h.count("<tr data-s=")
+    p, h = ammo_page(ctx)
+    write(out, p, h, urls)
+    ammo_n = h.count('<td class="n pen ')
+    p, h = patch_page(ctx)
+    write(out, p, h, urls)
     counts = {"quests": len(ctx.tasks), "items": items_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
-              "maps": len(main_maps(ctx)), "bosses": bosses_n, **extra_counts}
+              "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n, **extra_counts}
     p, h = hub_page(ctx, counts)
     write(out, p, h, urls)
     return urls

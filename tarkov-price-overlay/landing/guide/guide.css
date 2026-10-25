@@ -155,3 +155,8 @@ table.tot tr.done{opacity:.45}
   .h1en{display:block;margin:2px 0 0}
 }
 .osub{font-size:12px;color:var(--muted);margin-top:3px}
+.pen{font-weight:800;border-radius:5px;padding:1px 6px}
+td.pen{text-align:right}
+.pen.p1{color:#9d988b}.pen.p2{color:#c9c2a8}.pen.p3{color:#e0c66a;background:#2b2715}.pen.p4{color:#f0a55a;background:#2f2214}
+.pen.p5{color:#ff7d6b;background:#341a16}.pen.p6{color:#ff5bd0;background:#331630}
+td.m.up{color:var(--green)}td.m.down{color:var(--red)}

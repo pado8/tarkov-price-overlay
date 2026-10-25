@@ -308,6 +308,7 @@ def main() -> int:
     }
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
+        tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         page = tpl.replace("__DATA__", payload).replace("__STAMP__", stamp)
         dest = OUT / name / "index.html"
