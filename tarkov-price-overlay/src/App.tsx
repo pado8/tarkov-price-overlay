@@ -26,6 +26,8 @@ const ANNOUNCE_SEEN_KEY = "tarkov.announceSeen";
 const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
 // 카드에서 직접 '달성' 표시한 퀘스트 id — 서버(모드)별 (피드백 #49-②).
 const MANUAL_QUEST_DONE_KEY = "tarkov.manualQuestDone";
+// 이미 안내한 프레스티지 시각(모드별) — 같은 프레스티지로 두 번 묻지 않도록.
+const PRESTIGE_SEEN_KEY = "tarkov.prestigeSeen";
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
@@ -528,6 +530,9 @@ type QuestStatus = {
   // send this, so the field is optional and the UI falls back to the
   // legacy aggregate counts above.
   counts_by_mode?: { pvp: QuestModeCounts; pve: QuestModeCounts; season?: QuestModeCounts };
+  // 모드별 마지막 프레스티지 감지 시각(epoch 초, 0=없음). 사이드카가 감지하면
+  // 그 모드 퀘스트 기록을 그 시각부터 새로 센다(자동 와이프 리셋).
+  prestige_by_mode?: Record<string, number>;
 };
 
 type HideoutCraft = {
@@ -2107,6 +2112,47 @@ function App() {
     }
   };
 
+  // 사이드카가 새 프레스티지를 감지하면: 그 모드의 수동 달성 표시를 비우고,
+  // 최근(3일 이내) 프레스티지면 은신처 레벨 초기화도 묻는다(은신처는 모드 공용이라
+  // 자동으로 지우지 않는다). 오래전 프레스티지는 조용히 '본 것'으로만 기록.
+  const handlePrestige = async (pres?: Record<string, number>) => {
+    if (!pres) return;
+    let seen: Record<string, number> = {};
+    try {
+      seen = JSON.parse(localStorage.getItem(PRESTIGE_SEEN_KEY) ?? "{}");
+    } catch {
+      seen = {};
+    }
+    const fresh = (["pvp", "pve", "season"] as const).filter(
+      (m) => (pres[m] ?? 0) > (seen[m] ?? 0)
+    );
+    if (fresh.length === 0) return;
+    try {
+      localStorage.setItem(PRESTIGE_SEEN_KEY, JSON.stringify({ ...seen, ...pres }));
+    } catch {
+      // ignore
+    }
+    fresh.forEach((m) => clearManualQuestDone(m));
+    const recent = fresh.some(
+      (m) => Date.now() / 1000 - (pres[m] ?? 0) < 3 * 86400
+    );
+    let hasHideout = false;
+    try {
+      hasHideout =
+        Object.keys(JSON.parse(localStorage.getItem(HIDEOUT_LEVELS_KEY) ?? "{}"))
+          .length > 0;
+    } catch {
+      hasHideout = false;
+    }
+    if (recent && hasHideout) {
+      const yes = await ask(t.prestigeHideoutAsk, {
+        title: t.prestigeDetected,
+        kind: "info",
+      });
+      if (yes) resetHideoutLevels();
+    }
+  };
+
   // Quest tracker helpers — talk to the localhost FastAPI server.
   const fetchQuestStatus = async (): Promise<boolean> => {
     try {
@@ -2116,6 +2162,7 @@ function App() {
       setQuestStatus(data);
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
+      void handlePrestige(data.prestige_by_mode);
       return true;
     } catch (e) {
       log(`quest: status fetch failed — ${String(e)}`);

@@ -390,6 +390,73 @@ def _detect_mode_signal(folder: Path) -> Optional[SessionMode]:
     return None
 
 
+# 한 세션에서 캐릭터를 바꾸면(PVE ↔ 시즌 ↔ PVP, 게임 재시작 없이) application 로그에
+# "Session mode" 줄이 여러 번, 시각과 함께 남는다(2026-10-25 실측: 한 폴더에
+# Pve→PvpSeason→Regular→PvpSeason→Pve). 예전엔 이런 폴더를 통째로 건너뛰어 그 세션의
+# 퀘스트가 전부 사라졌다 → 각 이벤트를 그 시각에 유효했던 모드로 나눠 넣는다.
+_RE_MODE_LINE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.\d+)?\|[^\r\n]*?Session mode:\s*([^\s|]+)",
+    re.MULTILINE,
+)
+_MODE_LOG_MAX_BYTES = 8 * 1024 * 1024
+# 프레스티지 확정 요청(1.2.0 PVE 프레스티지 실측: gw-pve.../client/prestige/obtain).
+# 응답 줄의 시각이 "진행도가 초기화된 순간"이다.
+_RE_PRESTIGE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.\d+)?\|[^\r\n]*?<--- Response HTTPS"
+    r"[^\r\n]*?https://gw-([a-z0-9_-]+)\.escapefromtarkov\.com/client/prestige/obtain",
+    re.MULTILINE,
+)
+# 이만큼 지난 폴더는 끝난 세션으로 보고 로그 크기 재확인을 생략한다(폴링 비용 절감).
+_FINISHED_FOLDER_SEC = 12 * 3600
+
+
+def _log_line_ts(stamp: str) -> Optional[int]:
+    """EFT 로그 줄머리의 로컬 시각 "YYYY-MM-DD HH:MM:SS" → epoch 초."""
+    try:
+        return int(time.mktime(time.strptime(stamp, "%Y-%m-%d %H:%M:%S")))
+    except (ValueError, OverflowError):
+        return None
+
+
+def _mode_segments(folder: Path) -> Optional[list[tuple[int, SessionMode]]]:
+    """세션 폴더의 모드 타임라인 [(시작 epoch, 모드)] (시간순, 연속 중복 제거).
+    시각이 붙은 모드 줄이 없으면 기존 단일 판정(_detect_mode_signal)을 0초 구간
+    하나로 돌려주고, 그것도 없으면 None(신호 없음)."""
+    for app_log in folder.glob("*application_*.log"):
+        try:
+            with app_log.open("rb") as f:
+                text = f.read(_MODE_LOG_MAX_BYTES).decode("utf-8", errors="replace")
+        except OSError:
+            break
+        segs: list[tuple[int, SessionMode]] = []
+        for m in _RE_MODE_LINE.finditer(text):
+            ts = _log_line_ts(m.group(1))
+            if ts is None:
+                continue
+            mode = _classify_mode_word(m.group(2))
+            if segs and segs[-1][1] == mode:
+                continue
+            segs.append((ts, mode))
+        if segs:
+            return segs
+        break
+    sig = _detect_mode_signal(folder)
+    if sig is None:
+        return None
+    return [(0, sig)]
+
+
+def _mode_at(segs: list[tuple[int, SessionMode]], ts: int) -> SessionMode:
+    """이벤트 시각에 유효했던 모드. 첫 모드 줄보다 이른 이벤트는 첫 구간으로."""
+    mode = segs[0][1]
+    for start, m in segs:
+        if start <= ts:
+            mode = m
+        else:
+            break
+    return mode
+
+
 # A push-notifications log is a sequence of JSON objects pretty-printed with
 # braces on their own lines. We track brace depth to find complete blocks.
 def _iter_json_blocks(text: str):
@@ -486,6 +553,15 @@ class QuestTracker:
         # session folder (game can't switch mid-raid). "unknown" folders are
         # cached too — their quest events are skipped (new-mode guard).
         self._folder_mode: dict[str, SessionMode] = {}
+        # folder -> (application 로그 크기, 모드 타임라인). 크기가 바뀌면(진행 중
+        # 세션에서 캐릭터 전환) 다시 읽는다.
+        self._seg_cache: dict[str, tuple[int, list[tuple[int, SessionMode]]]] = {}
+        # backend 로그 읽기 위치(프레스티지 감지용) — push 로그 오프셋과 별개.
+        self._backend_offsets: dict[str, int] = {}
+        # 끝난 세션(12시간 경과)이고 backend 로그를 끝까지 읽은 폴더 — 폴링마다 다시 안 본다.
+        self._backend_done: set[str] = set()
+        # 모드별 마지막으로 감지한 프레스티지 시각(epoch). 0 = 없음.
+        self._prestige: dict[GameMode, int] = {m: 0 for m in MODES}
         # User-configurable; falls back to auto-detect.
         self._install_path: Optional[str] = None
         # Background poll thread.
@@ -552,9 +628,18 @@ class QuestTracker:
                     ignore_before[mode] = max(0, int(raw_ignore.get(mode, 0)))
                 except (TypeError, ValueError):
                     pass
+        prestige: dict[GameMode, int] = {m: 0 for m in MODES}
+        raw_prestige = data.get("prestige_by_mode")
+        if isinstance(raw_prestige, dict):
+            for mode in MODES:
+                try:
+                    prestige[mode] = max(0, int(raw_prestige.get(mode, 0)))
+                except (TypeError, ValueError):
+                    pass
         with self._lock:
             self._status = normalized
             self._ignore_before = ignore_before
+            self._prestige = prestige
             self._install_path = data.get("install_path") or None
             self._enabled = bool(data.get("enabled", True))
         print(
@@ -569,6 +654,7 @@ class QuestTracker:
             payload = {
                 "status_by_mode": {m: dict(self._status[m]) for m in MODES},
                 "ignore_before": dict(self._ignore_before),
+                "prestige_by_mode": dict(self._prestige),
                 "install_path": self._install_path,
                 "enabled": self._enabled,
             }
@@ -593,6 +679,7 @@ class QuestTracker:
         with self._lock:
             counts_by_mode = {m: self._count(m) for m in MODES}
             ignore_before = dict(self._ignore_before)
+            prestige_by_mode = dict(self._prestige)
             unknown_folders = sum(
                 1 for v in self._folder_mode.values() if v == "unknown"
             )
@@ -628,6 +715,9 @@ class QuestTracker:
             # epoch seconds per mode; >0 means a wipe reset is active and log
             # events before that moment are ignored. UI can show "새 시즌 기준".
             "ignore_before_by_mode": ignore_before,
+            # 모드별 마지막 프레스티지 감지 시각(epoch, 0=없음). 감지되면 그 모드의
+            # 퀘스트 기록을 그 시각부터 새로 센다(자동 와이프 리셋).
+            "prestige_by_mode": prestige_by_mode,
             # Session folders whose game mode we couldn't classify (likely a
             # new mode after a game update). >0 = time to add mode support.
             "unknown_mode_folders": unknown_folders,
@@ -714,20 +804,7 @@ class QuestTracker:
         )
         watermark = int(time.time()) if from_now else 0
         if from_now:
-            # One-deep safety net before the destructive path. A plain reset
-            # re-derives state from logs, but entries whose log folders have
-            # since been deleted (launcher cleanups) are NOT recoverable that
-            # way — observed live: 3 of 379 completed quests lost on a
-            # wipe→plain-reset round trip. Keep the pre-wipe snapshot so that
-            # worst case is a manual file restore, not permanent loss.
-            try:
-                src = _state_file()
-                if src.exists():
-                    (_state_dir() / "quest_state.pre-wipe.json").write_bytes(
-                        src.read_bytes()
-                    )
-            except OSError as e:
-                print(f"[quest] WARN: pre-wipe backup failed - {e}")
+            self._backup_pre_wipe()
         with self._lock:
             for m in target_modes:
                 self._status[m].clear()
@@ -739,8 +816,95 @@ class QuestTracker:
             # files too — idempotent (same ts wins), just a little I/O.
             self._file_offsets.clear()
             self._folder_mode.clear()
+            # 프레스티지도 다시 찾게 한다 — 일반 리셋(되돌리기) 뒤에도 실제 프레스티지
+            # 이전 기록은 진행도가 아니므로 그 시각부터 다시 센다. 와이프 리셋은
+            # 기준선이 '지금'이라 그보다 이른 프레스티지는 영향이 없다.
+            self._backend_offsets.clear()
+            self._backend_done.clear()
         self._save_state()
         self.scan_once()
+
+    def _backup_pre_wipe(self) -> None:
+        # One-deep safety net before the destructive path. A plain reset
+        # re-derives state from logs, but entries whose log folders have
+        # since been deleted (launcher cleanups) are NOT recoverable that
+        # way — observed live: 3 of 379 completed quests lost on a
+        # wipe→plain-reset round trip. Keep the pre-wipe snapshot so that
+        # worst case is a manual file restore, not permanent loss.
+        try:
+            src = _state_file()
+            if src.exists():
+                (_state_dir() / "quest_state.pre-wipe.json").write_bytes(
+                    src.read_bytes()
+                )
+        except OSError as e:
+            print(f"[quest] WARN: pre-wipe backup failed - {e}")
+
+    def _apply_detected_prestige(self, folders: list[Path]) -> None:
+        """backend 로그의 새 줄에서 프레스티지 확정(prestige/obtain)을 찾아, 그
+        모드의 퀘스트 기록을 그 시각부터 새로 센다(자동 와이프 리셋).
+        기준선보다 이른 프레스티지(이미 반영했거나, 사용자가 그 뒤에 와이프 리셋을
+        누른 경우)는 무시한다."""
+        found: dict[GameMode, int] = {}
+        for folder in folders:
+            fkey = str(folder)
+            if fkey in self._backend_done:
+                continue
+            finished = _folder_age_sec(folder) > _FINISHED_FOLDER_SEC
+            all_read = True
+            for bl in folder.glob("*backend_*.log"):
+                key = str(bl)
+                try:
+                    size = bl.stat().st_size
+                except OSError:
+                    all_read = False
+                    continue
+                offset = self._backend_offsets.get(key, 0)
+                if offset > size:
+                    offset = 0
+                if offset == size:
+                    continue
+                try:
+                    with bl.open("rb") as f:
+                        f.seek(offset)
+                        chunk = f.read()
+                except OSError:
+                    all_read = False
+                    continue
+                cut = chunk.rfind(b"\n")
+                if cut < 0:
+                    all_read = False
+                    continue  # 줄이 아직 덜 써졌다 — 다음 폴링에서
+                self._backend_offsets[key] = offset + cut + 1
+                if offset + cut + 1 < size:
+                    all_read = False
+                text = chunk[: cut + 1].decode("utf-8", errors="replace")
+                for m in _RE_PRESTIGE.finditer(text):
+                    mode = _classify_mode_word(m.group(2))
+                    ts = _log_line_ts(m.group(1))
+                    if mode in MODES and ts:
+                        found[mode] = max(found.get(mode, 0), ts)
+            if finished and all_read:
+                self._backend_done.add(fkey)
+        for mode, ts in found.items():
+            with self._lock:
+                self._prestige[mode] = max(self._prestige.get(mode, 0), ts)
+                apply = ts > self._ignore_before[mode]
+            if not apply:
+                continue
+            self._backup_pre_wipe()
+            with self._lock:
+                self._status[mode].clear()
+                self._ignore_before[mode] = ts
+                # 이어지는 이벤트 패스가 모든 알림 로그를 처음부터 다시 읽어
+                # 프레스티지 이후 이벤트만 채운다(다른 모드는 같은 값으로 재기록).
+                self._file_offsets.clear()
+            print(
+                f"[quest] prestige detected ({mode}) at "
+                f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(ts))} "
+                f"- {mode} progress restarts from that moment"
+            )
+            self._save_state()
 
     # ---------- scanning ----------
 
@@ -748,22 +912,32 @@ class QuestTracker:
         with self._lock:
             return self._install_path or detect_install_path()
 
-    def _mode_for_folder(self, folder: Path) -> SessionMode:
+    def _segments_for(self, folder: Path) -> Optional[list[tuple[int, SessionMode]]]:
+        """폴더의 모드 타임라인. None = 판정 보류(막 시작된 세션에 신호 없음 —
+        이 폴더는 이번 폴링에서 건너뛰고 오프셋도 그대로 둔다)."""
         key = str(folder)
-        cached = self._folder_mode.get(key)
-        if cached is not None:
-            return cached
-        mode = _detect_mode_signal(folder)
-        if mode is None:
+        cached = self._seg_cache.get(key)
+        if cached is not None and _folder_age_sec(folder) > _FINISHED_FOLDER_SEC:
+            return cached[1]  # 끝난 세션 — 로그가 더 자라지 않는다
+        app = next(folder.glob("*application_*.log"), None)
+        try:
+            size = app.stat().st_size if app else -1
+        except OSError:
+            size = -1
+        if cached is not None and cached[0] == size:
+            return cached[1]
+        segs = _mode_segments(folder)
+        if segs is None:
             # 신호 없음. 막 시작된 세션이면 모드 줄이 아직 안 써졌을 뿐이므로
-            # 캐시하지 않고 "pending"을 돌려준다 — scan_once가 이 폴더를 건너뛰어
-            # 오프셋도 그대로라, 신호가 생긴 다음 폴링에서 처음부터 올바른 버킷에
+            # 캐시하지 않는다 — 신호가 생긴 다음 폴링에서 처음부터 올바른 버킷에
             # 읽힌다. (_MODE_PENDING_GRACE_SEC 참고)
             if _folder_age_sec(folder) < _MODE_PENDING_GRACE_SEC:
-                return "pending"
-            mode = "pvp"  # 오래된 무신호 폴더 = PVE 이전 시절 로그(역사적 기본값)
-        self._folder_mode[key] = mode
-        return mode
+                return None
+            segs = [(0, "pvp")]  # 오래된 무신호 폴더 = PVE 이전 시절 로그(역사적 기본값)
+        self._seg_cache[key] = (size, segs)
+        modes = {m for _, m in segs}
+        self._folder_mode[key] = segs[0][1] if len(modes) == 1 else "mixed"
+        return segs
 
     def scan_once(self) -> int:
         """Read any new bytes from log files and update status. Returns the
@@ -774,12 +948,16 @@ class QuestTracker:
         if not install or not is_valid_install_path(install):
             return 0
         new_events = 0
-        for folder in _list_log_folders(install):
-            mode = self._mode_for_folder(folder)
-            if mode not in MODES:
-                # "unknown"(미인식 라벨) 또는 "mixed"(한 폴더에 상이 모드) —
-                # 어느 버킷인지 단정하면 영구 진행도가 오염되므로 스킵하고
-                # get_status 카운터로 노출만 한다.
+        folders = _list_log_folders(install)
+        # 프레스티지를 먼저 반영해야 이어지는 이벤트 패스가 새 기준선으로 읽는다.
+        self._apply_detected_prestige(folders)
+        for folder in folders:
+            segs = self._segments_for(folder)
+            if segs is None:
+                continue
+            if all(m not in MODES for _, m in segs):
+                # 미인식 라벨만 있는 폴더 — 어느 버킷인지 단정하면 영구 진행도가
+                # 오염되므로 스킵하고 get_status 카운터로 노출만 한다.
                 continue
             for log_file in _push_notification_files(folder):
                 key = str(log_file)
@@ -818,6 +996,11 @@ class QuestTracker:
                     qid = event["quest_id"]
                     new_status = event["status"]
                     new_ts = int(event.get("ts") or 0)
+                    # 이벤트 시각에 유효했던 캐릭터(모드)로 넣는다 — 한 세션에서
+                    # PVE↔시즌을 오가도 각자 버킷으로 간다. 미인식 구간은 버림.
+                    mode = _mode_at(segs, new_ts)
+                    if mode not in MODES:
+                        continue
                     with self._lock:
                         # Wipe-reset watermark: events from before the user's
                         # declared fresh-start moment are pre-wipe history and
