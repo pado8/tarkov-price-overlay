@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>타르코프 카파템 정리 — 컬렉터(수집가) 제출 아이템 전체 목록 | 탈콥 가이드</title>
+<meta name="description" content="타르코프 카파(Kappa) 컨테이너 퀘스트 '수집가(Collector)'에 제출해야 하는 아이템 전체 목록. 인레이드 여부·시세·보유 체크로 진행률을 관리하세요. 최신 패치 데이터 자동 반영." />
+<link rel="canonical" href="https://tarkov.aquapado.com/guide/kappa/" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="stylesheet" href="/guide/guide.css" />
+</head>
+<body>
+<div class="top"><div class="wrap">
+  <a class="brand" href="/guide/">탈콥 가이드</a>
+  <nav><a class="on" href="/guide/kappa/">카파템</a><a href="/guide/keys/">열쇠</a><a href="/guide/quests/">퀘스트 필요템</a><a href="/">시세 오버레이</a></nav>
+</div></div>
+<main class="wrap">
+  <h1>카파템 정리 <span class="muted" id="count"></span></h1>
+  <p class="sub">퀘스트 '수집가(Collector)'에 제출하는 아이템 전체 · 데이터 기준 __STAMP__ (json.tarkov.dev)</p>
+
+  <div class="box" id="req"></div>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="아이템 이름 검색 (한글·영문)" aria-label="검색" />
+    <div class="seg" id="filter"><button data-v="all" class="on">전체</button><button data-v="todo">미보유</button><button data-v="done">보유</button></div>
+    <div class="seg" id="mode"><button data-v="pvp" class="on">PVP 시세</button><button data-v="pve">PVE 시세</button></div>
+  </div>
+  <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div><button class="seg" id="reset" style="padding:6px 10px;background:var(--panel);color:var(--muted);cursor:pointer;font:inherit;font-size:12px">체크 초기화</button></div>
+
+  <div class="grid" id="grid" style="margin-top:14px"></div>
+
+  <div class="cta"><span><b>F2 한 번</b>으로 게임 안에서 이 아이템이 카파·퀘스트에 필요한지, 시세가 얼마인지 바로 확인</span><a class="btn" href="/">무료 시세 오버레이 받기</a></div>
+</main>
+<footer><div class="wrap">데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터 · 체크 상태는 이 브라우저에만 저장됩니다 · <a href="/guide/">가이드 홈</a></div></footer>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var KEY = "guide.kappa", MODEKEY = "guide.mode";
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function won(n) { return n == null ? null : Math.round(n).toLocaleString("ko-KR") + " ₽"; }
+  var have = load(KEY, {});
+  var mode = load(MODEKEY, "pvp");
+  var filter = "all";
+
+  var r = D.req;
+  document.getElementById("req").innerHTML =
+    "<h2>컬렉터 해금 조건</h2>" +
+    "<div>레벨 <b>" + esc(r.level) + "</b> 이상 · 수령 상인 <b>" + esc(r.trader) + "</b>" +
+    (r.wiki ? " · <a href=\"" + esc(r.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
+    (r.tasks.length ? "<div class=\"small\" style=\"margin-top:4px\">선행 퀘스트: " + r.tasks.map(esc).join(" · ") + "</div>" : "") +
+    (r.traders.length ? "<div class=\"small muted\" style=\"margin-top:2px\">상인 우호도: " + r.traders.map(esc).join(" · ") + "</div>" : "") +
+    "<div class=\"small muted\" style=\"margin-top:6px\">대부분 <span class=\"badge b-fir\">인레이드</span> 필수 — 레이드에서 직접 찾은 상태로 보관했다가 한 번에 제출합니다.</div>";
+
+  function setSeg(id, v) {
+    document.querySelectorAll("#" + id + " button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
+  }
+  setSeg("mode", mode);
+
+  function render() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var html = "", shown = 0;
+    D.items.forEach(function (it) {
+      var done = !!have[it.id];
+      if (filter === "todo" && done) return;
+      if (filter === "done" && !done) return;
+      if (q && (it.n + " " + it.en + " " + it.s).toLowerCase().indexOf(q) < 0) return;
+      shown++;
+      var p = mode === "pve" ? it.pve : it.pvp;
+      var price = it.noflea || p == null ? "<span class=\"small muted\">플리 거래 불가</span>" : "<span class=\"price\">플리 " + won(p) + "</span>";
+      var trader = it.tr ? "<span class=\"small muted\">상인 " + esc(it.tr[0]) + " " + won(it.tr[1]) + "</span>" : "";
+      html += "<label class=\"card" + (done ? " done" : "") + "\" data-id=\"" + esc(it.id) + "\">" +
+        "<img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" +
+        "<div><div class=\"nm\">" + esc(it.n) + (it.c > 1 ? " ×" + it.c : "") + "</div>" +
+        "<div class=\"en\">" + esc(it.en) + "</div>" +
+        "<div class=\"meta\">" + (it.fir ? "<span class=\"badge b-fir\">인레이드</span>" : "<span class=\"badge b-any\">일반</span>") +
+        price + "</div><div class=\"meta\">" + trader +
+        (it.wiki ? " <a class=\"small\" href=\"" + esc(it.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div></div>" +
+        "<input type=\"checkbox\" aria-label=\"보유\"" + (done ? " checked" : "") + " /></label>";
+    });
+    document.getElementById("grid").innerHTML = html || "<div class=\"empty\">조건에 맞는 아이템이 없습니다</div>";
+    var n = D.items.length, h = D.items.filter(function (it) { return have[it.id]; }).length;
+    document.getElementById("count").textContent = "(" + n + "개)";
+    document.getElementById("prog").textContent = "보유 " + h + " / " + n;
+    document.getElementById("bar").style.width = (n ? h / n * 100 : 0) + "%";
+  }
+  document.getElementById("grid").addEventListener("change", function (e) {
+    var card = e.target.closest(".card"); if (!card) return;
+    var id = card.getAttribute("data-id");
+    if (e.target.checked) have[id] = 1; else delete have[id];
+    save(KEY, have); render();
+  });
+  document.getElementById("q").addEventListener("input", render);
+  document.getElementById("filter").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; filter = v; setSeg("filter", v); render();
+  });
+  document.getElementById("mode").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; mode = v; save(MODEKEY, v); setSeg("mode", v); render();
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    if (confirm("보유 체크를 모두 지울까요?")) { have = {}; save(KEY, have); render(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>

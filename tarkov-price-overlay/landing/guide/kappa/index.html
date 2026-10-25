@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>타르코프 카파템 정리 — 컬렉터(수집가) 제출 아이템 전체 목록 | 탈콥 가이드</title>
+<meta name="description" content="타르코프 카파(Kappa) 컨테이너 퀘스트 '수집가(Collector)'에 제출해야 하는 아이템 전체 목록. 인레이드 여부·시세·보유 체크로 진행률을 관리하세요. 최신 패치 데이터 자동 반영." />
+<link rel="canonical" href="https://tarkov.aquapado.com/guide/kappa/" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="stylesheet" href="/guide/guide.css" />
+</head>
+<body>
+<div class="top"><div class="wrap">
+  <a class="brand" href="/guide/">탈콥 가이드</a>
+  <nav><a class="on" href="/guide/kappa/">카파템</a><a href="/guide/keys/">열쇠</a><a href="/guide/quests/">퀘스트 필요템</a><a href="/">시세 오버레이</a></nav>
+</div></div>
+<main class="wrap">
+  <h1>카파템 정리 <span class="muted" id="count"></span></h1>
+  <p class="sub">퀘스트 '수집가(Collector)'에 제출하는 아이템 전체 · 데이터 기준 2026-10-25 (json.tarkov.dev)</p>
+
+  <div class="box" id="req"></div>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="아이템 이름 검색 (한글·영문)" aria-label="검색" />
+    <div class="seg" id="filter"><button data-v="all" class="on">전체</button><button data-v="todo">미보유</button><button data-v="done">보유</button></div>
+    <div class="seg" id="mode"><button data-v="pvp" class="on">PVP 시세</button><button data-v="pve">PVE 시세</button></div>
+  </div>
+  <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div><button class="seg" id="reset" style="padding:6px 10px;background:var(--panel);color:var(--muted);cursor:pointer;font:inherit;font-size:12px">체크 초기화</button></div>
+
+  <div class="grid" id="grid" style="margin-top:14px"></div>
+
+  <div class="cta"><span><b>F2 한 번</b>으로 게임 안에서 이 아이템이 카파·퀘스트에 필요한지, 시세가 얼마인지 바로 확인</span><a class="btn" href="/">무료 시세 오버레이 받기</a></div>
+</main>
+<footer><div class="wrap">데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터 · 체크 상태는 이 브라우저에만 저장됩니다 · <a href="/guide/">가이드 홈</a></div></footer>
+<script id="data" type="application/json">{"items":[{"id":"5bc9b355d4351e6d1509862a","n":"#FireKlean 총기 윤활유","en":"#FireKlean gun lube","s":"#FireKlean","img":"https://assets.tarkov.dev/5bc9b355d4351e6d1509862a-grid-image.webp","w":1,"h":1,"pvp":20576,"pve":23499,"wiki":"https://escapefromtarkov.fandom.com/wiki/FireKlean_gun_lube","noflea":false,"tr":["테라피스트",18578],"c":1,"fir":true},{"id":"5bc9be8fd4351e00334cae6e","n":"42 시그니처 블렌드 잉글리시 티","en":"42 Signature Blend English Tea","s":"42","img":"https://assets.tarkov.dev/5bc9be8fd4351e00334cae6e-grid-image.webp","w":1,"h":1,"pvp":22175,"pve":22129,"wiki":"https://escapefromtarkov.fandom.com/wiki/42_Signature_Blend_English_Tea","noflea":false,"tr":["테라피스트",14154],"c":1,"fir":true},{"id":"5bc9c1e2d4351e00367fbcf0","n":"Antique axe 골동품 도끼","en":"Antique axe","s":"도끼","img":"https://assets.tarkov.dev/5bc9c1e2d4351e00367fbcf0-grid-image.webp","w":1,"h":2,"pvp":48678,"pve":47169,"wiki":"https://escapefromtarkov.fandom.com/wiki/Antique_axe","noflea":false,"tr":["예거",45408],"c":1,"fir":true},{"id":"62a091170b9d3c46de5b6cf2","n":"Axel 앵무새 피규어","en":"Axel parrot figurine","s":"Axel","img":"https://assets.tarkov.dev/62a091170b9d3c46de5b6cf2-grid-image.webp","w":1,"h":2,"pvp":30433,"pve":28802,"wiki":"https://escapefromtarkov.fandom.com/wiki/Axel_parrot_figurine","noflea":false,"tr":["테라피스트",26010],"c":1,"fir":true},{"id":"62a08f4c4f842e1bd12d9d62","n":"BEAR Buddy 인형","en":"BEAR Buddy plush toy","s":"BEAR Buddy","img":"https://assets.tarkov.dev/62a08f4c4f842e1bd12d9d62-grid-image.webp","w":2,"h":2,"pvp":43741,"pve":43593,"wiki":"https://escapefromtarkov.fandom.com/wiki/BEAR_Buddy_plush_toy","noflea":false,"tr":["테라피스트",44217],"c":1,"fir":true},{"id":"62a09dd4621468534a797ac7","n":"Baddie의 붉은 수염","en":"Baddie's red beard","s":"Baddie","img":"https://assets.tarkov.dev/62a09dd4621468534a797ac7-grid-image.webp","w":1,"h":2,"pvp":25068,"pve":22329,"wiki":"https://escapefromtarkov.fandom.com/wiki/Baddie%27s_red_beard","noflea":false,"tr":["래그맨",17500],"c":1,"fir":true},{"id":"62a09e73af34e73a266d932a","n":"BakeEzy 요리책","en":"BakeEzy cook book","s":"BakeEzy","img":"https://assets.tarkov.dev/62a09e73af34e73a266d932a-grid-image.webp","w":1,"h":2,"pvp":40782,"pve":36378,"wiki":"https://escapefromtarkov.fandom.com/wiki/BakeEzy_cook_book","noflea":false,"tr":["테라피스트",29580],"c":1,"fir":true},{"id":"62a09e974f842e1bd12da3f0","n":"Cyborg Killer 사이보그 킬러 영화가 든 비디오카세트","en":"Video cassette with the Cyborg Killer movie","s":"VHS","img":"https://assets.tarkov.dev/62a09e974f842e1bd12da3f0-grid-image.webp","w":2,"h":1,"pvp":41825,"pve":37184,"wiki":"https://escapefromtarkov.fandom.com/wiki/Video_cassette_with_the_Cyborg_Killer_movie","noflea":false,"tr":["테라피스트",35190],"c":1,"fir":true},{"id":"62a09d79de7ac81993580530","n":"DRD 방탄복","en":"DRD body armor","s":"DRD","img":"https://assets.tarkov.dev/62a09d79de7ac81993580530-grid-image.webp","w":3,"h":3,"pvp":59217,"pve":45304,"wiki":"https://escapefromtarkov.fandom.com/wiki/DRD_body_armor","noflea":false,"tr":["래그맨",27901],"c":1,"fir":true},{"id":"5bc9b9ecd4351e3bac122519","n":"Deadlyslob의 수염 기름","en":"Deadlyslob's beard oil","s":"수염 기름","img":"https://assets.tarkov.dev/5bc9b9ecd4351e3bac122519-grid-image.webp","w":1,"h":1,"pvp":28579,"pve":28574,"wiki":"https://escapefromtarkov.fandom.com/wiki/Deadlyslob%27s_beard_oil","noflea":false,"tr":["테라피스트",28278],"c":1,"fir":true},{"id":"69f9d547b98cc4120608692a","n":"Desmondpilak CD","en":"DesmondPilak CD","s":"Desmond","img":"https://assets.tarkov.dev/69f9d547b98cc4120608692a-grid-image.webp","w":1,"h":1,"pvp":27187,"pve":27090,"wiki":"https://escapefromtarkov.fandom.com/wiki/DesmondPilak_CD","noflea":false,"tr":["테라피스트",27260],"c":1,"fir":true},{"id":"6937f02dfd6488bb27024839","n":"Domontovich 우샨카 모자","en":"Domontovich ushanka hat","s":"Domontovich","img":"https://assets.tarkov.dev/6937f02dfd6488bb27024839-grid-image.webp","w":2,"h":2,"pvp":22172,"pve":27384,"wiki":"https://escapefromtarkov.fandom.com/wiki/Domontovich_ushanka_hat","noflea":false,"tr":["래그맨",13500],"c":1,"fir":true},{"id":"5e54f6af86f7742199090bf3","n":"Dr.Lupo의 커피 원두","en":"Can of Dr. Lupo's coffee beans","s":"Dr.Lupo","img":"https://assets.tarkov.dev/5e54f6af86f7742199090bf3-grid-image.webp","w":1,"h":1,"pvp":27253,"pve":36229,"wiki":"https://escapefromtarkov.fandom.com/wiki/Can_of_Dr._Lupo%27s_coffee_beans","noflea":false,"tr":["테라피스트",26520],"c":1,"fir":true},{"id":"69f9d60b5de6674f08060f2a","n":"Dunduk 플로피 디스크","en":"Dunduk floppy disk","s":"Dunduk","img":"https://assets.tarkov.dev/69f9d60b5de6674f08060f2a-grid-image.webp","w":1,"h":1,"pvp":27429,"pve":28166,"wiki":"https://escapefromtarkov.fandom.com/wiki/Dunduk_floppy_disk","noflea":false,"tr":["피스키퍼",24254],"c":1,"fir":true},{"id":"5bd073a586f7747e6f135799","n":"Fake mustache 가짜 콧수염","en":"Fake mustache","s":"콧수염","img":"https://assets.tarkov.dev/5bd073a586f7747e6f135799-grid-image.webp","w":1,"h":1,"pvp":12951,"pve":11842,"wiki":"https://escapefromtarkov.fandom.com/wiki/Fake_mustache","noflea":false,"tr":["래그맨",11344],"c":1,"fir":true},{"id":"6a3532423ec9d7082a05d430","n":"GigaBeef 고기 통조림","en":"Can of GigaBeef meat","s":"GigaBeef","img":"https://assets.tarkov.dev/6a3532423ec9d7082a05d430-grid-image.webp","w":2,"h":2,"pvp":26319,"pve":35220,"wiki":"https://escapefromtarkov.fandom.com/wiki/Can_of_GigaBeef_meat","noflea":false,"tr":["테라피스트",21029],"c":1,"fir":true},{"id":"62a09d3bcf4a99369e262447","n":"Gingy 열쇠고리","en":"Gingy keychain","s":"Gingy","img":"https://assets.tarkov.dev/62a09d3bcf4a99369e262447-grid-image.webp","w":1,"h":1,"pvp":46804,"pve":45869,"wiki":"https://escapefromtarkov.fandom.com/wiki/Gingy_keychain","noflea":false,"tr":["테라피스트",40800],"c":1,"fir":true},{"id":"62a09e08de7ac81993580532","n":"Glorious E 마스크","en":"Glorious E mask","s":"Glorious E","img":"https://assets.tarkov.dev/62a09e08de7ac81993580532-grid-image.webp","w":2,"h":2,"pvp":23744,"pve":21990,"wiki":"https://escapefromtarkov.fandom.com/wiki/Glorious_E_mask","noflea":false,"tr":["래그맨",23625],"c":1,"fir":true},{"id":"5bc9b720d4351e450201234b","n":"Golden 1GPhone 스마트폰","en":"Golden 1GPhone smartphone","s":"1GPhone","img":"https://assets.tarkov.dev/5bc9b720d4351e450201234b-grid-image.webp","w":1,"h":1,"pvp":26338,"pve":22903,"wiki":"https://escapefromtarkov.fandom.com/wiki/Golden_1GPhone_smartphone","noflea":false,"tr":["테라피스트",22765],"c":1,"fir":true},{"id":"62a09cfe4f842e1bd12da3e4","n":"Golden egg 황금알","en":"Golden egg","s":"Egg","img":"https://assets.tarkov.dev/62a09cfe4f842e1bd12da3e4-grid-image.webp","w":1,"h":1,"pvp":34502,"pve":33255,"wiki":"https://escapefromtarkov.fandom.com/wiki/Golden_egg","noflea":false,"tr":["테라피스트",34680],"c":1,"fir":true},{"id":"66b37f114410565a8f6789e2","n":"Inseq gas pipe wrench","en":"Inseq gas pipe wrench","s":"Inseq","img":"https://assets.tarkov.dev/66b37f114410565a8f6789e2-grid-image.webp","w":1,"h":2,"pvp":25187,"pve":20173,"wiki":"https://escapefromtarkov.fandom.com/wiki/Inseq_gas_pipe_wrench","noflea":false,"tr":["테라피스트",19162],"c":1,"fir":true},{"id":"62a09e410b9d3c46de5b6e78","n":"JohnB \"Liquid DNB\" 안경","en":"JohnB Liquid DNB glasses","s":"JohnB","img":"https://assets.tarkov.dev/62a09e410b9d3c46de5b6e78-grid-image.webp","w":2,"h":1,"pvp":31593,"pve":33227,"wiki":"https://escapefromtarkov.fandom.com/wiki/JohnB_Liquid_DNB_glasses","noflea":false,"tr":["래그맨",6000],"c":1,"fir":true},{"id":"6a4ce086b5644e9f0a08d08a","n":"LM KC-130 비행기 모델","en":"LM KC-130 model aircraft","s":"KC-130","img":"https://assets.tarkov.dev/6a4ce086b5644e9f0a08d08a-grid-image.webp","w":2,"h":2,"pvp":46283,"pve":45887,"wiki":"https://escapefromtarkov.fandom.com/wiki/LM_KC-130_model_aircraft","noflea":false,"tr":["테라피스트",46188],"c":1,"fir":true},{"id":"60b0f561c4449e4cb624c1d7","n":"LVNDMARK의 쥐약","en":"LVNDMARK's rat poison","s":"쥐약","img":"https://assets.tarkov.dev/60b0f561c4449e4cb624c1d7-grid-image.webp","w":1,"h":2,"pvp":26108,"pve":25370,"wiki":"https://escapefromtarkov.fandom.com/wiki/LVNDMARK%27s_rat_poison","noflea":false,"tr":["테라피스트",25954],"c":1,"fir":true},{"id":"60b0f7057897d47c5b04ab94","n":"Loot Lord 인형","en":"Loot Lord plushie","s":"Loot Lord","img":"https://assets.tarkov.dev/60b0f7057897d47c5b04ab94-grid-image.webp","w":2,"h":2,"pvp":45259,"pve":43279,"wiki":"https://escapefromtarkov.fandom.com/wiki/Loot_Lord_plushie","noflea":false,"tr":["테라피스트",42344],"c":1,"fir":true},{"id":"6937edb912d456a817083e82","n":"Mazoni golden dumbbell","en":"Mazoni golden dumbbell","s":"Mazoni","img":"https://assets.tarkov.dev/6937edb912d456a817083e82-grid-image.webp","w":2,"h":2,"pvp":66254,"pve":51348,"wiki":"https://escapefromtarkov.fandom.com/wiki/Mazoni_golden_dumbbell","noflea":false,"tr":["테라피스트",46155],"c":1,"fir":true},{"id":"62a09ec84f842e1bd12da3f2","n":"Missam 밋산 지게차 열쇠","en":"Missam forklift key","s":"Danex","img":"https://assets.tarkov.dev/62a09ec84f842e1bd12da3f2-grid-image.webp","w":1,"h":1,"pvp":18459,"pve":15255,"wiki":"https://escapefromtarkov.fandom.com/wiki/Missam_forklift_key","noflea":false,"tr":["테라피스트",15300],"uses":40,"c":1,"fir":true},{"id":"69398e94ca94fd2877039504","n":"Nut Sack balaclava","en":"Nut Sack balaclava","s":"Nut Sack","img":"https://assets.tarkov.dev/69398e94ca94fd2877039504-grid-image.webp","w":1,"h":1,"pvp":22814,"pve":22568,"wiki":"https://escapefromtarkov.fandom.com/wiki/Nut_Sack_balaclava","noflea":false,"tr":["래그맨",22222],"c":1,"fir":true},{"id":"5e54f79686f7744022011103","n":"Pestily 역병 마스크","en":"Pestily plague mask","s":"역병 마스크","img":"https://assets.tarkov.dev/5e54f79686f7744022011103-grid-image.webp","w":2,"h":2,"pvp":48210,"pve":49131,"wiki":"https://escapefromtarkov.fandom.com/wiki/Pestily_plague_mask","noflea":false,"tr":["래그맨",47450],"c":1,"fir":true},{"id":"60b0f93284c20f0feb453da7","n":"RatCola 탄산음료","en":"Can of RatCola soda","s":"RatCola","img":"https://assets.tarkov.dev/60b0f93284c20f0feb453da7-grid-image.webp","w":1,"h":1,"pvp":32497,"pve":42728,"wiki":"https://escapefromtarkov.fandom.com/wiki/Can_of_RatCola_soda","noflea":false,"tr":["테라피스트",12229],"c":1,"fir":true},{"id":"5e54f62086f774219b0f1937","n":"Raven figurine 까마귀 동상","en":"Raven figurine","s":"까마귀","img":"https://assets.tarkov.dev/5e54f62086f774219b0f1937-grid-image.webp","w":1,"h":2,"pvp":26843,"pve":23690,"wiki":"https://escapefromtarkov.fandom.com/wiki/Raven_figurine","noflea":false,"tr":["테라피스트",24480],"c":1,"fir":true},{"id":"69f9d319c906cd16da03b374","n":"SheefGG 저금통","en":"SheefGG piggy bank","s":"SheefGG","img":"https://assets.tarkov.dev/69f9d319c906cd16da03b374-grid-image.webp","w":2,"h":2,"pvp":41814,"pve":51445,"wiki":"https://escapefromtarkov.fandom.com/wiki/SheefGG_piggy_bank","noflea":false,"tr":["테라피스트",36322],"c":1,"fir":true},{"id":"5e54f76986f7740366043752","n":"Shroud 하프 마스크","en":"Shroud half-mask","s":"Shroud","img":"https://assets.tarkov.dev/5e54f76986f7740366043752-grid-image.webp","w":1,"h":1,"pvp":21811,"pve":20979,"wiki":"https://escapefromtarkov.fandom.com/wiki/Shroud_half-mask","noflea":false,"tr":["래그맨",21000],"c":1,"fir":true},{"id":"5bc9bdb8d4351e003562b8a1","n":"Silver Badge 은 배지","en":"Silver Badge","s":"배지","img":"https://assets.tarkov.dev/5bc9bdb8d4351e003562b8a1-grid-image.webp","w":1,"h":1,"pvp":54322,"pve":283657,"wiki":"https://escapefromtarkov.fandom.com/wiki/Silver_Badge","noflea":false,"tr":["테라피스트",30747],"c":1,"fir":true},{"id":"5fd8d28367cb5e077335170f","n":"Smoke 발라클라바","en":"Smoke balaclava","s":"Smoke","img":"https://assets.tarkov.dev/5fd8d28367cb5e077335170f-grid-image.webp","w":1,"h":1,"pvp":53383,"pve":70654,"wiki":"https://escapefromtarkov.fandom.com/wiki/Smoke_balaclava","noflea":false,"tr":["래그맨",22150],"c":1,"fir":true},{"id":"66b37ea4c5d72b0277488439","n":"Tamatthi kunai knife replica","en":"Tamatthi kunai knife replica","s":"Tamatthi","img":"https://assets.tarkov.dev/66b37ea4c5d72b0277488439-grid-image.webp","w":1,"h":2,"pvp":44368,"pve":44389,"wiki":"https://escapefromtarkov.fandom.com/wiki/Tamatthi_kunai_knife_replica","noflea":false,"tr":["테라피스트",43677],"c":1,"fir":true},{"id":"6937ecf8628ee476240c07cb","n":"Tigzresq 부목","en":"Tigzresq splint","s":"Tigzresq","img":"https://assets.tarkov.dev/6937ecf8628ee476240c07cb-grid-image.webp","w":1,"h":1,"pvp":36514,"pve":154812,"wiki":"https://escapefromtarkov.fandom.com/wiki/Tigzresq_splint","noflea":false,"tr":["테라피스트",5478],"uses":7,"c":1,"fir":true},{"id":"5f745ee30acaeb0d490d8c5b","n":"Veritas 기타 피크","en":"Veritas guitar pick","s":"Veritas","img":"https://assets.tarkov.dev/5f745ee30acaeb0d490d8c5b-grid-image.webp","w":1,"h":1,"pvp":33312,"pve":28372,"wiki":"https://escapefromtarkov.fandom.com/wiki/Veritas_guitar_pick","noflea":false,"tr":["테라피스트",28050],"c":1,"fir":true},{"id":"66b37eb4acff495a29492407","n":"Viibiin sneaker","en":"Viibiin sneaker","s":"Viibiin","img":"https://assets.tarkov.dev/66b37eb4acff495a29492407-grid-image.webp","w":2,"h":1,"pvp":55325,"pve":47701,"wiki":"https://escapefromtarkov.fandom.com/wiki/Viibiin_sneaker","noflea":false,"tr":["테라피스트",28939],"c":1,"fir":true},{"id":"60b0f6c058e0b0481a09ad11","n":"WZ 지갑","en":"WZ Wallet","s":"WZ","img":"https://assets.tarkov.dev/60b0f6c058e0b0481a09ad11-grid-image.webp","w":1,"h":1,"pvp":25596,"pve":40905,"wiki":"https://escapefromtarkov.fandom.com/wiki/WZ_Wallet","noflea":false,"tr":["테라피스트",20676],"c":1,"fir":true},{"id":"6a3557f841667bc4bb00fea4","n":"YMXC 물병","en":"Bottle of YMXC water","s":"YMXC","img":"https://assets.tarkov.dev/6a3557f841667bc4bb00fea4-grid-image.webp","w":1,"h":2,"pvp":46736,"pve":94905,"wiki":"https://escapefromtarkov.fandom.com/wiki/Bottle_of_YMXC_water","noflea":false,"tr":["테라피스트",33777],"c":1,"fir":true},{"id":"62a09cb7a04c0c5c6e0a84f8","n":"기자 출입증 (NoiceGuy에게 발급됨)","en":"Press pass (issued for NoiceGuy)","s":"출입증","img":"https://assets.tarkov.dev/62a09cb7a04c0c5c6e0a84f8-grid-image.webp","w":1,"h":2,"pvp":25545,"pve":24925,"wiki":"https://escapefromtarkov.fandom.com/wiki/Press_pass_(issued_for_NoiceGuy)","noflea":false,"tr":["테라피스트",25500],"c":1,"fir":true},{"id":"5bc9c049d4351e44f824d360","n":"낡은 골동품 서적","en":"Battered antique book","s":"책","img":"https://assets.tarkov.dev/5bc9c049d4351e44f824d360-grid-image.webp","w":1,"h":2,"pvp":32740,"pve":32273,"wiki":"https://escapefromtarkov.fandom.com/wiki/Battered_antique_book","noflea":false,"tr":["테라피스트",32144],"c":1,"fir":true},{"id":"6a35322b81d315afe1018ef3","n":"프랑스 베이커리 바게트 (French bakery baguette)","en":"French bakery baguette","s":"Coсaoo_","img":"https://assets.tarkov.dev/6a35322b81d315afe1018ef3-grid-image.webp","w":3,"h":1,"pvp":38881,"pve":38226,"wiki":"https://escapefromtarkov.fandom.com/wiki/French_bakery_baguette","noflea":false,"tr":["테라피스트",38424],"c":1,"fir":true}],"req":{"level":42,"tasks":["천국에서 태어난 저격수","솜씨 좋은 바느질 - 파트 2","행복배달부 팻아저씨 - 파트 2","화학 - 파트 3","타르코프의 저격수 - 파트 4"],"traders":["테라피스트 4","프라퍼 4","피스키퍼 4","메카닉 4","예거 4","스키어 4","래그맨 4"],"trader":"펜스","wiki":"https://escapefromtarkov.fandom.com/wiki/Collector"}}</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var KEY = "guide.kappa", MODEKEY = "guide.mode";
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function won(n) { return n == null ? null : Math.round(n).toLocaleString("ko-KR") + " ₽"; }
+  var have = load(KEY, {});
+  var mode = load(MODEKEY, "pvp");
+  var filter = "all";
+
+  var r = D.req;
+  document.getElementById("req").innerHTML =
+    "<h2>컬렉터 해금 조건</h2>" +
+    "<div>레벨 <b>" + esc(r.level) + "</b> 이상 · 수령 상인 <b>" + esc(r.trader) + "</b>" +
+    (r.wiki ? " · <a href=\"" + esc(r.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
+    (r.tasks.length ? "<div class=\"small\" style=\"margin-top:4px\">선행 퀘스트: " + r.tasks.map(esc).join(" · ") + "</div>" : "") +
+    (r.traders.length ? "<div class=\"small muted\" style=\"margin-top:2px\">상인 우호도: " + r.traders.map(esc).join(" · ") + "</div>" : "") +
+    "<div class=\"small muted\" style=\"margin-top:6px\">대부분 <span class=\"badge b-fir\">인레이드</span> 필수 — 레이드에서 직접 찾은 상태로 보관했다가 한 번에 제출합니다.</div>";
+
+  function setSeg(id, v) {
+    document.querySelectorAll("#" + id + " button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
+  }
+  setSeg("mode", mode);
+
+  function render() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var html = "", shown = 0;
+    D.items.forEach(function (it) {
+      var done = !!have[it.id];
+      if (filter === "todo" && done) return;
+      if (filter === "done" && !done) return;
+      if (q && (it.n + " " + it.en + " " + it.s).toLowerCase().indexOf(q) < 0) return;
+      shown++;
+      var p = mode === "pve" ? it.pve : it.pvp;
+      var price = it.noflea || p == null ? "<span class=\"small muted\">플리 거래 불가</span>" : "<span class=\"price\">플리 " + won(p) + "</span>";
+      var trader = it.tr ? "<span class=\"small muted\">상인 " + esc(it.tr[0]) + " " + won(it.tr[1]) + "</span>" : "";
+      html += "<label class=\"card" + (done ? " done" : "") + "\" data-id=\"" + esc(it.id) + "\">" +
+        "<img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" +
+        "<div><div class=\"nm\">" + esc(it.n) + (it.c > 1 ? " ×" + it.c : "") + "</div>" +
+        "<div class=\"en\">" + esc(it.en) + "</div>" +
+        "<div class=\"meta\">" + (it.fir ? "<span class=\"badge b-fir\">인레이드</span>" : "<span class=\"badge b-any\">일반</span>") +
+        price + "</div><div class=\"meta\">" + trader +
+        (it.wiki ? " <a class=\"small\" href=\"" + esc(it.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div></div>" +
+        "<input type=\"checkbox\" aria-label=\"보유\"" + (done ? " checked" : "") + " /></label>";
+    });
+    document.getElementById("grid").innerHTML = html || "<div class=\"empty\">조건에 맞는 아이템이 없습니다</div>";
+    var n = D.items.length, h = D.items.filter(function (it) { return have[it.id]; }).length;
+    document.getElementById("count").textContent = "(" + n + "개)";
+    document.getElementById("prog").textContent = "보유 " + h + " / " + n;
+    document.getElementById("bar").style.width = (n ? h / n * 100 : 0) + "%";
+  }
+  document.getElementById("grid").addEventListener("change", function (e) {
+    var card = e.target.closest(".card"); if (!card) return;
+    var id = card.getAttribute("data-id");
+    if (e.target.checked) have[id] = 1; else delete have[id];
+    save(KEY, have); render();
+  });
+  document.getElementById("q").addEventListener("input", render);
+  document.getElementById("filter").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; filter = v; setSeg("filter", v); render();
+  });
+  document.getElementById("mode").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; mode = v; save(MODEKEY, v); setSeg("mode", v); render();
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    if (confirm("보유 체크를 모두 지울까요?")) { have = {}; save(KEY, have); render(); }
+  });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>타르코프 열쇠 정리 — 맵별 열쇠·카드키 전체 (퀘스트 필요 키 표시) | 탈콥 가이드</title>
+<meta name="description" content="타르코프 맵별 열쇠·키카드 전체 정리. 세관·해안선·리저브·타르코프 시내·쇄빙선·터미널·미궁까지 최신 패치 반영. 퀘스트에 필요한 키, 사용 횟수, 시세, 입장에 필요한 키를 한눈에." />
+<link rel="canonical" href="https://tarkov.aquapado.com/guide/keys/" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="stylesheet" href="/guide/guide.css" />
+<style>
+.maps{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.maps button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+.maps button.on{background:var(--gold);border-color:var(--gold);color:#15140f;font-weight:700}
+.mapsec{margin:18px 0}
+.mapsec h2{font-size:18px;margin:0 0 8px;display:flex;align-items:baseline;gap:8px}
+.access{font-size:13px;margin:0 0 8px}
+.krow{display:flex;gap:10px;align-items:center;padding:8px 10px;border-top:1px solid var(--line2);cursor:pointer}
+.krow:first-child{border-top:0}
+.krow:hover{background:#ffffff08}
+.krow.done{opacity:.45}
+.krow .nm{font-weight:700;font-size:14px}
+.krow .en{color:var(--muted);font-size:11.5px}
+.krow .right{margin-left:auto;text-align:right;flex:none}
+.krow input{width:16px;height:16px;accent-color:var(--gold);flex:none}
+.qlist{font-size:12px;color:var(--green);margin-top:2px}
+@media (max-width:560px){.krow{flex-wrap:wrap}.krow .right{margin-left:58px;text-align:left}}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap">
+  <a class="brand" href="/guide/">탈콥 가이드</a>
+  <nav><a href="/guide/kappa/">카파템</a><a class="on" href="/guide/keys/">열쇠</a><a href="/guide/quests/">퀘스트 필요템</a><a href="/">시세 오버레이</a></nav>
+</div></div>
+<main class="wrap">
+  <h1>맵별 열쇠 정리</h1>
+  <p class="sub">각 맵의 실제 자물쇠 데이터 기준 · 쇄빙선·터미널·미궁 포함 · 데이터 기준 __STAMP__</p>
+  <div class="maps" id="maps"></div>
+  <div class="controls">
+    <input type="search" id="q" placeholder="열쇠 이름 검색 (예: 기숙사, 206, Marked)" aria-label="검색" />
+    <label class="chk"><input type="checkbox" id="onlyQuest" /> 퀘스트에 필요한 키만</label>
+    <label class="chk"><input type="checkbox" id="hideOwned" /> 보유한 키 숨기기</label>
+    <select id="sort" aria-label="정렬"><option value="quest">퀘스트 필요 먼저</option><option value="price">시세 높은 순</option><option value="name">이름순</option><option value="locks">여는 곳 많은 순</option></select>
+    <div class="seg" id="mode"><button data-v="pvp" class="on">PVP 시세</button><button data-v="pve">PVE 시세</button></div>
+  </div>
+  <div id="list"></div>
+  <div class="cta"><span>레이드에서 주운 열쇠, <b>F2 한 번</b>이면 시세와 필요한 퀘스트가 바로 뜹니다</span><a class="btn" href="/">무료 시세 오버레이 받기</a></div>
+</main>
+<footer><div class="wrap">데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터(맵 자물쇠·퀘스트 필요 키) · 키의 루팅 가치는 시세로 대신 표시 · 보유 체크는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a></div></footer>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var I = D.items;
+  var KEY = "guide.keys", MODEKEY = "guide.mode";
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function won(n) { return n == null ? null : Math.round(n).toLocaleString("ko-KR") + " ₽"; }
+  var have = load(KEY, {}), mode = load(MODEKEY, "pvp");
+  var cur = (location.hash || "").replace("#", "") || "all";
+
+  var mapsEl = document.getElementById("maps");
+  var btns = [{ id: "all", n: "전체" }].concat(D.maps.map(function (m) { return { id: m.id, n: m.n }; }));
+  mapsEl.innerHTML = btns.map(function (b) { return "<button data-v=\"" + esc(b.id) + "\">" + esc(b.n) + "</button>"; }).join("");
+  function setSeg(id, v) { document.querySelectorAll("#" + id + " button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); }); }
+  setSeg("maps", cur); setSeg("mode", mode);
+
+  function price(it) { var p = mode === "pve" ? it.pve : it.pvp; return p == null ? null : p; }
+  function row(k) {
+    var it = I[k.id]; if (!it) return "";
+    var done = !!have[k.id];
+    var p = price(it);
+    var badges = (k.q.length ? "<span class=\"badge b-quest\">퀘스트 " + k.q.length + "</span> " : "") +
+      (k.power ? "<span class=\"badge b-power\">전원 필요</span> " : "") +
+      (k.lt.indexOf("container") >= 0 ? "<span class=\"badge b-any\">보관함</span> " : "") +
+      (k.lt.indexOf("car") >= 0 ? "<span class=\"badge b-any\">차량</span> " : "");
+    return "<label class=\"krow" + (done ? " done" : "") + "\" data-id=\"" + esc(k.id) + "\">" +
+      "<input type=\"checkbox\" aria-label=\"보유\"" + (done ? " checked" : "") + " />" +
+      "<img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" +
+      "<div><div class=\"nm\">" + esc(it.n) + "</div><div class=\"en\">" + esc(it.en) + "</div>" +
+      "<div style=\"margin-top:3px\">" + badges + "<span class=\"small muted\">여는 곳 " + k.locks + "곳" + (it.uses ? " · 사용 " + it.uses + "회" : "") + "</span></div>" +
+      (k.q.length ? "<div class=\"qlist\">" + k.q.map(esc).join(" · ") + "</div>" : "") + "</div>" +
+      "<div class=\"right\">" + (p != null ? "<div class=\"price\">플리 " + won(p) + "</div>" : "<div class=\"small muted\">플리 거래 불가</div>") +
+      (it.tr ? "<div class=\"small muted\">상인 " + won(it.tr[1]) + "</div>" : "") +
+      (it.wiki ? "<a class=\"small\" href=\"" + esc(it.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div></label>";
+  }
+  function sortKeys(keys) {
+    var s = document.getElementById("sort").value;
+    return keys.slice().sort(function (a, b) {
+      var ia = I[a.id] || {}, ib = I[b.id] || {};
+      if (s === "quest" && (b.q.length > 0) !== (a.q.length > 0)) return (b.q.length > 0) - (a.q.length > 0);
+      if (s === "locks" && b.locks !== a.locks) return b.locks - a.locks;
+      if (s === "name") return String(ia.n).localeCompare(String(ib.n), "ko");
+      return (price(ib) || 0) - (price(ia) || 0);
+    });
+  }
+  function render() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var onlyQuest = document.getElementById("onlyQuest").checked;
+    var hideOwned = document.getElementById("hideOwned").checked;
+    var html = "";
+    D.maps.forEach(function (m) {
+      if (cur !== "all" && cur !== m.id) return;
+      var keys = m.keys.filter(function (k) {
+        var it = I[k.id]; if (!it) return false;
+        if (onlyQuest && !k.q.length) return false;
+        if (hideOwned && have[k.id]) return false;
+        if (q && (it.n + " " + it.en + " " + it.s).toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      if (!keys.length && !m.access.length) return;
+      var owned = m.keys.filter(function (k) { return have[k.id]; }).length;
+      html += "<section class=\"mapsec\"><h2>" + esc(m.n) + " <span class=\"small muted\">열쇠 " + m.keys.length + "개 · 보유 " + owned + "</span></h2>";
+      if (m.access.length) {
+        html += "<p class=\"access\"><span class=\"badge b-fir\">입장 필요</span> " + m.access.map(function (a) { return esc((I[a] || {}).n || a); }).join(" / ") + "</p>";
+      }
+      html += "<div class=\"box\" style=\"padding:0\">" + (keys.length ? sortKeys(keys).map(row).join("") : "<div class=\"empty\">조건에 맞는 열쇠가 없습니다</div>") + "</div></section>";
+    });
+    document.getElementById("list").innerHTML = html || "<div class=\"empty\">조건에 맞는 열쇠가 없습니다</div>";
+  }
+  document.getElementById("list").addEventListener("change", function (e) {
+    var r = e.target.closest(".krow"); if (!r) return;
+    var id = r.getAttribute("data-id");
+    if (e.target.checked) have[id] = 1; else delete have[id];
+    save(KEY, have); render();
+  });
+  mapsEl.addEventListener("click", function (e) { var v = e.target.getAttribute("data-v"); if (!v) return; cur = v; history.replaceState(null, "", v === "all" ? location.pathname : "#" + v); setSeg("maps", v); render(); });
+  ["q", "onlyQuest", "hideOwned", "sort"].forEach(function (id) { document.getElementById(id).addEventListener(id === "q" ? "input" : "change", render); });
+  document.getElementById("mode").addEventListener("click", function (e) { var v = e.target.getAttribute("data-v"); if (!v) return; mode = v; save(MODEKEY, v); setSeg("mode", v); render(); });
+  render();
+})();
+</script>
+</body>
+</html>

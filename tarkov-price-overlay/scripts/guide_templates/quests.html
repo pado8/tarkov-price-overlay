@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>타르코프 퀘스트 필요템 정리 — 인레이드(FiR) 아이템 총합·퀘스트별 제출 목록 | 탈콥 가이드</title>
+<meta name="description" content="타르코프 전체 퀘스트의 제출 아이템을 상인·퀘스트별로 정리. 인레이드(Found in Raid) 필수 아이템 총 개수, 카파 필수 퀘스트, 필요한 열쇠까지. 완료 체크하면 남은 필요템이 자동 계산됩니다." />
+<link rel="canonical" href="https://tarkov.aquapado.com/guide/quests/" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="stylesheet" href="/guide/guide.css" />
+<style>
+.tabs{display:flex;gap:6px;margin:12px 0}
+.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--gold);border-color:var(--gold);color:#15140f;font-weight:700}
+.tr-h{font-size:16px;margin:18px 0 6px;color:var(--gold)}
+.qrow{border-top:1px solid var(--line2);padding:9px 10px;display:flex;gap:10px;align-items:flex-start}
+.qrow:first-child{border-top:0}
+.qrow.done{opacity:.45}
+.qrow.done .qn{text-decoration:line-through}
+.qrow input{width:16px;height:16px;accent-color:var(--gold);margin-top:3px;flex:none}
+.qn{font-weight:700;font-size:14.5px}
+.qmeta{font-size:12.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:2px 7px 2px 3px;font-size:12.5px}
+.chip img{width:24px;height:24px;object-fit:contain}
+.chip.fir{border-color:#6b4d1c}
+.chip .cnt{font-family:Consolas,monospace;color:var(--gold);font-weight:700}
+.tot td,.tot th{padding:7px 8px;border-top:1px solid var(--line2);text-align:left;font-size:13.5px;vertical-align:middle}
+.tot th{color:var(--muted);font-weight:600;font-size:12.5px;border-top:0;white-space:nowrap}
+.tot td.n{font-family:Consolas,monospace;text-align:right}
+.tot{width:100%;border-collapse:collapse}
+.tbl{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap">
+  <a class="brand" href="/guide/">탈콥 가이드</a>
+  <nav><a href="/guide/kappa/">카파템</a><a href="/guide/keys/">열쇠</a><a class="on" href="/guide/quests/">퀘스트 필요템</a><a href="/">시세 오버레이</a></nav>
+</div></div>
+<main class="wrap">
+  <h1>퀘스트 필요템 정리</h1>
+  <p class="sub">퀘스트 <span id="nq"></span>개의 제출 아이템 · 인레이드 여부 · 필요 열쇠 · 데이터 기준 __STAMP__</p>
+  <div class="tabs" id="tabs"><button data-v="sum" class="on">필요 아이템 총합</button><button data-v="list">퀘스트별</button></div>
+  <div class="controls">
+    <input type="search" id="q" placeholder="퀘스트·아이템 이름 검색" aria-label="검색" />
+    <select id="trader" aria-label="상인"></select>
+    <div class="seg" id="mode"><button data-v="pvp" class="on">PVP</button><button data-v="pve">PVE</button></div>
+    <label class="chk"><input type="checkbox" id="kappaOnly" /> 카파 필수 퀘스트만</label>
+    <label class="chk"><input type="checkbox" id="firOnly" /> 인레이드만</label>
+    <label class="chk"><input type="checkbox" id="hideDone" checked /> 완료 퀘스트 제외</label>
+  </div>
+  <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div></div>
+  <div id="view" style="margin-top:12px"></div>
+  <div class="cta"><span>레이드 중 <b>F2 한 번</b>이면 "이 아이템이 어느 퀘스트에 몇 개 필요한지"가 바로 뜹니다</span><a class="btn" href="/">무료 시세 오버레이 받기</a></div>
+</main>
+<footer><div class="wrap">데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터 · 제출(handover) 목표만 집계 · 완료 체크는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a></div></footer>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var I = D.items, Q = D.quests;
+  var KEY = "guide.quests", MODEKEY = "guide.mode";
+  function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  var done = load(KEY, {});
+  var tab = "sum";
+  var mode = load(MODEKEY, "pvp");
+  function setMode(v) {
+    mode = v;
+    document.querySelectorAll("#mode button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
+    document.getElementById("nq").textContent = Q.filter(function (x) { return x.modes.indexOf(mode) >= 0; }).length;
+  }
+  setMode(mode);
+  var traders = [];
+  Q.forEach(function (q) { if (traders.indexOf(q.tr) < 0) traders.push(q.tr); });
+  document.getElementById("trader").innerHTML = "<option value=\"\">모든 상인</option>" + traders.map(function (t) { return "<option>" + esc(t) + "</option>"; }).join("");
+
+  function filtered() {
+    var q = document.getElementById("q").value.trim().toLowerCase();
+    var tr = document.getElementById("trader").value;
+    var kappa = document.getElementById("kappaOnly").checked;
+    var hideDone = document.getElementById("hideDone").checked;
+    return Q.filter(function (x) {
+      if (x.modes.indexOf(mode) < 0) return false;
+      if (tr && x.tr !== tr) return false;
+      if (kappa && !x.kappa) return false;
+      if (hideDone && done[x.id] && tab === "sum") return false;
+      if (q) {
+        var hay = (x.n + " " + x.en + " " + x.give.map(function (g) { return g.i.map(function (i) { return (I[i] || {}).n + " " + (I[i] || {}).en; }).join(" "); }).join(" ")).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+  // 대체 가능한 아이템이 3개 이상이면 "첫 아이템 외 N종"으로 줄이고 전체는 툴팁으로
+  function altLabel(ids, key) {
+    var uniq = [];
+    ids.forEach(function (i) { var v = (I[i] || {})[key] || (I[i] || {}).n || i; if (uniq.indexOf(v) < 0) uniq.push(v); });
+    return uniq.length > 2 ? esc(uniq[0]) + " <span class=\"muted\">외 " + (uniq.length - 1) + "종</span>" : uniq.map(esc).join(" 또는 ");
+  }
+  function chip(ids, c, fir) {
+    var names = altLabel(ids, "s");
+    var full = ids.map(function (i) { return (I[i] || {}).n || i; }).join(" 또는 ");
+    var img = (I[ids[0]] || {}).img;
+    return "<span class=\"chip" + (fir ? " fir" : "") + "\" title=\"" + esc(full) + "\">" + (img ? "<img loading=\"lazy\" alt=\"\" src=\"" + esc(img) + "\" />" : "") +
+      names + " <span class=\"cnt\">×" + c + "</span>" + (fir ? " <span class=\"badge b-fir\">인레이드</span>" : "") + "</span>";
+  }
+  function renderList(list) {
+    var firOnly = document.getElementById("firOnly").checked;
+    var html = "", lastTr = null;
+    list.forEach(function (x) {
+      var give = x.give.filter(function (g) { return !firOnly || g.fir; });
+      if (firOnly && !give.length) return;
+      if (x.tr !== lastTr) { if (lastTr !== null) html += "</div>"; html += "<h3 class=\"tr-h\">" + esc(x.tr) + "</h3><div class=\"box\" style=\"padding:0\">"; lastTr = x.tr; }
+      var isDone = !!done[x.id];
+      html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
+        "<div class=\"qn\">" + esc(x.n) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
+        (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
+        "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + " · " + esc(x.map || "아무 지역") +
+        (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
+        (give.length ? "<div class=\"chips\">" + give.map(function (g) { return chip(g.i, g.c, g.fir); }).join("") + "</div>" : "") +
+        (x.keys.length ? "<div class=\"chips\">" + x.keys.map(function (k) { return "<span class=\"chip\"><span class=\"badge b-power\">열쇠</span> " + esc((I[k] || {}).n || k) + "</span>"; }).join("") + "</div>" : "") +
+        "</div></label>";
+    });
+    if (lastTr !== null) html += "</div>";
+    return html || "<div class=\"empty\">조건에 맞는 퀘스트가 없습니다</div>";
+  }
+  function renderSum(list) {
+    var firOnly = document.getElementById("firOnly").checked;
+    var agg = {};
+    list.forEach(function (x) {
+      x.give.forEach(function (g) {
+        if (firOnly && !g.fir) return;
+        var k = g.i.join("|");
+        var a = agg[k] || (agg[k] = { ids: g.i, fir: 0, any: 0, quests: 0, kappa: false });
+        if (g.fir) a.fir += g.c; else a.any += g.c;
+        a.quests++; a.kappa = a.kappa || x.kappa;
+      });
+    });
+    var rows = Object.keys(agg).map(function (k) { return agg[k]; });
+    rows.sort(function (a, b) { return (b.fir - a.fir) || (b.any - a.any); });
+    if (!rows.length) return "<div class=\"empty\">조건에 맞는 아이템이 없습니다</div>";
+    var totFir = rows.reduce(function (s, r) { return s + r.fir; }, 0);
+    return "<p class=\"small muted\">아이템 종류 " + rows.length + "개 · 인레이드 필요 총 " + totFir.toLocaleString("ko-KR") + "개</p>" +
+      "<div class=\"box tbl\" style=\"padding:4px 8px\"><table class=\"tot\"><thead><tr><th>아이템</th><th style=\"text-align:right\">인레이드</th><th style=\"text-align:right\">일반</th><th style=\"text-align:right\">퀘스트 수</th></tr></thead><tbody>" +
+      rows.map(function (r) {
+        var it = I[r.ids[0]] || {};
+        var name = altLabel(r.ids, "n");
+        var full = r.ids.map(function (i) { return (I[i] || {}).n || i; }).join(" 또는 ");
+        return "<tr title=\"" + esc(full) + "\"><td><span style=\"display:inline-flex;gap:8px;align-items:center\">" + (it.img ? "<img class=\"icon sm\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" : "") +
+          "<span>" + name + (r.kappa ? " <span class=\"badge b-kappa\">카파</span>" : "") + "</span></span></td>" +
+          "<td class=\"n\">" + (r.fir || "") + "</td><td class=\"n\">" + (r.any || "") + "</td><td class=\"n\">" + r.quests + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+  function render() {
+    var list = filtered();
+    document.getElementById("view").innerHTML = tab === "sum" ? renderSum(list) : renderList(list);
+    var inMode = Q.filter(function (x) { return x.modes.indexOf(mode) >= 0; });
+    var n = inMode.length, d = inMode.filter(function (x) { return done[x.id]; }).length;
+    document.getElementById("prog").textContent = "완료 체크 " + d + " / " + n;
+    document.getElementById("bar").style.width = (n ? d / n * 100 : 0) + "%";
+  }
+  document.getElementById("view").addEventListener("change", function (e) {
+    var r = e.target.closest(".qrow"); if (!r) return;
+    var id = r.getAttribute("data-id");
+    if (e.target.checked) done[id] = 1; else delete done[id];
+    save(KEY, done); render();
+  });
+  document.getElementById("tabs").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; tab = v;
+    document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
+    render();
+  });
+  ["trader", "kappaOnly", "firOnly", "hideDone"].forEach(function (id) { document.getElementById(id).addEventListener("change", render); });
+  document.getElementById("mode").addEventListener("click", function (e) {
+    var v = e.target.getAttribute("data-v"); if (!v) return; save(MODEKEY, v); setMode(v); render();
+  });
+  document.getElementById("q").addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
