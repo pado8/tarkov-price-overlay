@@ -124,7 +124,15 @@ Write-Host "[release] pushing dev..."
 & git push origin dev
 
 Write-Host "[release] merging dev -> master..."
+# 빌드(cargo)가 Cargo.toml 줄끝(CRLF↔LF)만 바꿔 놓아 master 전환이 막히는 일이 반복됐다
+# (v1.2.x 두 번 — 2026-10-25엔 master 머지·push가 통째로 빠짐). 내용은 같고 줄끝만
+# 다를 때만 되돌린다. 내용이 다르면 그대로 두어 아래 checkout이 멈추게 한다.
+& git diff --quiet --ignore-cr-at-eol -- src-tauri/Cargo.toml
+if ($LASTEXITCODE -eq 0) { & git checkout -- src-tauri/Cargo.toml }
 & git checkout master
+if ($LASTEXITCODE -ne 0) {
+    throw "git checkout master failed - working tree changed during build. Fix it, then finish manually: git checkout master; git merge --ff-only dev; git tag -a $tag -m 'Release $tag'; git push origin master --tags"
+}
 & git merge --ff-only dev
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[release] fast-forward failed, doing merge commit"
