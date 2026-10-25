@@ -107,6 +107,19 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
         item { name shortName }
       }
     }
+    craftsUsing {
+      station { id name }
+      level
+      duration
+      requiredItems {
+        count
+        item { id }
+      }
+      rewardItems {
+        count
+        item { name shortName }
+      }
+    }
   }
 }
 """
@@ -245,6 +258,19 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
       level
       duration
       requiredItems {
+        count
+        item { name shortName }
+      }
+    }
+    craftsUsing {
+      station { id name }
+      level
+      duration
+      requiredItems {
+        count
+        item { id }
+      }
+      rewardItems {
         count
         item { name shortName }
       }
@@ -776,6 +802,47 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
             }
         )
 
+    # 이 아이템을 재료로 쓰는 은신처 제작(피드백 #46 B). 필요 개수는
+    # requiredItems 중 이 아이템 id의 count 합. 제작의 소수(정수기 물 필터 0.66 =
+    # 필터 내구도 소모)는 실제 소모량이라 바터와 달리 올리지 않는다.
+    crafts_using: list[dict] = []
+    my_id = item.get("id")
+    for c in item.get("craftsUsing", []) or []:
+        need = 0.0
+        for ri in c.get("requiredItems", []) or []:
+            if (ri.get("item") or {}).get("id") == my_id:
+                try:
+                    need += float(ri.get("count") or 0)
+                except (TypeError, ValueError):
+                    pass
+        rewards = []
+        for rw in c.get("rewardItems", []) or []:
+            inner = rw.get("item") or {}
+            if inner.get("name"):
+                rewards.append(
+                    {
+                        "name": inner["name"],
+                        "short_name": inner.get("shortName"),
+                        "count": rw.get("count") or 1,
+                    }
+                )
+        if not rewards:
+            continue
+        station = c.get("station") or {}
+        crafts_using.append(
+            {
+                "station": station.get("name") or "?",
+                "station_id": station.get("id") or "",
+                "level": c.get("level") or 1,
+                "duration_sec": c.get("duration") or 0,
+                "need_count": (
+                    (int(need) if need == int(need) else round(need, 2))
+                    if need > 0 else None
+                ),
+                "rewards": rewards,
+            }
+        )
+
     # Hideout upgrades that need this item. Pre-sorted by station/level inside
     # _fetch_hideout_index, so list order is stable across calls.
     needed_for_hideout = list(hideout_idx.get(item.get("id") or "", []))
@@ -830,6 +897,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "buy_for": buy_for,
         "used_in_tasks": used_in_tasks,
         "crafts_for": crafts_for,
+        "crafts_using": crafts_using,
         "needed_for_hideout": needed_for_hideout,
         "caliber": caliber_raw,
         "caliber_display": caliber_display,
@@ -1066,6 +1134,7 @@ def _empty_result(matched_from: str | None = None) -> dict:
         "buy_for": [],
         "used_in_tasks": [],
         "crafts_for": [],
+        "crafts_using": [],
         "needed_for_hideout": [],
         "caliber": None,
         "caliber_display": None,

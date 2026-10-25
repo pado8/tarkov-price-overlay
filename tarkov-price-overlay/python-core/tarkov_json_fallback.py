@@ -98,6 +98,7 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
         "barters_for": {},    # item_id -> [GraphQL bartersFor entries]
         "barters_using": {},  # item_id -> [GraphQL bartersUsing entries]
         "crafts_for": {},     # item_id -> [GraphQL craftsFor entries]
+        "crafts_using": {},   # item_id -> [GraphQL craftsUsing entries] (재료 쪽 역색인)
         "tasks_for": {},      # item_id -> [GraphQL usedInTasks entries]
         "hideout_index": {},  # item_id -> [{station, station_id, level, count, fir}]
         "stations": [],       # [{id, name, maxLevel}]
@@ -263,12 +264,33 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
             if not req:
                 continue
             sid = c.get("station")
+            station = {"id": sid or "", "name": station_name.get(sid, "?")}
             out["crafts_for"].setdefault(product, []).append({
-                "station": {"id": sid or "", "name": station_name.get(sid, "?")},
+                "station": station,
                 "level": c.get("level") or 1,
                 "duration": c.get("duration") or 0,
                 "requiredItems": req,
             })
+            # 재료 쪽 역색인(피드백 #46 B, GraphQL craftsUsing과 같은 모양).
+            # 같은 재료가 레시피에 두 줄로 있어도 엔트리는 한 번만 — 개수는
+            # _build_cache_entry가 requiredItems에서 id로 합산한다.
+            prod_ref = item_ref(product, items)
+            if prod_ref:
+                using_entry = {
+                    "station": station,
+                    "level": c.get("level") or 1,
+                    "duration": c.get("duration") or 0,
+                    "requiredItems": [
+                        {"count": ri.get("count") or 1, "item": {"id": ri.get("item")}}
+                        for ri in c.get("requiredItems") or [] if ri.get("item")
+                    ],
+                    "rewardItems": [{
+                        "count": (c.get("productItem") or {}).get("count") or 1,
+                        "item": prod_ref,
+                    }],
+                }
+                for iid in {ri.get("item") for ri in c.get("requiredItems") or [] if ri.get("item")}:
+                    out["crafts_using"].setdefault(iid, []).append(using_entry)
     except Exception as e:
         print(f"[fallback] crafts enrichment skipped ({mode}): {e!r}")
 
@@ -332,7 +354,8 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
     except Exception as e:
         print(f"[fallback] enrichments unavailable ({lang},{mode}): {e!r}")
         enrich = {"barters_for": {}, "barters_using": {}, "crafts_for": {},
-                  "tasks_for": {}, "hideout_index": {}, "stations": []}
+                  "crafts_using": {}, "tasks_for": {}, "hideout_index": {},
+                  "stations": []}
 
     out: list[dict] = []
     for iid, it in items.items():
@@ -404,6 +427,7 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
             "bartersUsing": enrich["barters_using"].get(iid, []),
             "usedInTasks": enrich["tasks_for"].get(iid, []),
             "craftsFor": enrich["crafts_for"].get(iid, []),
+            "craftsUsing": enrich["crafts_using"].get(iid, []),
         })
 
     if not out:

@@ -24,6 +24,8 @@ const ANNOUNCEMENT_ENDPOINT = "https://api.aquapado.com/priceoverlay/announcemen
 const ANNOUNCE_SEEN_KEY = "tarkov.announceSeen";
 // Hideout levels: {[stationId]: currentLevel}. Persisted across sessions.
 const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
+// 카드에서 직접 '달성' 표시한 퀘스트 id — 서버(모드)별 (피드백 #49-②).
+const MANUAL_QUEST_DONE_KEY = "tarkov.manualQuestDone";
 
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
@@ -93,6 +95,13 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // banner instead of going through `update.downloadAndInstall()`, which
 // silently installs a *second* copy at the default NSIS path and leaves
 // the portable folder's exe pinned at the old version.
+// 서비스 상태 페이지(피드백 #49-①) — 헬스 엔드포인트를 사람이 읽는 화면으로.
+const STATUS_PAGE_URL = "https://tarkov.aquapado.com/status/";
+const openStatusPage = (lang: Lang) => {
+  openUrl(`${STATUS_PAGE_URL}?lang=${lang}`).catch((e) => {
+    log(`status: openUrl failed — ${String(e)}`);
+  });
+};
 const RELEASES_PAGE_URL =
   "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest";
 
@@ -531,6 +540,17 @@ type HideoutCraft = {
   items: BarterRequiredItem[];
 };
 
+// 이 아이템을 재료로 쓰는 은신처 제작(피드백 #46 B). need_count는 이 아이템이
+// 몇 개 들어가는지 — 제작 소수(물 필터 0.66 = 내구도 소모)는 실제 값.
+type HideoutCraftUsing = {
+  station: string;
+  station_id: string;
+  level: number;
+  duration_sec: number;
+  need_count?: number | null;
+  rewards: BarterRequiredItem[];
+};
+
 type HideoutNeed = {
   station: string;
   station_id: string;
@@ -589,6 +609,7 @@ type LookupResult = {
   buy_for: BuyOffer[];
   used_in_tasks: TaskRef[];
   crafts_for: HideoutCraft[];
+  crafts_using?: HideoutCraftUsing[];
   needed_for_hideout: HideoutNeed[];
   // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
   // panel and pre-selects the relevant caliber. null for everything else.
@@ -657,11 +678,16 @@ type Region = {
   // only flea / trader / slot price are shown.
   show24hRange: boolean;
   showLastTrade: boolean;
+  // 직전 거래 가격을 플리·상인과 같은 본 가격 스타일로 강조(피드백 #50).
+  // 기본 꺼짐 — 다른 사용자의 카드 모양은 그대로 둔다.
+  highlightLastTrade: boolean;
   showWeight: boolean;
   showBuyFor: boolean;
   showBartersFor: boolean;
   showBartersUsing: boolean;
   showCraftsFor: boolean;
+  // 이 아이템을 재료로 쓰는 제작 패널(피드백 #46 B)
+  showCraftsUsing: boolean;
   showHideoutNeeds: boolean;
   showQuests: boolean;
   // What to do with quests the player has already completed (per the
@@ -703,6 +729,8 @@ const DEFAULT_REGION: Region = {
   autoHide: true,
   show24hRange: true,
   showLastTrade: true,
+  highlightLastTrade: false,
+  showCraftsUsing: true,
   showWeight: true,
   showBuyFor: true,
   showBartersFor: true,
@@ -1166,6 +1194,15 @@ function App() {
     () => {
       try {
         return JSON.parse(localStorage.getItem(HIDEOUT_LEVELS_KEY) ?? "{}");
+      } catch {
+        return {};
+      }
+    }
+  );
+  const [manualQuestDone, setManualQuestDone] = useState<Record<string, string[]>>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(MANUAL_QUEST_DONE_KEY) ?? "{}");
       } catch {
         return {};
       }
@@ -2028,6 +2065,39 @@ function App() {
     localStorage.removeItem(HIDEOUT_LEVELS_KEY);
     setHideoutLevels({});
   };
+  // 피드백 #49-②: 카드의 은신처 줄을 눌러 그 레벨 달성/해제. 설정의 은신처
+  // 레벨과 같은 값을 고치므로 두 화면이 항상 일치한다.
+  const toggleHideoutNeedDone = (stationId: string, level: number, done: boolean) => {
+    if (!stationId) return;
+    updateHideoutLevel(stationId, done ? Math.max(0, level - 1) : level);
+  };
+  // 피드백 #49-②: 퀘스트를 카드에서 직접 '달성' 표시(로그 동기화와 별개, 서버별).
+  // 깰 생각이 없는 퀘스트를 목록에서 정리하는 용도.
+  const toggleManualQuestDone = (mode: "pvp" | "pve" | "season", questId: string) => {
+    setManualQuestDone((prev) => {
+      const cur = new Set(prev[mode] ?? []);
+      if (cur.has(questId)) cur.delete(questId);
+      else cur.add(questId);
+      const next = { ...prev, [mode]: [...cur] };
+      try {
+        localStorage.setItem(MANUAL_QUEST_DONE_KEY, JSON.stringify(next));
+      } catch {
+        // 저장 실패해도 이번 실행 동안은 표시가 유지된다
+      }
+      return next;
+    });
+  };
+  const clearManualQuestDone = (mode?: "pvp" | "pve" | "season") => {
+    setManualQuestDone((prev) => {
+      const next = mode ? { ...prev, [mode]: [] } : {};
+      try {
+        localStorage.setItem(MANUAL_QUEST_DONE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
   const fetchHideoutStations = async (lang: string) => {
     try {
       const res = await fetch(`${PYTHON_API}/hideout/stations?lang=${lang}`);
@@ -2104,7 +2174,11 @@ function App() {
       title: t.questWipeReset,
       kind: "warning",
     });
-    if (yes) await resetQuestState(gameMode, true);
+    if (yes) {
+      await resetQuestState(gameMode, true);
+      // 와이프·프레스티지로 새로 시작하면 카드에서 직접 찍은 달성 표시도 함께 비운다.
+      clearManualQuestDone(gameMode);
+    }
   };
 
   // Pull the quest tracker status on mount. The Python sidecar warms up
@@ -3558,6 +3632,15 @@ function App() {
                     : t.updateCheckNow}
               </button>
             </div>
+            <div className="settings-row" title={t.statusPageHint}>
+              <label>{t.statusPage}</label>
+              <button
+                className="reset-btn"
+                onClick={() => openStatusPage(region.lang)}
+              >
+                {t.statusPageOpen}
+              </button>
+            </div>
             <div className="settings-row" title={t.autoHideHint}>
               <label>{t.autoHideToggle}</label>
               <input
@@ -3680,11 +3763,13 @@ function App() {
               [
                 ["show24hRange", "displayRange24"],
                 ["showLastTrade", "displayLastTrade"],
+                ["highlightLastTrade", "displayHighlightLastTrade"],
                 ["showWeight", "displayWeight"],
                 ["showBuyFor", "displayBuyFor"],
                 ["showBartersFor", "displayBartersFor"],
                 ["showBartersUsing", "displayBartersUsing"],
                 ["showCraftsFor", "displayCraftsFor"],
+                ["showCraftsUsing", "displayCraftsUsing"],
                 ["showHideoutNeeds", "displayHideoutNeeds"],
                 ["showQuests", "displayQuests"],
                 ["showLootTier", "displayLootTier"],
@@ -4206,7 +4291,18 @@ function App() {
             <div className="hint-sub">{t.hintFirstLoad}</div>
           </div>
         )}
-        {!showSettings && status === "error" && <div className="error">⚠ {error}</div>}
+        {!showSettings && status === "error" && (
+          <div className="error">
+            ⚠ {error}{" "}
+            <button
+              className="status-link"
+              onClick={() => openStatusPage(region.lang)}
+              title={t.statusPageHint}
+            >
+              {t.statusPageCheck}
+            </button>
+          </div>
+        )}
         {!showSettings && status === "success" && result && (
           <div className="result">
             <div className="item-row">
@@ -4339,7 +4435,11 @@ function App() {
                       </div>
                     )}
                   {region.showLastTrade && result.flea_last_low != null && (
-                    <div className="price sub-price">
+                    <div
+                      className={
+                        region.highlightLastTrade ? "price" : "price sub-price"
+                      }
+                    >
                       <span className="label">
                         {t.fleaLastLow}
                         {result.flea_last_offer_count != null && (
@@ -4349,7 +4449,13 @@ function App() {
                           </span>
                         )}
                       </span>
-                      <span className="value sub-value">
+                      <span
+                        className={
+                          region.highlightLastTrade
+                            ? "value"
+                            : "value sub-value"
+                        }
+                      >
                         {fmt(result.flea_last_low)}
                       </span>
                     </div>
@@ -4555,6 +4661,73 @@ function App() {
                       );
                     })()
                   }
+                  {region.showCraftsUsing &&
+                    result.crafts_using &&
+                    result.crafts_using.length > 0 && (() => {
+                      // 피드백 #46 B: 이 아이템이 재료로 들어가는 제작.
+                      // 잠금 표시는 위 '은신처 제작' 패널과 같은 규칙.
+                      const hasLevels = Object.keys(hideoutLevels).length > 0;
+                      const craftsUsing = result.crafts_using;
+                      return (
+                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                          <summary>
+                            ⚗️ {t.craftUsing} ({craftsUsing.length})
+                          </summary>
+                          <div className="trader-list">
+                            {craftsUsing.map((c, idx) => {
+                              const locked =
+                                hasLevels &&
+                                !!c.station_id &&
+                                (hideoutLevels[c.station_id] ?? 0) < c.level;
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`barter-row${locked ? " craft-locked" : ""}`}
+                                >
+                                  <div className="barter-trader">
+                                    {c.station}{" "}
+                                    <span className="barter-level">
+                                      Lv{c.level} · {fmtDuration(c.duration_sec)}
+                                    </span>
+                                    {locked && (
+                                      <span
+                                        className="craft-lock-badge"
+                                        title={t.craftLockedHint}
+                                      >
+                                        🔒 Lv{c.level} {t.craftLockedBadge}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="barter-items">
+                                    {c.need_count != null && (
+                                      <span
+                                        className="barter-need"
+                                        title={t.craftUsingNeedHint}
+                                      >
+                                        ×{c.need_count}
+                                      </span>
+                                    )}{" "}
+                                    {t.barterUsingArrow}{" "}
+                                    {c.rewards.map((it, i) => (
+                                      <span key={i} className="barter-item" data-fullname={it.name}>
+                                        {i > 0 && (
+                                          <span className="barter-plus">, </span>
+                                        )}
+                                        {it.short_name ?? it.name}
+                                        <span className="barter-count">
+                                          ×{it.count}
+                                        </span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      );
+                    })()
+                  }
                   {region.showHideoutNeeds &&
                     result.needed_for_hideout &&
                     result.needed_for_hideout.length > 0 && (() => {
@@ -4578,10 +4751,28 @@ function App() {
                               const done =
                                 hasLevels &&
                                 (hideoutLevels[n.station_id] ?? 0) >= n.level;
+                              const togglable = !!n.station_id;
                               return (
                                 <div
                                   key={idx}
-                                  className={`hideout-need-row${done ? " done" : ""}`}
+                                  className={`hideout-need-row${done ? " done" : ""}${togglable ? " toggleable" : ""}`}
+                                  title={
+                                    togglable
+                                      ? done
+                                        ? t.hideoutNeedUndoHint
+                                        : t.hideoutNeedDoneHint
+                                      : undefined
+                                  }
+                                  onClick={
+                                    togglable
+                                      ? () =>
+                                          toggleHideoutNeedDone(
+                                            n.station_id,
+                                            n.level,
+                                            done
+                                          )
+                                      : undefined
+                                  }
                                 >
                                   <span className="hideout-need-station">{n.station}</span>
                                   <span className="hideout-need-level">Lv{n.level}</span>
@@ -4696,23 +4887,36 @@ function App() {
                       // payload renders correctly for either server.
                       // Older backends only send task_status (no by_mode
                       // dict), so we fall through to the original value.
-                      const projected = result.used_in_tasks.map((q) =>
-                        q.task_status_by_mode
+                      // 피드백 #49-②: 카드에서 직접 '달성' 찍은 퀘스트는
+                      // 이 서버 기준 completed로 본다(로그 동기화와 별개).
+                      const manualSet = new Set(
+                        manualQuestDone[questDisplayMode] ?? []
+                      );
+                      const projected = result.used_in_tasks.map((q) => {
+                        const base = q.task_status_by_mode
                           ? {
                               ...q,
                               task_status:
                                 q.task_status_by_mode[questDisplayMode] ?? null,
                             }
-                          : q
-                      );
+                          : q;
+                        const manual =
+                          !!q.id &&
+                          manualSet.has(q.id) &&
+                          base.task_status !== "completed";
+                        return manual
+                          ? { ...base, task_status: "completed" as const, manual }
+                          : { ...base, manual: false };
+                      });
                       // Filter out completed quests entirely if the user
                       // chose "hide" — otherwise we keep them and just
                       // grey them in the list. Started/failed/unknown
-                      // quests are always shown.
+                      // quests are always shown. 직접 찍은 것은 숨기지 않는다
+                      // — 숨기면 다시 눌러 해제할 방법이 없어진다.
                       const visibleQuests =
                         region.completedQuestDisplay === "hide"
                           ? projected.filter(
-                              (q) => q.task_status !== "completed"
+                              (q) => q.task_status !== "completed" || q.manual
                             )
                           : projected;
                       if (visibleQuests.length === 0) return null;
@@ -4754,10 +4958,31 @@ function App() {
                                   : q.task_status === "started"
                                     ? " started"
                                     : "";
+                              // 로그가 완료라고 한 퀘스트는 수동 토글 대상이
+                              // 아니다(진짜 진행도를 덮지 않도록).
+                              const togglable =
+                                !!q.id &&
+                                (q.manual || q.task_status !== "completed");
                               return (
                                 <div
                                   key={q.id ?? idx}
-                                  className={`quest-row${statusClass}`}
+                                  className={`quest-row${statusClass}${togglable ? " toggleable" : ""}`}
+                                  title={
+                                    togglable
+                                      ? q.manual
+                                        ? t.questManualUndoHint
+                                        : t.questManualDoneHint
+                                      : undefined
+                                  }
+                                  onClick={
+                                    togglable
+                                      ? () =>
+                                          toggleManualQuestDone(
+                                            questDisplayMode,
+                                            q.id as string
+                                          )
+                                      : undefined
+                                  }
                                 >
                                   <span className="quest-trader">{q.trader}</span>
                                   <span className="quest-name">{q.name}</span>

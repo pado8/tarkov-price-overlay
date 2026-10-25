@@ -295,6 +295,20 @@ html, body, #root {
   color: var(--danger);
   font-size: var(--card-fs-sm);
 }
+/* 오류 옆 '서비스 상태 확인' 링크 (피드백 #49-①) */
+.error .status-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  color: var(--text-secondary, #aaa);
+  text-decoration: underline;
+  font-size: inherit;
+  cursor: pointer;
+}
+.error .status-link:hover {
+  color: var(--text-primary, #eee);
+}
 
 .item-name {
   font-weight: 500;
@@ -749,6 +763,17 @@ html, body, #root {
 }
 .hideout-need-row.done .hideout-need-station {
   text-decoration: line-through;
+}
+
+/* 카드에서 눌러 달성 표시/해제할 수 있는 줄 (피드백 #49-②) */
+.hideout-need-row.toggleable,
+.quest-row.toggleable {
+  cursor: pointer;
+  border-radius: 3px;
+}
+.hideout-need-row.toggleable:hover,
+.quest-row.toggleable:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* Hideout level collapsible section */

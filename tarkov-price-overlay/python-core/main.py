@@ -189,6 +189,18 @@ class HideoutCraft(BaseModel):
     items: list[BarterRequiredItem] = []
 
 
+class HideoutCraftUsing(BaseModel):
+    """이 아이템을 재료로 쓰는 은신처 제작(피드백 #46 B)."""
+    station: str
+    station_id: str = ""
+    level: int = 1
+    duration_sec: int = 0
+    # 이 제작에 조회한 아이템이 몇 개 필요한지. 제작 소수(물 필터 0.66 = 내구도
+    # 소모)는 실제 값이라 float 그대로.
+    need_count: float | None = None
+    rewards: list[BarterRequiredItem] = []
+
+
 class HideoutNeed(BaseModel):
     station: str
     station_id: str = ""
@@ -237,6 +249,7 @@ class LookupResponse(BaseModel):
     buy_for: list[BuyOffer] = []  # trader cash offers (Flea excluded)
     used_in_tasks: list[TaskRef] = []  # quests that need this item
     crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
+    crafts_using: list[HideoutCraftUsing] = []  # hideout recipes consuming this item
     needed_for_hideout: list[HideoutNeed] = []  # hideout upgrades that need this item
     # Caliber for ammo / weapons. Raw is the tarkov.dev id ("Caliber545x39");
     # display is the human-friendly form ("5.45x39"). Both None for non-
@@ -414,6 +427,24 @@ def _build_response(
                 ],
             )
             for c in price.get("crafts_for", [])
+        ],
+        crafts_using=[
+            HideoutCraftUsing(
+                station=c["station"],
+                station_id=c.get("station_id", ""),
+                level=c.get("level", 1),
+                duration_sec=c.get("duration_sec", 0),
+                need_count=c.get("need_count"),
+                rewards=[
+                    BarterRequiredItem(
+                        name=it["name"],
+                        short_name=it.get("short_name"),
+                        count=it.get("count", 1),
+                    )
+                    for it in c.get("rewards", [])
+                ],
+            )
+            for c in price.get("crafts_using", [])
         ],
         needed_for_hideout=[
             HideoutNeed(

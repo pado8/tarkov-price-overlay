@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>서비스 상태 — 타르코프 시세 오버레이</title>
+<meta name="description" content="타르코프 시세 오버레이의 시세 데이터·자동 업데이트 상태와 자주 겪는 문제 해결법" />
+<meta name="robots" content="noindex, follow" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<style>
+:root{--bg:#13130f;--panel:#1f1f19;--panel2:#26261f;--gold:#c8aa64;--line:#3a352b;--text:#e9e7e0;--muted:#9d988b;
+  --ok:#6cc070;--warn:#e0a84a;--bad:#e06a5a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);line-height:1.6;
+  font-family:"Pretendard","Segoe UI","맑은 고딕","Malgun Gothic",system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px 56px}
+a{color:var(--gold)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header a.home{color:var(--muted);text-decoration:none;font-size:14px}
+h1{font-size:24px;margin:8px 0 4px}
+.lang{display:flex;gap:6px}
+.lang a{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);text-decoration:none}
+.lang a.on{color:var(--gold);border-color:var(--gold)}
+.banner{margin:18px 0;padding:16px 18px;border-radius:12px;background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;font-weight:700;font-size:17px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--muted)}
+.ok .dot{background:var(--ok)} .warn .dot{background:var(--warn)} .bad .dot{background:var(--bad)}
+.banner.ok{border-color:#6cc07055} .banner.warn{border-color:#e0a84a66} .banner.bad{border-color:#e06a5a77}
+.rows{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;gap:12px;align-items:flex-start;padding:13px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:none}
+.row .dot{margin-top:7px}
+.row b{display:block}
+.row span{color:var(--muted);font-size:14px}
+.meta{color:var(--muted);font-size:13px;margin-top:10px}
+.notice{margin-top:18px;padding:14px 16px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:14.5px}
+.notice h2,.faq h2{font-size:15px;margin:0 0 6px;color:var(--gold)}
+.faq{margin-top:22px}
+.faq details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0}
+.faq summary{cursor:pointer;font-weight:600}
+.faq p{margin:8px 0 2px;color:#d6d3ca;font-size:14.5px}
+button.refresh{margin-top:12px;background:none;border:1px solid var(--line);color:var(--text);border-radius:8px;
+  padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
+button.refresh:hover{border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="home" href="/" id="home">← 타르코프 시세 오버레이</a>
+    <nav class="lang" aria-label="language">
+      <a href="?lang=ko" data-l="ko">한국어</a><a href="?lang=en" data-l="en">English</a><a href="?lang=ru" data-l="ru">Русский</a>
+    </nav>
+  </header>
+  <h1 id="title">서비스 상태</h1>
+  <div class="banner" id="banner"><span class="dot"></span><span id="bannerText">확인 중…</span></div>
+  <div class="rows" id="rows"></div>
+  <div class="meta"><span id="checked"></span> <button class="refresh" id="refresh">다시 확인</button></div>
+  <div class="notice" id="notice" hidden><h2 id="noticeTitle">공지</h2><div id="noticeText"></div></div>
+  <section class="faq" id="faq"></section>
+</div>
+<script>
+(function () {
+  var HEALTH = "https://api.aquapado.com/priceoverlay/health";
+  var ANN = "https://api.aquapado.com/priceoverlay/announcement";
+  var qs = new URLSearchParams(location.search);
+  var lang = qs.get("lang") || ((navigator.language || "ko").slice(0, 2));
+  if (["ko", "en", "ru"].indexOf(lang) < 0) lang = "en";
+
+  var S = {
+    ko: {
+      title: "서비스 상태", home: "← 타르코프 시세 오버레이", checking: "확인 중…", refresh: "다시 확인",
+      allOk: "모든 기능이 정상 동작 중입니다", degraded: "일부 기능에 주의가 필요합니다", down: "장애가 발생했습니다",
+      unreachable: "상태 서버에 연결할 수 없습니다", unreachableSub: "인터넷 연결을 확인하거나 잠시 후 다시 확인해 주세요. 계속되면 서비스 전체 장애일 수 있습니다.",
+      price: "시세 데이터", priceOk: "정상", priceFallback: "정상 — 원본 서버(tarkov.dev)가 장애 중이라 대체 데이터로 제공 중입니다(시세·퀘스트·교환 모두 정상)",
+      priceBad: "장애 — 지금은 시세를 가져올 수 없습니다. 잠시 후 다시 시도해 주세요",
+      updater: "자동 업데이트", updOk: "정상", updBad: "업데이트 서버 응답 없음 — 앱은 계속 쓸 수 있습니다",
+      rate: "조회 성공률 (최근 7일, 전체 사용자)", rateSub: "실패의 대부분은 캡처 위치가 어긋났거나 거래 불가 아이템입니다",
+      infra: "통계·피드백 수집", infraOk: "정상", infraWarn: "주의 — 일부 통계가 늦게 반영될 수 있습니다(앱 사용에는 영향 없음)",
+      checked: "마지막 확인", notice: "공지",
+      faq: "자주 겪는 문제",
+      q1: "F2를 눌러도 아무 반응이 없어요",
+      a1: "게임이 관리자 권한으로 실행 중이면 오버레이도 관리자 권한으로 실행해야 단축키가 전달됩니다. 다른 프로그램이 F2를 쓰고 있다면 설정에서 단축키를 바꿔 주세요.",
+      q2: "시세가 게임과 달라요",
+      a2: "설정 → 게임 모드가 지금 하는 서버(PVP / PVE / 시즌)와 같은지 확인해 주세요. 서버마다 플리마켓 시세가 크게 다릅니다.",
+      q3: "\"못 찾음\"만 나와요",
+      a3: "아이템에 마우스를 올려 이름 툴팁이 뜬 상태에서 F2를 눌러야 합니다. 해상도가 QHD·4K·울트라와이드라면 설정에서 캡처 위치를 맞춰 주세요.",
+      q4: "카드가 화면에 안 보여요",
+      a4: "게임이 '전체 화면' 모드이면 오버레이가 위에 그려지지 않습니다. '테두리 없는 창 모드'로 바꿔 주세요.",
+      q5: "퀘스트 완료 표시가 안 맞아요",
+      a5: "설정 → 퀘스트 표시가 지금 서버와 같은지 확인해 주세요. 와이프·프레스티지 뒤에는 퀘스트 동기화의 '와이프 리셋'을 눌러야 옛 기록이 정리됩니다."
+    },
+    en: {
+      title: "Service status", home: "← Tarkov Price Overlay", checking: "Checking…", refresh: "Check again",
+      allOk: "All systems operational", degraded: "Some features need attention", down: "Service outage",
+      unreachable: "Can't reach the status server", unreachableSub: "Check your connection or try again shortly. If it persists, the whole service may be down.",
+      price: "Price data", priceOk: "Operational", priceFallback: "Operational — the upstream API (tarkov.dev) is down, served from the backup source (prices, tasks, barters all work)",
+      priceBad: "Outage — prices can't be fetched right now. Please try again later",
+      updater: "Auto-update", updOk: "Operational", updBad: "Update server not responding — the app still works",
+      rate: "Lookup success rate (last 7 days, all users)", rateSub: "Most failures are misaligned capture areas or untradeable items",
+      infra: "Stats & feedback", infraOk: "Operational", infraWarn: "Degraded — some stats may arrive late (no effect on the app)",
+      checked: "Last checked", notice: "Announcement",
+      faq: "Common problems",
+      q1: "Nothing happens when I press F2",
+      a1: "If the game runs as administrator, run the overlay as administrator too so the hotkey reaches it. If another program uses F2, change the hotkey in settings.",
+      q2: "Prices don't match the game",
+      a2: "Check Settings → Game mode matches your server (PVP / PVE / Season). Flea prices differ a lot between servers.",
+      q3: "It only says \"not found\"",
+      a3: "Press F2 while the item's name tooltip is showing. On QHD / 4K / ultrawide, adjust the capture area in settings.",
+      q4: "The card doesn't show up",
+      a4: "The overlay can't draw over exclusive fullscreen. Switch the game to borderless windowed.",
+      q5: "Quest completion marks are wrong",
+      a5: "Check Settings → Quest display matches your server. After a wipe or prestige, press 'Wipe reset' in quest sync to clear old records."
+    },
+    ru: {
+      title: "Статус сервиса", home: "← Tarkov Price Overlay", checking: "Проверка…", refresh: "Проверить снова",
+      allOk: "Все системы работают", degraded: "Некоторым функциям нужно внимание", down: "Сбой сервиса",
+      unreachable: "Нет связи с сервером статуса", unreachableSub: "Проверьте подключение или повторите позже. Если не проходит — возможно, сбой всего сервиса.",
+      price: "Данные цен", priceOk: "Работает", priceFallback: "Работает — основной API (tarkov.dev) недоступен, данные идут из резервного источника (цены, задания, бартеры в порядке)",
+      priceBad: "Сбой — сейчас цены получить нельзя. Повторите позже",
+      updater: "Автообновление", updOk: "Работает", updBad: "Сервер обновлений не отвечает — приложением можно пользоваться",
+      rate: "Успешных запросов (7 дней, все пользователи)", rateSub: "Большинство неудач — сбитая зона захвата или непродаваемые предметы",
+      infra: "Статистика и отзывы", infraOk: "Работает", infraWarn: "Есть задержки — часть статистики может приходить позже (на приложение не влияет)",
+      checked: "Проверено", notice: "Объявление",
+      faq: "Частые проблемы",
+      q1: "F2 ничего не делает",
+      a1: "Если игра запущена от администратора, запустите оверлей тоже от администратора. Если F2 занята другой программой, смените клавишу в настройках.",
+      q2: "Цены не совпадают с игрой",
+      a2: "Проверьте Настройки → Режим игры (PVP / PVE / Сезон). Цены барахолки сильно различаются между серверами.",
+      q3: "Пишет только «не найдено»",
+      a3: "Нажимайте F2, когда видна подсказка с названием предмета. На QHD / 4K / ультрашироких мониторах настройте зону захвата.",
+      q4: "Карточка не появляется",
+      a4: "Оверлей не рисуется поверх эксклюзивного полноэкранного режима. Включите «окно без рамки».",
+      q5: "Отметки квестов неверные",
+      a5: "Проверьте Настройки → Показ квестов. После вайпа или престижа нажмите «Сброс (вайп)» в синхронизации квестов."
+    }
+  };
+  var t = S[lang];
+  document.documentElement.lang = lang;
+  document.title = t.title + " — Tarkov Price Overlay";
+  document.getElementById("title").textContent = t.title;
+  var home = document.getElementById("home");
+  home.textContent = t.home;
+  home.href = lang === "ko" ? "/" : "/" + lang;
+  document.getElementById("refresh").textContent = t.refresh;
+  document.querySelectorAll(".lang a").forEach(function (a) { if (a.getAttribute("data-l") === lang) a.className = "on"; });
+
+  var faq = document.getElementById("faq");
+  var h = document.createElement("h2"); h.textContent = t.faq; faq.appendChild(h);
+  [1, 2, 3, 4, 5].forEach(function (i) {
+    var d = document.createElement("details");
+    var s = document.createElement("summary"); s.textContent = t["q" + i];
+    var p = document.createElement("p"); p.textContent = t["a" + i];
+    d.appendChild(s); d.appendChild(p); faq.appendChild(d);
+  });
+
+  function row(level, title, sub) {
+    var r = document.createElement("div"); r.className = "row " + level;
+    var dot = document.createElement("span"); dot.className = "dot";
+    var box = document.createElement("div");
+    var b = document.createElement("b"); b.textContent = title;
+    var s = document.createElement("span"); s.textContent = sub;
+    box.appendChild(b); box.appendChild(s); r.appendChild(dot); r.appendChild(box);
+    return r;
+  }
+  function setBanner(level, text) {
+    var el = document.getElementById("banner");
+    el.className = "banner " + level;
+    document.getElementById("bannerText").textContent = text;
+  }
+
+  function render(d) {
+    var rows = document.getElementById("rows"); rows.innerHTML = "";
+    var by = {};
+    (d.checks || []).forEach(function (c) { by[c.name] = c; });
+    var p = by.price_source;
+    if (p) {
+      var fb = /graphql=down/.test(p.detail || "") && /json=up/.test(p.detail || "");
+      rows.appendChild(row(p.level === "ok" ? "ok" : "bad", t.price,
+        p.level !== "ok" ? t.priceBad : fb ? t.priceFallback : t.priceOk));
+    }
+    var u = by.updater;
+    if (u) rows.appendChild(row(u.level === "ok" ? "ok" : "warn", t.updater, u.level === "ok" ? t.updOk : t.updBad));
+    var f = by.lookup_fail_rate;
+    if (f) {
+      var pct = parseFloat(f.detail);
+      var okPct = isNaN(pct) ? null : Math.max(0, 100 - pct);
+      rows.appendChild(row(f.level === "ok" ? "ok" : "warn", t.rate, (okPct == null ? "—" : okPct + "%") + " · " + t.rateSub));
+    }
+    var infraLevels = ["neon_compute", "neon_storage", "stats"].map(function (k) { return by[k] && by[k].level; }).filter(Boolean);
+    if (infraLevels.length) {
+      var bad = infraLevels.some(function (l) { return l !== "ok"; });
+      rows.appendChild(row(bad ? "warn" : "ok", t.infra, bad ? t.infraWarn : t.infraOk));
+    }
+    var priceDown = p && p.level !== "ok";
+    if (d.status === "down" && priceDown) setBanner("bad", t.down);
+    else if (d.status === "ok") setBanner("ok", t.allOk);
+    else setBanner("warn", t.degraded);
+    var when = d.generated ? new Date(d.generated) : new Date();
+    document.getElementById("checked").textContent = t.checked + ": " + when.toLocaleString(lang === "ko" ? "ko-KR" : lang === "ru" ? "ru-RU" : "en-US");
+  }
+
+  function load() {
+    setBanner("", t.checking);
+    fetch(HEALTH, { cache: "no-store" }).then(function (r) { return r.json(); }).then(render).catch(function () {
+      setBanner("bad", t.unreachable);
+      var rows = document.getElementById("rows"); rows.innerHTML = "";
+      rows.appendChild(row("bad", t.unreachable, t.unreachableSub));
+    });
+    fetch(ANN).then(function (r) { return r.ok ? r.json() : null; }).then(function (a) {
+      if (!a || !a.active) return;
+      var text = a[lang] || a.ko || a.en;
+      if (!text) return;
+      document.getElementById("noticeTitle").textContent = t.notice;
+      document.getElementById("noticeText").textContent = text;
+      document.getElementById("notice").hidden = false;
+    }).catch(function () {});
+  }
+  document.getElementById("refresh").addEventListener("click", load);
+  load();
+})();
+</script>
+</body>
+</html>
