@@ -11,7 +11,7 @@ Tarkov Price Overlay (Portable v{VERSION})
 
 [사용법]
 1. 게임 인벤토리 아이템 위에 마우스 올리고 F2
-2. 설정(기어 아이콘)에서 PVP/PVE, 언어, 단축키 변경
+2. 설정(기어 아이콘)에서 PVP/PVE/시즌, 언어, 단축키 변경
 3. X 버튼으로 종료 (트레이로 숨김), 트레이 우클릭 → 종료로 완전 종료
 
 [자동 업데이트]
@@ -50,7 +50,7 @@ Tarkov Price Overlay (Portable v{VERSION})
 
 [Usage]
 1. Hover an item in-game, press F2
-2. Open settings (gear icon) to change PVP/PVE, language, hotkeys
+2. Open settings (gear icon) to change PVP/PVE/Season, language, hotkeys
 3. X button hides to tray; right-click tray icon -> Exit to fully quit
 
 [Auto-update]
