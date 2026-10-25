@@ -145,3 +145,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
   .steps,.safe-grid,.dl-cards,.voices{grid-template-columns:1fr}
 }
 @media(max-width:480px){ .feat{grid-template-columns:1fr} }
+
+/* 상단 메뉴의 가이드 링크: 줄바꿈 금지, 좁은 화면에선 숨김(하단 링크로 대체) */
+.nav-guide{white-space:nowrap}
+@media(max-width:560px){ .nav-guide{display:none} }
+.nav-cta{white-space:nowrap}
