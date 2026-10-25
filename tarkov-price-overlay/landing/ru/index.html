@@ -480,35 +480,6 @@
 <!-- Vercel Web Analytics (cookieless, free) — referrers/pageviews + download clicks -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
 <script defer src="/_vercel/insights/script.js"></script>
-<script>
-(function(){
-  var API="https://api.aquapado.com/priceoverlay/web";
-  function beacon(b){try{navigator.sendBeacon(API,new Blob([JSON.stringify(b)],{type:"text/plain"}));}catch(e){}}
-  // view: боты исключены, один раз за сессию на путь. Vercel Analytics тоже
-  // считает просмотры, но конверсия «просмотр→загрузка» по источнику требует
-  // общей таблицы. Аварийный выключатель на сервере — WEB_VIEW_OFF в web.ts.
-  try{
-    var UA=navigator.userAgent||"";
-    var isBot=/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor|curl|wget|python-requests|facebookexternalhit|embedly/i.test(UA);
-    var VKEY="vw:"+location.pathname;
-    var sendView=function(){
-      try{if(sessionStorage.getItem(VKEY)==="1")return;sessionStorage.setItem(VKEY,"1");}catch(e){}
-      beacon({kind:"view",path:location.pathname,ref:document.referrer});
-    };
-    if(!isBot){
-      if(document.visibilityState==="visible")sendView();
-      else document.addEventListener("visibilitychange",function h(){
-        if(document.visibilityState==="visible"){document.removeEventListener("visibilitychange",h);sendView();}
-      });
-    }
-  }catch(e){}
-  document.addEventListener('click',function(e){
-    var t=e.target.closest&&e.target.closest('a[href*="/releases"]');
-    if(t){var tg=/\/latest/.test(t.href)?'latest':'list';
-      if(window.va)window.va('event',{name:'download_click',target:tg});
-      beacon({kind:"download",path:location.pathname,ref:document.referrer,target:tg});}
-  });
-})();
-</script>
+<script src="/beacon.js"></script>
 </body>
 </html>
