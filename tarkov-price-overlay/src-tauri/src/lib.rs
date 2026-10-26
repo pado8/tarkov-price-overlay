@@ -132,9 +132,12 @@ struct MouseHotkeyStop(Arc<AtomicBool>);
 /// 키와 같은 키를 쓰고 싶으면 등록 대신 **키 상태만 엿듣는다**(마우스 버튼과 같은 방식,
 /// device_query/GetAsyncKeyState). 게임에 키를 넣어 주는 방식(SendInput)은 안티치트 쪽
 /// 불확실성이 있어 쓰지 않는다.
+/// `vk` = Windows 가상 키 코드. device_query 대신 GetAsyncKeyState를 직접 읽는 이유: 0x8000(지금
+/// 눌림)만 보면 16ms 폴링 사이에 끝나는 짧은 누름을 놓친다(실행 시험에서 3/3 놓침). 0x0001(마지막
+/// 호출 이후 눌린 적 있음) 비트까지 보면 놓치지 않는다.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct PollKey {
-    key: device_query::Keycode,
+    vk: u16,
     shift: bool,
     ctrl: bool,
     alt: bool,
@@ -151,9 +154,8 @@ struct HotkeyPassthrough(AtomicBool);
 /// Tauri 가속기 문자열("Shift+F2", "F5", "Ctrl+Alt+K")을 폴링용 키로. 지원 안 하는 키면 None
 /// → 호출 쪽이 RegisterHotKey로 되돌아간다(그 키는 게임과 공유 불가).
 fn parse_poll_key(accelerator: &str) -> Option<PollKey> {
-    use device_query::Keycode as K;
-    let mut pk = PollKey { key: K::F2, shift: false, ctrl: false, alt: false };
-    let mut main: Option<K> = None;
+    let mut pk = PollKey { vk: 0, shift: false, ctrl: false, alt: false };
+    let mut main: Option<u16> = None;
     for tok in accelerator.split('+').map(|s| s.trim()).filter(|s| !s.is_empty()) {
         let t = tok.to_ascii_lowercase();
         match t.as_str() {
@@ -161,40 +163,62 @@ fn parse_poll_key(accelerator: &str) -> Option<PollKey> {
             "ctrl" | "control" | "commandorcontrol" | "cmdorctrl" | "command" | "super" | "meta" => pk.ctrl = true,
             "alt" | "option" => pk.alt = true,
             _ => {
-                let k = match t.as_str() {
-                    "f1" => K::F1, "f2" => K::F2, "f3" => K::F3, "f4" => K::F4, "f5" => K::F5, "f6" => K::F6,
-                    "f7" => K::F7, "f8" => K::F8, "f9" => K::F9, "f10" => K::F10, "f11" => K::F11, "f12" => K::F12,
-                    "0" | "digit0" => K::Key0, "1" | "digit1" => K::Key1, "2" | "digit2" => K::Key2, "3" | "digit3" => K::Key3,
-                    "4" | "digit4" => K::Key4, "5" | "digit5" => K::Key5, "6" | "digit6" => K::Key6, "7" | "digit7" => K::Key7,
-                    "8" | "digit8" => K::Key8, "9" | "digit9" => K::Key9,
-                    "a" => K::A, "b" => K::B, "c" => K::C, "d" => K::D, "e" => K::E, "f" => K::F, "g" => K::G, "h" => K::H,
-                    "i" => K::I, "j" => K::J, "k" => K::K, "l" => K::L, "m" => K::M, "n" => K::N, "o" => K::O, "p" => K::P,
-                    "q" => K::Q, "r" => K::R, "s" => K::S, "t" => K::T, "u" => K::U, "v" => K::V, "w" => K::W, "x" => K::X,
-                    "y" => K::Y, "z" => K::Z,
-                    "insert" => K::Insert, "home" => K::Home, "end" => K::End, "pageup" => K::PageUp,
-                    "pagedown" => K::PageDown, "delete" => K::Delete, "space" => K::Space, "tab" => K::Tab,
-                    "enter" | "return" => K::Enter,
-                    "`" | "backquote" | "grave" => K::Grave, "-" | "minus" => K::Minus, "=" | "equal" => K::Equal,
-                    _ => return None,
+                let b = t.as_bytes();
+                let vk: u16 = if t.len() >= 2 && b[0] == b'f' && t[1..].chars().all(|c| c.is_ascii_digit()) {
+                    // F1~F12 → VK_F1(0x70)~
+                    match t[1..].parse::<u16>() {
+                        Ok(n) if (1..=12).contains(&n) => 0x6F + n,
+                        _ => return None,
+                    }
+                } else if t.len() == 1 && b[0].is_ascii_alphanumeric() {
+                    b[0].to_ascii_uppercase() as u16 // 'A'..'Z' = 0x41.., '0'..'9' = 0x30..
+                } else if let Some(d) = t.strip_prefix("digit").or_else(|| t.strip_prefix("key")) {
+                    if d.len() == 1 && d.as_bytes()[0].is_ascii_alphanumeric() { d.as_bytes()[0].to_ascii_uppercase() as u16 } else { return None }
+                } else {
+                    match t.as_str() {
+                        "insert" => 0x2D, "home" => 0x24, "end" => 0x23, "pageup" => 0x21, "pagedown" => 0x22,
+                        "delete" => 0x2E, "space" => 0x20, "tab" => 0x09, "enter" | "return" => 0x0D,
+                        "`" | "backquote" | "grave" => 0xC0, "-" | "minus" => 0xBD, "=" | "equal" => 0xBB,
+                        _ => return None,
+                    }
                 };
                 if main.is_some() {
                     return None;
                 }
-                main = Some(k);
+                main = Some(vk);
             }
         }
     }
-    pk.key = main?;
+    pk.vk = main?;
     Some(pk)
 }
 
-fn poll_key_down(keys: &[device_query::Keycode], pk: &PollKey) -> bool {
-    use device_query::Keycode as K;
-    let has = |a: K, b: K| keys.contains(&a) || keys.contains(&b);
-    keys.contains(&pk.key)
-        && (!pk.shift || has(K::LShift, K::RShift))
-        && (!pk.ctrl || has(K::LControl, K::RControl) || has(K::LMeta, K::RMeta))
-        && (!pk.alt || has(K::LAlt, K::RAlt))
+#[cfg(windows)]
+fn async_key(vk: u16) -> u16 {
+    #[link(name = "user32")]
+    extern "system" {
+        fn GetAsyncKeyState(vkey: i32) -> i16;
+    }
+    unsafe { GetAsyncKeyState(vk as i32) as u16 }
+}
+#[cfg(not(windows))]
+fn async_key(_vk: u16) -> u16 {
+    0
+}
+
+/// `main_state` = 주 키의 GetAsyncKeyState 값(호출 쪽이 한 번만 읽어 넘긴다 — 0x0001 비트는 읽으면
+/// 지워지므로 조회·토글이 같은 키를 쓸 때 두 번 읽으면 둘째가 못 본다). 주 키는 "지금 눌림(0x8000)
+/// 또는 지난 폴링 이후 눌린 적 있음(0x0001)". 수식키는 등록 방식과 똑같이 **정확히** 일치해야 한다 —
+/// F2 바인딩은 Shift+F2에 울리지 않는다.
+fn poll_key_down(pk: &PollKey, main_state: u16) -> bool {
+    const VK_SHIFT: u16 = 0x10;
+    const VK_CONTROL: u16 = 0x11;
+    const VK_MENU: u16 = 0x12; // Alt
+    let held = |vk: u16| async_key(vk) & 0x8000 != 0;
+    (main_state & 0x8001) != 0
+        && pk.shift == held(VK_SHIFT)
+        && pk.ctrl == held(VK_CONTROL)
+        && pk.alt == held(VK_MENU)
 }
 
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
@@ -343,6 +367,11 @@ fn register_toggle_mouse(app: tauri::AppHandle, button: String) -> Result<(), St
 /// 불러 등록 방식을 바꾼다. 반환값 = 지금 lookup 가속기가 엿듣기로 표현 가능한지(아니면 공유 불가).
 #[tauri::command]
 fn set_hotkey_passthrough(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    // 자동화 시험용 환경변수가 있으면 프론트의 저장값보다 우선(웹뷰 localStorage 없이 모드 고정)
+    let enabled = match std::env::var("TPO_HOTKEY_PASSTHROUGH") {
+        Ok(v) if v == "1" || v == "0" => v == "1",
+        _ => enabled,
+    };
     app.state::<HotkeyPassthrough>().0.store(enabled, Ordering::SeqCst);
     println!("[hotkey] passthrough = {enabled}");
     Ok(())
@@ -426,12 +455,18 @@ fn spawn_mouse_hotkey_thread(
             // 키보드 엿듣기: 등록(RegisterHotKey) 대신 상태만 읽으므로 게임도 같은 키를 받는다.
             let kc = *kcfg.lock().unwrap();
             if kc.lookup.is_some() || kc.toggle.is_some() {
-                let keys = device_state.get_keys();
-                for (i, (pk, event_name)) in [(kc.lookup, "hotkey-lookup"), (kc.toggle, "hotkey-toggle")]
+                // 주 키 상태는 슬롯당 한 번만 읽는다(같은 키를 둘이 쓰면 공유)
+                let s_lookup = kc.lookup.map(|p| async_key(p.vk)).unwrap_or(0);
+                let s_toggle = match (kc.lookup, kc.toggle) {
+                    (Some(a), Some(b)) if a.vk == b.vk => s_lookup,
+                    (_, Some(b)) => async_key(b.vk),
+                    _ => 0,
+                };
+                for (i, (pk, state, event_name)) in [(kc.lookup, s_lookup, "hotkey-lookup"), (kc.toggle, s_toggle, "hotkey-toggle")]
                     .into_iter()
                     .enumerate()
                 {
-                    let now = pk.map(|p| poll_key_down(&keys, &p)).unwrap_or(false);
+                    let now = pk.map(|p| poll_key_down(&p, state)).unwrap_or(false);
                     if now && !prev_key[i] {
                         if let Some(window) = app.get_webview_window("main") {
                             if !window.is_visible().unwrap_or(true) {
