@@ -100,6 +100,7 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // the portable folder's exe pinned at the old version.
 // 서비스 상태 페이지(피드백 #49-①) — 헬스 엔드포인트를 사람이 읽는 화면으로.
 const STATUS_PAGE_URL = "https://tarkov.aquapado.com/status/";
+const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 const openStatusPage = (lang: Lang) => {
   openUrl(`${STATUS_PAGE_URL}?lang=${lang}`).catch((e) => {
     log(`status: openUrl failed — ${String(e)}`);
@@ -2206,6 +2207,26 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCheckUpdate]);
 
+  // 가이드 사이트를 진행도와 함께 연다. 사이트의 sync.js 가 주소 해시(#sync=base64 JSON)를 읽어 완료 퀘스트를
+  // 반영하므로, 브라우저가 127.0.0.1 접근을 막는 환경에서도 연동이 된다. 실패하면 그냥 가이드만 연다.
+  const openGuideWithProgress = async () => {
+    let hash = "";
+    try {
+      const r = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(region.gameMode)}`);
+      if (r.ok) {
+        const p = await r.json();
+        const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0 };
+        const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+        hash = `#sync=${encodeURIComponent(b64)}`;
+      }
+    } catch {
+      // 사이드카가 없으면 진행도 없이 연다
+    }
+    openUrl(`${GUIDE_URL}items/${hash}`).catch((e) => {
+      log(`guide: openUrl failed — ${String(e)}`);
+    });
+  };
+
   // 가이드 사이트 연동: 은신처 단계를 사이드카에 올려 두면 같은 PC의 tarkov.aquapado.com/guide 가
   // /progress 로 읽어 "이미 지은 단계의 재료"를 필요 아이템에서 뺀다. 사이드카가 아직 안 떴으면 몇 번 다시 시도.
   useEffect(() => {
@@ -4108,6 +4129,12 @@ function App() {
                         : `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
                       : t.questSyncPathMissing}
                   </span>
+                </div>
+                <div className="settings-row">
+                  <label title={t.guideOpenHint}>{t.guideOpen}</label>
+                  <button type="button" className="reset-btn" onClick={() => void openGuideWithProgress()} title={t.guideOpenHint}>
+                    {t.guideOpenBtn}
+                  </button>
                 </div>
                 <div className="settings-row settings-row-stack">
                   <label title={t.questSyncPathHint}>{t.questSyncPath}</label>
