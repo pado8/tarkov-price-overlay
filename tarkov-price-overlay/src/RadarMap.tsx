@@ -40,6 +40,18 @@ type Props = {
 
 const cache = new Map<string, MapDoc>();
 
+/** 맵별 90° 회전 설정(지도 탭에서 ↻로 돌린 값) — 레이더 고정 모드도 같은 기준을 쓴다 */
+export function loadMapRot(slug: string | null | undefined): number {
+  if (!slug) return 0;
+  try {
+    const v = localStorage.getItem(ROT_KEY);
+    const all = v ? (JSON.parse(v) as Record<string, number>) : {};
+    return all[slug] ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 function loadJson<T>(key: string, fallback: T): T {
   try {
     const v = localStorage.getItem(key);

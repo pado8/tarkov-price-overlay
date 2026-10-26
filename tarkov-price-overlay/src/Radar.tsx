@@ -3,7 +3,7 @@
 // '내가 바라보는 쪽 = 위' 기준이라 지도 북쪽 방위는 쓰지 않는다(맵마다 회전이 달라 틀릴 위험).
 import { useState } from "react";
 import type { Strings as LiteralStrings } from "./i18n";
-import { RadarMap } from "./RadarMap";
+import { RadarMap, loadMapRot } from "./RadarMap";
 
 // i18n은 글자 값까지 고정된 타입이라 언어별 객체가 서로 대입되지 않는다 — 키만 맞으면 되게 넓힌다
 type Strings = { [K in keyof LiteralStrings]: string };
@@ -78,9 +78,17 @@ type Props = {
 };
 
 const MODE_KEY = "tarkov.radar.mode"; // "radar" | "map"
+const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose }: Props) {
   const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
+  const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
+  const pickFixed = (v: boolean) => {
+    setFixed(v);
+    try {
+      localStorage.setItem(FIXED_KEY, v ? "1" : "0");
+    } catch {}
+  };
   const pickMode = (m: "radar" | "map") => {
     setMode(m);
     try {
@@ -176,12 +184,16 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const C = 100; // 중심
   const stale = data.shot.age > STALE_SEC;
   const heading = data.shot.heading;
+  // 고정 모드: 점은 절대 방위(바라보는 방향 + 상대각 + 지도 탭과 같은 90° 회전)에 놓고 내 화살표를 돌린다.
+  // 바라보는 쪽 위 모드: 점은 상대각 그대로, 화살표는 항상 위.
+  const mapRot = loadMapRot(data.map?.id);
+  const base = fixed && heading != null ? heading + mapRot : 0;
 
   // 점 위치 + 이름표 자리 잡기: 가까운 것부터 최대 5개, 이미 놓인 이름표·내 화살표와 겹치면 생략
   const dots = visible.map((x) => {
     if (x.rel == null) return null;
     const r = Math.min(x.dist / range, 1) * R;
-    const a = (x.rel * Math.PI) / 180;
+    const a = ((x.rel + base) * Math.PI) / 180;
     return { x, out: x.dist > range, px: C + Math.sin(a) * r, py: C - Math.cos(a) * r };
   });
   const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [{ x1: C - 9, y1: C - 10, x2: C + 9, y2: C + 8 }];
@@ -210,6 +222,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         <line x1={C - R} y1={C} x2={C + R} y2={C} className="radar-axis" />
         <text x={C + 3} y={C - R / 2 - 3} className="radar-scale">{range / 2}m</text>
         <text x={C + 3} y={C - R + 9} className="radar-scale">{range}m</text>
+        {fixed && heading != null && <text x={C} y={C - R - 1} className="radar-scale" textAnchor="middle">▲</text>}
         {heading != null &&
           dots
             .map((d, i) => {
@@ -235,7 +248,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             })
             .reverse() /* 가까운 것이 위에 그려지게 */}
         {heading != null ? (
-          <path d={`M ${C} ${C - 8} L ${C + 6} ${C + 6} L ${C} ${C + 3} L ${C - 6} ${C + 6} Z`} className="radar-me" />
+          <path d={`M ${C} ${C - 8} L ${C + 6} ${C + 6} L ${C} ${C + 3} L ${C - 6} ${C + 6} Z`} className="radar-me" transform={base ? `rotate(${base} ${C} ${C})` : undefined} />
         ) : (
           <circle cx={C} cy={C} r={5} className="radar-me" />
         )}
@@ -276,7 +289,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         </label>
         {mapPicker}
       </div>
-      <div className="radar-note">{t.radarNote}</div>
+      <label className="radar-chk" title={t.radarFixedHint}>
+        <input type="checkbox" checked={fixed} onChange={(e) => pickFixed(e.target.checked)} /> {t.radarFixed}
+      </label>
+      <div className="radar-note">{fixed ? t.radarNoteFixed : t.radarNote}</div>
     </div>
   );
 }
