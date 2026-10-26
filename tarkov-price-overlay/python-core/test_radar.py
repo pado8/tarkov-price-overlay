@@ -117,7 +117,7 @@ raise SystemExit(1 if fails else 0)
 
 
 # 7) 스크린샷 폴더 직접 지정 — 저장·복원·없는 폴더 거부·자동 복귀 (설정 파일은 임시 폴더로 돌림)
-import tempfile, os, json as _json
+import tempfile, json as _json
 from pathlib import Path as _P
 _tmp = _P(tempfile.mkdtemp())
 _orig_settings = r._settings_path
@@ -138,29 +138,6 @@ try:
     eq("따옴표·공백 섞인 경로도 허용", svc.set_folder(f'  "{shots}"  ')["source"], "manual")
     (_tmp / "radar.json").write_text(_json.dumps({"folder": str(_tmp / "사라진")}), encoding="utf-8")
     eq("저장된 폴더가 사라지면 자동으로", r.RadarService().folder_info()["source"], "auto")
-
-# 8) 자동 정리 — 좌표 스크린샷만, 최신 N장 유지, 휴지통으로(실제 Windows 휴지통 사용; 작은 더미 파일)
-    svc2 = r.RadarService()
-    pr = _tmp / "prune"; pr.mkdir()
-    svc2.set_folder(str(pr))
-    names = [f"2026-10-26[01-0{i}]_{i}.0, 1.0, 2.0_0, 0, 0, 1_0.0 (0).png" for i in range(5)]
-    for i, nm in enumerate(names):
-        (pr / nm).write_bytes(b"x"); os.utime(pr / nm, (1000 + i, 1000 + i))
-    (pr / "normal_screenshot.png").write_bytes(b"x")   # 좌표 없는 일반 스크린샷 — 건드리면 안 됨
-    eq("정리 끔이면 아무것도 안 지움", svc2._prune(pr), 0)
-    eq("set_prune 저장", svc2.set_prune(2)["prune_keep"], 2)
-    eq("설정 파일에 prune_keep", _json.loads((_tmp / "radar.json").read_text(encoding="utf-8"))["prune_keep"], 2)
-    n = svc2._prune(pr)
-    eq("최신 2장 밖 3장 정리", n, 3)
-    eq("남은 좌표 파일 = 최신 2장", sorted(p.name for p in pr.iterdir() if "]_" in p.name), sorted(names[3:]))
-    eq("일반 스크린샷은 그대로", (pr / "normal_screenshot.png").exists(), True)
-    eq("state()가 새 샷마다 한 번만 정리", svc2.state("ko").get("folder_source"), "manual")
-    eq("재로드 시 prune_keep 복원", r.RadarService().folder_info()["prune_keep"], 2)
-    eq("0이면 끔", svc2.set_prune(0)["prune_keep"], None)
-    try:
-        svc2.set_prune(-1); eq("음수 거부", "예외 없음", "ValueError")
-    except ValueError:
-        eq("음수 거부", True, True)
 finally:
     r._settings_path = _orig_settings
 

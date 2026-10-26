@@ -1270,7 +1270,7 @@ function App() {
   const [radarLoading, setRadarLoading] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
   // 레이더가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
-  const [radarFolder, setRadarFolder] = useState<{ folder: string | null; source: "auto" | "manual"; auto: string | null; ok: boolean; prune_keep: number | null } | null>(null);
+  const [radarFolder, setRadarFolder] = useState<{ folder: string | null; source: "auto" | "manual"; auto: string | null; ok: boolean } | null>(null);
   const [radarFolderMsg, setRadarFolderMsg] = useState("");
   const [hotkeyPassthrough, setHotkeyPassthrough] = useState<boolean>(() => localStorage.getItem(HOTKEY_PASSTHROUGH_KEY) === "true");
   const hotkeyPassthroughRef = useRef(hotkeyPassthrough);
@@ -1759,22 +1759,6 @@ function App() {
     } catch (e) {
       setRadarFolderMsg(t.radarFolderInvalid);
       log(`radar: folder set failed ${e instanceof Error ? e.message : String(e)}`);
-    }
-  };
-  const setRadarPrune = async (keep: number) => {
-    try {
-      const res = await fetch(`${PYTHON_API}/radar/prune`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keep }),
-      });
-      if (res.ok) {
-        const d = (await res.json()) as { prune_keep: number | null };
-        setRadarFolder((f) => (f ? { ...f, prune_keep: d.prune_keep } : f));
-        log(`radar: prune keep = ${d.prune_keep ?? "off"}`);
-      }
-    } catch (e) {
-      log(`radar: prune set failed ${e instanceof Error ? e.message : String(e)}`);
     }
   };
   const pickRadarFolder = async () => {
@@ -3906,19 +3890,6 @@ function App() {
                     : t.radarNoFolder
                   : "")}
             </div>
-            <div className="settings-row" title={t.radarPruneHint}>
-              <label>{t.radarPruneLabel}</label>
-              <select
-                value={String(radarFolder?.prune_keep ?? 0)}
-                onChange={(e) => void setRadarPrune(Number(e.target.value))}
-              >
-                <option value="0">{t.radarPruneOff}</option>
-                {[20, 50, 100, 300].map((n) => (
-                  <option key={n} value={String(n)}>{t.radarPruneKeep.replace("{n}", String(n))}</option>
-                ))}
-              </select>
-            </div>
-            <div className="settings-hint">{t.radarPruneHint}</div>
             <div className="settings-row" title={t.autoHideHint}>
               <label>{t.autoHideToggle}</label>
               <input
