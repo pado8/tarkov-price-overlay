@@ -188,7 +188,10 @@ type StatsEvent =
   | "lookup_nomatch"
   | "lookup_noprice"
   | "hotkey"
-  | "hotkey_fail";
+  | "hotkey_fail"
+  // 레이더 사용 횟수만(detail 없음). 좌표·맵·파일명은 절대 보내지 않는다
+  | "radar_open"
+  | "radar_shot";
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
 // Every event used to be its own POST → its own INSERT → its own wake of the
 // (autosuspending) Postgres compute, so a busy raid kept the DB awake all
@@ -1794,6 +1797,7 @@ function App() {
     setShowSettings(false);
     setHistoryVisible(false);
     setRadarActive(true);
+    reportEvent(fromScreenshot ? "radar_shot" : "radar_open");
     await loadRadar();
     if (fromScreenshot) scheduleHide();
   };
