@@ -188,7 +188,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const labels = new Map<number, { text: string; lx: number; ly: number }>();
   dots.forEach((d, i) => {
     if (!d || labels.size >= 5) return;
-    const text = short(d.x.kind === "quest" ? d.x.objective || d.x.name : d.x.name);
+    const text = short(d.x.name); // 퀘스트도 이름으로 — 목표 문장은 길어서 원 위에선 잘린다(목록에 두 줄로 나옴)
     const w = text.length * 5.6;
     const left = d.px + 6 + w > 198; // 오른쪽 끝이면 점 왼쪽에 붙인다
     const lx = left ? d.px - 6 - w : d.px + 6;
