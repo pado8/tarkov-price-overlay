@@ -2082,17 +2082,50 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
 GUNSMITH_JS = """<script>
 (function(){var KEY="guide.gunsmith.have";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
 function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-var have=L(KEY,{}),rows=[].slice.call(document.querySelectorAll("#gtbl tbody tr")),chips=[].slice.call(document.querySelectorAll("[data-part]"));
+var have=L(KEY,{}),scope="all",rows=[].slice.call(document.querySelectorAll("#gtbl tbody tr")),chips=[].slice.call(document.querySelectorAll("[data-part]"));
 function render(){var q=document.getElementById("q").value.trim().toLowerCase(),hh=document.getElementById("hideHave").checked,shown=0,hv=0;
 rows.forEach(function(r){var d=r.dataset,h=!!have[d.id];if(h)hv++;var ok=true;if(hh&&h)ok=false;if(q&&d.s.indexOf(q)<0)ok=false;
+if(scope==="req"&&d.req!=="1")ok=false;if(scope==="ex"&&!r.children[3].textContent.trim())ok=false;
 r.style.display=ok?"":"none";r.classList.toggle("done",h);var c=r.querySelector("input");if(c)c.checked=h;if(ok)shown++;});
 chips.forEach(function(c){c.classList.toggle("done",!!have[c.getAttribute("data-part")])});
 document.getElementById("shown").textContent=shown;document.getElementById("havecnt").textContent=hv;}
 document.getElementById("hideHave").addEventListener("change",render);document.getElementById("q").addEventListener("input",render);
+document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;document.querySelectorAll("#scope button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)});render()});
 document.getElementById("gtbl").addEventListener("change",function(e){var r=e.target.closest("tr");if(!r)return;if(e.target.checked)have[r.dataset.id]=1;else delete have[r.dataset.id];S(KEY,have);render()});
 document.getElementById("clearHave").addEventListener("click",function(){if(!confirm("보유 체크를 모두 지울까요?"))return;have={};S(KEY,have);render()});
 render();})();
 </script>"""
+
+
+GUNSMITH_BUILDS = Path(__file__).resolve().parent / "guide_data" / "gunsmith_builds.json"  # scripts/gunsmith_wiki.py 가 만든다
+TRADER_KO = {"Prapor": "프라퍼", "Therapist": "테라피스트", "Skier": "스키어", "Peacekeeper": "피스키퍼", "Mechanic": "기계공",
+             "Ragman": "래그맨", "Jaeger": "예거", "Fence": "펜스", "Ref": "레프", "Lightkeeper": "등대지기", "Flea Market": "플리마켓"}
+
+
+def _wiki_item_index(ctx: Ctx):
+    """위키 영문 부품명 → 아이템 id. 정확히 같으면 그걸, 아니면 '이름 (색상)'처럼 변형이 하나뿐일 때 그것."""
+    def norm(s):
+        return re.sub(r"[^a-z0-9]+", "", (s or "").lower().replace("“", '"').replace("”", '"'))
+    exact: dict[str, str] = {}
+    prefix: dict[str, list] = {}
+    for iid, it in ctx.items.items():
+        n = ctx._loc(ctx.loc_items_en, it.get("name"), None)
+        if not isinstance(n, str):
+            continue
+        exact.setdefault(norm(n), iid)
+        m = re.match(r"(.+?)\s*\([^()]*\)\s*$", n)
+        if m:
+            prefix.setdefault(norm(m.group(1)), []).append(iid)
+
+    def find(name, page=None):
+        for k in (norm(page), norm(name)):
+            if k and k in exact:
+                return exact[k]
+        for k in (norm(page), norm(name)):
+            if k and len(prefix.get(k) or []) >= 1:
+                return prefix[k][0]
+        return None
+    return find
 
 
 def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
@@ -2101,6 +2134,45 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
           if ctx.task_names(tid)[1].startswith("Gunsmith") and any(o.get("type") == "buildWeapon" for o in t.get("objectives") or [])]
     if not gs:
         return None
+    try:
+        builds = json.loads(GUNSMITH_BUILDS.read_text(encoding="utf-8")) if GUNSMITH_BUILDS.exists() else {}
+    except Exception:  # noqa: BLE001
+        builds = {}
+    find_item = _wiki_item_index(ctx)
+    ex_parts: dict[str, dict] = {}  # 예시 조립 부품: key(id 또는 w:이름) → {"n","id","q":[tid...]}
+
+    def build_html(tid, k, n_objs):
+        """퀘스트 tid 의 k번째 무기에 해당하는 위키 예시 조립 표"""
+        b = builds.get(ctx.task_names(tid)[1])
+        if not b or not b.get("lists"):
+            return ""
+        lists = b["lists"]
+        pick = [lists[k]] if len(lists) == n_objs and n_objs > 1 else (lists if k == 0 else [])
+        if not pick:
+            return ""
+        out = []
+        for lst in pick:
+            trs = []
+            for r in lst["rows"]:
+                iid = find_item(r.get("name"), r.get("page"))
+                key = iid or ("w:" + r["name"])
+                ent = ex_parts.setdefault(key, {"n": r["name"], "id": iid, "q": []})
+                ent["q"].append(tid)
+                sellers = " / ".join(f'{TRADER_KO.get(s, s)} {l}' for s, l in zip(r.get("sellers") or [], r.get("ll") or []))
+                if not sellers:
+                    sellers = ", ".join(TRADER_KO.get(s, s) for s in r.get("sellers") or []) or "—"
+                sellers = sellers.replace("(Barter)", "(교환)")
+                cell = f'<span data-part="{e(key)}">{ctx.chip(iid)}</span>' if iid else f'<span data-part="{e(key)}"><span class="chip">{e(r["name"])}</span></span>'
+                trs.append(f'<tr><td>{cell}</td><td class="small muted">{e(sellers)}</td></tr>')
+            cap = f'{e(lst["weapon"])} ' if lst.get("weapon") else ""
+            out.append(f'<table class="tot wb"><thead><tr><th>{cap}예시 조립 부품 {len(trs)}개</th><th>파는 곳 · 등급</th></tr></thead><tbody>{"".join(trs)}</tbody></table>')
+        note = b.get("note") or ""
+        note = re.sub(r"^Th(?:is|ese) builds? (?:is|are) based on ", "기본 무기: ", note).replace("a standard ", "").replace(" from ", " ← ").replace(" and ", ", ").rstrip(".")
+        for en_, ko_ in TRADER_KO.items():
+            note = note.replace(en_, ko_)
+        return (f'<details class="wb"><summary>위키 예시 조립 보기 <span class="muted small">(여러 방법 중 하나 · '
+                f'<a href="{e(b["url"])}" rel="noopener" target="_blank">출처</a>)</span></summary>'
+                + (f'<p class="small muted">{e(note)}</p>' if note else "") + "".join(out) + "</details>")
 
     def num(tid):
         m = re.search(r"Part (\d+)", ctx.task_names(tid)[1])
@@ -2140,7 +2212,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 first = (f'<td rowspan="{len(objs)}">{ctx.task_link(tid)}'
                          + (f'<div class="small muted">레벨 {lv}</div>' if lv else "") + "</td>") if k == 0 else ""
                 rows.append(f'<tr>{first}<td><div class="chips">{ctx.chip(wid)}</div></td>'
-                            f'<td><div class="chips">{chips}</div></td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
+                            f'<td><div class="chips">{chips}</div>{build_html(tid, k, len(objs))}</td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
         return rows
 
     base_rows = build_rows(base)
@@ -2151,39 +2223,56 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 '<div class="box tbl" style="padding:4px 8px"><table class="tot gs"><thead><tr><th>퀘스트</th><th>무기</th><th>반드시 포함할 부품</th><th>성능 조건</th></tr></thead>'
                 f'<tbody>{"".join(rows)}</tbody></table></div>')
 
-    # 전체 부품 체크리스트 — 많이 쓰이는 것부터, 같은 횟수면 이름순
-    order = sorted(parts, key=lambda p: (-len(parts[p]), (ctx.item(p) or {}).get("n") or p))
+    # 전체 부품 체크리스트 — 필수 부품 + 위키 예시 조립 부품을 한 표에. 필수 횟수 많은 것부터, 그다음 예시 횟수, 이름순
+    allkeys = set(parts) | set(ex_parts)
+
+    def nm(k):
+        it = ctx.item(k) if not k.startswith("w:") else None
+        return (it or {}).get("n") or ex_parts.get(k, {}).get("n") or k
+
+    order = sorted(allkeys, key=lambda k: (-len(parts.get(k, [])), -len(ex_parts.get(k, {}).get("q", [])), nm(k)))
     trs = []
-    for pid in order:
-        it = ctx.item(pid)
-        if not it:
-            continue
-        uses = parts[pid]
-        qlinks = ", ".join(ctx.task_link(t) for t in dict.fromkeys(uses))
-        s = (it["n"] + " " + (it.get("en") or "") + " " + (it.get("s") or "")).lower()
-        price = it.get("pvp")
-        trs.append(f'<tr data-id="{e(pid)}" data-s="{e(s)}"><td class="n"><input type="checkbox" aria-label="보유" /></td>'
-                   f'<td>{ctx.chip(pid)}</td><td class="n">{len(uses)}</td><td class="small">{qlinks}</td>'
-                   f'<td class="n small">{(fmt_int(price) + "₽") if price else ("상인" if it.get("noflea") else "—")}</td></tr>')
+    for key in order:
+        it = ctx.item(key) if not key.startswith("w:") else None
+        req = parts.get(key, [])
+        exq = ex_parts.get(key, {}).get("q", [])
+        qlinks = ", ".join(ctx.task_link(t) for t in dict.fromkeys(req + exq))
+        if it:
+            s = (it["n"] + " " + (it.get("en") or "") + " " + (it.get("s") or "")).lower()
+            price = it.get("pvp")
+            pcell = (fmt_int(price) + "₽") if price else ("상인" if it.get("noflea") else "—")
+            chip = ctx.chip(key)
+        else:
+            s = nm(key).lower()
+            pcell = "—"
+            chip = f'<span class="chip">{e(nm(key))}</span>'
+        trs.append(f'<tr data-id="{e(key)}" data-s="{e(s)}" data-req="{1 if req else 0}"><td class="n"><input type="checkbox" aria-label="보유" /></td>'
+                   f'<td>{chip}</td><td class="n">{len(req) or ""}</td><td class="n">{len(exq) or ""}</td><td class="small">{qlinks}</td>'
+                   f'<td class="n small">{pcell}</td></tr>')
 
     body = (f'<h1>건스미스 부품 총정리 <span class="h1en">Gunsmith</span></h1>'
             f'<p class="sub">기계공 무기 조립 퀘스트 {len(gs)}개 · 반드시 포함할 부품 {len(parts)}종 · 데이터 기준 {e(ctx.stamp)}</p>'
             '<div class="note key"><b>쓰는 법</b> — 아래 "전체 부품 체크리스트"의 이름을 플리마켓 검색창에 넣고 ★(즐겨찾기)를 눌러 두면 시세 볼 때 한 번에 모입니다. '
             '표의 "반드시 포함할 부품"은 조립에 꼭 들어가야 하는 것이고, 그 외 인체공학·반동·무게 같은 <b>성능 조건</b>은 어떤 부품으로든 맞추면 됩니다. '
+            '각 줄의 <b>"위키 예시 조립 보기"</b>를 펼치면 공식 위키가 올린 조립 예시(부품·파는 상인·등급)가 나오고, 그 부품들도 체크리스트에 "예시" 열로 들어가 있습니다. '
             '조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.</div>'
             '<nav class="toc"><a href="#base">건스미스</a><a href="#master">건스미스 마스터</a><a href="#parts">전체 부품 체크리스트</a></nav>'
             + table(base_rows, "base", "건스미스", "기계공 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
             + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.")
             + f'<h2 class="sec" id="parts">전체 부품 체크리스트 <span class="muted small">{len(trs)}종</span></h2>'
             '<div class="box"><div class="bar"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
+            '<span class="seg" id="scope"><button type="button" data-v="all" class="on">전체</button><button type="button" data-v="req">필수만</button><button type="button" data-v="ex">예시 조립만</button></span>'
             '<label class="small"><input type="checkbox" id="hideHave" /> 보유 숨기기</label>'
             '<span class="small muted">표시 <b id="shown">0</b> · 보유 <b id="havecnt">0</b></span>'
             '<button type="button" id="clearHave" class="small">체크 초기화</button></div>'
-            '<div class="tbl"><table class="tot" id="gtbl"><thead><tr><th class="n">보유</th><th>부품</th><th class="n">필요 횟수</th><th>쓰는 퀘스트</th><th class="n">시세(PVP)</th></tr></thead>'
+            '<div class="tbl"><table class="tot" id="gtbl"><thead><tr><th class="n">보유</th><th>부품</th><th class="n">필수</th><th class="n">예시</th><th>쓰는 퀘스트</th><th class="n">시세(PVP)</th></tr></thead>'
             f'<tbody>{"".join(trs)}</tbody></table></div></div>'
-            '<p class="small muted">출처: tarkov.dev 퀘스트 데이터(buildWeapon 목표). 시세는 24시간 평균이며 "상인"은 플리마켓 거래 불가 품목입니다. '
-            '성능 조건을 맞추는 구체적인 조립법은 퀘스트 상세의 위키 링크에서 보세요.</p>')
+            '<p class="small muted">"필수"는 데이터상 반드시 포함해야 하는 횟수, "예시"는 위키 예시 조립에 쓰인 횟수입니다. 출처: tarkov.dev 퀘스트 데이터(buildWeapon 목표), '
+            '예시 조립은 <a href="https://escapefromtarkov.fandom.com/wiki/Mechanic" rel="noopener" target="_blank">공식 위키</a>(CC BY-NC-SA, 각 퀘스트 줄에 문서 링크). '
+            '시세는 24시간 평균이며 "상인"은 플리마켓 거래 불가 품목입니다.</p>')
     extra_head = ('<style>table.gs td{vertical-align:top}table.gs .chips{margin-top:0}'
+                  'details.wb{margin-top:6px}details.wb summary{cursor:pointer;font-size:12.5px;color:var(--gold)}details.wb table.wb{margin-top:6px;font-size:12.5px}details.wb table.wb td,details.wb table.wb th{padding:4px 6px}'
+                  '.seg button{padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12.5px}.seg button.on{border-color:var(--gold);color:var(--gold)}'
                   '[data-part].done .chip{opacity:.45;text-decoration:line-through}'
                   '#gtbl tr.done td{opacity:.5}#gtbl tr.done td.n:first-child{opacity:1}'
                   '.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:8px}.bar input[type=search]{flex:1;min-width:180px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}'

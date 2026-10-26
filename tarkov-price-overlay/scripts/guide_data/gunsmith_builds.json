@@ -1,0 +1,2745 @@
+{
+ "Gunsmith - AK-105": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_AK-105",
+  "note": "This build is based on a standard AK-105 from Prapor LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AK-74 5.45x39 6L31 60-round magazine",
+      "page": "AK-74 5.45x39 6L31 60-round magazine",
+      "sellers": [
+       "Prapor",
+       "Ref"
+      ],
+      "ll": [
+       "LL2 (Barter) after The Punisher - Part 2",
+       "LL4",
+       "LL3"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "page": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2",
+       "LL2"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "page": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "AK AKademia Bastion dust cover",
+      "page": "AK AKademia Bastion dust cover",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "page": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - AKM": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_AKM",
+  "note": "This build is based on a standard AKM from Prapor LL2.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AK 100-series polymer handguard",
+      "page": "AK 100-series polymer handguard",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Fortis Shift tactical foregrip",
+      "page": "Fortis Shift tactical foregrip",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "page": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2",
+       "LL2"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "page": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "AK 7.62x39 Magpul PMAG 30 GEN M3 30-round magazine (Black)",
+      "page": "AK 7.62x39 Magpul PMAG 30 GEN M3 30-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AK AKademia Bastion dust cover",
+      "page": "AK AKademia Bastion dust cover",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "page": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - AKS-74N": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_AKS-74N",
+  "note": "This build is based on a standard AKS-74N from Prapor LL2.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AKS-74/AKS-74U Zenit PT Lock",
+      "page": "AKS-74/AKS-74U Zenit PT Lock",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AK Zenit PT-3 \"Klassika\" stock",
+      "page": "AK Zenit PT-3 \"Klassika\" stock",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Zenit RK-3 pistol grip (Black)",
+      "page": "AK Zenit RK-3 pistol grip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Zenit B-33 dust cover",
+      "page": "AK Zenit B-33 dust cover",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Zenit DTK-1 7.62x39/5.45x39 muzzle brake",
+      "page": "AK Zenit DTK-1 7.62x39/5.45x39 muzzle brake",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Zenit B-30 handguard with B-31S upper handguard rail",
+      "page": "AK Zenit B-30 handguard with B-31S upper handguard rail",
+      "sellers": [
+       "Mechanic",
+       "Skier"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "Zenit Klesch-2IKS IR illuminator with laser",
+      "page": "Zenit Klesch-2IKS IR illuminator with laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Zenit RK-0 tactical foregrip",
+      "page": "Zenit RK-0 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK-12 5.45x39 30-round magazine",
+      "page": "AK-12 5.45x39 30-round magazine",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - AKS-74U": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_AKS-74U",
+  "note": "This build is based on a standard AKS-74U. You get one in the mail from Mechanic upon accepting this quest.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AKS-74U Zenit B-11 handguard",
+      "page": "AKS-74U Zenit B-11 handguard",
+      "sellers": [
+       "Mechanic",
+       "Skier"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "AK-74 5.45x39 6L31 60-round magazine",
+      "page": "AK-74 5.45x39 6L31 60-round magazine",
+      "sellers": [
+       "Prapor",
+       "Ref"
+      ],
+      "ll": [
+       "LL2 (Barter) after The Punisher - Part 2",
+       "LL4",
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - AS VAL": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_AS_VAL",
+  "note": "This build is based on a standard AS VAL from Prapor LL4.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "NSPU-M 3.5x dovetail night vision scope",
+      "page": "NSPU-M 3.5x dovetail night vision scope",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NSPU-M scope eyecup",
+      "page": "NSPU-M scope eyecup",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "L3Harris AN/PEQ-15 tactical device (Tan)",
+      "page": "L3Harris AN/PEQ-15 tactical device",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 FAB Defense GL-SHOCK buttstock",
+      "page": "AR-15 FAB Defense GL-SHOCK buttstock",
+      "sellers": [
+       "Mechanic",
+       "Skier"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "AS VAL Rotor 43 pistol grip with buffer tube",
+      "page": "AS VAL Rotor 43 pistol grip with buffer tube",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "VSS/VAL 9x39 SR3M.130 30-round magazine",
+      "page": "VSS/VAL 9x39 SR3M.130 30-round magazine",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "VSS/VAL 9x39 30-round magazine",
+      "page": "VSS/VAL 9x39 30-round magazine",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "VSS/VAL Zenit B-3 ring mount",
+      "page": "VSS/VAL Zenit B-3 ring mount",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "VSS/VAL Zenit B-3 mount combo",
+      "page": "VSS/VAL Zenit B-3 mount combo",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "VSS/VAL TOZ 6P29M mount",
+      "page": "VSS/VAL TOZ 6P29M mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - HK MP5": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_HK_MP5",
+  "note": "This build is based on a standard MP5 from Peacekeeper LL1.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "HK MP5SD 9x19 upper receiver",
+      "page": "HK MP5SD 9x19 upper receiver",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "HK MP5SD polymer handguard",
+      "page": "HK MP5SD polymer handguard",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "HK MP5SD 9x19 sound suppressor",
+      "page": "HK MP5SD 9x19 sound suppressor",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "HK MP5 9x19 X Products X-5 50-round drum magazine",
+      "page": "HK MP5 9x19 X Products X-5 50-round drum magazine",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper",
+       "Ref"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL2 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "HK MP5SD B&T tri-rail ring mount",
+      "page": "HK MP5SD B&T tri-rail ring mount",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - M4A1": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_M4A1",
+  "note": "This build is based on a standard M4A1 from Peacekeeper LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-15 5.56x45 SureFire MAG5-60 STANAG 60-round magazine",
+      "page": "AR-15 5.56x45 SureFire MAG5-60 STANAG 60-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3 (Barter)"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 Magpul PMAG D-60 STANAG 60-round magazine",
+      "page": "AR-15 5.56x45 Magpul PMAG D-60 STANAG 60-round magazine",
+      "sellers": [
+       "Peacekeeper",
+       "Ref"
+      ],
+      "ll": [
+       "LL4 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 SureFire MAG5-100 STANAG 100-round magazine",
+      "page": "AR-15 5.56x45 SureFire MAG5-100 STANAG 100-round magazine",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "page": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 10.3 inch barrel",
+      "page": "AR-15 5.56x45 10.3 inch barrel",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "AR-15 Daniel Defense MK12 Low Profile Gas Block",
+      "page": "AR-15 Daniel Defense MK12 Low Profile Gas Block",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 SureFire WarComp 5.56x45 flash hider",
+      "page": "AR-15 SureFire WarComp 5.56x45 flash hider",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "SureFire SOCOM556-MINI MONSTER 5.56x45 sound suppressor",
+      "page": "SureFire SOCOM556-MINI MONSTER 5.56x45 sound suppressor",
+      "sellers": [
+       "Skier",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 MFT BUS stock",
+      "page": "AR-15 MFT BUS stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - MP-133": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_MP-133",
+  "note": "This build is based on a standard MP-133 from Jaeger LL1.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "MP-133 custom plastic forestock with rails",
+      "page": "MP-133 custom plastic forestock with rails",
+      "sellers": [
+       "Mechanic",
+       "Jaeger"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "MP-133/153 plastic pistol grip",
+      "page": "MP-133/153 plastic pistol grip",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - MPX": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_MPX",
+  "note": "This build is based on a standard MPX from Peacekeeper LL2.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-15 Tactical Dynamics Skeletonized pistol grip",
+      "page": "AR-15 Tactical Dynamics Skeletonized pistol grip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Yankee Hill Annihilator multi-caliber flash hider",
+      "page": "Yankee Hill Annihilator multi-caliber flash hider",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Steiner LAS/TAC 2 tactical flashlight",
+      "page": "Steiner LAS/TAC 2 tactical flashlight",
+      "sellers": [
+       "Mechanic",
+       "Ref"
+      ],
+      "ll": [
+       "LL3",
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - Model 870": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_Model_870",
+  "note": "This build is based on a standard M870 from Skier LL1.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "ME Cylinder 12ga muzzle adapter",
+      "page": "ME Cylinder 12ga muzzle adapter",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "GK-02 12ga muzzle brake",
+      "page": "GK-02 12ga muzzle brake",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "M870 Magpul MOE handguard",
+      "page": "M870 Magpul MOE handguard",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 4.1 inch rail",
+      "page": "Magpul M-LOK 4.1 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "KAC vertical foregrip",
+      "page": "KAC vertical foregrip",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 2.5 inch rail",
+      "page": "Magpul M-LOK 2.5 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "M870 Magpul SGA polymer stock",
+      "page": "M870 Magpul SGA polymer stock",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - OP-SKS": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_OP-SKS",
+  "note": "This build is based on a standard OP-SKS from Jaeger LL1.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "SKS 7.62x39 TAPCO 6610 20-round magazine",
+      "page": "SKS 7.62x39 TAPCO 6610 20-round magazine",
+      "sellers": [
+       "Peacekeeper",
+       "Skier"
+      ],
+      "ll": [
+       "LL1",
+       "LL1 (Barter)"
+      ]
+     },
+     {
+      "name": "OP-SKS dovetail mount",
+      "page": "OP-SKS dovetail mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NPZ USP-1 Tyulpan 4x scope",
+      "page": "NPZ USP-1 Tyulpan 4x scope",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NPZ USP-1 scope eyecup",
+      "page": "NPZ USP-1 scope eyecup",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SKS TAPCO Intrafuse chassis",
+      "page": "SKS TAPCO Intrafuse chassis",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "SKS TAPCO Intrafuse buffer tube",
+      "page": "SKS TAPCO Intrafuse buffer tube",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul CTR Carbine stock",
+      "page": "AR-15 Magpul CTR Carbine stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "SKS TAPCO Intrafuse SAW-Style pistol grip",
+      "page": "SKS TAPCO Intrafuse SAW-Style pistol grip",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SKS TAPCO Intrafuse chassis lower rail",
+      "page": "SKS TAPCO Intrafuse chassis lower rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Zenit RK-6 tactical foregrip",
+      "page": "Zenit RK-6 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "SKS Hexagon 7.62x39 sound suppressor",
+      "page": "SKS Hexagon 7.62x39 sound suppressor",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - P226R": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_P226R",
+  "note": "This build is based on a standard P226R from Peacekeeper LL1.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "P226 Stainless Elite pistol slide",
+      "page": "P226 Stainless Elite pistol slide",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "P226 Stainless Elite Wooden pistol grip",
+      "page": "P226 Stainless Elite Wooden pistol grip",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "P226 9x19 20-round extended magazine",
+      "page": "P226 9x19 20-round extended magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "P226 9x19 112mm threaded barrel",
+      "page": "P226 9x19 112mm threaded barrel",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "P226 TJ's Custom 9x19 compensator",
+      "page": "P226 TJ's Custom 9x19 compensator",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith - Vector 9x19": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_-_Vector_9x19",
+  "note": "This build is based on a standard KRISS Vector 9x19 from Skier LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "KRISS Vector Mk.5 modular rail",
+      "page": "KRISS Vector Mk.5 modular rail",
+      "sellers": [
+       "Skier",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Tactical Dynamics Skeletonized Foregrip",
+      "page": "Tactical Dynamics Skeletonized Foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Glock 9x19 \"Big Stick\" 33-round magazine",
+      "page": "Glock 9x19 \"Big Stick\" 33-round magazine",
+      "sellers": [
+       "Skier",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3",
+       "LL3"
+      ]
+     },
+     {
+      "name": "KRISS Vector 9x19 6 inch barrel",
+      "page": "KRISS Vector 9x19 6 inch barrel",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "SilencerCo Osprey 9 9x19 sound suppressor",
+      "page": "SilencerCo Osprey 9 9x19 sound suppressor",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL3",
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 1": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_1",
+  "note": "This build is based on a standard black HK 416A5 from Peacekeeper LL3. It can only be purchased after completing Weapons Circulation.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-15 5.56x45 HK 30 STANAG polymer 30-round magazine",
+      "page": "AR-15 5.56x45 HK 30 STANAG polymer 30-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul MOE pistol grip (FDE)",
+      "page": "AR-15 Magpul MOE pistol grip (FDE)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul UBR GEN2 stock (FDE)",
+      "page": "AR-15 Magpul UBR GEN2 stock (FDE)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "HK 416 5.56x45 11 inch barrel",
+      "page": "HK 416 5.56x45 11 inch barrel",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 SureFire SF3P 5.56x45 flash hider",
+      "page": "AR-15 SureFire SF3P 5.56x45 flash hider",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "SureFire SOCOM556-RC2 5.56x45 sound suppressor",
+      "page": "SureFire SOCOM556-RC2 5.56x45 sound suppressor",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "HK 416 Midwest Industries 9 inch M-LOK handguard",
+      "page": "HK 416 Midwest Industries 9 inch M-LOK handguard",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 4.1 inch rail",
+      "page": "Magpul M-LOK 4.1 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "Magpul RVG foregrip (FDE)",
+      "page": "Magpul RVG foregrip (FDE)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "L3Harris LA-5B/PEQ tactical device",
+      "page": "L3Harris LA-5B/PEQ tactical device",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Magpul MBUS Gen2 flip-up rear sight",
+      "page": "Magpul MBUS Gen2 flip-up rear sight",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Magpul MBUS Gen2 flip-up front sight",
+      "page": "Magpul MBUS Gen2 flip-up front sight",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "EOTech EXPS3-0 holographic sight (Tan)",
+      "page": "EOTech EXPS3-0 holographic sight (Tan)",
+      "sellers": [
+       "Mechanic",
+       "Ref"
+      ],
+      "ll": [
+       "LL4",
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 10": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_10",
+  "note": "This build is based on a standard CMMG Mk47 Mutant from Skier LL4. It can only be purchased after completing Night Sweep.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-10 Noveske SWS N6 Split handguard",
+      "page": "AR-10 Noveske SWS N6 Split handguard",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Mk47 409mm barrel",
+      "page": "Mk47 409mm barrel",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-10 Odin Works ATLAS-7 7.62x51 muzzle brake",
+      "page": "AR-10 Odin Works ATLAS-7 7.62x51 muzzle brake",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Tactical Dynamics Skeletonized Foregrip",
+      "page": "Tactical Dynamics Skeletonized Foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Glock GTL 21 tactical flashlight with laser",
+      "page": "Glock GTL 21 tactical flashlight with laser",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Vortex Razor AMG UH-1 holographic sight",
+      "page": "Vortex Razor AMG UH-1 holographic sight",
+      "sellers": [
+       "Skier",
+       "Ref"
+      ],
+      "ll": [
+       "LL4",
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 HK E1 buttstock",
+      "page": "AR-15 HK E1 buttstock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 F1 Firearms Skeletonized Style 2 pistol grip",
+      "page": "AR-15 F1 Firearms Skeletonized Style 2 pistol grip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AK 7.62x39 ProMag AK-A-16 73-round drum magazine",
+      "page": "AK 7.62x39 ProMag AK-A-16 73-round drum magazine",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 11": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_11",
+  "note": "This build is based on a standard black SR-25 from Peacekeeper LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-15 HK Ergo PSG-1 style pistol grip",
+      "page": "AR-15 HK Ergo PSG-1 style pistol grip",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-10 7.62x51 KAC 10-round steel magazine",
+      "page": "AR-10 7.62x51 KAC 10-round steel magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul PRS GEN3 stock",
+      "page": "AR-15 Magpul PRS GEN3 stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "FLIR RS-32 2.25-9x 35mm 60Hz thermal riflescope",
+      "page": "FLIR RS-32 2.25-9x 35mm 60Hz thermal riflescope",
+      "sellers": [
+       "Jaeger",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL4",
+       "LL4 (Barter)"
+      ]
+     },
+     {
+      "name": "KAC PRS/QDC 7.62x51 sound suppressor",
+      "page": "KAC PRS/QDC 7.62x51 sound suppressor",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3 (Barter)"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 2.5 inch rail",
+      "page": "Magpul M-LOK 2.5 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Steiner DBAL-PL tactical device",
+      "page": "Steiner DBAL-PL tactical device",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 4.1 inch rail",
+      "page": "Magpul M-LOK 4.1 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "Stark SE-5 Express Forward foregrip (Black)",
+      "page": "Stark SE-5 Express Forward foregrip",
+      "sellers": [
+       "Mechanic",
+       "Ref"
+      ],
+      "ll": [
+       "LL4",
+       "LL3"
+      ]
+     },
+     {
+      "name": "NcSTAR MPR45 Backup mount",
+      "page": "NcSTAR MPR45 Backup mount",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Burris FastFire Weaver Base",
+      "page": "Burris FastFire Weaver Base",
+      "sellers": [
+       "Peacekeeper",
+       "Skier"
+      ],
+      "ll": [
+       "LL1",
+       "LL2"
+      ]
+     },
+     {
+      "name": "Burris FastFire 3 reflex sight",
+      "page": "Burris FastFire 3 reflex sight",
+      "sellers": [
+       "Peacekeeper",
+       "Skier"
+      ],
+      "ll": [
+       "LL1",
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 12": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_12",
+  "note": "These builds are based on a standard PP-19-01 from Prapor LL1, a standard T-5000M from Skier LL2 and a standard Glock 17 from Mechanic LL1.",
+  "lists": [
+   {
+    "weapon": "PP-19-01",
+    "rows": [
+     {
+      "name": "PP-19-01 Vityaz-SN dust cover",
+      "page": "PP-19-01 Vityaz-SN dust cover",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Aimpoint Micro Standard Mount",
+      "page": "Aimpoint Micro Standard Mount",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Aimpoint Micro Spacer High",
+      "page": "Aimpoint Micro Spacer High",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Aimpoint Micro T-1 reflex sight",
+      "page": "Aimpoint Micro T-1 reflex sight",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AK-74M/AK-100 Zenit PT Lock",
+      "page": "AK-74M/AK-100 Zenit PT Lock",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AK Zenit PT-3 \"Klassika\" stock",
+      "page": "AK Zenit PT-3 \"Klassika\" stock",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Zenit RK-3 pistol grip (Black)",
+      "page": "AK Zenit RK-3 pistol grip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "PP-19-01 Vityaz 9x19 sound suppressor",
+      "page": "PP-19-01 Vityaz 9x19 sound suppressor",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "PP-19-01 Vityaz SAG MK1 M-LOK handguard with gas tube",
+      "page": "PP-19-01 Vityaz SAG MK1 M-LOK handguard with gas tube",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 4.1 inch rail",
+      "page": "Magpul M-LOK 4.1 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL1"
+      ]
+     },
+     {
+      "name": "Zenit RK-6 tactical foregrip",
+      "page": "Zenit RK-6 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "L3Harris AN/PEQ-15 tactical device (Tan)",
+      "page": "L3Harris AN/PEQ-15 tactical device",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK 2.5 inch rail",
+      "page": "Magpul M-LOK 2.5 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Zenit Klesch-2P flashlight with laser",
+      "page": "Zenit Klesch-2P flashlight with laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     }
+    ]
+   },
+   {
+    "weapon": "T-5000M",
+    "rows": [
+     {
+      "name": "Harris S-BRM 6-9\" Bipod",
+      "page": "Harris S-BRM 6-9\" Bipod",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "page": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "sellers": [
+       "Mechanic",
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "page": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "page": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2",
+       "LL2"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "page": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2 (Barter)"
+      ]
+     }
+    ]
+   },
+   {
+    "weapon": "Glock 17",
+    "rows": [
+     {
+      "name": "Glock 9x19 Double Diamond 114mm threaded barrel",
+      "page": "Glock 9x19 Double Diamond 114mm threaded barrel",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Glock 9x19 Double Diamond thread protector",
+      "page": "Glock 9x19 Double Diamond thread protector",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Glock Pachmayr Tactical Grip Glove",
+      "page": "Glock Pachmayr Tactical Grip Glove",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Glock 9x19 Magpul PMAG GL9 21-round magazine",
+      "page": "Glock 9x19 Magpul PMAG GL9 21-round magazine",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Zenit Klesch-2P flashlight with laser",
+      "page": "Zenit Klesch-2P flashlight with laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 13": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_13",
+  "note": "",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "PK Zenit B-50 handguard",
+      "page": "PK Zenit B-50 handguard",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "PKM 7.62x54R 658mm barrel",
+      "page": "PKM 7.62x54R 658mm barrel",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "PK Zenit DTK-1P 7.62x54R muzzle brake",
+      "page": "PK Zenit DTK-1P 7.62x54R muzzle brake",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "PK Zenit PT-2 \"Klassika\" stock",
+      "page": "PK Zenit PT-2 \"Klassika\" stock",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "NPZ USP-1 Tyulpan 4x scope",
+      "page": "NPZ USP-1 Tyulpan 4x scope",
+      "sellers": [
+       "Prapor"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 2": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_2",
+  "note": "This build is based on a standard RSASS from Peacekeeper LL4. It can only be purchased after completing Wet Job - Part 5. It can also be obtained as a barter from Peacekeeper LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "page": "SilencerCo Hybrid 46 Direct Thread Mount adapter",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2",
+       "LL2"
+      ]
+     },
+     {
+      "name": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "page": "SilencerCo Hybrid 46 multi-caliber sound suppressor",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "Remington RAHG 4 inch rail",
+      "page": "Remington RAHG 4 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Zenit RK-4 tactical foregrip",
+      "page": "Zenit RK-4 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "page": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "sellers": [
+       "Mechanic",
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "page": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 ADAR 2-15 buffer tube",
+      "page": "AR-15 ADAR 2-15 buffer tube",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul CTR Carbine stock",
+      "page": "AR-15 Magpul CTR Carbine stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 3": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_3",
+  "note": "This build is based on a standard DVL-10 from Skier LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "page": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "Nightforce Magmount 34mm ring scope mount",
+      "page": "Nightforce Magmount 34mm ring scope mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 4": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_4",
+  "note": "This build is based on a standard AK-102 from Mechanic LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AK CNC Warrior 5.56x45 muzzle device adapter",
+      "page": "AK CNC Warrior 5.56x45 muzzle device adapter",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 Ferfrans CQB 5.56x45 muzzle brake",
+      "page": "AR-15 Ferfrans CQB 5.56x45 muzzle brake",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Ferfrans CRD 5.56x45 Concussion Reduction Device",
+      "page": "Ferfrans CRD 5.56x45 Concussion Reduction Device",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "AK Zenit B-10 Handguard",
+      "page": "AK Zenit B-10 Handguard",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Magpul AFG tactical foregrip (Olive Drab)",
+      "page": "Magpul AFG tactical foregrip (Olive Drab)",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Zenit Klesch-2U tactical flashlight",
+      "page": "Zenit Klesch-2U tactical flashlight",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK AKademia Bastion dust cover",
+      "page": "AK AKademia Bastion dust cover",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "page": "SIG Sauer ROMEO7 1x30 reflex sight (Prototype)",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "SLR-106/AK 5.56x45 Circle 10 30-round magazine",
+      "page": "SLR-106/AK 5.56x45 Circle 10 30-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "RPK-16 buffer tube",
+      "page": "RPK-16 buffer tube",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 KRISS Defiance DS150 stock",
+      "page": "AR-15 KRISS Defiance DS150 stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 5": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_5",
+  "note": "This build is based on a standard AKMN from Prapor LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AK Magpul MOE AKM handguard (Black)",
+      "page": "AK Magpul MOE AKM handguard (Black)",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Magpul M-LOK AFG tactical foregrip (Black)",
+      "page": "Magpul M-LOK AFG tactical foregrip (Black)",
+      "sellers": [
+       "Peacekeeper",
+       "Skier"
+      ],
+      "ll": [
+       "LL3",
+       "LL3"
+      ]
+     },
+     {
+      "name": "AKM/AK-74 Magpul Zhukov-S stock",
+      "page": "AKM/AK-74 Magpul Zhukov-S stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AK Magpul MOE pistol grip (Black)",
+      "page": "AK Magpul MOE pistol grip (Black)",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AK 7.62x39 Magpul PMAG 30 GEN M3 30-round magazine (Black)",
+      "page": "AK 7.62x39 Magpul PMAG 30 GEN M3 30-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "Rotor 43 7.62x39 sound suppressor",
+      "page": "Rotor 43 7.62x39 sound suppressor",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "EOTech HHS-1 hybrid sight (Black)",
+      "page": "EOTech HHS-1 hybrid sight",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AK AKademia Bastion dust cover",
+      "page": "AK AKademia Bastion dust cover",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 6": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_6",
+  "note": "This build is based on a standard SVDS from Prapor LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "SVDS Lynx Arms AK-series pistol grip adapter",
+      "page": "SVDS Lynx Arms AK-series pistol grip adapter",
+      "sellers": [
+       "Prapor",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "AK Magpul MOE pistol grip (Black)",
+      "page": "AK Magpul MOE pistol grip (Black)",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "SVD SAG MK1 chassis",
+      "page": "SVD SAG MK1 chassis",
+      "sellers": [
+       "Prapor",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "SVDS custom cut dust cover",
+      "page": "SVDS custom cut dust cover",
+      "sellers": [
+       "Prapor",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "SVDS Lynx Arms Hinge buffer tube adapter",
+      "page": "SVDS Lynx Arms Hinge buffer tube adapter",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul UBR GEN2 stock (Black)",
+      "page": "AR-15 Magpul UBR GEN2 stock (Black)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "SVDS Rotor 43 thread adapter",
+      "page": "SVDS Rotor 43 thread adapter",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Rotor 43 7.62x54R sound suppressor",
+      "page": "Rotor 43 7.62x54R sound suppressor",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Lobaev Arms 30mm scope mount",
+      "page": "Lobaev Arms 30mm scope mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL1 (Barter)",
+       "LL2"
+      ]
+     },
+     {
+      "name": "March Tactical 3-24x42 FFP 30mm riflescope",
+      "page": "March Tactical 3-24x42 FFP 30mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 7": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_7",
+  "note": "This build is based on a standard M1A from Peacekeeper LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "M1A 7.62x51 20-round magazine",
+      "page": "M1A 7.62x51 20-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "M1A ProMag Archangel chassis",
+      "page": "M1A ProMag Archangel chassis",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Holosun LS321 Tactical device",
+      "page": "Holosun LS321 Tactical device",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "M14 UltiMAK M8 Forward Optic mount",
+      "page": "M14 UltiMAK M8 Forward Optic mount",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "Aimpoint Micro Standard Mount",
+      "page": "Aimpoint Micro Standard Mount",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Aimpoint Micro T-1 reflex sight",
+      "page": "Aimpoint Micro T-1 reflex sight",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "M14 Leapers UTG 4-Point Locking Deluxe mount",
+      "page": "M14 Leapers UTG 4-Point Locking Deluxe mount",
+      "sellers": [
+       "Mechanic",
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "page": "IEA Mil-Optics KH/F 34mm one-piece magmount",
+      "sellers": [
+       "Mechanic",
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "page": "Nightforce ATACR 7-35x56 34mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL4"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 8": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_8",
+  "note": "These builds are based on a standard M700 from Peacekeeper LL2 and a standard Colt M1911A1 .45 ACP pistol from Peacekeeper LL1.",
+  "lists": [
+   {
+    "weapon": "M700",
+    "rows": [
+     {
+      "name": "M700 AB Arms MOD*X GEN 3 chassis",
+      "page": "M700 AB Arms MOD*X GEN 3 chassis",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul MIAD pistol grip (FDE)",
+      "page": "AR-15 Magpul MIAD pistol grip (FDE)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "M700 AB Arms MOD*X GEN 3 KeyMod handguard",
+      "page": "M700 AB Arms MOD*X GEN 3 KeyMod handguard",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Strike Industries KeyMod 6 inch rail",
+      "page": "Strike Industries KeyMod 6 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "Zenit RK-6 tactical foregrip",
+      "page": "Zenit RK-6 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 ADAR 2-15 buffer tube",
+      "page": "AR-15 ADAR 2-15 buffer tube",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "AR-15 KRISS Defiance DS150 stock",
+      "page": "AR-15 KRISS Defiance DS150 stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-10 Daniel Defense WAVE 7.62x51 muzzle brake",
+      "page": "AR-10 Daniel Defense WAVE 7.62x51 muzzle brake",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Daniel Defense WAVE QD sound suppressor",
+      "page": "Daniel Defense WAVE QD sound suppressor",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "M700 AB Arms MOD*X rail mount",
+      "page": "M700 AB Arms MOD*X rail mount",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Recknagel Era-Tac 34mm ring scope mount",
+      "page": "Recknagel Era-Tac 34mm ring scope mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "Schmidt & Bender PM II 5-25x56 34mm riflescope",
+      "page": "Schmidt & Bender PM II 5-25x56 34mm riflescope",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "M700 7.62x51 Magpul PMAG AC 5-round magazine",
+      "page": "M700 7.62x51 Magpul PMAG AC 5-round magazine",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     }
+    ]
+   },
+   {
+    "weapon": "M1911",
+    "rows": [
+     {
+      "name": "M1911 Pachmayr American Legend Grip #423",
+      "page": "M1911 Pachmayr American Legend Grip 423",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "M1911 Anarchy Outdoors .45 ACP muzzle brake",
+      "page": "M1911 Anarchy Outdoors .45 ACP muzzle brake",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "M1911A1 NcSTAR trigger guard mount",
+      "page": "M1911A1 NcSTAR trigger guard mount",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     },
+     {
+      "name": "NcSTAR Tactical Blue Laser",
+      "page": "NcSTAR Tactical Blue Laser",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL1"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ },
+ "Gunsmith Master - Part 9": {
+  "url": "https://escapefromtarkov.fandom.com/wiki/Gunsmith_Master_-_Part_9",
+  "note": "This build is based on a standard M4A1 from Peacekeeper LL3.",
+  "lists": [
+   {
+    "weapon": "",
+    "rows": [
+     {
+      "name": "AR-15 5.56x45 SureFire MAG5-60 STANAG 60-round magazine",
+      "page": "AR-15 5.56x45 SureFire MAG5-60 STANAG 60-round magazine",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3 (Barter)"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 Magpul PMAG D-60 STANAG 60-round magazine",
+      "page": "AR-15 5.56x45 Magpul PMAG D-60 STANAG 60-round magazine",
+      "sellers": [
+       "Peacekeeper",
+       "Ref"
+      ],
+      "ll": [
+       "LL4 (Barter)",
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 SureFire MAG5-100 STANAG 100-round magazine",
+      "page": "AR-15 5.56x45 SureFire MAG5-100 STANAG 100-round magazine",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "AR-15 Alexander Arms MK10 rifle length handguard",
+      "page": "AR-15 Alexander Arms MK10 rifle length handguard",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Alexander Arms 10 inch rail",
+      "page": "Alexander Arms 10 inch rail",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL4"
+      ]
+     },
+     {
+      "name": "Zenit RK-1 tactical foregrip",
+      "page": "Zenit RK-1 tactical foregrip",
+      "sellers": [
+       "Skier"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul MIAD pistol grip (FDE)",
+      "page": "AR-15 Magpul MIAD pistol grip (FDE)",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 5.56x45 10.3 inch barrel",
+      "page": "AR-15 5.56x45 10.3 inch barrel",
+      "sellers": [
+       "Peacekeeper",
+       "Mechanic"
+      ],
+      "ll": [
+       "LL2 (Barter)",
+       "LL3",
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "AR-15 KAC QDC 5.56x45 Flash Suppressor Kit",
+      "page": "AR-15 KAC QDC 5.56x45 Flash Suppressor Kit",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL2"
+      ]
+     },
+     {
+      "name": "AR-15 Ballistic Advantage Lo-Pro Gas Block",
+      "page": "AR-15 Ballistic Advantage Lo-Pro Gas Block",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "UNV DLOC-IRD sight mount",
+      "page": "UNV DLOC-IRD sight mount",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL2 (Barter)"
+      ]
+     },
+     {
+      "name": "Trijicon REAP-IR thermal scope",
+      "page": "Trijicon REAP-IR thermal scope",
+      "sellers": [
+       "Mechanic",
+       "Skier"
+      ],
+      "ll": [
+       "LL4 (Barter)",
+       "LL4 (Barter)"
+      ]
+     },
+     {
+      "name": "Trijicon REAP-IR scope eyecup",
+      "page": "Trijicon REAP-IR scope eyecup",
+      "sellers": [
+       "Jaeger"
+      ],
+      "ll": [
+       "LL3 (Barter)",
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 KRISS Defiance DS150 stock",
+      "page": "AR-15 KRISS Defiance DS150 stock",
+      "sellers": [
+       "Peacekeeper"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     },
+     {
+      "name": "AR-15 Magpul B.A.D. Lever bolt release",
+      "page": "AR-15 Magpul B.A.D. Lever bolt release",
+      "sellers": [
+       "Mechanic"
+      ],
+      "ll": [
+       "LL3"
+      ]
+     }
+    ]
+   }
+  ],
+  "fetched": "2026-10-27"
+ }
+}
