@@ -52,6 +52,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("kappa", "/guide/kappa/", "카파템"), ("keys", "/guide/keys/", "열쇠"),
        ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
        ("prestige", "/guide/prestige/", "프레스티지"), ("patch", "/guide/patch/", "패치 요약"),
+       ("promo", "/guide/promo/", "프로모 코드"),
        ("overlay", "/", "시세 오버레이")]
 
 
@@ -1730,6 +1731,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/ammo/", "탄약표", "구경별 관통력·데미지·방어구 피해·상인 구매처", f'{counts.get("ammo", 0)}종'),
         ("/guide/prestige/", "프레스티지", "PVE·PVP 단계별 조건과 보상", "1.2.0 PVE 반영"),
         ("/guide/patch/", "패치 요약", "1.0.5~1.2.5 주요 변경 한국어 정리", "2026-05~10"),
+        ("/guide/promo/", "프로모 코드", "지금 쓸 수 있는 공식 프로모 코드 · 모드별 · 등록 방법", f'{counts.get("promo", 0)}개 · {PROMO_CHECKED}'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
         ("/guide/keys/", "맵별 열쇠", "여는 곳·퀘스트 필요 키·시세", f'{counts.get("keys", 0)}개'),
     ]
@@ -1985,6 +1987,92 @@ def patch_page(ctx: Ctx) -> tuple[str, str]:
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="patch", crumbs=[("패치 요약", None)])
 
 
+# ─────────────────────────────────────────────────────────────
+# 프로모 코드 — 손으로 관리. 넣는 기준: 서로 다른 출처 3곳 이상이 최근 2주 안에 '활성'으로 확인했고
+# 국내 커뮤니티(디시 타르코프 갤러리)에서도 쓴 보고가 있는 것만. 한 곳이라도 '만료'로 적은 코드는 '제외' 칸에 둔다.
+# 갱신할 때 PROMO_CHECKED 날짜를 꼭 바꿀 것(페이지·허브 카드에 그대로 나간다).
+# ─────────────────────────────────────────────────────────────
+PROMO_CHECKED = "2026-10-26"
+# (모드 키, 제목, 설명)
+PROMO_MODES = [
+    ("pve", "PVE 존", "PVE 캐릭터로 접속해 메신저에서 받습니다. 1.2.0(10-06) 업데이트 기념으로 해외 매체마다 하나씩 나온 코드라 이름이 매체명입니다."),
+    ("season", "PVP 시즌 (KORD BREACH)", "시즌 캐릭터 전용 — 영구 PVP·PVE 캐릭터에는 안 들어옵니다."),
+    ("pvp", "PVP 영구 존", "영구 PVP 캐릭터 전용. 대부분 소소한 보급품·루블이고 2025년 말~2026년 초에 나온 뒤 아직 살아 있는 코드입니다."),
+]
+# (코드, 모드 키, 보상 요약, 비고)
+PROMO_CODES = [
+    ("POLYGON", "pve", "M60E6 기관총 + 100발 박스 + 7.62x51 M993 200발, ComTac II 헤드셋, TC 800 헬멧, M53A1 방독면, LV-119 플레이트 캐리어, 배낭", "가장 알찬 코드"),
+    ("AUTOMATON", "pve", "SIG MCX .300 BLK + PMAG + AP 탄, Siege-R 플레이트 캐리어, NeoSteel 헬멧, IR 발라클라바, ComTac VI 헤드셋, 방탄 안경", ""),
+    ("YYSTV", "pve", "HK 416A5 + PMAG + 5.56 M995 120발, LV-119 플레이트 캐리어, Bastion 헬멧, SOTR 마스크, Sordin 헤드셋, 배낭", ""),
+    ("PVEPRESTIGE", "pve", "나무 장비 상자 2개 + 탄약 상자 1개", "PVE 프레스티지 추가 기념"),
+    ("WIPE", "season", "HK G36 + AKS-74U, RBAV-AF 플레이트 캐리어, DevTac Ronin 헬멧, 탄창 케이스, 탄약·의료품", "시즌 시작(08-03) 기념"),
+    ("GAMESPARK", "season", "Desert Tech MDR, Trooper 방탄복, Ronin 헬멧, T20 배낭, Grizzly·CMS·Salewa 의료품", ""),
+    ("PCGAMESN", "season", "Velociraptor .300 BLK + SLR-106 5.56, TV-110 플레이트 캐리어, 헬멧, 배낭, Grizzly 의료품, 제작 재료", ""),
+    ("ELVISVISTA", "pvp", "Elvisvista 피규어, 은색 트리 장식 2개", "BSG 아트 리드 공개(2025-12-24)"),
+    ("PAY2WIN", "pvp", "TOZ-106 산탄총, Blicky 장난감 총, FAST MT 헬멧(모조), GP 코인", "니키타가 올린 장난 코드(2025-12-07)"),
+    ("LIGHTSOUT", "pvp", "절전형 전구 6개", ""),
+    ("GOONSQUAD", "pvp", "50,000₽, CALOK-B, 원정용 연료통, 설탕, 볼트 2, KEKTAPE 2", "개발자 방송 공개"),
+    ("SCAVYBOI", "pvp", "50,000₽, CALOK-B, 원정용 연료통, 위스키, 알룐카 초콜릿, 볼트 2, 너트 2, 전원 코드", ""),
+    ("SBEUKOMAR", "pvp", "50,000₽, CALOK-B, 원정용 연료통, 주름 호스 2, 연유, Slickers 초코바, Iskra 전투식량", ""),
+]
+# 최근 끝났거나 넣지 않은 것 — 검색해서 들어온 사람이 헛수고하지 않게 이유와 함께 적는다
+PROMO_GONE = [
+    ("INVEN", "PVE", "M1A 소총 세트. 인벤 독자용으로 <b>업데이트 뒤 2주 한정</b>이라고 인벤 기사(10-07)에 명시 → 10-20 전후 만료. 20일까지 됐다는 댓글이 마지막 보고."),
+    ("12주년 선물", "전 모드", "코드가 아니라 <a href=\"https://profile.tarkov.com/profile/gifts\" rel=\"noopener\" target=\"_blank\">프로필 선물함</a>에서 받는 식료품 꾸러미. 공식 트윗 기준 <b>10-19 20:00(한국)</b>에 끝남."),
+    ("JUST150TARCOINS", "확장 허브", "TarCoin 150개. 선착순 4만 명 한정이라 소진됨(8월 공개)."),
+    ("PROMOCODE · BACKTORAID · SUDAKTUDAK · LETMEIN", "—", "정리 사이트마다 활성/만료가 갈려서 뺐습니다. 런처에서 직접 넣어 보는 건 손해 볼 게 없습니다."),
+]
+
+
+def promo_page(ctx: Ctx) -> tuple[str, str]:
+    by_mode: dict[str, list] = {}
+    for code, mode, reward, note in PROMO_CODES:
+        by_mode.setdefault(mode, []).append((code, reward, note))
+    secs = []
+    for key, title, desc in PROMO_MODES:
+        rows = "".join(
+            f'<tr><td class="n"><code class="promo">{e(code)}</code> <button type="button" class="cp" data-c="{e(code)}" aria-label="{e(code)} 복사">복사</button></td>'
+            f'<td>{e(reward)}</td><td class="small muted">{e(note) or "—"}</td></tr>'
+            for code, reward, note in by_mode.get(key, []))
+        secs.append(f'<h2 class="sec" id="{key}">{e(title)} <span class="muted small">{len(by_mode.get(key, []))}개</span></h2>'
+                    f'<p class="small muted">{desc}</p>'
+                    '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">코드</th><th>보상</th><th>비고</th></tr></thead>'
+                    f'<tbody>{rows}</tbody></table></div>')
+    gone = "".join(f'<tr><td class="n"><code class="promo off">{e(c)}</code></td><td class="small">{e(m)}</td><td class="small">{why}</td></tr>' for c, m, why in PROMO_GONE)
+    body = (f'<h1>프로모 코드 <span class="h1en">Promo codes</span></h1>'
+            f'<p class="sub">지금 쓸 수 있는 공식 코드 {len(PROMO_CODES)}개 · 마지막 확인 {PROMO_CHECKED}</p>'
+            '<div class="note key"><b>넣는 기준</b> — 서로 다른 정리 사이트 3곳 이상이 최근 2주 안에 "활성"으로 확인했고, 디시 타르코프 갤러리에서도 쓴 보고가 있는 코드만 올립니다. '
+            '한 곳이라도 만료로 적은 코드는 아래 "제외" 표로 내립니다. BSG는 만료일을 공지하지 않고 하루 만에 닫는 코드도 있어서, <b>보이면 바로 넣는 게 답</b>입니다. '
+            '코드는 <b>모드별</b>로 들어오니 PVE 코드를 넣고 PVP 캐릭터로 접속하면 메신저에 아무것도 없습니다.</div>'
+            '<nav class="toc"><a href="#how">등록 방법</a>' + "".join(f'<a href="#{k}">{e(t)}</a>' for k, t, _ in PROMO_MODES) + '<a href="#gone">끝난·제외</a></nav>'
+            '<section class="box" id="how"><h2>등록 방법</h2><ol>'
+            '<li><b>런처</b>: 오른쪽 위 계정 이름 → <b>Activate code(코드 활성화)</b> → 코드 입력 → Enter. 대소문자를 구분합니다.</li>'
+            '<li><b>웹</b>: <a href="https://www.escapefromtarkov.com/promo/activate" rel="noopener" target="_blank">escapefromtarkov.com/promo/activate</a>에 로그인해 입력해도 같습니다.</li>'
+            '<li>게임에 <b>해당 모드 캐릭터</b>로 접속 → 오른쪽 아래 <b>메신저</b> → 보낸 사람 탭에서 수령. 보관함이 꽉 차면 안 들어오니 자리를 비워 두세요.</li>'
+            '<li>여러 개를 연달아 넣으면 잠깐 쿨다운이 걸립니다. 점검 중엔 등록이 안 되니 서버가 열린 뒤에 넣으세요.</li>'
+            '<li>"이미 사용됨"은 계정당 1회라서, "유효하지 않음"은 만료라서 뜹니다. 두 번째가 뜨면 아래 표에서 내려야 하니 알려 주세요(시세 오버레이 앱 ⚙ → 피드백, 또는 디시 타르코프 갤러리).</li>'
+            '</ol></section>'
+            + "".join(secs)
+            + f'<h2 class="sec" id="gone">최근 끝났거나 넣지 않은 것</h2>'
+            '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">코드</th><th>모드</th><th>이유</th></tr></thead>'
+            f'<tbody>{gone}</tbody></table></div>'
+            '<p class="small muted">확인 출처(2026-10-26): Dexerto(10-20 갱신)·PCGamesN(10-24)·Guided.news(10-14)·Timesaver(10-15)·games.gg(10-07)·tarkov.help, 디시 타르코프 갤러리 10-09·10-15 글, 인벤 기사(10-07), Battlestate Games 공식 X(10-15). '
+            '보상 구성은 사이트마다 조금씩 달라 공통되는 것만 적었습니다. 직접 받아 보고 다르면 알려 주세요.</p>')
+    extra_head = ('<style>code.promo{font-family:Consolas,"D2Coding",monospace;font-size:14px;font-weight:700;color:var(--gold);background:var(--panel2);'
+                  'border:1px solid var(--line);border-radius:6px;padding:2px 7px;letter-spacing:.3px;user-select:all}code.promo.off{color:var(--muted);text-decoration:line-through;font-weight:600}'
+                  'button.cp{margin-left:4px;font-size:11.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}'
+                  'button.cp:hover{border-color:var(--gold)}button.cp.ok{border-color:var(--gold);color:var(--gold)}</style>')
+    scripts = ('<script>document.addEventListener("click",function(ev){var b=ev.target.closest("button.cp");if(!b)return;'
+               'var c=b.getAttribute("data-c");(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(function(){b.textContent="복사됨";b.classList.add("ok");'
+               'setTimeout(function(){b.textContent="복사";b.classList.remove("ok")},1500)},function(){var r=document.createRange();r.selectNodeContents(b.previousElementSibling);'
+               'var s=getSelection();s.removeAllRanges();s.addRange(r)})});</script>')
+    path = "/guide/promo/"
+    title = f"타르코프 프로모 코드 {PROMO_CHECKED} — 지금 쓸 수 있는 공식 코드 {len(PROMO_CODES)}개 (PVE·시즌·PVP) | 탈콥 가이드"
+    desc = f"타르코프(Escape from Tarkov) 프로모 코드 {PROMO_CHECKED} 확인판: PVE 존 POLYGON·AUTOMATON·YYSTV·PVEPRESTIGE, KORD BREACH 시즌 WIPE·GAMESPARK·PCGAMESN, PVP 영구 존 6개. 보상·모드·런처 등록 방법·만료된 코드."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="promo", crumbs=[("프로모 코드", None)],
+                      extra_head=extra_head, scripts=scripts)
+
+
 def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> list[str]:
     urls: list[str] = []
     # 퀘스트 상세
@@ -2031,8 +2119,11 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     ammo_n = h.count('<td class="n pen ')
     p, h = patch_page(ctx)
     write(out, p, h, urls)
+    p, h = promo_page(ctx)
+    write(out, p, h, urls)
     counts = {"quests": len(ctx.tasks), "items": items_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
-              "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n, **extra_counts}
+              "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,
+              "promo": len(PROMO_CODES), **extra_counts}
     p, h = hub_page(ctx, counts)
     write(out, p, h, urls)
     return urls

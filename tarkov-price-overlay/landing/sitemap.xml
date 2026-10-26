@@ -98,6 +98,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://tarkov.aquapado.com/guide/promo/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://tarkov.aquapado.com/guide/quest-items/</loc>
     <lastmod>2026-10-26</lastmod>
     <changefreq>weekly</changefreq>
