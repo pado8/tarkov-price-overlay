@@ -761,6 +761,8 @@ const RADAR_SCAV_KEY = "tarkov.radar.showScav";
 const RADAR_POPUP_MAX_AGE_SEC = 60;
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
+// "조회 키를 게임에도 전달": RegisterHotKey 대신 키 상태만 엿들어 게임 스크린샷 키와 같은 키를 쓸 수 있게
+const HOTKEY_PASSTHROUGH_KEY = "tarkov.hotkeyPassthrough";
 const SOUND_KEY = "tarkov.soundOn";
 const PIN_KEY = "tarkov.pinned";
 const HISTORY_KEY = "tarkov.history";
@@ -1267,6 +1269,12 @@ function App() {
   const [radarData, setRadarData] = useState<RadarState | null>(null);
   const [radarLoading, setRadarLoading] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
+  // 레이더가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
+  const [radarFolder, setRadarFolder] = useState<{ folder: string | null; source: "auto" | "manual"; auto: string | null; ok: boolean } | null>(null);
+  const [radarFolderMsg, setRadarFolderMsg] = useState("");
+  const [hotkeyPassthrough, setHotkeyPassthrough] = useState<boolean>(() => localStorage.getItem(HOTKEY_PASSTHROUGH_KEY) === "true");
+  const hotkeyPassthroughRef = useRef(hotkeyPassthrough);
+  hotkeyPassthroughRef.current = hotkeyPassthrough;
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
@@ -1725,6 +1733,46 @@ function App() {
     if (radarMapRef.current) q.set("map", radarMapRef.current);
     return `${PYTHON_API}/radar?${q.toString()}`;
   };
+  // 스크린샷 폴더 설정(사이드카에 저장) — 설정 패널을 열 때 읽고, 선택/초기화 때 보낸다
+  const loadRadarFolder = async () => {
+    try {
+      const res = await fetch(`${PYTHON_API}/radar/folder`);
+      if (res.ok) setRadarFolder(await res.json());
+    } catch {}
+  };
+  const setRadarFolderPath = async (path: string) => {
+    setRadarFolderMsg("");
+    try {
+      const res = await fetch(`${PYTHON_API}/radar/folder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        setRadarFolderMsg(t.radarFolderInvalid + (d?.detail ? ` (${d.detail})` : ""));
+        return;
+      }
+      setRadarFolder(await res.json());
+      radarLastShotRef.current = undefined; // 새 폴더의 옛 스크린샷으로 레이더가 튀지 않게 기준 다시 잡기
+      log(`radar: folder set to "${path || "(auto)"}"`);
+    } catch (e) {
+      setRadarFolderMsg(t.radarFolderInvalid);
+      log(`radar: folder set failed ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+  const pickRadarFolder = async () => {
+    try {
+      const picked = await openFolderDialog({ directory: true, multiple: false, defaultPath: radarFolder?.folder ?? undefined, title: t.radarFolderPick });
+      if (typeof picked === "string" && picked) await setRadarFolderPath(picked);
+    } catch (e) {
+      log(`radar: folder dialog failed ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+  useEffect(() => {
+    if (showSettings) void loadRadarFolder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSettings]);
   const loadRadar = async () => {
     setRadarLoading(true);
     try {
@@ -1920,6 +1968,22 @@ function App() {
         });
     }
   }, [hotkey]);
+
+  // 엿듣기 모드 토글: Rust 플래그를 먼저 바꾼 뒤 키보드 바인딩을 다시 등록해 방식을 전환한다
+  useEffect(() => {
+    localStorage.setItem(HOTKEY_PASSTHROUGH_KEY, String(hotkeyPassthrough));
+    (async () => {
+      try {
+        await invoke("set_hotkey_passthrough", { enabled: hotkeyPassthrough });
+        if (!isMouseHotkey(hotkey)) await invoke("register_lookup_hotkey", { accelerator: hotkey });
+        if (!isMouseHotkey(toggleHotkey)) await invoke("register_toggle_hotkey", { accelerator: toggleHotkey });
+        log(`React: hotkey passthrough = ${hotkeyPassthrough}`);
+      } catch (e) {
+        log(`React: hotkey passthrough apply failed: ${e}`);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hotkeyPassthrough]);
 
   useEffect(() => {
     localStorage.setItem(TOGGLE_HOTKEY_KEY, toggleHotkey);
@@ -2653,7 +2717,9 @@ function App() {
         } catch {}
         showCard(); // bring card up + cancel any in-flight hide
         setShowSettings(false);
-        setRadarActive(false); // F2는 항상 시세 카드로
+        // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 레이더를 띄워 둔 채 조회한다 —
+        // 인벤토리 밖에서 누른 F2는 '스크린샷+레이더 갱신'이 목적이라 빈 조회로 레이더를 덮지 않게
+        if (!hotkeyPassthroughRef.current) setRadarActive(false);
         setStatus("loading");
         setError("");
         // New lookup generation: invalidates any still-running older lookup
@@ -2703,8 +2769,14 @@ function App() {
             return;
           }
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
-          setResult(data);
-          setStatus("success");
+          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 레이더를 그대로 두고
+          // 빈 결과 카드로 덮지 않는다. 읽혔으면 평소처럼 시세 카드.
+          if (data.item_name != null) setRadarActive(false);
+          const keepRadar = hotkeyPassthroughRef.current && data.item_name == null;
+          if (!keepRadar) {
+            setResult(data);
+            setStatus("success");
+          }
           // Wide-rescue matches stay OUT of history: the enlarged box can
           // read static UI captions ("BODY ARMOR", trader names…) that the
           // match chain resolves to real-looking items — letting those into
@@ -2720,7 +2792,9 @@ function App() {
           // "empty" into "no_match" and the misread-vs-misaligned split on
           // the dashboard stops meaning anything.
           if (data.item_name == null) {
-            const pfx = data.attempt === "wide" ? "wide_" : "";
+            // "share_" = 게임 스크린샷 키와 공유 중인 누름 — 인벤토리 밖에서 누른 게 대부분이라
+            // 대시보드의 '캡처 영역 빗나감(empty)' 비율에 섞이지 않게 따로 표시
+            const pfx = (hotkeyPassthroughRef.current ? "share_" : "") + (data.attempt === "wide" ? "wide_" : "");
             reportEvent("lookup_nomatch", pfx + nomatchCategory(data.raw_text));
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
@@ -3724,6 +3798,17 @@ function App() {
                   : formatHotkeyLabel(toggleHotkey, t)}
               </button>
             </div>
+            <div className="settings-row" title={t.hotkeyPassthroughHint}>
+              <label>{t.hotkeyPassthrough}</label>
+              <input
+                type="checkbox"
+                checked={hotkeyPassthrough}
+                onChange={(e) => setHotkeyPassthrough(e.target.checked)}
+              />
+            </div>
+            <div className="settings-hint">
+              {hotkeyPassthrough ? t.hotkeyPassthroughOn.replace("{key}", formatHotkeyLabel(hotkey, t)) : t.hotkeyPassthroughHint}
+            </div>
             <div className="settings-row">
               <label>{t.sound}</label>
               <input
@@ -3787,6 +3872,23 @@ function App() {
                   if (!e.target.checked) radarLastShotRef.current = undefined;
                 }}
               />
+            </div>
+            <div className="settings-row" title={t.radarFolderHint}>
+              <label>{t.radarFolderLabel}</label>
+              <span style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <button className="reset-btn" onClick={() => void pickRadarFolder()}>{t.radarFolderPick}</button>
+                {radarFolder?.source === "manual" && (
+                  <button className="reset-btn" onClick={() => void setRadarFolderPath("")}>{t.radarFolderAuto}</button>
+                )}
+              </span>
+            </div>
+            <div className="settings-hint" style={{ wordBreak: "break-all" }}>
+              {radarFolderMsg ||
+                (radarFolder
+                  ? radarFolder.folder
+                    ? `${radarFolder.source === "manual" ? t.radarFolderManualTag : t.radarFolderAutoTag} ${radarFolder.folder}`
+                    : t.radarNoFolder
+                  : "")}
             </div>
             <div className="settings-row" title={t.autoHideHint}>
               <label>{t.autoHideToggle}</label>

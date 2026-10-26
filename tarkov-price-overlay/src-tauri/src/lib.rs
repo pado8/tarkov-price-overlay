@@ -127,6 +127,76 @@ struct MouseHotkeys(Arc<Mutex<MouseHotkeyConfig>>);
 /// Closes the race with the installer hook's taskkill on auto-update.
 struct MouseHotkeyStop(Arc<AtomicBool>);
 
+/// "조회 키를 게임에도 전달" 모드. RegisterHotKey로 잡은 키는 OS가 가로채서 전경 앱(게임)에
+/// 전달하지 않는다 — 일반 메시지도, Raw Input도 안 간다(2026-10-26 실험). 그래서 게임 스크린샷
+/// 키와 같은 키를 쓰고 싶으면 등록 대신 **키 상태만 엿듣는다**(마우스 버튼과 같은 방식,
+/// device_query/GetAsyncKeyState). 게임에 키를 넣어 주는 방식(SendInput)은 안티치트 쪽
+/// 불확실성이 있어 쓰지 않는다.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct PollKey {
+    key: device_query::Keycode,
+    shift: bool,
+    ctrl: bool,
+    alt: bool,
+}
+
+#[derive(Default, Clone, Copy)]
+struct KeyPollConfig {
+    lookup: Option<PollKey>,
+    toggle: Option<PollKey>,
+}
+struct KeyPolls(Arc<Mutex<KeyPollConfig>>);
+struct HotkeyPassthrough(AtomicBool);
+
+/// Tauri 가속기 문자열("Shift+F2", "F5", "Ctrl+Alt+K")을 폴링용 키로. 지원 안 하는 키면 None
+/// → 호출 쪽이 RegisterHotKey로 되돌아간다(그 키는 게임과 공유 불가).
+fn parse_poll_key(accelerator: &str) -> Option<PollKey> {
+    use device_query::Keycode as K;
+    let mut pk = PollKey { key: K::F2, shift: false, ctrl: false, alt: false };
+    let mut main: Option<K> = None;
+    for tok in accelerator.split('+').map(|s| s.trim()).filter(|s| !s.is_empty()) {
+        let t = tok.to_ascii_lowercase();
+        match t.as_str() {
+            "shift" => pk.shift = true,
+            "ctrl" | "control" | "commandorcontrol" | "cmdorctrl" | "command" | "super" | "meta" => pk.ctrl = true,
+            "alt" | "option" => pk.alt = true,
+            _ => {
+                let k = match t.as_str() {
+                    "f1" => K::F1, "f2" => K::F2, "f3" => K::F3, "f4" => K::F4, "f5" => K::F5, "f6" => K::F6,
+                    "f7" => K::F7, "f8" => K::F8, "f9" => K::F9, "f10" => K::F10, "f11" => K::F11, "f12" => K::F12,
+                    "0" | "digit0" => K::Key0, "1" | "digit1" => K::Key1, "2" | "digit2" => K::Key2, "3" | "digit3" => K::Key3,
+                    "4" | "digit4" => K::Key4, "5" | "digit5" => K::Key5, "6" | "digit6" => K::Key6, "7" | "digit7" => K::Key7,
+                    "8" | "digit8" => K::Key8, "9" | "digit9" => K::Key9,
+                    "a" => K::A, "b" => K::B, "c" => K::C, "d" => K::D, "e" => K::E, "f" => K::F, "g" => K::G, "h" => K::H,
+                    "i" => K::I, "j" => K::J, "k" => K::K, "l" => K::L, "m" => K::M, "n" => K::N, "o" => K::O, "p" => K::P,
+                    "q" => K::Q, "r" => K::R, "s" => K::S, "t" => K::T, "u" => K::U, "v" => K::V, "w" => K::W, "x" => K::X,
+                    "y" => K::Y, "z" => K::Z,
+                    "insert" => K::Insert, "home" => K::Home, "end" => K::End, "pageup" => K::PageUp,
+                    "pagedown" => K::PageDown, "delete" => K::Delete, "space" => K::Space, "tab" => K::Tab,
+                    "enter" | "return" => K::Enter,
+                    "`" | "backquote" | "grave" => K::Grave, "-" | "minus" => K::Minus, "=" | "equal" => K::Equal,
+                    _ => return None,
+                };
+                if main.is_some() {
+                    return None;
+                }
+                main = Some(k);
+            }
+        }
+    }
+    pk.key = main?;
+    Some(pk)
+}
+
+fn poll_key_down(keys: &[device_query::Keycode], pk: &PollKey) -> bool {
+    use device_query::Keycode as K;
+    let has = |a: K, b: K| keys.contains(&a) || keys.contains(&b);
+    keys.contains(&pk.key)
+        && (!pk.shift || has(K::LShift, K::RShift))
+        && (!pk.ctrl || has(K::LControl, K::RControl) || has(K::LMeta, K::RMeta))
+        && (!pk.alt || has(K::LAlt, K::RAlt))
+}
+
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
     // Only fire the notification on the first hide-to-tray of the session.
     // Repeating it on every X click is noisy; the user learns where the tray
@@ -183,9 +253,35 @@ fn apply_keyboard_hotkey(
     if let Some(old) = old {
         let _ = gs.unregister(old);
     }
+    // 엿듣기 슬롯도 비운다 — 등록 방식이 바뀌어도 옛 바인딩이 같이 울리지 않게
+    {
+        let kstate = app.state::<KeyPolls>();
+        let mut k = kstate.0.lock().unwrap();
+        match slot {
+            "lookup" => k.lookup = None,
+            _ => k.toggle = None,
+        }
+    }
     if accelerator.is_empty() {
         println!("[hotkey] {slot} cleared");
         return Ok(());
+    }
+    let passthrough = app
+        .try_state::<HotkeyPassthrough>()
+        .map(|s| s.0.load(Ordering::SeqCst))
+        .unwrap_or(false);
+    if passthrough {
+        if let Some(pk) = parse_poll_key(accelerator) {
+            let kstate = app.state::<KeyPolls>();
+            let mut k = kstate.0.lock().unwrap();
+            match slot {
+                "lookup" => k.lookup = Some(pk),
+                _ => k.toggle = Some(pk),
+            }
+            println!("[hotkey] {slot} passthrough(poll): {accelerator} → {pk:?}");
+            return Ok(());
+        }
+        println!("[hotkey] {slot} passthrough unsupported for {accelerator} — falling back to RegisterHotKey");
     }
     let parsed = parse_accel(accelerator)?;
     gs.register(parsed.clone())
@@ -243,6 +339,20 @@ fn register_toggle_mouse(app: tauri::AppHandle, button: String) -> Result<(), St
     apply_mouse_hotkey(&app, "toggle", &button)
 }
 
+/// "조회 키를 게임에도 전달" 켜기/끄기. 프론트는 이걸 먼저 부른 뒤 register_*_hotkey를 다시
+/// 불러 등록 방식을 바꾼다. 반환값 = 지금 lookup 가속기가 엿듣기로 표현 가능한지(아니면 공유 불가).
+#[tauri::command]
+fn set_hotkey_passthrough(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    app.state::<HotkeyPassthrough>().0.store(enabled, Ordering::SeqCst);
+    println!("[hotkey] passthrough = {enabled}");
+    Ok(())
+}
+
+#[tauri::command]
+fn hotkey_passthrough_supported(accelerator: String) -> bool {
+    parse_poll_key(&accelerator).is_some()
+}
+
 /// Background poller that watches the three usable mouse buttons (middle, X1,
 /// X2) and emits the same `hotkey-lookup` / `hotkey-toggle` events the
 /// keyboard handler emits. Edge-triggered: only emits on the false→true
@@ -250,11 +360,14 @@ fn register_toggle_mouse(app: tauri::AppHandle, button: String) -> Result<(), St
 fn spawn_mouse_hotkey_thread(
     app: tauri::AppHandle,
     cfg: Arc<Mutex<MouseHotkeyConfig>>,
+    kcfg: Arc<Mutex<KeyPollConfig>>,
     stop: Arc<AtomicBool>,
 ) {
     thread::spawn(move || {
         let device_state = DeviceState::new();
         let mut prev_pressed = [false; 8];
+        // 엿듣기 키(passthrough) — 마우스와 같은 edge 트리거
+        let mut prev_key = [false; 2];
         // Buttons we actually care about. Left/Right are excluded — binding
         // them would steal normal game input and there's no good UX for it.
         const WATCHED: &[MouseHotkeyButton] = &[
@@ -310,6 +423,33 @@ fn spawn_mouse_hotkey_thread(
                 }
                 prev_pressed[idx] = now;
             }
+            // 키보드 엿듣기: 등록(RegisterHotKey) 대신 상태만 읽으므로 게임도 같은 키를 받는다.
+            let kc = *kcfg.lock().unwrap();
+            if kc.lookup.is_some() || kc.toggle.is_some() {
+                let keys = device_state.get_keys();
+                for (i, (pk, event_name)) in [(kc.lookup, "hotkey-lookup"), (kc.toggle, "hotkey-toggle")]
+                    .into_iter()
+                    .enumerate()
+                {
+                    let now = pk.map(|p| poll_key_down(&keys, &p)).unwrap_or(false);
+                    if now && !prev_key[i] {
+                        if let Some(window) = app.get_webview_window("main") {
+                            if !window.is_visible().unwrap_or(true) {
+                                reveal_overlay_no_activate(&window);
+                            }
+                        }
+                        let pos = CursorPos {
+                            x: mouse.coords.0,
+                            y: mouse.coords.1,
+                        };
+                        println!("[hotkey] {event_name} (passthrough {:?}) cursor=({}, {})", pk, pos.x, pos.y);
+                        let _ = app.emit(event_name, pos);
+                    }
+                    prev_key[i] = now;
+                }
+            } else {
+                prev_key = [false; 2];
+            }
             thread::sleep(Duration::from_millis(16));
         }
     });
@@ -330,7 +470,12 @@ fn unregister_all_hotkeys(app: tauri::AppHandle) -> Result<(), String> {
     let mut mcfg = mstate.0.lock().unwrap();
     mcfg.lookup = None;
     mcfg.toggle = None;
-    println!("[hotkey] unregistered all (keyboard + mouse)");
+    drop(mcfg);
+    let kstate = app.state::<KeyPolls>();
+    let mut kcfg = kstate.0.lock().unwrap();
+    kcfg.lookup = None;
+    kcfg.toggle = None;
+    println!("[hotkey] unregistered all (keyboard + mouse + passthrough)");
     Ok(())
 }
 
@@ -779,6 +924,11 @@ pub fn run() {
         .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
         .manage(MouseHotkeys(Arc::new(Mutex::new(MouseHotkeyConfig::default()))))
         .manage(MouseHotkeyStop(Arc::new(AtomicBool::new(false))))
+        .manage(KeyPolls(Arc::new(Mutex::new(KeyPollConfig::default()))))
+        // 시작값은 프론트가 저장된 설정으로 곧 덮어쓴다. 환경변수는 자동화 시험용(웹뷰 localStorage 없이 켜기).
+        .manage(HotkeyPassthrough(AtomicBool::new(
+            std::env::var("TPO_HOTKEY_PASSTHROUGH").map(|v| v == "1").unwrap_or(false),
+        )))
         .invoke_handler(tauri::generate_handler![
             get_cursor_position,
             log_msg,
@@ -786,6 +936,8 @@ pub fn run() {
             register_toggle_hotkey,
             register_lookup_mouse,
             register_toggle_mouse,
+            set_hotkey_passthrough,
+            hotkey_passthrough_supported,
             unregister_all_hotkeys,
             hide_to_tray,
             recover_window_position,
@@ -802,8 +954,9 @@ pub fn run() {
             // shares the MouseHotkeys Arc so register_*_mouse takes effect
             // without restarting the thread.
             let mcfg = app.state::<MouseHotkeys>().0.clone();
+            let kcfg = app.state::<KeyPolls>().0.clone();
             let mstop = app.state::<MouseHotkeyStop>().0.clone();
-            spawn_mouse_hotkey_thread(app.handle().clone(), mcfg, mstop);
+            spawn_mouse_hotkey_thread(app.handle().clone(), mcfg, kcfg, mstop);
 
             // Self-healing sidecar: respawns on unexpected death (see
             // spawn_and_watch_sidecar) so "Failed to fetch" recovers without

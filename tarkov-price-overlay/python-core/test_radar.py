@@ -113,5 +113,34 @@ tg_n = r.build_targets(maps_doc, "night-factory", loc, tasks, loc_t, {"T1"}, pos
 eq("야간 공장에서도 공장 퀘스트 구역이 보임", sorted(t["objective"] for t in tg_n if t["kind"] == "quest"), ["구역 방문", "상자 찾기"])
 eq("없는 맵이면 빈 목록", r.build_targets(maps_doc, "nowhere", loc, tasks, loc_t, {"T1"}, pose), [])
 
-print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 raise SystemExit(1 if fails else 0)
+
+
+# 7) 스크린샷 폴더 직접 지정 — 저장·복원·없는 폴더 거부·자동 복귀 (설정 파일은 임시 폴더로 돌림)
+import tempfile, json as _json
+from pathlib import Path as _P
+_tmp = _P(tempfile.mkdtemp())
+_orig_settings = r._settings_path
+r._settings_path = lambda: _tmp / "radar.json"
+try:
+    svc = r.RadarService()
+    eq("처음엔 자동 탐색", svc.folder_info()["source"], "auto")
+    shots = _tmp / "shots"; shots.mkdir()
+    info = svc.set_folder(str(shots))
+    eq("직접 지정 반영", (info["source"], info["folder"]), ("manual", str(shots)))
+    eq("설정 파일에 저장", _json.loads((_tmp / "radar.json").read_text(encoding="utf-8"))["folder"], str(shots))
+    eq("state()에도 출처 표시", r.RadarService().state("ko").get("folder_source"), "manual")
+    try:
+        svc.set_folder(str(_tmp / "없는폴더")); eq("없는 폴더 거부", "예외 없음", "ValueError")
+    except ValueError:
+        eq("없는 폴더 거부", True, True)
+    eq("빈 문자열 → 자동", svc.set_folder("")["source"], "auto")
+    eq("따옴표·공백 섞인 경로도 허용", svc.set_folder(f'  "{shots}"  ')["source"], "manual")
+    (_tmp / "radar.json").write_text(_json.dumps({"folder": str(_tmp / "사라진")}), encoding="utf-8")
+    eq("저장된 폴더가 사라지면 자동으로", r.RadarService().folder_info()["source"], "auto")
+finally:
+    r._settings_path = _orig_settings
+
+print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
+import sys as _sys
+_sys.exit(1 if fails else 0)

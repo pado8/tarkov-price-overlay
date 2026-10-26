@@ -318,12 +318,63 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
     return out
 
 
+def _settings_path() -> Path:
+    """사용자가 직접 고른 스크린샷 폴더 등 레이더 설정. 퀘스트 트래커와 같은 %LOCALAPPDATA%\\TarkovPriceOverlay."""
+    from quest_tracker import _state_dir  # 순환 import 방지(quest_tracker는 radar를 모른다)
+    return _state_dir() / "radar.json"
+
+
 class RadarService:
     def __init__(self) -> None:
         self._shots = _ShotWatcher()
         self._logs = _LogMaps()
         self._lock = threading.Lock()
         self._folder_override: Optional[Path] = None
+        self._load_settings()
+
+    # ── 설정(스크린샷 폴더 직접 지정) ──
+    def _load_settings(self) -> None:
+        try:
+            import json
+            d = json.loads(_settings_path().read_text(encoding="utf-8"))
+            f = d.get("folder")
+            if f and Path(f).is_dir():
+                self._folder_override = Path(f)
+            elif f:
+                log.warning(f"[radar] 저장된 스크린샷 폴더가 없어져 자동 탐색으로 돌아감: {f}")
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            log.warning(f"[radar] 설정 읽기 실패(무시): {e}")
+
+    def _save_settings(self) -> None:
+        try:
+            import json
+            _settings_path().write_text(
+                json.dumps({"folder": str(self._folder_override) if self._folder_override else None}, ensure_ascii=False),
+                encoding="utf-8")
+        except Exception as e:
+            log.warning(f"[radar] 설정 저장 실패: {e}")
+
+    def folder_info(self) -> dict:
+        """현재 쓰는 폴더와 출처. auto = 자동 탐색 결과(없으면 None)."""
+        auto = screenshots_dir()
+        cur = self._folder_override or auto
+        return {"folder": str(cur) if cur else None,
+                "source": "manual" if self._folder_override else "auto",
+                "auto": str(auto) if auto else None,
+                "ok": bool(cur and cur.is_dir())}
+
+    def set_folder(self, path: str) -> dict:
+        """빈 문자열이면 자동 탐색으로 되돌린다. 없는 폴더면 ValueError."""
+        p = Path(path.strip().strip('"')).expanduser() if path and path.strip() else None
+        if p is not None and not p.is_dir():
+            raise ValueError(f"폴더가 없습니다: {p}")
+        with self._lock:
+            self._folder_override = p
+            self._shots = _ShotWatcher()  # 폴더가 바뀌었으니 '마지막 샷' 캐시를 버린다
+            self._save_settings()
+        return self.folder_info()
 
     # 스크린샷이 이보다 오래됐으면(그리고 사용자가 레이더를 직접 연 게 아니면) 지도 데이터를 받지 않는다.
     # 앱이 1초마다 부르는데, 레이더를 안 쓰는 사용자까지 9MB 지도 문서를 받게 할 이유가 없다.
@@ -333,7 +384,9 @@ class RadarService:
               full: bool = False) -> dict:
         with self._lock:
             folder = self._folder_override or screenshots_dir()
-            res: dict = {"folder": str(folder) if folder else None, "shot": None, "map": None,
+            res: dict = {"folder": str(folder) if folder else None,
+                         "folder_source": "manual" if self._folder_override else "auto",
+                         "shot": None, "map": None,
                          "map_source": None, "preset": None, "targets": [], "maps": []}
             shot = self._shots.latest(folder) if folder else None
             if shot:

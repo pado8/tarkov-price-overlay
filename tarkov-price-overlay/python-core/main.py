@@ -1042,6 +1042,25 @@ def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = 
     return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full)
 
 
+class RadarFolderRequest(BaseModel):
+    path: str = ""  # 빈 문자열 = 자동 탐색으로 되돌리기
+
+
+@app.get("/radar/folder")
+def radar_folder() -> dict:
+    """레이더가 보는 스크린샷 폴더: 현재 폴더·출처(auto/manual)·자동 탐색 결과."""
+    return get_radar().folder_info()
+
+
+@app.post("/radar/folder", dependencies=[Depends(_reject_foreign_origin)])
+def radar_folder_set(req: RadarFolderRequest) -> dict:
+    """사용자가 스크린샷 폴더를 직접 지정(문서 폴더를 옮긴 PC 등). 없는 폴더면 400."""
+    try:
+        return get_radar().set_folder(req.path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.get("/quests/status")
 def quests_status() -> dict:
     """Current state of the quest log watcher: install path validity,
