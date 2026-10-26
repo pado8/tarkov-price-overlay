@@ -2123,6 +2123,15 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 for pid in need:
                     parts.setdefault(pid, []).append(tid)
                 conds = []
+                # 종류 조건(containsCategory): "소음기 아무거나 하나" 식 — 특정 부품은 아니지만 꼭 달아야 한다
+                kinds = []
+                for c in o.get("containsCategory") or []:
+                    cid = c.get("id") if isinstance(c, dict) else c
+                    nm = ctx._loc(ctx.loc_items, f"{cid} Name", None) or ctx._loc(ctx.loc_items_en, f"{cid} Name", None) \
+                        or (c.get("name") if isinstance(c, dict) else None) or cid
+                    kinds.append(nm)
+                if kinds:
+                    conds.append("필수 종류: " + " · ".join(kinds))
                 for key, v in (o.get("buildAttributes") or {}).items():
                     if isinstance(v, dict) and (v.get("value") or 0) > 0:
                         conds.append(f'{BUILD_ATTR.get(key, key)} {_cmp(v.get("compareMethod"))} {fmt_int(v["value"])}')
