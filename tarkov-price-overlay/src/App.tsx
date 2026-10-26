@@ -8,6 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
+import { RadarPanel, type RadarState } from "./Radar";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -754,6 +755,10 @@ const DEFAULT_REGION: Region = {
 
 const STORAGE_KEY = "tarkov.captureRegion";
 const POSITION_KEY = "tarkov.windowPosition";
+const RADAR_ENABLED_KEY = "tarkov.radar.enabled";
+const RADAR_SCAV_KEY = "tarkov.radar.showScav";
+// 새 스크린샷이 이보다 오래됐으면 레이더를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
+const RADAR_POPUP_MAX_AGE_SEC = 60;
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const SOUND_KEY = "tarkov.soundOn";
@@ -1257,6 +1262,16 @@ function App() {
   // leaves the card rect mid-drag (the window would otherwise eat the drag).
   const resizingRef = useRef(false);
   const [historyVisible, setHistoryVisible] = useState(false);
+  // ── 레이더(미니맵 1단계) — 게임 스크린샷을 찍으면 그 위치 기준으로 띄운다(Radar.tsx, radar.py)
+  const [radarActive, setRadarActive] = useState(false);
+  const [radarData, setRadarData] = useState<RadarState | null>(null);
+  const [radarLoading, setRadarLoading] = useState(false);
+  const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
+  const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
+  // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
+  const radarMapRef = useRef<string | null>(null);
+  const radarLastShotRef = useRef<string | null | undefined>(undefined); // undefined = 아직 첫 확인 전
+  const radarPollBusyRef = useRef(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     loadAutoCheckUpdate
@@ -1702,6 +1717,68 @@ function App() {
     cancelHideTimer();
     setCardVisible(true);
   };
+
+  // ── 레이더 ─────────────────────────────────────────────────────────
+  const radarUrl = (full: boolean) => {
+    const q = new URLSearchParams({ lang: region.lang, game_mode: region.gameMode });
+    if (full) q.set("full", "true");
+    if (radarMapRef.current) q.set("map", radarMapRef.current);
+    return `${PYTHON_API}/radar?${q.toString()}`;
+  };
+  const loadRadar = async () => {
+    setRadarLoading(true);
+    try {
+      const res = await fetch(radarUrl(true));
+      if (res.ok) setRadarData((await res.json()) as RadarState);
+    } catch (e) {
+      log(`radar: load failed ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setRadarLoading(false);
+    }
+  };
+  // 카드 위에 레이더를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
+  const openRadar = async (fromScreenshot: boolean) => {
+    try {
+      const win = getCurrentWindow();
+      if (!(await win.isVisible())) await invoke("show_overlay_passive");
+    } catch {}
+    showCard();
+    setShowSettings(false);
+    setHistoryVisible(false);
+    setRadarActive(true);
+    await loadRadar();
+    if (fromScreenshot) scheduleHide();
+  };
+  // 새 스크린샷 감지: 1초마다 가벼운 확인(사이드카가 폴더 수정 시각이 같으면 다시 훑지 않음)
+  useEffect(() => {
+    if (!radarEnabled) return;
+    const iv = window.setInterval(async () => {
+      if (radarPollBusyRef.current) return;
+      radarPollBusyRef.current = true;
+      try {
+        const res = await fetch(radarUrl(false));
+        if (!res.ok) return;
+        const d = (await res.json()) as RadarState;
+        const id = d.shot?.id ?? null;
+        const first = radarLastShotRef.current === undefined;
+        if (id !== radarLastShotRef.current) {
+          radarLastShotRef.current = id;
+          // 앱을 켠 직후의 첫 확인은 기준만 잡는다 — 지난 스크린샷으로 레이더가 튀어나오지 않게
+          if (!first && d.shot && d.shot.age <= RADAR_POPUP_MAX_AGE_SEC) {
+            radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지
+            log(`radar: new screenshot ${id}`);
+            void openRadar(true);
+          }
+        }
+      } catch {
+        // 사이드카가 아직 안 떴거나 재시작 중 — 다음 틱에 다시
+      } finally {
+        radarPollBusyRef.current = false;
+      }
+    }, 1000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radarEnabled, region.lang, region.gameMode]);
 
   // Region-based click-through: while the card is visible, poll cursor
   // position and only capture clicks when the cursor is over the card's
@@ -2576,6 +2653,7 @@ function App() {
         } catch {}
         showCard(); // bring card up + cancel any in-flight hide
         setShowSettings(false);
+        setRadarActive(false); // F2는 항상 시세 카드로
         setStatus("loading");
         setError("");
         // New lookup generation: invalidates any still-running older lookup
@@ -3057,6 +3135,16 @@ function App() {
               title={t.history}
             >
               🕒
+            </button>
+            <button
+              className={`settings-btn${radarActive ? " active" : ""}`}
+              onClick={() => {
+                if (radarActive) setRadarActive(false);
+                else void openRadar(false);
+              }}
+              title={t.radarOpen}
+            >
+              🧭
             </button>
             <button
               className="settings-btn"
@@ -3687,6 +3775,18 @@ function App() {
               >
                 {t.statusPageOpen}
               </button>
+            </div>
+            <div className="settings-row" title={t.radarSettingHint}>
+              <label>{t.radarSettingLabel}</label>
+              <input
+                type="checkbox"
+                checked={radarEnabled}
+                onChange={(e) => {
+                  setRadarEnabled(e.target.checked);
+                  localStorage.setItem(RADAR_ENABLED_KEY, String(e.target.checked));
+                  if (!e.target.checked) radarLastShotRef.current = undefined;
+                }}
+              />
             </div>
             <div className="settings-row" title={t.autoHideHint}>
               <label>{t.autoHideToggle}</label>
@@ -4330,15 +4430,32 @@ function App() {
             the card's bottom-right corner handle now resizes the settings
             panel vertically (see onResizeHandleDown's `inSettings` branch). */}
 
-        {!showSettings && status === "idle" && <div className="hint">{t.hintIdle}</div>}
-        {!showSettings && status === "loading" && (
+        {!showSettings && radarActive && (
+          <RadarPanel
+            data={radarData}
+            loading={radarLoading}
+            t={t}
+            showScav={radarShowScav}
+            onToggleScav={(v) => {
+              setRadarShowScav(v);
+              localStorage.setItem(RADAR_SCAV_KEY, String(v));
+            }}
+            onPickMap={(id) => {
+              radarMapRef.current = id;
+              void loadRadar();
+            }}
+            onClose={() => setRadarActive(false)}
+          />
+        )}
+        {!showSettings && !radarActive && status === "idle" && <div className="hint">{t.hintIdle}</div>}
+        {!showSettings && !radarActive && status === "loading" && (
           <div className="hint loading-hint">
             <span className="loading-spinner" aria-hidden="true" />
             <span>{t.hintLoading}</span>
             <div className="hint-sub">{t.hintFirstLoad}</div>
           </div>
         )}
-        {!showSettings && status === "error" && (
+        {!showSettings && !radarActive && status === "error" && (
           <div className="error">
             ⚠ {error}{" "}
             <button
@@ -4350,7 +4467,7 @@ function App() {
             </button>
           </div>
         )}
-        {!showSettings && status === "success" && result && (
+        {!showSettings && !radarActive && status === "success" && result && (
           <div className="result">
             <div className="item-row">
               {result.icon && (

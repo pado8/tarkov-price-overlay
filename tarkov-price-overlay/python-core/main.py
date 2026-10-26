@@ -43,6 +43,7 @@ from ocr import (
     unwrap_nospace_item,
 )
 from quest_tracker import get_tracker
+from radar import get_service as get_radar
 from tarkov_api import (
     get_item_price,
     get_station_list,
@@ -1031,6 +1032,14 @@ def hideout_stations(lang: str = "en") -> list:
     Used by the frontend settings panel so users can set their current
     upgrade level per station (to dim already-completed rows on the card)."""
     return get_station_list(lang)
+
+
+@app.get("/radar")
+def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False) -> dict:
+    """레이더(미니맵 1단계): 가장 최근 좌표 스크린샷 + 게임 로그로 판정한 맵 + 그 맵의 탈출구·트랜짓·
+    진행 중 퀘스트 목표까지의 거리·상대 각도·높이 차. 게임 메모리는 읽지 않는다(radar.py 참고).
+    앱이 1초마다 부르므로 지도 데이터는 스크린샷이 새로울 때나 사용자가 직접 열 때(full)만 받는다."""
+    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full)
 
 
 @app.get("/quests/status")
