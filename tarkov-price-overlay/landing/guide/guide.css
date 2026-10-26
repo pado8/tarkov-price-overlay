@@ -11,10 +11,17 @@ a{color:var(--gold);text-decoration:none}
 a:hover{text-decoration:underline}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 .top{border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:20}
-.top .wrap{display:flex;align-items:center;gap:6px;height:52px;overflow-x:auto;white-space:nowrap}
+.top .wrap{display:flex;align-items:center;gap:6px;min-height:52px;white-space:nowrap;flex-wrap:wrap;padding-top:4px;padding-bottom:4px}
 .brand{font-weight:800;color:var(--gold);margin-right:10px}
 .top nav a{color:var(--muted);font-size:14px;padding:6px 10px;border-radius:8px}
 .top nav a.on,.top nav a:hover{color:var(--text);background:var(--panel2);text-decoration:none}
+.top nav{display:flex;gap:2px;flex-wrap:wrap}.top nav .g{position:relative}.top nav .gt .car{font-size:10px;margin-left:3px;opacity:.7}
+.top nav .g.on>.gt{color:var(--text);background:var(--panel2)}
+.top nav .dd{display:none;position:absolute;top:calc(100% + 4px);left:0;flex-direction:column;min-width:170px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30}
+.top nav .dd a{font-size:13.5px;padding:7px 10px;white-space:nowrap}
+@media (hover:hover) and (min-width:900px){.top nav .g:hover>.dd{display:flex}}
+.top nav .g.open>.dd{display:flex}
+
 h1{font-size:26px;margin:22px 0 4px}
 .sub{color:var(--muted);margin:0 0 16px;font-size:14px}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}

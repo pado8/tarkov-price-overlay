@@ -56,10 +56,31 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("overlay", "/", "시세 오버레이")]
 
 
+# 2뎁스 그룹 메뉴(2026-10-27, 탭 16개가 가로 스크롤을 만들어서). 그룹 제목은 대표 페이지 링크,
+# 데스크톱은 올리면 펼침, 좁은 화면·터치는 눌러 펼침(sync.js 의 메뉴 토글). 아이템 페이지들을 한 페이지로 합치지
+# 않은 이유: 페이지가 너무 커지고 검색 유입용 개별 주소를 잃는다.
+NAV_GROUPS = [
+    ("시작", "/guide/start/", [("start", "/guide/start/", "초반 가이드"), ("patch", "/guide/patch/", "패치 요약"),
+                               ("promo", "/guide/promo/", "프로모 코드")]),
+    ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
+                                 ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
+    ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
+                                ("keys", "/guide/keys/", "열쇠"), ("ammo", "/guide/ammo/", "탄약표")]),
+    ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
+    ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스")]),
+]
+
+
 def nav_html(active: str) -> str:
     """가이드 상단 메뉴 — 정적 페이지와 템플릿 페이지(카파·열쇠·퀘스트)가 같은 걸 쓴다"""
-    on = ' class="on"'
-    return "<nav>" + "".join(f'<a{on if k == active else ""} href="{h}">{l}</a>' for k, h, l in NAV) + "</nav>"
+    out = []
+    for label, href, items in NAV_GROUPS:
+        gon = any(k == active for k, _, _ in items)
+        inner = "".join(f'<a{" class=\"on\"" if k == active else ""} href="{h}">{l}</a>' for k, h, l in items)
+        out.append(f'<div class="g{" on" if gon else ""}"><a class="gt" href="{href}">{label}<span class="car" aria-hidden="true">▾</span></a>'
+                   f'<div class="dd">{inner}</div></div>')
+    out.append(f'<a class="ov{" on" if active == "overlay" else ""}" href="/">시세 오버레이</a>')
+    return "<nav>" + "".join(out) + "</nav>"
 
 
 def e(s) -> str:
@@ -2333,6 +2354,14 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
 # 사이드카 쪽은 /progress 한 경로에만 이 사이트 출처를 허용한다(main.py _ProgressCORS).
 # ─────────────────────────────────────────────────────────────
 SYNC_JS = r"""(function(){
+// 상단 그룹 메뉴: 마우스가 없는(터치) 환경이나 좁은 화면에선 그룹 제목을 누르면 펼치고, 다시 누르면 이동. 바깥 클릭이면 닫힘
+var noHover=window.matchMedia&&window.matchMedia("(hover: none)").matches;
+document.addEventListener("click",function(ev){var gt=ev.target.closest(".top nav .gt");var open=document.querySelectorAll(".top nav .g.open");
+if(!gt){open.forEach(function(g){g.classList.remove("open")});return}
+var g=gt.parentNode,narrow=window.innerWidth<900;if(!(noHover||narrow))return;
+if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x.classList.remove("open")});g.classList.add("open")}});
+})();
+(function(){
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var mode=L(MK,"pvp"),gm=mode==="pve"?"pve":"regular";

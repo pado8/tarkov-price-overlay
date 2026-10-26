@@ -1,4 +1,12 @@
 (function(){
+// 상단 그룹 메뉴: 마우스가 없는(터치) 환경이나 좁은 화면에선 그룹 제목을 누르면 펼치고, 다시 누르면 이동. 바깥 클릭이면 닫힘
+var noHover=window.matchMedia&&window.matchMedia("(hover: none)").matches;
+document.addEventListener("click",function(ev){var gt=ev.target.closest(".top nav .gt");var open=document.querySelectorAll(".top nav .g.open");
+if(!gt){open.forEach(function(g){g.classList.remove("open")});return}
+var g=gt.parentNode,narrow=window.innerWidth<900;if(!(noHover||narrow))return;
+if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x.classList.remove("open")});g.classList.add("open")}});
+})();
+(function(){
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var mode=L(MK,"pvp"),gm=mode==="pve"?"pve":"regular";
