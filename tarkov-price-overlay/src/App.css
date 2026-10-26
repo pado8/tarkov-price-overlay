@@ -1641,3 +1641,27 @@ html, body, #root {
 .radar-chk { display: inline-flex; align-items: center; gap: 4px; font-size: var(--card-fs-xs); color: var(--text-muted); cursor: pointer; }
 .radar-map { background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); font: inherit; font-size: var(--card-fs-xs); padding: 2px 4px; max-width: 100%; }
 .radar-note { font-size: var(--card-fs-xs); color: var(--text-disabled); }
+
+/* ── 레이더 2단계: 전체 지도(API 좌표로 직접 그림) ── */
+.radar-tabs { display: inline-flex; gap: 2px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-default); border-radius: 6px; padding: 2px; }
+.radar-tab { font-size: var(--card-fs-xs); padding: 2px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; }
+.radar-tab.on { background: var(--gold-bright); color: #1a1408; font-weight: 700; }
+.radar-mapwrap { position: relative; width: 100%; height: 270px; background: #0e0f12; border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+.radar-mapwrap.drag { cursor: grabbing; }
+.radar-mapsvg { width: 100%; height: 100%; display: block; }
+.radar-maptools { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; }
+.radar-maptools button { font-size: 11px; padding: 2px 7px; background: rgba(0, 0, 0, 0.65); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
+.radar-maptools button:hover { border-color: var(--gold-bright); }
+.radar-mapscale { position: absolute; left: 6px; bottom: 4px; font-size: 10px; color: var(--text-muted); pointer-events: none; }
+.radar-layers { display: flex; flex-wrap: wrap; gap: 3px 8px; font-size: var(--card-fs-xs); color: var(--text-muted); }
+.radar-layers label { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
+.radar-layers input { margin: 0; }
+.radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
+.radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); min-height: 1.3em; }
+.radar-mapsel b { color: var(--gold-light); }
+.radar-mapmsg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--card-fs-sm); pointer-events: none; }
+.radar-sw { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+.radar-sw.pmc { background: #6fbf73; }
+.radar-sw.scav { background: #9a9a9a; }
+.radar-sw.transit { background: #6fa8dc; }
+.radar-sw.quest { background: #f0c040; }

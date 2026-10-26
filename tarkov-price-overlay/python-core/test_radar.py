@@ -138,6 +138,28 @@ try:
     eq("따옴표·공백 섞인 경로도 허용", svc.set_folder(f'  "{shots}"  ')["source"], "manual")
     (_tmp / "radar.json").write_text(_json.dumps({"folder": str(_tmp / "사라진")}), encoding="utf-8")
     eq("저장된 폴더가 사라지면 자동으로", r.RadarService().folder_info()["source"], "auto")
+
+    # 9) 전체 지도 좌표 추리기(compact_map_features) — 가짜 맵 문서, 네트워크 없음
+    fake = {"normalizedName": "customs", "name": "Customs", "coordinateToCardinalRotation": 180,
+            "extracts": [{"name": "ex_a", "faction": "pmc", "position": {"x": 10, "y": 1, "z": 20}, "outline": [{"x": 9, "z": 19}, {"x": 11, "z": 19}, {"x": 11, "z": 21}], "switches": ["s1"]},
+                     {"name": "ex_bad", "position": None}],
+            "transits": [{"description": "tr_a", "position": {"x": -5, "y": 0, "z": 5}, "outline": []}],
+            "hazards": [{"name": "mine", "hazardType": "minefield", "position": {"x": 0, "y": 0, "z": 0}, "outline": [{"x": -1, "z": -1}, {"x": 1, "z": -1}, {"x": 1, "z": 1}]}],
+            "locks": [{"lockType": "door", "position": {"x": 3, "y": 2, "z": 3}}],
+            "lootContainers": [{"position": {"x": 1.26, "y": 0.5, "z": 2.74}}, {"position": {"x": 2, "y": 0, "z": 2}}],
+            "spawns": [{"position": {"x": 7, "y": 0, "z": 7}, "sides": ["pmc"], "categories": ["player"]},
+                   {"position": {"x": 8, "y": 0, "z": 8}, "sides": ["scav"], "categories": ["boss"]},
+                   {"position": {"x": 9, "y": 0, "z": 9}, "sides": ["scav"], "categories": ["bot"]}],
+            "stationaryWeapons": [{"position": {"x": 4, "y": 0, "z": 4}}], "switches": []}
+    d = r.compact_map_features(fake, {"ex_a": "탈출 A", "tr_a": "트랜짓 A", "Customs": "세관"})
+    eq("맵 이름 번역", d["name"], "세관")
+    eq("탈출구: 위치 없는 것 제외·번역·스위치·윤곽", (len(d["extracts"]), d["extracts"][0]["name"], d["extracts"][0]["switch"], d["extracts"][0]["outline"]), (1, "탈출 A", True, [[9, 19], [11, 19], [11, 21]]))
+    eq("좌표 소수 1자리로 압축", d["containers"][0], [1.3, 0.5, 2.7])
+    eq("스폰 종류 코드 p/b/s", [s[3] for s in d["spawns"]], ["p", "b", "s"])
+    eq("위험 구역 윤곽", len(d["hazards"][0]["outline"]), 3)
+    eq("경계 상자", d["bounds"], {"minx": -5, "maxx": 10, "minz": 0, "maxz": 20})
+    eq("회전값 전달", d["rot"], 180)
+    eq("빈 맵은 경계 None", r.compact_map_features({"normalizedName": "x"}, {})["bounds"], None)
 finally:
     r._settings_path = _orig_settings
 

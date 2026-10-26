@@ -4541,6 +4541,7 @@ function App() {
             data={radarData}
             loading={radarLoading}
             t={t}
+            lang={region.lang}
             showScav={radarShowScav}
             onToggleScav={(v) => {
               setRadarShowScav(v);

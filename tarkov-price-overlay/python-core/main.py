@@ -1042,6 +1042,17 @@ def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = 
     return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full)
 
 
+@app.get("/radar/map")
+def radar_map(map: str, lang: str = "ko") -> dict:
+    """전체 지도(2단계)용 정적 좌표: 탈출구·트랜짓·위험 구역(윤곽)·잠긴 문·상자·스폰·고정 무기·스위치.
+    tarkov.dev API 좌표만 쓴다(SVG 지도 없음). 맵·언어별 캐시."""
+    from radar import map_features
+    doc = map_features(map, lang)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="unknown_map")
+    return doc
+
+
 class RadarFolderRequest(BaseModel):
     path: str = ""  # 빈 문자열 = 자동 탐색으로 되돌리기
 

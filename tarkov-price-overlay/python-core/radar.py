@@ -276,7 +276,10 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
         dist, rel = relative(px, pz, hd, float(pos["x"]), float(pos["z"]))
         dy = float(pos.get("y") or py) - py
         out.append({"kind": kind, "name": name, "dist": round(dist, 1),
-                    "rel": None if rel is None else round(rel, 1), "dy": round(dy, 1), **extra})
+                    "rel": None if rel is None else round(rel, 1), "dy": round(dy, 1),
+                    # 전체 지도(2단계)가 같은 점을 찍을 수 있게 게임 좌표도 준다
+                    "x": round(float(pos["x"]), 1), "y": round(float(pos.get("y") or py), 1), "z": round(float(pos["z"]), 1),
+                    **extra})
 
     for ex in m.get("extracts") or []:
         fac = ex.get("faction") or "shared"
@@ -316,6 +319,87 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid)
     out.sort(key=lambda r: r["dist"])
     return out
+
+
+def compact_map_features(m: dict, loc_maps: dict) -> dict:
+    """맵 문서 하나 → 전체 지도(2단계)가 그릴 좌표만 추린 작은 문서.
+    SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(MIT 사이트 데이터)로만 그린다.
+    점이 많은 것(상자·스폰)은 [x, y, z(, 종류)] 배열로 줄여 보낸다."""
+    def pt(p):
+        return [round(float(p["x"]), 1), round(float(p.get("y") or 0), 1), round(float(p["z"]), 1)]
+
+    def ok(p):
+        return isinstance(p, dict) and p.get("x") is not None and p.get("z") is not None
+
+    def outline(o):
+        return [[round(float(q["x"]), 1), round(float(q["z"]), 1)] for q in (o or []) if ok(q)]
+
+    xs: list[float] = []
+    zs: list[float] = []
+
+    def note(p):
+        xs.append(p[0]); zs.append(p[2]); return p
+
+    extracts = []
+    for e in m.get("extracts") or []:
+        if not ok(e.get("position")):
+            continue
+        extracts.append({"name": _loc(loc_maps, e.get("name"), e.get("name")), "p": note(pt(e["position"])),
+                         "faction": e.get("faction") or "shared", "switch": bool(e.get("switches") or e.get("switch")),
+                         "outline": outline(e.get("outline"))})
+    transits = []
+    for t in m.get("transits") or []:
+        if not ok(t.get("position")):
+            continue
+        transits.append({"name": _loc(loc_maps, t.get("description"), "transit"), "p": note(pt(t["position"])),
+                         "outline": outline(t.get("outline"))})
+    hazards = []
+    for h in m.get("hazards") or []:
+        ol = outline(h.get("outline"))
+        if not ol and not ok(h.get("position")):
+            continue
+        hazards.append({"name": _loc(loc_maps, h.get("name"), h.get("hazardType") or "hazard"),
+                        "type": h.get("hazardType") or "", "p": note(pt(h["position"])) if ok(h.get("position")) else None,
+                        "outline": ol})
+    locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door"}
+             for lk in m.get("locks") or [] if ok(lk.get("position"))]
+    containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]
+    spawns = []
+    for s in m.get("spawns") or []:
+        if not ok(s.get("position")):
+            continue
+        cats = [str(c).lower() for c in (s.get("categories") or [])]
+        sides = [str(c).lower() for c in (s.get("sides") or [])]
+        code = "b" if "boss" in cats else "n" if "sniper" in cats else "p" if "pmc" in sides else "s" if "scav" in sides else "o"
+        spawns.append(note(pt(s["position"])) + [code])
+    weapons = [note(pt(w["position"])) for w in m.get("stationaryWeapons") or [] if ok(w.get("position"))]
+    switches = [note(pt(w["position"])) for w in m.get("switches") or [] if ok(w.get("position"))]
+    bounds = {"minx": min(xs), "maxx": max(xs), "minz": min(zs), "maxz": max(zs)} if xs else None
+    return {"slug": m.get("normalizedName"), "name": _loc(loc_maps, m.get("name"), m.get("normalizedName")),
+            "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds,
+            "extracts": extracts, "transits": transits, "hazards": hazards, "locks": locks,
+            "containers": containers, "spawns": spawns, "weapons": weapons, "switches": switches}
+
+
+_map_cache: dict = {}
+
+
+def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
+    """전체 지도용 정적 좌표 문서(맵·언어별 캐시). 없는 맵이면 None."""
+    key = (slug, lang)
+    with _data_lock:
+        hit = _map_cache.get(key)
+        if hit and time.time() - hit[0] < _DATA_TTL:
+            return hit[1]
+    maps = (_doc("regular/maps") or {}).get("maps") or {}
+    m = next((x for x in maps.values() if x.get("normalizedName") == slug), None)
+    if not m:
+        return None
+    loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
+    doc = compact_map_features(m, loc_maps)
+    with _data_lock:
+        _map_cache[key] = (time.time(), doc)
+    return doc
 
 
 def _settings_path() -> Path:

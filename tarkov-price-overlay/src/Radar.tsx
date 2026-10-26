@@ -1,7 +1,9 @@
 // 레이더(미니맵 1단계) 화면. 데이터는 사이드카 /radar(radar.py)가 계산한다 —
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
 // '내가 바라보는 쪽 = 위' 기준이라 지도 북쪽 방위는 쓰지 않는다(맵마다 회전이 달라 틀릴 위험).
+import { useState } from "react";
 import type { Strings as LiteralStrings } from "./i18n";
+import { RadarMap } from "./RadarMap";
 
 // i18n은 글자 값까지 고정된 타입이라 언어별 객체가 서로 대입되지 않는다 — 키만 맞으면 되게 넓힌다
 type Strings = { [K in keyof LiteralStrings]: string };
@@ -19,6 +21,10 @@ export type RadarTarget = {
   objective?: string;
   optional?: boolean;
   task?: string;
+  // 전체 지도용 게임 좌표(2단계)
+  x?: number;
+  y?: number;
+  z?: number;
 };
 
 export type RadarState = {
@@ -64,19 +70,35 @@ type Props = {
   data: RadarState | null;
   loading: boolean;
   t: Strings;
+  lang: string;
   showScav: boolean;
   onToggleScav: (v: boolean) => void;
   onPickMap: (id: string | null) => void;
   onClose: () => void;
 };
 
-export function RadarPanel({ data, loading, t, showScav, onToggleScav, onPickMap, onClose }: Props) {
+const MODE_KEY = "tarkov.radar.mode"; // "radar" | "map"
+
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose }: Props) {
+  const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
+  const pickMode = (m: "radar" | "map") => {
+    setMode(m);
+    try {
+      localStorage.setItem(MODE_KEY, m);
+    } catch {}
+  };
   const header = (
     <div className="radar-head">
       <span className="radar-title">
         🧭 {data?.map ? data.map.name : t.radarTitle}
         {data?.map_source === "manual" && <span className="radar-src"> · {t.radarManual}</span>}
       </span>
+      {data?.map && data.shot && (
+        <span className="radar-tabs" role="tablist">
+          <button type="button" role="tab" className={`radar-tab${mode === "radar" ? " on" : ""}`} onClick={() => pickMode("radar")}>{t.radarModeRadar}</button>
+          <button type="button" role="tab" className={`radar-tab${mode === "map" ? " on" : ""}`} onClick={() => pickMode("map")}>{t.radarModeMap}</button>
+        </span>
+      )}
       {data?.shot && (
         <span className={`radar-age${data.shot.age > STALE_SEC ? " stale" : ""}`}>{ago(data.shot.age, t)}</span>
       )}
@@ -138,6 +160,17 @@ export function RadarPanel({ data, loading, t, showScav, onToggleScav, onPickMap
   }
 
   const visible = data.targets.filter((x) => showScav || !(x.kind === "extract" && x.faction === "scav"));
+  if (mode === "map") {
+    return (
+      <div className="radar">
+        {header}
+        {error(data, t)}
+        <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} />
+        <div className="radar-foot">{mapPicker}</div>
+        <div className="radar-note">{t.radarMapNote}</div>
+      </div>
+    );
+  }
   const range = pickRange(visible);
   const R = 92; // 원 반지름(px)
   const C = 100; // 중심
