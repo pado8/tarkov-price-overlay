@@ -762,6 +762,7 @@ const RADAR_ENABLED_KEY = "tarkov.radar.enabled";
 const RADAR_SCAV_KEY = "tarkov.radar.showScav";
 // 새 스크린샷이 이보다 오래됐으면 레이더를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
 const RADAR_POPUP_MAX_AGE_SEC = 60;
+const RADAR_MIN_OPACITY = 90; // 레이더·지도 표시 중 카드 전체 불투명도 하한(%)
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 // "조회 키를 게임에도 전달": RegisterHotKey 대신 키 상태만 엿들어 게임 스크린샷 키와 같은 키를 쓸 수 있게
@@ -3162,7 +3163,8 @@ function App() {
           // Auto-hide already handles the full 0→opacity transition via
           // .card-hidden. We only dim while visible so the fade-out can
           // still drop to 0 without fighting the user's preference.
-          opacity: cardVisible ? region.opacity / 100 : undefined,
+          // 레이더·지도가 열려 있으면 최소 90% — 점·이름표가 게임 화면에 묻히지 않게(사용자 설정은 그대로 둔다)
+          opacity: cardVisible ? (radarActive ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100 : undefined,
           // Background-only opacity: fades the dark panel behind the text
           // (consumed by .card's background rgba), text/icons stay opaque.
           ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
