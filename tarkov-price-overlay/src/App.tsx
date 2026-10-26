@@ -620,6 +620,8 @@ type LookupResult = {
   crafts_for: HideoutCraft[];
   crafts_using?: HideoutCraftUsing[];
   needed_for_hideout: HideoutNeed[];
+  // 건스미스 퀘스트에 쓰이는 부품이면(필수 부품 / 위키 예시 조립). 사이드카 gunsmith.py — 가이드 사이트 JSON 기준
+  gunsmith?: { quest: string; kind: "req" | "ex"; weapon: string | null }[];
   // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
   // panel and pre-selects the relevant caliber. null for everything else.
   caliber: string | null;
@@ -2203,6 +2205,26 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoCheckUpdate]);
+
+  // 가이드 사이트 연동: 은신처 단계를 사이드카에 올려 두면 같은 PC의 tarkov.aquapado.com/guide 가
+  // /progress 로 읽어 "이미 지은 단계의 재료"를 필요 아이템에서 뺀다. 사이드카가 아직 안 떴으면 몇 번 다시 시도.
+  useEffect(() => {
+    let tries = 0;
+    let timer: number | null = null;
+    const push = () => {
+      fetch(`${PYTHON_API}/sync/hideout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ levels: hideoutLevels }),
+      }).catch(() => {
+        if (++tries < 4) timer = window.setTimeout(push, 15000);
+      });
+    };
+    push();
+    return () => {
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [hideoutLevels]);
 
   // Hideout levels helpers
   const updateHideoutLevel = (stationId: string, level: number) => {
@@ -5001,6 +5023,22 @@ function App() {
                       );
                     })()
                   }
+                  {region.showQuests && result.gunsmith && result.gunsmith.length > 0 && (
+                    <div className="quest-warning gunsmith" title={t.gunsmithHint}>
+                      🔧 {t.gunsmithTitle} ({result.gunsmith.length})
+                      <div className="quest-list">
+                        {result.gunsmith.map((g, i) => (
+                          <div key={`${g.quest}-${g.kind}-${i}`} className="quest-row">
+                            <span className="quest-trader">{g.kind === "req" ? t.gunsmithReq : t.gunsmithEx}</span>
+                            <span className="quest-name">
+                              {g.quest}
+                              {g.weapon ? <span className="quest-sub"> · {g.weapon}</span> : null}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {region.showHideoutNeeds &&
                     result.needed_for_hideout &&
                     result.needed_for_hideout.length > 0 && (() => {

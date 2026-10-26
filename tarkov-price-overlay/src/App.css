@@ -1666,3 +1666,5 @@ html, body, #root {
 .radar-sw.scav { background: #9a9a9a; }
 .radar-sw.transit { background: #6fa8dc; }
 .radar-sw.quest { background: #f0c040; }
+.quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
+.quest-sub { color: var(--text-muted); }

@@ -489,6 +489,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 <div class="cta"><span>레이드 중 아이템에 마우스 올리고 <b>F2 한 번</b> — 시세·퀘스트·은신처에 필요한지 바로 확인</span><a class="btn" href="/?src=guide">무료 시세 오버레이 받기</a></div>
 </main>
 <footer><div class="wrap">게임 데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터(기준 {e(ctx.stamp)}) · 설명 문구는 <a href="https://escapefromtarkov.fandom.com/" rel="noopener">공식 위키</a>와 패치 노트를 참고해 직접 정리 · 체크 표시는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a> · <a href="/status/">서비스 상태</a> · <a href="/">타르코프 시세 오버레이</a></div></footer>
+<script src="/guide/sync.js" defer></script>
 {scripts}
 <script defer src="/_vercel/insights/script.js"></script>
 <script src="/beacon.js"></script>
@@ -722,8 +723,10 @@ def requirements_html(ctx: Ctx, t: dict) -> str:
 
 
 QUEST_JS = """<script>
-(function(){var K="guide.quests",d={};try{d=JSON.parse(localStorage.getItem(K))||{}}catch(e){}
+(function(){var K="guide.quests",d={};function rd(){try{d=JSON.parse(localStorage.getItem(K))||{}}catch(e){d={}}}rd();
 var el=document.querySelector(".quest");if(!el)return;var id=el.getAttribute("data-id"),c=document.getElementById("qdone");c.checked=!!d[id];
+function mark(){var sy=window.__guideSync;if(!sy)return;var lab=c.parentNode;if(!lab||lab.querySelector(".syn"))return;var st=(sy.completed||[]).indexOf(id)>=0?"완료":(sy.started||[]).indexOf(id)>=0?"진행 중":"";if(!st)return;var b=document.createElement("span");b.className="syn badge";b.textContent="오버레이: "+st;lab.appendChild(b)}
+document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark()});if(window.__guideSync)mark();
 c.addEventListener("change",function(){if(c.checked)d[id]=1;else delete d[id];try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}});})();
 </script>"""
 
@@ -928,8 +931,9 @@ def item_needs(ctx: Ctx, tasks: dict, hideout: dict):
             if iid in MONEY:
                 money["quest"][iid] = money["quest"].get(iid, 0) + c
                 continue
-            a = q.setdefault(iid, {"fir": 0, "any": 0, "where": []})
+            a = q.setdefault(iid, {"fir": 0, "any": 0, "where": [], "parts": []})
             a["fir" if o.get("foundInRaid") else "any"] += c
+            a["parts"].append((tid, 1 if o.get("foundInRaid") else 0, c))  # 연동: 완료 퀘스트 분을 브라우저에서 뺀다
             if tid not in a["where"]:
                 a["where"].append(tid)
     for sid, st in hideout.items():
@@ -944,10 +948,21 @@ def item_needs(ctx: Ctx, tasks: dict, hideout: dict):
                     money["hideout"][iid] = money["hideout"].get(iid, 0) + c
                     continue
                 fir = bool((r.get("attributes") or {}).get("foundInRaid"))
-                a = h.setdefault(iid, {"fir": 0, "any": 0, "where": []})
+                a = h.setdefault(iid, {"fir": 0, "any": 0, "where": [], "parts": []})
                 a["fir" if fir else "any"] += c
+                a["parts"].append((sid, lv.get("level") or 1, 1 if fir else 0, c))
                 a["where"].append((sid, lv.get("level")))
     return q, h, money
+
+
+def _parts_q(a: dict) -> str:
+    """퀘스트 내역 직렬화 'tid:fir:count;…' — 연동 JS가 완료 퀘스트 분을 뺄 때 쓴다"""
+    return ";".join(f"{t}:{f}:{c}" for t, f, c in (a.get("parts") or []))
+
+
+def _parts_h(a: dict) -> str:
+    """은신처 내역 'sid:lv:fir:count;…' — 연동 JS가 이미 지은 단계 분을 뺀다"""
+    return ";".join(f"{sid}:{lv}:{f}:{c}" for sid, lv, f, c in (a.get("parts") or []))
 
 
 ITEMS_JS = """<script>
@@ -955,13 +970,19 @@ ITEMS_JS = """<script>
 function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var have=L(KEY,{}),mode=L(MK,"pvp"),scope="all",rows=[].slice.call(document.querySelectorAll("#itbl tbody tr"));
 function seg(id,v){document.querySelectorAll("#"+id+" button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)})}
-function render(){var q=document.getElementById("q").value.trim().toLowerCase(),fo=document.getElementById("firOnly").checked,hh=document.getElementById("hideHave").checked,shown=0;
-rows.forEach(function(r){var d=r.dataset,p=mode==="pve"?"e":"p",qf=+d[p+"qf"]||0,qa=+d[p+"qa"]||0,hf=+d[p+"hf"]||0,ha=+d[p+"ha"]||0;
+// 연동/체크 반영: 완료 퀘스트(guide.quests — 직접 체크 + 오버레이 연동)와 지은 은신처 단계(연동) 분을 뺀 필요량
+function needs(d,p){var done=L("guide.quests",{}),sy=window.__guideSync||L("guide.sync",null),hl=(sy&&sy.hideout)||{},qf=0,qa=0,hf=0,ha=0,cut=false;
+(d[p+"q"]||"").split(";").forEach(function(x){if(!x)return;var a=x.split(":"),t=a[0],f=a[1]==="1",c=+a[2]||0;if(done[t]){cut=true;return}if(f)qf+=c;else qa+=c});
+(d[p+"h"]||"").split(";").forEach(function(x){if(!x)return;var a=x.split(":"),sid=a[0],lv=+a[1]||1,f=a[2]==="1",c=+a[3]||0;if((+hl[sid]||0)>=lv){cut=true;return}if(f)hf+=c;else ha+=c});
+return {qf:qf,qa:qa,hf:hf,ha:ha,cut:cut}}
+function render(){var q=document.getElementById("q").value.trim().toLowerCase(),fo=document.getElementById("firOnly").checked,hh=document.getElementById("hideHave").checked,shown=0,cutn=0;
+rows.forEach(function(r){var d=r.dataset,p=mode==="pve"?"e":"p",nd=needs(d,p),qf=nd.qf,qa=nd.qa,hf=nd.hf,ha=nd.ha;if(nd.cut)cutn++;r.classList.toggle("cut",nd.cut);
 var qq=qf+qa,hc=hf+ha,ok=true;if(scope==="quest"&&!qq)ok=false;if(scope==="hideout"&&!hc)ok=false;if(!qq&&!hc)ok=false;
 if(fo&&!(qf||hf))ok=false;if(q&&d.s.indexOf(q)<0)ok=false;var hv=!!have[d.id];if(hh&&hv)ok=false;
 r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector("input");if(c)c.checked=hv;
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
-document.getElementById("shown").textContent=shown;}
+document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";}
+document.addEventListener("guide-sync",render);
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
 ["firOnly","hideHave"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("q").addEventListener("input",render);
@@ -1013,7 +1034,8 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
         img = f'<img class="icon sm" loading="lazy" alt="" src="{e(it["img"])}" />' if it.get("img") else ""
         trs.append(
             f'<tr data-id="{e(iid)}" data-s="{e(s)}" data-pqf="{a_q.get("fir", 0)}" data-pqa="{a_q.get("any", 0)}" data-phf="{a_h.get("fir", 0)}" data-pha="{a_h.get("any", 0)}" '
-            f'data-eqf="{b_q.get("fir", 0)}" data-eqa="{b_q.get("any", 0)}" data-ehf="{b_h.get("fir", 0)}" data-eha="{b_h.get("any", 0)}">'
+            f'data-eqf="{b_q.get("fir", 0)}" data-eqa="{b_q.get("any", 0)}" data-ehf="{b_h.get("fir", 0)}" data-eha="{b_h.get("any", 0)}" '
+            f'data-pq="{_parts_q(a_q)}" data-eq="{_parts_q(b_q)}" data-ph="{_parts_h(a_h)}" data-eh="{_parts_h(b_h)}">'
             f'<td><input type="checkbox" aria-label="보유" /></td><td><span class="itn">{img}<span>{e(it["n"])}{kappa}<br><span class="muted small">{e(it.get("en") or "")}</span></span></span></td>'
             f'<td class="n">{a_q.get("fir") or ""}</td><td class="n">{a_q.get("any") or ""}</td><td class="n">{a_h.get("fir") or ""}</td><td class="n">{a_h.get("any") or ""}</td>'
             f'<td class="n"><b>{(tot(qp, iid) + tot(hp, iid)) or ""}</b></td><td>{price_html}</td><td class="small">{" · ".join(where)}</td></tr>')
@@ -1032,7 +1054,7 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
 <div class="seg" id="scope"><button data-v="all" class="on">전체</button><button data-v="quest">퀘스트</button><button data-v="hideout">은신처</button></div>
 <div class="seg" id="mode"><button data-v="pvp" class="on">PVP</button><button data-v="pve">PVE</button></div>
 <label class="chk"><input type="checkbox" id="firOnly" /> 인레이드 필요만</label><label class="chk"><input type="checkbox" id="hideHave" /> 보유 체크 숨기기</label>
-<span class="muted small"><span id="shown">{len(trs)}</span>종 표시</span></div>
+<span class="muted small"><span id="shown">{len(trs)}</span>종 표시 <span id="cutn"></span></span></div>
 <div class="box tbl" style="padding:4px 8px"><table class="tot" id="itbl"><thead><tr><th></th><th>아이템</th><th class="n">퀘스트<br>인레이드</th><th class="n">퀘스트<br>일반</th><th class="n">은신처<br>인레이드</th><th class="n">은신처<br>일반</th><th class="n">합계</th><th>플리 시세</th><th>쓰이는 곳</th></tr></thead><tbody>
 {"".join(trs)}
 </tbody></table></div>"""
@@ -2128,7 +2150,7 @@ def _wiki_item_index(ctx: Ctx):
     return find
 
 
-def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
+def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
     # 건스미스 퀘스트 = buildWeapon 목표가 있고 영문 이름이 Gunsmith로 시작
     gs = [tid for tid, t in ctx.tasks.items()
           if ctx.task_names(tid)[1].startswith("Gunsmith") and any(o.get("type") == "buildWeapon" for o in t.get("objectives") or [])]
@@ -2141,7 +2163,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
     find_item = _wiki_item_index(ctx)
     ex_parts: dict[str, dict] = {}  # 예시 조립 부품: key(id 또는 w:이름) → {"n","id","q":[tid...]}
 
-    def build_html(tid, k, n_objs):
+    def build_html(tid, k, n_objs, wid=None):
         """퀘스트 tid 의 k번째 무기에 해당하는 위키 예시 조립 표"""
         b = builds.get(ctx.task_names(tid)[1])
         if not b or not b.get("lists"):
@@ -2158,6 +2180,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 key = iid or ("w:" + r["name"])
                 ent = ex_parts.setdefault(key, {"n": r["name"], "id": iid, "q": []})
                 ent["q"].append(tid)
+                ex_w.setdefault(key, []).append(lst.get("weapon") or (ctx.item(wid) or {}).get("s") or "")
                 sellers = " / ".join(f'{TRADER_KO.get(s, s)} {l}' for s, l in zip(r.get("sellers") or [], r.get("ll") or []))
                 if not sellers:
                     sellers = ", ".join(TRADER_KO.get(s, s) for s in r.get("sellers") or []) or "—"
@@ -2182,6 +2205,8 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
     master = sorted([t for t in gs if "Master" in ctx.task_names(t)[1]], key=lambda t: (num(t), ctx.task_names(t)[1]))
 
     parts: dict[str, list[str]] = {}  # 부품 → 쓰는 퀘스트들(중복 포함: 같은 부품을 두 퀘스트가 요구하면 2개 필요)
+    parts_w: dict[str, list[str]] = {}  # 부품 → 그 퀘스트에서 조립하는 무기 id(오버레이용 JSON에 무기 이름을 넣으려고)
+    ex_w: dict[str, list[str]] = {}  # 예시 조립 부품 key → 무기 라벨
 
     def build_rows(tids):
         rows = []
@@ -2194,6 +2219,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 need = _flat(o.get("containsAll"))
                 for pid in need:
                     parts.setdefault(pid, []).append(tid)
+                    parts_w.setdefault(pid, []).append(wid)
                 conds = []
                 # 종류 조건(containsCategory): "소음기 아무거나 하나" 식 — 특정 부품은 아니지만 꼭 달아야 한다
                 kinds = []
@@ -2212,7 +2238,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                 first = (f'<td rowspan="{len(objs)}">{ctx.task_link(tid)}'
                          + (f'<div class="small muted">레벨 {lv}</div>' if lv else "") + "</td>") if k == 0 else ""
                 rows.append(f'<tr>{first}<td><div class="chips">{ctx.chip(wid)}</div></td>'
-                            f'<td><div class="chips">{chips}</div>{build_html(tid, k, len(objs))}</td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
+                            f'<td><div class="chips">{chips}</div>{build_html(tid, k, len(objs), wid)}</td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
         return rows
 
     base_rows = build_rows(base)
@@ -2277,16 +2303,54 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
                   '#gtbl tr.done td{opacity:.5}#gtbl tr.done td.n:first-child{opacity:1}'
                   '.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:8px}.bar input[type=search]{flex:1;min-width:180px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}'
                   '.bar button{padding:4px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}</style>')
+    # 오버레이(사이드카 gunsmith.py)가 받아 가는 압축 JSON — 아이템 id → [{q: 영문 퀘스트, k: 한국어 퀘스트, t: req|ex, w: 무기}]
+    feed: dict[str, list[dict]] = {}
+    for pid, tids in parts.items():
+        for tid, wid in zip(tids, parts_w.get(pid, [])):
+            ko, en = ctx.task_names(tid)
+            w = (ctx.item(wid) or {}).get("s") or (ctx.item(wid) or {}).get("n") or ""
+            feed.setdefault(pid, []).append({"q": en, "k": ko, "t": "req", "w": w})
+    for key, ent in ex_parts.items():
+        if not ent.get("id"):
+            continue
+        for tid, w in zip(ent["q"], ex_w.get(key, [])):
+            ko, en = ctx.task_names(tid)
+            feed.setdefault(ent["id"], []).append({"q": en, "k": ko, "t": "ex", "w": w})
+    feed_json = json.dumps({"updated": ctx.stamp, "items": feed}, ensure_ascii=False, separators=(",", ":"))
+
     path = "/guide/gunsmith/"
     title = f"타르코프 건스미스 부품 총정리 — 퀘스트 {len(gs)}개 필수 부품 {len(parts)}종·성능 조건·즐겨찾기 체크리스트 | 탈콥 가이드"
     desc = (f"타르코프 건스미스(기계공 무기 조립) 퀘스트 {len(gs)}개 전부: 무기별 반드시 포함할 부품 {len(parts)}종, 인체공학·반동·무게 조건, "
             "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.")
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="gunsmith", crumbs=[("건스미스", None)],
-                      extra_head=extra_head, scripts=GUNSMITH_JS)
+                      extra_head=extra_head, scripts=GUNSMITH_JS), feed_json
+
+
+# ─────────────────────────────────────────────────────────────
+# 오버레이 연동 — 같은 PC에서 시세 오버레이가 켜져 있으면 사이드카(127.0.0.1:8765)의 /progress 를 읽어
+# 게임 로그로 확인된 완료 퀘스트를 이 브라우저의 체크 저장소(guide.quests)에 합치고, 은신처 단계도 받아 둔다.
+# 오버레이가 꺼져 있으면 조용히 아무것도 안 한다. 사용자 데이터는 이 브라우저 밖으로 나가지 않는다.
+# 사이드카 쪽은 /progress 한 경로에만 이 사이트 출처를 허용한다(main.py _ProgressCORS).
+# ─────────────────────────────────────────────────────────────
+SYNC_JS = r"""(function(){
+var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced";
+function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var mode=L(MK,"pvp"),gm=mode==="pve"?"pve":"regular";
+function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top||document.querySelector(".sync"))return;var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href="/guide/sync/";
+var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0;a.textContent=stale?("오버레이 연동 끊김 · 마지막 "+(ago<60?ago+"분 전":Math.round(ago/60)+"시간 전")):("🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)"));
+a.title=stale?"시세 오버레이가 꺼져 있어요. 켜 두면 깬 퀘스트가 자동 반영됩니다.":"시세 오버레이가 게임 로그로 확인한 완료 퀘스트를 자동 반영 중";top.appendChild(a)}
+function apply(p){var done=L(KEY,{}),syn=L(SYNCED,{}),changed=0;(p.completed||[]).forEach(function(id){if(!done[id]){done[id]=1;changed++}syn[id]=1});if(changed)S(KEY,done);S(SYNCED,syn);
+var sy={ts:Date.now(),mode:p.mode,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0};S(SK,sy);window.__guideSync=sy;chip(sy,false);
+document.dispatchEvent(new CustomEvent("guide-sync",{detail:sy}))}
+var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},2500);
+fetch("http://127.0.0.1:8765/progress?game_mode="+gm,{signal:ctrl&&ctrl.signal,cache:"no-store",mode:"cors"}).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok)apply(p)})
+.catch(function(){clearTimeout(tm);var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true)}});
+})();"""
 
 
 def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> list[str]:
     urls: list[str] = []
+    (out / "sync.js").write_text(SYNC_JS, encoding="utf-8")
     # 퀘스트 상세
     for tid in ctx.tasks:
         p, h = quest_page(ctx, tid)
@@ -2336,8 +2400,9 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     gs_q = gs_p = 0
     gsr = gunsmith_page(ctx)
     if gsr:
-        p, h = gsr
+        p, h, feed_json = gsr
         write(out, p, h, urls)
+        (out / "gunsmith.json").write_text(feed_json, encoding="utf-8")  # 오버레이가 받아 가는 데이터(사이트맵엔 안 넣음)
         gs_q = h.count("<td rowspan=")
         gs_p = h.count('<tr data-id="')
     counts = {"quests": len(ctx.tasks), "items": items_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),

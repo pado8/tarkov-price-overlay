@@ -26,6 +26,7 @@ if sys.platform == "win32":
 
 print(f"[startup] DPI awareness: {DPI_STATUS}")
 
+import json
 import re
 import threading
 from contextlib import asynccontextmanager
@@ -42,7 +43,8 @@ from ocr import (
     recognize_text_fragments,
     unwrap_nospace_item,
 )
-from quest_tracker import get_tracker
+from quest_tracker import _normalize_request_mode, get_tracker
+import gunsmith
 from radar import get_service as get_radar
 from tarkov_api import (
     get_item_price,
@@ -60,6 +62,7 @@ async def lifespan(_app: FastAPI):
     start_background_refresher()
     print("[startup] starting quest log watcher...")
     get_tracker().start()
+    gunsmith.start_background_refresh()  # 건스미스 부품 표(가이드 사이트 JSON) — 실패해도 조회엔 영향 없음
     print("[startup] warmup complete")
     yield
 
@@ -83,6 +86,50 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── 가이드 사이트 연동(/progress 한 경로만) ─────────────────────────────────────
+# tarkov.aquapado.com 가이드가 같은 PC의 오버레이에서 퀘스트 진행도를 읽어 "깬 퀘스트·필요 없어진 아이템"을
+# 자동으로 걸러 준다. 전역 CORS를 넓히면 /lookup(화면 OCR 결과)까지 사이트가 읽을 수 있게 되므로, 아래 미들웨어가
+# /progress 경로의 GET·OPTIONS 에만 사이트 출처 헤더를 붙인다(브라우저 로컬 네트워크 접근 프리플라이트 포함).
+# 사용자 데이터는 받는 쪽(사이트 JS)이 브라우저 안에서만 쓰고 어디에도 보내지 않는다.
+_SITE_ORIGIN_RE = re.compile(r"^(https://tarkov\.aquapado\.com|http://127\.0\.0\.1:8099)$")
+
+
+class _ProgressCORS:
+    """CORSMiddleware 바깥에서 /progress 의 프리플라이트를 가로채고 응답에 출처 헤더를 더한다."""
+
+    def __init__(self, app):  # noqa: D107
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") != "http" or scope.get("path") != "/progress":
+            return await self.app(scope, receive, send)
+        headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
+        origin = headers.get("origin", "")
+        allowed = bool(_SITE_ORIGIN_RE.match(origin))
+        cors = [
+            (b"access-control-allow-origin", origin.encode()),
+            (b"access-control-allow-methods", b"GET, OPTIONS"),
+            (b"access-control-allow-headers", b"*"),
+            (b"access-control-allow-private-network", b"true"),
+            (b"access-control-max-age", b"600"),
+            (b"vary", b"Origin"),
+        ]
+        if scope.get("method") == "OPTIONS":
+            status = 204 if allowed or not origin else 403
+            await send({"type": "http.response.start", "status": status, "headers": cors if allowed else []})
+            await send({"type": "http.response.body", "body": b""})
+            return
+
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start" and allowed:
+                message = {**message, "headers": list(message.get("headers") or []) + cors}
+            await send(message)
+
+        return await self.app(scope, receive, send_with_cors)
+
+
+app.add_middleware(_ProgressCORS)
 
 
 def _reject_foreign_origin(request: Request) -> None:
@@ -202,6 +249,13 @@ class HideoutCraftUsing(BaseModel):
     rewards: list[BarterRequiredItem] = []
 
 
+class GunsmithRef(BaseModel):
+    """조회한 아이템이 건스미스 퀘스트에 쓰임 — kind=req(반드시 포함) | ex(위키 예시 조립). 데이터: gunsmith.py"""
+    quest: str
+    kind: str = "req"
+    weapon: str | None = None
+
+
 class HideoutNeed(BaseModel):
     station: str
     station_id: str = ""
@@ -252,6 +306,7 @@ class LookupResponse(BaseModel):
     crafts_for: list[HideoutCraft] = []  # hideout recipes producing this item
     crafts_using: list[HideoutCraftUsing] = []  # hideout recipes consuming this item
     needed_for_hideout: list[HideoutNeed] = []  # hideout upgrades that need this item
+    gunsmith: list[GunsmithRef] = []  # 건스미스 퀘스트에 쓰이는 부품이면(필수/위키 예시) — 가이드 사이트 JSON 기준
     # Caliber for ammo / weapons. Raw is the tarkov.dev id ("Caliber545x39");
     # display is the human-friendly form ("5.45x39"). Both None for non-
     # weapon, non-ammo items, which suppresses the ammo-matrix panel.
@@ -275,6 +330,7 @@ def _build_response(
     price: dict,
     game_mode: str = "regular",
     attempt: str | None = None,
+    lang: str = "ko",
 ) -> LookupResponse:
     """Single source of truth that maps a get_item_price() dict into the
     Pydantic response. Both the F2-capture and override_text paths use it,
@@ -457,6 +513,7 @@ def _build_response(
             )
             for n in price.get("needed_for_hideout", [])
         ],
+        gunsmith=[GunsmithRef(**g) for g in gunsmith.for_item(price.get("id"), lang)],
         caliber=price.get("caliber"),
         caliber_display=price.get("caliber_display"),
         ammo_pack_round_id=price.get("ammo_pack_round_id"),
@@ -849,7 +906,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             game_mode=game_mode,
             corrections=req.corrections,
         )
-        return _build_response(req.override_text, price, game_mode)
+        return _build_response(req.override_text, price, game_mode, lang=req.lang)
 
     # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,
     # so it shares a coordinate space with mss). Fall back to the value the
@@ -947,7 +1004,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
-            return _build_response(best_text, {"name": None}, game_mode, attempt="superseded")
+            return _build_response(best_text, {"name": None}, game_mode, attempt="superseded", lang=req.lang)
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections,
             rescue_pool=rescue_pool,
@@ -986,19 +1043,19 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             if wide_price.get("name") is None:
                 rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
                 if rescued is not None:
-                    return _build_response(rescued[0], rescued[1], game_mode, attempt="wide")
-            return _build_response(wide_text, wide_price, game_mode, attempt="wide")
+                    return _build_response(rescued[0], rescued[1], game_mode, attempt="wide", lang=req.lang)
+            return _build_response(wide_text, wide_price, game_mode, attempt="wide", lang=req.lang)
 
     # Deferred cold-path: one network shot at the best-read strings, for
     # brand-new patch items the (≤10min-stale) catalog cache can't know yet.
     if price.get("name") is None and rescue_pool and not _lookup_superseded(req.client_seq):
         rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
         if rescued is not None:
-            return _build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used)
+            return _build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used, lang=req.lang)
 
     # No match: report the most informative text read across attempts.
     final_text = text if price.get("name") is not None else best_text
-    return _build_response(final_text, price, game_mode, attempt=attempt_used)
+    return _build_response(final_text, price, game_mode, attempt=attempt_used, lang=req.lang)
 
 
 # ─── Quest tracker endpoints ─────────────────────────────────────────
@@ -1051,6 +1108,66 @@ def radar_map(map: str, lang: str = "ko") -> dict:
     if doc is None:
         raise HTTPException(status_code=404, detail="unknown_map")
     return doc
+
+
+class HideoutSyncRequest(BaseModel):
+    """앱 프런트가 설정에서 고른 은신처 단계 {station_id: level}. 사이트 연동(/progress)에 같이 실어 준다."""
+    levels: dict[str, int] = {}
+
+
+_hideout_levels_cache: dict[str, int] | None = None
+
+
+def _hideout_levels_path():
+    from quest_tracker import _state_dir
+
+    return _state_dir() / "hideout_levels.json"
+
+
+def _load_hideout_levels() -> dict[str, int]:
+    global _hideout_levels_cache
+    if _hideout_levels_cache is None:
+        try:
+            _hideout_levels_cache = {str(k): int(v) for k, v in json.loads(_hideout_levels_path().read_text(encoding="utf-8")).items()}
+        except Exception:  # noqa: BLE001 — 없거나 깨졌으면 빈 값
+            _hideout_levels_cache = {}
+    return _hideout_levels_cache
+
+
+@app.post("/sync/hideout", dependencies=[Depends(_reject_foreign_origin)])
+def sync_hideout(req: HideoutSyncRequest) -> dict:
+    global _hideout_levels_cache
+    levels = {str(k): int(v) for k, v in (req.levels or {}).items() if int(v) > 0}
+    _hideout_levels_cache = levels
+    try:
+        p = _hideout_levels_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(levels), encoding="utf-8")
+    except Exception as ex:  # noqa: BLE001
+        print(f"[sync] hideout levels save failed: {ex}")
+    return {"ok": True, "count": len(levels)}
+
+
+@app.get("/progress")
+def progress(game_mode: str = "regular") -> dict:
+    """가이드 사이트용 진행도 요약 — 게임 로그에서 읽은 퀘스트 상태(모드별) + 앱 설정의 은신처 단계.
+    읽기 전용이고 화면 내용은 전혀 들어 있지 않다. CORS 는 _ProgressCORS 가 이 경로에만 붙인다."""
+    tracker = get_tracker()
+    mode = _normalize_request_mode(game_mode)
+    st = tracker.all_status(mode)
+    by = {"completed": [], "started": [], "failed": []}
+    for qid, status in st.items():
+        if status in by:
+            by[status].append(qid)
+    return {
+        "ok": True,
+        "mode": mode,
+        "enabled": tracker.is_enabled(),
+        "quest_count": len(st),
+        **by,
+        "hideout": _load_hideout_levels(),
+        "gunsmith": gunsmith.status().get("updated") or None,
+    }
 
 
 class RadarFolderRequest(BaseModel):
