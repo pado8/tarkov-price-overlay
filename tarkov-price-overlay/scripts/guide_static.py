@@ -52,7 +52,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("kappa", "/guide/kappa/", "카파템"), ("keys", "/guide/keys/", "열쇠"),
        ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
        ("prestige", "/guide/prestige/", "프레스티지"), ("patch", "/guide/patch/", "패치 요약"),
-       ("promo", "/guide/promo/", "프로모 코드"),
+       ("promo", "/guide/promo/", "프로모 코드"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
        ("overlay", "/", "시세 오버레이")]
 
 
@@ -1732,6 +1732,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/prestige/", "프레스티지", "PVE·PVP 단계별 조건과 보상", "1.2.0 PVE 반영"),
         ("/guide/patch/", "패치 요약", "1.0.5~1.2.5 주요 변경 한국어 정리", "2026-05~10"),
         ("/guide/promo/", "프로모 코드", "지금 쓸 수 있는 공식 프로모 코드 · 모드별 · 등록 방법", f'{counts.get("promo", 0)}개 · {PROMO_CHECKED}'),
+        ("/guide/gunsmith/", "건스미스 부품 총정리", "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)", f'{counts.get("gunsmith_q", 0)}개 퀘스트 · 부품 {counts.get("gunsmith_p", 0)}종'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
         ("/guide/keys/", "맵별 열쇠", "여는 곳·퀘스트 필요 키·시세", f'{counts.get("keys", 0)}개'),
     ]
@@ -2073,6 +2074,119 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
                       extra_head=extra_head, scripts=scripts)
 
 
+# ─────────────────────────────────────────────────────────────
+# 건스미스 — 기계공 무기 조립 퀘스트 전부(기본 '건스미스 - 무기명' + '건스미스 마스터 - 파트 N').
+# 데이터의 buildWeapon 목표: item(무기) · containsAll(반드시 포함할 부품) · buildAttributes(성능 조건).
+# 부품은 즐겨찾기(플리마켓 ★)용 체크리스트로도 한 번 더 묶는다.
+# ─────────────────────────────────────────────────────────────
+GUNSMITH_JS = """<script>
+(function(){var KEY="guide.gunsmith.have";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var have=L(KEY,{}),rows=[].slice.call(document.querySelectorAll("#gtbl tbody tr")),chips=[].slice.call(document.querySelectorAll("[data-part]"));
+function render(){var q=document.getElementById("q").value.trim().toLowerCase(),hh=document.getElementById("hideHave").checked,shown=0,hv=0;
+rows.forEach(function(r){var d=r.dataset,h=!!have[d.id];if(h)hv++;var ok=true;if(hh&&h)ok=false;if(q&&d.s.indexOf(q)<0)ok=false;
+r.style.display=ok?"":"none";r.classList.toggle("done",h);var c=r.querySelector("input");if(c)c.checked=h;if(ok)shown++;});
+chips.forEach(function(c){c.classList.toggle("done",!!have[c.getAttribute("data-part")])});
+document.getElementById("shown").textContent=shown;document.getElementById("havecnt").textContent=hv;}
+document.getElementById("hideHave").addEventListener("change",render);document.getElementById("q").addEventListener("input",render);
+document.getElementById("gtbl").addEventListener("change",function(e){var r=e.target.closest("tr");if(!r)return;if(e.target.checked)have[r.dataset.id]=1;else delete have[r.dataset.id];S(KEY,have);render()});
+document.getElementById("clearHave").addEventListener("click",function(){if(!confirm("보유 체크를 모두 지울까요?"))return;have={};S(KEY,have);render()});
+render();})();
+</script>"""
+
+
+def gunsmith_page(ctx: Ctx) -> tuple[str, str] | None:
+    # 건스미스 퀘스트 = buildWeapon 목표가 있고 영문 이름이 Gunsmith로 시작
+    gs = [tid for tid, t in ctx.tasks.items()
+          if ctx.task_names(tid)[1].startswith("Gunsmith") and any(o.get("type") == "buildWeapon" for o in t.get("objectives") or [])]
+    if not gs:
+        return None
+
+    def num(tid):
+        m = re.search(r"Part (\d+)", ctx.task_names(tid)[1])
+        return int(m.group(1)) if m else 0
+
+    base = sorted([t for t in gs if "Master" not in ctx.task_names(t)[1]], key=lambda t: (ctx.depth(t), ctx.task_names(t)[1]))
+    master = sorted([t for t in gs if "Master" in ctx.task_names(t)[1]], key=lambda t: (num(t), ctx.task_names(t)[1]))
+
+    parts: dict[str, list[str]] = {}  # 부품 → 쓰는 퀘스트들(중복 포함: 같은 부품을 두 퀘스트가 요구하면 2개 필요)
+
+    def build_rows(tids):
+        rows = []
+        for tid in tids:
+            t = ctx.tasks[tid]
+            objs = [o for o in t.get("objectives") or [] if o.get("type") == "buildWeapon"]
+            for k, o in enumerate(objs):
+                it = o.get("item")
+                wid = it.get("id") if isinstance(it, dict) else it
+                need = _flat(o.get("containsAll"))
+                for pid in need:
+                    parts.setdefault(pid, []).append(tid)
+                conds = []
+                for key, v in (o.get("buildAttributes") or {}).items():
+                    if isinstance(v, dict) and (v.get("value") or 0) > 0:
+                        conds.append(f'{BUILD_ATTR.get(key, key)} {_cmp(v.get("compareMethod"))} {fmt_int(v["value"])}')
+                chips = "".join(f'<span data-part="{e(pid)}">{ctx.chip(pid)}</span>' for pid in need) or '<span class="muted small">없음 — 성능 조건만</span>'
+                lv = t.get("minPlayerLevel") or 0
+                first = (f'<td rowspan="{len(objs)}">{ctx.task_link(tid)}'
+                         + (f'<div class="small muted">레벨 {lv}</div>' if lv else "") + "</td>") if k == 0 else ""
+                rows.append(f'<tr>{first}<td><div class="chips">{ctx.chip(wid)}</div></td>'
+                            f'<td><div class="chips">{chips}</div></td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
+        return rows
+
+    base_rows = build_rows(base)
+    master_rows = build_rows(master)
+
+    def table(rows, hid, title, note):
+        return (f'<h2 class="sec" id="{hid}">{e(title)} <span class="muted small">{len(rows)}개</span></h2><p class="small muted">{note}</p>'
+                '<div class="box tbl" style="padding:4px 8px"><table class="tot gs"><thead><tr><th>퀘스트</th><th>무기</th><th>반드시 포함할 부품</th><th>성능 조건</th></tr></thead>'
+                f'<tbody>{"".join(rows)}</tbody></table></div>')
+
+    # 전체 부품 체크리스트 — 많이 쓰이는 것부터, 같은 횟수면 이름순
+    order = sorted(parts, key=lambda p: (-len(parts[p]), (ctx.item(p) or {}).get("n") or p))
+    trs = []
+    for pid in order:
+        it = ctx.item(pid)
+        if not it:
+            continue
+        uses = parts[pid]
+        qlinks = ", ".join(ctx.task_link(t) for t in dict.fromkeys(uses))
+        s = (it["n"] + " " + (it.get("en") or "") + " " + (it.get("s") or "")).lower()
+        price = it.get("pvp")
+        trs.append(f'<tr data-id="{e(pid)}" data-s="{e(s)}"><td class="n"><input type="checkbox" aria-label="보유" /></td>'
+                   f'<td>{ctx.chip(pid)}</td><td class="n">{len(uses)}</td><td class="small">{qlinks}</td>'
+                   f'<td class="n small">{(fmt_int(price) + "₽") if price else ("상인" if it.get("noflea") else "—")}</td></tr>')
+
+    body = (f'<h1>건스미스 부품 총정리 <span class="h1en">Gunsmith</span></h1>'
+            f'<p class="sub">기계공 무기 조립 퀘스트 {len(gs)}개 · 반드시 포함할 부품 {len(parts)}종 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note key"><b>쓰는 법</b> — 아래 "전체 부품 체크리스트"의 이름을 플리마켓 검색창에 넣고 ★(즐겨찾기)를 눌러 두면 시세 볼 때 한 번에 모입니다. '
+            '표의 "반드시 포함할 부품"은 조립에 꼭 들어가야 하는 것이고, 그 외 인체공학·반동·무게 같은 <b>성능 조건</b>은 어떤 부품으로든 맞추면 됩니다. '
+            '조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.</div>'
+            '<nav class="toc"><a href="#base">건스미스</a><a href="#master">건스미스 마스터</a><a href="#parts">전체 부품 체크리스트</a></nav>'
+            + table(base_rows, "base", "건스미스", "기계공 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
+            + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.")
+            + f'<h2 class="sec" id="parts">전체 부품 체크리스트 <span class="muted small">{len(trs)}종</span></h2>'
+            '<div class="box"><div class="bar"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
+            '<label class="small"><input type="checkbox" id="hideHave" /> 보유 숨기기</label>'
+            '<span class="small muted">표시 <b id="shown">0</b> · 보유 <b id="havecnt">0</b></span>'
+            '<button type="button" id="clearHave" class="small">체크 초기화</button></div>'
+            '<div class="tbl"><table class="tot" id="gtbl"><thead><tr><th class="n">보유</th><th>부품</th><th class="n">필요 횟수</th><th>쓰는 퀘스트</th><th class="n">시세(PVP)</th></tr></thead>'
+            f'<tbody>{"".join(trs)}</tbody></table></div></div>'
+            '<p class="small muted">출처: tarkov.dev 퀘스트 데이터(buildWeapon 목표). 시세는 24시간 평균이며 "상인"은 플리마켓 거래 불가 품목입니다. '
+            '성능 조건을 맞추는 구체적인 조립법은 퀘스트 상세의 위키 링크에서 보세요.</p>')
+    extra_head = ('<style>table.gs td{vertical-align:top}table.gs .chips{margin-top:0}'
+                  '[data-part].done .chip{opacity:.45;text-decoration:line-through}'
+                  '#gtbl tr.done td{opacity:.5}#gtbl tr.done td.n:first-child{opacity:1}'
+                  '.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:8px}.bar input[type=search]{flex:1;min-width:180px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}'
+                  '.bar button{padding:4px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer}</style>')
+    path = "/guide/gunsmith/"
+    title = f"타르코프 건스미스 부품 총정리 — 퀘스트 {len(gs)}개 필수 부품 {len(parts)}종·성능 조건·즐겨찾기 체크리스트 | 탈콥 가이드"
+    desc = (f"타르코프 건스미스(기계공 무기 조립) 퀘스트 {len(gs)}개 전부: 무기별 반드시 포함할 부품 {len(parts)}종, 인체공학·반동·무게 조건, "
+            "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.")
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="gunsmith", crumbs=[("건스미스", None)],
+                      extra_head=extra_head, scripts=GUNSMITH_JS)
+
+
 def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> list[str]:
     urls: list[str] = []
     # 퀘스트 상세
@@ -2121,9 +2235,16 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     write(out, p, h, urls)
     p, h = promo_page(ctx)
     write(out, p, h, urls)
+    gs_q = gs_p = 0
+    gsr = gunsmith_page(ctx)
+    if gsr:
+        p, h = gsr
+        write(out, p, h, urls)
+        gs_q = h.count("<td rowspan=")
+        gs_p = h.count('<tr data-id="')
     counts = {"quests": len(ctx.tasks), "items": items_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
               "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,
-              "promo": len(PROMO_CODES), **extra_counts}
+              "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, **extra_counts}
     p, h = hub_page(ctx, counts)
     write(out, p, h, urls)
     return urls
