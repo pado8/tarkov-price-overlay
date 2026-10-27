@@ -57,7 +57,7 @@ const RANGES = [25, 50, 100, 200, 400, 800, 1600];
 const STALE_SEC = 15 * 60;
 const COLORS: Record<string, string> = {
   extract: "var(--success)",
-  scav: "#9a9a9a",
+  scav: "#f0f0f0", // RadarMap.SCAV_COLOR 와 같게 — 회색은 묻힌다
   transit: "#6fa8dc",
   quest: "var(--gold-bright)",
 };

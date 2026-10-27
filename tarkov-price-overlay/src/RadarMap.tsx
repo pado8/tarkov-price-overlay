@@ -35,8 +35,9 @@ const SPAN_KEY = "tarkov.radar.mapSpan"; // 짧은 변이 몇 m 인지(확대 �
 const SPAN_DEFAULT = 300;
 const SPAN_MIN = 30;
 const SPAN_MAX = 4000;
-const FLOOR_M = 5; // 이보다 높이 차가 크면 다른 층으로 보고 흐리게
+const FLOOR_M = 5; // 층 구역이 다르고 높이 차도 이보다 크면 다른 층으로 보고 흐리게
 const DIM = 0.45;
+export const SCAV_COLOR = "#f0f0f0"; // 스캐브 탈출구 — 회색(#9a9a9a)은 어두운 지도 그림 위에서 묻혀 밝은 흰색으로
 
 type Pt = [number, number, number]; // x, y, z
 export type MapDoc = {
@@ -315,7 +316,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   };
 
   const dist = (p: Pt) => (me ? Math.hypot(p[0] - me.x, p[2] - me.z) : 0);
-  const op = (y: number) => (Math.abs(y - myY) > FLOOR_M ? DIM : 1);
+  // 다른 층 흐리게: 층 구역 정보가 있는 맵은 내 층과 대상의 층(autoFloor)이 다를 때만. 층 정보가 없는 맵은
+  // 높이 차로 판단하면 야외 지형 고저차에도 걸려 멀쩡한 탈출구가 흐려지므로 아예 안 흐린다.
+  const floorLayers = doc?.img?.layers ?? [];
+  const myFloor = me && floorLayers.length ? autoFloor(floorLayers, me.x, me.y, me.z) : null;
+  const op = (x: number, y: number, z: number) =>
+    floorLayers.length && me && autoFloor(floorLayers, x, y, z) !== myFloor && Math.abs(y - myY) > FLOOR_M ? DIM : 1;
   const questTargets: RadarTarget[] = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null);
 
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
@@ -424,7 +430,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
               doc.transits.map((x, i) => {
                 const s = toScreen(x.p[0], x.p[2]);
                 return (
-                  <g key={`tr${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[1])}>
+                  <g key={`tr${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                     {x.outline.length >= 3 && <polygon points={poly(x.outline)} fill="rgba(111,168,220,0.15)" stroke="#6fa8dc" strokeWidth={1} />}
                     <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                     <circle cx={s.x} cy={s.y} r={4} fill="#6fa8dc" stroke="#000" strokeWidth={0.8} />
@@ -435,9 +441,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
             {doc.extracts.map((x, i) => {
                   if (!showExtract(x.faction)) return null; // 이름표 키(ex{i})가 원본 인덱스라 filter 로 줄이면 안 됨
                   const s = toScreen(x.p[0], x.p[2]);
-                  const c = x.faction === "scav" ? "#9a9a9a" : "#6fbf73";
+                  const c = x.faction === "scav" ? SCAV_COLOR : "#6fbf73";
                   return (
-                    <g key={`ex${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[1])}>
+                    <g key={`ex${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                       {x.outline.length >= 3 && <polygon points={poly(x.outline)} fill="rgba(111,191,115,0.15)" stroke={c} strokeWidth={1} />}
                       <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                       <circle cx={s.x} cy={s.y} r={4} fill={c} stroke="#000" strokeWidth={0.8} />
@@ -449,7 +455,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
               questTargets.map((q, i) => {
                 const s = toScreen(q.x!, q.z!);
                 return (
-                  <g key={`q${i}`} onClick={() => pick({ name: `${q.name}${q.objective ? " · " + q.objective : ""}`, p: [q.x!, q.y ?? myY, q.z!] })} opacity={op(q.y ?? myY)}>
+                  <g key={`q${i}`} onClick={() => pick({ name: `${q.name}${q.objective ? " · " + q.objective : ""}`, p: [q.x!, q.y ?? myY, q.z!] })} opacity={op(q.x!, q.y ?? myY, q.z!)}>
                     <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                     <circle cx={s.x} cy={s.y} r={5} fill="#f0c040" stroke="#000" strokeWidth={0.8} />
                     {label(`q${i}`)}
