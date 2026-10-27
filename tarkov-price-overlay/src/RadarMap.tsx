@@ -10,6 +10,7 @@ import type { RadarState, RadarTarget } from "./Radar";
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot"; // {[slug]: 0|90|180|270}
 const LAYER_KEY = "tarkov.radar.mapLayers";
+const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔
 const SPAN_KEY = "tarkov.radar.mapSpan"; // 짧은 변이 몇 m 인지(확대 배율). 휠로 바꾸면 기억
 const SPAN_DEFAULT = 300;
 const SPAN_MIN = 30;
@@ -23,6 +24,8 @@ export type MapDoc = {
   name: string;
   rot: number | null;
   bounds: { minx: number; maxx: number; minz: number; maxz: number } | null;
+  // 지도 그림(tarkov.dev SVG, CC BY-NC-SA 4.0): 좌표 변환은 tarkov.dev 사이트(maps.json·getCRS)와 같은 식
+  img?: { url: string; rot: number; bounds: [number, number][]; transform: number[]; credit: string } | null;
   extracts: { name: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[];
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
@@ -83,6 +86,15 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const [doc, setDoc] = useState<MapDoc | null>(slug ? cache.get(`${slug}|${lang}`) ?? null : null);
   const [err, setErr] = useState(false);
   const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
+  const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
+  const toggleImg = () => {
+    setShowImg((v) => {
+      try {
+        localStorage.setItem(IMG_KEY, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  };
   const [rot, setRot] = useState<number>(() => (slug ? loadJson<Record<string, number>>(ROT_KEY, {})[slug] ?? 0 : 0));
   const [span, setSpan] = useState<number>(loadSpan);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -171,7 +183,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
 
   const fit = () => {
     if (!doc?.bounds) return;
-    const b = doc.bounds;
+    const b = { ...doc.bounds };
+    if (doc.img && showImg) {
+      // 지도 그림까지 다 보이게
+      for (const [bx, bz] of doc.img.bounds) {
+        b.minx = Math.min(b.minx, bx); b.maxx = Math.max(b.maxx, bx);
+        b.minz = Math.min(b.minz, bz); b.maxz = Math.max(b.maxz, bz);
+      }
+    }
     const spanM = Math.max(b.maxx - b.minx, b.maxz - b.minz, 50) * 1.08;
     setView({ cx: (b.minx + b.maxx) / 2, cz: (b.minz + b.maxz) / 2, s: Math.min(box.w, box.h) / spanM });
   };
@@ -315,6 +334,32 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   };
 
   const poly = (ol: [number, number][]) => ol.map((q) => { const s = toScreen(q[0], q[1]); return `${s.x.toFixed(1)},${s.y.toFixed(1)}`; }).join(" ");
+
+  // 지도 그림 ↔ 게임 좌표: tarkov.dev 사이트와 같은 식 — (x, z)를 coordinateRotation 만큼 돌린 뒤 px = t0·rx + t1, py = −t2·rz + t3.
+  // 그림은 bounds 두 모서리의 투영 사각형을 꽉 채우므로 그림 픽셀 (u, v) → 투영 (pxmin+u, pymin+v) → 역변환 → 게임 좌표 → 화면.
+  // 전부 아핀이라 그림을 SVG <image transform="matrix(…)"> 하나로 놓을 수 있다.
+  const imgLayer = (() => {
+    const im = doc?.img;
+    if (!im || !v || !showImg) return null;
+    const [t0, t1, t2, t3] = im.transform;
+    const a = (im.rot * Math.PI) / 180;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    const proj = (gx: number, gz: number) => ({ x: t0 * (gx * ca - gz * sa) + t1, y: -t2 * (gx * sa + gz * ca) + t3 });
+    const p1 = proj(im.bounds[0][0], im.bounds[0][1]);
+    const p2 = proj(im.bounds[1][0], im.bounds[1][1]);
+    const pxmin = Math.min(p1.x, p2.x), pymin = Math.min(p1.y, p2.y);
+    const W = Math.abs(p2.x - p1.x), H = Math.abs(p2.y - p1.y);
+    if (!(W > 0 && H > 0) || !t0 || !t2) return null;
+    const game = (u: number, w: number) => {
+      const rx = (pxmin + u - t1) / t0;
+      const rz = (pymin + w - t3) / -t2;
+      return { gx: rx * ca + rz * sa, gz: -rx * sa + rz * ca };
+    };
+    const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
+    const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
+    const m = [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ");
+    return <image href={`${PYTHON_API}${im.url}`} width={W} height={H} preserveAspectRatio="none" transform={`matrix(${m})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
+  })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
     <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={onClick}>
@@ -336,6 +381,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
       >
         {doc && v && (
           <svg className="radar-mapsvg" viewBox={`0 0 ${box.w} ${box.h}`} role="img" aria-label={doc.name} onClick={onSvgClick}>
+            {imgLayer}
             {layers.transits &&
               doc.transits.map((x, i) => {
                 const s = toScreen(x.p[0], x.p[2]);
@@ -391,12 +437,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
         </div>
         {v && <div className="radar-mapscale">━ {scaleM}m</div>}
         {headingUp && <div className="radar-mapup">▲ {t.radarMapHeadingUp}</div>}
+        {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
       </div>
       <div className="radar-layers">
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => toggleLayer("pmc"))}
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
         {chip(layers.transits, "transit", t.radarLayerTransits, () => toggleLayer("transits"))}
         {chip(layers.quests, "quest", t.radarLayerQuests, () => toggleLayer("quests"))}
+        {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>
       {sel && (
         <div className="radar-mapsel">

@@ -1124,6 +1124,17 @@ def radar_map(map: str, lang: str = "ko") -> dict:
     return doc
 
 
+@app.get("/radar/mapimg")
+def radar_map_image(map: str):
+    """전체 지도 배경 그림(tarkov.dev SVG, CC BY-NC-SA 4.0 · 비영리·출처 표기). 사이드카가 7일 캐시해 되돌려준다."""
+    from fastapi.responses import FileResponse
+    from radar import map_image_file
+    f = map_image_file(map)
+    if f is None:
+        raise HTTPException(status_code=404, detail="no_map_image")
+    return FileResponse(str(f), media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
 class HideoutSyncRequest(BaseModel):
     """앱 프런트가 설정에서 고른 은신처 단계 {station_id: level}. 사이트 연동(/progress)에 같이 실어 준다."""
     levels: dict[str, int] = {}

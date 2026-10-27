@@ -1,0 +1,724 @@
+{
+ "checked": "2026-10-27",
+ "source": "https://escapefromtarkov.fandom.com (Extractions 표)",
+ "maps": {
+  "woods": [
+   {
+    "name": "Boat",
+    "faction": "scav",
+    "img": "The Boat"
+   },
+   {
+    "name": "Bridge V-Ex",
+    "faction": "pmc",
+    "img": "Wood Bridge extraction"
+   },
+   {
+    "name": "Dead Man's Place",
+    "faction": "scav",
+    "img": "Dead Mans Place"
+   },
+   {
+    "name": "Eastern Rocks",
+    "faction": "scav",
+    "img": "West Border"
+   },
+   {
+    "name": "Friendship Bridge (Co-Op)",
+    "faction": "shared",
+    "img": "Scav bridge"
+   },
+   {
+    "name": "Mountain Stash",
+    "faction": "scav",
+    "img": "Mountain Stash"
+   },
+   {
+    "name": "Northern UN Roadblock",
+    "faction": "pmc",
+    "img": "Northern UN roadblock"
+   },
+   {
+    "name": "Old Railway Depot",
+    "faction": "scav",
+    "img": "Old Station"
+   },
+   {
+    "name": "Outskirts",
+    "faction": "shared",
+    "img": "Outskirts"
+   },
+   {
+    "name": "Power Line Passage (Flare)",
+    "faction": "pmc",
+    "img": "Power Line Passage"
+   },
+   {
+    "name": "Railway Bridge to Tarkov",
+    "faction": "shared",
+    "img": "Railway Bridge to Tarkov"
+   },
+   {
+    "name": "RUAF Gate",
+    "faction": "pmc",
+    "img": "RUAF Gate"
+   },
+   {
+    "name": "RUAF Roadblock",
+    "faction": "scav",
+    "img": "RUAF Roadblock"
+   },
+   {
+    "name": "Scav Bunker",
+    "faction": "scav",
+    "img": "Scav bunker"
+   },
+   {
+    "name": "Scav House",
+    "faction": "scav",
+    "img": "Scav House"
+   },
+   {
+    "name": "UN Roadblock",
+    "faction": "shared",
+    "img": "UN Road"
+   },
+   {
+    "name": "ZB-014",
+    "faction": "pmc",
+    "img": "ZB-014"
+   },
+   {
+    "name": "ZB-016",
+    "faction": "pmc",
+    "img": "ZB-016"
+   }
+  ],
+  "customs": [
+   {
+    "name": "Administration Gate",
+    "faction": "scav",
+    "img": "Administration Gate"
+   },
+   {
+    "name": "Boiler Room Basement (Co-op)",
+    "faction": "shared",
+    "img": "Boiler room basement"
+   },
+   {
+    "name": "Crossroads",
+    "faction": "shared",
+    "img": "Crossroads"
+   },
+   {
+    "name": "Dorms V-Ex",
+    "faction": "pmc",
+    "img": "Dorms V-Ex"
+   },
+   {
+    "name": "Gate Near Medblock",
+    "faction": "scav",
+    "img": "Gate Near Medblock"
+   },
+   {
+    "name": "Old Gas Station",
+    "faction": "shared",
+    "img": "Old Gas Station Extraction"
+   },
+   {
+    "name": "Railroad Passage (Flare)",
+    "faction": "pmc",
+    "img": "Railroad Passage"
+   },
+   {
+    "name": "Railroad to Port",
+    "faction": "scav",
+    "img": "Railroad to Port"
+   },
+   {
+    "name": "Railroad to Reserve",
+    "faction": "shared",
+    "img": "Railroad To Military Base"
+   },
+   {
+    "name": "Railroad to Tarkov",
+    "faction": "scav",
+    "img": "Railroad To Tarkov"
+   },
+   {
+    "name": "Reserve Checkpoint",
+    "faction": "scav",
+    "img": "Scavs checkpoint"
+   },
+   {
+    "name": "Smugglers' Boat",
+    "faction": "shared",
+    "img": "Smuggler's Boat"
+   },
+   {
+    "name": "Smugglers' Bunker (ZB-1012)",
+    "faction": "shared",
+    "img": "ZB-1012"
+   },
+   {
+    "name": "Trailer Park",
+    "faction": "shared",
+    "img": "Trailer Park"
+   },
+   {
+    "name": "ZB-1011",
+    "faction": "shared",
+    "img": "ZB-1011"
+   },
+   {
+    "name": "ZB-1013",
+    "faction": "pmc",
+    "img": "ZB013 Grate"
+   }
+  ],
+  "streets-of-tarkov": [
+   {
+    "name": "Cardinal Apartment Complex Parking",
+    "faction": "scav",
+    "img": "Cardinal parking"
+   },
+   {
+    "name": "Collapsed Crane",
+    "faction": "pmc",
+    "img": "CollapsedCraneExtraction"
+   },
+   {
+    "name": "Courtyard",
+    "faction": "pmc",
+    "img": "CourtyardExtraction"
+   },
+   {
+    "name": "Crash Site",
+    "faction": "pmc",
+    "img": "StreetsCrashSiteExtract"
+   },
+   {
+    "name": "Damaged House",
+    "faction": "pmc",
+    "img": "DamagedHouseExtraction"
+   },
+   {
+    "name": "Entrance to Catacombs",
+    "faction": "scav",
+    "img": "EntranceToCatacombsExtraction"
+   },
+   {
+    "name": "Expo Checkpoint",
+    "faction": "pmc",
+    "img": "Expo exfil"
+   },
+   {
+    "name": "Klimov Shopping Mall Exfil",
+    "faction": "scav",
+    "img": "Klimov trading exfil"
+   },
+   {
+    "name": "Klimov Street (Flare)",
+    "faction": "pmc",
+    "img": "KlimovStreetExtraction"
+   },
+   {
+    "name": "Near Kamchatskaya Arch",
+    "faction": "scav",
+    "img": "Near arch exfil"
+   },
+   {
+    "name": "Pinewood Basement (Co-Op)",
+    "faction": "shared",
+    "img": "StreetsPinewoodBasementExtract"
+   },
+   {
+    "name": "Primorsky Ave Taxi V-Ex",
+    "faction": "pmc",
+    "img": "PrimorskyAveTaxiV-ExExtraction"
+   },
+   {
+    "name": "Sewer Manhole",
+    "faction": "scav",
+    "img": "SewerExtraction"
+   },
+   {
+    "name": "Sewer River",
+    "faction": "pmc",
+    "img": "SewerRiverExtraction"
+   },
+   {
+    "name": "Smugglers' Basement",
+    "faction": "shared",
+    "img": "BasementDescentExtraction"
+   },
+   {
+    "name": "Stylobate Building Elevator",
+    "faction": "pmc",
+    "img": "StreetsStylobateElevatorExtract"
+   },
+   {
+    "name": "Ventilation Shaft",
+    "faction": "scav",
+    "img": "VentilationShaftExtraction"
+   }
+  ],
+  "ground-zero": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared",
+    "img": "Emercom Checkpoint"
+   },
+   {
+    "name": "Mira Ave (Flare)",
+    "faction": "pmc",
+    "img": "Mira Prospect"
+   },
+   {
+    "name": "Nakatani Basement Stairs",
+    "faction": "shared",
+    "img": "Nakatani Basement Stairs"
+   },
+   {
+    "name": "Police Cordon V-Ex",
+    "faction": "pmc",
+    "img": "Police Checkpoint"
+   },
+   {
+    "name": "Scav Checkpoint (Co-op)",
+    "faction": "shared",
+    "img": "Scav Checkpoint"
+   },
+   {
+    "name": "Tartowers Sales Office",
+    "faction": "shared",
+    "img": "Tartowers Sales Office"
+   }
+  ],
+  "ground-zero-21": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared",
+    "img": "Emercom Checkpoint"
+   },
+   {
+    "name": "Mira Ave (Flare)",
+    "faction": "pmc",
+    "img": "Mira Prospect"
+   },
+   {
+    "name": "Nakatani Basement Stairs",
+    "faction": "shared",
+    "img": "Nakatani Basement Stairs"
+   },
+   {
+    "name": "Police Cordon V-Ex",
+    "faction": "pmc",
+    "img": "Police Checkpoint"
+   },
+   {
+    "name": "Scav Checkpoint (Co-op)",
+    "faction": "shared",
+    "img": "Scav Checkpoint"
+   },
+   {
+    "name": "Tartowers Sales Office",
+    "faction": "shared",
+    "img": "Tartowers Sales Office"
+   }
+  ],
+  "interchange": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared",
+    "img": "InterchangeSouthEastExit"
+   },
+   {
+    "name": "Path to River (Flare)",
+    "faction": "pmc",
+    "img": "Path to River"
+   },
+   {
+    "name": "Power Station V-Ex",
+    "faction": "pmc",
+    "img": "InterchangePowerPlantExit"
+   },
+   {
+    "name": "Railway Exfil",
+    "faction": "shared",
+    "img": "InterchangeNorthWestExit"
+   },
+   {
+    "name": "Saferoom Exfil",
+    "faction": "pmc",
+    "img": "IC-Saferoom EXFIL"
+   },
+   {
+    "name": "Scav Camp (Co-Op)",
+    "faction": "shared",
+    "img": "IC-Scav Camp"
+   },
+   {
+    "name": "Smugglers' Tunnel",
+    "faction": "shared",
+    "img": "Smugglers' Tunnel"
+   }
+  ],
+  "shoreline": [
+   {
+    "name": "Admin Basement",
+    "faction": "scav",
+    "img": "Adm Basement"
+   },
+   {
+    "name": "Climber's Trail",
+    "faction": "pmc",
+    "img": "Shoreline Climber's Trail Extraction"
+   },
+   {
+    "name": "East Wing Gym Entrance",
+    "faction": "scav",
+    "img": "Rwing Gym Entrance"
+   },
+   {
+    "name": "Lighthouse",
+    "faction": "scav",
+    "img": "Lighthouse"
+   },
+   {
+    "name": "Mountain Bunker",
+    "faction": "shared",
+    "img": "South Fence Passage"
+   },
+   {
+    "name": "Path to Lighthouse",
+    "faction": "pmc",
+    "img": "Path to Lighthouse"
+   },
+   {
+    "name": "Pier Boat",
+    "faction": "pmc",
+    "img": "Pier Boat"
+   },
+   {
+    "name": "Railway Bridge",
+    "faction": "pmc",
+    "img": "Road at Railbridge"
+   },
+   {
+    "name": "Road to Customs",
+    "faction": "shared",
+    "img": "Road To Customs"
+   },
+   {
+    "name": "Road to North V-Ex",
+    "faction": "pmc",
+    "img": "Shoreline Road to North V-Ex Extraction"
+   },
+   {
+    "name": "Ruined Road",
+    "faction": "scav",
+    "img": "Ruined Road"
+   },
+   {
+    "name": "Smugglers' Path (Co-op)",
+    "faction": "shared",
+    "img": "Smuggler's Path Extraction"
+   },
+   {
+    "name": "Tunnel",
+    "faction": "pmc",
+    "img": "Tunnel"
+   }
+  ],
+  "reserve": [
+   {
+    "name": "Armored Train",
+    "faction": "shared",
+    "img": "Armored train 3"
+   },
+   {
+    "name": "Bunker Hermetic Door",
+    "faction": "shared",
+    "img": "Bunker hermetic door"
+   },
+   {
+    "name": "Checkpoint Fence",
+    "faction": "scav",
+    "img": "CP Fence"
+   },
+   {
+    "name": "Cliff Descent",
+    "faction": "pmc",
+    "img": "Cliff descent (fence behind weather dome)"
+   },
+   {
+    "name": "D-2",
+    "faction": "pmc",
+    "img": "D2 Extract"
+   },
+   {
+    "name": "Depot Hermetic Door",
+    "faction": "scav",
+    "img": "Depot hermetic door"
+   },
+   {
+    "name": "Exit to Woods",
+    "faction": "shared",
+    "img": "Exit to Woods"
+   },
+   {
+    "name": "Heating Pipe",
+    "faction": "scav",
+    "img": "Heating Pipe"
+   },
+   {
+    "name": "Hole in the Wall by the Mountains",
+    "faction": "scav",
+    "img": "Hole in fence by the mountains (Northwest Corner of map)"
+   },
+   {
+    "name": "Scav Lands (Co-Op)",
+    "faction": "shared",
+    "img": "Scav lands"
+   },
+   {
+    "name": "Sewer Manhole",
+    "faction": "shared",
+    "img": "Sewer manhole"
+   }
+  ],
+  "lighthouse": [
+   {
+    "name": "Armored Train",
+    "faction": "shared",
+    "img": "Lighthouse - Armored train"
+   },
+   {
+    "name": "Hideout Under the Landing Stage",
+    "faction": "scav",
+    "img": "Hideout under the landing stage"
+   },
+   {
+    "name": "Industrial Zone Gates",
+    "faction": "scav",
+    "img": "Industrial zone gates"
+   },
+   {
+    "name": "Mountain Pass",
+    "faction": "pmc",
+    "img": "Lighthouse - Mountain pass"
+   },
+   {
+    "name": "Northern Checkpoint",
+    "faction": "pmc",
+    "img": "Lighthouse - Northern checkpoint"
+   },
+   {
+    "name": "Passage by the Lake",
+    "faction": "shared",
+    "img": "Passage by the Lake"
+   },
+   {
+    "name": "Path to Shoreline",
+    "faction": "shared",
+    "img": "Lighthouse - Path to Shoreline"
+   },
+   {
+    "name": "Road to Military Base V-Ex",
+    "faction": "pmc",
+    "img": "Lighthousecar"
+   },
+   {
+    "name": "Scav Hideout at the Grotto",
+    "faction": "scav",
+    "img": "Scav_hideout_at_the_grotto"
+   },
+   {
+    "name": "Side Tunnel (Co-Op)",
+    "faction": "shared",
+    "img": "LighthouseSideTunnelExtract"
+   },
+   {
+    "name": "Southern Road",
+    "faction": "pmc",
+    "img": "Lighthouse - southern road"
+   },
+   {
+    "name": "Southern Road Landslide",
+    "faction": "scav",
+    "img": "Scav_Coastal_South"
+   }
+  ],
+  "factory": [
+   {
+    "name": "Camera Bunker Door",
+    "faction": "scav",
+    "img": "Fac Camera Bunker Door"
+   },
+   {
+    "name": "Cellars",
+    "faction": "pmc",
+    "img": "Fac Cellars"
+   },
+   {
+    "name": "Courtyard Gate",
+    "faction": "pmc",
+    "img": "Factory Courtyard Gate"
+   },
+   {
+    "name": "Gate 0",
+    "faction": "pmc",
+    "img": "Fac Gate 0"
+   },
+   {
+    "name": "Gate 3",
+    "faction": "shared",
+    "img": "Fac Gate 3"
+   },
+   {
+    "name": "Med Tent Gate",
+    "faction": "pmc",
+    "img": "Med tent gates"
+   },
+   {
+    "name": "Office Window",
+    "faction": "scav",
+    "img": "Fac Office Window"
+   },
+   {
+    "name": "Smugglers' Passage",
+    "faction": "shared",
+    "img": "Smuggler's Passage"
+   }
+  ],
+  "night-factory": [
+   {
+    "name": "Camera Bunker Door",
+    "faction": "scav",
+    "img": "Fac Camera Bunker Door"
+   },
+   {
+    "name": "Cellars",
+    "faction": "pmc",
+    "img": "Fac Cellars"
+   },
+   {
+    "name": "Courtyard Gate",
+    "faction": "pmc",
+    "img": "Factory Courtyard Gate"
+   },
+   {
+    "name": "Gate 0",
+    "faction": "pmc",
+    "img": "Fac Gate 0"
+   },
+   {
+    "name": "Gate 3",
+    "faction": "shared",
+    "img": "Fac Gate 3"
+   },
+   {
+    "name": "Med Tent Gate",
+    "faction": "pmc",
+    "img": "Med tent gates"
+   },
+   {
+    "name": "Office Window",
+    "faction": "scav",
+    "img": "Fac Office Window"
+   },
+   {
+    "name": "Smugglers' Passage",
+    "faction": "shared",
+    "img": "Smuggler's Passage"
+   }
+  ],
+  "the-lab": [
+   {
+    "name": "Cargo Elevator",
+    "faction": null,
+    "img": "LabsCargoElevatorExtract"
+   },
+   {
+    "name": "Hangar Gate",
+    "faction": null,
+    "img": "LabsHangarGateExtract"
+   },
+   {
+    "name": "Main Elevator",
+    "faction": null,
+    "img": "LabsMainElevatorExtract"
+   },
+   {
+    "name": "Medical Block Elevator",
+    "faction": null,
+    "img": "LabsElevatorOfTheMedicaBlockExtract"
+   },
+   {
+    "name": "Parking Gate",
+    "faction": null,
+    "img": "LabsParkingGateExtract"
+   },
+   {
+    "name": "Sewage Conduit",
+    "faction": null,
+    "img": "LabsSewageConduitExtract"
+   },
+   {
+    "name": "Ventilation Shaft",
+    "faction": null,
+    "img": "LabsVentilationShaftExtract"
+   }
+  ],
+  "the-lab-dark": [
+   {
+    "name": "Cargo Elevator",
+    "faction": null,
+    "img": "LabsCargoElevatorExtract"
+   },
+   {
+    "name": "Hangar Gate",
+    "faction": null,
+    "img": "LabsHangarGateExtract"
+   },
+   {
+    "name": "Main Elevator",
+    "faction": null,
+    "img": "LabsMainElevatorExtract"
+   },
+   {
+    "name": "Medical Block Elevator",
+    "faction": null,
+    "img": "LabsElevatorOfTheMedicaBlockExtract"
+   },
+   {
+    "name": "Parking Gate",
+    "faction": null,
+    "img": "LabsParkingGateExtract"
+   },
+   {
+    "name": "Sewage Conduit",
+    "faction": null,
+    "img": "LabsSewageConduitExtract"
+   },
+   {
+    "name": "Ventilation Shaft",
+    "faction": null,
+    "img": "LabsVentilationShaftExtract"
+   }
+  ],
+  "the-labyrinth": [
+   {
+    "name": "Ariadne's Path",
+    "faction": null,
+    "img": "Ariadne's Path"
+   },
+   {
+    "name": "The Way Up",
+    "faction": null,
+    "img": "The Way Up"
+   }
+  ]
+ }
+}

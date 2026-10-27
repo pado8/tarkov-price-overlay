@@ -22,6 +22,9 @@ from pathlib import Path
 from typing import Optional
 
 import extract_conditions
+import extract_current
+import json
+import sys
 
 log = logging.getLogger("radar")
 
@@ -252,13 +255,26 @@ def _loc(table: dict, key, fallback=None):
     return v.strip() if isinstance(v, str) and v.strip() else fallback
 
 
+_HANGUL = re.compile(r"[가-힣]")
+
+
+def _disp_name(loc_maps: dict, loc_en: Optional[dict], key) -> str:
+    """탈출구 표시 이름. 한국어 로케일이 번역 없이 옛 영어 이름을 그대로 둔 경우('Warehouse 17'·'Scav checkpoint')가 있어,
+    한글이 없는 문자열이면 영어 로케일(현재 이름)을 쓴다. 한글 번역('Klimov Street (조명탄 탈출구)')은 그대로."""
+    ko = _loc(loc_maps, key, None)
+    en = _loc(loc_en, key, None) if loc_en else None
+    if ko and (_HANGUL.search(ko) or not en):
+        return ko
+    return en or ko or (key or "")
+
+
 def _mode_doc(game_mode: str) -> str:
     """퀘스트 데이터를 받을 json 경로의 모드 — 시즌은 일반 퀘스트를 쓴다"""
     return "pve" if (game_mode or "").lower() == "pve" else "regular"
 
 
 def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, loc_tasks: dict,
-                  active: set[str], pose: dict) -> list[dict]:
+                  active: set[str], pose: dict, loc_en: Optional[dict] = None) -> list[dict]:
     """맵의 탈출구·트랜짓·진행 중 퀘스트 목표 → 내 위치 기준 거리·상대 각도·높이 차."""
     maps = maps_doc or {}
     by_slug = {m.get("normalizedName"): (mid, m) for mid, m in maps.items()}
@@ -283,11 +299,19 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                     "x": round(float(pos["x"]), 1), "y": round(float(pos.get("y") or py), 1), "z": round(float(pos["z"]), 1),
                     **extra})
 
+    seen_ex: set[str] = set()
     for ex in m.get("extracts") or []:
-        fac = ex.get("faction") or "shared"
+        # 1.0 개편 때 없어진 탈출구는 tarkov.dev 문서에 그대로 남아 있다 → 위키 현재 표(extract_current)로 걸러내고 진영도 표 값으로.
+        # PMC·스캐브 두 줄로 든 같은 탈출구(위키는 'All' 하나)는 하나만
+        keep, wfac, wkey = extract_current.lookup(map_slug, _loc(loc_en, ex.get("name"), None)) if loc_en else (True, None, "")
+        if not keep or (wkey and wkey in seen_ex):
+            continue
+        if wkey:
+            seen_ex.add(wkey)
+        fac = wfac or ex.get("faction") or "shared"
         # 조건은 위키 기준 표 — 데이터의 switches 는 맵 전체 스위치가 모든 탈출구에 붙어 있어 쓰면 틀린다
         tags, _text, _give = extract_conditions.conditions(map_slug, ex)
-        add("extract", _loc(loc_maps, ex.get("name"), ex.get("name")), ex.get("position"),
+        add("extract", _disp_name(loc_maps, loc_en, ex.get("name")), ex.get("position"),
             faction=fac, switch="lever" in tags, paid="paid" in tags, cond=sorted(tags))
     for tr in m.get("transits") or []:
         dest = tr.get("map")
@@ -324,7 +348,7 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
     return out
 
 
-def compact_map_features(m: dict, loc_maps: dict) -> dict:
+def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> dict:
     """맵 문서 하나 → 전체 지도(2단계)가 그릴 좌표만 추린 작은 문서.
     SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(MIT 사이트 데이터)로만 그린다.
     점이 많은 것(상자·스폰)은 [x, y, z(, 종류)] 배열로 줄여 보낸다."""
@@ -344,11 +368,18 @@ def compact_map_features(m: dict, loc_maps: dict) -> dict:
         xs.append(p[0]); zs.append(p[2]); return p
 
     extracts = []
+    slug = m.get("normalizedName") or ""
+    seen_ex: set[str] = set()
     for e in m.get("extracts") or []:
         if not ok(e.get("position")):
             continue
-        extracts.append({"name": _loc(loc_maps, e.get("name"), e.get("name")), "p": note(pt(e["position"])),
-                         "faction": e.get("faction") or "shared",
+        keep, wfac, wkey = extract_current.lookup(slug, _loc(loc_en, e.get("name"), None)) if loc_en else (True, None, "")
+        if not keep or (wkey and wkey in seen_ex):
+            continue  # 개편 때 없어진 탈출구 · PMC/스캐브 중복
+        if wkey:
+            seen_ex.add(wkey)
+        extracts.append({"name": _disp_name(loc_maps, loc_en, e.get("name")), "p": note(pt(e["position"])),
+                         "faction": wfac or e.get("faction") or "shared",
                          "switch": "lever" in extract_conditions.conditions(m.get("normalizedName") or "", e)[0],
                          "outline": outline(e.get("outline"))})
     transits = []
@@ -378,11 +409,60 @@ def compact_map_features(m: dict, loc_maps: dict) -> dict:
         spawns.append(note(pt(s["position"])) + [code])
     weapons = [note(pt(w["position"])) for w in m.get("stationaryWeapons") or [] if ok(w.get("position"))]
     switches = [note(pt(w["position"])) for w in m.get("switches") or [] if ok(w.get("position"))]
+    # 지도 그림(tarkov.dev SVG, CC BY-NC-SA 4.0) — 좌표 변환값은 data/td_maps.json(scripts/td_maps.py). bounds 는 좌표만의 경계(그림 경계는 img.bounds, '전체' 보기가 합친다)
+    img = map_image_meta(slug)
     bounds = {"minx": min(xs), "maxx": max(xs), "minz": min(zs), "maxz": max(zs)} if xs else None
     return {"slug": m.get("normalizedName"), "name": _loc(loc_maps, m.get("name"), m.get("normalizedName")),
-            "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds,
+            "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds, "img": img,
             "extracts": extracts, "transits": transits, "hazards": hazards, "locks": locks,
             "containers": containers, "spawns": spawns, "weapons": weapons, "switches": switches}
+
+
+_TD_MAPS: Optional[dict] = None
+_MAPIMG_TTL = 7 * 24 * 3600
+
+
+def map_image_meta(slug: str) -> Optional[dict]:
+    """맵의 지도 그림 메타 {url, rot, bounds, transform} — 그림 자체는 /radar/mapimg 가 사이드카 캐시로 준다."""
+    global _TD_MAPS
+    if _TD_MAPS is None:
+        try:
+            base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+            _TD_MAPS = (json.loads((base / "data" / "td_maps.json").read_text(encoding="utf-8")).get("maps") or {})
+        except Exception:  # noqa: BLE001
+            _TD_MAPS = {}
+    x = _TD_MAPS.get(_IMG_ALIAS.get(slug, slug))
+    if not x:
+        return None
+    return {"url": f"/radar/mapimg?map={slug}", "rot": x.get("rot") or 0, "bounds": x["bounds"], "transform": x["transform"],
+            "credit": "tarkov.dev (CC BY-NC-SA 4.0)"}
+
+
+# 같은 그림을 쓰는 맵 변형(tarkov.dev 사이트는 대표 slug 하나만 가진다)
+_IMG_ALIAS = {"ground-zero-21": "ground-zero", "night-factory": "factory", "the-lab-dark": "the-lab"}
+
+
+def map_image_file(slug: str) -> Optional[Path]:
+    """지도 그림 SVG 파일(7일 캐시, %LOCALAPPDATA%\\TarkovPriceOverlay\\mapimg). 못 받으면 None."""
+    meta = map_image_meta(slug)
+    if not meta:
+        return None
+    from quest_tracker import _state_dir
+    d = _state_dir() / "mapimg"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{slug}.svg"
+    if f.exists() and f.stat().st_size > 1000 and time.time() - f.stat().st_mtime < _MAPIMG_TTL:
+        return f
+    try:
+        import requests
+        r = requests.get(_TD_MAPS[_IMG_ALIAS.get(slug, slug)]["svg"], timeout=60, headers={"User-Agent": "tarkov-price-overlay radar"})
+        r.raise_for_status()
+        if b"<svg" not in r.content[:4000]:
+            raise ValueError("not svg")
+        f.write_bytes(r.content)
+        return f
+    except Exception:  # noqa: BLE001 — 옛 캐시라도 있으면 그걸로
+        return f if f.exists() and f.stat().st_size > 1000 else None
 
 
 _map_cache: dict = {}
@@ -400,7 +480,7 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     if not m:
         return None
     loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
-    doc = compact_map_features(m, loc_maps)
+    doc = compact_map_features(m, loc_maps, _doc("regular/maps_en") or {})
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc
@@ -529,7 +609,7 @@ class RadarService:
                 except Exception:
                     tasks_doc, loc_tasks = {}, {}
                 res["targets"] = build_targets(maps_doc, slug, loc_maps, tasks_doc.get("tasks") or {}, loc_tasks,
-                                               active, shot)
+                                               active, shot, loc_en=_doc("regular/maps_en") or {})
                 res["active_quests"] = len(active)
             return res
 

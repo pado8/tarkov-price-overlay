@@ -1,0 +1,225 @@
+{
+ "source": "https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json",
+ "license": "maps.json MIT · SVG CC BY-NC-SA 4.0 (tarkov.dev)",
+ "maps": {
+  "streets-of-tarkov": {
+   "svg": "https://assets.tarkov.dev/maps/svg/StreetsOfTarkov.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     323,
+     -295
+    ],
+    [
+     -280,
+     532
+    ]
+   ],
+   "transform": [
+    0.38,
+    0,
+    0.38,
+    0
+   ],
+   "svgBounds": null
+  },
+  "ground-zero": {
+   "svg": "https://assets.tarkov.dev/maps/svg/GroundZero.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     249,
+     -124
+    ],
+    [
+     -99,
+     364
+    ]
+   ],
+   "transform": [
+    0.524,
+    167.3,
+    0.524,
+    65.1
+   ],
+   "svgBounds": null
+  },
+  "customs": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Customs.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     698,
+     -307
+    ],
+    [
+     -372,
+     237
+    ]
+   ],
+   "transform": [
+    0.239,
+    168.65,
+    0.239,
+    136.35
+   ],
+   "svgBounds": null
+  },
+  "factory": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Factory.svg",
+   "rot": 90,
+   "bounds": [
+    [
+     77,
+     -64.5
+    ],
+    [
+     -65.5,
+     67.4
+    ]
+   ],
+   "transform": [
+    1.629,
+    119.9,
+    1.629,
+    139.3
+   ],
+   "svgBounds": null
+  },
+  "interchange": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Interchange.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     598,
+     -442
+    ],
+    [
+     -433,
+     426
+    ]
+   ],
+   "transform": [
+    0.265,
+    150.6,
+    0.265,
+    134.6
+   ],
+   "svgBounds": null
+  },
+  "lighthouse": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Lighthouse.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     515,
+     -998
+    ],
+    [
+     -545,
+     725
+    ]
+   ],
+   "transform": [
+    0.2,
+    0,
+    0.2,
+    0
+   ],
+   "svgBounds": null
+  },
+  "reserve": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Reserve.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     289,
+     -293
+    ],
+    [
+     -303,
+     244
+    ]
+   ],
+   "transform": [
+    0.395,
+    122.0,
+    0.395,
+    137.65
+   ],
+   "svgBounds": [
+    [
+     289,
+     -274
+    ],
+    [
+     -303,
+     272
+    ]
+   ]
+  },
+  "shoreline": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Shoreline.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     504,
+     -415
+    ],
+    [
+     -1056,
+     618
+    ]
+   ],
+   "transform": [
+    0.16,
+    83.2,
+    0.16,
+    111.1
+   ],
+   "svgBounds": null
+  },
+  "terminal": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Terminal.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     463,
+     -580
+    ],
+    [
+     -433,
+     475
+    ]
+   ],
+   "transform": [
+    0.2,
+    0,
+    0.2,
+    0
+   ],
+   "svgBounds": null
+  },
+  "woods": {
+   "svg": "https://assets.tarkov.dev/maps/svg/Woods.svg",
+   "rot": 180,
+   "bounds": [
+    [
+     646,
+     -914
+    ],
+    [
+     -761,
+     442
+    ]
+   ],
+   "transform": [
+    0.1855,
+    112.95,
+    0.1855,
+    167.85
+   ],
+   "svgBounds": null
+  }
+ }
+}
