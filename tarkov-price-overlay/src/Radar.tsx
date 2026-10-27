@@ -3,7 +3,10 @@
 // '내가 바라보는 쪽 = 위' 기준이라 지도 북쪽 방위는 쓰지 않는다(맵마다 회전이 달라 틀릴 위험).
 import { useState } from "react";
 import type { Strings as LiteralStrings } from "./i18n";
-import { RadarMap, loadMapRot } from "./RadarMap";
+import { RadarMap, loadMapRot, useMapDoc, imageMatrix, autoFloor } from "./RadarMap";
+
+const PYTHON_API = "http://127.0.0.1:8765";
+const RADAR_IMG_KEY = "tarkov.radar.radarImg"; // "0" = 레이더 원 안 지도 배경 끔
 
 // i18n은 글자 값까지 고정된 타입이라 언어별 객체가 서로 대입되지 않는다 — 키만 맞으면 되게 넓힌다
 type Strings = { [K in keyof LiteralStrings]: string };
@@ -110,6 +113,15 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
+  const [radarImg, setRadarImg] = useState<boolean>(() => localStorage.getItem(RADAR_IMG_KEY) !== "0");
+  const toggleRadarImg = (v: boolean) => {
+    setRadarImg(v);
+    try {
+      localStorage.setItem(RADAR_IMG_KEY, v ? "1" : "0");
+    } catch {}
+  };
+  // 레이더 원 안 배경(건물·도로 윤곽 정도만 보이게 흐리게) — 지도 탭과 같은 문서·그림을 쓴다
+  const { doc: mapDoc } = useMapDoc(data?.map?.id ?? null, lang);
   const pickFixed = (v: boolean) => {
     setFixed(v);
     try {
@@ -254,7 +266,28 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 고정 모드: 점은 절대 방위(바라보는 방향 + 상대각 + 지도 탭과 같은 90° 회전)에 놓고 내 화살표를 돌린다.
   // 바라보는 쪽 위 모드: 점은 상대각 그대로, 화살표는 항상 위.
   const mapRot = loadMapRot(data.map?.id, data.map?.rot ?? 0);
-  const base = fixed && heading != null ? heading + mapRot : 0;
+  // 지도 탭과 같은 규약: 세계를 반시계로 eff 만큼 돌리면 방위 β 는 화면 각 β − eff. 고정 모드 eff = mapRot → 점은 rel + heading − mapRot, 화살표도 heading − mapRot
+  const base = fixed && heading != null ? heading - mapRot : 0;
+  // 배경 지도: 레이더 좌표계(중심 = 나, 축척 = R/range px/m, 회전 = 고정이면 mapRot, 아니면 바라보는 쪽 위)
+  const bgImg = (() => {
+    const im = mapDoc?.img;
+    if (!radarImg || !im || !data.shot) return null;
+    const eff = fixed ? mapRot : heading ?? 0;
+    const a = (eff * Math.PI) / 180;
+    const k = R / range;
+    const me = data.shot;
+    const toScreen = (gx: number, gz: number) => {
+      const dx = gx - me.x, dz = gz - me.z;
+      const rx = dx * Math.cos(a) - dz * Math.sin(a);
+      const rz = dx * Math.sin(a) + dz * Math.cos(a);
+      return { x: C + rx * k, y: C - rz * k };
+    };
+    const mx = imageMatrix(im, toScreen);
+    if (!mx) return null;
+    const floor = autoFloor(im.layers, me.x, me.y, me.z);
+    const href = `${PYTHON_API}${im.url}` + (floor ? `&layer=${encodeURIComponent(floor)}` : "");
+    return <image href={href} width={mx.W} height={mx.H} preserveAspectRatio="none" transform={`matrix(${mx.matrix})`} clipPath="url(#radar-clip)" className="radar-bg" />;
+  })();
 
   // 점 위치 + 이름표 자리 잡기: 가까운 것부터(원이 클수록 더 많이·더 길게), 이미 놓인 이름표·내 화살표와 겹치면 생략
   const maxLabels = Math.max(5, Math.round(S / 40));
@@ -285,6 +318,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
       <svg className="radar-svg" viewBox={`0 0 ${S} ${S}`} width={S} height={S} role="img" aria-label={t.radarTitle}>
+        <defs>
+          <clipPath id="radar-clip"><circle cx={C} cy={C} r={R} /></clipPath>
+        </defs>
+        {bgImg}
         <circle cx={C} cy={C} r={R} className="radar-ring" />
         <circle cx={C} cy={C} r={R / 2} className="radar-ring" />
         <line x1={C} y1={C - R} x2={C} y2={C + R} className="radar-axis" />
@@ -366,7 +403,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {fixedCtl}
         {sizeCtl}
       </div>
-      <div className="radar-note">{fixed ? t.radarNoteFixed : t.radarNote}</div>
+      {mapDoc?.img && (
+        <label className="radar-chk" title={t.radarImgBgHint}>
+          <input type="checkbox" checked={radarImg} onChange={(e) => toggleRadarImg(e.target.checked)} /> {t.radarImgBg}
+        </label>
+      )}
+      <div className="radar-note">{fixed ? t.radarNoteFixed : t.radarNote}{radarImg && mapDoc?.img ? ` · ${t.radarImgCredit}` : ""}</div>
     </div>
   );
 }

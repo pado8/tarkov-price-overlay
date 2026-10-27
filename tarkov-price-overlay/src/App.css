@@ -1624,6 +1624,8 @@ html, body, #root {
 .radar-age.stale { color: var(--warning); }
 .radar-warn { font-size: var(--card-fs-sm); color: var(--warning); }
 .radar-svg { align-self: center; max-width: 100%; height: auto; }
+/* 레이더 원 안 배경 지도: 윤곽만 가늠되게 흑백·어둡게 */
+.radar-bg { opacity: 0.55; filter: grayscale(1) brightness(0.75) contrast(1.15); pointer-events: none; }
 .radar-ring { fill: rgba(200, 170, 100, 0.04); stroke: var(--border-default); stroke-width: 1; }
 .radar-axis { stroke: var(--border-subtle); stroke-width: 1; stroke-dasharray: 2 3; }
 .radar-scale { fill: var(--text-disabled); font-size: 8px; }

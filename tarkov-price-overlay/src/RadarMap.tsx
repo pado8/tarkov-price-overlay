@@ -18,7 +18,7 @@ const FLOOR_KO: Record<string, string> = {
 };
 
 /** 내 높이·위치로 층 고르기 — extents 의 높이 범위 안이고(구역이 있으면 그 사각형 안) 처음 맞는 층. 없으면 null(지상) */
-function autoFloor(layers: NonNullable<MapDoc["img"]>["layers"], x: number, y: number, z: number): string | null {
+export function autoFloor(layers: NonNullable<MapDoc["img"]>["layers"], x: number, y: number, z: number): string | null {
   for (const l of layers) {
     for (const e of l.ext) {
       if (y < e.h[0] || y > e.h[1]) continue;
@@ -107,10 +107,62 @@ function loadSpan(): number {
   return SPAN_DEFAULT;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }: Props) {
-  const slug = data.map?.id ?? null;
+/** 맵 문서(좌표·그림 메타) 받기 — 맵·언어별 캐시. 지도 탭과 레이더 탭(배경 지도)이 같이 쓴다 */
+export function useMapDoc(slug: string | null, lang: string): { doc: MapDoc | null; err: boolean } {
   const [doc, setDoc] = useState<MapDoc | null>(slug ? cache.get(`${slug}|${lang}`) ?? null : null);
   const [err, setErr] = useState(false);
+  useEffect(() => {
+    if (!slug) return;
+    const key = `${slug}|${lang}`;
+    const hit = cache.get(key);
+    if (hit) {
+      setDoc(hit);
+      return;
+    }
+    let dead = false;
+    setErr(false);
+    fetch(`${PYTHON_API}/radar/map?map=${encodeURIComponent(slug)}&lang=${encodeURIComponent(lang)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d: MapDoc) => {
+        cache.set(key, d);
+        if (!dead) setDoc(d);
+      })
+      .catch(() => {
+        if (!dead) setErr(true);
+      });
+    return () => {
+      dead = true;
+    };
+  }, [slug, lang]);
+  return { doc, err };
+}
+
+/** 지도 그림(tarkov.dev SVG)을 화면에 놓는 아핀 행렬. tarkov.dev 사이트와 같은 식 — (x, z)를 coordinateRotation 만큼 돌린 뒤
+ * px = t0·rx + t1, py = −t2·rz + t3. 그림은 bounds 두 모서리의 투영 사각형을 꽉 채우므로 그림 픽셀 (u, v) → 투영 (pxmin+u, pymin+v)
+ * → 역변환 → 게임 좌표 → 화면(toScreen). 전부 아핀이라 <image transform="matrix(…)"> 하나로 놓을 수 있다. */
+export function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: number, gz: number) => { x: number; y: number }): { W: number; H: number; matrix: string } | null {
+  const [t0, t1, t2, t3] = im.transform;
+  const a = (im.rot * Math.PI) / 180;
+  const ca = Math.cos(a), sa = Math.sin(a);
+  const proj = (gx: number, gz: number) => ({ x: t0 * (gx * ca - gz * sa) + t1, y: -t2 * (gx * sa + gz * ca) + t3 });
+  const p1 = proj(im.bounds[0][0], im.bounds[0][1]);
+  const p2 = proj(im.bounds[1][0], im.bounds[1][1]);
+  const pxmin = Math.min(p1.x, p2.x), pymin = Math.min(p1.y, p2.y);
+  const W = Math.abs(p2.x - p1.x), H = Math.abs(p2.y - p1.y);
+  if (!(W > 0 && H > 0) || !t0 || !t2) return null;
+  const game = (u: number, w: number) => {
+    const rx = (pxmin + u - t1) / t0;
+    const rz = (pymin + w - t3) / -t2;
+    return { gx: rx * ca + rz * sa, gz: -rx * sa + rz * ca };
+  };
+  const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
+  const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
+  return { W, H, matrix: [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ") };
+}
+
+export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }: Props) {
+  const slug = data.map?.id ?? null;
+  const { doc, err } = useMapDoc(slug, lang);
   const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
   // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 레이더를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
@@ -139,31 +191,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const dragRef = useRef<{ x: number; y: number; cx: number; cz: number; moved: boolean } | null>(null);
   const movedRef = useRef(false); // 끌고 난 뒤 따라오는 click 은 선택으로 치지 않는다
   const [dragging, setDragging] = useState(false);
-
-  // 지도 문서 받기(맵·언어별 캐시)
-  useEffect(() => {
-    if (!slug) return;
-    const key = `${slug}|${lang}`;
-    const hit = cache.get(key);
-    if (hit) {
-      setDoc(hit);
-      return;
-    }
-    let dead = false;
-    setErr(false);
-    fetch(`${PYTHON_API}/radar/map?map=${encodeURIComponent(slug)}&lang=${encodeURIComponent(lang)}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((d: MapDoc) => {
-        cache.set(key, d);
-        if (!dead) setDoc(d);
-      })
-      .catch(() => {
-        if (!dead) setErr(true);
-      });
-    return () => {
-      dead = true;
-    };
-  }, [slug, lang]);
 
   // 맵이 바뀌면 회전·보기 초기화
   useEffect(() => {
@@ -199,9 +226,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   }, [me?.x, me?.z, box.w, box.h, span]); // eslint-disable-line react-hooks/exhaustive-deps
   const v = view ?? baseView;
 
-  // 실제 회전: 고정이면 맵별 90° 값, 아니면 바라보는 쪽이 위(내 화살표 각 = heading + eff = 0)
+  // 실제 회전(세계를 반시계로 eff 만큼): 고정이면 맵별 90° 값, 아니면 바라보는 쪽이 위.
+  // toScreen 은 방위 β 인 대상을 화면 각 β − eff(위에서 시계 방향)에 놓으므로, 바라보는 쪽(β = heading)이 위(0)가 되려면 eff = heading.
+  // 내 화살표도 같은 식으로 heading − eff. (전엔 −heading / heading + eff 로 써서 바라보는 쪽 위 모드가 거울상, 90°·270° 회전에서 화살표가 반대였다)
   const headingUp = !fixed && heading != null;
-  const eff = headingUp ? -heading! : rot;
+  const eff = headingUp ? heading! : rot;
   const effRef = useRef(eff);
   effRef.current = eff;
 
@@ -343,7 +372,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
     ];
     if (me) {
       const s = toScreen(me.x, me.z);
-      boxes.push({ x1: s.x - 10, y1: s.y - 10, x2: s.x + 10, y2: s.y + 10 });
+      boxes.push({ x1: s.x - 6, y1: s.y - 7, x2: s.x + 6, y2: s.y + 6 }); // 내 화살표 자리(바로 옆 탈출구의 이름표까지 막지 않게 작게)
     }
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
@@ -360,12 +389,21 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
         const s = toScreen(c.p[0], c.p[2]);
         if (s.x < 0 || s.y < 0 || s.x > box.w || s.y > box.h) return; // 점이 화면 밖이면 이름표도 생략(가장자리에 글자만 잘려 들어오지 않게)
         const w = c.text.length * 5.4;
-        const left = s.x + c.off + w > box.w - 2;
-        const lx = left ? s.x - c.off - w : s.x + c.off;
-        const b = { x1: lx, y1: s.y - 6, x2: lx + w, y2: s.y + 5 };
-        if (boxes.some((o) => b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) return;
-        boxes.push(b);
-        labels.set(c.key, { text: c.text, lx, ly: s.y + 3 });
+        // 자리 후보: 오른쪽 → 왼쪽 → 아래(가운데) → 위(가운데). 먼저 놓인 이름표·도구 영역과 안 겹치고 화면 안에 드는 첫 자리.
+        // 한 자리만 보고 포기하면 점이 몰린 곳(시내 동쪽 등)의 이름표가 통째로 빠진다
+        const spots: [number, number][] = [
+          [s.x + c.off, s.y + 3], [s.x - c.off - w, s.y + 3], [s.x - w / 2, s.y + c.off + 9], [s.x - w / 2, s.y - c.off - 3],
+          // 대각선(점이 몰린 곳에서 마지막 수단)
+          [s.x + c.off, s.y - c.off - 4], [s.x + c.off, s.y + c.off + 9], [s.x - c.off - w, s.y - c.off - 4], [s.x - c.off - w, s.y + c.off + 9],
+        ];
+        for (const [lx, ly] of spots) {
+          const b = { x1: lx, y1: ly - 9, x2: lx + w, y2: ly + 2 };
+          if (b.x1 < 2 || b.x2 > box.w - 2 || b.y1 < 2 || b.y2 > box.h - 2) continue;
+          if (boxes.some((o) => b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) continue;
+          boxes.push(b);
+          labels.set(c.key, { text: c.text, lx, ly });
+          break;
+        }
       });
   }
   const label = (key: string) => {
@@ -390,25 +428,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const imgLayer = (() => {
     const im = doc?.img;
     if (!im || !v || !showImg) return null;
-    const [t0, t1, t2, t3] = im.transform;
-    const a = (im.rot * Math.PI) / 180;
-    const ca = Math.cos(a), sa = Math.sin(a);
-    const proj = (gx: number, gz: number) => ({ x: t0 * (gx * ca - gz * sa) + t1, y: -t2 * (gx * sa + gz * ca) + t3 });
-    const p1 = proj(im.bounds[0][0], im.bounds[0][1]);
-    const p2 = proj(im.bounds[1][0], im.bounds[1][1]);
-    const pxmin = Math.min(p1.x, p2.x), pymin = Math.min(p1.y, p2.y);
-    const W = Math.abs(p2.x - p1.x), H = Math.abs(p2.y - p1.y);
-    if (!(W > 0 && H > 0) || !t0 || !t2) return null;
-    const game = (u: number, w: number) => {
-      const rx = (pxmin + u - t1) / t0;
-      const rz = (pymin + w - t3) / -t2;
-      return { gx: rx * ca + rz * sa, gz: -rx * sa + rz * ca };
-    };
-    const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
-    const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
-    const m = [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ");
+    const mx = imageMatrix(im, toScreen);
+    if (!mx) return null;
     const href = `${PYTHON_API}${im.url}` + (floorNow ? `&layer=${encodeURIComponent(floorNow)}` : "");
-    return <image href={href} width={W} height={H} preserveAspectRatio="none" transform={`matrix(${m})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
+    return <image href={href} width={mx.W} height={mx.H} preserveAspectRatio="none" transform={`matrix(${mx.matrix})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
@@ -470,7 +493,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
               })}
             {me && (() => {
               const s = toScreen(me.x, me.z);
-              const h = heading == null ? null : heading + eff;
+              const h = heading == null ? null : heading - eff;
               return h == null ? (
                 <circle cx={s.x} cy={s.y} r={5} className="radar-me" />
               ) : (
