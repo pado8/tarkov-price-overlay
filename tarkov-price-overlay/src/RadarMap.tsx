@@ -11,6 +11,26 @@ const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot"; // {[slug]: 0|90|180|270}
 const LAYER_KEY = "tarkov.radar.mapLayers";
 const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔
+// tarkov.dev 층 이름 → 한국어(한국어 UI 일 때만)
+const FLOOR_KO: Record<string, string> = {
+  "2nd Floor": "2층", "3rd Floor": "3층", "4th Floor": "4층", "5th Floor": "5층", "Second Level": "2층",
+  Underground: "지하", Tunnels: "터널", Bunkers: "벙커", Garage: "주차장", Technical: "기술층",
+};
+
+/** 내 높이·위치로 층 고르기 — extents 의 높이 범위 안이고(구역이 있으면 그 사각형 안) 처음 맞는 층. 없으면 null(지상) */
+function autoFloor(layers: NonNullable<MapDoc["img"]>["layers"], x: number, y: number, z: number): string | null {
+  for (const l of layers) {
+    for (const e of l.ext) {
+      if (y < e.h[0] || y > e.h[1]) continue;
+      if (!e.b.length) return l.g;
+      for (const r of e.b) {
+        const [x1, z1, x2, z2] = r;
+        if (x >= Math.min(x1, x2) && x <= Math.max(x1, x2) && z >= Math.min(z1, z2) && z <= Math.max(z1, z2)) return l.g;
+      }
+    }
+  }
+  return null;
+}
 const SPAN_KEY = "tarkov.radar.mapSpan"; // 짧은 변이 몇 m 인지(확대 배율). 휠로 바꾸면 기억
 const SPAN_DEFAULT = 300;
 const SPAN_MIN = 30;
@@ -25,7 +45,11 @@ export type MapDoc = {
   rot: number | null;
   bounds: { minx: number; maxx: number; minz: number; maxz: number } | null;
   // 지도 그림(tarkov.dev SVG, CC BY-NC-SA 4.0): 좌표 변환은 tarkov.dev 사이트(maps.json·getCRS)와 같은 식
-  img?: { url: string; rot: number; bounds: [number, number][]; transform: number[]; credit: string } | null;
+  img?: {
+    url: string; rot: number; bounds: [number, number][]; transform: number[]; credit: string;
+    base: string | null; // SVG 바탕 그룹 id(지상)
+    layers: { name: string; g: string; ext: { h: [number, number]; b: number[][] }[] }[]; // 층: 그룹 id + 높이·구역(x1,z1,x2,z2)
+  } | null;
   extracts: { name: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[];
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
@@ -87,6 +111,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const [err, setErr] = useState(false);
   const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
+  const [floor, setFloor] = useState<string>("auto"); // "auto" | "base" | 층 그룹 id — 맵이 바뀌면 자동으로
   const toggleImg = () => {
     setShowImg((v) => {
       try {
@@ -136,6 +161,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
     setRot(slug ? loadJson<Record<string, number>>(ROT_KEY, {})[slug] ?? 0 : 0);
     setView(null);
     setSel(null);
+    setFloor("auto");
   }, [slug]);
 
   const me = data.shot;
@@ -338,6 +364,15 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   // 지도 그림 ↔ 게임 좌표: tarkov.dev 사이트와 같은 식 — (x, z)를 coordinateRotation 만큼 돌린 뒤 px = t0·rx + t1, py = −t2·rz + t3.
   // 그림은 bounds 두 모서리의 투영 사각형을 꽉 채우므로 그림 픽셀 (u, v) → 투영 (pxmin+u, pymin+v) → 역변환 → 게임 좌표 → 화면.
   // 전부 아핀이라 그림을 SVG <image transform="matrix(…)"> 하나로 놓을 수 있다.
+  // 층: 자동이면 내 높이·위치로, 아니면 고른 층. 그림은 사이드카가 그 층만 켠 SVG 변형으로 준다(?layer=)
+  const floorAuto = doc?.img && me ? autoFloor(doc.img.layers, me.x, me.y, me.z) : null;
+  const floorNow = floor === "auto" ? floorAuto : floor === "base" ? null : floor;
+  const floorName = (g: string | null) => {
+    if (!g) return t.radarFloorBase;
+    const l = doc?.img?.layers.find((x) => x.g === g);
+    const n = l?.name ?? g;
+    return lang === "ko" ? FLOOR_KO[n] ?? n : n;
+  };
   const imgLayer = (() => {
     const im = doc?.img;
     if (!im || !v || !showImg) return null;
@@ -358,7 +393,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
     const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
     const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
     const m = [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ");
-    return <image href={`${PYTHON_API}${im.url}`} width={W} height={H} preserveAspectRatio="none" transform={`matrix(${m})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
+    const href = `${PYTHON_API}${im.url}` + (floorNow ? `&layer=${encodeURIComponent(floorNow)}` : "");
+    return <image href={href} width={W} height={H} preserveAspectRatio="none" transform={`matrix(${m})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
@@ -438,6 +474,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
         {v && <div className="radar-mapscale">━ {scaleM}m</div>}
         {headingUp && <div className="radar-mapup">▲ {t.radarMapHeadingUp}</div>}
         {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
+        {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
       <div className="radar-layers">
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => toggleLayer("pmc"))}
@@ -446,6 +483,18 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
         {chip(layers.quests, "quest", t.radarLayerQuests, () => toggleLayer("quests"))}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>
+      {doc?.img && showImg && doc.img.layers.length > 0 && (
+        <div className="radar-layers radar-floors">
+          <span className="radar-kind">{t.radarFloor}</span>
+          <button type="button" className={`radar-chip${floor === "auto" ? " on" : ""}`} aria-pressed={floor === "auto"} onClick={() => setFloor("auto")}>
+            {t.radarFloorAuto}{floor === "auto" ? ` · ${floorName(floorAuto)}` : ""}
+          </button>
+          <button type="button" className={`radar-chip${floor === "base" ? " on" : ""}`} aria-pressed={floor === "base"} onClick={() => setFloor("base")}>{t.radarFloorBase}</button>
+          {doc.img.layers.map((l) => (
+            <button key={l.g} type="button" className={`radar-chip${floor === l.g ? " on" : ""}`} aria-pressed={floor === l.g} onClick={() => setFloor(l.g)}>{floorName(l.g)}</button>
+          ))}
+        </div>
+      )}
       {sel && (
         <div className="radar-mapsel">
           <b>{sel.name}</b> · {Math.round(dist(sel.p))}m

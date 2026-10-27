@@ -26,9 +26,22 @@ def main() -> int:
         for x in m.get("maps") or []:
             if x.get("projection") != "interactive" or not x.get("svgPath") or not x.get("bounds") or not x.get("transform"):
                 continue
+            # 층: SVG 안의 최상위 <g id=svgLayer> 그룹. extents = [{h:[min,max], b:[[x1,z1,x2,z2],…]}] (b 없으면 맵 전체)
+            layers = []
+            for l in x.get("layers") or []:
+                if not l.get("svgLayer"):
+                    continue  # 타일 전용 층은 SVG 로 못 그린다
+                ext = []
+                for e in l.get("extents") or []:
+                    h = e.get("height")
+                    if not h:
+                        continue
+                    rects = [[b[0][0], b[0][1], b[1][0], b[1][1]] for b in (e.get("bounds") or []) if isinstance(b, list) and len(b) >= 2]
+                    ext.append({"h": [h[0], h[1]], "b": rects})
+                layers.append({"name": l.get("name"), "g": l["svgLayer"], "ext": ext})
             out["maps"][slug] = {"svg": x["svgPath"], "rot": x.get("coordinateRotation") or 0, "bounds": x["bounds"],
-                                 "transform": x["transform"], "svgBounds": x.get("svgBounds")}
-            print(f"[td_maps] {slug}: rot {x.get('coordinateRotation')} {x['svgPath'].rsplit('/', 1)[-1]}")
+                                 "transform": x["transform"], "svgBounds": x.get("svgBounds"), "base": x.get("svgLayer"), "layers": layers}
+            print(f"[td_maps] {slug}: rot {x.get('coordinateRotation')} {x['svgPath'].rsplit('/', 1)[-1]} 층 {len(layers)}")
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"[td_maps] {len(out['maps'])}개 → {OUT}")

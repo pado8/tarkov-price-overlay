@@ -1125,14 +1125,15 @@ def radar_map(map: str, lang: str = "ko") -> dict:
 
 
 @app.get("/radar/mapimg")
-def radar_map_image(map: str):
-    """전체 지도 배경 그림(tarkov.dev SVG, CC BY-NC-SA 4.0 · 비영리·출처 표기). 사이드카가 7일 캐시해 되돌려준다."""
-    from fastapi.responses import FileResponse
-    from radar import map_image_file
-    f = map_image_file(map)
-    if f is None:
+def radar_map_image(map: str, layer: str | None = None):
+    """전체 지도 배경 그림(tarkov.dev SVG, CC BY-NC-SA 4.0 · 비영리·출처 표기). 사이드카가 7일 캐시해 되돌려준다.
+    layer = 층 그룹 id(td_maps.json layers[].g) — 그 층만 켜고 바탕은 흐리게. 없으면 바탕(지상)만."""
+    from fastapi.responses import Response
+    from radar import map_image_svg
+    data = map_image_svg(map, layer or None)
+    if data is None:
         raise HTTPException(status_code=404, detail="no_map_image")
-    return FileResponse(str(f), media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+    return Response(content=data, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 class HideoutSyncRequest(BaseModel):

@@ -1669,6 +1669,9 @@ html, body, #root {
 .radar-mapup { position: absolute; right: 6px; bottom: 4px; font-size: 10px; color: var(--text-muted); pointer-events: none; }
 .radar-mapcredit { position: absolute; right: 6px; top: 30px; font-size: 9px; color: var(--text-disabled); pointer-events: none; }
 .radar-sw.img { background: #c9b48a; }
+.radar-floors { align-items: center; }
+.radar-floors .radar-kind { margin-right: 2px; }
+.radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: 11px; font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
 .radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
 .radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); }
 .radar-mapsel b { color: var(--gold-light); }

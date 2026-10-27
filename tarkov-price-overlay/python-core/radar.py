@@ -435,7 +435,36 @@ def map_image_meta(slug: str) -> Optional[dict]:
     if not x:
         return None
     return {"url": f"/radar/mapimg?map={slug}", "rot": x.get("rot") or 0, "bounds": x["bounds"], "transform": x["transform"],
-            "credit": "tarkov.dev (CC BY-NC-SA 4.0)"}
+            "credit": "tarkov.dev (CC BY-NC-SA 4.0)", "base": x.get("base"), "layers": x.get("layers") or []}
+
+
+_SVG_G_RE = re.compile(r"<g\b[^>]*\bid=\"([^\"]+)\"")
+
+
+def style_svg_layers(svg: bytes, base: Optional[str], layer: Optional[str]) -> bytes:
+    """SVG 에 <style> 을 넣어 층 그룹을 켜고 끈다(tarkov.dev 사이트와 같은 규칙).
+    layer 없음: 바탕(base)과 data-keep-with-group=base 그룹만 · layer 있음: 바탕은 흐리게(0.35) + 그 층 그룹.
+    base 를 모르면(그룹 id 없음) 원본 그대로."""
+    if not base or b"<svg" not in svg[:4000]:
+        return svg
+    css = f'svg > g {{ display: none }} svg > g#{base}, svg > g[data-keep-with-group="{base}"] {{ display: inline }}'
+    if layer and layer != base:
+        css += f' svg > g#{base}, svg > g[data-keep-with-group="{base}"] {{ opacity: 0.35 }} svg > g#{layer} {{ display: inline; opacity: 1 }}'
+    i = svg.find(b">", svg.find(b"<svg"))
+    if i < 0:
+        return svg
+    return svg[: i + 1] + f"<style>{css}</style>".encode("utf-8") + svg[i + 1:]
+
+
+def map_image_svg(slug: str, layer: Optional[str] = None) -> Optional[bytes]:
+    """층 처리를 끝낸 SVG 바이트. layer 는 maps.json 의 svgLayer(그룹 id)만 받는다(아무 문자열이나 CSS 에 넣지 않게)."""
+    f = map_image_file(slug)
+    meta = map_image_meta(slug)
+    if f is None or meta is None:
+        return None
+    allowed = {l["g"] for l in meta["layers"]}
+    lay = layer if layer in allowed else None
+    return style_svg_layers(f.read_bytes(), meta.get("base"), lay)
 
 
 # 같은 그림을 쓰는 맵 변형(tarkov.dev 사이트는 대표 slug 하나만 가진다)
