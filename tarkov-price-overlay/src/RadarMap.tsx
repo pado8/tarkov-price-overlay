@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { RadarState, RadarTarget } from "./Radar";
 
 const PYTHON_API = "http://127.0.0.1:8765";
-const ROT_KEY = "tarkov.radar.mapRot"; // {[slug]: 0|90|180|270}
+const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
 const LAYER_KEY = "tarkov.radar.mapLayers";
 const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔
 // tarkov.dev 층 이름 → 한국어(한국어 UI 일 때만)
@@ -77,14 +77,14 @@ type Props = {
 const cache = new Map<string, MapDoc>();
 
 /** 맵별 90° 회전 설정(지도 탭에서 ↻로 돌린 값) — 레이더 고정 모드도 같은 기준을 쓴다 */
-export function loadMapRot(slug: string | null | undefined): number {
-  if (!slug) return 0;
+export function loadMapRot(slug: string | null | undefined, fallback = 0): number {
+  if (!slug) return fallback;
   try {
     const v = localStorage.getItem(ROT_KEY);
     const all = v ? (JSON.parse(v) as Record<string, number>) : {};
-    return all[slug] ?? 0;
+    return all[slug] ?? fallback;
   } catch {
-    return 0;
+    return fallback;
   }
 }
 
@@ -120,7 +120,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
       return !v;
     });
   };
-  const [rot, setRot] = useState<number>(() => (slug ? loadJson<Record<string, number>>(ROT_KEY, {})[slug] ?? 0 : 0));
+  // 기본 회전 = tarkov.dev 지도 그림 방향(coordinateRotation, /radar 의 map.rot) — 사용자가 ↻로 돌린 값이 있으면 그걸로
+  const defRot = data.map?.rot ?? 0;
+  const [rot, setRot] = useState<number>(() => loadMapRot(slug, defRot));
   const [span, setSpan] = useState<number>(loadSpan);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ w: 300, h: size });
@@ -158,7 +160,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
 
   // 맵이 바뀌면 회전·보기 초기화
   useEffect(() => {
-    setRot(slug ? loadJson<Record<string, number>>(ROT_KEY, {})[slug] ?? 0 : 0);
+    setRot(loadMapRot(slug, defRot));
     setView(null);
     setSel(null);
     setFloor("auto");

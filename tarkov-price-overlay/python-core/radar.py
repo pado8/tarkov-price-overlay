@@ -622,7 +622,9 @@ class RadarService:
                 key=lambda x: x["name"] or "")
             if slug:
                 mm = next((x for x in maps_doc.values() if x.get("normalizedName") == slug), None)
-                res["map"] = {"id": slug, "name": _loc(loc_maps, (mm or {}).get("name"), slug)}
+                # rot = tarkov.dev 지도 그림 기준 기본 회전(coordinateRotation) — 지도 탭·고정 레이더가 그 지도와 같은 방향으로 보이게
+                res["map"] = {"id": slug, "name": _loc(loc_maps, (mm or {}).get("name"), slug),
+                              "rot": (map_image_meta(slug) or {}).get("rot", 0)}
                 res["map_source"] = source
             if shot and slug:
                 active: set[str] = set()

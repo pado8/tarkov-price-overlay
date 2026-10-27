@@ -31,7 +31,7 @@ export type RadarTarget = {
 export type RadarState = {
   folder: string | null;
   shot: { id: string; ts: number; age: number; x: number; y: number; z: number; heading: number | null } | null;
-  map: { id: string; name: string } | null;
+  map: { id: string; name: string; rot?: number } | null; // rot = tarkov.dev 지도 기준 기본 회전
   map_source: "log" | "manual" | null;
   targets: RadarTarget[];
   maps: { id: string; name: string }[];
@@ -253,7 +253,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const heading = data.shot.heading;
   // 고정 모드: 점은 절대 방위(바라보는 방향 + 상대각 + 지도 탭과 같은 90° 회전)에 놓고 내 화살표를 돌린다.
   // 바라보는 쪽 위 모드: 점은 상대각 그대로, 화살표는 항상 위.
-  const mapRot = loadMapRot(data.map?.id);
+  const mapRot = loadMapRot(data.map?.id, data.map?.rot ?? 0);
   const base = fixed && heading != null ? heading + mapRot : 0;
 
   // 점 위치 + 이름표 자리 잡기: 가까운 것부터(원이 클수록 더 많이·더 길게), 이미 놓인 이름표·내 화살표와 겹치면 생략
