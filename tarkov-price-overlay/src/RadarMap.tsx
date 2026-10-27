@@ -277,7 +277,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   // 이름표 자리 잡기: 가까운 것부터 놓고, 먼저 놓인 이름표·내 마커와 겹치거나 화면 밖이면 생략
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
   if (doc && v) {
-    const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [];
+    // 도구 버튼(오른쪽 위)·축척/방향 표시(아래 줄) 자리는 미리 막아 이름표가 그 밑에 깔리지 않게
+    const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [
+      { x1: box.w - 170, y1: 0, x2: box.w, y2: 30 },
+      { x1: 0, y1: box.h - 20, x2: box.w, y2: box.h },
+    ];
     if (me) {
       const s = toScreen(me.x, me.z);
       boxes.push({ x1: s.x - 10, y1: s.y - 10, x2: s.x + 10, y2: s.y + 10 });
