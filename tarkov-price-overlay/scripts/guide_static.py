@@ -18,8 +18,16 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python-core"))
+import extract_conditions  # noqa: E402 — 탈출구 조건(앱 레이더와 같은 표)
 
 SITE = "https://tarkov.aquapado.com"
+# Google AdSense 게시자 ID(예: "ca-pub-1234567890123456"). 비어 있으면 광고 스크립트를 넣지 않는다.
+# 승인 뒤 값을 채우고 다시 생성하면 가이드 전 페이지에 자동 광고가 켜진다. 랜딩·방침·상태 페이지(손글)에는 넣지 않는다.
+# 켤 때 함께 할 것: landing/ads.txt 생성, landing/privacy/index.html 5번 "현재 광고 없음" 문구 갱신.
+ADSENSE_CLIENT = ""
 MONEY = {"5449016a4bdc2d6f028b456f": "₽", "5696686a4bdc2da3298b456a": "$", "569668774bdc2da2298b4568": "€"}
 # 같은 지도의 변형 — 대표 지도 페이지에 메모로만 합친다(열쇠 페이지와 같은 규칙).
 MAP_VARIANTS = {"night-factory": "factory", "ground-zero-21": "ground-zero",
@@ -79,8 +87,9 @@ def nav_html(active: str) -> str:
         inner = "".join(f'<a{" class=\"on\"" if k == active else ""} href="{h}">{l}</a>' for k, h, l in items)
         out.append(f'<div class="g{" on" if gon else ""}"><a class="gt" href="{href}">{label}<span class="car" aria-hidden="true">▾</span></a>'
                    f'<div class="dd">{inner}</div></div>')
-    out.append(f'<a class="ov{" on" if active == "overlay" else ""}" href="/">시세 오버레이</a>')
-    return "<nav>" + "".join(out) + "</nav>"
+    # '시세 오버레이'는 nav 밖 형제로 둔다 — 넓은 화면에선 메뉴 바로 뒤, 폰에선 로고 줄 오른쪽(guide.css)
+    ov = f'<a class="ov{" on" if active == "overlay" else ""}" href="/">시세 오버레이</a>'
+    return "<nav>" + "".join(out) + "</nav>" + ov
 
 
 def e(s) -> str:
@@ -467,7 +476,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
          og_type: str = "article", extra_head: str = "", scripts: str = "") -> str:
     url = SITE + path
     crumbs = crumbs or []
-    navhtml = nav_html(nav)[len("<nav>"):-len("</nav>")]
+    navhtml = nav_html(nav)  # <nav>…</nav> + '시세 오버레이' 링크(형제)
     crumb_html = ""
     ld = []
     if crumbs:
@@ -479,6 +488,8 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
             {"@type": "ListItem", "position": i + 1, "name": name, **({"item": SITE + href} if href else {})}
             for i, (name, href) in enumerate(items)]})
     ld_html = "".join(f'<script type="application/ld+json">{json.dumps(x, ensure_ascii=False)}</script>' for x in ld)
+    ads_html = (f'\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
+                if ADSENSE_CLIENT else "")
     return f"""<!doctype html>
 <html lang="ko">
 <head>
@@ -497,12 +508,12 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 <meta name="theme-color" content="#c8aa64" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="stylesheet" href="/guide/guide.css" />
-{ld_html}{extra_head}
+{ld_html}{extra_head}{ads_html}
 </head>
 <body>
 <div class="top"><div class="wrap">
   <a class="brand" href="/guide/">탈콥 가이드</a>
-  <nav>{navhtml}</nav>
+  {navhtml}
 </div></div>
 <main class="wrap">
 {crumb_html}
@@ -1634,15 +1645,19 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     for ex in m.get("extracts") or []:
         fac = ex.get("faction") or "shared"
         cond = []  # 이미 안전한 HTML 조각만 넣는다(칩 HTML을 다시 이스케이프하면 글자로 보인다)
-        if ex.get("switches") or ex.get("switch"):
-            cond.append("스위치·레버 작동 필요")
-        ti = ex.get("transferItem")
-        if ti:
-            iid = (ti.get("item") or {}).get("id") if isinstance(ti.get("item"), dict) else ti.get("item")
-            cost = ctx.money(iid, ti.get("count"))
-            cond.append("유료 " + (e(cost) if cost else ctx.chip(iid, ti.get("count"))))
+        # 조건은 위키 기준 표(python-core/extract_conditions.py). 데이터의 switches 는 맵 전체 스위치가
+        # 모든 탈출구에 붙어 있어 조건으로 쓰면 틀린다.
+        tags, text, give = extract_conditions.conditions(slug, ex)
+        if text:
+            cond.append(e(text))
+        if give and "vex" not in tags:  # 차량 탈출 요금은 인원·카르마로 바뀌어 고정 금액을 적지 않는다
+            if give["money"]:
+                cost = ctx.money(give["id"], give["count"])
+                cond.append("유료 " + e(cost or f'{give["count"]:,}{give["money"]}'))
+            else:
+                cond.append("필요 아이템 " + ctx.chip(give["id"], give["count"]))
         ex_groups.setdefault(fac, []).append(f'<li><b>{e(ctx._loc(ctx.loc_maps, ex.get("name"), ex.get("name")))}</b>'
-                                             + (f' <span class="muted small">{" · ".join(cond)}</span>' if cond else "") + "</li>")
+                                             + (f'<div class="xcond small">{" · ".join(cond)}</div>' if cond else "") + "</li>")
     fac_label = {"pmc": "PMC", "scav": "스캐브", "shared": "공용(PMC·스캐브)"}
     ex_html = "".join(f'<div><h3>{fac_label.get(f, f)} <span class="muted small">{len(v)}개</span></h3><ul class="plain">{"".join(v)}</ul></div>'
                       for f, v in sorted(ex_groups.items(), key=lambda kv: ["pmc", "shared", "scav"].index(kv[0]) if kv[0] in ("pmc", "shared", "scav") else 9))
@@ -1680,7 +1695,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
             + (f"<tr><th>등장 적</th><td class=small>{enemies}</td></tr>" if enemies else "") + "</table></section>"
             + (('<section class="box"><h2>보스</h2><div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
                 + "".join(boss_rows) + "</tbody></table></div></section>") if boss_rows else "")
-            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">조건(배낭 금지, 파라코드 등)은 데이터에 일부만 있습니다. 레이드 중 탈출구 목록을 꼭 확인하세요.</p></section>' if ex_html else "")
+            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">조건이 적혀 있지 않은 탈출구는 그냥 가면 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
             + (f'<section class="box"><h2>다른 맵으로 이동(트랜짓)</h2><ul class="plain">{"".join(tr_rows)}</ul></section>' if tr_rows else "")
             + (f'<section class="box"><h2>이 맵의 퀘스트 {len(qs)}개</h2><div class="cols3">{q_html}</div></section>' if q_html else ""))
     path = f"/guide/maps/{slug}/"
@@ -1882,9 +1897,9 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
         trs.append(f'<tr data-s="{e(names)}" data-st="{e(c.get("station"))}" '
                    f'data-pco="{num(a, "cost")}" data-pva="{num(a, "value")}" data-ppr="{num(a, "profit")}" data-pph="{num(a, "per_h")}" '
                    f'data-eco="{num(b, "cost")}" data-eva="{num(b, "value")}" data-epr="{num(b, "profit")}" data-eph="{num(b, "per_h")}">'
-                   f'<td>{ctx.chip(pid, p.get("count"))}{lock}</td><td class="small nw">{ctx.station_link(c.get("station"), c.get("level"))}</td>'
-                   f'<td class="n">{fmt_dur(c.get("duration"))}</td><td><div class="chips">{"".join(mats)}</div></td>'
-                   '<td class="m n"></td><td class="m n"></td><td class="m n"></td><td class="m n"></td></tr>')
+                   f'<td class="pr">{ctx.chip(pid, p.get("count"))}{lock}</td><td class="small nw" data-l="시설">{ctx.station_link(c.get("station"), c.get("level"))}</td>'
+                   f'<td class="n" data-l="시간">{fmt_dur(c.get("duration"))}</td><td class="mt" data-l="재료"><div class="chips">{"".join(mats)}</div></td>'
+                   '<td class="m n" data-l="재료비"></td><td class="m n" data-l="판매가"></td><td class="m n" data-l="이익"></td><td class="m n" data-l="시간당"></td></tr>')
     opts = '<option value="">모든 시설</option>' + "".join(f'<option value="{e(s)}">{e(ctx.station_name(s))}</option>' for s in st_opts)
     body = f"""<h1>은신처 제작 수익표 <span class="h1en">Crafting profit</span></h1>
 <p class="sub">제작 {len(trs)}개 · 시간당 이익 순 · 시세 기준 {e(ctx.stamp)} (tarkov.dev 24시간 평균)</p>
@@ -2256,10 +2271,10 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
                         conds.append(f'{BUILD_ATTR.get(key, key)} {_cmp(v.get("compareMethod"))} {fmt_int(v["value"])}')
                 chips = "".join(f'<span data-part="{e(pid)}">{ctx.chip(pid)}</span>' for pid in need) or '<span class="muted small">없음 — 성능 조건만</span>'
                 lv = t.get("minPlayerLevel") or 0
-                first = (f'<td rowspan="{len(objs)}">{ctx.task_link(tid)}'
+                first = (f'<td class="q" rowspan="{len(objs)}">{ctx.task_link(tid)}'
                          + (f'<div class="small muted">레벨 {lv}</div>' if lv else "") + "</td>") if k == 0 else ""
-                rows.append(f'<tr>{first}<td><div class="chips">{ctx.chip(wid)}</div></td>'
-                            f'<td><div class="chips">{chips}</div>{build_html(tid, k, len(objs), wid)}</td><td class="small">{e(" · ".join(conds)) or "—"}</td></tr>')
+                rows.append(f'<tr>{first}<td class="w"><div class="chips">{ctx.chip(wid)}</div></td>'
+                            f'<td class="p"><div class="chips">{chips}</div>{build_html(tid, k, len(objs), wid)}</td><td class="small c">{e(" · ".join(conds)) or "—"}</td></tr>')
         return rows
 
     base_rows = build_rows(base)

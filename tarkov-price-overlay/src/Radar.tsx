@@ -17,6 +17,7 @@ export type RadarTarget = {
   faction?: string; // 탈출구: pmc | scav | shared
   switch?: boolean;
   paid?: boolean;
+  cond?: string[]; // 탈출구 조건 태그(python-core/extract_conditions.py, 위키 기준)
   dest?: string | null; // 트랜짓 목적지
   objective?: string;
   optional?: boolean;
@@ -62,6 +63,16 @@ function ago(sec: number, t: Strings): string {
   if (sec < 60) return t.radarAgoNow;
   if (sec < 3600) return t.radarAgoMin.replace("{n}", String(Math.floor(sec / 60)));
   return t.radarAgoHour.replace("{n}", String(Math.floor(sec / 3600)));
+}
+
+// 탈출구 조건 태그 → 짧은 표시. vex(차량)는 유료와 겹쳐 따로 안 쓴다. 옛 사이드카(cond 없음)는 switch/paid로
+const COND_KEYS: [string, keyof Strings][] = [
+  ["lever", "radarSwitch"], ["key", "radarKey"], ["flare", "radarFlare"], ["item", "radarItem"], ["paid", "radarPaid"],
+  ["coop", "radarCoop"], ["nobag", "radarNoBag"], ["climb", "radarClimb"], ["time", "radarTime"],
+];
+function condLabels(x: RadarTarget, t: Strings): string[] {
+  const tags = x.cond ?? [...(x.switch ? ["lever"] : []), ...(x.paid ? ["paid"] : [])];
+  return COND_KEYS.filter(([k]) => tags.includes(k)).map(([, s]) => t[s]);
 }
 
 const short = (s: string, n = 11) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
@@ -265,8 +276,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               </span>{" "}
               {x.name}
               {x.kind === "quest" && x.objective && <span className="radar-sub">{x.objective}</span>}
-              {x.switch && <span className="radar-flag"> {t.radarSwitch}</span>}
-              {x.paid && <span className="radar-flag"> {t.radarPaid}</span>}
+              {condLabels(x, t).map((c) => (
+                <span className="radar-flag" key={c}>
+                  {" "}
+                  {c}
+                </span>
+              ))}
             </span>
             <span className="radar-dist">{Math.round(x.dist)}m</span>
             {x.rel != null && heading != null && (

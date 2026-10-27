@@ -5,7 +5,7 @@
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);line-height:1.55;
+body{margin:0;word-break:keep-all;overflow-wrap:break-word;background:var(--bg);color:var(--text);line-height:1.55;
   font-family:"Pretendard","Segoe UI","맑은 고딕","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--gold);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -13,8 +13,16 @@ a:hover{text-decoration:underline}
 .top{border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:20}
 .top .wrap{display:flex;align-items:center;gap:6px;min-height:52px;white-space:nowrap;flex-wrap:wrap;padding-top:4px;padding-bottom:4px}
 .brand{font-weight:800;color:var(--gold);margin-right:10px}
-.top nav a{color:var(--muted);font-size:14px;padding:6px 10px;border-radius:8px}
-.top nav a.on,.top nav a:hover{color:var(--text);background:var(--panel2);text-decoration:none}
+/* 그룹 제목(.gt)·드롭다운 항목·'시세 오버레이'(.ov) 모두 같은 상자 모양이어야 글자 높이가 맞는다 */
+.top nav a,.top .ov{display:inline-flex;align-items:center;flex:none;white-space:nowrap;line-height:1.4;color:var(--muted);font-size:14px;padding:6px 10px;border-radius:8px}
+.top nav a.on,.top nav a:hover,.top .ov.on,.top .ov:hover{color:var(--text);background:var(--panel2);text-decoration:none}
+@media (max-width:560px){
+  .top .wrap{gap:4px 6px}
+  .top .ov{order:1;margin-left:auto;font-size:13px;padding:5px 8px}
+  .top nav{order:2;width:100%}
+  .top .sync{order:3}
+  .top nav a.gt{padding:6px 8px;font-size:13.5px}
+}
 .top nav{display:flex;gap:2px;flex-wrap:wrap}.top nav .g{position:relative}.top nav .gt .car{font-size:10px;margin-left:3px;opacity:.7}
 .top nav .g.on>.gt{color:var(--text);background:var(--panel2)}
 .top nav .dd{display:none;position:absolute;top:calc(100% + 4px);left:0;flex-direction:column;min-width:170px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30}
@@ -46,7 +54,7 @@ label.chk{display:inline-flex;gap:6px;align-items:center;font-size:13.5px;color:
 .b-quest{background:#1d3324;color:var(--green);border:1px solid #2f5a3b}
 .price{font-family:Consolas,"D2Coding",monospace;font-size:12.5px;color:var(--green)}
 .muted{color:var(--muted)}
-.small{font-size:12px}
+.small{font-size:12.5px}
 .icon{width:56px;height:56px;object-fit:contain;background:#0d0d0b;border:1px solid var(--line2);border-radius:6px;flex:none}
 .icon.sm{width:30px;height:30px;border-radius:4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
@@ -116,7 +124,9 @@ table.kv th{width:96px;text-align:left;vertical-align:top;color:var(--muted);fon
 table.kv td{padding:6px 0;vertical-align:top;border-top:1px solid var(--line2)}
 table.kv tr:first-child td{border-top:0}
 ul.plain{list-style:none;padding:0;margin:0}
-ul.plain li{padding:4px 0;border-top:1px solid var(--line2);font-size:13.5px}
+ul.plain li{padding:6px 0;border-top:1px solid var(--line2);font-size:14px;line-height:1.5}
+/* 탈출구 조건 — 이름 아래 한 줄, 칩(아이템)은 같은 줄에 */
+ul.plain li .xcond{color:#c9bf9f;margin-top:2px;line-height:1.5}ul.plain li .xcond .chip{vertical-align:middle;margin:2px 0}
 ul.plain li:first-child{border-top:0}
 ul.cols-list{list-style:none;padding:0;margin:0;columns:2 280px;column-gap:20px}
 ul.cols-list li{break-inside:avoid;padding:3px 0;font-size:13.5px}
@@ -134,6 +144,33 @@ table.tot th{color:var(--muted);font-weight:600;font-size:12.5px;border-top:0;wh
 table.tot td.n,table.tot th.n{text-align:right;font-family:Consolas,"D2Coding",monospace;white-space:nowrap}
 table.tot tr.grp td{background:var(--panel2);color:var(--gold);font-weight:700;font-size:12.5px}
 table.tot tr.done{opacity:.45}
+/* 넓은 표는 상자 안에서 옆으로 밀린다 — 양 끝 그림자로 "더 있음"을 보여 준다(배경 스크롤 그림자) */
+.tbl{background:linear-gradient(90deg,var(--panel) 30%,rgba(31,31,25,0)) left/40px 100% no-repeat local,
+  linear-gradient(270deg,var(--panel) 30%,rgba(31,31,25,0)) right/40px 100% no-repeat local,
+  radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.55),transparent) left/12px 100% no-repeat scroll,
+  radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.55),transparent) right/12px 100% no-repeat scroll,var(--panel)}
+@media (min-width:561px){ #ctbl td.pr{min-width:190px} #ctbl td.mt{min-width:240px} }
+@media (max-width:560px){
+  table.tot td,table.tot th{padding:6px 5px;font-size:13px}
+  /* 건스미스 표: 글이 많은 4칸이라 폰에선 퀘스트마다 세로 카드로 */
+  table.gs,table.gs tbody,table.gs tr,table.gs td{display:block;width:auto}
+  table.gs thead{display:none}
+  table.gs td{border-top:0;padding:3px 2px}
+  table.gs td.q{border-top:1px solid var(--line);padding-top:10px;font-weight:700}
+  table.gs tr:first-child td.q{border-top:0}
+  table.gs td.w::before,table.gs td.p::before,table.gs td.c::before{display:block;color:var(--muted);font-size:11.5px;margin-bottom:2px}
+  table.gs td.w::before{content:"무기"}table.gs td.p::before{content:"반드시 포함할 부품"}table.gs td.c::before{content:"성능 조건"}
+  table.gs tr{padding-bottom:6px}
+  /* 제작 수익표: 폰에선 행마다 카드 — 결과물 / 시설·시간 / 재료 / 재료비·판매가·이익·시간당(2칸) */
+  #ctbl,#ctbl tbody{display:block}
+  #ctbl thead{display:none}
+  #ctbl tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:10px 2px;border-top:1px solid var(--line)}
+  #ctbl tr:first-child{border-top:0}
+  #ctbl td{display:block;border:0;padding:0;text-align:left;font-size:13.5px}
+  #ctbl td.pr,#ctbl td.mt{grid-column:1/-1}
+  #ctbl td[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:11.5px;font-family:inherit}
+  .tbl:has(#ctbl){overflow-x:visible;background:var(--panel)}
+}
 .itn{display:inline-flex;gap:8px;align-items:center}
 .nw{white-space:nowrap}
 .grid.wide{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}

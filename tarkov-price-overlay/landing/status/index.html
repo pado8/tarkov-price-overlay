@@ -43,6 +43,9 @@ h1{font-size:24px;margin:8px 0 4px}
 button.refresh{margin-top:12px;background:none;border:1px solid var(--line);color:var(--text);border-radius:8px;
   padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
 button.refresh:hover{border-color:var(--gold)}
+footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px 18px}
+footer a{color:#bdb8ab;text-decoration:none;margin-left:14px}
+footer a:hover{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -59,6 +62,7 @@ button.refresh:hover{border-color:var(--gold)}
   <div class="meta"><span id="checked"></span> <button class="refresh" id="refresh">다시 확인</button></div>
   <div class="notice" id="notice" hidden><h2 id="noticeTitle">공지</h2><div id="noticeText"></div></div>
   <section class="faq" id="faq"></section>
+  <footer><div>© 2026 pado · <a href="https://aquapado.com/" style="margin-left:0">aquapado.com</a></div><div><a href="/guide/" id="fGuide">탈콥 가이드</a><a href="/about/" id="fAbout">소개</a><a href="/privacy/" id="fPrivacy">개인정보처리방침</a></div></footer>
 </div>
 <script>
 (function () {
@@ -79,6 +83,7 @@ button.refresh:hover{border-color:var(--gold)}
       rate: "조회 성공률 (최근 7일, 전체 사용자)", rateSub: "실패의 대부분은 캡처 위치가 어긋났거나 거래 불가 아이템입니다",
       infra: "통계·피드백 수집", infraOk: "정상", infraWarn: "주의 — 일부 통계가 늦게 반영될 수 있습니다(앱 사용에는 영향 없음)", infraUnknown: "확인 지연 — 지표를 잠시 읽지 못했습니다(앱 사용에는 영향 없음)",
       checked: "마지막 확인", notice: "공지",
+      fGuide: "탈콥 가이드", fAbout: "소개", fPrivacy: "개인정보처리방침",
       faq: "자주 겪는 문제",
       q1: "F2를 눌러도 아무 반응이 없어요",
       a1: "게임이 관리자 권한으로 실행 중이면 오버레이도 관리자 권한으로 실행해야 단축키가 전달됩니다. 다른 프로그램이 F2를 쓰고 있다면 설정에서 단축키를 바꿔 주세요.",
@@ -101,6 +106,7 @@ button.refresh:hover{border-color:var(--gold)}
       rate: "Lookup success rate (last 7 days, all users)", rateSub: "Most failures are misaligned capture areas or untradeable items",
       infra: "Stats & feedback", infraOk: "Operational", infraWarn: "Degraded — some stats may arrive late (no effect on the app)", infraUnknown: "Check delayed — metrics could not be read just now (no effect on the app)",
       checked: "Last checked", notice: "Announcement",
+      fGuide: "Guide (KR)", fAbout: "About", fPrivacy: "Privacy policy",
       faq: "Common problems",
       q1: "Nothing happens when I press F2",
       a1: "If the game runs as administrator, run the overlay as administrator too so the hotkey reaches it. If another program uses F2, change the hotkey in settings.",
@@ -123,6 +129,7 @@ button.refresh:hover{border-color:var(--gold)}
       rate: "Успешных запросов (7 дней, все пользователи)", rateSub: "Большинство неудач — сбитая зона захвата или непродаваемые предметы",
       infra: "Статистика и отзывы", infraOk: "Работает", infraWarn: "Есть задержки — часть статистики может приходить позже (на приложение не влияет)", infraUnknown: "Проверка задерживается — метрики сейчас недоступны (на приложение не влияет)",
       checked: "Проверено", notice: "Объявление",
+      fGuide: "Гайд (KR)", fAbout: "О проекте", fPrivacy: "Конфиденциальность",
       faq: "Частые проблемы",
       q1: "F2 ничего не делает",
       a1: "Если игра запущена от администратора, запустите оверлей тоже от администратора. Если F2 занята другой программой, смените клавишу в настройках.",
@@ -144,6 +151,7 @@ button.refresh:hover{border-color:var(--gold)}
   home.textContent = t.home;
   home.href = lang === "ko" ? "/" : "/" + lang;
   document.getElementById("refresh").textContent = t.refresh;
+  ["fGuide", "fAbout", "fPrivacy"].forEach(function (k) { document.getElementById(k).textContent = t[k]; });
   document.querySelectorAll(".lang a").forEach(function (a) { if (a.getAttribute("data-l") === lang) a.className = "on"; });
 
   var faq = document.getElementById("faq");

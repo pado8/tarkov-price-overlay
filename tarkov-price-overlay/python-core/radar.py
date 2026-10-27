@@ -21,6 +21,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
+import extract_conditions
+
 log = logging.getLogger("radar")
 
 # ── 스크린샷 파일명 ───────────────────────────────────────────────
@@ -283,9 +285,10 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
 
     for ex in m.get("extracts") or []:
         fac = ex.get("faction") or "shared"
+        # 조건은 위키 기준 표 — 데이터의 switches 는 맵 전체 스위치가 모든 탈출구에 붙어 있어 쓰면 틀린다
+        tags, _text, _give = extract_conditions.conditions(map_slug, ex)
         add("extract", _loc(loc_maps, ex.get("name"), ex.get("name")), ex.get("position"),
-            faction=fac, switch=bool(ex.get("switches") or ex.get("switch")),
-            paid=bool(ex.get("transferItem")))
+            faction=fac, switch="lever" in tags, paid="paid" in tags, cond=sorted(tags))
     for tr in m.get("transits") or []:
         dest = tr.get("map")
         dest_id = dest.get("id") if isinstance(dest, dict) else dest
@@ -345,7 +348,8 @@ def compact_map_features(m: dict, loc_maps: dict) -> dict:
         if not ok(e.get("position")):
             continue
         extracts.append({"name": _loc(loc_maps, e.get("name"), e.get("name")), "p": note(pt(e["position"])),
-                         "faction": e.get("faction") or "shared", "switch": bool(e.get("switches") or e.get("switch")),
+                         "faction": e.get("faction") or "shared",
+                         "switch": "lever" in extract_conditions.conditions(m.get("normalizedName") or "", e)[0],
                          "outline": outline(e.get("outline"))})
     transits = []
     for t in m.get("transits") or []:

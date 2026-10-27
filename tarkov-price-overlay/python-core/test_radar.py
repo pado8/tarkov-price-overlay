@@ -86,6 +86,8 @@ maps_doc = {
     "M1": {"normalizedName": "factory", "name": "M1 Name", "extracts": [
         {"name": "ex_a", "faction": "pmc", "position": {"x": 0, "y": 0, "z": 100}},
         {"name": "ex_b", "faction": "scav", "position": {"x": 30, "y": 5, "z": 0}, "switches": ["s1"]},
+        {"name": "Gate m", "faction": "pmc", "position": {"x": 0, "y": 0, "z": -500},
+         "transferItem": {"item": {"id": "5449016a4bdc2d6f028b456f"}, "count": 5000}},
     ], "transits": [{"description": "tr_x", "map": "M2", "position": {"x": -40, "y": -6, "z": 0}}]},
     "M2": {"normalizedName": "woods", "name": "M2 Name"},
     "M3": {"normalizedName": "night-factory", "name": "M3 Name", "extracts": []},
@@ -99,21 +101,32 @@ tasks = {"T1": {"name": "T1 name", "objectives": [
 loc_t = {"T1 name": "첫 퀘스트", "o1": "구역 방문", "o2": "상자 찾기", "o3": "다른 맵"}
 pose = {"x": 0.0, "y": 0.0, "z": 0.0, "heading": 0.0}
 tg = r.build_targets(maps_doc, "factory", loc, tasks, loc_t, {"T1"}, pose)
-eq("대상 수(탈출 2 + 트랜짓 1 + 퀘스트 2)", len(tg), 5)
+eq("대상 수(탈출 3 + 트랜짓 1 + 퀘스트 2)", len(tg), 6)
 eq("가까운 순 정렬", [t["dist"] for t in tg], sorted(t["dist"] for t in tg))
 q = [t for t in tg if t["kind"] == "quest"]
 eq("다른 맵 목표는 빠짐", sorted(t["objective"] for t in q), ["구역 방문", "상자 찾기"])
 eq("후보 위치 중 가까운 곳", next(t for t in q if t["objective"] == "상자 찾기")["dist"], round(math.hypot(5, 5), 1))
 eq("진행 중이 아닌 퀘스트(T2)는 빠짐", any(t.get("task") == "T2" for t in tg), False)
 ex_b = next(t for t in tg if t["name"] == "Office")
-eq("스캐브 탈출구·스위치 표시", (ex_b["faction"], ex_b["switch"], ex_b["rel"], ex_b["dy"]), ("scav", True, 90.0, 5.0))
+eq("데이터 switches 는 조건으로 안 씀(맵 전체 스위치가 모든 탈출구에 붙어 있음)", (ex_b["faction"], ex_b["switch"], ex_b["cond"], ex_b["rel"], ex_b["dy"]), ("scav", False, [], 90.0, 5.0))
+gm = next(t for t in tg if t["name"] == "Gate m")
+eq("위키 표: 공장 의료 텐트 = 열쇠, 돈 제출 = 유료", (gm["cond"], gm["paid"], gm["switch"]), (["key", "paid"], True, False))
+tg_nf = r.build_targets({**maps_doc, "M3": {**maps_doc["M3"], "extracts": [{"name": "Cellars", "position": {"x": 1, "y": 0, "z": 1}}]}},
+                        "night-factory", loc, tasks, loc_t, set(), pose)
+eq("야간 공장도 공장 표 사용", next(t for t in tg_nf if t["kind"] == "extract")["cond"], ["key"])
 trn = next(t for t in tg if t["kind"] == "transit")
 eq("트랜짓 이름·목적지·아래 6m", (trn["name"], trn["dest"], trn["dy"], trn["rel"]), ("삼림으로 이동", "삼림", -6.0, -90.0))
 tg_n = r.build_targets(maps_doc, "night-factory", loc, tasks, loc_t, {"T1"}, pose)
 eq("야간 공장에서도 공장 퀘스트 구역이 보임", sorted(t["objective"] for t in tg_n if t["kind"] == "quest"), ["구역 방문", "상자 찾기"])
 eq("없는 맵이면 빈 목록", r.build_targets(maps_doc, "nowhere", loc, tasks, loc_t, {"T1"}, pose), [])
 
-raise SystemExit(1 if fails else 0)
+# 6-1) 탈출구 조건 표(extract_conditions) — 가이드와 레이더가 같이 쓴다
+import extract_conditions as xc
+eq("조건 없는 탈출구", xc.conditions("customs", {"name": "ex_customs_scav_gasstation", "switches": ["s"]})[:2], (set(), None))
+eq("세관 ZB-1013 = 레버+열쇠", xc.conditions("customs", {"name": "ex_customs_pmc_zb1013"})[0], {"lever", "key"})
+eq("아이템 제출 = item(유료 아님)", xc.conditions("customs", {"name": "ex_customs_secret_voron_boat", "transferItem": {"item": {"id": "675aaab74bca0b001d02f356"}, "count": 1}})[0], {"item"})
+eq("유로 = paid·기호", xc.conditions("icebreaker", {"name": "Heli", "transferItem": {"item": "569668774bdc2da2298b4568", "count": 2400}})[2]["money"], "€")
+eq("그라운드 제로 21+ 도 같은 표", xc.conditions("ground-zero-21", {"name": "Sniper_exit"})[0], {"flare"})
 
 
 # 7) 스크린샷 폴더 직접 지정 — 저장·복원·없는 폴더 거부·자동 복귀 (설정 파일은 임시 폴더로 돌림)
@@ -153,7 +166,7 @@ try:
             "stationaryWeapons": [{"position": {"x": 4, "y": 0, "z": 4}}], "switches": []}
     d = r.compact_map_features(fake, {"ex_a": "탈출 A", "tr_a": "트랜짓 A", "Customs": "세관"})
     eq("맵 이름 번역", d["name"], "세관")
-    eq("탈출구: 위치 없는 것 제외·번역·스위치·윤곽", (len(d["extracts"]), d["extracts"][0]["name"], d["extracts"][0]["switch"], d["extracts"][0]["outline"]), (1, "탈출 A", True, [[9, 19], [11, 19], [11, 21]]))
+    eq("탈출구: 위치 없는 것 제외·번역·스위치·윤곽", (len(d["extracts"]), d["extracts"][0]["name"], d["extracts"][0]["switch"], d["extracts"][0]["outline"]), (1, "탈출 A", False, [[9, 19], [11, 19], [11, 21]]))
     eq("좌표 소수 1자리로 압축", d["containers"][0], [1.3, 0.5, 2.7])
     eq("스폰 종류 코드 p/b/s", [s[3] for s in d["spawns"]], ["p", "b", "s"])
     eq("위험 구역 윤곽", len(d["hazards"][0]["outline"]), 3)
