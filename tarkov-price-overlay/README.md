@@ -1,3 +1,6 @@
+<p align="center">🇬🇧 <b><a href="#english">English</a></b> &nbsp;·&nbsp; 🇰🇷 <a href="#korean">한국어</a> &nbsp;·&nbsp; 🇷🇺 <a href="https://tarkov.aquapado.com/ru">Русский</a> &nbsp;|&nbsp; 🌐 <a href="https://tarkov.aquapado.com/en">Official site (EN)</a> / <a href="https://tarkov.aquapado.com">공식 사이트 (KO)</a></p>
+<a id="korean"></a>
+
 # Tarkov Price Overlay
 
 > **타르코프에서 마우스 올리고 F2** — 플리 시세 · 상인가 · 바터 · 제작 · 퀘스트 정보를 게임 위에 바로 띄워주는 **오픈소스 무료** Windows 오버레이 앱
@@ -8,7 +11,7 @@
 
 > 🌐 **공식 사이트: [tarkov.aquapado.com](https://tarkov.aquapado.com)** — 다운로드·사용법·자주 묻는 질문·[탈콥 가이드(카파템·열쇠·퀘스트)](https://tarkov.aquapado.com/guide/)·[서비스 상태](https://tarkov.aquapado.com/status/)는 공식 사이트에서 확인하세요. 이 페이지는 소스 코드와 개발 기록입니다.
 
-**[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · 한국어 / English
+**[⬇ 최신 버전 다운로드](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest)** · 한국어 / [English](#english)
 
 > ⚠️ **공식 다운로드는 위 링크 한 곳뿐입니다.**
 > 다른 곳에서 다운받지 마세요 — 코드는 [`pado8/tarkov-price-overlay`](https://github.com/pado8/tarkov-price-overlay)에서 공개되어 있으며, 빌드 결과물은 위 Releases 페이지에서만 배포합니다.
@@ -366,6 +369,8 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 ---
 ---
 
+<a id="english"></a>
+
 # Tarkov Price Overlay — English Guide
 
 > **Hover an item in Tarkov, press F2** — instantly see flea market prices, trader prices, barters, crafts, and quest requirements as a transparent overlay on top of the game.
@@ -378,7 +383,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 Hover an inventory item, press F2 — card appears in about a second.
 
-![Main lookup card](assets/screenshots/01-main-lookup.png)
+![Main lookup card](assets/screenshots/en/01-main-lookup.png)
 
 Flea current/24h range/last trade · top trader price · barters (both directions) · hideout crafts · **quest requirements** all in one card. Weight efficiency (₽/kg) and per-slot price (₽/slot) auto-calculated.
 
@@ -462,7 +467,7 @@ Grab one from **[Releases](https://github.com/pado8/tarkov-price-overlay-release
 
 Want to recheck something you just looked up? Click 🕒 in the card header to see the last 15 lookups; click any entry to re-query.
 
-![History panel](assets/screenshots/02-history.png)
+![History panel](assets/screenshots/en/02-history.png)
 
 ### 4. If recognition is off
 
@@ -485,7 +490,7 @@ Drag any blank area of the card to reposition. Position is auto-saved.
 
 Click the gear (⚙) icon to open settings.
 
-![Settings panel](assets/screenshots/03-settings.png)
+![Settings panel](assets/screenshots/en/03-settings.png)
 
 | Setting | Description |
 |---|---|

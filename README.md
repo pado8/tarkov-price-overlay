@@ -1,3 +1,6 @@
+<p align="center">🇬🇧 <b><a href="#english">English</a></b> &nbsp;·&nbsp; 🇰🇷 <a href="#korean">한국어</a> &nbsp;·&nbsp; 🇷🇺 <a href="https://tarkov.aquapado.com/ru">Русский</a> &nbsp;|&nbsp; 🌐 <a href="https://tarkov.aquapado.com/en">Official site (EN)</a> / <a href="https://tarkov.aquapado.com">공식 사이트 (KO)</a></p>
+<a id="korean"></a>
+
 # 타르코프 시세 오버레이 (Tarkov Price Overlay)
 
 > **아이템에 마우스 올리고 `F2`** — 플리마켓 시세·상인가·바터·하이드아웃 제작·퀘스트 정보를 게임 화면 위에 약 1초 만에 띄우는 **무료 오픈소스 Windows 오버레이**. 알트탭으로 위키 켤 필요 없이.
@@ -80,6 +83,8 @@ npm run tauri dev            # 개발 실행
 MIT. 본 도구는 **비공식 도구**이며 Battlestate Games와 무관합니다. *Escape from Tarkov* 및 관련 자산은 Battlestate Games Limited의 상표/저작권입니다.
 
 ---
+
+<a id="english"></a>
 
 # Tarkov Price Overlay — English
 
