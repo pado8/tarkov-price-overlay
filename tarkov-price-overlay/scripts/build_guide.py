@@ -81,6 +81,10 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
     for u in sorted(set(guide_urls), key=lambda u: (u.count("/"), u)):
         out += ["  <url>", f"    <loc>https://tarkov.aquapado.com{u}</loc>", f"    <lastmod>{stamp}</lastmod>",
                 "    <changefreq>weekly</changefreq>", f"    <priority>{pri_of(u)}</priority>", "  </url>"]
+    # 개인정보처리방침(landing/privacy/index.html, 손글) — 광고 심사·검색 노출용으로 사이트맵에 포함
+    out += ["  <url>", "    <loc>https://tarkov.aquapado.com/privacy/</loc>",
+            f"    <lastmod>{old_lastmod('https://tarkov.aquapado.com/privacy/')}</lastmod>",
+            "    <changefreq>yearly</changefreq>", "    <priority>0.3</priority>", "  </url>"]
     out.append("</urlset>")
     sm.write_text(nl.join(out) + nl, encoding="utf-8")
     print(f"[guide] sitemap: {len(set(guide_urls)) + 3} URL")

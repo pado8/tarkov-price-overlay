@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>개인정보처리방침 — 타르코프 시세 오버레이 · 탈콥 가이드</title>
+<meta name="description" content="tarkov.aquapado.com(랜딩·탈콥 가이드·서비스 상태)과 타르코프 시세 오버레이 앱이 무엇을 수집하고 무엇을 수집하지 않는지, 브라우저 저장소·오버레이 연동·익명 사용 통계·광고·제3자 서비스에 대한 안내." />
+<link rel="canonical" href="https://tarkov.aquapado.com/privacy/" />
+<meta name="robots" content="index,follow" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="개인정보처리방침 — 타르코프 시세 오버레이 · 탈콥 가이드" />
+<meta property="og:url" content="https://tarkov.aquapado.com/privacy/" />
+<meta property="og:image" content="https://tarkov.aquapado.com/og.png" />
+<meta name="theme-color" content="#c8aa64" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="stylesheet" href="/styles.css" />
+<style>
+.legal{max-width:820px;margin:0 auto;padding:28px 20px 60px;line-height:1.75;font-size:15.5px}
+.legal h1{font-size:30px;margin:10px 0 6px}
+.legal .meta{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+.legal h2{font-size:19px;margin:30px 0 8px;color:var(--gold)}
+.legal h3{font-size:16px;margin:18px 0 6px}
+.legal ul{padding-left:20px;margin:6px 0}
+.legal li{margin:3px 0}
+.legal table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0 14px}
+.legal th,.legal td{border-top:1px solid var(--line);padding:8px 8px;text-align:left;vertical-align:top}
+.legal th{color:var(--muted);font-weight:600;font-size:13px}
+.legal .box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0}
+.legal .ok{color:#8ccf8c}.legal .no{color:#e08a8a}
+.legal .toc{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 4px}
+.legal .toc a{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--text)}
+.legal .toc a:hover{border-color:var(--gold);text-decoration:none}
+</style>
+</head>
+<body>
+<header class="nav"><div class="wrap" style="display:flex;align-items:center;gap:14px;height:54px">
+  <a href="/" style="font-weight:800;color:var(--gold)">타르코프 시세 오버레이</a>
+  <nav style="display:flex;gap:14px;font-size:14px;margin-left:auto"><a href="/guide/">탈콥 가이드</a><a href="/status/">서비스 상태</a><a href="/privacy/" style="color:var(--text)">개인정보처리방침</a></nav>
+</div></header>
+
+<main class="legal">
+<h1>개인정보처리방침</h1>
+<p class="meta">적용 대상: tarkov.aquapado.com(메인·탈콥 가이드·서비스 상태 페이지)과 Windows용 "타르코프 시세 오버레이" 앱 · 운영자: pado(<a href="https://aquapado.com/" rel="noopener">aquapado.com</a>) · 제정 2026-10-27</p>
+
+<div class="box">
+  <b>한 줄 요약</b> — 이 사이트와 앱은 <b>이름·이메일·계정 같은 개인정보를 요구하거나 저장하지 않습니다.</b> 사이트는 쿠키 없는 익명 방문 집계만 하고, 앱은 끌 수 있는 익명 사용 횟수만 보냅니다. 검색한 아이템 이름, 게임 화면, 좌표, 게임 메모리는 어디에도 전송되지 않습니다. 광고를 붙이게 되면 이 문서의 "광고" 항목을 먼저 갱신합니다.
+</div>
+
+<nav class="toc"><a href="#site">웹사이트</a><a href="#storage">브라우저 저장소</a><a href="#sync">오버레이 연동</a><a href="#app">오버레이 앱</a><a href="#ads">광고</a><a href="#third">제3자 서비스</a><a href="#rights">보관·권리·문의</a></nav>
+
+<h2 id="site">1. 웹사이트(tarkov.aquapado.com)에서 수집하는 것</h2>
+<table>
+<thead><tr><th>항목</th><th>내용</th><th>식별 가능성</th></tr></thead>
+<tbody>
+<tr><td>방문 집계(Vercel Web Analytics)</td><td>페이지뷰·방문자 수·국가·기기 종류 같은 통계. 쿠키를 쓰지 않고 개인을 추적하지 않습니다.</td><td class="no">식별 불가(집계만)</td></tr>
+<tr><td>자체 유입 비콘</td><td>어느 경로로 들어와 어디서 다운로드 버튼을 눌렀는지 보려고, 방문한 페이지 경로·이전 페이지 주소(리퍼러)·링크에 붙은 캠페인 표식(<code>?src=</code>)·같은 세션의 첫 진입 페이지를 보냅니다. 쿠키·방문자 ID는 없고, 봇은 제외하며, 페이지당 세션에 한 번만 보냅니다.</td><td class="no">식별 불가</td></tr>
+<tr><td>서버 접속 기록</td><td>호스팅(Vercel)이 표준 접속 로그를 남깁니다. 운영자는 이를 개인 식별에 쓰지 않습니다.</td><td>호스팅 사업자 정책에 따름</td></tr>
+</tbody>
+</table>
+<p>회원가입·로그인·댓글 기능이 없으므로 이름, 이메일, 비밀번호를 받지 않습니다.</p>
+
+<h2 id="storage">2. 브라우저 저장소(이 기기에만 남는 것)</h2>
+<p>탈콥 가이드의 편의 기능은 브라우저의 로컬 저장소(localStorage·sessionStorage)에 저장되며 <b>서버로 전송되지 않습니다.</b> 브라우저 데이터를 지우면 함께 삭제됩니다.</p>
+<ul>
+  <li>퀘스트 완료·아이템 보유·건스미스 부품 체크 표시, 선택한 모드(PVP/PVE)와 필터, 레이더·지도 표시 설정</li>
+  <li>오버레이 연동으로 받은 완료 퀘스트 목록과 은신처 단계(아래 3번)</li>
+  <li>세션의 첫 진입 페이지(유입 비콘용, 탭을 닫으면 사라짐)</li>
+</ul>
+
+<h2 id="sync">3. 오버레이 연동(선택 기능)</h2>
+<p>같은 PC에서 시세 오버레이 앱이 실행 중이면, 가이드 페이지가 <b>이 PC 안의 앱(127.0.0.1)</b>에서 게임 로그로 확인된 퀘스트 완료 상태와 설정한 은신처 단계를 읽어 와 "깬 퀘스트"를 자동으로 표시합니다. 이 데이터는 브라우저와 앱 사이에서만 오가며 <b>어떤 서버에도 보내지 않습니다.</b> 브라우저가 로컬 네트워크 접근 허용 여부를 물으면 거부해도 가이드는 정상 동작하고, 연동 표시만 빠집니다. 앱 설정의 "진행도와 함께 열기" 버튼을 쓰면 같은 데이터가 주소의 해시(<code>#sync=</code>) 부분에 담겨 열리며, 페이지가 읽은 뒤 주소에서 지웁니다. 해시는 서버로 전송되지 않습니다.</p>
+
+<h2 id="app">4. 타르코프 시세 오버레이 앱</h2>
+<h3>앱이 보내는 것 — 익명 사용 통계(설정에서 끌 수 있음)</h3>
+<ul>
+  <li><span class="ok">✅</span> 앱 실행·조회(F2) 횟수, 앱 버전, 국가 코드, 무작위 설치 ID(재설치하면 바뀜), 관리자 권한 실행 여부, 조회 실패 유형(빈 화면/잡음/미일치 같은 분류만), 레이더를 연 횟수</li>
+  <li><span class="ok">✅</span> 조회 실패나 시세 없음일 때: 매칭된 <b>공개 아이템 ID</b>(검색어나 화면 글자가 아니라, 패치로 새 아이템이 생겼는지 알기 위한 공개 식별자)</li>
+  <li><span class="ok">✅</span> 사용자가 직접 보낸 피드백 내용(설정 → ✉). 쓴 내용 그대로 저장되므로 개인정보를 적지 않는 것을 권합니다.</li>
+  <li><span class="no">❌</span> 보내지 않는 것: 검색한 아이템 이름, 화면 이미지, 마우스 좌표, 게임 안 좌표·맵·스크린샷, 게임 메모리, 이름·이메일 같은 개인정보, IP 주소(서버가 요청에서 국가만 뽑고 저장하지 않습니다)</li>
+</ul>
+<p>통계는 기본 켜짐이며 첫 실행 때 한 번 안내하고, 설정에서 언제든 끌 수 있습니다. 끄면 그 뒤로는 아무것도 보내지 않습니다. 수집 코드는 공개 저장소의 <code>src/App.tsx</code>(<code>reportEvent</code>)에서 볼 수 있습니다.</p>
+<h3>앱이 이 PC 안에서만 읽는 것</h3>
+<ul>
+  <li>게임 화면의 아이템 툴팁 부분을 캡처해 글자를 읽습니다(OCR). 캡처 이미지는 PC 밖으로 나가지 않습니다.</li>
+  <li>게임이 남기는 <code>application</code> 로그 파일에서 퀘스트 진행과 맵 로딩 줄을 읽어 퀘스트 트래커와 레이더에 씁니다.</li>
+  <li>레이더: 게임이 스크린샷을 저장할 때 파일명에 적어 두는 좌표·방향만 읽습니다. 스크린샷 이미지 내용은 읽지 않고, 게임 메모리에는 접근하지 않습니다.</li>
+  <li>설정(단축키·언어·은신처 단계 등)은 PC의 사용자 폴더(<code>%LOCALAPPDATA%\TarkovPriceOverlay</code>)와 앱 저장소에 보관됩니다.</li>
+</ul>
+<h3>앱이 접속하는 외부 서비스</h3>
+<ul>
+  <li>시세·퀘스트·은신처 데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 및 json.tarkov.dev(공개 데이터). 요청에는 통상적인 접속 정보(IP 등)가 해당 서비스에 전달됩니다.</li>
+  <li>업데이트 확인과 다운로드: GitHub(릴리즈 저장소)</li>
+  <li>건스미스 부품 표·인앱 공지: tarkov.aquapado.com과 api.aquapado.com에서 받기만 합니다.</li>
+</ul>
+
+<h2 id="ads">5. 광고</h2>
+<p><b>현재 이 사이트와 앱에는 제3자 광고가 없습니다.</b> 운영비를 위해 탈콥 가이드 등 웹페이지에 Google AdSense 광고를 도입할 수 있으며, 도입하면 이 항목을 먼저 갱신합니다. 도입 시 적용되는 내용은 다음과 같습니다.</p>
+<ul>
+  <li>Google을 포함한 제3자 광고 사업자는 쿠키나 유사 기술을 사용해 이 사이트와 다른 사이트 방문 기록을 바탕으로 광고를 보여 줄 수 있습니다.</li>
+  <li>개인 맞춤 광고는 <a href="https://adssettings.google.com/" rel="noopener">Google 광고 설정</a>에서 끌 수 있고, 다른 사업자의 쿠키는 <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>에서 관리할 수 있습니다.</li>
+  <li>유럽경제지역·영국·스위스 방문자에게는 광고 전에 동의 창을 띄웁니다.</li>
+  <li>오버레이 앱 안에는 제3자 광고 네트워크를 넣지 않습니다. 앱 설정 화면의 "광고" 자리는 현재 운영자 자체 안내만 보여 주며, 외부 광고 코드가 실행되지 않습니다.</li>
+</ul>
+
+<h2 id="third">6. 제3자 서비스</h2>
+<table>
+<thead><tr><th>서비스</th><th>용도</th><th>전달되는 것</th></tr></thead>
+<tbody>
+<tr><td>Vercel</td><td>사이트·API 호스팅, 방문 집계</td><td>표준 접속 정보, 익명 집계</td></tr>
+<tr><td>Neon</td><td>익명 사용 통계·피드백 저장(데이터베이스)</td><td>4번에 적은 익명 통계와 피드백 내용</td></tr>
+<tr><td>GitHub</td><td>소스 코드·릴리즈 배포·버그 제보</td><td>업데이트 확인 요청, 사용자가 직접 올린 이슈</td></tr>
+<tr><td>tarkov.dev / json.tarkov.dev</td><td>게임 공개 데이터</td><td>데이터 요청(아이템 이름은 보내지 않고 전체 목록을 받습니다)</td></tr>
+<tr><td>Google(도입 시)</td><td>광고</td><td>5번 참고</td></tr>
+</tbody>
+</table>
+
+<h2 id="rights">7. 보관 기간·이용자 권리·문의</h2>
+<ul>
+  <li>익명 사용 통계는 서비스 개선과 규모 파악 목적으로 보관하며, 개인을 식별할 수 없어 특정인의 기록으로 분리하거나 되돌릴 수 없습니다. 통계 전송을 끄면 그 시점부터 새 기록이 남지 않습니다.</li>
+  <li>피드백은 처리 후 삭제를 원하면 아래 문의처로 보낸 시각과 내용 일부를 알려 주세요. 해당 기록을 삭제합니다.</li>
+  <li>이 사이트와 앱은 만 14세 미만을 대상으로 하지 않으며, 아동의 개인정보를 의도적으로 수집하지 않습니다.</li>
+  <li>문의: <a href="https://github.com/pado8/tarkov-price-overlay-releases/issues" rel="noopener">GitHub 이슈</a> 또는 <a href="https://aquapado.com/" rel="noopener">aquapado.com</a>의 연락처</li>
+  <li>이 문서가 바뀌면 이 페이지의 날짜를 갱신하고, 수집 항목이 늘어나는 변경은 앱 공지로도 알립니다.</li>
+</ul>
+<p class="meta">본 도구와 사이트는 비공식이며 Battlestate Games와 무관합니다. <i>Escape from Tarkov</i> 및 관련 자산은 Battlestate Games Limited의 상표·저작권입니다.</p>
+</main>
+
+<footer><div class="wrap">
+  <div class="foot-in">
+    <div>© 2026 pado · <a href="https://aquapado.com/">aquapado.com</a></div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap"><a href="/">타르코프 시세 오버레이</a><a href="/guide/">탈콥 가이드</a><a href="/status/">서비스 상태</a><a href="/privacy/">개인정보처리방침</a></div>
+  </div>
+</div></footer>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="/beacon.js"></script>
+</body>
+</html>
