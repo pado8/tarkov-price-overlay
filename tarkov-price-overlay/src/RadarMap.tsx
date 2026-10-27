@@ -295,7 +295,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
       .sort((a, b) => a.pr - b.pr || a.d - b.d)
       .forEach((c) => {
         const s = toScreen(c.p[0], c.p[2]);
-        if (s.x < -20 || s.y < -20 || s.x > box.w + 20 || s.y > box.h + 20) return;
+        if (s.x < 0 || s.y < 0 || s.x > box.w || s.y > box.h) return; // 점이 화면 밖이면 이름표도 생략(가장자리에 글자만 잘려 들어오지 않게)
         const w = c.text.length * 5.4;
         const left = s.x + c.off + w > box.w - 2;
         const lx = left ? s.x - c.off - w : s.x + c.off;

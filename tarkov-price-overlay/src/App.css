@@ -1614,7 +1614,8 @@ html, body, #root {
 .radar { display: flex; flex-direction: column; gap: var(--sp-2); }
 .radar-stale .radar-svg, .radar-stale .radar-list { opacity: 0.55; }
 .radar-head { display: flex; align-items: center; gap: var(--sp-2); }
-.radar-title { font-weight: 700; color: var(--gold-text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.radar-title { font-weight: 700; color: var(--gold-text); flex: 1; min-width: 4em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 최소 폭: 작은 크기·긴 언어에서도 맵 이름 일부는 보이게 */
+.radar-age { max-width: 9em; overflow: hidden; text-overflow: ellipsis; }
 .radar-src { font-weight: 400; color: var(--text-muted); font-size: var(--card-fs-xs); }
 .radar-age { font-size: var(--card-fs-xs); color: var(--text-muted); white-space: nowrap; }
 .radar-age.stale { color: var(--warning); }
