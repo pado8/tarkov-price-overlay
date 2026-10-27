@@ -76,6 +76,7 @@ type Props = {
 };
 
 const cache = new Map<string, MapDoc>();
+const floorMemo: Record<string, string> = {}; // 맵별 층 선택(세션 동안)
 
 /** 맵별 90° 회전 설정(지도 탭에서 ↻로 돌린 값) — 레이더 고정 모드도 같은 기준을 쓴다 */
 export function loadMapRot(slug: string | null | undefined, fallback = 0): number {
@@ -112,7 +113,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const [err, setErr] = useState(false);
   const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
-  const [floor, setFloor] = useState<string>("auto"); // "auto" | "base" | 층 그룹 id — 맵이 바뀌면 자동으로
+  // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 레이더를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
+  const [floor, setFloorState] = useState<string>(() => (slug && floorMemo[slug]) || "auto");
+  const setFloor = (f: string) => {
+    setFloorState(f);
+    if (slug) floorMemo[slug] = f;
+  };
   const toggleImg = () => {
     setShowImg((v) => {
       try {
@@ -164,7 +170,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
     setRot(loadMapRot(slug, defRot));
     setView(null);
     setSel(null);
-    setFloor("auto");
+    setFloorState((slug && floorMemo[slug]) || "auto");
   }, [slug]);
 
   const me = data.shot;
