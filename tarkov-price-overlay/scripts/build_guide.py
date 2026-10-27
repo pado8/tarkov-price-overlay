@@ -341,6 +341,9 @@ def main() -> int:
     import adsense  # 새로 만든 페이지에도 AdSense 코드 유지(ID 없으면 아무것도 안 넣음)
     n_ad, cid = adsense.apply()
     print(f"[guide] AdSense: {cid or '끔'} · 바뀐 페이지 {n_ad}")
+    import ga4  # GA4도 같은 방식(ID 없으면 아무것도 안 넣음)
+    n_ga, gid = ga4.apply()
+    print(f"[guide] GA4: {gid or '끔'} · 바뀐 페이지 {n_ga}")
     print(f"[guide] 완료 {time.time() - t0:.1f}s → {OUT}")
     return 0
 
