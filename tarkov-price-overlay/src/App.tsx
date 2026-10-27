@@ -437,6 +437,22 @@ const submitFeedback = async (
 
 const PYTHON_API = "http://127.0.0.1:8765";
 
+// 시세 나이 배지 — 사이드카가 네트워크 대신 디스크 스냅샷을 쓰고 있거나(패치 당일 등) 카탈로그가 3시간 넘게 못 갱신됐을 때만
+const STALE_PRICE_SEC = 3 * 3600;
+function staleNote(result: { price_age_sec?: number | null; price_source?: string | null }, t: { priceStaleHours: string; priceStaleMinutes: string; priceStaleHint: string }) {
+  const age = result.price_age_sec;
+  if (age == null) return null;
+  if (result.price_source !== "disk" && age < STALE_PRICE_SEC) return null;
+  const text = age >= 3600
+    ? t.priceStaleHours.replace("{n}", String(Math.floor(age / 3600)))
+    : t.priceStaleMinutes.replace("{n}", String(Math.max(1, Math.floor(age / 60))));
+  return (
+    <div className="price-stale" title={t.priceStaleHint}>
+      ⏱ {text}
+    </div>
+  );
+}
+
 const log = (msg: string) => {
   invoke("log_msg", { msg }).catch(() => {});
 };
@@ -623,6 +639,9 @@ type LookupResult = {
   needed_for_hideout: HideoutNeed[];
   // 건스미스 퀘스트에 쓰이는 부품이면(필수 부품 / 위키 예시 조립). 사이드카 gunsmith.py — 가이드 사이트 JSON 기준
   gunsmith?: { quest: string; kind: "req" | "ex"; weapon: string | null }[];
+  // 이 시세가 몇 초 전 카탈로그인지 · 출처(json/graphql/disk). 디스크 복원이거나 3시간 넘으면 "N시간 전 시세" 배지
+  price_age_sec?: number | null;
+  price_source?: string | null;
   // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
   // panel and pre-selects the relevant caliber. null for everything else.
   caliber: string | null;
@@ -4719,6 +4738,7 @@ function App() {
                 (result.sell_for?.length ?? 0) === 0;
               return (
                 <div className="prices">
+                  {staleNote(result, t)}
                   {noMarketPrice ? (
                     <div className="no-market-note">{t.noMarketPrice}</div>
                   ) : (

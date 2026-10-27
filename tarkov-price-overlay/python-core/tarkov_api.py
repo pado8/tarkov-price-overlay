@@ -1,8 +1,12 @@
 import difflib
+import gzip
+import json
 import math
+import os
 import re
 import threading
 import time
+from pathlib import Path
 
 import requests
 
@@ -290,6 +294,8 @@ _price_cache_ts: dict[tuple[str, str], float] = {}
 # never used for matching. See _canon().
 _canon_cache: dict[tuple[str, str], dict[str, dict | None]] = {}
 _price_cache_lock = threading.Lock()
+# (lang, game_mode) -> "json" | "graphql" | "disk" — 마지막으로 카탈로그를 채운 출처(진단·"N시간 전 시세" 표시용)
+_price_cache_source: dict[tuple[str, str], str] = {}
 _refresher_started = False
 _refresher_lock = threading.Lock()
 
@@ -907,42 +913,160 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
     }
 
 
-def _refresh_one(lang: str, game_mode: str) -> int:
-    # Primary source: tarkov.dev GraphQL. When it's down (the 2026-07 multi-day
-    # 503 "GraphQL server unavailable", the-hideout/tarkov-api#474), fall back to
-    # json.tarkov.dev — the maintainer-recommended live source that tarkov.dev
-    # itself is built on. The fallback yields the same item shape so the rest of
-    # this function (entry build, alias, canon) is unchanged. (v1.2.4부터
-    # 폴백도 바터/퀘스트/제작/은신처 enrichment full parity — 과거 주석 정정.)
-    source = "graphql"
-    # Set only on the fallback path: the JSON source supplies the hideout index
-    # itself, so we must not fall through to the (also-unreachable) GraphQL
-    # hideout query below and blank the panel.
-    fb_hideout: tuple[dict, list] | None = None
+# ── 카탈로그 소스 순서 · 디스크 스냅샷 (2026-10-27) ─────────────────────────────
+# 2026-07부터 tarkov.dev GraphQL 이 422/503 으로 사실상 죽어 있어(the-hideout/tarkov-api#474) 매 갱신이
+# "GraphQL 실패 → json 폴백" 을 반복했다. 이제 json.tarkov.dev 가 1순위, GraphQL 은 json 이 막혔을 때의 폴백.
+# 거기에 마지막으로 성공한 카탈로그를 %LOCALAPPDATA%\TarkovPriceOverlay\catalog\ 에 gzip 으로 남겨, 앱 시작 때
+# 네트워크보다 먼저 올리고(즉시 조회 가능) 둘 다 막힌 패치 당일에도 "N시간 전 시세" 로 버틴다.
+# 시험용: TPO_PRICE_SOURCE=graphql 이면 순서를 뒤집고, TPO_CATALOG_DIR 로 스냅샷 폴더를 바꾼다.
+SNAPSHOT_MAX_AGE_SEC = 7 * 24 * 3600  # 이보다 오래된 스냅샷은 안 올린다(시세로서 의미가 없다)
+
+
+def _source_order() -> list[str]:
+    pref = (os.environ.get("TPO_PRICE_SOURCE") or "json").strip().lower()
+    return ["graphql", "json"] if pref == "graphql" else ["json", "graphql"]
+
+
+def _snapshot_dir() -> Path:
+    env = os.environ.get("TPO_CATALOG_DIR")
+    if env:
+        p = Path(env)
+    else:
+        from quest_tracker import _state_dir  # 같은 %LOCALAPPDATA%\TarkovPriceOverlay
+
+        p = _state_dir() / "catalog"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _snapshot_path(lang: str, game_mode: str) -> Path:
+    return _snapshot_dir() / f"{lang}_{game_mode}.json.gz"
+
+
+def _save_snapshot(lang: str, game_mode: str, items: list, hideout_pair: tuple | None, source: str) -> None:
+    """갱신 성공 직후 호출. 실패해도 조회엔 영향 없게 삼킨다. 임시 파일에 쓰고 교체해 반쯤 쓰인 파일을 남기지 않는다."""
     try:
-        if game_mode == "pvp-season":
-            # 시즌 래더(2026-08)는 GraphQL 스키마보다 늦게 생겨 GameMode
-            # enum에 없다 — json.tarkov.dev(/pvp-season/*)가 유일한 공급원.
-            # raise로 아래 폴백 경로(다른 장애와 동일 경로)로 라우팅한다.
-            raise RuntimeError("pvp-season is served by json.tarkov.dev only")
-        response = requests.post(
-            TARKOV_API_URL,
-            json={
-                "query": _QUERY_ALL_PRICED,
-                "variables": {"lang": lang, "gameMode": game_mode},
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
-        items = response.json().get("data", {}).get("items", []) or []
-        if not items:
-            raise RuntimeError("GraphQL returned an empty item list")
-    except Exception as e:
-        print(f"[cache] GraphQL failed for ({lang},{game_mode}): {e!r} - trying json.tarkov.dev fallback")
-        import tarkov_json_fallback
-        items, fb_idx, fb_stations = tarkov_json_fallback.fetch_catalog(lang, game_mode)
-        fb_hideout = (fb_idx, fb_stations)
-        source = "json-fallback"
+        if hideout_pair is None:  # GraphQL 경로는 은신처 인덱스를 따로 받았으니 지금 캐시된 것을 같이 보관
+            with _hideout_index_lock:
+                hideout_pair = (_hideout_index_cache.get(lang, {}), _hideout_station_list_cache.get(lang, []))
+        doc = {"ts": time.time(), "source": source, "lang": lang, "mode": game_mode,
+               "items": items, "hideout": [hideout_pair[0], hideout_pair[1]]}
+        p = _snapshot_path(lang, game_mode)
+        tmp = p.with_suffix(".tmp")
+        with gzip.open(tmp, "wt", encoding="utf-8") as f:
+            json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp, p)
+    except Exception as e:  # noqa: BLE001
+        print(f"[cache] snapshot save failed ({lang},{game_mode}): {e!r}")
+
+
+def _load_snapshot(lang: str, game_mode: str) -> dict | None:
+    try:
+        p = _snapshot_path(lang, game_mode)
+        if not p.exists():
+            return None
+        with gzip.open(p, "rt", encoding="utf-8") as f:
+            doc = json.load(f)
+        ts = float(doc.get("ts") or 0)
+        if not doc.get("items") or (time.time() - ts) > SNAPSHOT_MAX_AGE_SEC:
+            return None
+        return doc
+    except Exception as e:  # noqa: BLE001
+        print(f"[cache] snapshot load failed ({lang},{game_mode}): {e!r}")
+        return None
+
+
+def _json_fetch_catalog(lang: str, game_mode: str):
+    """json.tarkov.dev — 테스트에서 바꿔 끼우기 쉽게 한 겹 감쌌다."""
+    import tarkov_json_fallback
+
+    return tarkov_json_fallback.fetch_catalog(lang, game_mode)
+
+
+def _graphql_fetch_items(lang: str, game_mode: str) -> list[dict]:
+    if game_mode == "pvp-season":
+        # 시즌 래더(2026-08)는 GraphQL 스키마보다 늦게 생겨 GameMode enum 에 없다 — json 만 공급한다.
+        raise RuntimeError("pvp-season is served by json.tarkov.dev only")
+    response = requests.post(
+        TARKOV_API_URL,
+        json={"query": _QUERY_ALL_PRICED, "variables": {"lang": lang, "gameMode": game_mode}},
+        timeout=30,
+    )
+    response.raise_for_status()
+    items = response.json().get("data", {}).get("items", []) or []
+    if not items:
+        raise RuntimeError("GraphQL returned an empty item list")
+    return items
+
+
+def _fetch_catalog_items(lang: str, game_mode: str) -> tuple[list[dict], tuple | None, str]:
+    """소스 순서대로 시도해 (items, hideout_pair|None, source) 를 돌려준다. 전부 실패하면 마지막 예외를 올린다."""
+    last: Exception | None = None
+    for src in _source_order():
+        try:
+            if src == "json":
+                items, idx, stations = _json_fetch_catalog(lang, game_mode)
+                return items, (idx, stations), "json"
+            return _graphql_fetch_items(lang, game_mode), None, "graphql"
+        except Exception as e:  # noqa: BLE001
+            last = e
+            print(f"[cache] {src} failed for ({lang},{game_mode}): {e!r} - trying next source")
+    raise last if last else RuntimeError("no catalog source")
+
+
+def _refresh_one(lang: str, game_mode: str) -> int:
+    items, hideout_pair, source = _fetch_catalog_items(lang, game_mode)
+    n = _install_catalog(lang, game_mode, items, hideout_pair, source)
+    _save_snapshot(lang, game_mode, items, hideout_pair, source)
+    return n
+
+
+def load_snapshots() -> int:
+    """앱 시작 때 네트워크보다 먼저 — 디스크 스냅샷이 있는 (lang, mode) 를 메모리에 올린다. 올린 카탈로그 수."""
+    n = 0
+    for lang in ("ko", "en"):
+        for game_mode in ("regular", "pve", "pvp-season"):
+            if _price_cache.get((lang, game_mode)):
+                continue  # 이미 네트워크로 채워졌으면 덮지 않는다
+            doc = _load_snapshot(lang, game_mode)
+            if not doc:
+                continue
+            try:
+                hp = doc.get("hideout")
+                pair = (hp[0] or {}, hp[1] or []) if isinstance(hp, list) and len(hp) == 2 else None
+                _install_catalog(lang, game_mode, doc["items"], pair, "disk", ts=float(doc.get("ts") or time.time()))
+                n += 1
+            except Exception as e:  # noqa: BLE001
+                print(f"[cache] snapshot install failed ({lang},{game_mode}): {e!r}")
+    if n:
+        print(f"[cache] {n} catalog(s) restored from disk snapshot")
+    return n
+
+
+def catalog_age(lang: str, game_mode: str) -> tuple[int | None, str | None]:
+    """(시세 나이 초, 출처) — 카탈로그가 없으면 (None, None)."""
+    with _price_cache_lock:
+        ts = _price_cache_ts.get((lang, game_mode))
+        src = _price_cache_source.get((lang, game_mode))
+    if ts is None:
+        return None, None
+    return int(max(0.0, time.time() - ts)), src
+
+
+def catalog_status() -> dict:
+    out = {}
+    with _price_cache_lock:
+        for key, cache in _price_cache.items():
+            ts = _price_cache_ts.get(key)
+            out[f"{key[0]}/{key[1]}"] = {"items": len(cache), "ts": ts, "age_sec": int(time.time() - ts) if ts else None,
+                                        "source": _price_cache_source.get(key)}
+    return {"order": _source_order(), "snapshot_dir": str(_snapshot_dir()), "catalogs": out}
+
+
+def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair: tuple | None, source: str,
+                     ts: float | None = None) -> int:
+    """items(GraphQL 모양) 를 메모리 캐시로 — 엔트리·별칭·정규화 색인. 네트워크 갱신과 디스크 복원이 같이 쓴다."""
+    fb_hideout = hideout_pair
     # Refresh the lang's hideout index alongside prices so cached entries
     # always have the latest "needed for upgrade" mapping baked in. On the
     # fallback path it arrived with the catalog; otherwise it's its own
@@ -1020,7 +1144,8 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     with _price_cache_lock:
         _price_cache[(lang, game_mode)] = by_name
         _canon_cache[(lang, game_mode)] = canon_map
-        _price_cache_ts[(lang, game_mode)] = time.time()
+        _price_cache_ts[(lang, game_mode)] = ts if ts is not None else time.time()
+        _price_cache_source[(lang, game_mode)] = source
     # Reuse the populated names for fuzzy matching too (one source of truth).
     with _names_lock:
         _names_cache[lang] = list(by_name.keys())
@@ -1030,6 +1155,10 @@ def _refresh_one(lang: str, game_mode: str) -> int:
 
 def _refresher_loop() -> None:
     """Periodic warm-up + refresh of all (lang, game_mode) catalogs."""
+    try:
+        load_snapshots()  # 네트워크 전에 디스크 스냅샷부터 — 첫 조회를 바로, 오프라인이면 끝까지 이걸로
+    except Exception as e:  # noqa: BLE001
+        print(f"[cache] snapshot restore failed: {e!r}")
     while True:
         for lang in ("ko", "en"):
             for game_mode in ("regular", "pve", "pvp-season"):

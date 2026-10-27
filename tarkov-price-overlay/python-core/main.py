@@ -45,6 +45,7 @@ from ocr import (
 )
 from quest_tracker import _normalize_request_mode, get_tracker
 import gunsmith
+from tarkov_api import catalog_age as _catalog_age
 from radar import get_service as get_radar
 from tarkov_api import (
     get_item_price,
@@ -307,6 +308,9 @@ class LookupResponse(BaseModel):
     crafts_using: list[HideoutCraftUsing] = []  # hideout recipes consuming this item
     needed_for_hideout: list[HideoutNeed] = []  # hideout upgrades that need this item
     gunsmith: list[GunsmithRef] = []  # 건스미스 퀘스트에 쓰이는 부품이면(필수/위키 예시) — 가이드 사이트 JSON 기준
+    # 이 응답의 시세가 몇 초 전 카탈로그인지와 출처(json/graphql/disk). 디스크 복원·오래된 캐시면 카드가 "N시간 전 시세" 를 단다.
+    price_age_sec: int | None = None
+    price_source: str | None = None
     # Caliber for ammo / weapons. Raw is the tarkov.dev id ("Caliber545x39");
     # display is the human-friendly form ("5.45x39"). Both None for non-
     # weapon, non-ammo items, which suppresses the ammo-matrix panel.
@@ -514,6 +518,8 @@ def _build_response(
             for n in price.get("needed_for_hideout", [])
         ],
         gunsmith=[GunsmithRef(**g) for g in gunsmith.for_item(price.get("id"), lang)],
+        price_age_sec=_catalog_age(lang, game_mode)[0],
+        price_source=_catalog_age(lang, game_mode)[1],
         caliber=price.get("caliber"),
         caliber_display=price.get("caliber_display"),
         ammo_pack_round_id=price.get("ammo_pack_round_id"),
@@ -526,6 +532,14 @@ def _build_response(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/catalog/status")
+def catalog_status_ep() -> dict:
+    """시세 카탈로그 상태 — (언어/모드)별 항목 수·나이·출처(json/graphql/disk), 소스 순서, 스냅샷 폴더. 진단용."""
+    from tarkov_api import catalog_status
+
+    return catalog_status()
 
 
 @app.get("/ammo")

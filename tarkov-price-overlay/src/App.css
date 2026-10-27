@@ -1668,3 +1668,4 @@ html, body, #root {
 .radar-sw.quest { background: #f0c040; }
 .quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
 .quest-sub { color: var(--text-muted); }
+.price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }
