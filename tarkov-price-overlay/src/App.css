@@ -1348,15 +1348,18 @@ html, body, #root {
 }
 .settings-feedback-row {
   justify-content: center;
+  flex-wrap: wrap; /* 버튼 셋(피드백·서비스 상태·후원)이 좁은 카드에선 두 줄로 */
   gap: 6px;
   margin-bottom: 4px;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(200, 170, 100, 0.15);
 }
 .feedback-btn,
+.status-btn,
 .donate-btn {
   margin-left: 0;
   padding: 3px 10px;
+  white-space: nowrap;
 }
 .donate-btn {
   border-color: rgba(255, 180, 100, 0.5);

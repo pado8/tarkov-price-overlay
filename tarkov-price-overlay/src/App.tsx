@@ -3590,6 +3590,13 @@ function App() {
                 ✉ {t.feedback}
               </button>
               <button
+                className="reset-btn status-btn"
+                onClick={() => openStatusPage(region.lang)}
+                title={t.statusPageHint}
+              >
+                🌐 {t.statusPage}
+              </button>
+              <button
                 className="reset-btn donate-btn"
                 onClick={() => {
                   setShowDonate((s) => !s);
