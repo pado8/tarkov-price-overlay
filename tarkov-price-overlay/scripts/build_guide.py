@@ -85,9 +85,13 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
     out += ["  <url>", "    <loc>https://tarkov.aquapado.com/privacy/</loc>",
             f"    <lastmod>{old_lastmod('https://tarkov.aquapado.com/privacy/')}</lastmod>",
             "    <changefreq>yearly</changefreq>", "    <priority>0.3</priority>", "  </url>"]
+    # 사이트 소개·운영자(landing/about/index.html, 손글)
+    out += ["  <url>", "    <loc>https://tarkov.aquapado.com/about/</loc>",
+            f"    <lastmod>{old_lastmod('https://tarkov.aquapado.com/about/')}</lastmod>",
+            "    <changefreq>yearly</changefreq>", "    <priority>0.3</priority>", "  </url>"]
     out.append("</urlset>")
     sm.write_text(nl.join(out) + nl, encoding="utf-8")
-    print(f"[guide] sitemap: {len(set(guide_urls)) + 3} URL")
+    print(f"[guide] sitemap: {len(set(guide_urls)) + 4} URL")
 
 
 def main() -> int:
@@ -317,6 +321,8 @@ def main() -> int:
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)
         if 'href="/privacy/"' not in tpl:  # 개인정보처리방침 링크 — 광고 심사 요건, page() 푸터와 같게
             tpl = tpl.replace("</div></footer>", ' · <a href="/privacy/">개인정보처리방침</a></div></footer>', 1)
+        if 'href="/about/"' not in tpl:  # 사이트 소개·운영자 링크 — 광고 심사 요건(운영 주체·연락처), 방침 링크 앞에
+            tpl = tpl.replace(' · <a href="/privacy/">', ' · <a href="/about/">소개</a> · <a href="/privacy/">', 1)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         page = tpl.replace("__DATA__", payload).replace("__STAMP__", stamp)
         dest = OUT / name / "index.html"
