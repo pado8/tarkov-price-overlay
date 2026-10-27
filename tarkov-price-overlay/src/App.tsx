@@ -1281,8 +1281,9 @@ function App() {
   // with their own sizing, so the override must yield to them — otherwise
   // the card box stays locked to the dragged height while the window sizes
   // to the sub-panel's content, leaving an empty gap or clipping it.
+  // 레이더·지도도 마찬가지 — 크기 슬라이더가 패널 크기를 정하므로 끌어 놓은 카드 높이에 갇히면 안 된다.
   const cardHeightOverrideForResize = (): number | null =>
-    showSettingsRef.current || captureModalOpenRef.current
+    showSettingsRef.current || captureModalOpenRef.current || radarActiveRef.current
       ? null
       : cardHeightRef.current;
   // True while the bottom-right resize handle is being dragged. Keeps the
@@ -1292,6 +1293,8 @@ function App() {
   const [historyVisible, setHistoryVisible] = useState(false);
   // ── 레이더(미니맵 1단계) — 게임 스크린샷을 찍으면 그 위치 기준으로 띄운다(Radar.tsx, radar.py)
   const [radarActive, setRadarActive] = useState(false);
+  const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
+  radarActiveRef.current = radarActive;
   const [radarData, setRadarData] = useState<RadarState | null>(null);
   const [radarLoading, setRadarLoading] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
@@ -3222,7 +3225,7 @@ function App() {
           // max-height in CSS). Settings/capture-modal must not inherit the
           // card-height override — they size themselves and the window-resize
           // observer ignores the override in those modes too (kept in sync).
-          ...(cardHeight != null && !showSettings && !captureModalOpen
+          ...(cardHeight != null && !showSettings && !captureModalOpen && !radarActive
             ? { height: `${cardHeight}px`, maxHeight: `${cardHeight}px` }
             : {}),
           // Auto-hide already handles the full 0→opacity transition via
