@@ -8,7 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
-import { RadarPanel, type RadarState } from "./Radar";
+import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize } from "./Radar";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -1302,6 +1302,8 @@ function App() {
   const hotkeyPassthroughRef = useRef(hotkeyPassthrough);
   hotkeyPassthroughRef.current = hotkeyPassthrough;
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
+  // 레이더 지름 = 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
+  const [radarSize, setRadarSize] = useState<number>(loadRadarSize);
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
   const radarLastShotRef = useRef<string | null | undefined>(undefined); // undefined = 아직 첫 확인 전
@@ -3213,7 +3215,8 @@ function App() {
         className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
-          width: `${cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT)}px`,
+          // 레이더·지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
+          width: `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0))}px`,
           // Explicit height only when the user dragged one AND we're in the
           // plain price-card view; otherwise auto (content height, capped by
           // max-height in CSS). Settings/capture-modal must not inherit the
@@ -4622,6 +4625,13 @@ function App() {
               void loadRadar();
             }}
             onClose={() => setRadarActive(false)}
+            size={radarSize}
+            onSize={(px) => {
+              setRadarSize(px);
+              try {
+                localStorage.setItem(RADAR_SIZE_KEY, String(px));
+              } catch {}
+            }}
           />
         )}
         {!showSettings && !radarActive && status === "idle" && <div className="hint">{t.hintIdle}</div>}

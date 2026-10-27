@@ -40,6 +40,19 @@ export type RadarState = {
   active_quests?: number;
 };
 
+// 레이더 지름 = 지도 높이(px). 사용자가 슬라이더로 바꾸고 App 이 카드 폭을 여기에 맞춘다(창 폭 800 안에서 카드 최대 760).
+export const RADAR_SIZE_KEY = "tarkov.radar.size";
+export const RADAR_SIZE_MIN = 160;
+export const RADAR_SIZE_MAX = 600;
+export const RADAR_SIZE_DEFAULT = 240;
+export function loadRadarSize(): number {
+  try {
+    const n = parseInt(localStorage.getItem(RADAR_SIZE_KEY) ?? "", 10);
+    if (Number.isFinite(n)) return Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, n));
+  } catch {}
+  return RADAR_SIZE_DEFAULT;
+}
+
 const RANGES = [25, 50, 100, 200, 400, 800, 1600];
 const STALE_SEC = 15 * 60;
 const COLORS: Record<string, string> = {
@@ -86,12 +99,14 @@ type Props = {
   onToggleScav: (v: boolean) => void;
   onPickMap: (id: string | null) => void;
   onClose: () => void;
+  size: number; // 레이더 지름 = 지도 높이(px)
+  onSize: (px: number) => void;
 };
 
 const MODE_KEY = "tarkov.radar.mode"; // "radar" | "map"
-const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
+const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 레이더·지도 탭 공통, 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize }: Props) {
   const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const pickFixed = (v: boolean) => {
@@ -178,21 +193,47 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     );
   }
 
+  // 크기 슬라이더(레이더 지름 = 지도 높이). 두 탭이 같은 값을 쓴다
+  const sizeCtl = (
+    <label className="radar-size" title={`${t.radarSize} ${size}px`}>
+      <span>{t.radarSize}</span>
+      <input
+        type="range"
+        min={RADAR_SIZE_MIN}
+        max={RADAR_SIZE_MAX}
+        step={20}
+        value={size}
+        onChange={(e) => onSize(Number(e.target.value))}
+        aria-label={t.radarSize}
+      />
+    </label>
+  );
+  const fixedCtl = (
+    <label className="radar-chk" title={t.radarFixedHint}>
+      <input type="checkbox" checked={fixed} onChange={(e) => pickFixed(e.target.checked)} /> {t.radarFixed}
+    </label>
+  );
+
   const visible = data.targets.filter((x) => showScav || !(x.kind === "extract" && x.faction === "scav"));
   if (mode === "map") {
     return (
       <div className="radar">
         {header}
         {error(data, t)}
-        <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} />
-        <div className="radar-foot">{mapPicker}</div>
+        <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+        <div className="radar-foot">
+          {mapPicker}
+          {sizeCtl}
+        </div>
+        {fixedCtl}
         <div className="radar-note">{t.radarMapNote}</div>
       </div>
     );
   }
   const range = pickRange(visible);
-  const R = 92; // 원 반지름(px)
-  const C = 100; // 중심
+  const S = size; // SVG 한 변(px) — 글자·점 크기는 고정, 원만 커진다
+  const C = S / 2; // 중심
+  const R = C - 10; // 원 반지름(px)
   const stale = data.shot.age > STALE_SEC;
   const heading = data.shot.heading;
   // 고정 모드: 점은 절대 방위(바라보는 방향 + 상대각 + 지도 탭과 같은 90° 회전)에 놓고 내 화살표를 돌린다.
@@ -200,7 +241,9 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const mapRot = loadMapRot(data.map?.id);
   const base = fixed && heading != null ? heading + mapRot : 0;
 
-  // 점 위치 + 이름표 자리 잡기: 가까운 것부터 최대 5개, 이미 놓인 이름표·내 화살표와 겹치면 생략
+  // 점 위치 + 이름표 자리 잡기: 가까운 것부터(원이 클수록 더 많이·더 길게), 이미 놓인 이름표·내 화살표와 겹치면 생략
+  const maxLabels = Math.max(5, Math.round(S / 40));
+  const nameLen = Math.max(11, Math.round(S / 18));
   const dots = visible.map((x) => {
     if (x.rel == null) return null;
     const r = Math.min(x.dist / range, 1) * R;
@@ -210,10 +253,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [{ x1: C - 9, y1: C - 10, x2: C + 9, y2: C + 8 }];
   const labels = new Map<number, { text: string; lx: number; ly: number }>();
   dots.forEach((d, i) => {
-    if (!d || labels.size >= 5) return;
-    const text = short(d.x.name); // 퀘스트도 이름으로 — 목표 문장은 길어서 원 위에선 잘린다(목록에 두 줄로 나옴)
+    if (!d || labels.size >= maxLabels) return;
+    const text = short(d.x.name, nameLen); // 퀘스트도 이름으로 — 목표 문장은 길어서 원 위에선 잘린다(목록에 두 줄로 나옴)
     const w = text.length * 5.6;
-    const left = d.px + 6 + w > 198; // 오른쪽 끝이면 점 왼쪽에 붙인다
+    const left = d.px + 6 + w > S - 2; // 오른쪽 끝이면 점 왼쪽에 붙인다
     const lx = left ? d.px - 6 - w : d.px + 6;
     const box = { x1: lx, y1: d.py - 6, x2: lx + w, y2: d.py + 5 };
     if (boxes.some((b) => box.x1 < b.x2 && box.x2 > b.x1 && box.y1 < b.y2 && box.y2 > b.y1)) return;
@@ -226,7 +269,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {header}
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
-      <svg className="radar-svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label={t.radarTitle}>
+      <svg className="radar-svg" viewBox={`0 0 ${S} ${S}`} width={S} height={S} role="img" aria-label={t.radarTitle}>
         <circle cx={C} cy={C} r={R} className="radar-ring" />
         <circle cx={C} cy={C} r={R / 2} className="radar-ring" />
         <line x1={C} y1={C - R} x2={C} y2={C + R} className="radar-axis" />
@@ -304,9 +347,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         </label>
         {mapPicker}
       </div>
-      <label className="radar-chk" title={t.radarFixedHint}>
-        <input type="checkbox" checked={fixed} onChange={(e) => pickFixed(e.target.checked)} /> {t.radarFixed}
-      </label>
+      <div className="radar-foot">
+        {fixedCtl}
+        {sizeCtl}
+      </div>
       <div className="radar-note">{fixed ? t.radarNoteFixed : t.radarNote}</div>
     </div>
   );
