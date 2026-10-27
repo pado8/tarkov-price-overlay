@@ -109,6 +109,7 @@ const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize }: Props) {
   const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
+  const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
   const pickFixed = (v: boolean) => {
     setFixed(v);
     try {
@@ -194,18 +195,32 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   }
 
   // 크기 슬라이더(레이더 지름 = 지도 높이). 두 탭이 같은 값을 쓴다
+  // 끄는 동안은 숫자만 미리 보여주고 손을 뗄 때 적용한다 — 바로 적용하면 카드가 넓어지며 슬라이더가 커서 밑에서 움직여
+  // 값이 다시 바뀌는 되먹임(띡띡 튐)이 생긴다. 키보드(화살표)는 키를 뗄 때마다 적용.
+  const commitSize = () => {
+    if (sizeDraft != null) {
+      if (sizeDraft !== size) onSize(sizeDraft);
+      setSizeDraft(null);
+    }
+  };
+  const shown = sizeDraft ?? size;
   const sizeCtl = (
-    <label className="radar-size" title={`${t.radarSize} ${size}px`}>
+    <label className="radar-size" title={`${t.radarSize} ${shown}px`}>
       <span>{t.radarSize}</span>
       <input
         type="range"
         min={RADAR_SIZE_MIN}
         max={RADAR_SIZE_MAX}
         step={20}
-        value={size}
-        onChange={(e) => onSize(Number(e.target.value))}
+        value={shown}
+        onChange={(e) => setSizeDraft(Number(e.target.value))}
+        onPointerUp={commitSize}
+        onLostPointerCapture={commitSize}
+        onKeyUp={commitSize}
+        onBlur={commitSize}
         aria-label={t.radarSize}
       />
+      <span className="radar-size-val">{shown}</span>
     </label>
   );
   const fixedCtl = (

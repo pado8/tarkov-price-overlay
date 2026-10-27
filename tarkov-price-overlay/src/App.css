@@ -1662,8 +1662,10 @@ html, body, #root {
 .radar-chip:not(.on) .radar-sw { opacity: 0.35; }
 .radar-chip:hover { border-color: var(--gold-bright); }
 /* 크기 슬라이더(레이더 지름 = 지도 높이) */
-.radar-size { display: inline-flex; align-items: center; gap: 5px; font-size: var(--card-fs-xs); color: var(--text-muted); flex: 1; min-width: 90px; }
-.radar-size input { flex: 1; min-width: 60px; margin: 0; accent-color: var(--gold-bright); cursor: pointer; }
+.radar-size { display: inline-flex; align-items: center; gap: 5px; font-size: var(--card-fs-xs); color: var(--text-muted); }
+/* 폭 고정: 카드가 넓어져도 슬라이더 길이가 안 변해야 끄는 손 위치와 값이 어긋나지 않는다 */
+.radar-size input { width: 110px; flex: none; margin: 0; accent-color: var(--gold-bright); cursor: pointer; }
+.radar-size-val { min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
 .radar-mapup { position: absolute; right: 6px; bottom: 4px; font-size: 10px; color: var(--text-muted); pointer-events: none; }
 .radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
 .radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); }
