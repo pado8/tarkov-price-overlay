@@ -122,6 +122,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://tarkov.aquapado.com/guide/rewards/</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://tarkov.aquapado.com/guide/start/</loc>
     <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>

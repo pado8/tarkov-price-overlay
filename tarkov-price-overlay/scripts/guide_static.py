@@ -48,6 +48,10 @@ BUILD_ATTR = {"accuracy": "정확도(MOA)", "durability": "내구도", "effectiv
               "ergonomics": "인체공학", "height": "세로 칸", "width": "가로 칸", "magazineCapacity": "탄창 용량",
               "muzzleVelocity": "총구 속도", "recoil": "반동 합계", "weight": "무게(kg)"}
 STATUS = {"complete": "완료", "active": "진행 중", "failed": "실패", "started": "시작"}
+# 기본 건스미스의 옛 '파트 N' 번호(공식 위키 퀘스트 아이콘 파일명 GunsmithPart{N} 기준, 2026-10-27) — 같은 묶음 단계 안에서 순서를 정할 때만 쓴다.
+# 데이터엔 기본 건스미스끼리 선행 관계가 없어(1.1.0 묶음 방식) 이 번호가 없으면 알파벳순이 돼 AK-105가 맨 앞에 왔었다.
+GUNSMITH_LEGACY = {"MP-133": 1, "AKS-74U": 2, "HK MP5": 3, "OP-SKS": 4, "M4A1": 4, "Model 870": 7, "AKM": 8,
+                   "AKS-74N": 9, "P226R": 9, "AK-105": 10, "Vector 9x19": 11, "AS VAL": 11, "MPX": 13}
 MOB_KO = {"Kaban Guard": "카반 경호원", "Kaban": "카반", "Knight": "나이트", "Kollontay": "콜론타이", "Partisan": "파르티잔", "Big Pipe": "빅 파이프",
           "Birdeye": "버드아이", "Shadow of Tagilla": "타길라의 그림자", "Vengeful Killa": "분노한 킬라", "Scourge": "스커지",
           "The Wedge": "웨지", "Basmach": "바스마치", "Gus": "구스", "Reshala Guard": "르샬라 경호원",
@@ -55,7 +59,7 @@ MOB_KO = {"Kaban Guard": "카반 경호원", "Kaban": "카반", "Knight": "나�
 HAZARD = {"minefield": "지뢰밭", "sniper": "저격 구역", "hazard": "위험 지역"}
 
 NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests/", "퀘스트"),
-       ("items", "/guide/items/", "필요 아이템"), ("hideout", "/guide/hideout/", "은신처"),
+       ("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상 아이템"), ("hideout", "/guide/hideout/", "은신처"),
        ("maps", "/guide/maps/", "맵"), ("bosses", "/guide/bosses/", "보스"),
        ("kappa", "/guide/kappa/", "카파템"), ("keys", "/guide/keys/", "열쇠"),
        ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
@@ -72,7 +76,8 @@ NAV_GROUPS = [
                                ("promo", "/guide/promo/", "프로모 코드")]),
     ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
-    ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
+    ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
+                                ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
                                 ("keys", "/guide/keys/", "열쇠"), ("ammo", "/guide/ammo/", "탄약표")]),
     ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
     ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스")]),
@@ -365,6 +370,27 @@ class Ctx:
         d = 1 + max((self.depth(r, _seen) for r in reqs), default=-1)
         self._depth[tid] = d
         return d
+
+    def chain(self, tid) -> list[tuple[str, bool]]:
+        """처음부터 이 퀘스트까지의 선행 사슬 — (퀘스트 id, 완료가 필요한지) 를 먼저 하는 순서로.
+        완료가 아니라 '시작/진행 중'만 요구하는 선행(status 에 complete 없음)은 False 로 표시한다. 자기 자신은 뺀다."""
+        need: dict[str, bool] = {}
+        stack = [tid]
+        seen = {tid}
+        while stack:
+            cur = stack.pop()
+            for r in (self.tasks.get(cur) or {}).get("taskRequirements") or []:
+                q = r.get("task")
+                if q not in self.tasks:
+                    continue
+                st = r.get("status") or []
+                comp = (not st) or ("complete" in st)
+                need[q] = need.get(q, False) or comp
+                if q not in seen:
+                    seen.add(q)
+                    stack.append(q)
+        order = sorted(need, key=lambda q: (self.depth(q), (self.tasks[q].get("minPlayerLevel") or 0), self.task_names(q)[0]))
+        return [(q, need[q]) for q in order]
 
     def early_tasks(self, traders: list[str], max_batch: int = 1) -> list[str]:
         """초반(대략 10레벨까지)에 실제로 받게 되는 퀘스트.
@@ -758,7 +784,9 @@ QUEST_JS = """<script>
 (function(){var K="guide.quests",d={};function rd(){try{d=JSON.parse(localStorage.getItem(K))||{}}catch(e){d={}}}rd();
 var el=document.querySelector(".quest");if(!el)return;var id=el.getAttribute("data-id"),c=document.getElementById("qdone");c.checked=!!d[id];
 function mark(){var sy=window.__guideSync;if(!sy)return;var lab=c.parentNode;if(!lab||lab.querySelector(".syn"))return;var st=(sy.completed||[]).indexOf(id)>=0?"완료":(sy.started||[]).indexOf(id)>=0?"진행 중":"";if(!st)return;var b=document.createElement("span");b.className="syn badge";b.textContent="오버레이: "+st;lab.appendChild(b)}
-document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark()});if(window.__guideSync)mark();
+// '처음부터 순서' 목록: 완료한 선행 퀘스트(직접 체크 + 오버레이 연동)는 흐리게
+function chainMark(){var sy=window.__guideSync,cp=(sy&&sy.completed)||[];document.querySelectorAll(".chain li[data-t]").forEach(function(li){var t=li.getAttribute("data-t");li.classList.toggle("done",!!d[t]||cp.indexOf(t)>=0)})}
+chainMark();document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark();chainMark()});if(window.__guideSync)mark();
 c.addEventListener("change",function(){if(c.checked)d[id]=1;else delete d[id];try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}});})();
 </script>"""
 
@@ -840,6 +868,15 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         sections_side.append('<section class="box"><h2>미리 챙길 아이템</h2><div class="chips">'
                              + "".join(ctx.chip(a["id"], a["c"], a["fir"]) for a in need_sorted) + "</div>"
                              + "".join(ctx.chips_alt(g["ids"], g["c"], g["fir"]) for g in groups) + "</section>")
+    ch = ctx.chain(tid)
+    if ch:
+        lis = "".join(
+            f'<li data-t="{e(q)}">{ctx.task_link(q)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[q].get("trader")))}'
+            + (f' · 레벨 {ctx.tasks[q].get("minPlayerLevel")}' if (ctx.tasks[q].get("minPlayerLevel") or 0) > 1 else "")
+            + ("" if comp else " · 시작만 하면 됨") + "</span></li>" for q, comp in ch)
+        sections_side.append(f'<section class="box"><h2>처음부터 순서 <span class="muted small">먼저 깰 퀘스트 {len(ch)}개</span></h2>'
+                             f'<ol class="chain">{lis}<li class="tgt">{e(ko)} <span class="muted small">이 퀘스트</span></li></ol>'
+                             '<p class="muted small">선행 조건을 끝까지 거슬러 올라가 먼저 하는 순서로 늘어놓았습니다. 완료로 표시한 퀘스트는 흐리게 보입니다.</p></section>')
     nxt = sorted(set(ctx.next_of.get(tid, [])), key=lambda x: ctx.task_names(x)[0])
     if nxt:
         lis = "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span></li>' for x in nxt)
@@ -1010,14 +1047,16 @@ return {qf:qf,qa:qa,hf:hf,ha:ha,cut:cut}}
 function render(){var q=document.getElementById("q").value.trim().toLowerCase(),fo=document.getElementById("firOnly").checked,hh=document.getElementById("hideHave").checked,shown=0,cutn=0;
 rows.forEach(function(r){var d=r.dataset,p=mode==="pve"?"e":"p",nd=needs(d,p),qf=nd.qf,qa=nd.qa,hf=nd.hf,ha=nd.ha;if(nd.cut)cutn++;r.classList.toggle("cut",nd.cut);
 var qq=qf+qa,hc=hf+ha,ok=true;if(scope==="quest"&&!qq)ok=false;if(scope==="hideout"&&!hc)ok=false;if(!qq&&!hc)ok=false;
-if(fo&&!(qf||hf))ok=false;if(q&&d.s.indexOf(q)<0)ok=false;var hv=!!have[d.id];if(hh&&hv)ok=false;
+if(fo&&!(qf||hf))ok=false;if(q&&d.s.indexOf(q)<0&&d.s.indexOf(q.replace(/\\s+/g,""))<0)ok=false;var hv=!!have[d.id];if(hh&&hv)ok=false;
 r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector("input");if(c)c.checked=hv;
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
-document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";}
+document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";
+var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href="/guide/rewards/"+(q?"?q="+encodeURIComponent(q):"")}}
 document.addEventListener("guide-sync",render);
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
 ["firOnly","hideHave"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("q").addEventListener("input",render);
+var q0=new URLSearchParams(location.search).get("q");if(q0)document.getElementById("q").value=q0;
 document.getElementById("itbl").addEventListener("change",function(e){var r=e.target.closest("tr");if(!r)return;if(e.target.checked)have[r.dataset.id]=1;else delete have[r.dataset.id];S(KEY,have);render()});
 render();})();
 </script>"""
@@ -1063,6 +1102,7 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
         price = it.get("pvp")
         price_html = f'<span class="price">{fmt_int(price)}₽</span>' if price else ('<span class="muted small">거래 불가</span>' if it.get("noflea") else "")
         s = (it["n"] + " " + (it.get("en") or "") + " " + (it.get("s") or "")).lower()
+        s = s + " " + s.replace(" ", "")  # 띄어 쓴 이름도 붙여 쓴 검색어로 찾히게
         img = f'<img class="icon sm" loading="lazy" alt="" src="{e(it["img"])}" />' if it.get("img") else ""
         trs.append(
             f'<tr data-id="{e(iid)}" data-s="{e(s)}" data-pqf="{a_q.get("fir", 0)}" data-pqa="{a_q.get("any", 0)}" data-phf="{a_h.get("fir", 0)}" data-pha="{a_h.get("any", 0)}" '
@@ -1089,12 +1129,129 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
 <span class="muted small"><span id="shown">{len(trs)}</span>종 표시 <span id="cutn"></span></span></div>
 <div class="box tbl" style="padding:4px 8px"><table class="tot" id="itbl"><thead><tr><th></th><th>아이템</th><th class="n">퀘스트<br>인레이드</th><th class="n">퀘스트<br>일반</th><th class="n">은신처<br>인레이드</th><th class="n">은신처<br>일반</th><th class="n">합계</th><th>플리 시세</th><th>쓰이는 곳</th></tr></thead><tbody>
 {"".join(trs)}
-</tbody></table></div>"""
+</tbody></table></div>
+<div class="note" id="norow" style="display:none">이 표에 없는 아이템이에요. 여기는 <b>퀘스트에 내거나 은신처에 넣는</b> 아이템만 모았습니다 — <b>퀘스트 보상으로 받는</b> 아이템(상자·파우치·열쇠 등)은 <a href="/guide/rewards/">보상으로 받는 아이템</a>에서 찾아보세요. 어떤 퀘스트가 주는지, 처음부터 어떤 순서로 깨야 하는지 나옵니다.</div>"""
     path = "/guide/items/"
     title = "타르코프 퀘스트·은신처 필요 아이템 총정리 — 버리면 안 되는 템, 인레이드 수량 | 탈콥 가이드"
     desc = f"타르코프 전체 퀘스트 제출 아이템과 은신처 건설 재료 {len(trs)}종을 한 표로. 인레이드(FiR) 필요 수량, 일반 수량, 플리 시세, 쓰이는 퀘스트·은신처 단계. PVP·PVE 전환. 데이터 기준 {ctx.stamp}."
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="items",
                       crumbs=[("필요 아이템", None)], scripts=ITEMS_JS)
+
+
+# ─────────────────────────────────────────────────────────────
+# 퀘스트 보상으로 받는 아이템 — 어떤 퀘스트가 주는지 + 처음부터의 선행 사슬
+# ─────────────────────────────────────────────────────────────
+
+REWARDS_JS = """<script>
+(function(){var Q=JSON.parse(document.getElementById("qd").textContent),T=Q.t,K="guide.quests";
+function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+var dmemo={};function depth(t,seen){if(dmemo[t]!=null)return dmemo[t];seen=seen||{};if(seen[t])return 0;seen[t]=1;var r=(T[t]&&T[t][3])||[],m=-1;for(var i=0;i<r.length;i++){var x=T[r[i][0]]?depth(r[i][0],seen):-1;if(x>m)m=x}return dmemo[t]=m+1}
+// 선행 사슬: 끝까지 거슬러 올라가 모은 뒤 깊이(먼저 하는 것) → 레벨 → 이름 순
+function chain(t){var need={},st=[t],seen={};seen[t]=1;while(st.length){var c=st.pop(),r=(T[c]&&T[c][3])||[];for(var i=0;i<r.length;i++){var q=r[i][0];if(!T[q])continue;need[q]=need[q]||r[i][1]===1;if(!seen[q]){seen[q]=1;st.push(q)}}}
+var ids=Object.keys(need);ids.sort(function(a,b){return depth(a)-depth(b)||(T[a][2]-T[b][2])||(T[a][0]<T[b][0]?-1:1)});return ids.map(function(q){return [q,need[q]]})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function li(q,d,cls,tail){var x=T[q];return '<li data-t="'+q+'" class="'+cls+(d?" done":"")+'"><a href="/guide/quest/'+x[4]+'/">'+esc(x[0])+'</a> <span class="muted small">'+esc(x[1])+(x[2]>1?" · 레벨 "+x[2]:"")+tail+(x[5]&&x[5].length===1?" · "+x[5][0].toUpperCase()+" 전용":"")+'</span></li>'}
+function render(box){var t=box.getAttribute("data-t");if(!T[t])return;var done=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],isd=function(q){return !!done[q]||cp.indexOf(q)>=0},ch=chain(t),left=0,first=null,h="";
+ch.forEach(function(p){var d=isd(p[0]);if(!d){left++;if(!first)first=p[0]}h+=li(p[0],d,"",p[1]?"":" · 시작만 하면 됨")});
+var td=isd(t);h+=li(t,td,"tgt"," · 이 퀘스트를 깨면 받음");
+var sum=td?"이미 완료한 퀘스트예요":ch.length?(left?("먼저 깰 퀘스트 <b>"+left+"</b>개 남음 / 전체 "+ch.length+"개 · 시작점: <b>"+esc(T[first][0])+"</b>"):"선행 퀘스트를 다 끝냈어요 — 조건(레벨·상인 등급)만 맞으면 바로 받습니다"):"선행 퀘스트 없음 — 레벨·상인 등급 조건만 맞으면 바로 받습니다";
+box.innerHTML='<div class="small csum">'+sum+'</div><ol class="chain">'+h+'</ol>'}
+function renderOpen(){document.querySelectorAll("details.rw[open] .cbox").forEach(render)}
+document.addEventListener("toggle",function(ev){var d=ev.target;if(d.tagName==="DETAILS"&&d.open)d.querySelectorAll(".cbox").forEach(render)},true);
+document.addEventListener("guide-sync",renderOpen);
+var rows=[].slice.call(document.querySelectorAll("details.rw")),scope="all",qi=document.getElementById("q");
+function seg(id,v){document.querySelectorAll("#"+id+" button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)})}
+function filter(auto){var q=qi.value.trim().toLowerCase(),qn=q.replace(/\\s+/g,""),n=0,vis=[];rows.forEach(function(r){var ok=true,s=r.getAttribute("data-s");if(scope!=="all"&&(r.getAttribute("data-k")||"").indexOf(scope)<0)ok=false;if(q&&s.indexOf(q)<0&&s.indexOf(qn)<0)ok=false;r.style.display=ok?"":"none";if(ok){n++;vis.push(r)}});
+document.getElementById("shown").textContent=n;var ne=document.getElementById("none");if(ne)ne.style.display=n?"none":"";if(auto&&q.length>=2&&vis.length<=3)vis.forEach(function(r){if(!r.open)r.open=true})}
+document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);filter(false)});
+qi.addEventListener("input",function(){filter(true)});
+var p=new URLSearchParams(location.search).get("q");if(p)qi.value=p;filter(true);})();
+</script>"""
+
+
+def rewards_page(ctx: Ctx) -> tuple[str, str]:
+    rew: dict[str, list] = {}   # 아이템 → [(퀘스트, 수량)]
+    unl: dict[str, list] = {}   # 아이템 → [(퀘스트, 상인, LL)]
+    crf: dict[str, list] = {}   # 아이템 → [(퀘스트, 시설, 단계)]
+    for tid, t in ctx.tasks.items():
+        fr = t.get("finishRewards") or {}
+        for x in fr.get("items") or []:
+            iid = x.get("item")
+            if iid and iid not in MONEY:
+                rew.setdefault(iid, []).append((tid, x.get("count") or 1))
+        for x in fr.get("offerUnlock") or []:
+            if x.get("item"):
+                unl.setdefault(x["item"], []).append((tid, x.get("trader"), x.get("level")))
+        for x in fr.get("craftUnlock") or []:
+            if x.get("item"):
+                crf.setdefault(x["item"], []).append((tid, x.get("station"), x.get("level")))
+    ids = set(rew) | set(unl) | set(crf)
+
+    def qline(tid, extra):
+        t = ctx.tasks[tid]
+        lv = t.get("minPlayerLevel") or 0
+        modes = ctx.task_modes.get(tid, [])
+        tag = f' <span class="badge b-mode">{"PVE 전용" if modes == ["pve"] else "PVP 전용"}</span>' if len(modes) == 1 else ""
+        return (f'<div class="rq"><div>{ctx.task_link(tid)} <span class="muted small">{e(ctx.trader_name(t.get("trader")))}'
+                + (f" · 레벨 {lv}" if lv > 1 else "") + (f" · {extra}" if extra else "") + f"</span>{tag}</div>"
+                f'<div class="cbox" data-t="{e(tid)}"></div></div>')
+
+    blocks = []
+    for iid in sorted(ids, key=lambda i: ((ctx.item(i) or {}).get("n") or i)):
+        it = ctx.item(iid)
+        if not it:
+            continue
+        kinds, body, badges = [], "", ""
+        if iid in rew:
+            kinds.append("r")
+            qs = sorted(rew[iid], key=lambda x: (ctx.depth(x[0]), ctx.task_names(x[0])[0]))
+            badges += f'<span class="badge b-quest">완료 보상 {len(qs)}</span>'
+            body += '<h3>퀘스트를 깨면 받음</h3>' + "".join(qline(tid, f"×{fmt_int(c)}" if c not in (None, 1) else "") for tid, c in qs)
+        if iid in unl:
+            kinds.append("u")
+            badges += '<span class="badge b-any">구매 해금</span>'
+            body += '<h3>퀘스트를 깨면 상인이 팔기 시작</h3>' + "".join(
+                qline(tid, f"{e(ctx.trader_name(tr))} LL{lvl}에서 구매") for tid, tr, lvl in sorted(unl[iid], key=lambda x: ctx.depth(x[0])))
+        if iid in crf:
+            kinds.append("c")
+            badges += '<span class="badge b-power">제작 해금</span>'
+            body += '<h3>퀘스트를 깨면 은신처에서 제작 가능</h3>' + "".join(
+                qline(tid, f"{e(ctx.station_name(st))} {lvl}단계") for tid, st, lvl in sorted(crf[iid], key=lambda x: ctx.depth(x[0])))
+        price = it.get("pvp")
+        price_html = f'<span class="price">{fmt_int(price)}₽</span>' if price else ('<span class="muted small">거래 불가</span>' if it.get("noflea") else "")
+        s = (it["n"] + " " + (it.get("en") or "") + " " + (it.get("s") or "")).lower()
+        s = s + " " + s.replace(" ", "")  # 'S I C C' 처럼 띄어 쓴 이름도 'sicc' 로 찾히게
+        img = f'<img class="icon sm" loading="lazy" alt="" src="{e(it["img"])}" />' if it.get("img") else ""
+        en_html = f'<span class="muted small">{e(it["en"])}</span>' if it.get("en") and it["en"] != it["n"] else ""
+        blocks.append(f'<details class="rw" data-s="{e(s)}" data-k="{" ".join(kinds)}"><summary>{img}<span class="itn2"><b>{e(it["n"])}</b>{en_html}</span>'
+                      f'<span class="bd">{badges}</span>{price_html}</summary><div class="rwb">{body}</div></details>')
+
+    # 선행 사슬은 열 때 브라우저가 그린다 — 퀘스트 전체(이름·상인·레벨·선행·주소·모드)를 JSON 으로 한 번만 싣는다
+    qd = {"t": {}}
+    for tid, t in ctx.tasks.items():
+        ko = ctx.task_names(tid)[0]
+        suf = ctx.display_suffix.get(tid)
+        reqs = [[r["task"], 1 if (not r.get("status") or "complete" in r.get("status")) else 0]
+                for r in t.get("taskRequirements") or [] if r.get("task") in ctx.tasks]
+        qd["t"][tid] = [f"{ko} ({suf})" if suf else ko, ctx.trader_name(t.get("trader")), t.get("minPlayerLevel") or 0, reqs,
+                        ctx.task_slug(tid), ctx.task_modes.get(tid, [])]
+    qd_json = json.dumps(qd, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    n_r, n_u, n_c = len(rew), len(unl), len(crf)
+    body = f"""<h1>퀘스트 보상으로 받는 아이템 <span class="h1en">어떤 퀘스트를 깨야 받나</span></h1>
+<p class="sub">완료 보상 {n_r}종 · 구매 해금 {n_u}종 · 제작 해금 {n_c}종 · 아이템을 누르면 주는 퀘스트와 <b>처음부터 깨야 하는 순서</b>가 나옵니다 · 데이터 기준 {e(ctx.stamp)}</p>
+<div class="note">예: <b>럭키 스캐브의 고물상자</b>를 검색하면 그 상자를 주는 퀘스트와, 그 퀘스트를 받기까지 먼저 깨야 하는 선행 퀘스트가 시작점부터 순서대로 보입니다. 완료로 표시한 퀘스트(퀘스트 페이지 체크 또는 오버레이 연동)는 흐리게 지워져 <b>지금 어디서 시작하면 되는지</b>만 남습니다. 돈 보상은 뺐습니다.</div>
+<div class="controls"><input type="search" id="q" placeholder="아이템 이름 검색 (한글·영문)" aria-label="검색" />
+<div class="seg" id="scope"><button data-v="all" class="on">전체</button><button data-v="r">완료 보상</button><button data-v="u">구매 해금</button><button data-v="c">제작 해금</button></div>
+<span class="muted small"><span id="shown">{len(blocks)}</span>종 표시</span></div>
+<div class="rwlist">{"".join(blocks)}</div>
+<div class="note" id="none" style="display:none">보상·해금 아이템 중엔 없어요. 퀘스트에 <b>내는</b> 아이템이라면 <a href="/guide/items/">필요 아이템 총정리</a>에서 찾아보세요.</div>
+<script type="application/json" id="qd">{qd_json}</script>"""
+    path = "/guide/rewards/"
+    title = "타르코프 퀘스트 보상 아이템 — 어떤 퀘스트가 주는지·선행 퀘스트 순서 | 탈콥 가이드"
+    desc = (f"타르코프 퀘스트 완료 보상 아이템 {n_r}종, 구매 해금 {n_u}종, 제작 해금 {n_c}종. 아이템을 검색하면 주는 퀘스트와 처음부터 깨야 하는 선행 퀘스트 순서, "
+            f"남은 선행 퀘스트 수를 보여줍니다. PVP·PVE. 데이터 기준 {ctx.stamp}.")
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="rewards",
+                      crumbs=[("보상으로 받는 아이템", None)], scripts=REWARDS_JS)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1781,6 +1938,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/start/", "초반 가이드", "투어(Tour)로 상인·맵 여는 순서 · 10레벨까지 퀘스트 · 미리 모을 아이템", "처음·프레스티지 직후"),
         ("/guide/quests/", "퀘스트", "상인별 해금 순서 · 퀘스트마다 목표·필요템·열쇠·보상", f'{counts.get("quests", 0)}개'),
         ("/guide/items/", "필요 아이템 총정리", "퀘스트·은신처에 들어가는 아이템 총량 · 버리면 안 되는 템", f'{counts.get("items", 0)}종'),
+        ("/guide/rewards/", "보상으로 받는 아이템", "어떤 퀘스트가 이 아이템을 주는지 · 처음부터 어떤 순서로 깨야 받는지", f'{counts.get("rewards", 0)}종'),
         ("/guide/quest-items/", "퀘스트 전용 아이템", "레이드에서 찾는 퀘스트템 · 지도별", f'{counts.get("qitems", 0)}종'),
         ("/guide/hideout/", "은신처", "시설별 단계 재료·조건·효과·제작 · 남은 재료 계산기", f'{counts.get("stations", 0)}개 시설'),
         ("/guide/maps/", "맵 정보", "보스 출현 확률·탈출구·트랜짓·맵별 퀘스트", f'{counts.get("maps", 0)}개'),
@@ -2237,7 +2395,20 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
         m = re.search(r"Part (\d+)", ctx.task_names(tid)[1])
         return int(m.group(1)) if m else 0
 
-    base = sorted([t for t in gs if "Master" not in ctx.task_names(t)[1]], key=lambda t: (ctx.depth(t), ctx.task_names(t)[1]))
+    # 기본 건스미스는 서로 선행 관계가 없고(1.1.0 묶음 방식) 기계공 묶음 카운터 4갈래에 흩어져 있어 깊이로는 전부 0 →
+    # 실제 받는 순서 = ①바로(대화만) ②묶음 1개 완료 뒤 ③3개 ④5개 ⑤LL3·레벨 26, 같은 단계 안에선 옛 '파트 N' 번호(공식 위키 아이콘)로.
+    def gs_tier(tid):
+        t = ctx.tasks[tid]
+        b = ctx.batch_req(t)
+        if b:
+            return b
+        return 6 + ctx.trader_ll(t) if ctx.trader_ll(t) > 1 or (t.get("minPlayerLevel") or 0) > 1 else 0
+
+    def gs_legacy(tid):
+        en = ctx.task_names(tid)[1]
+        return GUNSMITH_LEGACY.get(en.split(" - ", 1)[-1].strip(), 99)
+
+    base = sorted([t for t in gs if "Master" not in ctx.task_names(t)[1]], key=lambda t: (gs_tier(t), gs_legacy(t), ctx.task_names(t)[1]))
     master = sorted([t for t in gs if "Master" in ctx.task_names(t)[1]], key=lambda t: (num(t), ctx.task_names(t)[1]))
 
     parts: dict[str, list[str]] = {}  # 부품 → 쓰는 퀘스트들(중복 포함: 같은 부품을 두 퀘스트가 요구하면 2개 필요)
@@ -2271,8 +2442,12 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
                         conds.append(f'{BUILD_ATTR.get(key, key)} {_cmp(v.get("compareMethod"))} {fmt_int(v["value"])}')
                 chips = "".join(f'<span data-part="{e(pid)}">{ctx.chip(pid)}</span>' for pid in need) or '<span class="muted small">없음 — 성능 조건만</span>'
                 lv = t.get("minPlayerLevel") or 0
+                b = ctx.batch_req(t)
+                when = (f"기계공 묶음 {b}개 완료 뒤" if b else
+                        (f"기계공 LL{ctx.trader_ll(t)}" if ctx.trader_ll(t) > 1 else ("" if "Master" in ctx.task_names(tid)[1] else "바로 받음")))
+                sub = " · ".join(x for x in (f"레벨 {lv}" if lv else "", when) if x)
                 first = (f'<td class="q" rowspan="{len(objs)}">{ctx.task_link(tid)}'
-                         + (f'<div class="small muted">레벨 {lv}</div>' if lv else "") + "</td>") if k == 0 else ""
+                         + (f'<div class="small muted">{e(sub)}</div>' if sub else "") + "</td>") if k == 0 else ""
                 rows.append(f'<tr>{first}<td class="w"><div class="chips">{ctx.chip(wid)}</div></td>'
                             f'<td class="p"><div class="chips">{chips}</div>{build_html(tid, k, len(objs), wid)}</td><td class="small c">{e(" · ".join(conds)) or "—"}</td></tr>')
         return rows
@@ -2418,6 +2593,9 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     p, h = items_page(ctx, collector_ids)
     write(out, p, h, urls)
     items_n = h.count('<tr data-id="')
+    p, h = rewards_page(ctx)
+    write(out, p, h, urls)
+    rewards_n = h.count('<details class="rw"')
     p, h = quest_items_page(ctx)
     write(out, p, h, urls)
     qitems_n = h.count('class="card static"')
@@ -2457,7 +2635,7 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
         (out / "gunsmith.json").write_text(feed_json, encoding="utf-8")  # 오버레이가 받아 가는 데이터(사이트맵엔 안 넣음)
         gs_q = h.count("<td rowspan=")
         gs_p = h.count('<tr data-id="')
-    counts = {"quests": len(ctx.tasks), "items": items_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
+    counts = {"quests": len(ctx.tasks), "items": items_n, "rewards": rewards_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
               "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,
               "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, **extra_counts}
     p, h = hub_page(ctx, counts)
