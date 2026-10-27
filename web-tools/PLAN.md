@@ -162,3 +162,4 @@ C:\project\web-tools\PLAN.md의 Phase 3를 진행해줘.
 GSC 쿼리 데이터(내가 공유)와 PLAN 3장의 확장 후보를 참고해 도구를 15개 이상으로 늘리고,
 전 페이지 AdSense 승인 요건(콘텐츠 밀도·필수 페이지·색인)을 점검한 뒤 신청 직전 체크리스트를 만들어줘.
 ```
+- 2026-10-27 prod 배포: AdSense 사전 준비 — 개인정보처리방침·소개·푸터 링크·광고 삽입 지점(NEXT_PUBLIC_ADSENSE_CLIENT, 비활성).  

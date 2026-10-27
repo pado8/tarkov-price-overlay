@@ -10,7 +10,7 @@ export default function Privacy() {
   return (
     <article className="prose-sm mx-auto max-w-3xl px-4 py-10 text-gray-700">
       <h1 className="text-2xl font-bold text-gray-900">개인정보처리방침</h1>
-      <p className="mt-2 text-sm text-gray-500">시행일: 2026년 7월 8일</p>
+      <p className="mt-2 text-sm text-gray-500">시행일: 2026년 7월 8일 · 최종 갱신: 2026년 10월 27일</p>
 
       <h2 className="mt-8 text-lg font-bold text-gray-900">1. 파일 처리에 관하여</h2>
       <p className="mt-2 leading-relaxed">
@@ -36,7 +36,12 @@ export default function Privacy() {
         <a href="https://adssettings.google.com" className="text-brand-600 underline" rel="noreferrer" target="_blank">
           Google 광고 설정
         </a>
-        에서 맞춤 광고를 해제할 수 있습니다.
+        에서 맞춤 광고를 해제할 수 있고, 다른 광고 사업자의 쿠키는{' '}
+        <a href="https://optout.aboutads.info" className="text-brand-600 underline" rel="noreferrer" target="_blank">
+          aboutads.info
+        </a>
+        에서 관리할 수 있습니다. 유럽경제지역·영국·스위스 방문자에게는 광고 전에 동의 창을 띄웁니다.
+        현재(2026-10-27 기준) 본 사이트에는 제3자 광고가 게재되어 있지 않으며, 게재를 시작하면 이 항목을 먼저 갱신합니다.
       </p>
 
       <h2 className="mt-8 text-lg font-bold text-gray-900">4. 문의</h2>
