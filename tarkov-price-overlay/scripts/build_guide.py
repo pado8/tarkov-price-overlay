@@ -315,6 +315,8 @@ def main() -> int:
         tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)
         if 'src="/guide/sync.js"' not in tpl:  # 오버레이 연동 스크립트 — page() 로 만드는 페이지와 같게
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)
+        if 'href="/privacy/"' not in tpl:  # 개인정보처리방침 링크 — 광고 심사 요건, page() 푸터와 같게
+            tpl = tpl.replace("</div></footer>", ' · <a href="/privacy/">개인정보처리방침</a></div></footer>', 1)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         page = tpl.replace("__DATA__", payload).replace("__STAMP__", stamp)
         dest = OUT / name / "index.html"
