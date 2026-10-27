@@ -943,17 +943,27 @@ def _snapshot_path(lang: str, game_mode: str) -> Path:
     return _snapshot_dir() / f"{lang}_{game_mode}.json.gz"
 
 
-def _save_snapshot(lang: str, game_mode: str, items: list, hideout_pair: tuple | None, source: str) -> None:
-    """갱신 성공 직후 호출. 실패해도 조회엔 영향 없게 삼킨다. 임시 파일에 쓰고 교체해 반쯤 쓰인 파일을 남기지 않는다."""
+def _save_snapshot(lang: str, game_mode: str, by_name: dict[str, dict], hideout_pair: tuple | None, source: str) -> None:
+    """갱신 성공 직후 호출. 가공된 엔트리를 저장한다(원본 아이템 목록은 1.6GB라 불가, 엔트리는 ~6MB → gzip 1MB).
+    별칭(짧은 이름·라틴 변환)은 같은 dict 를 가리키므로 고유 엔트리 목록 + 이름→번호 표로 푼다.
+    실패해도 조회엔 영향 없게 삼키고, 임시 파일에 쓰고 교체해 반쯤 쓰인 파일을 남기지 않는다."""
     try:
-        if hideout_pair is None:  # GraphQL 경로는 은신처 인덱스를 따로 받았으니 지금 캐시된 것을 같이 보관
-            with _hideout_index_lock:
-                hideout_pair = (_hideout_index_cache.get(lang, {}), _hideout_station_list_cache.get(lang, []))
-        doc = {"ts": time.time(), "source": source, "lang": lang, "mode": game_mode,
-               "items": items, "hideout": [hideout_pair[0], hideout_pair[1]]}
+        seen: dict[int, int] = {}
+        entries: list[dict] = []
+        names: dict[str, int] = {}
+        for n, e in by_name.items():
+            i = seen.get(id(e))
+            if i is None:
+                i = len(entries)
+                seen[id(e)] = i
+                entries.append(e)
+            names[n] = i
+        hp = list(hideout_pair) if hideout_pair else [{}, []]
+        doc = {"v": 2, "ts": time.time(), "source": source, "lang": lang, "mode": game_mode,
+               "entries": entries, "names": names, "hideout": hp}
         p = _snapshot_path(lang, game_mode)
         tmp = p.with_suffix(".tmp")
-        with gzip.open(tmp, "wt", encoding="utf-8") as f:
+        with gzip.open(tmp, "wt", encoding="utf-8", compresslevel=5) as f:
             json.dump(doc, f, ensure_ascii=False, separators=(",", ":"))
         os.replace(tmp, p)
     except Exception as e:  # noqa: BLE001
@@ -968,7 +978,7 @@ def _load_snapshot(lang: str, game_mode: str) -> dict | None:
         with gzip.open(p, "rt", encoding="utf-8") as f:
             doc = json.load(f)
         ts = float(doc.get("ts") or 0)
-        if not doc.get("items") or (time.time() - ts) > SNAPSHOT_MAX_AGE_SEC:
+        if doc.get("v") != 2 or not doc.get("entries") or (time.time() - ts) > SNAPSHOT_MAX_AGE_SEC:
             return None
         return doc
     except Exception as e:  # noqa: BLE001
@@ -1016,9 +1026,11 @@ def _fetch_catalog_items(lang: str, game_mode: str) -> tuple[list[dict], tuple |
 
 def _refresh_one(lang: str, game_mode: str) -> int:
     items, hideout_pair, source = _fetch_catalog_items(lang, game_mode)
-    n = _install_catalog(lang, game_mode, items, hideout_pair, source)
-    _save_snapshot(lang, game_mode, items, hideout_pair, source)
-    return n
+    by_name = _install_catalog(lang, game_mode, items, hideout_pair, source)
+    with _hideout_index_lock:
+        pair = (_hideout_index_cache.get(lang, {}), _hideout_station_list_cache.get(lang, []))
+    _save_snapshot(lang, game_mode, by_name, pair, source)
+    return len(by_name)
 
 
 def load_snapshots() -> int:
@@ -1032,9 +1044,16 @@ def load_snapshots() -> int:
             if not doc:
                 continue
             try:
+                entries = doc["entries"]
+                by_name = {name: entries[i] for name, i in (doc.get("names") or {}).items() if 0 <= i < len(entries)}
+                if not by_name:
+                    continue
                 hp = doc.get("hideout")
-                pair = (hp[0] or {}, hp[1] or []) if isinstance(hp, list) and len(hp) == 2 else None
-                _install_catalog(lang, game_mode, doc["items"], pair, "disk", ts=float(doc.get("ts") or time.time()))
+                if isinstance(hp, list) and len(hp) == 2:
+                    with _hideout_index_lock:
+                        _hideout_index_cache.setdefault(lang, hp[0] or {})
+                        _hideout_station_list_cache.setdefault(lang, hp[1] or [])
+                _finish_install(lang, game_mode, by_name, "disk", ts=float(doc.get("ts") or time.time()))
                 n += 1
             except Exception as e:  # noqa: BLE001
                 print(f"[cache] snapshot install failed ({lang},{game_mode}): {e!r}")
@@ -1064,7 +1083,7 @@ def catalog_status() -> dict:
 
 
 def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair: tuple | None, source: str,
-                     ts: float | None = None) -> int:
+                     ts: float | None = None) -> dict[str, dict]:
     """items(GraphQL 모양) 를 메모리 캐시로 — 엔트리·별칭·정규화 색인. 네트워크 갱신과 디스크 복원이 같이 쓴다."""
     fb_hideout = hideout_pair
     # Refresh the lang's hideout index alongside prices so cached entries
@@ -1127,6 +1146,12 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
             latin = n.translate(_CYR_LOOKALIKE)
             if latin != n and not _CYRILLIC_RE.search(latin) and latin not in by_name:
                 by_name[latin] = by_name[n]
+    _finish_install(lang, game_mode, by_name, source, ts)
+    return by_name
+
+
+def _finish_install(lang: str, game_mode: str, by_name: dict[str, dict], source: str, ts: float | None = None) -> None:
+    """정규화 색인을 만들고 메모리 캐시에 설치. 네트워크 갱신(_install_catalog)과 디스크 복원(load_snapshots)이 같이 쓴다."""
     # Canonical (OCR-confusion-folded) index for the last-resort exact match.
     # Built once per refresh so the hot path pays a single dict lookup.
     canon_map: dict[str, dict | None] = {}
@@ -1150,7 +1175,6 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
     with _names_lock:
         _names_cache[lang] = list(by_name.keys())
     print(f"[cache] refreshed ({lang},{game_mode}) - {len(by_name)} items [{source}]")
-    return len(by_name)
 
 
 def _refresher_loop() -> None:
