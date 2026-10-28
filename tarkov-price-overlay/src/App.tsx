@@ -1299,6 +1299,8 @@ function App() {
   const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
   radarActiveRef.current = radarActive;
   const [radarData, setRadarData] = useState<RadarState | null>(null);
+  const radarDataRef = useRef<RadarState | null>(null); // 폴링 클로저용(넓게 보기에서 아직 못 받았으면 다시 받기)
+  radarDataRef.current = radarData;
   const [radarLoading, setRadarLoading] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
   // 레이더가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
@@ -1917,6 +1919,8 @@ function App() {
         const res = await fetch(radarUrl(false));
         if (!res.ok) return;
         const d = (await res.json()) as RadarState;
+        // 지도 나란히 모드로 켜진 채 시작하면 사이드카가 뜨기 전에 첫 loadRadar 가 실패한다 → 응답이 오기 시작하면 한 번 받아 둔다
+        if (wideModeRef.current && !radarDataRef.current && !radarLoading) void loadRadar();
         const id = d.shot?.id ?? null;
         const first = radarLastShotRef.current === undefined;
         if (id !== radarLastShotRef.current) {
@@ -5608,7 +5612,7 @@ function App() {
       {wideMode && (
         <div
           ref={paneRef}
-          className="card wide-pane"
+          className={`card wide-pane${cardVisible ? "" : " card-hidden"}`} // 카드를 숨기면(토글·트레이) 패널도 함께
           style={{
             "--card-fs": `${region.fontSize}px`,
             opacity: Math.max(region.opacity, RADAR_MIN_OPACITY) / 100,
