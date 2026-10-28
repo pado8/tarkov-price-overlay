@@ -104,13 +104,16 @@ type Props = {
   onClose: () => void;
   size: number; // 레이더 지름 = 지도 높이(px)
   onSize: (px: number) => void;
+  forceMode?: "radar" | "map"; // 지도 나란히 패널: 탭 없이 이 모드만
+  fill?: boolean; // 패널이 크기를 정한다 — 크기 슬라이더 숨김
 };
 
 const MODE_KEY = "tarkov.radar.mode"; // "radar" | "map"
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 레이더·지도 탭 공통, 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize }: Props) {
-  const [mode, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, forceMode, fill }: Props) {
+  const [modeState, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
+  const mode = forceMode ?? modeState;
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
   const [radarImg, setRadarImg] = useState<boolean>(() => localStorage.getItem(RADAR_IMG_KEY) !== "0");
@@ -140,7 +143,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         🧭 {data?.map ? data.map.name : t.radarTitle}
         {data?.map_source === "manual" && <span className="radar-src"> · {t.radarManual}</span>}
       </span>
-      {data?.map && data.shot && (
+      {data?.map && data.shot && !forceMode && (
         <span className="radar-tabs" role="tablist">
           <button type="button" role="tab" className={`radar-tab${mode === "radar" ? " on" : ""}`} onClick={() => pickMode("radar")}>{t.radarModeRadar}</button>
           <button type="button" role="tab" className={`radar-tab${mode === "map" ? " on" : ""}`} onClick={() => pickMode("map")}>{t.radarModeMap}</button>
@@ -216,7 +219,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     }
   };
   const shown = sizeDraft ?? size;
-  const sizeCtl = (
+  const sizeCtl = fill ? null : (
     <label className="radar-size" title={`${t.radarSize} ${shown}px`}>
       <span>{t.radarSize}</span>
       <input

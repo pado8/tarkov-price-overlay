@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition, LogicalSize, primaryMonitor, currentMonitor, availableMonitors } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, PhysicalSize, LogicalSize, primaryMonitor, currentMonitor, availableMonitors } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -784,7 +784,10 @@ const RADAR_ENABLED_KEY = "tarkov.radar.enabled";
 const RADAR_SCAV_KEY = "tarkov.radar.showScav";
 // 새 스크린샷이 이보다 오래됐으면 레이더를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
 const RADAR_POPUP_MAX_AGE_SEC = 60;
-const RADAR_MIN_OPACITY = 90; // 레이더·지도 표시 중 카드 전체 불투명도 하한(%)
+const RADAR_MIN_OPACITY = 90;
+// 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
+const WIDE_KEY = "tarkov.wideMode";
+const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos"; // 레이더·지도 표시 중 카드 전체 불투명도 하한(%)
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 // "조회 키를 게임에도 전달": RegisterHotKey 대신 키 상태만 엿들어 게임 스크린샷 키와 같은 키를 쓸 수 있게
@@ -1307,6 +1310,11 @@ function App() {
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
   // 레이더 지름 = 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
   const [radarSize, setRadarSize] = useState<number>(loadRadarSize);
+  const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
+  const wideModeRef = useRef(wideMode);
+  wideModeRef.current = wideMode;
+  const paneRef = useRef<HTMLDivElement>(null);
+  const [paneSize, setPaneSize] = useState(400); // 오른쪽 지도 패널의 지도 높이(패널 높이에서 머리글·칩·안내 줄을 뺀 값)
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
   const radarLastShotRef = useRef<string | null | undefined>(undefined); // undefined = 아직 첫 확인 전
@@ -1732,6 +1740,8 @@ function App() {
     cancelHideTimer();
     // Auto-hide disabled: the card stays until hidden explicitly.
     if (!autoHideRef.current) return;
+    // 지도 나란히 모드 = 모니터 하나를 통째로 쓰는 상태라 숨기지 않는다
+    if (wideModeRef.current) return;
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
     // Cursor parked on the card keeps it alive. Without this, any
@@ -1829,6 +1839,74 @@ function App() {
     await loadRadar();
     if (fromScreenshot) scheduleHide();
   };
+  // 지도 나란히 모드 — 켜면 지금 있는 모니터에 창을 꽉 채우고(위치는 저장), 끄면 저장한 위치·내용 크기로
+  useEffect(() => {
+    const win = getCurrentWindow();
+    let dead = false;
+    (async () => {
+      try {
+        if (wideMode) {
+          showCard(); // 숨김 타이머가 걸려 있었어도 취소
+          const pos = await win.outerPosition();
+          if (dead) return;
+          // 돌아갈 위치 = 이미 저장된 값 > 사용자가 쓰던 창 위치(POSITION_KEY, 앱 시작 직후엔 창이 아직 기본 자리라 outerPosition 은 틀림) > 지금 위치
+          let prevRaw = localStorage.getItem(WIDE_PREV_POS_KEY);
+          if (!prevRaw) {
+            prevRaw = localStorage.getItem(POSITION_KEY) || JSON.stringify({ x: pos.x, y: pos.y });
+            localStorage.setItem(WIDE_PREV_POS_KEY, prevRaw);
+          }
+          // 채울 모니터 = 그 위치가 들어 있는 모니터(두 번째 모니터에 두고 쓰던 사람은 그 모니터를 통째로)
+          let mon = null as Awaited<ReturnType<typeof currentMonitor>>;
+          try {
+            const pt = JSON.parse(prevRaw) as { x: number; y: number };
+            const mons = await availableMonitors();
+            mon = mons.find((m) => pt.x >= m.position.x && pt.x < m.position.x + m.size.width && pt.y >= m.position.y && pt.y < m.position.y + m.size.height) ?? null;
+          } catch {}
+          if (!mon) mon = await currentMonitor();
+          if (dead) return;
+          if (mon) {
+            await win.setPosition(new PhysicalPosition(mon.position.x, mon.position.y));
+            await win.setSize(new PhysicalSize(mon.size.width, mon.size.height));
+          }
+          log(`wide: on (monitor ${mon?.name ?? "?"} ${mon?.size.width}x${mon?.size.height})`);
+          void loadRadar();
+        } else {
+          const raw = localStorage.getItem(WIDE_PREV_POS_KEY);
+          localStorage.removeItem(WIDE_PREV_POS_KEY);
+          applyRef.current?.(); // 내용 크기로 되돌린다
+          if (raw) {
+            const { x, y } = JSON.parse(raw);
+            if (Number.isFinite(x) && Number.isFinite(y)) await win.setPosition(new PhysicalPosition(x, y));
+          }
+          log("wide: off");
+        }
+      } catch (e) {
+        log(`wide: failed ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
+    return () => {
+      dead = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wideMode]);
+  // 오른쪽 패널 높이 → 지도 높이(머리글·칩·맵 선택·안내 줄 몫을 뺀다)
+  useEffect(() => {
+    const el = paneRef.current;
+    if (!wideMode || !el) return;
+    const read = () => setPaneSize(Math.max(200, el.clientHeight - 210));
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    read();
+    return () => ro.disconnect();
+  }, [wideMode]);
+  const toggleWide = () => {
+    setWideMode((v) => {
+      try {
+        localStorage.setItem(WIDE_KEY, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  };
   // 새 스크린샷 감지: 1초마다 가벼운 확인(사이드카가 폴더 수정 시각이 같으면 다시 훑지 않음)
   useEffect(() => {
     if (!radarEnabled) return;
@@ -1847,7 +1925,14 @@ function App() {
           if (!first && d.shot && d.shot.age <= RADAR_POPUP_MAX_AGE_SEC) {
             radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지
             log(`radar: new screenshot ${id}`);
-            void openRadar(true);
+            if (wideModeRef.current) {
+              // 지도가 오른쪽에 늘 떠 있으니 카드(시세)는 그대로 두고 데이터만 갱신
+              showCard();
+              reportEvent("radar_shot");
+              void loadRadar();
+            } else {
+              void openRadar(true);
+            }
           }
         }
       } catch {
@@ -1908,6 +1993,7 @@ function App() {
         const cardEl = cardRef.current;
         if (cardEl) {
           const rect = cardEl.getBoundingClientRect();
+          const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
           if (rect.width > 0 && rect.height > 0) {
             const [winPos, winScale] = await Promise.all([
               win.outerPosition(),
@@ -1936,11 +2022,18 @@ function App() {
             const cursor = await invoke<{ x: number; y: number }>(
               "get_cursor_position"
             );
-            const inside =
+            let inside =
               cursor.x >= left &&
               cursor.x < right &&
               cursor.y >= top &&
               cursor.y < bottom;
+            if (!inside && paneRect && paneRect.width > 0) {
+              const pl = winPos.x + Math.floor(paneRect.left * dpr) - EDGE_PAD;
+              const pt = winPos.y + Math.floor(paneRect.top * dpr) - EDGE_PAD;
+              const pr = winPos.x + Math.ceil((paneRect.left + paneRect.width) * dpr) + EDGE_PAD;
+              const pb = winPos.y + Math.ceil((paneRect.top + paneRect.height) * dpr) + EDGE_PAD;
+              inside = cursor.x >= pl && cursor.x < pr && cursor.y >= pt && cursor.y < pb;
+            }
             setIgnore(!inside);
             // Drive auto-hide from the poll — the single source of truth for
             // "cursor on card". The card's DOM mouseenter/mouseleave fire
@@ -2596,6 +2689,7 @@ function App() {
     // case so the user always gets a visible overlay on next launch.
     (async () => {
       try {
+        if (wideModeRef.current) return; // 지도 나란히 모드로 시작하면 창은 모니터 원점으로 간다(wide 효과가 처리)
         const raw = localStorage.getItem(POSITION_KEY);
         if (!raw) return;
         const { x, y } = JSON.parse(raw);
@@ -2645,6 +2739,7 @@ function App() {
     })();
 
     const unlistenPromise = win.listen("tauri://move", () => {
+      if (wideModeRef.current) return; // 모니터 원점으로 옮긴 건 사용자 위치가 아니다
       win.outerPosition().then((pos) => {
         localStorage.setItem(
           POSITION_KEY,
@@ -2674,6 +2769,7 @@ function App() {
     if (!el) return;
     let raf = 0;
     const apply = () => {
+      if (wideModeRef.current) return; // 지도 나란히: 창은 모니터 크기 그대로
       // When the user has dragged an explicit card height (price-card view
       // only — settings mode returns null), size the window to that override
       // instead of the content's scrollHeight. Otherwise the window stays at
@@ -3201,7 +3297,7 @@ function App() {
   };
 
   return (
-    <div className="overlay">
+    <div className={`overlay${wideMode ? " wide" : ""}`}>
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -3252,10 +3348,10 @@ function App() {
         {/* Pinned: drop the drag-region attributes so the OS can't move the
             window via the header — that's the only move affordance in a
             borderless window. */}
-        <div className="header" data-tauri-drag-region={pinned ? undefined : true}>
-          <span className="title" data-tauri-drag-region={pinned ? undefined : true}>{t.title}</span>
+        <div className="header" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
+          <span className="title" data-tauri-drag-region={pinned || wideMode ? undefined : true}>{t.title}</span>
           <div className="header-actions">
-            <span className="hotkey" data-tauri-drag-region={pinned ? undefined : true}>
+            <span className="hotkey" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
               {/* Mouse bindings carry their own 🖱 prefix from
                   formatHotkeyLabel — the fixed ⌨︎ would read as
                   "⌨︎ : 🖱 휠클릭". Only show it for keyboard binds. */}
@@ -3293,6 +3389,13 @@ function App() {
               title={t.radarOpen}
             >
               🧭
+            </button>
+            <button
+              className={`settings-btn${wideMode ? " active" : ""}`}
+              onClick={toggleWide}
+              title={t.wideModeBtn}
+            >
+              ⧉
             </button>
             <button
               className="settings-btn"
@@ -3941,6 +4044,10 @@ function App() {
               >
                 {t.statusPageOpen}
               </button>
+            </div>
+            <div className="settings-row" title={t.wideModeHint}>
+              <label>{t.wideMode}</label>
+              <input type="checkbox" checked={wideMode} onChange={toggleWide} />
             </div>
             <div className="settings-row" title={t.radarSettingHint}>
               <label>{t.radarSettingLabel}</label>
@@ -5498,6 +5605,38 @@ function App() {
           />
         )}
       </div>
+      {wideMode && (
+        <div
+          ref={paneRef}
+          className="card wide-pane"
+          style={{
+            "--card-fs": `${region.fontSize}px`,
+            opacity: Math.max(region.opacity, RADAR_MIN_OPACITY) / 100,
+            ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
+          } as React.CSSProperties}
+        >
+          <RadarPanel
+            data={radarData}
+            loading={radarLoading}
+            t={t}
+            lang={region.lang}
+            showScav={radarShowScav}
+            onToggleScav={(v) => {
+              setRadarShowScav(v);
+              localStorage.setItem(RADAR_SCAV_KEY, String(v));
+            }}
+            onPickMap={(id) => {
+              radarMapRef.current = id;
+              void loadRadar();
+            }}
+            onClose={toggleWide}
+            size={paneSize}
+            onSize={() => {}}
+            forceMode="map"
+            fill
+          />
+        </div>
+      )}
     </div>
   );
 }
