@@ -1849,6 +1849,11 @@ function App() {
       try {
         if (wideMode) {
           showCard(); // 숨김 타이머가 걸려 있었어도 취소
+          // 고정(나란히) 상태에선 시세 카드가 비어 있지 않게 — 앱을 다시 켰거나 아직 조회 전이면 최근 검색 1건을 그대로 보여 준다
+          if (status === "idle" && history.length > 0) {
+            setResult(history[0].result);
+            setStatus("success");
+          }
           const pos = await win.outerPosition();
           if (dead) return;
           // 돌아갈 위치 = 이미 저장된 값 > 사용자가 쓰던 창 위치(POSITION_KEY, 앱 시작 직후엔 창이 아직 기본 자리라 outerPosition 은 틀림) > 지금 위치
