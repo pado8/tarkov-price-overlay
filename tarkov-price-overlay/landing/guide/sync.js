@@ -7,12 +7,15 @@ var g=gt.parentNode,narrow=window.innerWidth<900;if(!(noHover||narrow))return;
 if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x.classList.remove("open")});g.classList.add("open")}});
 })();
 (function(){
-var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced";
+var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced",SE="guide.sync.err";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
-var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0;a.textContent=stale?("오버레이 연동 끊김 · 마지막 "+(ago<60?ago+"분 전":Math.round(ago/60)+"시간 전")):("🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)"));
-a.title=stale?"오버레이를 직접 읽지 못했어요(꺼져 있거나 브라우저가 로컬 네트워크 접근을 막음). 눌러서 다시 시도":"시세 오버레이가 게임 로그로 확인한 완료 퀘스트를 자동 반영 중";
+var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"방금":ago<60?ago+"분 전":Math.round(ago/60)+"시간 전";
+var base="🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)");
+a.textContent=stale?(base+" · "+agoTxt+" 기준 ↻"):base;
+var err=L(SE,null);
+a.title=stale?("마지막으로 받은 진행도("+agoTxt+")를 쓰고 있어요. 지금은 오버레이를 직접 읽지 못했어요"+(err&&err.msg?" — "+err.msg:"")+". 눌러서 다시 읽기. 크롬이 '로컬 네트워크 접근'을 차단해 두었다면 주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용"):"시세 오버레이가 게임 로그로 확인한 완료 퀘스트를 자동 반영 중";
 if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.dataset.busy)return;a.dataset.busy="1";a.textContent="연동 다시 시도 중…";pull(true).then(function(ok){delete a.dataset.busy;if(ok)return;chip(sy,true);help()})});
 top.appendChild(a)}
 // 오버레이가 알려 준 서버(PVE/PVP)로 사이트 모드를 맞춘다 — 안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져와 "완료 n개"가 바뀐다
@@ -27,10 +30,10 @@ if(p0&&p0.completed){p0.ok=true;apply(p0);history.replaceState(null,"",location.
 //    처음 한 번 "로컬 네트워크 접근 허용" 창이 뜬다. 거부·미지원이면 조용히 마지막 연동 값만 보여 준다.
 //    앱을 안 쓰는 방문자에게 권한 창을 띄우지 않도록, 자동 시도는 한 번이라도 연동된 브라우저에서만 하고,
 //    처음인 브라우저에는 상단에 "오버레이 연동" 버튼을 두어 사용자가 눌렀을 때(사용자 동작) 시도한다.
-function pull(manual){var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},4000);
+function pull(manual){var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},manual?25000:12000);
 var opt={signal:ctrl&&ctrl.signal,cache:"no-store",mode:"cors"};opt.targetAddressSpace="loopback";
-return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){apply(p);return true}throw new Error("bad")})
-.catch(function(){clearTimeout(tm);if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true)}return false})}
+return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p);return true}throw new Error("응답 형식 오류")})
+.catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true)}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
 var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 오버레이 연동";
@@ -39,6 +42,6 @@ b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.tex
 pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 오버레이 연동";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
-h.innerHTML='<b>오버레이를 찾지 못했어요.</b> 같은 PC에서 <a href="/">시세 오버레이</a>(연동 기능이 들어간 최신 버전)를 켜 두고 다시 눌러 주세요. 브라우저가 "로컬 네트워크 접근"을 막았다면 허용하거나, 오버레이 <b>설정 → 내 진행도로 가이드 열기</b> 버튼으로 이 사이트를 열면 됩니다. <button type="button" class="x" aria-label="닫기">✕</button>';
+h.innerHTML='<b>오버레이를 찾지 못했어요.</b> 같은 PC에서 <a href="/">시세 오버레이</a>(연동 기능이 들어간 최신 버전)를 켜 두고 다시 눌러 주세요. 크롬이 "로컬 네트워크 접근"을 차단해 두었다면 <b>주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용</b>으로 바꾼 뒤 새로고침하세요. 그래도 안 되면 오버레이 <b>설정 → 사이트 연동하기</b> 버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다. <button type="button" class="x" aria-label="닫기">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })();
