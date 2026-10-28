@@ -1181,9 +1181,9 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp
 function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
 rows.forEach(function(r){var t=r.getAttribute("data-t"),isf=!!f[t],done=!!d[t]||cp.indexOf(t)>=0,started=!done&&st.indexOf(t)>=0;
 r.classList.toggle("isfav",isf);r.classList.toggle("done",done);r.querySelector(".fav").classList.toggle("on",isf);var b=r.querySelector(".stbadge");b.textContent=done?"완료":started?"진행 중":"";b.className="stbadge badge"+(done?" b-done":started?" b-run":"");b.style.display=b.textContent?"":"none";if(isf)nf++;
-var ok=true;if(tg!=="all"&&(" "+r.getAttribute("data-tg")+" ").indexOf(" "+tg+" ")<0)ok=false;if(mp!=="all"&&("|"+r.getAttribute("data-m")+"|").indexOf("|"+mp+"|")<0)ok=false;if(favOnly&&!isf)ok=false;if(hideDone&&done)ok=false;if(q&&r.getAttribute("data-s").indexOf(q)<0)ok=false;
-r.style.display=ok?"":"none";if(ok)n++;r._k=[isf?0:1,done?1:0,+r.getAttribute("data-lv")]});
-rows.slice().sort(function(a,b){for(var i=0;i<3;i++){if(a._k[i]!==b._k[i])return a._k[i]-b._k[i]}return 0}).forEach(function(r){list.appendChild(r)});
+var ok=true;if(tg!=="all"&&(" "+r.getAttribute("data-tg")+" ").indexOf(" "+tg+" ")<0)ok=false;var dm=r.getAttribute("data-m"),mg=mp==="all"?0:(!dm?1:(("|"+dm+"|").indexOf("|"+mp+"|")>=0?0:2));if(mg===2)ok=false;if(favOnly&&!isf)ok=false;if(hideDone&&done)ok=false;if(q&&r.getAttribute("data-s").indexOf(q)<0)ok=false;
+r.style.display=ok?"":"none";if(ok)n++;r._k=[isf?0:1,mg,done?1:0,+r.getAttribute("data-lv")]});
+rows.slice().sort(function(a,b){for(var i=0;i<4;i++){if(a._k[i]!==b._k[i])return a._k[i]-b._k[i]}return 0}).forEach(function(r){list.appendChild(r)});
 document.getElementById("shown").textContent=n;document.getElementById("nfav").textContent=nf;var ne=document.getElementById("none");ne.style.display=n?"none":"";
 var o=document.getElementById("ofav"),h="";Object.keys(f).forEach(function(t){if(hunt[t]||!all[t])return;h+='<li><a href="/guide/quest/'+all[t][1]+'/">'+esc(all[t][0])+'</a> <span class="muted small">'+esc(all[t][2])+'</span></li>'});o.innerHTML=h;document.getElementById("ofavbox").style.display=h?"":"none"}
 document.addEventListener("click",function(ev){var b=ev.target.closest(".fav");if(!b)return;var t=b.getAttribute("data-t"),f=L(FK,{});if(f[t])delete f[t];else f[t]=1;S(FK,f);apply()});
@@ -1202,24 +1202,35 @@ def _allq(ctx: Ctx) -> dict:
     for tid, t in ctx.tasks.items():
         ko, _en = ctx.task_names(tid)
         suf = ctx.display_suffix.get(tid)
-        out[tid] = [f"{ko} ({suf})" if suf else ko, ctx.task_slug(tid), ctx.trader_name(t.get("trader")), t.get("minPlayerLevel") or 0]
+        mnames = []
+        for mid in ctx.task_maps(t):
+            mn = ctx.map_name(mid)
+            if mn and mn not in mnames:
+                mnames.append(mn)
+        out[tid] = [f"{ko} ({suf})" if suf else ko, ctx.task_slug(tid), ctx.trader_name(t.get("trader")), t.get("minPlayerLevel") or 0, mnames]
     return out
 
 
 FAV_JS = r"""<script>
 (function(){var FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={};
+var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={},MP="guide.fav.map";
+var mpSel=document.getElementById("mp");(function(){var ms={};Object.keys(all).forEach(function(t){(all[t][4]||[]).forEach(function(m){ms[m]=1})});Object.keys(ms).sort().forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m;mpSel.appendChild(o)});var sv=L(MP,"all");if(sv!=="all"&&ms[sv])mpSel.value=sv})();
+mpSel.addEventListener("change",function(){S(MP,mpSel.value);render()});
+// 지역 그룹: 0 = 고른 지역, 1 = 아무 지역(지역 제한 없음), 2 = 다른 지역(숨김). 전체면 모두 0
+function mgrp(t){var mp=mpSel.value;if(mp==="all")return 0;var ms=all[t][4]||[];if(!ms.length)return 1;return ms.indexOf(mp)>=0?0:2}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function card(t,html,done,started,isFav){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav'+(isFav?" on":"")+'" data-t="'+t+'" aria-label="'+(isFav?"즐겨찾기 해제":"즐겨찾기")+'" title="'+(isFav?"즐겨찾기 해제":"즐겨찾기로 고정")+'">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+'</span></div>'+html+'</article>'}
+function card(t,html,done,started,isFav){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav'+(isFav?" on":"")+'" data-t="'+t+'" aria-label="'+(isFav?"즐겨찾기 해제":"즐겨찾기")+'" title="'+(isFav?"즐겨찾기 해제":"즐겨찾기로 고정")+'">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+' · '+((x[4]&&x[4].length)?esc(x[4].join(", ")):"아무 지역")+'</span></div>'+html+'</article>'}
 // 퀘스트 페이지를 그대로 받아 목표·필요한 열쇠 부분만 잘라 온다(정적 사이트라 즐겨찾기 조합은 브라우저가 만든다)
 function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
 [].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
 var seq=0;
 function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
-var isd=function(t){return !!d[t]||cp.indexOf(t)>=0},byLv=function(a,b){return (all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)};
+var isd=function(t){return !!d[t]||cp.indexOf(t)>=0},byLv=function(a,b){return mgrp(a)-mgrp(b)||(all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)};
+var nhid=0;ids=ids.filter(function(t){if(mgrp(t)===2){nhid++;return false}return true});
 // 오버레이 연동이 알려 준 진행 중 퀘스트 — 즐겨찾기·완료는 빼고 아래 구역에(★ 누르면 즐겨찾기로 고정)
-var runs=st.filter(function(t){return !!all[t]&&!f[t]&&!isd(t)});runs.sort(byLv);
-ids.sort(function(a,b){return (isd(a)?1:0)-(isd(b)?1:0)||byLv(a,b)});
+var runs=st.filter(function(t){return !!all[t]&&!f[t]&&!isd(t)&&(mgrp(t)!==2||(nhid++,false))});runs.sort(byLv);
+ids.sort(function(a,b){return mgrp(a)-mgrp(b)||(isd(a)?1:0)-(isd(b)?1:0)||byLv(a,b)});
+document.getElementById("nhid").textContent=nhid;document.getElementById("hidnote").style.display=nhid?"":"none";
 document.getElementById("nfav").textContent=ids.length;document.getElementById("nrun").textContent=runs.length;
 document.getElementById("empty").style.display=(ids.length||runs.length)?"none":"";document.getElementById("runbox").style.display=runs.length?"":"none";
 document.getElementById("nosync").style.display=(sy||runs.length)?"none":"";
@@ -1237,6 +1248,7 @@ def favorites_page(ctx: Ctx) -> tuple[str, str]:
     allq_json = json.dumps(_allq(ctx), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     body = f"""<h1>내 즐겨찾기 <span class="h1en">★로 표시한 퀘스트</span></h1>
 <p class="sub">퀘스트 페이지·<a href="/guide/quests/">퀘스트 목록</a>·<a href="/guide/hunt/">사냥 퀘스트</a>의 ★를 누르면 여기 모입니다(이 브라우저에 저장) · 즐겨찾기 <b id="nfav">0</b>개 · 오버레이를 연동하면 <b>진행 중인 퀘스트</b>도 자동으로 아래에 · 완료한 퀘스트는 뒤로·흐리게</p>
+<div class="controls"><select id="mp" aria-label="지역"><option value="all">모든 지역</option></select><span class="muted small">지역을 고르면 그 지역 퀘스트 → 아무 지역 순으로, 다른 지역은 숨김 <span id="hidnote" style="display:none">(숨김 <b id="nhid">0</b>개)</span></span></div>
 <div class="note" id="empty">아직 즐겨찾기가 없어요. <a href="/guide/quests/">퀘스트 목록</a>이나 <a href="/guide/hunt/">사냥 퀘스트</a>에서 ★를 눌러 보세요.</div>
 <div id="fl"></div>
 <section id="runbox" style="display:none"><h2 style="margin-top:22px">진행 중인 퀘스트 <span class="muted small">시세 오버레이가 게임 로그로 확인한 것 · <b id="nrun">0</b>개 · ★를 누르면 즐겨찾기로 고정</span></h2><div id="rl"></div></section>
@@ -1327,7 +1339,7 @@ def hunt_page(ctx: Ctx) -> tuple[str, str]:
 <div class="note">게임하면서 옆에 띄워 두는 용도입니다. 대상·사용 무기·부착물·착용 장비·거리·부위·시간대 조건이 바로 보이고, 완료로 표시한 퀘스트(퀘스트 페이지 체크 또는 오버레이 연동)는 흐려집니다. 사냥이 아닌 퀘스트의 ★는 <a href="/guide/favorites/">내 즐겨찾기</a>에서 목표까지 볼 수 있습니다.</div>
 <div class="controls"><input type="search" id="q" placeholder="퀘스트·대상·상인·맵 검색" aria-label="검색" />
 <div class="seg" id="tg"><button data-v="all" class="on">전체</button><button data-v="pmc">PMC</button><button data-v="scav">스캐브</button><button data-v="boss">보스·경호</button><button data-v="any">아무나</button></div>
-<select id="mp" aria-label="맵"><option value="all">모든 맵</option>{opts}</select>
+<select id="mp" aria-label="맵"><option value="all">모든 맵</option>{opts}</select><span class="muted small">고른 맵 → 아무 지역 순, 다른 맵은 숨김</span>
 <label class="chk"><input type="checkbox" id="favonly" /> 즐겨찾기만</label>
 <label class="chk"><input type="checkbox" id="hidedone" /> 완료 숨기기</label>
 <span class="muted small">즐겨찾기 <b id="nfav">0</b> · 표시 <span id="shown">{n}</span></span></div>
