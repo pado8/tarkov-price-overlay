@@ -9,7 +9,7 @@ import type { RadarState, RadarTarget } from "./Radar";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
-const LAYER_KEY = "tarkov.radar.mapLayers";
+export const LAYER_KEY = "tarkov.radar.mapLayers";
 const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔
 // tarkov.dev 층 이름 → 한국어(한국어 UI 일 때만)
 const FLOOR_KO: Record<string, string> = {
@@ -61,8 +61,8 @@ export type MapDoc = {
   switches: Pt[];
 };
 
-type Layers = { pmc: boolean; transits: boolean; quests: boolean }; // 스캐브 탈출구는 레이더 탭과 같은 showScav 로 켜고 끈다
-const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true };
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·레이더 원·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true };
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -71,6 +71,9 @@ type Props = {
   t: Strings;
   showScav: boolean;
   onToggleScav: (v: boolean) => void;
+  layers: Layers;
+  onToggleLayer: (k: keyof Layers) => void;
+  hiddenQuests: Set<string>; // 사용자가 숨긴 퀘스트(task id) — 지도 점·이름표에서 뺀다
   size: number; // 지도 높이(px). 폭은 카드 폭을 따라간다
   fixed: boolean; // true = 지도 고정(↻ 90° 회전만) · false = 바라보는 쪽이 위
 };
@@ -90,7 +93,7 @@ export function loadMapRot(slug: string | null | undefined, fallback = 0): numbe
   }
 }
 
-function loadJson<T>(key: string, fallback: T): T {
+export function loadJson<T>(key: string, fallback: T): T {
   try {
     const v = localStorage.getItem(key);
     return v ? { ...fallback, ...JSON.parse(v) } : fallback;
@@ -160,10 +163,9 @@ export function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: numbe
   return { W, H, matrix: [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ") };
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed }: Props) {
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
-  const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
   // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 레이더를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
   const [floor, setFloorState] = useState<string>(() => (slug && floorMemo[slug]) || "auto");
@@ -270,15 +272,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
       } catch {}
     }
   };
-  const toggleLayer = (k: keyof Layers) =>
-    setLayers((L) => {
-      const n = { ...L, [k]: !L[k] };
-      try {
-        localStorage.setItem(LAYER_KEY, JSON.stringify(n));
-      } catch {}
-      return n;
-    });
-
   // 휠 확대(커서 위치 고정). React 의 onWheel 은 passive 로 붙어 preventDefault 가 안 먹고 카드가 같이 스크롤되므로
   // 네이티브 리스너를 non-passive 로 단다.
   const vRef = useRef(v);
@@ -357,7 +350,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
   const myFloor = me && floorLayers.length ? autoFloor(floorLayers, me.x, me.y, me.z) : null;
   const op = (x: number, y: number, z: number) =>
     floorLayers.length && me && autoFloor(floorLayers, x, y, z) !== myFloor && Math.abs(y - myY) > FLOOR_M ? DIM : 1;
-  const questTargets: RadarTarget[] = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null);
+  const questTargets: RadarTarget[] = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null && !hiddenQuests.has(x.task ?? x.name));
 
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
   const showExtract = (faction: string) => (faction === "scav" ? showScav : layers.pmc);
@@ -514,10 +507,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, size, fixed }:
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
       <div className="radar-layers">
-        {chip(layers.pmc, "pmc", t.radarLayerPmc, () => toggleLayer("pmc"))}
+        {chip(layers.pmc, "pmc", t.radarLayerPmc, () => onToggleLayer("pmc"))}
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
-        {chip(layers.transits, "transit", t.radarLayerTransits, () => toggleLayer("transits"))}
-        {chip(layers.quests, "quest", t.radarLayerQuests, () => toggleLayer("quests"))}
+        {chip(layers.transits, "transit", t.radarLayerTransits, () => onToggleLayer("transits"))}
+        {chip(layers.quests, "quest", t.radarLayerQuests, () => onToggleLayer("quests"))}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>
       {doc?.img && showImg && doc.img.layers.length > 0 && (

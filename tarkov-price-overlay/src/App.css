@@ -1701,3 +1701,13 @@ html, body, #root {
 .radar-side { flex: 0 0 300px; overflow-y: auto; padding-right: 4px; }
 .wide-pane .radar-side { max-height: calc(100vh - 170px); } /* 패널 높이 안에서 목록만 스크롤 */
 .radar-side .radar-row { font-size: var(--card-fs-sm); }
+
+/* 레이더 목록: 퀘스트 개별 숨김(✕)과 '숨긴 퀘스트 n개' 복원 줄 */
+.radar-hide { flex: none; background: none; border: 0; color: var(--muted); font-size: 11px; line-height: 1; padding: 0 4px; cursor: pointer; opacity: 0.55; }
+.radar-row:hover .radar-hide, .radar-hide:focus-visible { opacity: 1; }
+.radar-hide:hover { color: var(--danger, #ff6b6b); }
+.radar-hidden { margin-top: 4px; font-size: 11px; color: var(--muted); }
+.radar-link { background: none; border: 0; color: var(--muted); font-size: 11px; padding: 2px 4px; cursor: pointer; text-decoration: underline dotted; }
+.radar-link:hover { color: var(--text); }
+.radar-hidden-row { display: flex; align-items: center; gap: 6px; padding: 1px 0 1px 8px; }
+.radar-hidden-row .radar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

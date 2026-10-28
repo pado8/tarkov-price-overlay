@@ -3,10 +3,21 @@
 // '내가 바라보는 쪽 = 위' 기준이라 지도 북쪽 방위는 쓰지 않는다(맵마다 회전이 달라 틀릴 위험).
 import { useState } from "react";
 import type { Strings as LiteralStrings } from "./i18n";
-import { RadarMap, loadMapRot, useMapDoc, imageMatrix, autoFloor } from "./RadarMap";
+import { RadarMap, loadMapRot, useMapDoc, imageMatrix, autoFloor, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
+import type { Layers } from "./RadarMap";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const RADAR_IMG_KEY = "tarkov.radar.radarImg"; // "0" = 레이더 원 안 지도 배경 끔
+const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
+type HiddenQuest = { id: string; name: string };
+function loadHidden(): HiddenQuest[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(HIDDEN_Q_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter((x) => x && typeof x.id === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 // i18n은 글자 값까지 고정된 타입이라 언어별 객체가 서로 대입되지 않는다 — 키만 맞으면 되게 넓힌다
 type Strings = { [K in keyof LiteralStrings]: string };
@@ -123,6 +134,45 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       localStorage.setItem(RADAR_IMG_KEY, v ? "1" : "0");
     } catch {}
   };
+  // 표시 필터(PMC 탈출구·트랜짓·퀘스트 + 스캐브는 showScav) — 지도 칩과 목록·레이더 원이 한 상태를 쓴다
+  const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
+  const toggleLayer = (k: keyof Layers) =>
+    setLayers((L) => {
+      const n = { ...L, [k]: !L[k] };
+      try {
+        localStorage.setItem(LAYER_KEY, JSON.stringify(n));
+      } catch {}
+      return n;
+    });
+  // 퀘스트 개별 숨김: 목록의 ✕ 로 숨기고, '숨긴 퀘스트 n개' 줄에서 하나씩·전부 복원
+  const [hiddenQ, setHiddenQ] = useState<HiddenQuest[]>(loadHidden);
+  const [showHidden, setShowHidden] = useState(false);
+  const saveHidden = (list: HiddenQuest[]) => {
+    setHiddenQ(list);
+    try {
+      localStorage.setItem(HIDDEN_Q_KEY, JSON.stringify(list));
+    } catch {}
+  };
+  const questKey = (x: RadarTarget) => x.task ?? x.name;
+  const hiddenSet = new Set(hiddenQ.map((h) => h.id));
+  const hideQuest = (x: RadarTarget) => {
+    const id = questKey(x);
+    if (!hiddenSet.has(id)) saveHidden([...hiddenQ, { id, name: x.name }]);
+  };
+  const restoreQuest = (id: string) => saveHidden(hiddenQ.filter((h) => h.id !== id));
+  const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
+    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={onClick}>
+      <span className={`radar-sw ${k}`} /> {text}
+    </button>
+  );
+  const layerChips = (
+    <>
+      {chip(layers.pmc, "pmc", t.radarLayerPmc, () => toggleLayer("pmc"))}
+      {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
+      {chip(layers.transits, "transit", t.radarLayerTransits, () => toggleLayer("transits"))}
+      {chip(layers.quests, "quest", t.radarLayerQuests, () => toggleLayer("quests"))}
+    </>
+  );
   // 레이더 원 안 배경(건물·도로 윤곽 정도만 보이게 흐리게) — 지도 탭과 같은 문서·그림을 쓴다
   const { doc: mapDoc } = useMapDoc(data?.map?.id ?? null, lang);
   const pickFixed = (v: boolean) => {
@@ -244,7 +294,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     </label>
   );
 
-  const visible = data.targets.filter((x) => showScav || !(x.kind === "extract" && x.faction === "scav"));
+  // 목록·레이더 원 모두 지도와 같은 필터: 탈출구(PMC/공용 = pmc 칩, 스캐브 = showScav)·트랜짓·퀘스트(+개별 숨김)
+  const visible = data.targets.filter((x) =>
+    x.kind === "extract" ? (x.faction === "scav" ? showScav : layers.pmc)
+    : x.kind === "transit" ? layers.transits
+    : layers.quests && !hiddenSet.has(questKey(x)),
+  );
   // 대상 목록(탈출구·트랜짓·진행 중 퀘스트 목표 요약) — 레이더 탭 아래와 지도 모드(카드는 지도 아래, 나란히 패널은 지도 오른쪽 열)에 같이 쓴다
   const heading = data.shot.heading;
   const stale = data.shot.age > STALE_SEC;
@@ -265,8 +320,18 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               <span className="radar-flag" key={c}>
                 {" "}
                 {c}
-              </span>
+                {x.kind === "quest" && (
+              <button type="button" className="radar-hide" onClick={() => hideQuest(x)} title={t.radarHideQuest} aria-label={t.radarHideQuest}>
+                ✕
+              </button>
+            )}
+          </span>
             ))}
+            {x.kind === "quest" && (
+              <button type="button" className="radar-hide" onClick={() => hideQuest(x)} title={t.radarHideQuest} aria-label={t.radarHideQuest}>
+                ✕
+              </button>
+            )}
           </span>
           <span className="radar-dist">{Math.round(x.dist)}m</span>
           {x.rel != null && heading != null && (
@@ -282,6 +347,24 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           )}
         </div>
       ))}
+      {hiddenQ.length > 0 && (
+        <div className="radar-hidden">
+          <button type="button" className="radar-link" onClick={() => setShowHidden((v) => !v)} aria-expanded={showHidden}>
+            {t.radarHiddenQuests.replace("{n}", String(hiddenQ.length))} {showHidden ? "▴" : "▾"}
+          </button>
+          {showHidden && (
+            <>
+              {hiddenQ.map((h) => (
+                <div className="radar-hidden-row" key={h.id}>
+                  <span className="radar-name">{h.name}</span>
+                  <button type="button" className="radar-link" onClick={() => restoreQuest(h.id)}>{t.radarRestore}</button>
+                </div>
+              ))}
+              <button type="button" className="radar-link" onClick={() => saveHidden([])}>{t.radarRestoreAll}</button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
   if (mode === "map") {
@@ -292,12 +375,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {stale && <div className="radar-warn">{t.radarStale}</div>}
         {fill ? (
           <div className="radar-maprow">
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} />
             <div className="radar-side">{targetList}</div>
           </div>
         ) : (
           <>
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} />
             {targetList}
           </>
         )}
@@ -412,12 +495,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       </svg>
       {heading == null && <div className="hint">{t.radarDirUnknown}</div>}
       {targetList}
-      <div className="radar-foot">
-        <label className="radar-chk">
-          <input type="checkbox" checked={showScav} onChange={(e) => onToggleScav(e.target.checked)} /> {t.radarScav}
-        </label>
-        {mapPicker}
-      </div>
+      <div className="radar-layers">{layerChips}</div>
+      <div className="radar-foot">{mapPicker}</div>
       <div className="radar-foot">
         {fixedCtl}
         {sizeCtl}
