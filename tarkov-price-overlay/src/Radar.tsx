@@ -39,6 +39,7 @@ export type RadarTarget = {
   optional?: boolean;
   task?: string;
   slug?: string; // 가이드 퀘스트 페이지 slug(tarkov.dev normalizedName)
+  keys?: string[]; // 목표에 필요한 열쇠(대체 열쇠는 ' / ')
   // 전체 지도용 게임 좌표(2단계)
   x?: number;
   y?: number;
@@ -319,6 +320,13 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             </span>{" "}
             {x.name}
             {x.kind === "quest" && x.objective && <span className="radar-sub">{x.objective}</span>}
+            {x.kind === "quest" &&
+              x.keys?.map((k) => (
+                <span className="radar-flag radar-key" key={k} title={t.radarKeyNeeded}>
+                  {" "}
+                  🔑 {k}
+                </span>
+              ))}
             {condLabels(x, t).map((c) => (
               <span className="radar-flag" key={c}>
                 {" "}

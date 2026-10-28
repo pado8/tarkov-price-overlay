@@ -1716,3 +1716,4 @@ html, body, #root {
 .radar-hidden-row .radar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .radar-guide { opacity: 0.75; font-size: 11px; }
 .radar-guide:hover { color: var(--text); }
+.radar-flag.radar-key { color: var(--gold-bright); white-space: normal; display: inline; overflow: visible; }

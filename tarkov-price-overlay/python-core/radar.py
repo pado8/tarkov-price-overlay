@@ -273,8 +273,44 @@ def _mode_doc(game_mode: str) -> str:
     return "pve" if (game_mode or "").lower() == "pve" else "regular"
 
 
+_key_names_cache: dict[tuple, tuple[float, dict]] = {}
+
+
+def quest_key_names(jmode: str, lang: str, tasks: dict) -> dict:
+    """퀘스트 목표의 requiredKeys 에 나오는 아이템 id → 표시 이름(현재 언어 표, 없으면 영어 표, 그래도 없으면 짧은 이름).
+    items 문서(5천 종)는 한 번만 훑고 결과(열쇠 100여 개)만 (모드, 언어)별로 6시간 캐시. 문서를 못 받으면 빈 dict(열쇠 표시만 빠진다)."""
+    key = (jmode, lang)
+    with _data_lock:
+        hit = _key_names_cache.get(key)
+        if hit and time.time() - hit[0] < _DATA_TTL:
+            return hit[1]
+    ids: set[str] = set()
+    for t in (tasks or {}).values():
+        for o in t.get("objectives") or []:
+            for grp in o.get("requiredKeys") or []:
+                ids.update(i for i in grp if isinstance(i, str))
+    out: dict = {}
+    if ids:
+        try:
+            items = (_doc(f"{jmode}/items") or {}).get("items") or {}
+            loc = _doc(f"{jmode}/items_{lang}") or {}
+            loc_en = loc if lang == "en" else (_doc(f"{jmode}/items_en") or {})
+        except Exception as e:
+            log.warning(f"[radar] 열쇠 이름 문서 로드 실패: {e}")
+            items, loc, loc_en = {}, {}, {}
+        for i in ids:
+            it = items.get(i) or {}
+            nm = _loc(loc, it.get("name")) or _loc(loc_en, it.get("name")) or _loc(loc, it.get("shortName")) or _loc(loc_en, it.get("shortName"))
+            if nm:
+                out[i] = nm
+    with _data_lock:
+        _key_names_cache[key] = (time.time(), out)
+    return out
+
+
 def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, loc_tasks: dict,
-                  active: set[str], pose: dict, loc_en: Optional[dict] = None) -> list[dict]:
+                  active: set[str], pose: dict, loc_en: Optional[dict] = None,
+                  key_names: Optional[dict] = None) -> list[dict]:
     """맵의 탈출구·트랜짓·진행 중 퀘스트 목표 → 내 위치 기준 거리·상대 각도·높이 차."""
     maps = maps_doc or {}
     by_slug = {m.get("normalizedName"): (mid, m) for mid, m in maps.items()}
@@ -329,6 +365,12 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
             desc = _loc(loc_tasks, o.get("description"), None)
             if not desc or desc == o.get("description"):
                 desc = ""
+            keys: list[str] = []
+            for grp in o.get("requiredKeys") or []:
+                alts = [(key_names or {}).get(i) for i in grp if isinstance(i, str)]
+                alts = [a for a in alts if a]
+                if alts:
+                    keys.append(" / ".join(alts))
             pts = [z.get("position") for z in o.get("zones") or [] if z.get("map") in ids]
             for pl in o.get("possibleLocations") or []:
                 if pl.get("map") in ids:
@@ -344,7 +386,8 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                     continue
                 seen.add(k)
                 add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid,
-                    slug=t.get("normalizedName") or None)  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
+                    slug=t.get("normalizedName") or None,  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
+                    keys=keys or None)  # 목표에 필요한 열쇠 이름(대체 열쇠는 " / " 로)
     out.sort(key=lambda r: r["dist"])
     return out
 
@@ -715,8 +758,12 @@ class RadarService:
                     loc_tasks = _doc(f"{jmode}/tasks_{lang}") or {}
                 except Exception:
                     tasks_doc, loc_tasks = {}, {}
+                try:
+                    key_names = quest_key_names(jmode, lang, tasks_doc.get("tasks") or {}) if active else {}
+                except Exception:
+                    key_names = {}
                 res["targets"] = build_targets(maps_doc, slug, loc_maps, tasks_doc.get("tasks") or {}, loc_tasks,
-                                               active, shot, loc_en=_doc("regular/maps_en") or {})
+                                               active, shot, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
                 res["active_quests"] = len(active)
             return res
 
