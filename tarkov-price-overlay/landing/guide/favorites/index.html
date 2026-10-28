@@ -45,7 +45,7 @@ function card(t,html,done,started,isFav){var x=all[t];return '<article class="bo
 function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
 [].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
 var seq=0;
-function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
+function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
 var isd=function(t){return !!d[t]||cp.indexOf(t)>=0},byLv=function(a,b){return (all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)};
 // 오버레이 연동이 알려 준 진행 중 퀘스트 — 즐겨찾기·완료는 빼고 아래 구역에(★ 누르면 즐겨찾기로 고정)
 var runs=st.filter(function(t){return !!all[t]&&!f[t]&&!isd(t)});runs.sort(byLv);

@@ -1178,7 +1178,7 @@ HUNT_JS = """<script>
 var rows=[].slice.call(document.querySelectorAll(".hq")),list=document.getElementById("hl"),tg="all",mp="all",favOnly=false,hideDone=false,qi=document.getElementById("q");
 var all=JSON.parse(document.getElementById("allq").textContent),hunt={};rows.forEach(function(r){hunt[r.getAttribute("data-t")]=1});
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
+function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
 rows.forEach(function(r){var t=r.getAttribute("data-t"),isf=!!f[t],done=!!d[t]||cp.indexOf(t)>=0,started=!done&&st.indexOf(t)>=0;
 r.classList.toggle("isfav",isf);r.classList.toggle("done",done);r.querySelector(".fav").classList.toggle("on",isf);var b=r.querySelector(".stbadge");b.textContent=done?"완료":started?"진행 중":"";b.className="stbadge badge"+(done?" b-done":started?" b-run":"");b.style.display=b.textContent?"":"none";if(isf)nf++;
 var ok=true;if(tg!=="all"&&(" "+r.getAttribute("data-tg")+" ").indexOf(" "+tg+" ")<0)ok=false;if(mp!=="all"&&("|"+r.getAttribute("data-m")+"|").indexOf("|"+mp+"|")<0)ok=false;if(favOnly&&!isf)ok=false;if(hideDone&&done)ok=false;if(q&&r.getAttribute("data-s").indexOf(q)<0)ok=false;
@@ -1215,7 +1215,7 @@ function card(t,html,done,started,isFav){var x=all[t];return '<article class="bo
 function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
 [].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
 var seq=0;
-function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
+function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
 var isd=function(t){return !!d[t]||cp.indexOf(t)>=0},byLv=function(a,b){return (all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)};
 // 오버레이 연동이 알려 준 진행 중 퀘스트 — 즐겨찾기·완료는 빼고 아래 구역에(★ 누르면 즐겨찾기로 고정)
 var runs=st.filter(function(t){return !!all[t]&&!f[t]&&!isd(t)});runs.sort(byLv);
@@ -2752,7 +2752,7 @@ if(p0&&p0.completed){p0.ok=true;apply(p0);history.replaceState(null,"",location.
 function pull(manual){var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},manual?25000:12000);
 var opt={signal:ctrl&&ctrl.signal,cache:"no-store",mode:"cors"};opt.targetAddressSpace="loopback";
 return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p);return true}throw new Error("응답 형식 오류")})
-.catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true)}return false})}
+.catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
 var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 오버레이 연동";

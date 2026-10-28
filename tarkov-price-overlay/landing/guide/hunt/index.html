@@ -47,7 +47,7 @@
 var rows=[].slice.call(document.querySelectorAll(".hq")),list=document.getElementById("hl"),tg="all",mp="all",favOnly=false,hideDone=false,qi=document.getElementById("q");
 var all=JSON.parse(document.getElementById("allq").textContent),hunt={};rows.forEach(function(r){hunt[r.getAttribute("data-t")]=1});
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
+function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
 rows.forEach(function(r){var t=r.getAttribute("data-t"),isf=!!f[t],done=!!d[t]||cp.indexOf(t)>=0,started=!done&&st.indexOf(t)>=0;
 r.classList.toggle("isfav",isf);r.classList.toggle("done",done);r.querySelector(".fav").classList.toggle("on",isf);var b=r.querySelector(".stbadge");b.textContent=done?"완료":started?"진행 중":"";b.className="stbadge badge"+(done?" b-done":started?" b-run":"");b.style.display=b.textContent?"":"none";if(isf)nf++;
 var ok=true;if(tg!=="all"&&(" "+r.getAttribute("data-tg")+" ").indexOf(" "+tg+" ")<0)ok=false;if(mp!=="all"&&("|"+r.getAttribute("data-m")+"|").indexOf("|"+mp+"|")<0)ok=false;if(favOnly&&!isf)ok=false;if(hideDone&&done)ok=false;if(q&&r.getAttribute("data-s").indexOf(q)<0)ok=false;
