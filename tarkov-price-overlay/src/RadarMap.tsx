@@ -580,9 +580,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               const s = toScreen(me.x, me.z);
               const h = heading == null ? null : heading - eff;
               return h == null ? (
-                <circle cx={s.x} cy={s.y} r={5} className="radar-me" />
+                <circle cx={s.x} cy={s.y} r={6} className="radar-me" />
               ) : (
-                <path d={`M ${s.x} ${s.y - 9} L ${s.x + 6} ${s.y + 6} L ${s.x} ${s.y + 3} L ${s.x - 6} ${s.y + 6} Z`} className="radar-me" transform={`rotate(${h} ${s.x} ${s.y})`} />
+                <path d={`M ${s.x} ${s.y - 12} L ${s.x + 8} ${s.y + 8} L ${s.x} ${s.y + 4} L ${s.x - 8} ${s.y + 8} Z`} className="radar-me" transform={`rotate(${h} ${s.x} ${s.y})`} />
               );
             })()}
           </svg>
