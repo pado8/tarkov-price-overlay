@@ -1210,15 +1210,23 @@ FAV_JS = r"""<script>
 (function(){var FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function card(t,html,done,started){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav on" data-t="'+t+'" aria-label="즐겨찾기 해제" title="즐겨찾기 해제">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+'</span></div>'+html+'</article>'}
+function card(t,html,done,started,isFav){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav'+(isFav?" on":"")+'" data-t="'+t+'" aria-label="'+(isFav?"즐겨찾기 해제":"즐겨찾기")+'" title="'+(isFav?"즐겨찾기 해제":"즐겨찾기로 고정")+'">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+'</span></div>'+html+'</article>'}
 // 퀘스트 페이지를 그대로 받아 목표·필요한 열쇠 부분만 잘라 온다(정적 사이트라 즐겨찾기 조합은 브라우저가 만든다)
 function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
 [].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
+var seq=0;
 function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
-document.getElementById("nfav").textContent=ids.length;document.getElementById("empty").style.display=ids.length?"none":"";if(!ids.length){box.innerHTML="";return}
-var isd=function(t){return !!d[t]||cp.indexOf(t)>=0};ids.sort(function(a,b){return (isd(a)?1:0)-(isd(b)?1:0)||(all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)});
-box.innerHTML='<p class="muted small">불러오는 중…</p>';
-Promise.all(ids.map(load1)).then(function(hs){box.innerHTML=ids.map(function(t,i){var done=isd(t);return card(t,hs[i],done,!done&&st.indexOf(t)>=0)}).join("")})}
+var isd=function(t){return !!d[t]||cp.indexOf(t)>=0},byLv=function(a,b){return (all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)};
+// 오버레이 연동이 알려 준 진행 중 퀘스트 — 즐겨찾기·완료는 빼고 아래 구역에(★ 누르면 즐겨찾기로 고정)
+var runs=st.filter(function(t){return !!all[t]&&!f[t]&&!isd(t)});runs.sort(byLv);
+ids.sort(function(a,b){return (isd(a)?1:0)-(isd(b)?1:0)||byLv(a,b)});
+document.getElementById("nfav").textContent=ids.length;document.getElementById("nrun").textContent=runs.length;
+document.getElementById("empty").style.display=(ids.length||runs.length)?"none":"";document.getElementById("runbox").style.display=runs.length?"":"none";
+document.getElementById("nosync").style.display=(sy||runs.length)?"none":"";
+var rl=document.getElementById("rl"),my=++seq;if(!ids.length)box.innerHTML="";else box.innerHTML='<p class="muted small">불러오는 중…</p>';if(runs.length)rl.innerHTML='<p class="muted small">불러오는 중…</p>';else rl.innerHTML="";
+Promise.all(ids.concat(runs).map(load1)).then(function(hs){if(my!==seq)return;
+box.innerHTML=ids.map(function(t,i){var done=isd(t);return card(t,hs[i],done,!done&&st.indexOf(t)>=0,true)}).join("");
+rl.innerHTML=runs.map(function(t,i){return card(t,hs[ids.length+i],false,true,false)}).join("")})}
 document.addEventListener("click",function(ev){var b=ev.target.closest(".fav");if(!b)return;var t=b.getAttribute("data-t"),f=L(FK,{});if(f[t])delete f[t];else f[t]=1;S(FK,f);render()});
 document.addEventListener("guide-sync",render);render();})();
 </script>"""
@@ -1228,9 +1236,11 @@ def favorites_page(ctx: Ctx) -> tuple[str, str]:
     """내 즐겨찾기 — ★로 표시한 퀘스트(어떤 종류든)를 목표·필요한 열쇠까지 한 페이지에. 내용은 브라우저가 각 퀘스트 페이지에서 잘라 온다."""
     allq_json = json.dumps(_allq(ctx), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     body = f"""<h1>내 즐겨찾기 <span class="h1en">★로 표시한 퀘스트</span></h1>
-<p class="sub">퀘스트 페이지·<a href="/guide/quests/">퀘스트 목록</a>·<a href="/guide/hunt/">사냥 퀘스트</a>의 ★를 누르면 여기 모입니다(이 브라우저에 저장) · <b id="nfav">0</b>개 · 완료한 퀘스트는 뒤로·흐리게</p>
+<p class="sub">퀘스트 페이지·<a href="/guide/quests/">퀘스트 목록</a>·<a href="/guide/hunt/">사냥 퀘스트</a>의 ★를 누르면 여기 모입니다(이 브라우저에 저장) · 즐겨찾기 <b id="nfav">0</b>개 · 오버레이를 연동하면 <b>진행 중인 퀘스트</b>도 자동으로 아래에 · 완료한 퀘스트는 뒤로·흐리게</p>
 <div class="note" id="empty">아직 즐겨찾기가 없어요. <a href="/guide/quests/">퀘스트 목록</a>이나 <a href="/guide/hunt/">사냥 퀘스트</a>에서 ★를 눌러 보세요.</div>
 <div id="fl"></div>
+<section id="runbox" style="display:none"><h2 style="margin-top:22px">진행 중인 퀘스트 <span class="muted small">시세 오버레이가 게임 로그로 확인한 것 · <b id="nrun">0</b>개 · ★를 누르면 즐겨찾기로 고정</span></h2><div id="rl"></div></section>
+<div class="note" id="nosync" style="display:none">같은 PC에서 <a href="/">시세 오버레이</a>를 켜고 상단 <b>오버레이 연동</b>을 누르면, 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.</div>
 <script type="application/json" id="allq">{allq_json}</script>"""
     path = "/guide/favorites/"
     title = "내 즐겨찾기 퀘스트 — 목표·필요 아이템·열쇠 한눈에 | 탈콥 가이드"
