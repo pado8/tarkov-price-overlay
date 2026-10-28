@@ -1717,3 +1717,9 @@ html, body, #root {
 .radar-guide { opacity: 0.75; font-size: 11px; }
 .radar-guide:hover { color: var(--text); }
 .radar-flag.radar-key { color: var(--gold-bright); white-space: normal; display: inline; overflow: visible; }
+/* 시세로 조회한 열쇠가 여는 문: 지도 강조(깜빡이는 금색 고리) + 카드 한 줄 */
+.radar-keyring { animation: radar-keyring 1.4s ease-in-out infinite; }
+@keyframes radar-keyring { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.key-locks { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0 2px; font-size: var(--card-fs-sm); color: var(--gold-bright); }
+.key-locks .link-btn { background: none; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 4px; padding: 0 6px; font-size: 11px; line-height: 18px; cursor: pointer; }
+.key-locks .link-btn:hover { color: var(--text); border-color: var(--gold); }

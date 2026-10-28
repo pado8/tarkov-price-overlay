@@ -121,12 +121,13 @@ type Props = {
   onSize: (px: number) => void;
   forceMode?: "radar" | "map"; // 지도 나란히 패널: 탭 없이 이 모드만
   fill?: boolean; // 패널이 크기를 정한다 — 크기 슬라이더 숨김
+  highlightKey?: string | null; // 시세로 조회한 열쇠 — 지도에서 여는 문 강조
 };
 
 const MODE_KEY = "tarkov.radar.mode"; // "radar" | "map"
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 레이더·지도 탭 공통, 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, forceMode, fill }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, forceMode, fill, highlightKey }: Props) {
   const [modeState, setMode] = useState<"radar" | "map">(() => (localStorage.getItem(MODE_KEY) === "map" ? "map" : "radar"));
   const mode = forceMode ?? modeState;
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
@@ -392,12 +393,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {stale && <div className="radar-warn">{t.radarStale}</div>}
         {fill ? (
           <div className="radar-maprow">
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} />
             <div className="radar-side">{targetList}</div>
           </div>
         ) : (
           <>
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} />
             {targetList}
           </>
         )}

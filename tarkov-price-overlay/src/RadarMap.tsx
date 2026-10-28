@@ -54,7 +54,7 @@ export type MapDoc = {
   extracts: { name: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[];
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
-  locks: { p: Pt; type: string }[];
+  locks: { p: Pt; type: string; key?: string | null }[]; // key = 여는 열쇠 아이템 id
   containers: Pt[];
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
   bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[] }[]; // 보스 스폰 구역(구역별 합침)
@@ -77,6 +77,7 @@ type Props = {
   hiddenQuests: Set<string>; // 사용자가 숨긴 퀘스트(task id) — 지도 점·이름표에서 뺀다
   size: number; // 지도 높이(px). 폭은 카드 폭을 따라간다
   fixed: boolean; // true = 지도 고정(↻ 90° 회전만) · false = 바라보는 쪽이 위
+  highlightKey?: string | null; // 시세로 조회한 열쇠 아이템 id — 이 열쇠로 여는 문을 금색으로 강조(잠긴 문 레이어와 무관)
 };
 
 const cache = new Map<string, MapDoc>();
@@ -183,7 +184,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey }: Props) {
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
@@ -389,6 +390,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     }
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
+    if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     if (layers.hazards) doc.hazards.forEach((x, i) => { const p = hazardPt(x); if (p) cands.push({ key: `hz${i}`, text: x.name, p, off: 6, pr: 4 }); });
     if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: `${z.name} · ${bossText(z, 1)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
@@ -548,6 +550,18 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     <polygon points={poly(corners)} fill="rgba(220,40,40,0.22)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="4 2" />
                     <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize={14} fill="#ff4d4d" stroke="#000" strokeWidth={0.6}>☠</text>
                     {label(`bz${i}`)}
+                  </g>
+                );
+              })}
+            {highlightKey &&
+              doc.locks.map((x, i) => {
+                if (x.key !== highlightKey) return null;
+                const s = toScreen(x.p[0], x.p[2]);
+                return (
+                  <g key={`kl${i}`} onClick={() => pick({ name: `🔑 ${t.radarKeyDoor}${x.type === "trunk" ? " · " + t.radarLockTrunk : ""}`, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                    <circle cx={s.x} cy={s.y} r={11} fill="none" stroke="#ffd34d" strokeWidth={1.6} className="radar-keyring" />
+                    <rect x={s.x - 4.5} y={s.y - 4.5} width={9} height={9} fill="#ffd34d" stroke="#000" strokeWidth={0.8} transform={`rotate(45 ${s.x} ${s.y})`} />
+                    {label(`kl${i}`)}
                   </g>
                 );
               })}

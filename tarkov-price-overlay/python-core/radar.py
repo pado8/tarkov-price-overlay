@@ -474,7 +474,7 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
         hazards.append({"name": _loc(loc_maps, h.get("name"), h.get("hazardType") or "hazard"),
                         "type": h.get("hazardType") or "", "p": note(pt(h["position"])) if ok(h.get("position")) else None,
                         "outline": ol})
-    locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door"}
+    locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door", "key": lk.get("key") or None}  # key = 여는 열쇠 아이템 id(시세 조회한 열쇠 강조용)
              for lk in m.get("locks") or [] if ok(lk.get("position"))]
     containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]
     spawns = []
@@ -726,6 +726,27 @@ class RadarService:
     # 스크린샷이 이보다 오래됐으면(그리고 사용자가 레이더를 직접 연 게 아니면) 지도 데이터를 받지 않는다.
     # 앱이 1초마다 부르는데, 레이더를 안 쓰는 사용자까지 9MB 지도 문서를 받게 할 이유가 없다.
     FRESH_SEC = 15 * 60
+
+    def key_locks(self, item_id: str, lang: str = "ko", game_mode: str = "regular") -> dict:
+        """시세로 조회한 아이템이 열쇠면, 지금 맵에서 그 열쇠로 여는 잠긴 문·트렁크(가까운 순, 내 위치 기준 거리·방향).
+        열쇠가 아니거나 맵을 모르면 locks 가 빈 목록. 카드 한 줄 + 지도 강조에 쓴다."""
+        st = self.state(lang, game_mode)
+        mp, shot = st.get("map"), st.get("shot")
+        if not mp or not item_id:
+            return {"map": mp, "locks": []}
+        doc = map_features(mp["id"], lang) or {}
+        out = []
+        for lk in doc.get("locks") or []:
+            if lk.get("key") != item_id:
+                continue
+            p = lk["p"]
+            row = {"p": p, "type": lk.get("type") or "door", "dist": None, "rel": None, "dy": None}
+            if shot:
+                dist, rel = relative(shot["x"], shot["z"], shot.get("heading"), p[0], p[2])
+                row.update({"dist": round(dist, 1), "rel": None if rel is None else round(rel, 1), "dy": round(p[1] - shot["y"], 1)})
+            out.append(row)
+        out.sort(key=lambda r: (r["dist"] is None, r["dist"] or 0))
+        return {"map": mp, "locks": out}
 
     def state(self, lang: str = "ko", game_mode: str = "regular", map_override: Optional[str] = None,
               full: bool = False) -> dict:

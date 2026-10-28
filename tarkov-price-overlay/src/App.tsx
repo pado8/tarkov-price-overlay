@@ -1303,6 +1303,29 @@ function App() {
   radarDataRef.current = radarData;
   const [radarLoading, setRadarLoading] = useState(false);
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
+  // 시세로 조회한 아이템이 열쇠면, 지금 맵에서 그 열쇠로 여는 문·트렁크(사이드카 /radar/keylocks) — 카드 한 줄 + 지도 강조
+  type KeyLocks = { map: { id: string; name: string } | null; locks: { p: [number, number, number]; type: string; dist: number | null; rel: number | null; dy: number | null }[] };
+  const [keyLocks, setKeyLocks] = useState<KeyLocks | null>(null);
+  useEffect(() => {
+    const id = status === "success" ? result?.item_id : null;
+    if (!id || !radarEnabled) {
+      setKeyLocks(null);
+      return;
+    }
+    let dead = false;
+    fetch(`${PYTHON_API}/radar/keylocks?item_id=${encodeURIComponent(id)}&lang=${encodeURIComponent(region.lang)}&game_mode=${encodeURIComponent(region.gameMode)}`)
+      .then((r) => (r.ok ? (r.json() as Promise<KeyLocks>) : null))
+      .then((d) => {
+        if (!dead) setKeyLocks(d && d.map && d.locks.length ? d : null);
+      })
+      .catch(() => {
+        if (!dead) setKeyLocks(null);
+      });
+    return () => {
+      dead = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, result?.item_id, radarEnabled]);
   // 레이더가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
   const [radarFolder, setRadarFolder] = useState<{ folder: string | null; source: "auto" | "manual"; auto: string | null; ok: boolean; prune_keep: number | null } | null>(null);
   const [radarFolderMsg, setRadarFolderMsg] = useState("");
@@ -4794,6 +4817,7 @@ function App() {
             }}
             onClose={() => setRadarActive(false)}
             size={radarSize}
+            highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={(px) => {
               setRadarSize(px);
               try {
@@ -4879,6 +4903,28 @@ function App() {
               result.attempt === "wide" && (
                 <div className="hint">{t.wideCaptureHint}</div>
               )}
+            {/* 조회한 아이템이 열쇠고 지금 맵에서 여는 문이 있으면 — 몇 곳·가장 가까운 거리, 지도에서 금색으로 강조 */}
+            {keyLocks && keyLocks.map && (
+              <div className="key-locks">
+                <span>
+                  🗺 {t.keyLocksLine.replace("{map}", keyLocks.map.name).replace("{n}", String(keyLocks.locks.length))}
+                  {keyLocks.locks[0]?.dist != null && ` · ${t.keyLocksNearest.replace("{d}", String(Math.round(keyLocks.locks[0].dist)))}`}
+                </span>
+                {!wideMode && !radarActive && (
+                  <button
+                    className="link-btn"
+                    onClick={() => {
+                      try {
+                        localStorage.setItem("tarkov.radar.mode", "map");
+                      } catch {}
+                      void openRadar(false);
+                    }}
+                  >
+                    {t.keyLocksShow}
+                  </button>
+                )}
+              </div>
+            )}
             {result.item_name && (() => {
               const trend = trendPct(result.flea_change_48h_pct);
               const slot = fmtSlot(
@@ -5682,6 +5728,7 @@ function App() {
             }}
             onClose={toggleWide}
             size={paneSize}
+            highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={() => {}}
             forceMode="map"
             fill

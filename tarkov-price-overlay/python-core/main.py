@@ -1114,6 +1114,12 @@ def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = 
     return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full)
 
 
+@app.get("/radar/keylocks")
+def radar_keylocks(item_id: str, lang: str = "ko", game_mode: str = "regular") -> dict:
+    """시세로 조회한 아이템이 열쇠면 지금 맵에서 그 열쇠로 여는 잠긴 문·트렁크(거리·방향). 아니면 locks 빈 목록."""
+    return get_radar().key_locks(item_id, lang, game_mode)
+
+
 @app.get("/radar/map")
 def radar_map(map: str, lang: str = "ko") -> dict:
     """전체 지도(2단계)용 정적 좌표: 탈출구·트랜짓·위험 구역(윤곽)·잠긴 문·상자·스폰·고정 무기·스위치.
