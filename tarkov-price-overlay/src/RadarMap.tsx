@@ -61,8 +61,8 @@ export type MapDoc = {
   switches: Pt[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·레이더 원·지도가 같은 필터) 여기엔 props 로 온다
-export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true };
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·레이더 원·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -161,6 +161,16 @@ export function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: numbe
   const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
   const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
   return { W, H, matrix: [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ") };
+}
+
+function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
+  if (h.p) return h.p;
+  if (h.outline.length) {
+    const x = h.outline.reduce((a, q) => a + q[0], 0) / h.outline.length;
+    const z = h.outline.reduce((a, q) => a + q[1], 0) / h.outline.length;
+    return [x, 0, z];
+  }
+  return null;
 }
 
 export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed }: Props) {
@@ -370,6 +380,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
+    if (layers.hazards) doc.hazards.forEach((x, i) => { const p = hazardPt(x); if (p) cands.push({ key: `hz${i}`, text: x.name, p, off: 6, pr: 4 }); });
     doc.extracts.forEach((x, i) => {
       if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -448,6 +459,24 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {doc && v && (
           <svg className="radar-mapsvg" viewBox={`0 0 ${box.w} ${box.h}`} role="img" aria-label={doc.name} onClick={onSvgClick}>
             {imgLayer}
+            {layers.hazards &&
+              doc.hazards.map((x, i) => {
+                const p = hazardPt(x);
+                if (!p) return null;
+                const s = toScreen(p[0], p[2]);
+                return (
+                  <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
+                    {x.outline.length >= 3 ? (
+                      <polygon points={poly(x.outline)} fill="rgba(255,120,40,0.18)" stroke="#ff9f1c" strokeWidth={1} strokeDasharray="3 2" />
+                    ) : (
+                      <circle cx={s.x} cy={s.y} r={6} fill="rgba(255,120,40,0.25)" stroke="#ff9f1c" strokeWidth={1} />
+                    )}
+                    <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
+                    <text x={s.x} y={s.y + 3} textAnchor="middle" fontSize={8} fill="#ff9f1c" fontWeight={700}>!</text>
+                    {label(`hz${i}`)}
+                  </g>
+                );
+              })}
             {layers.transits &&
               doc.transits.map((x, i) => {
                 const s = toScreen(x.p[0], x.p[2]);
@@ -473,6 +502,29 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     </g>
                   );
                 })}
+            {layers.locks &&
+              doc.locks.map((x, i) => {
+                const s = toScreen(x.p[0], x.p[2]);
+                return (
+                  <g key={`lk${i}`} onClick={() => pick({ name: `${t.radarLayerLocks}${x.type && x.type !== "door" ? " · " + x.type : ""}`, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                    <circle cx={s.x} cy={s.y} r={8} fill="transparent" />
+                    <rect x={s.x - 3} y={s.y - 3} width={6} height={6} fill="#c08cff" stroke="#000" strokeWidth={0.7} transform={`rotate(45 ${s.x} ${s.y})`} />
+                  </g>
+                );
+              })}
+            {layers.spawns &&
+              doc.spawns.map((sp, i) => {
+                if (sp[3] !== "b" && sp[3] !== "n") return null; // 보스·저격 스캐브만(PMC·일반 스캐브 스폰은 너무 많다)
+                const s = toScreen(sp[0], sp[2]);
+                const boss = sp[3] === "b";
+                return (
+                  <g key={`sp${i}`} onClick={() => pick({ name: boss ? t.radarSpawnBoss : t.radarSpawnSniper, p: [sp[0], sp[1], sp[2]] })} opacity={op(sp[0], sp[1], sp[2])}>
+                    <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
+                    <circle cx={s.x} cy={s.y} r={5.5} fill={boss ? "#ff5e5e" : "#ff9ad5"} stroke="#000" strokeWidth={0.8} />
+                    <text x={s.x} y={s.y + 2.8} textAnchor="middle" fontSize={7} fill="#000" fontWeight={700}>{boss ? "B" : "S"}</text>
+                  </g>
+                );
+              })}
             {layers.quests &&
               questTargets.map((q, i) => {
                 const s = toScreen(q.x!, q.z!);
@@ -511,6 +563,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
         {chip(layers.transits, "transit", t.radarLayerTransits, () => onToggleLayer("transits"))}
         {chip(layers.quests, "quest", t.radarLayerQuests, () => onToggleLayer("quests"))}
+        {chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}
+        {chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
+        {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>
       {doc?.img && showImg && doc.img.layers.length > 0 && (

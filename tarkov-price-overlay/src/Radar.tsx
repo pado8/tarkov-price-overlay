@@ -2,11 +2,13 @@
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
 // '내가 바라보는 쪽 = 위' 기준이라 지도 북쪽 방위는 쓰지 않는다(맵마다 회전이 달라 틀릴 위험).
 import { useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
 import { RadarMap, loadMapRot, useMapDoc, imageMatrix, autoFloor, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
 import type { Layers } from "./RadarMap";
 
 const PYTHON_API = "http://127.0.0.1:8765";
+const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 const RADAR_IMG_KEY = "tarkov.radar.radarImg"; // "0" = 레이더 원 안 지도 배경 끔
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
 type HiddenQuest = { id: string; name: string };
@@ -36,6 +38,7 @@ export type RadarTarget = {
   objective?: string;
   optional?: boolean;
   task?: string;
+  slug?: string; // 가이드 퀘스트 페이지 slug(tarkov.dev normalizedName)
   // 전체 지도용 게임 좌표(2단계)
   x?: number;
   y?: number;
@@ -320,13 +323,19 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               <span className="radar-flag" key={c}>
                 {" "}
                 {c}
-                {x.kind === "quest" && (
-              <button type="button" className="radar-hide" onClick={() => hideQuest(x)} title={t.radarHideQuest} aria-label={t.radarHideQuest}>
-                ✕
+              </span>
+            ))}
+            {x.kind === "quest" && x.slug && (
+              <button
+                type="button"
+                className="radar-hide radar-guide"
+                onClick={() => void openUrl(`${GUIDE_URL}quest/${x.slug}/`).catch(() => {})}
+                title={t.radarOpenGuide}
+                aria-label={t.radarOpenGuide}
+              >
+                📖
               </button>
             )}
-          </span>
-            ))}
             {x.kind === "quest" && (
               <button type="button" className="radar-hide" onClick={() => hideQuest(x)} title={t.radarHideQuest} aria-label={t.radarHideQuest}>
                 ✕

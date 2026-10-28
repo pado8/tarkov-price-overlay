@@ -27,6 +27,7 @@ if sys.platform == "win32":
 print(f"[startup] DPI awareness: {DPI_STATUS}")
 
 import json
+import os
 import re
 import threading
 from contextlib import asynccontextmanager
@@ -1213,6 +1214,19 @@ def radar_folder_set(req: RadarFolderRequest) -> dict:
         return get_radar().set_folder(req.path)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/radar/folder/open", dependencies=[Depends(_reject_foreign_origin)])
+def radar_folder_open() -> dict:
+    """레이더가 보는 스크린샷 폴더를 탐색기로 연다(설정 › 폴더 열기). 폴더가 없으면 404."""
+    folder = get_radar().folder_info().get("folder")
+    if not folder or not os.path.isdir(folder):
+        raise HTTPException(status_code=404, detail="screenshot folder not found")
+    try:
+        os.startfile(folder)  # type: ignore[attr-defined]  # Windows 전용
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    return {"ok": True, "folder": folder}
 
 
 class RadarPruneRequest(BaseModel):

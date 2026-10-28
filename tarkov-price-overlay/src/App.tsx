@@ -1412,6 +1412,8 @@ function App() {
     const ro = new ResizeObserver(() => {
       const h = el.offsetHeight;
       if (h >= 200) localStorage.setItem(SETTINGS_HEIGHT_KEY, String(h));
+      // 지도 나란히 모드: 창은 모니터 크기 그대로(여기서 800×내용 높이로 되돌리면 패널이 카드를 눌러 버린다)
+      if (wideModeRef.current) return;
       // Re-measure the card and resize the window to match the new
       // natural content height. Uses the same formula as the card's
       // observer so the two paths agree.
@@ -4090,6 +4092,17 @@ function App() {
               <label>{t.radarFolderLabel}</label>
               <span style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 <button className="reset-btn" onClick={() => void pickRadarFolder()}>{t.radarFolderPick}</button>
+                {radarFolder?.folder && (
+                  <button
+                    className="reset-btn"
+                    title={radarFolder.folder}
+                    onClick={() => {
+                      fetch(`${PYTHON_API}/radar/folder/open`, { method: "POST" }).catch((e) => log(`radar: open folder failed ${String(e)}`));
+                    }}
+                  >
+                    {t.radarFolderOpen}
+                  </button>
+                )}
                 {radarFolder?.source === "manual" && (
                   <button className="reset-btn" onClick={() => void setRadarFolderPath("")}>{t.radarFolderAuto}</button>
                 )}

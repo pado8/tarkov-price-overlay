@@ -343,7 +343,8 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 if k in seen:
                     continue
                 seen.add(k)
-                add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid)
+                add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid,
+                    slug=t.get("normalizedName") or None)  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
     out.sort(key=lambda r: r["dist"])
     return out
 
