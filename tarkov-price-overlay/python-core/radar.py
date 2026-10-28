@@ -513,6 +513,33 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc
+def _recycle(paths: list[str]) -> int:
+    """파일들을 Windows 휴지통으로(SHFileOperationW, FOF_ALLOWUNDO). 성공한 개수 반환. 비윈도우/실패 = 0."""
+    if not paths or os.name != "nt":
+        return 0
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        class SHFILEOPSTRUCTW(ctypes.Structure):
+            _fields_ = [("hwnd", wintypes.HWND), ("wFunc", wintypes.UINT), ("pFrom", wintypes.LPCWSTR),
+                        ("pTo", wintypes.LPCWSTR), ("fFlags", ctypes.c_ushort),
+                        ("fAnyOperationsAborted", wintypes.BOOL), ("hNameMappings", ctypes.c_void_p),
+                        ("lpszProgressTitle", wintypes.LPCWSTR)]
+
+        FO_DELETE, FOF_ALLOWUNDO, FOF_NOCONFIRMATION, FOF_SILENT, FOF_NOERRORUI = 3, 0x40, 0x10, 0x4, 0x400
+        op = SHFILEOPSTRUCTW()
+        op.wFunc = FO_DELETE
+        op.pFrom = "\0".join(os.path.abspath(p) for p in paths) + "\0\0"   # 이중 NUL 종료 목록
+        op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI
+        rc = ctypes.windll.shell32.SHFileOperationW(ctypes.byref(op))
+        if rc != 0 or op.fAnyOperationsAborted:
+            log.warning(f"[radar] 휴지통 보내기 실패 rc={rc}")
+            return 0
+        return sum(1 for p in paths if not os.path.exists(p))
+    except Exception as e:
+        log.warning(f"[radar] 휴지통 보내기 예외: {e}")
+        return 0
 
 
 def _settings_path() -> Path:
@@ -527,6 +554,8 @@ class RadarService:
         self._logs = _LogMaps()
         self._lock = threading.Lock()
         self._folder_override: Optional[Path] = None
+        self._prune_keep: Optional[int] = None   # None=자동 정리 끔
+        self._last_pruned_for: Optional[str] = None
         self._load_settings()
 
     # ── 설정(스크린샷 폴더 직접 지정) ──
@@ -539,6 +568,8 @@ class RadarService:
                 self._folder_override = Path(f)
             elif f:
                 log.warning(f"[radar] 저장된 스크린샷 폴더가 없어져 자동 탐색으로 돌아감: {f}")
+            pk = d.get("prune_keep")
+            self._prune_keep = int(pk) if isinstance(pk, int) and pk > 0 else None
         except FileNotFoundError:
             pass
         except Exception as e:
@@ -548,10 +579,49 @@ class RadarService:
         try:
             import json
             _settings_path().write_text(
-                json.dumps({"folder": str(self._folder_override) if self._folder_override else None}, ensure_ascii=False),
+                json.dumps({"folder": str(self._folder_override) if self._folder_override else None,
+                            "prune_keep": self._prune_keep}, ensure_ascii=False),
                 encoding="utf-8")
         except Exception as e:
             log.warning(f"[radar] 설정 저장 실패: {e}")
+
+    # ── 자동 정리: 좌표 스크린샷은 장당 5~7MB라 레이더용으로 F2를 누르다 보면 하루 1GB를 넘긴다 ──
+    # 좌표 패턴 파일만, 최신 N장을 남기고, **휴지통으로**(영구 삭제 안 함 — 되돌릴 수 있게).
+    def set_prune(self, keep: Optional[int]) -> dict:
+        """keep=None/0 → 끔. 양수면 좌표 스크린샷을 최신 keep장만 남긴다."""
+        k = int(keep) if keep else 0
+        if k < 0:
+            raise ValueError("keep은 0 이상")
+        with self._lock:
+            self._prune_keep = k or None
+            self._save_settings()
+        return {"prune_keep": self._prune_keep}
+
+    def _prune(self, folder: Path) -> int:
+        """최신 N장 밖의 좌표 스크린샷을 휴지통으로. 지운 개수 반환. 실패하면 0(절대 영구 삭제로 폴백하지 않음)."""
+        keep = self._prune_keep
+        if not keep:
+            return 0
+        try:
+            shots = []
+            with os.scandir(folder) as it:
+                for ent in it:
+                    n = ent.name
+                    if n.lower().endswith(SHOT_EXT) and "]_" in n and parse_shot_name(n):
+                        try:
+                            shots.append((ent.stat().st_mtime, ent.path))
+                        except OSError:
+                            pass
+        except OSError:
+            return 0
+        if len(shots) <= keep:
+            return 0
+        shots.sort()
+        victims = [p for _, p in shots[:-keep]]
+        done = _recycle(victims)
+        if done:
+            log.info(f"[radar] 좌표 스크린샷 {done}장 휴지통으로(최신 {keep}장 유지)")
+        return done
 
     def folder_info(self) -> dict:
         """현재 쓰는 폴더와 출처. auto = 자동 탐색 결과(없으면 None)."""
@@ -560,7 +630,8 @@ class RadarService:
         return {"folder": str(cur) if cur else None,
                 "source": "manual" if self._folder_override else "auto",
                 "auto": str(auto) if auto else None,
-                "ok": bool(cur and cur.is_dir())}
+                "ok": bool(cur and cur.is_dir()),
+                "prune_keep": self._prune_keep}
 
     def set_folder(self, path: str) -> dict:
         """빈 문자열이면 자동 탐색으로 되돌린다. 없는 폴더면 ValueError."""
@@ -586,6 +657,10 @@ class RadarService:
                          "shot": None, "map": None,
                          "map_source": None, "preset": None, "targets": [], "maps": []}
             shot = self._shots.latest(folder) if folder else None
+            # 새 스크린샷이 들어올 때만 한 번 정리(1초 폴링마다 폴더를 다시 훑지 않게)
+            if shot and self._prune_keep and shot["name"] != self._last_pruned_for:
+                self._last_pruned_for = shot["name"]
+                self._prune(folder)
             if shot:
                 shot = dict(shot)
                 shot["heading"] = heading_deg(shot["qx"], shot["qy"], shot["qz"], shot["qw"])

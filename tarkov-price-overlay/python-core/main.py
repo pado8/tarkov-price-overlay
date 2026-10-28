@@ -1215,6 +1215,19 @@ def radar_folder_set(req: RadarFolderRequest) -> dict:
         raise HTTPException(status_code=400, detail=str(e))
 
 
+class RadarPruneRequest(BaseModel):
+    keep: int = 0  # 0 = 자동 정리 끔, N = 좌표 스크린샷을 최신 N장만 남김(나머지는 휴지통)
+
+
+@app.post("/radar/prune", dependencies=[Depends(_reject_foreign_origin)])
+def radar_prune_set(req: RadarPruneRequest) -> dict:
+    """레이더용 스크린샷 자동 정리 설정. 장당 5~7MB라 F2를 자주 누르면 하루 1GB를 넘긴다."""
+    try:
+        return get_radar().set_prune(req.keep)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @app.get("/quests/status")
 def quests_status() -> dict:
     """Current state of the quest log watcher: install path validity,
