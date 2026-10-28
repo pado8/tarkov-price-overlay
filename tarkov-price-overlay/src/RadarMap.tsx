@@ -392,7 +392,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
     if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
-    if (layers.hazards) doc.hazards.forEach((x, i) => { const p = hazardPt(x); if (p) cands.push({ key: `hz${i}`, text: x.name, p, off: 6, pr: 4 }); });
+    // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
     if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: `${z.name} · ${bossText(z, 1)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
       if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
