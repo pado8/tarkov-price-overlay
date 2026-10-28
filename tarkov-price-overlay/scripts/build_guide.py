@@ -109,7 +109,9 @@ def main() -> int:
     tasks = {**tasks_pve, **tasks_reg}
     task_modes = {tid: [m for m, src in (("pvp", tasks_reg), ("pve", tasks_pve)) if tid in src]
                   for tid in tasks}
-    loc_tasks = {**(get("pve/tasks_ko") or {}), **(get("regular/tasks_ko") or {})}
+    sys.path.insert(0, str(ROOT / "python-core"))
+    import quest_ko  # 영어로 남은 퀘스트 이름·목표의 한국어 보정 표(python-core/data/quest_ko.json) — 사이드카와 공유
+    loc_tasks = quest_ko.overlay({**(get("pve/tasks_ko") or {}), **(get("regular/tasks_ko") or {})})
     loc_tasks_en = {**(get("pve/tasks_en") or {}), **(get("regular/tasks_en") or {})}
     maps_doc = get("regular/maps")
     maps = maps_doc["maps"]

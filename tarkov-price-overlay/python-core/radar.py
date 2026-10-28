@@ -23,6 +23,7 @@ from typing import Optional
 
 import extract_conditions
 import extract_current
+import quest_ko
 import json
 import sys
 
@@ -812,6 +813,8 @@ class RadarService:
                 try:
                     tasks_doc = _doc(f"{jmode}/tasks") or {}
                     loc_tasks = _doc(f"{jmode}/tasks_{lang}") or {}
+                    if lang == "ko":
+                        loc_tasks = quest_ko.overlay(loc_tasks)  # 영어로 남은 퀘스트 이름·목표를 한국어 보정 표로
                 except Exception:
                     tasks_doc, loc_tasks = {}, {}
                 try:
