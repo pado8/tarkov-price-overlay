@@ -18,6 +18,7 @@
 .qrow:first-child{border-top:0}
 .qrow.done{opacity:.45}
 .qrow.done .qn{text-decoration:line-through}
+.qn .fav{width:22px;height:22px;font-size:13px;margin-right:2px;vertical-align:-3px}.qrow.done .qn .fav{text-decoration:none}
 .qrow input{width:16px;height:16px;accent-color:var(--gold);margin-top:3px;flex:none}
 .qn{font-weight:700;font-size:14.5px}
 .qmeta{font-size:12.5px;color:var(--muted)}
@@ -49,6 +50,7 @@
     <label class="chk"><input type="checkbox" id="kappaOnly" /> 카파 필수 퀘스트만</label>
     <label class="chk"><input type="checkbox" id="firOnly" /> 인레이드만</label>
     <label class="chk"><input type="checkbox" id="hideDone" checked /> 완료 퀘스트 제외</label>
+    <label class="chk"><input type="checkbox" id="favOnly" /> 즐겨찾기만</label>
   </div>
   <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div></div>
   <div id="view" style="margin-top:12px"></div>
@@ -65,6 +67,7 @@
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
   var done = load(KEY, {});
+  var FK = "guide.fav", fav = load(FK, {}); // ★ 즐겨찾기 — /guide/favorites/ 에 모임
   var tab = "sum";
   var mode = load(MODEKEY, "pvp");
   function setMode(v) {
@@ -82,10 +85,12 @@
     var tr = document.getElementById("trader").value;
     var kappa = document.getElementById("kappaOnly").checked;
     var hideDone = document.getElementById("hideDone").checked;
+    var favOnly = document.getElementById("favOnly").checked;
     return Q.filter(function (x) {
       if (x.modes.indexOf(mode) < 0) return false;
       if (tr && x.tr !== tr) return false;
       if (kappa && !x.kappa) return false;
+      if (favOnly && !fav[x.id]) return false;
       if (hideDone && done[x.id] && tab === "sum") return false;
       if (q) {
         var hay = (x.n + " " + x.en + " " + x.give.map(function (g) { return g.i.map(function (i) { return (I[i] || {}).n + " " + (I[i] || {}).en; }).join(" "); }).join(" ")).toLowerCase();
@@ -116,7 +121,7 @@
       if (x.tr !== lastTr) { if (lastTr !== null) html += "</div>"; html += "<h3 class=\"tr-h\">" + esc(x.tr) + "</h3><div class=\"box\" style=\"padding:0\">"; lastTr = x.tr; }
       var isDone = !!done[x.id];
       html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
-        "<div class=\"qn\">" + (x.slug ? "<a href=\"/guide/quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
+        "<div class=\"qn\"><button type=\"button\" class=\"fav" + (fav[x.id] ? " on" : "") + "\" data-t=\"" + esc(x.id) + "\" aria-label=\"즐겨찾기\" title=\"즐겨찾기 — 내 즐겨찾기 페이지에 모임\">★</button> " + (x.slug ? "<a href=\"/guide/quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
         (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
         "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + " · " + esc(x.map || "아무 지역") +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
@@ -162,6 +167,12 @@
     document.getElementById("prog").textContent = "완료 체크 " + d + " / " + n;
     document.getElementById("bar").style.width = (n ? d / n * 100 : 0) + "%";
   }
+  document.getElementById("view").addEventListener("click", function (e) {
+    var b = e.target.closest(".fav"); if (!b) return;
+    e.preventDefault(); // label 안의 버튼 — 완료 체크박스가 같이 눌리지 않게
+    var t = b.getAttribute("data-t"); if (fav[t]) delete fav[t]; else fav[t] = 1;
+    save(FK, fav); render();
+  });
   document.getElementById("view").addEventListener("change", function (e) {
     var r = e.target.closest(".qrow"); if (!r) return;
     var id = r.getAttribute("data-id");
@@ -173,7 +184,7 @@
     document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
     render();
   });
-  ["trader", "kappaOnly", "firOnly", "hideDone"].forEach(function (id) { document.getElementById(id).addEventListener("change", render); });
+  ["trader", "kappaOnly", "firOnly", "hideDone", "favOnly"].forEach(function (id) { document.getElementById(id).addEventListener("change", render); });
   // 오버레이 연동(sync.js)이 완료 퀘스트를 guide.quests 에 합치면 다시 읽어 그린다
   document.addEventListener("guide-sync", function () { done = load(KEY, {}); render(); });
   document.getElementById("mode").addEventListener("click", function (e) {

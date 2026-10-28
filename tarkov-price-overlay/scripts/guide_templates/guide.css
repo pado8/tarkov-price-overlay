@@ -229,3 +229,10 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .synchelp{max-width:1100px;margin:8px auto 0;padding:8px 36px 8px 12px;position:relative;font-size:13px;line-height:1.5;color:var(--text);background:var(--panel2);border:1px solid var(--gold-dim);border-radius:8px}.synchelp a{color:var(--gold)}.synchelp .x{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px}
 #itbl tr.cut td{opacity:.75}#itbl tr.cut td:nth-child(2)::after{content:" 완료분 제외";font-size:11px;color:var(--gold);margin-left:4px}
 .badge.syn{margin-left:6px;background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold);font-size:11px;padding:1px 6px;border-radius:999px}
+/* 사냥 퀘스트 페이지 + ★ 즐겨찾기 */
+.fav{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none;vertical-align:middle}
+.fav:hover{color:var(--gold);border-color:var(--gold-dim)}.fav.on{color:#ffd34d;border-color:#ffd34d;background:rgba(255,211,77,.08)}
+.hq{margin:10px 0}.hq.done{opacity:.5}.hq.isfav{border-color:#b8962e;box-shadow:inset 3px 0 0 #ffd34d}
+.hq .hqh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.hq h2{margin:0;font-size:17px}.hq .tags{display:inline-flex;gap:6px;flex-wrap:wrap}
+.hq .objs{margin:0}.badge.b-done{background:var(--panel2);color:var(--muted)}.badge.b-run{background:rgba(255,211,77,.15);color:var(--gold)}
+.controls .chk{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text);white-space:nowrap}.controls select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px}

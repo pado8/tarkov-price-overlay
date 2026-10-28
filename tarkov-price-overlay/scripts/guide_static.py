@@ -74,7 +74,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
 NAV_GROUPS = [
     ("시작", "/guide/start/", [("start", "/guide/start/", "초반 가이드"), ("patch", "/guide/patch/", "패치 요약"),
                                ("promo", "/guide/promo/", "프로모 코드")]),
-    ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
+    ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("hunt", "/guide/hunt/", "사냥 퀘스트"), ("favorites", "/guide/favorites/", "내 즐겨찾기"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
     ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
                                 ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
@@ -787,7 +787,10 @@ function mark(){var sy=window.__guideSync;if(!sy)return;var lab=c.parentNode;if(
 // '처음부터 순서' 목록: 완료한 선행 퀘스트(직접 체크 + 오버레이 연동)는 흐리게
 function chainMark(){var sy=window.__guideSync,cp=(sy&&sy.completed)||[];document.querySelectorAll(".chain li[data-t]").forEach(function(li){var t=li.getAttribute("data-t");li.classList.toggle("done",!!d[t]||cp.indexOf(t)>=0)})}
 chainMark();document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark();chainMark()});if(window.__guideSync)mark();
-c.addEventListener("change",function(){if(c.checked)d[id]=1;else delete d[id];try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}});})();
+c.addEventListener("change",function(){if(c.checked)d[id]=1;else delete d[id];try{localStorage.setItem(K,JSON.stringify(d))}catch(e){}});
+// ★ 즐겨찾기(guide.fav) — 사냥 퀘스트 페이지(/guide/hunt/)에서 모아 본다
+var FK="guide.fav";function fr(){try{return JSON.parse(localStorage.getItem(FK))||{}}catch(e){return {}}}var fb=document.getElementById("qfav");
+if(fb){fb.classList.toggle("on",!!fr()[id]);fb.addEventListener("click",function(){var f=fr();if(f[id])delete f[id];else f[id]=1;try{localStorage.setItem(FK,JSON.stringify(f))}catch(e){}fb.classList.toggle("on",!!f[id])})}})();
 </script>"""
 
 
@@ -828,6 +831,7 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         tags.append(f'<span class="badge b-any">{e(t["factionName"])} 전용</span>')
     if t.get("restartable"):
         tags.append('<span class="badge b-any">실패 시 재시작 가능</span>')
+    tags.append(f'<button type="button" class="fav" id="qfav" data-t="{e(tid)}" aria-label="즐겨찾기" title="즐겨찾기 — 사냥 퀘스트 페이지에서 모아 보기">★</button>')
 
     objs = "".join(objective_html(ctx, o) for o in t.get("objectives") or [])
     sections_main = [f'<section class="box"><h2>목표 {len(t.get("objectives") or [])}개</h2><ol class="objs">{objs}</ol></section>']
@@ -1167,6 +1171,166 @@ document.getElementById("scope").addEventListener("click",function(e){var v=e.ta
 qi.addEventListener("input",function(){filter(true)});
 var p=new URLSearchParams(location.search).get("q");if(p)qi.value=p;filter(true);})();
 </script>"""
+
+
+HUNT_JS = """<script>
+(function(){var K="guide.quests",FK="guide.fav";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var rows=[].slice.call(document.querySelectorAll(".hq")),list=document.getElementById("hl"),tg="all",mp="all",favOnly=false,hideDone=false,qi=document.getElementById("q");
+var all=JSON.parse(document.getElementById("allq").textContent),hunt={};rows.forEach(function(r){hunt[r.getAttribute("data-t")]=1});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function apply(){var f=L(FK,{}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[],q=qi.value.trim().toLowerCase(),n=0,nf=0;
+rows.forEach(function(r){var t=r.getAttribute("data-t"),isf=!!f[t],done=!!d[t]||cp.indexOf(t)>=0,started=!done&&st.indexOf(t)>=0;
+r.classList.toggle("isfav",isf);r.classList.toggle("done",done);r.querySelector(".fav").classList.toggle("on",isf);var b=r.querySelector(".stbadge");b.textContent=done?"완료":started?"진행 중":"";b.className="stbadge badge"+(done?" b-done":started?" b-run":"");b.style.display=b.textContent?"":"none";if(isf)nf++;
+var ok=true;if(tg!=="all"&&(" "+r.getAttribute("data-tg")+" ").indexOf(" "+tg+" ")<0)ok=false;if(mp!=="all"&&("|"+r.getAttribute("data-m")+"|").indexOf("|"+mp+"|")<0)ok=false;if(favOnly&&!isf)ok=false;if(hideDone&&done)ok=false;if(q&&r.getAttribute("data-s").indexOf(q)<0)ok=false;
+r.style.display=ok?"":"none";if(ok)n++;r._k=[isf?0:1,done?1:0,+r.getAttribute("data-lv")]});
+rows.slice().sort(function(a,b){for(var i=0;i<3;i++){if(a._k[i]!==b._k[i])return a._k[i]-b._k[i]}return 0}).forEach(function(r){list.appendChild(r)});
+document.getElementById("shown").textContent=n;document.getElementById("nfav").textContent=nf;var ne=document.getElementById("none");ne.style.display=n?"none":"";
+var o=document.getElementById("ofav"),h="";Object.keys(f).forEach(function(t){if(hunt[t]||!all[t])return;h+='<li><a href="/guide/quest/'+all[t][1]+'/">'+esc(all[t][0])+'</a> <span class="muted small">'+esc(all[t][2])+'</span></li>'});o.innerHTML=h;document.getElementById("ofavbox").style.display=h?"":"none"}
+document.addEventListener("click",function(ev){var b=ev.target.closest(".fav");if(!b)return;var t=b.getAttribute("data-t"),f=L(FK,{});if(f[t])delete f[t];else f[t]=1;S(FK,f);apply()});
+function seg(id,v){document.querySelectorAll("#"+id+" button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)})}
+document.getElementById("tg").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;tg=v;seg("tg",v);apply()});
+document.getElementById("mp").addEventListener("change",function(e){mp=e.target.value;apply()});
+document.getElementById("favonly").addEventListener("change",function(e){favOnly=e.target.checked;apply()});
+document.getElementById("hidedone").addEventListener("change",function(e){hideDone=e.target.checked;apply()});
+qi.addEventListener("input",apply);document.addEventListener("guide-sync",apply);apply();})();
+</script>"""
+
+
+def _allq(ctx: Ctx) -> dict:
+    """즐겨찾기 페이지들이 쓰는 전체 퀘스트 요약 {tid: [이름, slug, 상인, 레벨]} (≈40KB)"""
+    out = {}
+    for tid, t in ctx.tasks.items():
+        ko, _en = ctx.task_names(tid)
+        suf = ctx.display_suffix.get(tid)
+        out[tid] = [f"{ko} ({suf})" if suf else ko, ctx.task_slug(tid), ctx.trader_name(t.get("trader")), t.get("minPlayerLevel") or 0]
+    return out
+
+
+FAV_JS = r"""<script>
+(function(){var FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function card(t,html,done,started){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav on" data-t="'+t+'" aria-label="즐겨찾기 해제" title="즐겨찾기 해제">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+'</span></div>'+html+'</article>'}
+// 퀘스트 페이지를 그대로 받아 목표·필요한 열쇠 부분만 잘라 온다(정적 사이트라 즐겨찾기 조합은 브라우저가 만든다)
+function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
+[].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
+function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync,cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
+document.getElementById("nfav").textContent=ids.length;document.getElementById("empty").style.display=ids.length?"none":"";if(!ids.length){box.innerHTML="";return}
+var isd=function(t){return !!d[t]||cp.indexOf(t)>=0};ids.sort(function(a,b){return (isd(a)?1:0)-(isd(b)?1:0)||(all[a][3]-all[b][3])||(all[a][0]<all[b][0]?-1:1)});
+box.innerHTML='<p class="muted small">불러오는 중…</p>';
+Promise.all(ids.map(load1)).then(function(hs){box.innerHTML=ids.map(function(t,i){var done=isd(t);return card(t,hs[i],done,!done&&st.indexOf(t)>=0)}).join("")})}
+document.addEventListener("click",function(ev){var b=ev.target.closest(".fav");if(!b)return;var t=b.getAttribute("data-t"),f=L(FK,{});if(f[t])delete f[t];else f[t]=1;S(FK,f);render()});
+document.addEventListener("guide-sync",render);render();})();
+</script>"""
+
+
+def favorites_page(ctx: Ctx) -> tuple[str, str]:
+    """내 즐겨찾기 — ★로 표시한 퀘스트(어떤 종류든)를 목표·필요한 열쇠까지 한 페이지에. 내용은 브라우저가 각 퀘스트 페이지에서 잘라 온다."""
+    allq_json = json.dumps(_allq(ctx), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    body = f"""<h1>내 즐겨찾기 <span class="h1en">★로 표시한 퀘스트</span></h1>
+<p class="sub">퀘스트 페이지·<a href="/guide/quests/">퀘스트 목록</a>·<a href="/guide/hunt/">사냥 퀘스트</a>의 ★를 누르면 여기 모입니다(이 브라우저에 저장) · <b id="nfav">0</b>개 · 완료한 퀘스트는 뒤로·흐리게</p>
+<div class="note" id="empty">아직 즐겨찾기가 없어요. <a href="/guide/quests/">퀘스트 목록</a>이나 <a href="/guide/hunt/">사냥 퀘스트</a>에서 ★를 눌러 보세요.</div>
+<div id="fl"></div>
+<script type="application/json" id="allq">{allq_json}</script>"""
+    path = "/guide/favorites/"
+    title = "내 즐겨찾기 퀘스트 — 목표·필요 아이템·열쇠 한눈에 | 탈콥 가이드"
+    desc = "★로 표시한 타르코프 퀘스트를 목표·필요 아이템·열쇠까지 한 페이지에 모아 게임 옆에 띄워 두세요. 브라우저에 저장되며 오버레이 연동 시 완료 퀘스트는 자동으로 흐려집니다."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="favorites",
+                      crumbs=[("퀘스트", "/guide/quests/"), ("내 즐겨찾기", None)], scripts=FAV_JS,
+                      extra_head='<meta name="robots" content="noindex" />')
+
+
+def _hunt_classes(names) -> set:
+    """사격 목표 대상 이름 → 필터용 분류(pmc·scav·boss·any)"""
+    cls = set()
+    for n in names or []:
+        s = str(n)
+        if s == "Any":
+            cls.add("any")
+        elif s in ("AnyPmc", "Usec", "Bear", "PmcBot", "ExUsec", "exUsecFree") or s.lower().startswith("pmc"):
+            cls.add("pmc")
+        elif s in ("Savage", "Marksman", "assaultGroup") or s.lower().startswith("cursed"):
+            cls.add("scav")
+        else:
+            cls.add("boss")  # boss*·follower*·sectant*·infected* …
+    return cls
+
+
+def hunt_page(ctx: Ctx) -> tuple[str, str]:
+    """사냥 퀘스트 — 적 처치(shoot) 목표가 있는 퀘스트만 모아 대상·무기·조건을 한눈에. ★ 즐겨찾기(guide.fav)는 브라우저 저장."""
+    rows = []
+    map_names: set = set()
+    allq = _allq(ctx)
+    for tid, t in ctx.tasks.items():
+        ko, en = ctx.task_names(tid)
+        suf = ctx.display_suffix.get(tid)
+        name = f"{ko} ({suf})" if suf else ko
+        shoot = [o for o in t.get("objectives") or [] if o.get("type") == "shoot"]
+        if not shoot:
+            continue
+        other = len(t.get("objectives") or []) - len(shoot)
+        tr_id = t.get("trader")
+        trn = ctx.trader_name(tr_id)
+        img = ctx.trader(tr_id).get("imageLink")
+        lv = t.get("minPlayerLevel") or 0
+        tags = [f'<a class="tag tr" href="/guide/quests/{e(ctx.trader_slug(tr_id))}/">'
+                + (f'<img src="{e(img)}" alt="" width="18" height="18" loading="lazy" />' if img else "") + f"{e(trn)}</a>"]
+        if lv > 1:
+            tags.append(f'<span class="tag">레벨 {lv}+</span>')
+        mids = ctx.task_maps(t)
+        mnames = []
+        for mid in mids:
+            mn = ctx.map_name(mid)
+            if mn and mn not in mnames:
+                mnames.append(mn)
+        for mid in mids[:4]:
+            tags.append(f'<span class="tag map">{ctx.map_link(mid)}</span>')
+        if t.get("kappaRequired"):
+            tags.append('<span class="badge b-kappa">카파</span>')
+        modes = ctx.task_modes.get(tid, ["pvp", "pve"])
+        if len(modes) == 1:
+            tags.append(f'<span class="badge b-mode">{"PVE 전용" if modes[0] == "pve" else "PVP 전용"}</span>')
+        cls: set = set()
+        tg_names: list = []
+        for o in shoot:
+            cls |= _hunt_classes(o.get("targetNames"))
+            for n in o.get("targetNames") or []:
+                tn = TARGETS.get(n) or ctx.mob_name(n)
+                if tn and tn not in tg_names:
+                    tg_names.append(tn)
+        map_names.update(mnames)
+        search = " ".join([name, en or "", trn] + tg_names + mnames).lower()
+        objs = "".join(objective_html(ctx, o) for o in shoot)
+        rows.append(
+            f'<article class="box hq" data-t="{e(tid)}" data-tg="{" ".join(sorted(cls))}" data-m="{e("|".join(mnames))}" data-lv="{lv}" data-s="{e(search)}">'
+            f'<div class="hqh"><button type="button" class="fav" data-t="{e(tid)}" aria-label="즐겨찾기" title="즐겨찾기">★</button>'
+            f'<h2>{ctx.task_link(tid)}</h2><span class="stbadge badge" style="display:none"></span><span class="tags">{"".join(tags)}</span></div>'
+            f'<ol class="objs">{objs}</ol>'
+            + (f'<p class="muted small">이 밖에 다른 목표 {other}개 — 퀘스트 페이지에서 확인</p>' if other else "")
+            + "</article>")
+    rows_sorted = rows  # 정렬은 브라우저가(즐겨찾기 → 미완료 → 레벨)
+    opts = "".join(f'<option value="{e(m)}">{e(m)}</option>' for m in sorted(map_names))
+    allq_json = json.dumps(allq, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    n = len(rows)
+    body = f"""<h1>사냥 퀘스트 <span class="h1en">누구를 · 어떤 총으로 · 어디서</span></h1>
+<p class="sub">적 처치 목표가 있는 퀘스트 {n}개 · <b>★</b>를 누르면 즐겨찾기 — 맨 위로 모이고 이 브라우저에 저장됩니다 · 데이터 기준 {e(ctx.stamp)}</p>
+<div class="note">게임하면서 옆에 띄워 두는 용도입니다. 대상·사용 무기·부착물·착용 장비·거리·부위·시간대 조건이 바로 보이고, 완료로 표시한 퀘스트(퀘스트 페이지 체크 또는 오버레이 연동)는 흐려집니다. 사냥이 아닌 퀘스트의 ★는 <a href="/guide/favorites/">내 즐겨찾기</a>에서 목표까지 볼 수 있습니다.</div>
+<div class="controls"><input type="search" id="q" placeholder="퀘스트·대상·상인·맵 검색" aria-label="검색" />
+<div class="seg" id="tg"><button data-v="all" class="on">전체</button><button data-v="pmc">PMC</button><button data-v="scav">스캐브</button><button data-v="boss">보스·경호</button><button data-v="any">아무나</button></div>
+<select id="mp" aria-label="맵"><option value="all">모든 맵</option>{opts}</select>
+<label class="chk"><input type="checkbox" id="favonly" /> 즐겨찾기만</label>
+<label class="chk"><input type="checkbox" id="hidedone" /> 완료 숨기기</label>
+<span class="muted small">즐겨찾기 <b id="nfav">0</b> · 표시 <span id="shown">{n}</span></span></div>
+<section class="box" id="ofavbox" style="display:none"><h2>다른 즐겨찾기 <span class="muted small">사냥 퀘스트가 아닌 것</span></h2><ul class="plain" id="ofav"></ul></section>
+<div id="hl">{"".join(rows_sorted)}</div>
+<div class="note" id="none" style="display:none">조건에 맞는 퀘스트가 없어요.</div>
+<script type="application/json" id="allq">{allq_json}</script>"""
+    path = "/guide/hunt/"
+    title = "타르코프 사냥 퀘스트 총정리 — 누구를 어떤 총으로 어디서 잡나 + 즐겨찾기 | 탈콥 가이드"
+    desc = (f"타르코프 적 처치 퀘스트 {n}개: 대상(PMC·스캐브·보스), 사용 무기·부착물·착용 장비·거리·부위·시간대 조건을 한 페이지에. "
+            f"★ 즐겨찾기로 지금 할 사냥 퀘스트만 모아 게임 옆에 띄워 두세요. 완료 퀘스트는 흐리게. 데이터 기준 {ctx.stamp}.")
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="hunt",
+                      crumbs=[("퀘스트", "/guide/quests/"), ("사냥 퀘스트", None)], scripts=HUNT_JS)
 
 
 def rewards_page(ctx: Ctx) -> tuple[str, str]:
@@ -2611,6 +2775,10 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     write(out, p, h, urls)
     items_n = h.count('<tr data-id="')
     p, h = rewards_page(ctx)
+    write(out, p, h, urls)
+    p, h = hunt_page(ctx)
+    write(out, p, h, urls)
+    p, h = favorites_page(ctx)
     write(out, p, h, urls)
     rewards_n = h.count('<details class="rw"')
     p, h = quest_items_page(ctx)
