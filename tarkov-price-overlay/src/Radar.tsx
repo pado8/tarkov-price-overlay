@@ -245,12 +245,62 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   );
 
   const visible = data.targets.filter((x) => showScav || !(x.kind === "extract" && x.faction === "scav"));
+  // 대상 목록(탈출구·트랜짓·진행 중 퀘스트 목표 요약) — 레이더 탭 아래와 지도 모드(카드는 지도 아래, 나란히 패널은 지도 오른쪽 열)에 같이 쓴다
+  const heading = data.shot.heading;
+  const stale = data.shot.age > STALE_SEC;
+  const listMax = fill ? 30 : 8;
+  const targetList = (
+    <div className="radar-list">
+      {visible.length === 0 && <div className="hint">{t.radarNoTargets}</div>}
+      {visible.slice(0, listMax).map((x, i) => (
+        <div className="radar-row" key={`${x.kind}-${x.name}-${i}`}>
+          <span className="radar-dot" style={{ background: colorOf(x) }} />
+          <span className="radar-name">
+            <span className="radar-kind">
+              {x.kind === "extract" ? t.radarExtract : x.kind === "transit" ? t.radarTransit : t.radarQuest}
+            </span>{" "}
+            {x.name}
+            {x.kind === "quest" && x.objective && <span className="radar-sub">{x.objective}</span>}
+            {condLabels(x, t).map((c) => (
+              <span className="radar-flag" key={c}>
+                {" "}
+                {c}
+              </span>
+            ))}
+          </span>
+          <span className="radar-dist">{Math.round(x.dist)}m</span>
+          {x.rel != null && heading != null && (
+            <span className="radar-arrow" style={{ transform: `rotate(${x.rel}deg)` }} aria-hidden="true">
+              ↑
+            </span>
+          )}
+          {Math.abs(x.dy) >= 2.5 && (
+            <span className={`radar-dy ${x.dy > 0 ? "up" : "down"}`}>
+              {x.dy > 0 ? "▲" : "▼"}
+              {Math.round(Math.abs(x.dy))}m
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
   if (mode === "map") {
     return (
       <div className="radar">
         {header}
         {error(data, t)}
-        <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+        {stale && <div className="radar-warn">{t.radarStale}</div>}
+        {fill ? (
+          <div className="radar-maprow">
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+            <div className="radar-side">{targetList}</div>
+          </div>
+        ) : (
+          <>
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} size={size} fixed={fixed} />
+            {targetList}
+          </>
+        )}
         <div className="radar-foot">
           {mapPicker}
           {sizeCtl}
@@ -264,8 +314,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const S = size; // SVG 한 변(px) — 글자·점 크기는 고정, 원만 커진다
   const C = S / 2; // 중심
   const R = C - 10; // 원 반지름(px)
-  const stale = data.shot.age > STALE_SEC;
-  const heading = data.shot.heading;
   // 고정 모드: 점은 절대 방위(바라보는 방향 + 상대각 + 지도 탭과 같은 90° 회전)에 놓고 내 화살표를 돌린다.
   // 바라보는 쪽 위 모드: 점은 상대각 그대로, 화살표는 항상 위.
   const mapRot = loadMapRot(data.map?.id, data.map?.rot ?? 0);
@@ -363,39 +411,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         )}
       </svg>
       {heading == null && <div className="hint">{t.radarDirUnknown}</div>}
-      <div className="radar-list">
-        {visible.length === 0 && <div className="hint">{t.radarNoTargets}</div>}
-        {visible.slice(0, 8).map((x, i) => (
-          <div className="radar-row" key={`${x.kind}-${x.name}-${i}`}>
-            <span className="radar-dot" style={{ background: colorOf(x) }} />
-            <span className="radar-name">
-              <span className="radar-kind">
-                {x.kind === "extract" ? t.radarExtract : x.kind === "transit" ? t.radarTransit : t.radarQuest}
-              </span>{" "}
-              {x.name}
-              {x.kind === "quest" && x.objective && <span className="radar-sub">{x.objective}</span>}
-              {condLabels(x, t).map((c) => (
-                <span className="radar-flag" key={c}>
-                  {" "}
-                  {c}
-                </span>
-              ))}
-            </span>
-            <span className="radar-dist">{Math.round(x.dist)}m</span>
-            {x.rel != null && heading != null && (
-              <span className="radar-arrow" style={{ transform: `rotate(${x.rel}deg)` }} aria-hidden="true">
-                ↑
-              </span>
-            )}
-            {Math.abs(x.dy) >= 2.5 && (
-              <span className={`radar-dy ${x.dy > 0 ? "up" : "down"}`}>
-                {x.dy > 0 ? "▲" : "▼"}
-                {Math.round(Math.abs(x.dy))}m
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+      {targetList}
       <div className="radar-foot">
         <label className="radar-chk">
           <input type="checkbox" checked={showScav} onChange={(e) => onToggleScav(e.target.checked)} /> {t.radarScav}

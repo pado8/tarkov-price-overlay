@@ -1695,3 +1695,9 @@ html, body, #root {
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
 .wide-pane .radar-mapblock { flex: 1; min-height: 0; }
+/* 지도 나란히 패널: 지도 왼쪽 + 대상 목록 오른쪽 열 */
+.radar-maprow { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
+.radar-maprow .radar-mapblock { flex: 1 1 auto; min-width: 0; }
+.radar-side { flex: 0 0 300px; overflow-y: auto; padding-right: 4px; }
+.wide-pane .radar-side { max-height: calc(100vh - 170px); } /* 패널 높이 안에서 목록만 스크롤 */
+.radar-side .radar-row { font-size: var(--card-fs-sm); }
