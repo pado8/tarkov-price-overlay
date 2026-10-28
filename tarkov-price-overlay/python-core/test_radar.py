@@ -173,6 +173,19 @@ try:
     eq("경계 상자", d["bounds"], {"minx": -5, "maxx": 10, "minz": 0, "maxz": 20})
     eq("회전값 전달", d["rot"], 180)
     eq("빈 맵은 경계 None", r.compact_map_features({"normalizedName": "x"}, {})["bounds"], None)
+    # 9b) 보스 구역 — 좌표 있는 구역은 그대로, 비어 있으면 spawns 의 zoneName 으로, PMC 는 제외, 같은 구역의 보스는 합침
+    fb = {"normalizedName": "customs", "spawns": [{"position": {"x": 1, "y": 0, "z": 1}, "zoneName": "ZoneDorm", "categories": ["player"]},
+                                                  {"position": {"x": 3, "y": 0, "z": 3}, "zoneName": "ZoneDorm", "categories": ["boss"]}],
+          "bosses": [{"mob": "bossBully", "spawnChance": 0.75, "spawnLocations": [{"name": "ZoneDorm", "spawnKey": "ZoneDorm", "chance": 0.5, "positions": []},
+                                                                                   {"name": "ZoneGas", "spawnKey": "ZoneGas", "chance": 0.5, "positions": [{"x": 9, "y": 0, "z": 9}]}]},
+                     {"mob": "bossKnight", "spawnChance": 0.25, "spawnLocations": [{"name": "ZoneDorm", "spawnKey": "ZoneDorm", "chance": 1, "positions": []}]},
+                     {"mob": "pmcBEAR", "spawnChance": 1, "spawnLocations": [{"name": "ZoneDorm", "spawnKey": "ZoneDorm", "chance": 1, "positions": []}]},
+                     {"mob": "bossNowhere", "spawnChance": 1, "spawnLocations": [{"name": "ZoneNone", "spawnKey": "ZoneNone", "chance": 1, "positions": []}]}]}
+    bz = r.compact_map_features(fb, {"bossBully": "르샬라", "ZoneDorm": "기숙사"})["bosses"]
+    eq("보스 구역 수(좌표 없는 구역 제외)", sorted(z["name"] for z in bz), ["ZoneGas", "기숙사"])
+    d1 = next(z for z in bz if z["name"] == "기숙사")
+    eq("구역 좌표는 spawns 로 보충", d1["pts"], [[1, 1], [3, 3]])
+    eq("같은 구역 보스 합침·확률 큰 순·PMC 제외", [(b["name"], b["chance"]) for b in d1["bosses"]], [("르샬라", 0.38), ("bossKnight", 0.25)])
 # 8) 자동 정리 — 좌표 스크린샷만, 최신 N장 유지, 휴지통으로(실제 Windows 휴지통 사용; 작은 더미 파일)
     svc2 = r.RadarService()
     pr = _tmp / "prune"; pr.mkdir()

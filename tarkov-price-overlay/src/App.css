@@ -1688,7 +1688,7 @@ html, body, #root {
 .radar-sw.transit { background: #6fa8dc; }
 .radar-sw.quest { background: #f0c040; }
 .radar-sw.hazard { background: #ff9f1c; }
-.radar-sw.spawn { background: #ff5e5e; }
+.radar-sw.spawn { background: #ff4d4d; }
 .radar-sw.lock { background: #c08cff; }
 .quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
 .quest-sub { color: var(--text-muted); }

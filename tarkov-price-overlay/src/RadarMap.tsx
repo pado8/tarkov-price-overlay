@@ -57,6 +57,7 @@ export type MapDoc = {
   locks: { p: Pt; type: string }[];
   containers: Pt[];
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
+  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[] }[]; // 보스 스폰 구역(구역별 합침)
   weapons: Pt[];
   switches: Pt[];
 };
@@ -161,6 +162,15 @@ export function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: numbe
   const scr = (u: number, w: number) => { const g = game(u, w); return toScreen(g.gx, g.gz); };
   const s0 = scr(0, 0), sx = scr(1, 0), sy = scr(0, 1);
   return { W, H, matrix: [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ") };
+}
+
+const BOSS_PAD = 12; // 구역 사각형 여유(m)
+function bossBox(pts: [number, number][]) {
+  const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
+  return { x1: Math.min(...xs) - BOSS_PAD, x2: Math.max(...xs) + BOSS_PAD, z1: Math.min(...zs) - BOSS_PAD, z2: Math.max(...zs) + BOSS_PAD };
+}
+function bossText(z: NonNullable<MapDoc["bosses"]>[number], max = 9): string {
+  return z.bosses.slice(0, max).map((b) => `${b.name} ${Math.round(b.chance * 100)}%`).join(", ");
 }
 
 function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
@@ -381,6 +391,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     if (layers.hazards) doc.hazards.forEach((x, i) => { const p = hazardPt(x); if (p) cands.push({ key: `hz${i}`, text: x.name, p, off: 6, pr: 4 }); });
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: `${z.name} · ${bossText(z, 1)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
       if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -464,6 +475,19 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 const p = hazardPt(x);
                 if (!p) return null;
                 const s = toScreen(p[0], p[2]);
+                if (x.type === "sniper") {
+                  // 저격수 스캐브: tarkov.dev 처럼 조준점 하나(구역 윤곽은 안 그림 — 빨간 표시가 너무 많아진다)
+                  return (
+                    <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
+                      <circle cx={s.x} cy={s.y} r={10} fill="transparent" />
+                      <circle cx={s.x} cy={s.y} r={6} fill="rgba(0,0,0,0.35)" stroke="#f5f5f5" strokeWidth={1.2} />
+                      <line x1={s.x - 9} y1={s.y} x2={s.x + 9} y2={s.y} stroke="#f5f5f5" strokeWidth={1.2} />
+                      <line x1={s.x} y1={s.y - 9} x2={s.x} y2={s.y + 9} stroke="#f5f5f5" strokeWidth={1.2} />
+                      <circle cx={s.x} cy={s.y} r={1.5} fill="#ff4d4d" />
+                      {label(`hz${i}`)}
+                    </g>
+                  );
+                }
                 return (
                   <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
                     {x.outline.length >= 3 ? (
@@ -513,15 +537,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 );
               })}
             {layers.spawns &&
-              doc.spawns.map((sp, i) => {
-                if (sp[3] !== "b" && sp[3] !== "n") return null; // 보스·저격 스캐브만(PMC·일반 스캐브 스폰은 너무 많다)
-                const s = toScreen(sp[0], sp[2]);
-                const boss = sp[3] === "b";
+              (doc.bosses ?? []).map((z, i) => {
+                // 구역 = 스폰 점들을 감싸는 사각형(여유 12m) — tarkov.dev 처럼 붉게 칠하고 해골
+                const b = bossBox(z.pts);
+                const c = toScreen((b.x1 + b.x2) / 2, (b.z1 + b.z2) / 2);
+                const corners = [[b.x1, b.z1], [b.x2, b.z1], [b.x2, b.z2], [b.x1, b.z2]] as [number, number][];
+                const text = bossText(z);
                 return (
-                  <g key={`sp${i}`} onClick={() => pick({ name: boss ? t.radarSpawnBoss : t.radarSpawnSniper, p: [sp[0], sp[1], sp[2]] })} opacity={op(sp[0], sp[1], sp[2])}>
-                    <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
-                    <circle cx={s.x} cy={s.y} r={5.5} fill={boss ? "#ff5e5e" : "#ff9ad5"} stroke="#000" strokeWidth={0.8} />
-                    <text x={s.x} y={s.y + 2.8} textAnchor="middle" fontSize={7} fill="#000" fontWeight={700}>{boss ? "B" : "S"}</text>
+                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${z.name}: ${text}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2] })}>
+                    <polygon points={poly(corners)} fill="rgba(220,40,40,0.22)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="4 2" />
+                    <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize={14} fill="#ff4d4d" stroke="#000" strokeWidth={0.6}>☠</text>
+                    {label(`bz${i}`)}
                   </g>
                 );
               })}

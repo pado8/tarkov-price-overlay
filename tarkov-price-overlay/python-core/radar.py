@@ -392,6 +392,40 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
     return out
 
 
+def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
+    """맵의 보스 스폰 구역(tarkov.dev bosses[].spawnLocations) → 구역별로 합친 목록.
+    [{name: 구역 이름, pts: [[x, z]…], bosses: [{name, chance}]}]. PMC(pmcBEAR/pmcUSEC)는 보스가 아니라 뺀다.
+    구역 좌표가 비어 있으면 spawns 에서 같은 zoneName 의 점들로 채운다(세관 기숙사·주유소). 그래도 없으면 그 구역은 생략."""
+    def ok(p):
+        return isinstance(p, dict) and p.get("x") is not None and p.get("z") is not None
+    by_zone: dict = {}
+    for s in m.get("spawns") or []:
+        zn = s.get("zoneName")
+        if zn and ok(s.get("position")):
+            by_zone.setdefault(zn, []).append([round(float(s["position"]["x"]), 1), round(float(s["position"]["z"]), 1)])
+    zones: dict = {}
+    for b in m.get("bosses") or []:
+        mob = b.get("mob") or ""
+        if not mob or mob.startswith("pmc"):
+            continue
+        bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
+        chance = float(b.get("spawnChance") or 0)
+        for sl in b.get("spawnLocations") or []:
+            key = sl.get("spawnKey") or sl.get("name")
+            if not key:
+                continue
+            pts = [[round(float(p["x"]), 1), round(float(p["z"]), 1)] for p in sl.get("positions") or [] if ok(p)] or by_zone.get(key) or []
+            if not pts:
+                continue
+            z = zones.setdefault(key, {"name": _loc(loc_maps, sl.get("name")) or _loc(loc_en, sl.get("name")) or key, "pts": pts, "bosses": []})
+            if not any(x["name"] == bname for x in z["bosses"]):
+                z["bosses"].append({"name": bname, "chance": round(chance * float(sl.get("chance") or 1), 2)})
+    out = list(zones.values())
+    for z in out:
+        z["bosses"].sort(key=lambda x: -x["chance"])
+    return out
+
+
 def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> dict:
     """맵 문서 하나 → 전체 지도(2단계)가 그릴 좌표만 추린 작은 문서.
     SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(MIT 사이트 데이터)로만 그린다.
@@ -459,7 +493,8 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
     return {"slug": m.get("normalizedName"), "name": _loc(loc_maps, m.get("name"), m.get("normalizedName")),
             "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds, "img": img,
             "extracts": extracts, "transits": transits, "hazards": hazards, "locks": locks,
-            "containers": containers, "spawns": spawns, "weapons": weapons, "switches": switches}
+            "containers": containers, "spawns": spawns, "weapons": weapons, "switches": switches,
+            "bosses": boss_zones(m, loc_maps, loc_en)}
 
 
 _TD_MAPS: Optional[dict] = None
