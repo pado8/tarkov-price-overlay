@@ -25,7 +25,7 @@ foreach ($lang in @("ko", "en", "ru")) {
 }
 Remove-Item Env:GUIDE_LANG -ErrorAction SilentlyContinue
 Push-Location (Join-Path $root "landing")
-$out = & vercel --prod --yes 2>&1
+$out = & vercel --prod --yes --archive=tgz 2>&1   # 가이드 1,800쪽: 파일별 업로드는 무료 플랜 하루 5,000개 한도에 걸림
 Pop-Location
 $ready = ($out | Select-String '"readyState": "READY"') -ne $null
 Log ("배포 " + $(if ($ready) { "완료" } else { "실패: " + (($out | Select-Object -Last 5) -join " | ") }))
