@@ -45,7 +45,9 @@
       try { if (sessionStorage.getItem(VKEY) === "1") return; sessionStorage.setItem(VKEY, "1"); } catch (e) {}
       send({ kind: "view" });
     };
-    if (!isBot) {
+    // 2026-11-02: 페이지뷰(view)는 더 이상 Neon에 보내지 않는다 — 가이드 1,800쪽이 색인되며 뷰마다 DB를 깨워
+    //   11-01 하루에 컴퓨트 +9.85h(월 한도의 10%). 페이지뷰는 Vercel Analytics·GA4가 세고, 이 비콘은 다운로드(유입원·첫 페이지 포함)만 보낸다.
+    if (false && !isBot) {
       if (document.visibilityState === "visible") sendView();
       else document.addEventListener("visibilitychange", function h() {
         if (document.visibilityState === "visible") { document.removeEventListener("visibilitychange", h); sendView(); }

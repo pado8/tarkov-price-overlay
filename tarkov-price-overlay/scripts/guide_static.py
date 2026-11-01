@@ -136,6 +136,92 @@ def is_event_mob(mob) -> bool:
     return str(mob or "").startswith("infected")
 
 
+# 공개 데이터와 공식 위키가 다른 맵 기본 정보 — 2026-11-02 전수 대조. 값을 바꾸지 않고 병기하거나(판정 불가), 명백한 오류만 교체.
+MAP_FIX = {
+    "terminal": {"duration_note": "공개 데이터 50분 · 공식 위키는 45분"},
+    "the-labyrinth": {"players": "1-5", "players_note": "공개 데이터는 5-5로 적혀 있으나 공식 위키 기준 1~5인"},
+}
+# 공식 위키(2026-11-02 전수 대조)와 공개 데이터가 다른 퀘스트 — 키는 영어 이름(모드 접미 제외). 어느 쪽이 현재 게임과 맞는지
+# 확인되지 않아 값을 바꾸지 않고 퀘스트 페이지에 병기한다. rev=위키 문서 마지막 수정일. 재대조는 tmp/quest_verify2.py 방식.
+WIKI_DIFF = {
+    "A Difficult Choice": {"rev": "2026-10-27", "exp": 65000},
+    "A Helping Hand": {"rev": "2026-10-28", "level": 20},
+    "Beneath The Streets": {"rev": "2026-10-27", "exp": 65000},
+    "Booze": {"rev": "2026-10-27", "exp": 20000},
+    "Cargo X - Part 3": {"rev": "2026-10-27", "level": 12},
+    "Charity": {"rev": "2026-10-27", "ll": 2},
+    "Collector": {"rev": "2026-10-31", "level": 40, "obj": "위키는 선행 퀘스트를 4개로 적음(Postman Pat - Part 2 제외)"},
+    "Create a Distraction - Part 2": {"rev": "2026-10-27", "obj": "위키에는 「카반·콜론타이를 해치지 말 것」 조건이 더 있음"},
+    "Crisis": {"rev": "2026-10-27", "exp": 65000},
+    "Dandies": {"rev": "2026-10-27", "exp": 10000},
+    "Debtor": {"rev": "2026-10-27", "exp": 10000},
+    "Decisions, Decisions": {"rev": "2026-10-27", "obj": "위키에는 「세관의 옛 챔피언 은신처로 돌아가기」 목표가 더 있음"},
+    "Decontamination Service": {"rev": "2026-10-27", "exp": 65000},
+    "Disease History": {"rev": "2026-10-27", "exp": 2800},
+    "District Patrol": {"rev": "2026-10-27", "exp": 10000},
+    "Drug Trafficking": {"rev": "2026-10-28", "exp": 28500},
+    "Every Hunter Knows This": {"rev": "2026-10-27", "exp": 5800, "rep": "Jaeger +0.01"},
+    "Glory to CPSU - Part 1": {"rev": "2026-10-27", "level": 15},
+    "Gunsmith Master - Part 1": {"rev": "2026-10-13", "level": 27},
+    "Hell on Earth - Part 1": {"rev": "2026-10-27", "exp": 3000},
+    "Hell on Earth - Part 2": {"rev": "2026-10-27", "exp": 28000},
+    "Job for a Patriot": {"rev": "2026-10-27", "exp": 10000},
+    "Make an Impression": {"rev": "2026-11-01", "obj": "위키에는 「볼트액션 소총 스킬 10 달성」 조건이 더 있고 처치 수를 10명으로 적음"},
+    "Minibus": {"rev": "2026-10-27", "obj": "위키에는 「도구 분류 아이템 10개 제출」 목표가 더 있음"},
+    "New Beginning": {"rev": "2026-10-27", "rep": "Ragman +0.1"},
+    "No Swiping": {"rev": "2026-10-28", "exp": 3000},
+    "Nostalgia": {"rev": "2026-10-27", "level": 28},
+    "Perfect Mediator": {"rev": "2026-10-27", "exp": 20900},
+    "Private Club": {"rev": "2026-10-28", "exp": 3000},
+    "Properties All Around": {"rev": "2026-10-27", "exp": 10000},
+    "Pyramid Scheme": {"rev": "2026-10-27", "exp": 28000},
+    "Reconnaissance": {"rev": "2026-10-27", "exp": 28000},
+    "Scavenger": {"rev": "2026-10-27", "exp": 28000},
+    "Shooter Born in Heaven": {"rev": "2026-10-27", "exp": 65000},
+    "Slaughterhouse": {"rev": "2026-10-31", "obj": "위키는 삼림·인터체인지·세관까지 9개 맵(공개 데이터는 6개 맵)"},
+    "Surveillance": {"rev": "2026-10-27", "exp": 10000},
+    "Tarkov-Style Diplomacy": {"rev": "2026-10-27", "exp": 28200},
+    "The Bunker - Part 2": {"rev": "2026-10-27", "level": 15},
+    "The Cult": {"rev": "2026-10-27", "exp": 1000},
+    "The Huntsman Path - Administrator": {"rev": "2026-10-31", "obj": "위키는 등대 기차역에서도 조명탄 발사·6명 처치를 요구(총 4개 목표)하고 처치 수를 6명으로 적음"},
+    "The Tarkov Shooter - Part 5": {"rev": "2026-10-31", "exp": 28000},
+    "Trophies": {"rev": "2026-10-28", "obj": "위키는 「20레벨 이상 PMC 인식표」와 「PMC 12명 처치」 조건(공개 데이터는 프레스티지 1 이상 인식표)"},
+    "Unique Experience": {"rev": "2026-10-28", "exp": 65000},
+    "Urban Medicine": {"rev": "2026-10-28", "obj": "위키에는 「시내에서 스캐브 처치」 목표가 없음"},
+}
+# 은신처 시설도 같은 방식(위키 Hideout 표는 1.3.0 이전 갱신). 키 = 시설 normalizedName, 단계별 문장.
+STATION_WIKI_DIFF = {
+    "hall-of-fame": {1: "위키에는 선행 시설(약해 보이는 벽 6단계·조명 시설 2단계) 조건이 없음"},
+    "rest-space": {2: "위키는 건설 시간을 2시간으로 적음", 3: "위키는 건설 시간을 10시간으로 적음"},
+    "cultist-circle": {1: "위키는 건설 시간을 6시간으로 적음"},
+}
+
+
+def wiki_diff_html(en_name: str, stamp: str) -> str:
+    """퀘스트 페이지용 — 공개 데이터와 공식 위키가 다른 항목을 병기한다(값은 바꾸지 않음)."""
+    import re as _re
+    d = WIKI_DIFF.get(_re.sub(r"\s*\[(?:PVP|PVE) ZONE\]\s*$", "", en_name or ""))
+    if not d:
+        return ""
+    parts = []
+    if "level" in d:
+        parts.append(f"레벨 {d['level']}")
+    if "ll" in d:
+        parts.append(f"상인 등급 LL{d['ll']}")
+    if "exp" in d:
+        parts.append(f"경험치 {d['exp']:,}")
+    if "rep" in d:
+        parts.append(f"평판 {d['rep']}")
+    if "obj" in d:
+        parts.append(d["obj"])
+    return (f'<div class="note">⚠ <b>공식 위키 표기와 다름</b>(위키 마지막 수정 {d["rev"]}) — 위키: {" · ".join(parts)}. '
+            f'이 페이지는 공개 데이터(기준 {stamp}) 값을 보여주며, 어느 쪽이 현재 게임과 맞는지는 확인되지 않았습니다.</div>')
+
+
+def station_diff_html(slug: str, level) -> str:
+    txt = (STATION_WIKI_DIFF.get(slug) or {}).get(level)
+    return f'<p class="small"><span class="warn">⚠ 공식 위키 표기와 다름:</span> {txt} — 위키 시설 표는 1.3.0 이전 갱신이라 어느 쪽이 맞는지 확인되지 않았습니다.</p>' if txt else ""
+
 # 데이터에 잘못 섞인 탈출구 — (맵, 탈출구 내부 이름). 2026-11-02: 그라운드 제로 데이터에 시내의 Pinewood Basement (Co-Op)가 들어 있음(위키 표에 없음).
 EXTRACT_SKIP = {("ground-zero", "Exit_E10_coop")}
 # 데이터에 탈출구가 비어 있는 맵 — 공식 위키 표를 손으로 옮김(2026-11-02).
@@ -940,7 +1026,7 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
     tags.append(f'<button type="button" class="fav" id="qfav" data-t="{e(tid)}" aria-label="즐겨찾기" title="즐겨찾기 — 사냥 퀘스트 페이지에서 모아 보기">★</button>')
 
     objs = "".join(objective_html(ctx, o) for o in t.get("objectives") or [])
-    sections_main = [f'<section class="box"><h2>목표 {len(t.get("objectives") or [])}개</h2><ol class="objs">{objs}</ol></section>']
+    sections_main = [wiki_diff_html(en, ctx.stamp) + f'<section class="box"><h2>목표 {len(t.get("objectives") or [])}개</h2><ol class="objs">{objs}</ol></section>']
     tp = ctx.tasks_pve.get(tid)
     if tp and tid in ctx.tasks_reg and _sig(tp) != _sig(ctx.tasks_reg[tid]):
         sections_main.append('<section class="box"><h2>PVE 버전 목표</h2><p class="small muted">PVE에서는 목표가 조금 다릅니다.</p><ol class="objs">'
@@ -1689,6 +1775,11 @@ def crafts_html(ctx: Ctx, crafts: list, unlock_map: dict) -> str:
         for r in c.get("requiredItems") or []:
             tool = (r.get("attributes") or {}).get("tool")
             mats.append(ctx.chip(r.get("item"), r.get("count"), extra=' <span class="badge b-any">도구·반환</span>' if tool else ""))
+        for r in c.get("requiredQuestItems") or []:  # 퀘스트 아이템 재료(키카드 재프로그래밍 등 7개 제작) — 2026-11-02 위키 대조에서 누락 발견
+            qid = r.get("item") if isinstance(r, dict) else r
+            qid = qid.get("id") if isinstance(qid, dict) else qid
+            if qid:
+                mats.append(ctx.chip(qid, (r.get("count") if isinstance(r, dict) else None) or 1, extra=' <span class="badge b-any">퀘스트 아이템</span>'))
         q = unlock_map.get((c.get("station"), c.get("level"), pid))
         lock = (' <span class="muted small">해금: ' + ", ".join(ctx.task_link(x) for x in q) + "</span>") if q else ""
         trs.append(f'<tr><td>{ctx.chip(pid, p.get("count"))}{lock}</td><td><div class="chips">{"".join(mats)}</div></td><td class="n">{fmt_dur(c.get("duration"))}</td></tr>')
@@ -1722,7 +1813,7 @@ def station_page(ctx: Ctx, sid: str, unlock_map: dict) -> tuple[str, str]:
         crafts = crafts_by_lv.get(n) or []
         secs.append(f'<section class="box lvl" id="lv{n}"><h2>{e(name)} {n}단계</h2>'
                     + (f'<p class="small muted">{e(d)}</p>' if d else "")
-                    + '<div class="cols2"><div><h3>필요 조건</h3>' + level_req_html(ctx, lv) + pve_html + "</div>"
+                    + '<div class="cols2"><div><h3>필요 조건</h3>' + level_req_html(ctx, lv) + station_diff_html(slug, n) + pve_html + "</div>"
                     + f'<div><h3>효과</h3>{bon_html}</div></div>'
                     + (f'<h3>이 단계에서 할 수 있는 제작 {len(crafts)}개</h3>' + crafts_html(ctx, crafts, unlock_map) if crafts else "")
                     + "</section>")
@@ -2072,8 +2163,9 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     name = ctx.map_name(mid)
     en_name = slug.replace("-", " ").title()
     desc_ko = ctx._loc(ctx.loc_maps, m.get("description"), "")
-    rows = [("레이드 시간", f'{m.get("raidDuration")}분' if m.get("raidDuration") else "—"),
-            ("인원", e(m.get("players") or "—"))]
+    fix = MAP_FIX.get(slug, {})
+    rows = [("레이드 시간", (f'{m.get("raidDuration")}분' if m.get("raidDuration") else "—") + (f' <span class="muted small">({fix["duration_note"]})</span>' if fix.get("duration_note") else "")),
+            ("인원", e(fix.get("players") or m.get("players") or "—") + (f' <span class="muted small">({fix["players_note"]})</span>' if fix.get("players_note") else ""))]
     lo_lv, hi_lv = m.get("minPlayerLevel") or 0, m.get("maxPlayerLevel") or 0
     if lo_lv > 0 or 0 < hi_lv < 79:  # 0~99·0~100은 사실상 제한 없음
         rows.append(("입장 레벨", f"{lo_lv}~{hi_lv} 레벨" if hi_lv else f"{lo_lv} 레벨 이상"))
@@ -2086,19 +2178,24 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
         rows.append(("변형", ", ".join(e(v) for v in variants) + ' <span class="muted small">(같은 지역의 다른 판 — 보스·탈출구가 다를 수 있음)</span>'))
     boss_rows = []
     has_event_mob = False
-    seen_rows: dict[str, int] = {}  # 감염자는 데이터에 같은 이름으로 3줄씩 들어와(위치·호위 없음) 한 줄로 합친다
+    # 데이터는 스폰 지점마다 줄이 따로 있다(쇄빙선 웨지 12줄, 감염자 3줄 등) → 같은 적은 한 줄로: 확률 최대, 위치·호위 합집합
+    grouped: dict[str, dict] = {}
     for b in m.get("bosses") or []:
-        zones = ", ".join(e(ctx._loc(ctx.loc_maps, z.get("spawnKey"), z.get("name"))) for z in b.get("spawnLocations") or [])
-        chance = b.get("spawnChance")
         ev = is_event_mob(b.get("mob"))
         has_event_mob = has_event_mob or ev
         label = ctx.mob_name(b.get("mob"))
-        if ev and label in seen_rows:  # 같은 이름의 감염자 줄은 첫 줄만(확률이 같고 위치·호위가 비어 있음)
-            continue
-        if ev:
-            seen_rows[label] = len(boss_rows)
-        boss_rows.append(f'<tr><td><b>{e(label)}</b>{" " + EVENT_TAG if ev else ""}</td><td class="n">{fmt_int((chance or 0) * 100)}%</td>'
-                         f'<td class="small">{zones}</td><td class="small">{e(_escort_txt(ctx, b.get("escorts")))}</td></tr>')
+        g = grouped.setdefault(label, {"chance": 0, "zones": [], "escorts": [], "ev": ev})
+        g["chance"] = max(g["chance"], b.get("spawnChance") or 0)
+        for z in b.get("spawnLocations") or []:
+            zn = ctx._loc(ctx.loc_maps, z.get("spawnKey"), z.get("name"))
+            if zn and zn not in g["zones"]:
+                g["zones"].append(zn)
+        et = _escort_txt(ctx, b.get("escorts"))
+        if et and et not in g["escorts"]:
+            g["escorts"].append(et)
+    for label, g in grouped.items():
+        boss_rows.append(f'<tr><td><b>{e(label)}</b>{" " + EVENT_TAG if g["ev"] else ""}</td><td class="n">{fmt_int(g["chance"] * 100)}%</td>'
+                         f'<td class="small">{e(", ".join(g["zones"]))}</td><td class="small">{e(" / ".join(g["escorts"]))}</td></tr>')
     is_event_map = slug in EVENT_MAPS
     ex_groups: dict[str, list] = {}
     for ex in m.get("extracts") or []:
@@ -2202,7 +2299,7 @@ def maps_index(ctx: Ctx) -> tuple[str, str]:
 
 
 # 데이터 mob 키는 대소문자를 가린다: 레이더=PmcBot, 로그=ExUsec·exUsecFree (2026-11-02 확인 — 소문자로 적어 둬 둘 다 빠져 있었음)
-BOSS_EXTRA = {"sectantPriest", "PmcBot", "ExUsec", "exUsecFree"}
+BOSS_EXTRA = {"sectantPriest", "PmcBot", "ExUsec", "exUsecFree", "blackDivision"}  # 터미널 블랙 디비전은 키에 boss 접두가 없다(2026-11-02)
 
 
 def bosses_page(ctx: Ctx) -> tuple[str, str]:
@@ -2224,7 +2321,15 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
         mb = ctx.mobs.get(mob) or {}
         hp = sum(h.get("max") or 0 for h in mb.get("health") or [])
         img = f'<img class="portrait" src="{e(mb.get("imagePortraitLink"))}" alt="" width="72" height="72" loading="lazy" />' if mb.get("imagePortraitLink") else ""
-        lis = "".join(f'<li>{ctx.map_link(x)} <b>{fmt_int(c * 100)}%</b> <span class="muted small">{e(z)}</span></li>' for x, c, z in sorted(a["maps"], key=lambda r: -r[1]))
+        merged: dict[str, list] = {}  # 같은 맵의 스폰 지점별 줄(쇄빙선 웨지 12줄 등)을 맵 하나로 합친다 — 확률은 최대, 위치는 합집합
+        for x, c, z in a["maps"]:
+            mm = merged.setdefault(x, [0, []])
+            mm[0] = max(mm[0], c)
+            for zz in (z.split(", ") if z else []):
+                if zz and zz not in mm[1]:
+                    mm[1].append(zz)
+        lis = "".join(f'<li>{ctx.map_link(x)} <b>{fmt_int(c * 100)}%</b> <span class="muted small">{e(", ".join(z))}</span></li>'
+                      for x, (c, z) in sorted(merged.items(), key=lambda kv: -kv[1][0]))
         cards.append(f'<section class="box boss">{img}<div><h2>{e(ctx.mob_name(mob))}</h2>'
                      + (f'<p class="small muted">체력 합계 {hp}</p>' if hp else "")
                      + f'<ul class="plain">{lis}</ul>'
@@ -2368,6 +2473,11 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
         for r in c.get("requiredItems") or []:
             tool = (r.get("attributes") or {}).get("tool")
             mats.append(ctx.chip(r.get("item"), r.get("count"), extra=' <span class="badge b-any">도구</span>' if tool else ""))
+        for r in c.get("requiredQuestItems") or []:  # 퀘스트 아이템 재료 — 2026-11-02 위키 대조에서 누락 발견(7개 제작)
+            qid = r.get("item") if isinstance(r, dict) else r
+            qid = qid.get("id") if isinstance(qid, dict) else qid
+            if qid:
+                mats.append(ctx.chip(qid, (r.get("count") if isinstance(r, dict) else None) or 1, extra=' <span class="badge b-any">퀘스트 아이템</span>'))
         q = unlock.get((c.get("station"), c.get("level"), pid))
         lock = ('<div class="osub">해금: ' + ", ".join(ctx.task_link(x) for x in q) + "</div>") if q else ""
 
@@ -2383,6 +2493,7 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
     opts = '<option value="">모든 시설</option>' + "".join(f'<option value="{e(s)}">{e(ctx.station_name(s))}</option>' for s in st_opts)
     body = f"""<h1>은신처 제작 수익표 <span class="h1en">Crafting profit</span></h1>
 <p class="sub">제작 {len(trs)}개 · 시간당 이익 순 · 시세 기준 {e(ctx.stamp)} (tarkov.dev 24시간 평균)</p>
+<div class="note">⚠ <b>공식 위키 Crafts 표와 다른 제작(2026-11-02 전수 대조, 어느 쪽이 현재 게임과 맞는지 미확인)</b> — 재료: 5.56x45 MK 318(SOST) 90발은 위키가 화약 Eagle 2·Kite 4, M855A1 90발은 위키에 Kite 없음, ANA M2 플레이트 캐리어는 위키가 Ox bleach 2·Ripstop 없음, AK-50은 위키에 RPK-16 요구 없음 · 산출: 12/70 플레셰트 위키 60발(데이터 40) · 시설 단계: .300 BLK M62 작업대 3단계(데이터 2), 차량 배터리 작업대 2단계(데이터 1), Wilston 담배 조리 시설 2단계(데이터 1) · 시간: BNTI Zhuk(Press) 위키 2시간 6분(데이터 1시간 6분) 등 8건은 몇 분 차이. 위키에만 있는 제작 5개(스토리 챕터 연계)는 데이터에 없음. 시즌 모드에서는 제작 시간이 절반입니다.</div>
 <div class="note">이익 = 결과물 판매가 − 재료 구입비. 결과물은 플리 24시간 평균가(플리 거래 불가면 상인 최고 매입가), 재료는 플리 평균가와 상인 판매가 중 싼 쪽으로 계산했습니다.
 <b>도구</b> 표시 재료는 돌려받으므로 비용에서 뺐습니다. <b>연료비·플리 수수료(1.1.0부터 인상)·판매 시간은 빠져 있으니</b> 실제 이익은 이보다 작습니다. 시세는 하루에도 크게 움직이니 참고용으로만 보세요.</div>
 <div class="controls"><input type="search" id="cq" placeholder="결과물·재료 이름 검색" aria-label="검색" /><select id="cst" aria-label="시설">{opts}</select>

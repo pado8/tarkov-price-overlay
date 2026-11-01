@@ -28,6 +28,12 @@ OUT = ROOT / "landing" / "guide"
 COLLECTOR_ID = "5c51aac186f77432ea65c552"
 # 같은 지도의 변형(야간·21+·튜토리얼·암전)은 열쇠 목록이 겹치므로 대표 지도로 합친다.
 MAP_SKIP = {"night-factory", "ground-zero-21", "ground-zero-tutorial", "the-lab-dark"}
+# 열쇠 페이지에서 뺄 (맵, 열쇠 id) — tarkov.dev locks 의 trunk 항목이 엉뚱한 열쇠를 가리키는 잔재(2026-11-02 위키 전수 대조):
+# 공장 비상구 열쇠(5448ba0b…)는 위키 기준 공장 전용인데 해안선·등대·시내·그라운드 제로 금고 17개를 여는 것으로 들어 있고,
+# VAZ 차 열쇠(5913651…)는 위키가 "여는 곳 없음"인데 세관 잠금 1개가 붙어 있다.
+KEY_SKIP = {("shoreline", "5448ba0b4bdc2d02308b456c"), ("lighthouse", "5448ba0b4bdc2d02308b456c"),
+            ("streets-of-tarkov", "5448ba0b4bdc2d02308b456c"), ("ground-zero", "5448ba0b4bdc2d02308b456c"),
+            ("customs", "5913651986f774432f15d132")}
 MAP_ORDER = ["customs", "factory", "woods", "shoreline", "interchange", "reserve",
              "lighthouse", "streets-of-tarkov", "ground-zero", "the-lab",
              "icebreaker", "terminal", "the-labyrinth"]
@@ -303,6 +309,8 @@ def main() -> int:
         for lk in m.get("locks") or []:
             k = lk.get("key")
             if not k or not item_info(k):
+                continue
+            if (nn, k) in KEY_SKIP:  # 데이터 잔재(공장 비상구 열쇠가 다른 맵 금고를 연다는 등) — 2026-11-02 위키 대조
                 continue
             e = by_key.setdefault(k, {"locks": 0, "power": False, "types": set()})
             e["locks"] += 1

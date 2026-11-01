@@ -53,6 +53,7 @@
     (r.wiki ? " · <a href=\"" + esc(r.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
     (r.tasks.length ? "<div class=\"small\" style=\"margin-top:4px\">선행 퀘스트: " + r.tasks.map(esc).join(" · ") + "</div>" : "") +
     (r.traders.length ? "<div class=\"small muted\" style=\"margin-top:2px\">상인 우호도: " + r.traders.map(esc).join(" · ") + "</div>" : "") +
+    "<div class=\"small\" style=\"margin-top:4px\"><span class=\"warn\">⚠ 공식 위키 표기와 다름:</span> 위키(2026-10-31 수정)는 레벨 40 이상·선행 퀘스트 4개(Postman Pat - Part 2 제외)로 적고 있습니다. 위 값은 공개 데이터 기준이며 어느 쪽이 현재 게임과 맞는지는 확인되지 않았습니다.</div>" +
     "<div class=\"small muted\" style=\"margin-top:6px\">대부분 <span class=\"badge b-fir\">인레이드</span> 필수 — 레이드에서 직접 찾은 상태로 보관했다가 한 번에 제출합니다.</div>";
 
   function setSeg(id, v) {

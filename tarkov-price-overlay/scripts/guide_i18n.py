@@ -54,9 +54,13 @@ def translate_text(text: str, table: dict, missing: set | None = None, edge_befo
         # 앞뒤가 자리표시자(})·숫자이고 번역이 글자로 시작/끝나면 공백을 끼운다.
         before = text[m.start() - 1] if m.start() > 0 else edge_before
         after = text[m.end()] if m.end() < len(text) else edge_after
-        if not lead and before and (before in "}>" or before.isdigit()) and t[:1].isalpha():
+        prev_txt = text[: m.start()] if m.start() > 0 else edge_before
+        next_txt = text[m.end():] if m.end() < len(text) else edge_after
+        closing_before = before == ">" and re.search(r"</\w+>$", prev_txt or "") is not None   # "</b>텍스트" → 띄움, "<span>텍스트"는 그대로
+        opening_after = after == "<" and re.match(r"<(?!/)\w", next_txt or "") is not None       # "텍스트<b>" → 띄움, "텍스트</span>"는 그대로
+        if not lead and before and (before == "}" or before.isdigit() or closing_before) and t[:1].isalpha():
             lead = " "
-        if not trail and after and (after in "{<" or after.isdigit()) and t[-1:].isalpha():
+        if not trail and after and (after == "{" or after.isdigit() or opening_after) and t[-1:].isalpha():
             trail = " "
         return lead + t + trail
     return RUN.sub(rep, text)

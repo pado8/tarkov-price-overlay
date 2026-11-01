@@ -42,6 +42,6 @@ b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.tex
 pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Overlay sync";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
-h.innerHTML='<b> Could not find the overlay.</b> On the same PC, run <a href="/"> Price Overlay </a>(latest version with sync support) must be running — start it and click again. If Chrome has blocked "local network access", change it to <b> address bar lock → Site settings → Local network access → Allow </b> and refresh. If it still fails, open this site with the overlay <b> Settings → Sync with site </b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
+h.innerHTML='<b>Could not find the overlay.</b> On the same PC, run <a href="/">Price Overlay</a>(latest version with sync support) must be running — start it and click again. If Chrome has blocked "local network access", change it to <b>address bar lock → Site settings → Local network access → Allow</b> and refresh. If it still fails, open this site with the overlay <b>Settings → Sync with site</b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })();
