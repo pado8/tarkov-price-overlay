@@ -43,12 +43,14 @@ COND: dict[str, tuple[frozenset, str]] = {
     "interchange:ex_interchange_pmc_auto": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
     "interchange:ex_interchange_coop_basement": (frozenset({"coop"}), _COOP),
     "interchange:ex_interchange_pmc_saferoom": (frozenset({"lever", "key"}),
-        "발전소 전원 켜기 → 버거 가게 소변기 물 내리기 → 드러난 패널에 오브젝트 #11SR 키카드 사용 → 이후 단계 진행"),
+        "발전소 전원 켜기 → 버거 가게(Burger Spot) 소변기 물 내리기 → 드러난 패널에 오브젝트 #11SR 키카드 사용 → 안으로 들어가 문 옆 버튼을 눌러 문을 잠가야 탈출(안쪽에 Object-14 컨테이너 여는 레버 있음)"),
     # 등대
     "lighthouse:Alpinist_light": (frozenset({"climb"}), _CLIMB),
     "lighthouse:tunnel_shared": (frozenset({"coop"}), _COOP),
+    "lighthouse:EXFIL_Train": (frozenset({"time"}), "장갑열차 — 레이드 종료 20~15분 전 사이에 도착해 7분 정차(도착 때 경적 2회, 출발 1분 전 1회). 그 밖의 시간엔 못 나감"),
     # 리저브
-    "reserve:EXFIL_Bunker": (frozenset({"lever"}), "흰색 폰(Pawn) 막사 서쪽 오두막의 레버를 당겨야 열림"),
+    "reserve:EXFIL_Train": (frozenset({"time"}), "장갑열차 — 레이드 종료 16~12분 전 사이에 도착해 7분 정차(도착 때 경적 2회, 출발 1분 전 1회). 항상 열리는 탈출구 아님, 도착 무렵 레이더가 올 수 있음"),
+    "reserve:EXFIL_Bunker": (frozenset({"lever"}), "흰색 폰(Pawn) 막사 서쪽 오두막의 레버를 당겨야 열림 — 레버를 당기면 사이렌이 울리고 4분 동안만 열림"),
     "reserve:EXFIL_Bunker_D2": (frozenset({"lever"}), "지하 벙커에서 레버로 전원을 켠 뒤, 미닫이문 옆 벽 버튼을 눌러야 열림"),
     "reserve:Alpinist": (frozenset({"climb"}), _CLIMB),
     "reserve:EXFIL_ScavCooperation": (frozenset({"coop"}), _COOP),

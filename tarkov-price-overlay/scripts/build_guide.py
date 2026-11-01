@@ -96,9 +96,16 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
 
 def main() -> int:
     t0 = time.time()
+    # 언어판: GUIDE_LANG=ko(기본)·en·ru. ko 외는 tarkov.dev 해당 로케일 표를 쓰고 /guide/<lang>/ 아래에 쓴다.
+    lang = (os.environ.get("GUIDE_LANG") or "ko").lower()
+    if lang not in ("ko", "en", "ru"):
+        raise SystemExit(f"GUIDE_LANG must be ko/en/ru (got {lang})")
+    sfx = f"_{lang}"
+    out_dir = OUT if lang == "ko" else OUT / lang
+    guide_static.set_lang(lang)
     items_reg = get("regular/items")["items"]
     items_pve = get("pve/items")["items"]
-    loc_items = get("regular/items_ko") or {}
+    loc_items = get(f"regular/items{sfx}") or {}
     loc_items_en = get("regular/items_en") or {}
     # 퀘스트는 모드마다 조금 다르다(23개가 [PVP ZONE]/[PVE ZONE] 판으로 갈림, 프레스티지
     # 퀘스트는 일반판에만) → 두 모드의 합집합으로 만들고 퀘스트마다 속한 모드를 단다.
@@ -110,14 +117,23 @@ def main() -> int:
     task_modes = {tid: [m for m, src in (("pvp", tasks_reg), ("pve", tasks_pve)) if tid in src]
                   for tid in tasks}
     sys.path.insert(0, str(ROOT / "python-core"))
-    import quest_ko  # 영어로 남은 퀘스트 이름·목표의 한국어 보정 표(python-core/data/quest_ko.json) — 사이드카와 공유
-    loc_tasks = quest_ko.overlay({**(get("pve/tasks_ko") or {}), **(get("regular/tasks_ko") or {})})
+    # 두 모드 로케일 병합: 같은 키면 '그 언어 글자가 든 쪽' 우선(regular 는 영어로 남아 있고 pve 에만 한글이 있는 키가
+    # 83개 있었다 — regular 가 덮어써 공식 한글이 버려지던 것, 2026-11-02 검수에서 발견)
+    script = {"ko": re.compile(r"[가-힣]"), "ru": re.compile(r"[А-Яа-яЁё]"), "en": re.compile(r"[A-Za-z]")}[lang]
+    loc_tasks = dict(get(f"pve/tasks{sfx}") or {})
+    for k, v in (get(f"regular/tasks{sfx}") or {}).items():
+        cur = loc_tasks.get(k)
+        if not (isinstance(cur, str) and script.search(cur) and not (isinstance(v, str) and script.search(v))):
+            loc_tasks[k] = v
+    if lang == "ko":
+        import quest_ko  # 영어로 남은 퀘스트 이름·목표의 한국어 보정 표(python-core/data/quest_ko.json) — 사이드카와 공유
+        loc_tasks = quest_ko.overlay(loc_tasks)
     loc_tasks_en = {**(get("pve/tasks_en") or {}), **(get("regular/tasks_en") or {})}
     maps_doc = get("regular/maps")
     maps = maps_doc["maps"]
-    loc_maps = get("regular/maps_ko") or {}
+    loc_maps = get(f"regular/maps{sfx}") or {}
     traders = get("regular/traders")
-    loc_traders = get("regular/traders_ko") or {}
+    loc_traders = get(f"regular/traders{sfx}") or {}
     print(f"[guide] 데이터 수신 {time.time() - t0:.1f}s — 아이템 {len(items_reg)}, 퀘스트 {len(tasks)}, 지도 {len(maps)}")
 
     def loc(table, key, fallback=None):
@@ -245,8 +261,11 @@ def main() -> int:
             "req": [r["task"] for r in t.get("taskRequirements") or [] if r.get("task") in tasks],
             "slug": t.get("normalizedName"),
         })
-    trader_order = ["프라퍼", "테라피스트", "스키어", "피스키퍼", "메카닉", "래그맨", "예거", "펜스", "레프", "등대지기"]
-    qlist.sort(key=lambda q: (trader_order.index(q["tr"]) if q["tr"] in trader_order else 99, q["lv"], q["n"]))
+    # 상인 순서는 언어와 무관하게 normalizedName 으로(ko 이름으로 비교하면 en/ru 판에서 전부 99가 된다)
+    trader_rank = {tid: (guide_static.TRADER_ORDER.index(tr.get("normalizedName")) if tr.get("normalizedName") in guide_static.TRADER_ORDER else 99)
+                   for tid, tr in traders.items()}
+    tr_by_name = {trader_name(tid): r for tid, r in trader_rank.items()}
+    qlist.sort(key=lambda q: (tr_by_name.get(q["tr"], 99), q["lv"], q["n"]))
 
     # 열쇠 → 이 열쇠가 필요한 퀘스트
     key_tasks: dict[str, list[str]] = {}
@@ -300,7 +319,7 @@ def main() -> int:
         maps=maps, loc_maps=loc_maps, mobs=maps_doc.get("mobs") or {},
         traders=traders, loc_traders=loc_traders,
         hideout_reg=get("regular/hideout") or {}, hideout_pve=get("pve/hideout") or {},
-        loc_hideout=get("regular/hideout_ko") or {},
+        loc_hideout=get(f"regular/hideout{sfx}") or {},
         crafts_reg=get("regular/crafts") or [], crafts_pve=get("pve/crafts") or [],
     )
     for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
@@ -326,18 +345,19 @@ def main() -> int:
         if 'href="/about/"' not in tpl:  # 사이트 소개·운영자 링크 — 광고 심사 요건(운영 주체·연락처), 방침 링크 앞에
             tpl = tpl.replace(' · <a href="/privacy/">', ' · <a href="/about/">소개</a> · <a href="/privacy/">', 1)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        page = tpl.replace("__DATA__", payload).replace("__STAMP__", stamp)
-        dest = OUT / name / "index.html"
+        page = guide_static.localize_template(tpl.replace("__DATA__", payload).replace("__STAMP__", stamp))
+        dest = out_dir / name / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(page, encoding="utf-8")
         print(f"[guide] {name}: {len(page) / 1024:.0f} KB")
     # ── 정적 페이지(퀘스트 상세·상인별·아이템·은신처·초반·프레스티지·맵·보스·가이드 홈) ──
     collector_ids = {k["id"] for k in kappa}
     guide_urls = ["/guide/kappa/", "/guide/keys/", "/guide/quests/"]
-    guide_urls += guide_static.build_all(ctx, OUT, collector_ids, {
+    guide_urls += guide_static.build_all(ctx, out_dir, collector_ids, {
         "kappa": len(kappa), "keys": len(pages["keys"]["items"])})
-    print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개")
-    write_sitemap(guide_urls, stamp)
+    print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개 ({lang})")
+    if lang == "ko":
+        write_sitemap(guide_urls, stamp)
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")
     (OUT / "guide.css").write_text(css, encoding="utf-8")
     import adsense  # 새로 만든 페이지에도 AdSense 코드 유지(ID 없으면 아무것도 안 넣음)

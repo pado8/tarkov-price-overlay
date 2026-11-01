@@ -41,7 +41,7 @@ ZONE_RE = re.compile(r"\s*\[(?:PVP|PVE) ZONE\]\s*$")
 CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 
 TARGETS = {"Any": "아무 대상", "Savage": "스캐브", "AnyPmc": "PMC", "Usec": "USEC 요원", "Bear": "BEAR 요원",
-           "pmcBot": "레이더", "exUsec": "로그", "marksman": "저격 스캐브"}
+           "pmcBot": "레이더", "exUsec": "로그", "marksman": "스캐브 저격수"}
 BODY = {"Head": "머리", "Chest": "흉부", "Stomach": "복부", "LeftArm": "왼팔", "RightArm": "오른팔",
         "LeftLeg": "왼다리", "RightLeg": "오른다리"}
 BUILD_ATTR = {"accuracy": "정확도(MOA)", "durability": "내구도", "effectiveDistance": "유효 사거리",
@@ -52,10 +52,68 @@ STATUS = {"complete": "완료", "active": "진행 중", "failed": "실패", "sta
 # 데이터엔 기본 건스미스끼리 선행 관계가 없어(1.1.0 묶음 방식) 이 번호가 없으면 알파벳순이 돼 AK-105가 맨 앞에 왔었다.
 GUNSMITH_LEGACY = {"MP-133": 1, "AKS-74U": 2, "HK MP5": 3, "OP-SKS": 4, "M4A1": 4, "Model 870": 7, "AKM": 8,
                    "AKS-74N": 9, "P226R": 9, "AK-105": 10, "Vector 9x19": 11, "AS VAL": 11, "MPX": 13}
-MOB_KO = {"Kaban Guard": "카반 경호원", "Kaban": "카반", "Knight": "나이트", "Kollontay": "콜론타이", "Partisan": "파르티잔", "Big Pipe": "빅 파이프",
+MOB_KO = {"Kaban Guard (Sniper)": "카반 경호원(저격)", "Kaban Guard": "카반 경호원", "Kaban": "카반", "Knight": "나이트", "Kollontay": "콜론타이", "Partisan": "파르티잔", "Big Pipe": "빅 파이프",
+          "Glukhar Guard": "글루하 경호원",
           "Birdeye": "버드아이", "Shadow of Tagilla": "타길라의 그림자", "Vengeful Killa": "분노한 킬라", "Scourge": "스커지",
           "The Wedge": "웨지", "Basmach": "바스마치", "Gus": "구스", "Reshala Guard": "르샬라 경호원",
-          "Shturman Guard": "슈트르만 경호원", "Sanitar Guard": "세니타 경호원"}
+          "Shturman Guard": "슈트르만 경호원", "Sanitar Guard": "세니타 경호원",
+          "Infected Tagilla": "감염된 타길라", "infectedScreamer": "감염자"}
+# 현재 게임 버전 — 허브·초반·패치 페이지 문구에 쓴다. 패치 때 올릴 것(공식 위키 Changelog 기준).
+GAME_VERSION = "1.3.0"
+# 진행 중 이벤트 — tarkov.dev 데이터에 이벤트 기간 값이 그대로 들어오므로(오염된 맵·감염자·보스 확률 변화)
+# 이벤트 한정 내용은 반드시 표시하고, 이벤트가 끝나면 다시 생성해야 평소 값으로 돌아간다.
+EVENT_NAME, EVENT_SINCE = "할로윈 이벤트", "2026-10-29"
+EVENT_MAPS = {"infected-factory", "infected-lab"}
+EVENT_TAG = '<span class="evtag">🎃 이벤트 한정</span>'
+
+
+# 언어판 — build_guide 가 GUIDE_LANG 으로 정한다. ko 가 기본, en/ru 는 /guide/<lang>/ 아래에 생성된다.
+LANG = "ko"
+
+
+def set_lang(lang: str) -> None:
+    global LANG
+    LANG = lang
+
+
+def localize_template(html_text: str) -> str:
+    """템플릿 페이지(quests/kappa/keys)에 언어판 처리를 적용한다. ko 는 그대로."""
+    return html_text if LANG == "ko" else localize_html(html_text)
+
+
+def localize_html(html_text: str) -> str:
+    """en/ru 판: 내부 /guide/ 링크를 /guide/<lang>/ 로 바꾼다(자산 파일 제외). 고정 문구 번역은 i18n 표가 붙으면 여기서 적용."""
+    import re as _re
+    assets = ("/guide/guide.css", "/guide/sync.js", "/guide/gunsmith.json")
+
+    def _href(m):
+        url = m.group(2)
+        if url.startswith(assets) or url.startswith(f"/guide/{LANG}/"):
+            return m.group(0)
+        return f'{m.group(1)}="/guide/{LANG}/{url[len("/guide/"):]}"'
+    return _re.sub(r'(href|action)="(/guide/[^"]*)"', _href, html_text)
+
+
+def is_event_mob(mob) -> bool:
+    return str(mob or "").startswith("infected")
+
+
+# 데이터에 잘못 섞인 탈출구 — (맵, 탈출구 내부 이름). 2026-11-02: 그라운드 제로 데이터에 시내의 Pinewood Basement (Co-Op)가 들어 있음(위키 표에 없음).
+EXTRACT_SKIP = {("ground-zero", "Exit_E10_coop")}
+# 데이터에 탈출구가 비어 있는 맵 — 공식 위키 표를 손으로 옮김(2026-11-02).
+HAND_EXTRACTS = {
+    "terminal": '공개 데이터에 탈출구 정보가 없어 공식 위키 기준: <b>Zubr Boat</b>(PMC, 항상 열림, 1회용) — 입장 인원 1~3명이면 3석, 4명 3~4석, 5명 4~5석. Alpha-1 증거 컨테이너를 가져온 사람은 소지하고 있어야 하며, 부두 도착 뒤 3분 타이머. '
+                '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Terminal" rel="noopener" target="_blank">공식 위키 Terminal</a>',
+    "infected-lab": '공개 데이터에 탈출구 정보가 없어 공식 위키 기준: <b>Parking</b>(PMC, Car keys 필요) · <b>Sewage Conduit</b>(PMC, Collector map 필요). '
+                    '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Infected_Lab" rel="noopener" target="_blank">공식 위키 Infected Lab</a>',
+    "infected-factory": '공개 데이터에 탈출구 정보가 없어 공식 위키 기준: <b>Gate 0</b> · <b>Gate 3</b>(둘 다 PMC, 조건 없음). '
+                        '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Infected_Factory" rel="noopener" target="_blank">공식 위키 Infected Factory</a>',
+}
+
+
+def event_note(what: str) -> str:
+    return (f'<div class="note">🎃 <b>{EVENT_NAME}({EVENT_SINCE}~) 기간 값</b> — {what} 이벤트가 끝나면 이 페이지를 다시 생성해 평소 값으로 돌아갑니다. '
+            '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Events" rel="noopener" target="_blank">공식 위키 Events</a>.</div>')
 HAZARD = {"minefield": "지뢰밭", "sniper": "저격 구역", "hazard": "위험 지역"}
 
 NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests/", "퀘스트"),
@@ -285,6 +343,8 @@ class Ctx:
         return sid
 
     def mob_name(self, mob):
+        if is_event_mob(mob):  # 할로윈 감염자 — 로케일이 내부 ID(infectedScreamer)를 그대로 돌려주는 것도 있어 종류만 표시
+            return "감염된 타길라" if mob == "infectedTagilla" else "감염자"
         n = self._loc(self.loc_maps, mob) or self._loc(self.loc_tasks, mob) or TARGETS.get(mob) or mob
         # 한국어판도 영어로 두는 보스 이름 — 검색은 한글로 하니 음역을 앞에 붙인다
         for en, ko in MOB_KO.items():
@@ -1813,7 +1873,7 @@ def start_page(ctx: Ctx) -> tuple[str, str]:
     ref = next((x for x in ctx.tasks_reg if ctx.task_names(x)[1].startswith("Easy Money - Part 1")), None)
     ref_pve = next((x for x in ctx.tasks_pve if ctx.task_names(x)[1].startswith("Easy Money - Part 1") and x != ref), None)
     body = f"""<h1>타르코프 초반 가이드 <span class="h1en">투어(Tour)부터 10레벨까지</span></h1>
-<p class="sub">새 캐릭터·프레스티지 직후 기준 · 게임 1.2.x · 데이터 기준 {e(ctx.stamp)}</p>
+<p class="sub">새 캐릭터·프레스티지 직후 기준 · 게임 {GAME_VERSION} · 데이터 기준 {e(ctx.stamp)}</p>
 <div class="note key"><b>먼저 이 세 가지만</b><ol>
 <li>시작하면 스토리 <b>투어(Tour)</b>가 자동으로 붙습니다. 이걸 순서대로 밀어야 <b>스키어 → 메카닉 → 프라퍼 → 피스키퍼</b>와 맵이 하나씩 열립니다.</li>
 <li>사이드 퀘스트는 상인이 열린 뒤 그 상인의 <b>등급(LL)별로 2~4개씩 묶음</b>으로 열립니다. 몇 개 깨거나 등급이 오르면 다음 묶음이 나옵니다.</li>
@@ -1866,7 +1926,7 @@ def start_page(ctx: Ctx) -> tuple[str, str]:
 <li>투어의 '3회 방문'·'인식표는 인레이드 불필요' 조건을 활용하면 장비가 부족한 초반에도 막힘 없이 맵을 열 수 있습니다.</li>
 <li>프레스티지를 했다면 <a href="/guide/prestige/">프레스티지 조건·보상</a>도 확인하세요. PVE 1단계는 PVP보다 조건이 가볍습니다.</li>
 <li>레이드 중에는 아이템에 마우스를 올리고 F2 — <a href="/?src=guide-start">시세 오버레이</a>가 이 아이템이 퀘스트·은신처에 필요한지, 얼마에 팔리는지 바로 보여 줍니다.</li></ul></section>
-<p class="small muted">출처: 공식 위키 'Tour' 문서, 패치 노트 1.1.0(2026-08-03)·1.1.5(2026-09-08)·1.2.0(2026-10-06), tarkov.dev 퀘스트 데이터. 문장은 직접 정리했습니다.</p>"""
+<p class="small muted">출처: 공식 위키 'Tour' 문서, 패치 노트 1.1.0(2026-08-03)·1.1.5(2026-09-08)·1.2.0(2026-10-06)·1.3.0(2026-10-29, 투어·상인 해금 변경 없음 확인), tarkov.dev 퀘스트 데이터. 문장은 직접 정리했습니다.</p>"""
     path = "/guide/start/"
     title = "타르코프 초반 가이드 — 투어(Tour) 순서·상인/맵 해금·10레벨까지 퀘스트 | 탈콥 가이드"
     desc = "타르코프 새 캐릭터·프레스티지 직후 진행 순서: 투어로 스키어·메카닉·프라퍼·피스키퍼와 맵 여는 법, 사이드 퀘스트 묶음 해금, 예거·레프·등대지기 해금, 10레벨까지 퀘스트와 미리 모을 인레이드 아이템."
@@ -1928,7 +1988,7 @@ def prestige_page(ctx: Ctx) -> tuple[str, str]:
     body = (f'<h1>프레스티지 조건 총정리 <span class="h1en">Prestige</span></h1>'
             f'<p class="sub">PVE·PVP 단계별 조건과 보상 · 데이터 기준 {e(ctx.stamp)}</p>'
             '<div class="note">프레스티지는 조건을 채운 고레벨 캐릭터가 진행도를 초기화하고 다시 시작하는 대신 고유 보상을 받는 시스템입니다. '
-            '1.2.0(2026-10-06)부터 <b>PVE에도 6단계</b>가 생겼고, PVE 1단계는 PVP보다 조건이 가볍습니다. 초기화할 때 장비 일부와 스킬·무기 숙련도 일부(최대 50%)를 가져갈 수 있고, '
+            '1.2.0(2026-10-06)부터 <b>PVE에도 6단계</b>가 생겼고, PVE 1단계는 PVP보다 조건이 가볍습니다. 초기화할 때 장비 일부와 스킬·무기 숙련도 일부(이월 비율은 단계별로 PVE 10~50%, PVP 5~30% — 공식 위키 Prestige 문서 기준)를 가져갈 수 있고, '
             '"이월 칸" 크기만큼 허용된 종류의 아이템을 옮길 수 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.</div>'
             f'<nav class="toc"><a href="#pve">PVE</a><a href="#pvp">PVP</a><a href="/guide/start/">초기화 뒤 초반 가이드 →</a></nav>'
             + "".join(secs)
@@ -1979,13 +2039,25 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     if variants:
         rows.append(("변형", ", ".join(e(v) for v in variants) + ' <span class="muted small">(같은 지역의 다른 판 — 보스·탈출구가 다를 수 있음)</span>'))
     boss_rows = []
+    has_event_mob = False
+    seen_rows: dict[str, int] = {}  # 감염자는 데이터에 같은 이름으로 3줄씩 들어와(위치·호위 없음) 한 줄로 합친다
     for b in m.get("bosses") or []:
         zones = ", ".join(e(ctx._loc(ctx.loc_maps, z.get("spawnKey"), z.get("name"))) for z in b.get("spawnLocations") or [])
         chance = b.get("spawnChance")
-        boss_rows.append(f'<tr><td><b>{e(ctx.mob_name(b.get("mob")))}</b></td><td class="n">{fmt_int((chance or 0) * 100)}%</td>'
+        ev = is_event_mob(b.get("mob"))
+        has_event_mob = has_event_mob or ev
+        label = ctx.mob_name(b.get("mob"))
+        if ev and label in seen_rows:  # 같은 이름의 감염자 줄은 첫 줄만(확률이 같고 위치·호위가 비어 있음)
+            continue
+        if ev:
+            seen_rows[label] = len(boss_rows)
+        boss_rows.append(f'<tr><td><b>{e(label)}</b>{" " + EVENT_TAG if ev else ""}</td><td class="n">{fmt_int((chance or 0) * 100)}%</td>'
                          f'<td class="small">{zones}</td><td class="small">{e(_escort_txt(ctx, b.get("escorts")))}</td></tr>')
+    is_event_map = slug in EVENT_MAPS
     ex_groups: dict[str, list] = {}
     for ex in m.get("extracts") or []:
+        if (slug, ex.get("name")) in EXTRACT_SKIP:
+            continue
         fac = ex.get("faction") or "shared"
         cond = []  # 이미 안전한 HTML 조각만 넣는다(칩 HTML을 다시 이스케이프하면 글자로 보인다)
         # 조건은 위키 기준 표(python-core/extract_conditions.py). 데이터의 switches 는 맵 전체 스위치가
@@ -2012,7 +2084,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     hz: dict[str, int] = {}
     for h in m.get("hazards") or []:
         hz[h.get("hazardType") or "hazard"] = hz.get(h.get("hazardType") or "hazard", 0) + 1
-    hz_txt = ", ".join(f"{HAZARD.get(k, k)} {v}곳" for k, v in hz.items())
+    hz_txt = ", ".join(f"{HAZARD.get(k, k)}(표시 구역 {v}개)" for k, v in hz.items())  # 데이터의 폴리곤 수 — '곳'으로 읽히면 과장됨
     extra = []
     if hz_txt:
         extra.append(("위험 지역", e(hz_txt)))
@@ -2031,14 +2103,18 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                      + "".join(f"<li>{ctx.task_link(x)}</li>" for x in sorted(v, key=lambda x: ctx.task_names(x)[0])) + "</ul></div>"
                      for s, v in sorted(by_tr.items(), key=lambda kv: TRADER_ORDER.index(kv[0]) if kv[0] in TRADER_ORDER else 99))
     enemies = ", ".join(dict.fromkeys(e(ctx.mob_name(x)) for x in m.get("enemies") or [] if not str(x).startswith("follower")))
-    body = (f'<h1>{e(name)} <span class="h1en">{e(en_name)}</span></h1>'
+    body = (f'<h1>{e(name)} <span class="h1en">{e(en_name)}</span>{" " + EVENT_TAG if is_event_map else ""}</h1>'
             f'<p class="sub">맵 정보 · 보스 {len(boss_rows)} · 탈출구 {len(m.get("extracts") or [])} · 관련 퀘스트 {len(qs)} · 데이터 기준 {e(ctx.stamp)}</p>'
+            + (event_note("이 맵은 이벤트 기간에만 들어갈 수 있습니다.") if is_event_map else "")
             + (f'<p class="small muted">{e(desc_ko)}</p>' if desc_ko else "")
             + f'<section class="box"><h2>기본 정보</h2><table class="kv">{"".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in rows)}'
             + (f"<tr><th>등장 적</th><td class=small>{enemies}</td></tr>" if enemies else "") + "</table></section>"
-            + (('<section class="box"><h2>보스</h2><div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
+            + (('<section class="box"><h2>보스</h2>'
+                + (event_note("감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.") if (has_event_mob and not is_event_map) else "")
+                + '<div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
                 + "".join(boss_rows) + "</tbody></table></div></section>") if boss_rows else "")
-            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">조건이 적혀 있지 않은 탈출구는 그냥 가면 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
+            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있지만, 공식 위키 표에 아직 없는 새 탈출구(1.2.0 세관 추가분 등)는 조건을 확인하지 못했습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
+            + (f'<section class="box"><h2>탈출구</h2><p class="small">{HAND_EXTRACTS[slug]}</p></section>' if (not ex_html and slug in HAND_EXTRACTS) else "")
             + (f'<section class="box"><h2>다른 맵으로 이동(트랜짓)</h2><ul class="plain">{"".join(tr_rows)}</ul></section>' if tr_rows else "")
             + (f'<section class="box"><h2>이 맵의 퀘스트 {len(qs)}개</h2><div class="cols3">{q_html}</div></section>' if q_html else ""))
     path = f"/guide/maps/{slug}/"
@@ -2067,7 +2143,7 @@ def maps_index(ctx: Ctx) -> tuple[str, str]:
         m = ctx.maps[mid]
         bosses = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or [] if str(b.get("mob", "")).startswith("boss")))
         nq = len(map_quests(ctx, mid))
-        cards.append(f'<a class="hub" href="/guide/maps/{e(m.get("normalizedName"))}/"><div class="t">{e(ctx.map_name(mid))}</div>'
+        cards.append(f'<a class="hub" href="/guide/maps/{e(m.get("normalizedName"))}/"><div class="t">{e(ctx.map_name(mid))}{" " + EVENT_TAG if m.get("normalizedName") in EVENT_MAPS else ""}</div>'
                      f'<div class="d">레이드 {m.get("raidDuration") or "—"}분 · {e(m.get("players") or "—")}명 · 탈출구 {len(m.get("extracts") or [])}</div>'
                      f'<div class="d">보스: {e(bosses) or "없음"}</div><div class="d">퀘스트 {nq}개</div></a>')
     body = (f'<h1>맵 정보 <span class="h1en">Maps</span></h1><p class="sub">맵 {len(cards)}개 · 보스·탈출구·트랜짓·퀘스트 · 데이터 기준 {e(ctx.stamp)}</p>'
@@ -2079,7 +2155,8 @@ def maps_index(ctx: Ctx) -> tuple[str, str]:
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="maps", crumbs=[("맵", None)])
 
 
-BOSS_EXTRA = {"sectantPriest", "pmcBot", "exUsec"}
+# 데이터 mob 키는 대소문자를 가린다: 레이더=PmcBot, 로그=ExUsec·exUsecFree (2026-11-02 확인 — 소문자로 적어 둬 둘 다 빠져 있었음)
+BOSS_EXTRA = {"sectantPriest", "PmcBot", "ExUsec", "exUsecFree"}
 
 
 def bosses_page(ctx: Ctx) -> tuple[str, str]:
@@ -2106,9 +2183,22 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
                      + (f'<p class="small muted">체력 합계 {hp}</p>' if hp else "")
                      + f'<ul class="plain">{lis}</ul>'
                      + (f'<p class="small">호위: {e(" / ".join(sorted(a["escorts"])))}</p>' if a["escorts"] else "") + "</div></section>")
+    if "bossPartisan" not in agg:
+        # 파르티잔은 카르마에 따라 출현해 공개 데이터에 확률이 비는 때가 있다(2026-11 할로윈 이벤트 기간 데이터에서 통째로 빠짐).
+        # 보스가 없는 것처럼 보이지 않게 공식 위키(Partisan 문서) 기준으로 카드를 유지한다.
+        mb = ctx.mobs.get("bossPartisan") or {}
+        hp = sum(h.get("max") or 0 for h in mb.get("health") or [])
+        img = f'<img class="portrait" src="{e(mb.get("imagePortraitLink"))}" alt="" width="72" height="72" loading="lazy" />' if mb.get("imagePortraitLink") else ""
+        maps_txt = " · ".join(f'<a href="/guide/maps/{s}/">{n}</a>' for s, n in (("customs", "세관"), ("woods", "삼림"), ("shoreline", "해안선"), ("lighthouse", "등대")))
+        cards.append(f'<section class="box boss">{img}<div><h2>{e(ctx.mob_name("bossPartisan"))}</h2>'
+                     + (f'<p class="small muted">체력 합계 {hp}</p>' if hp else "")
+                     + f'<p class="small">{maps_txt} — 맵 전역에서 나올 수 있음</p>'
+                     '<p class="small muted">출현 확률은 공개 데이터에 없음(카르마가 낮은 PMC가 있는 레이드에 더 자주 나타나고, 1.3.0에서 카르마 낮은 플레이어가 없는 레이드의 출현 확률 계산 오류가 수정됨). '
+                     '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Partisan" rel="noopener" target="_blank">공식 위키 Partisan</a></p></div></section>')
     body = (f'<h1>보스 총정리 <span class="h1en">Bosses</span></h1><p class="sub">보스·특수 적 {len(cards)}종 · 출현 맵과 확률 · 호위 · 데이터 기준 {e(ctx.stamp)}</p>'
-            '<div class="note">출현 확률은 레이드마다의 기본 확률이며, 이벤트 기간에는 크게 달라질 수 있습니다. 같은 보스가 맵의 여러 변형(야간 공장 등)에 따로 나오면 각각 표시합니다.</div>'
-            f'<div class="bossgrid">{"".join(cards)}</div>')
+            '<div class="note">출현 확률은 레이드마다의 기본 확률이며, 이벤트 기간에는 크게 달라집니다(예: 2026-09 이벤트 때 글루하가 등대 정수장에 100% 출현). 같은 보스가 맵의 여러 변형(야간 공장 등)에 따로 나오면 각각 표시합니다.</div>'
+            + event_note("감염자·감염된 타길라는 이벤트 기간에만 출현하며(<a href=\"/guide/maps/infected-factory/\">오염된 공장</a>·<a href=\"/guide/maps/infected-lab/\">오염된 연구소</a> 참고), 아래 확률은 이벤트 중 값입니다.")
+            + f'<div class="bossgrid">{"".join(cards)}</div>')
     path = "/guide/bosses/"
     title = "타르코프 보스 총정리 — 출현 맵·확률·위치·호위·체력 | 탈콥 가이드"
     desc = f"타르코프 보스 {len(cards)}종(르샬라·킬라·타길라·세니타·글루하·슈트르만·카반·즈리야치 등)의 출현 맵, 출현 확률, 출현 위치, 호위 인원, 체력. 데이터 기준 {ctx.stamp}."
@@ -2132,7 +2222,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/crafts/", "제작 수익표", "은신처 제작 재료비·판매가·시간당 이익 순위", f'{counts.get("crafts", 0)}개'),
         ("/guide/ammo/", "탄약표", "구경별 관통력·데미지·방어구 피해·상인 구매처", f'{counts.get("ammo", 0)}종'),
         ("/guide/prestige/", "프레스티지", "PVE·PVP 단계별 조건과 보상", "1.2.0 PVE 반영"),
-        ("/guide/patch/", "패치 요약", "1.0.5~1.2.5 주요 변경 한국어 정리", "2026-05~10"),
+        ("/guide/patch/", "패치 요약", f"1.0.5~{GAME_VERSION} 주요 변경 한국어 정리", "2026-05~10"),
         ("/guide/promo/", "프로모 코드", "지금 쓸 수 있는 공식 프로모 코드 · 모드별 · 등록 방법", f'{counts.get("promo", 0)}개 · {PROMO_CHECKED}'),
         ("/guide/gunsmith/", "건스미스 부품 총정리", "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)", f'{counts.get("gunsmith_q", 0)}개 퀘스트 · 부품 {counts.get("gunsmith_p", 0)}종'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
@@ -2140,7 +2230,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
     ]
     html_cards = "".join(f'<a class="hub" href="{href}"><div class="t">{e(t)}</div><div class="d">{e(d)}</div><div class="n2">{e(n)}</div></a>' for href, t, d, n in cards)
     body = (f'<h1>탈콥 가이드 <span class="h1en">타르코프 한국어 정리</span></h1>'
-            f'<p class="sub">공개 게임 데이터로 만드는 한국어 정리 · 패치되면 자동 갱신 · 데이터 기준 {e(ctx.stamp)} · 게임 1.2.x</p>'
+            f'<p class="sub">공개 게임 데이터로 만드는 한국어 정리 · 패치·이벤트 뒤 다시 생성 · 데이터 기준 {e(ctx.stamp)} · 게임 {GAME_VERSION}</p>'
             f'<div class="cards">{html_cards}</div>'
             '<section class="box"><h2>이 가이드는</h2><p class="small">퀘스트 목표·아이템·은신처·맵 정보는 <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터에서 자동으로 만들고, '
             '초반 진행·프레스티지 설명은 공식 위키와 패치 노트를 확인해 직접 정리했습니다. 보유·완료 체크는 이 브라우저에만 저장됩니다.</p></section>')
@@ -2263,7 +2353,7 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
 
 
 CAL_OVERRIDES = {"1143x23ACP": ".45 ACP", "9x18PM": "9x18 PM", "9x18PMM": "9x18 PMM", "9x19PARA": "9x19", "9x33R": ".357",
-                 "127x33": "12.7x33", "127x55": "12.7x55", "127x99": ".50 BMG", "12g": "12 게이지", "20g": "20 게이지",
+                 "127x33": ".50 AE", "23x75": "23x75", "26x75": "26x75", "40x46": "40x46", "20x1mm": "20x1mm",  # 두 자리 구경(KS-23·신호탄·유탄·장난감)은 소수점 규칙 예외(2026-11-02) "127x55": "12.7x55", "127x99": ".50 BMG", "12g": "12 게이지", "20g": "20 게이지",
                  "366TKM": ".366 TKM", "40mmRU": "40mm (RU)", "46x30": "4.6x30", "556x45NATO": "5.56x45 NATO", "57x28": "5.7x28",
                  "762x25TT": "7.62x25 TT", "762x35": "7.62x35 (.300 BLK)", "784x49": ".308 ME", "86x70": ".338 LM", "725": "72.5mm"}
 CAL_ORDER = ["545x39", "556x45NATO", "762x39", "762x51", "762x54R", "9x19PARA", "9x39", "366TKM", "46x30", "57x28",
@@ -2346,11 +2436,17 @@ def ammo_page(ctx: Ctx) -> tuple[str, str]:
 
 
 PATCHES = [
+    ("1.3.0", "2026-10-29·30", [
+        "<b>할로윈 이벤트</b>: 연구소에서 퍼진 감염으로 <b>오염된 공장·오염된 연구소</b> 맵 추가(맵 선택 화면에서 맵별 감염 정도 표시), 감염자(민간인·연구원·PMC·블랙 디비전 요원)와 감염된 타길라 출현(공장·인터체인지에도 가끔), 감염자에게 맞으면 '바이러스' 효과(잠시 청력 상실·수분 감소, 탈출하거나 죽어야 해제), 할로윈 퀘스트 19개, 플레이어 스캐브가 스캐브를 죽여도 카르마 감점 없음, 월드에 사탕 든 호박 배치",
+        "날씨 계절이 가을로 전환 · PVE 고레벨 맵에 고난도 PMC 봇 추가 · 화폐·귀중품 일부의 충돌 범위를 키워 줍기 쉽게",
+        "은신처 꾸미기 세트 2종(Expansion Hub) · <b>Unity 6 엔진 전환은 11월 중순 1.3.5.0으로 연기</b>",
+        "스킬: 대사(Metabolism) 성장이 회복한 에너지·수분량 기준으로 바뀜, 시즌 모드는 전 스킬 성장 속도 대폭 상승, 수확 체감 보정, 무기 스킬 성장 속도를 다른 스킬과 같게 수정",
+        "플레이어가 설치한 트립와이어 지속 시간 증가 · 카르마 낮은 플레이어가 없는 레이드의 파르티잔 출현 확률 계산 오류 수정 · <b>PMC 봇은 이제 항상 플레이어를 적대</b>(1.2.0의 '접근 전까지 중립' 동작은 사실상 사라짐) · 일부 조준경 시야각, 고장 뒤 탄창 장전·분리 불가, 상인 상호작용 화면 진입 불가, 쇄빙선·인터체인지·해안선 지형 수정 · 10-30: 특정 지역에서 엎드려 이동·넘기 불가, 컨테이너 수색 중단 문제 수정"]),
     ("1.2.5", "2026-10-16·20", [
         "PVE: PMC 봇이 총소리에 반응하는 거리·엄폐 시간 단축 등 행동 조정",
         "이벤트 퀘스트 라인 완료 업적 추가, 이벤트 보스 Scourge와 경호원 약화(체력·시야·원거리 명중률·발견 속도)",
         "블랙 디비전 순간이동 버그, RShG-2 장전 해제로 막히던 문제 등 수정"]),
-    ("1.2.0", "2026-10-06", [
+    ("1.2.0", "2026-10-06·09", [
         "<b>PVE 프레스티지 6단계</b> — PVE 1단계는 PVP보다 조건 완화, 장비 일부·스킬/숙련 최대 50% 이월 (<a href=\"/guide/prestige/\">프레스티지</a>)",
         "EXFIL Brothers 추천 프로그램(신규 친구와 함께하면 경험치 +5%와 보상)",
         "PVE 봇: USEC·BEAR 봇끼리 협력 확률↑, 일부 봇은 접근 전까지 중립, 봇 수·장비가 레벨과 진영에 맞게 조정",
@@ -2369,7 +2465,9 @@ PATCHES = [
         "상인 등급: 판매액 조건 삭제, 평판·레벨 조건 재조정 / 일부 탄약·탄창 해금 등급 1단계 하향",
         "은신처: 1~3단계 일부 완화(일부 인레이드 조건 해제·건설 시간 단축), 많은 시설에 돈 요구 추가, 무기 빌드는 작업대 없이도 가능",
         "보험: 예거 보험 추가(가장 빠르고 비쌈), 프라퍼·테라피스트 반환 빨라짐",
-        "신규: QBZ-191·Howa Type 20·HK 416A5, <b>5.8x42 구경</b>, 자물쇠 달린 문·상자, 모드 선택 화면, Arena→시즌 진행 동기화"]),
+        "신규: QBZ-191·Howa Type 20·HK 416A5, <b>5.8x42 구경</b>, 자물쇠 달린 문·상자, 모드 선택 화면, Arena→시즌 진행 동기화",
+        "<b>카파 업적 변경</b>: 'The Kappa Path' 업적은 시즌 1부터 더 얻을 수 없고, 수집가(Collector) 완료 시 'Dawn of a New Era' 업적을 받음(기존 획득자는 프로필에 유지)",
+        "래그맨 전술 의류는 계정 영구 해금(프로필 초기화·프레스티지·시즌 캐릭터 뒤 다시 살 필요 없음), 기본 의류 가격 인상 · 시즌 모드는 보험 사용 불가"]),
     ("1.0.6", "2026-07-03", ["퀘스트 화면에서 이름·목표·지역·상인으로 검색", "Expansion Hub 준비(유료 상점)"]),
     ("1.0.5", "2026-05-25", ["<b>쇄빙선(Icebreaker)</b>: 1~3인 PvE 탐사 지역 + 스토리 챕터 '보레아스'",
                              "레이드 중 퀘스트 아이템 근처에 가면 방향 표시"]),
@@ -2379,14 +2477,14 @@ PATCHES = [
 def patch_page(ctx: Ctx) -> tuple[str, str]:
     secs = "".join(f'<section class="box"><h2>{e(v)} <span class="muted small">{e(d)}</span></h2><ul class="plain">'
                    + "".join(f"<li>{x}</li>" for x in items) + "</ul></section>" for v, d, items in PATCHES)
-    body = ('<h1>패치 요약 <span class="h1en">1.0.5 → 1.2.5</span></h1>'
-            f'<p class="sub">2026년 5월~10월 주요 변경 · 현재 게임 버전 1.2.5 · 정리 {e(ctx.stamp)}</p>'
+    body = (f'<h1>패치 요약 <span class="h1en">1.0.5 → {GAME_VERSION}</span></h1>'
+            f'<p class="sub">2026년 5월~10월 주요 변경 · 현재 게임 버전 {GAME_VERSION} · 정리 {e(ctx.stamp)}</p>'
             '<div class="note">공식 패치 노트(위키 Changelog 모음)를 읽고 플레이에 영향이 큰 것만 골라 한국어로 요약했습니다. 원문은 '
             '<a href="https://escapefromtarkov.fandom.com/wiki/Changelog" rel="noopener" target="_blank">공식 위키 Changelog</a>에서 볼 수 있습니다.</div>'
             + secs)
     path = "/guide/patch/"
-    title = "타르코프 패치 요약 1.0.5~1.2.5 — 시즌·퀘스트 개편·PVE 프레스티지·경제 변경 | 탈콥 가이드"
-    desc = "타르코프 2026년 5~10월 패치 한국어 요약: 1.1.0 KORD BREACH(시즌·사이드 퀘스트 묶음 해금·플리 수수료 5%), 1.1.5 등대 개편·등대지기 체인, 1.2.0 PVE 프레스티지, 1.2.5."
+    title = f"타르코프 패치 요약 1.0.5~{GAME_VERSION} — 할로윈 이벤트·시즌·퀘스트 개편·PVE 프레스티지·경제 변경 | 탈콥 가이드"
+    desc = f"타르코프 2026년 5~10월 패치 한국어 요약: 1.1.0 KORD BREACH(시즌·사이드 퀘스트 묶음 해금·플리 수수료 5%), 1.1.5 등대 개편·등대지기 체인, 1.2.0 PVE 프레스티지, 1.2.5, {GAME_VERSION} 할로윈 이벤트·오염된 맵·스킬 변경."
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="patch", crumbs=[("패치 요약", None)])
 
 
@@ -2395,9 +2493,10 @@ def patch_page(ctx: Ctx) -> tuple[str, str]:
 # 국내 커뮤니티(디시 타르코프 갤러리)에서도 쓴 보고가 있는 것만. 한 곳이라도 '만료'로 적은 코드는 '제외' 칸에 둔다.
 # 갱신할 때 PROMO_CHECKED 날짜를 꼭 바꿀 것(페이지·허브 카드에 그대로 나간다).
 # ─────────────────────────────────────────────────────────────
-PROMO_CHECKED = "2026-10-26"
+PROMO_CHECKED = "2026-11-02"
 # (모드 키, 제목, 설명)
 PROMO_MODES = [
+    ("unknown", "🎃 신규 — 모드 미확인", "최근 나온 코드인데 어느 모드(PVE·PVP·시즌) 캐릭터가 받는지 출처가 아직 없습니다. 등록은 계정당 한 번이니 주로 쓰는 캐릭터로 접속한 뒤 등록하세요."),
     ("pve", "PVE 존", "PVE 캐릭터로 접속해 메신저에서 받습니다. 1.2.0(10-06) 업데이트 기념으로 해외 매체마다 하나씩 나온 코드라 이름이 매체명입니다."),
     ("season", "PVP 시즌 (KORD BREACH)", "시즌 캐릭터 전용 — 영구 PVP·PVE 캐릭터에는 안 들어옵니다."),
     ("pvp", "PVP 영구 존", "영구 PVP 캐릭터 전용. 대부분 소소한 보급품·루블이고 2025년 말~2026년 초에 나온 뒤 아직 살아 있는 코드입니다."),
@@ -2405,12 +2504,13 @@ PROMO_MODES = [
 # (코드, 모드 키, 보상 요약, 비고)
 PROMO_CODES = [
     ("POLYGON", "pve", "M60E6 기관총 + 100발 박스 + 7.62x51 M993 200발, ComTac II 헤드셋, TC 800 헬멧, M53A1 방독면, LV-119 플레이트 캐리어, 배낭", "가장 알찬 코드"),
-    ("AUTOMATON", "pve", "SIG MCX .300 BLK + PMAG + AP 탄, Siege-R 플레이트 캐리어, NeoSteel 헬멧, IR 발라클라바, ComTac VI 헤드셋, 방탄 안경", ""),
     ("YYSTV", "pve", "HK 416A5 + PMAG + 5.56 M995 120발, LV-119 플레이트 캐리어, Bastion 헬멧, SOTR 마스크, Sordin 헤드셋, 배낭", ""),
     ("PVEPRESTIGE", "pve", "나무 장비 상자 2개 + 탄약 상자 1개", "PVE 프레스티지 추가 기념"),
     ("WIPE", "season", "HK G36 + AKS-74U, RBAV-AF 플레이트 캐리어, DevTac Ronin 헬멧, 탄창 케이스, 탄약·의료품", "시즌 시작(08-03) 기념"),
-    ("GAMESPARK", "season", "Desert Tech MDR, Trooper 방탄복, Ronin 헬멧, T20 배낭, Grizzly·CMS·Salewa 의료품", ""),
-    ("PCGAMESN", "season", "Velociraptor .300 BLK + SLR-106 5.56, TV-110 플레이트 캐리어, 헬멧, 배낭, Grizzly 의료품, 제작 재료", ""),
+    ("GAMESPARK", "season", "Desert Tech MDR, Trooper 방탄복, Ronin 헬멧, T20 배낭, TV-104 체스트리그, PMAG 3개, Grizzly·CMS·Salewa 의료품", ""),
+    ("PCGAMESN", "season", "Velociraptor .300 BLK + .300 BLK 탄 120발, SLR-106/AK 5.56 30발 탄창 3개, TV-110 플레이트 캐리어, TC 800 헬멧, Walker's Razor 헤드셋, 배낭, Grizzly 의료품, 제작 재료", "SLR-106은 소총이 아니라 탄창(11-02 정정)"),
+    ("UNDEADTARKOV", "unknown", "'좀비 잡이 세트' — M3 Super 90 산탄총 + 12게이지 플레셰트, SP PC V2 플레이트 캐리어, ULACH 헬멧, ComTac V, Salewa·CALOK-B·붕대, RGD-5 4개, Klesch-2P 손전등 등(디시 갤러리 보관함 캡처 기준, 공식 목록 없음)",
+     "10-30 공개(할로윈 1.3.0 연동). 런처 '등록됨' 캡처와 갤러리 보고 5건으로 확인. 어느 모드에 들어오는지는 어떤 출처에도 없음 — 쓰는 캐릭터로 접속해 메신저 확인"),
     ("ELVISVISTA", "pvp", "Elvisvista 피규어, 은색 트리 장식 2개", "BSG 아트 리드 공개(2025-12-24)"),
     ("PAY2WIN", "pvp", "TOZ-106 산탄총, Blicky 장난감 총, FAST MT 헬멧(모조), GP 코인", "니키타가 올린 장난 코드(2025-12-07)"),
     ("LIGHTSOUT", "pvp", "절전형 전구 6개", ""),
@@ -2421,6 +2521,8 @@ PROMO_CODES = [
 # 최근 끝났거나 넣지 않은 것 — 검색해서 들어온 사람이 헛수고하지 않게 이유와 함께 적는다
 PROMO_GONE = [
     ("INVEN", "PVE", "M1A 소총 세트. 인벤 독자용으로 <b>업데이트 뒤 2주 한정</b>이라고 인벤 기사(10-07)에 명시 → 10-20 전후 만료. 20일까지 됐다는 댓글이 마지막 보고."),
+    ("AUTOMATON", "PVE", "SIG MCX .300 BLK 세트. 일본 매체 배포 코드로 <b>교환 2주 한정</b>(10-06 시작 → 10-20 전후)이라고 안내됨(11-02 확인). 해외 정리 사이트 상당수는 아직 '활성'으로 두고 있어 런처에서 넣어 봐도 손해는 없음."),
+    ("WIPE · GAMESPARK · PCGAMESN · ELVISVISTA · PAY2WIN · SCAVYBOI 참고", "—", "위 표에 그대로 두었지만, 정리 사이트 두 곳(10-03·10-30)이 '만료됐을 수 있음' 묶음에 넣고 있습니다. 같은 시기 갱신된 다른 사이트들은 전부 활성이라 유지 — 안 들어오면 만료된 것."),
     ("12주년 선물", "전 모드", "코드가 아니라 <a href=\"https://profile.tarkov.com/profile/gifts\" rel=\"noopener\" target=\"_blank\">프로필 선물함</a>에서 받는 식료품 꾸러미. 공식 트윗 기준 <b>10-19 20:00(한국)</b>에 끝남."),
     ("JUST150TARCOINS", "확장 허브", "TarCoin 150개. 선착순 4만 명 한정이라 소진됨(8월 공개)."),
     ("PROMOCODE · BACKTORAID · SUDAKTUDAK · LETMEIN", "—", "정리 사이트마다 활성/만료가 갈려서 뺐습니다. 런처에서 직접 넣어 보는 건 손해 볼 게 없습니다."),
@@ -2477,7 +2579,7 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
 
 
 # ─────────────────────────────────────────────────────────────
-# 건스미스 — 기계공 무기 조립 퀘스트 전부(기본 '건스미스 - 무기명' + '건스미스 마스터 - 파트 N').
+# 건스미스 — 메카닉 무기 조립 퀘스트 전부(기본 '건스미스 - 무기명' + '건스미스 마스터 - 파트 N').
 # 데이터의 buildWeapon 목표: item(무기) · containsAll(반드시 포함할 부품) · buildAttributes(성능 조건).
 # 부품은 즐겨찾기(플리마켓 ★)용 체크리스트로도 한 번 더 묶는다.
 # ─────────────────────────────────────────────────────────────
@@ -2500,7 +2602,7 @@ render();})();
 
 
 GUNSMITH_BUILDS = Path(__file__).resolve().parent / "guide_data" / "gunsmith_builds.json"  # scripts/gunsmith_wiki.py 가 만든다
-TRADER_KO = {"Prapor": "프라퍼", "Therapist": "테라피스트", "Skier": "스키어", "Peacekeeper": "피스키퍼", "Mechanic": "기계공",
+TRADER_KO = {"Prapor": "프라퍼", "Therapist": "테라피스트", "Skier": "스키어", "Peacekeeper": "피스키퍼", "Mechanic": "메카닉",
              "Ragman": "래그맨", "Jaeger": "예거", "Fence": "펜스", "Ref": "레프", "Lightkeeper": "등대지기", "Flea Market": "플리마켓"}
 
 
@@ -2581,7 +2683,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
         m = re.search(r"Part (\d+)", ctx.task_names(tid)[1])
         return int(m.group(1)) if m else 0
 
-    # 기본 건스미스는 서로 선행 관계가 없고(1.1.0 묶음 방식) 기계공 묶음 카운터 4갈래에 흩어져 있어 깊이로는 전부 0 →
+    # 기본 건스미스는 서로 선행 관계가 없고(1.1.0 묶음 방식) 메카닉 묶음 카운터 4갈래에 흩어져 있어 깊이로는 전부 0 →
     # 실제 받는 순서 = ①바로(대화만) ②묶음 1개 완료 뒤 ③3개 ④5개 ⑤LL3·레벨 26, 같은 단계 안에선 옛 '파트 N' 번호(공식 위키 아이콘)로.
     def gs_tier(tid):
         t = ctx.tasks[tid]
@@ -2629,8 +2731,8 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
                 chips = "".join(f'<span data-part="{e(pid)}">{ctx.chip(pid)}</span>' for pid in need) or '<span class="muted small">없음 — 성능 조건만</span>'
                 lv = t.get("minPlayerLevel") or 0
                 b = ctx.batch_req(t)
-                when = (f"기계공 묶음 {b}개 완료 뒤" if b else
-                        (f"기계공 LL{ctx.trader_ll(t)}" if ctx.trader_ll(t) > 1 else ("" if "Master" in ctx.task_names(tid)[1] else "바로 받음")))
+                when = (f"메카닉 묶음 {b}개 완료 뒤" if b else
+                        (f"메카닉 LL{ctx.trader_ll(t)}" if ctx.trader_ll(t) > 1 else ("" if "Master" in ctx.task_names(tid)[1] else "바로 받음")))
                 sub = " · ".join(x for x in (f"레벨 {lv}" if lv else "", when) if x)
                 first = (f'<td class="q" rowspan="{len(objs)}">{ctx.task_link(tid)}'
                          + (f'<div class="small muted">{e(sub)}</div>' if sub else "") + "</td>") if k == 0 else ""
@@ -2674,13 +2776,13 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
                    f'<td class="n small">{pcell}</td></tr>')
 
     body = (f'<h1>건스미스 부품 총정리 <span class="h1en">Gunsmith</span></h1>'
-            f'<p class="sub">기계공 무기 조립 퀘스트 {len(gs)}개 · 반드시 포함할 부품 {len(parts)}종 · 데이터 기준 {e(ctx.stamp)}</p>'
+            f'<p class="sub">메카닉 무기 조립 퀘스트 {len(gs)}개 · 반드시 포함할 부품 {len(parts)}종 · 데이터 기준 {e(ctx.stamp)}</p>'
             '<div class="note key"><b>쓰는 법</b> — 아래 "전체 부품 체크리스트"의 이름을 플리마켓 검색창에 넣고 ★(즐겨찾기)를 눌러 두면 시세 볼 때 한 번에 모입니다. '
             '표의 "반드시 포함할 부품"은 조립에 꼭 들어가야 하는 것이고, 그 외 인체공학·반동·무게 같은 <b>성능 조건</b>은 어떤 부품으로든 맞추면 됩니다. '
             '각 줄의 <b>"위키 예시 조립 보기"</b>를 펼치면 공식 위키가 올린 조립 예시(부품·파는 상인·등급)가 나오고, 그 부품들도 체크리스트에 "예시" 열로 들어가 있습니다. '
             '조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.</div>'
             '<nav class="toc"><a href="#base">건스미스</a><a href="#master">건스미스 마스터</a><a href="#parts">전체 부품 체크리스트</a></nav>'
-            + table(base_rows, "base", "건스미스", "기계공 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
+            + table(base_rows, "base", "건스미스", "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
             + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.")
             + f'<h2 class="sec" id="parts">전체 부품 체크리스트 <span class="muted small">{len(trs)}종</span></h2>'
             '<div class="box"><div class="bar"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
@@ -2717,7 +2819,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
 
     path = "/guide/gunsmith/"
     title = f"타르코프 건스미스 부품 총정리 — 퀘스트 {len(gs)}개 필수 부품 {len(parts)}종·성능 조건·즐겨찾기 체크리스트 | 탈콥 가이드"
-    desc = (f"타르코프 건스미스(기계공 무기 조립) 퀘스트 {len(gs)}개 전부: 무기별 반드시 포함할 부품 {len(parts)}종, 인체공학·반동·무게 조건, "
+    desc = (f"타르코프 건스미스(메카닉 무기 조립) 퀘스트 {len(gs)}개 전부: 무기별 반드시 포함할 부품 {len(parts)}종, 인체공학·반동·무게 조건, "
             "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.")
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="gunsmith", crumbs=[("건스미스", None)],
                       extra_head=extra_head, scripts=GUNSMITH_JS), feed_json

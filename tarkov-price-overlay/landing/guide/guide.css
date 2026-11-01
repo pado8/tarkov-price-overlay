@@ -236,3 +236,6 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .hq .hqh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}.hq h2{margin:0;font-size:17px}.hq .tags{display:inline-flex;gap:6px;flex-wrap:wrap}
 .hq .objs{margin:0}.badge.b-done{background:var(--panel2);color:var(--muted)}.badge.b-run{background:rgba(255,211,77,.15);color:var(--gold)}
 .controls .chk{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text);white-space:nowrap}.controls select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px}
+
+/* 이벤트 한정 표식(오염된 맵·감염자) — guide_static.EVENT_TAG */
+.evtag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(255,140,0,.16);color:#ffb366;border:1px solid rgba(255,140,0,.45);vertical-align:2px;margin-left:4px}
