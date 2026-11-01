@@ -1444,7 +1444,7 @@ def favorites_page(ctx: Ctx) -> tuple[str, str]:
 <div class="note" id="empty">아직 즐겨찾기가 없어요. <a href="/guide/quests/">퀘스트 목록</a>이나 <a href="/guide/hunt/">사냥 퀘스트</a>에서 ★를 눌러 보세요.</div>
 <div id="fl"></div>
 <section id="runbox" style="display:none"><h2 style="margin-top:22px">진행 중인 퀘스트 <span class="muted small">시세 오버레이가 게임 로그로 확인한 것 · <b id="nrun">0</b>개 · ★를 누르면 즐겨찾기로 고정</span></h2><div id="rl"></div></section>
-<div class="note" id="nosync" style="display:none">같은 PC에서 <a href="/">시세 오버레이</a>를 켜고 상단 <b>오버레이 연동</b>을 누르면, 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.</div>
+<div class="note" id="nosync" style="display:none">같은 PC에서 <a href="/">시세 오버레이</a>를 켜고 상단 <b>오버레이 연동</b>을 누르면(다음 버전부터), 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.</div>
 <script type="application/json" id="allq">{allq_json}</script>"""
     path = "/guide/favorites/"
     title = "내 즐겨찾기 퀘스트 — 목표·필요 아이템·열쇠 한눈에 | 탈콥 가이드"
@@ -3026,13 +3026,13 @@ return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(funct
 .catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
-var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 오버레이 연동";
-b.title="같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.";
+var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 오버레이 연동 (다음 버전부터)";
+b.title="다음 버전부터 쓸 수 있어요. 같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.";
 b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.textContent="연동 중…";
-pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 오버레이 연동";help()})});
+pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 오버레이 연동 (다음 버전부터)";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
-h.innerHTML='<b>오버레이를 찾지 못했어요.</b> 같은 PC에서 <a href="/">시세 오버레이</a>(연동 기능이 들어간 최신 버전)를 켜 두고 다시 눌러 주세요. 크롬이 "로컬 네트워크 접근"을 차단해 두었다면 <b>주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용</b>으로 바꾼 뒤 새로고침하세요. 그래도 안 되면 오버레이 <b>설정 → 사이트 연동하기</b> 버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다. <button type="button" class="x" aria-label="닫기">✕</button>';
+h.innerHTML='<b>오버레이 연동은 다음 버전부터 쓸 수 있어요.</b> 지금 버전의 앱에는 아직 이 기능이 없습니다. 새 버전을 설치했다면 같은 PC에서 <a href="/">시세 오버레이</a>(연동 기능이 들어간 최신 버전)를 켜 두고 다시 눌러 주세요. 크롬이 "로컬 네트워크 접근"을 차단해 두었다면 <b>주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용</b>으로 바꾼 뒤 새로고침하세요. 그래도 안 되면 오버레이 <b>설정 → 사이트 연동하기</b> 버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다. <button type="button" class="x" aria-label="닫기">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })();"""
 

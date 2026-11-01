@@ -36,12 +36,12 @@ return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(funct
 .catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"No response (timed out)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
-var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Overlay sync";
-b.title="Brings quest progress and Hideout levels from the Price Overlay running on this PC into this browser. Data never leaves your browser.";
+var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Overlay sync (next version)";
+b.title="Available from the next version. Brings quest progress and Hideout levels from the Price Overlay running on this PC into this browser. Data never leaves your browser.";
 b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.textContent="Syncing…";
-pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Overlay sync";help()})});
+pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Overlay sync (next version)";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
-h.innerHTML='<b>Could not find the overlay.</b> On the same PC, run <a href="/">Price Overlay</a>(latest version with sync support) must be running — start it and click again. If Chrome has blocked "local network access", change it to <b>address bar lock → Site settings → Local network access → Allow</b> and refresh. If it still fails, open this site with the overlay <b>Settings → Sync with site</b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
+h.innerHTML='<b>Overlay sync will be available from the next version.</b> The current app version does not have this feature yet. After installing the new version, on the same PC, run <a href="/">Price Overlay</a>(latest version with sync support) must be running — start it and click again. If Chrome has blocked "local network access", change it to <b>address bar lock → Site settings → Local network access → Allow</b> and refresh. If it still fails, open this site with the overlay <b>Settings → Sync with site</b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })();
