@@ -78,9 +78,14 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
             return "0.9"
         return "0.8" if u.count("/") <= 3 else "0.6"
 
+    # 가이드는 ko(/guide/x/)·en(/guide/en/x/)·ru(/guide/ru/x/) 세 판 — 각 항목에 언어 대체 주소를 단다
     for u in sorted(set(guide_urls), key=lambda u: (u.count("/"), u)):
-        out += ["  <url>", f"    <loc>https://tarkov.aquapado.com{u}</loc>", f"    <lastmod>{stamp}</lastmod>",
-                "    <changefreq>weekly</changefreq>", f"    <priority>{pri_of(u)}</priority>", "  </url>"]
+        galts = [f'<xhtml:link rel="alternate" hreflang="{l}" href="https://tarkov.aquapado.com{guide_static.lang_path(u, l)}" />'
+                 for l, _, _ in guide_static.LANGS] + [f'<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com{u}" />']
+        for l, _, _ in guide_static.LANGS:
+            out += ["  <url>", f"    <loc>https://tarkov.aquapado.com{guide_static.lang_path(u, l)}</loc>"] + [f"    {a}" for a in galts] + [
+                f"    <lastmod>{stamp}</lastmod>", "    <changefreq>weekly</changefreq>",
+                f"    <priority>{pri_of(u) if l == 'ko' else '0.5'}</priority>", "  </url>"]
     # 개인정보처리방침(landing/privacy/index.html, 손글) — 광고 심사·검색 노출용으로 사이트맵에 포함
     out += ["  <url>", "    <loc>https://tarkov.aquapado.com/privacy/</loc>",
             f"    <lastmod>{old_lastmod('https://tarkov.aquapado.com/privacy/')}</lastmod>",
@@ -91,7 +96,7 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
             "    <changefreq>yearly</changefreq>", "    <priority>0.3</priority>", "  </url>"]
     out.append("</urlset>")
     sm.write_text(nl.join(out) + nl, encoding="utf-8")
-    print(f"[guide] sitemap: {len(set(guide_urls)) + 4} URL")
+    print(f"[guide] sitemap: {len(set(guide_urls)) * 3 + 5} URL (가이드 {len(set(guide_urls))}쪽 × 3개 언어)")
 
 
 def main() -> int:
@@ -102,7 +107,20 @@ def main() -> int:
         raise SystemExit(f"GUIDE_LANG must be ko/en/ru (got {lang})")
     sfx = f"_{lang}"
     out_dir = OUT if lang == "ko" else OUT / lang
-    guide_static.set_lang(lang)
+    global guide_static
+    i18n_missing: set = set()
+    if lang != "ko":
+        # 생성기 소스의 한글 구간을 번역표로 치환한 모듈로 바꿔 끼운다(guide_i18n.py 설명 참고)
+        import guide_i18n
+        table = guide_i18n.load_table(lang)
+        if not table:
+            raise SystemExit(f"번역표가 없습니다: scripts/guide_i18n/{lang}.json")
+        sys.path.insert(0, str(ROOT / "python-core"))
+        guide_i18n.load_module(ROOT / "python-core" / "extract_conditions.py", "extract_conditions", table, i18n_missing)
+        guide_static = guide_i18n.load_module(ROOT / "scripts" / "guide_static.py", "guide_static", table, i18n_missing)
+        guide_static.set_lang(lang, table)
+    else:
+        guide_static.set_lang(lang)
     items_reg = get("regular/items")["items"]
     items_pve = get("pve/items")["items"]
     loc_items = get(f"regular/items{sfx}") or {}
@@ -337,7 +355,7 @@ def main() -> int:
     }
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
-        tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)
+        tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)  # 언어 전환은 localize_template 이 붙인다
         if 'src="/guide/sync.js"' not in tpl:  # 오버레이 연동 스크립트 — page() 로 만드는 페이지와 같게
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)
         if 'href="/privacy/"' not in tpl:  # 개인정보처리방침 링크 — 광고 심사 요건, page() 푸터와 같게
@@ -345,7 +363,8 @@ def main() -> int:
         if 'href="/about/"' not in tpl:  # 사이트 소개·운영자 링크 — 광고 심사 요건(운영 주체·연락처), 방침 링크 앞에
             tpl = tpl.replace(' · <a href="/privacy/">', ' · <a href="/about/">소개</a> · <a href="/privacy/">', 1)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        page = guide_static.localize_template(tpl.replace("__DATA__", payload).replace("__STAMP__", stamp))
+        # 번역은 자리표시자를 채우기 전에(추출 때와 같은 구간이어야 표에 맞는다)
+        page = guide_static.localize_template(tpl, f"/guide/{name}/").replace("__DATA__", payload).replace("__STAMP__", stamp)
         dest = out_dir / name / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(page, encoding="utf-8")
@@ -366,7 +385,25 @@ def main() -> int:
     import ga4  # GA4도 같은 방식(ID 없으면 아무것도 안 넣음)
     n_ga, gid = ga4.apply()
     print(f"[guide] GA4: {gid or '끔'} · 바뀐 페이지 {n_ga}")
-    print(f"[guide] 완료 {time.time() - t0:.1f}s → {OUT}")
+    if lang != "ko":
+        # 번역 누락 검사: 생성된 페이지에 한글이 남아 있으면 번역표에 없는 구간이다
+        han = re.compile(r"[가-힣]")
+        left = 0
+        sample: list[str] = []
+        for f in out_dir.rglob("index.html"):
+            txt = f.read_text(encoding="utf-8")
+            n = len(han.findall(txt))
+            if n:
+                left += 1
+                if len(sample) < 5:
+                    m = re.search(r"[^<>\"]*[가-힣][^<>\"]*", txt)
+                    sample.append(f"{f.relative_to(out_dir)}: {m.group(0).strip()[:60] if m else ''}")
+        miss_f = ROOT / "scripts" / "guide_i18n" / f"missing_{lang}.json"
+        miss_f.write_text(json.dumps(sorted(i18n_missing), ensure_ascii=False, indent=0), encoding="utf-8")
+        print(f"[guide] {lang}: 한글 남은 페이지 {left}개 · 번역표 누락 구간 {len(i18n_missing)}개 → {miss_f.name}")
+        for s in sample:
+            print("   ", s)
+    print(f"[guide] 완료 {time.time() - t0:.1f}s → {out_dir}")
     return 0
 
 

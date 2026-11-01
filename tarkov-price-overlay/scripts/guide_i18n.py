@@ -35,8 +35,9 @@ def load_table(lang: str) -> dict:
     return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
 
 
-def translate_text(text: str, table: dict, missing: set | None = None) -> str:
-    """텍스트 안의 한글 구간을 번역표로 바꾼다. 앞뒤 공백은 그대로 두고, 표에 없으면 원문 유지(+missing 기록)."""
+def translate_text(text: str, table: dict, missing: set | None = None, edge_before: str = "", edge_after: str = "") -> str:
+    """텍스트 안의 한글 구간을 번역표로 바꾼다. 앞뒤 공백은 그대로 두고, 표에 없으면 원문 유지(+missing 기록).
+    edge_before/after = text 바깥 바로 앞뒤 글자(f-string 조각처럼 토큰 하나만 넘길 때 띄어쓰기 판단용)."""
     def rep(m):
         s = m.group(0)
         core = s.strip()
@@ -49,6 +50,14 @@ def translate_text(text: str, table: dict, missing: set | None = None) -> str:
             return s
         lead = s[: len(s) - len(s.lstrip())]
         trail = s[len(s.rstrip()):]
+        # 한국어는 "{n}개"·"보스{n}"처럼 자리표시자에 조사를 바로 붙이지만 영어·러시아어는 띄어야 한다.
+        # 앞뒤가 자리표시자(})·숫자이고 번역이 글자로 시작/끝나면 공백을 끼운다.
+        before = text[m.start() - 1] if m.start() > 0 else edge_before
+        after = text[m.end()] if m.end() < len(text) else edge_after
+        if not lead and before and (before in "}>" or before.isdigit()) and t[:1].isalpha():
+            lead = " "
+        if not trail and after and (after in "{<" or after.isdigit()) and t[-1:].isalpha():
+            trail = " "
         return lead + t + trail
     return RUN.sub(rep, text)
 
@@ -78,7 +87,7 @@ def transform_source(src: str, table: dict, missing: set | None = None) -> str:
     last = 0
     for a, b in _string_spans(src):
         out.append(src[last:a])
-        out.append(translate_text(src[a:b], table, missing))
+        out.append(translate_text(src[a:b], table, missing, edge_before=src[a - 1] if a > 0 else "", edge_after=src[b] if b < len(src) else ""))
         last = b
     out.append(src[last:])
     return "".join(out)

@@ -68,30 +68,68 @@ EVENT_TAG = '<span class="evtag">🎃 이벤트 한정</span>'
 
 
 # 언어판 — build_guide 가 GUIDE_LANG 으로 정한다. ko 가 기본, en/ru 는 /guide/<lang>/ 아래에 생성된다.
+# en/ru 빌드에서는 이 모듈 자체가 guide_i18n.load_module 로 '한글 구간이 번역된 소스'로 실행되므로 아래 문구들도 그 언어로 나온다.
 LANG = "ko"
+I18N: dict = {}      # ko 구간 → 번역 (en/ru 빌드에서 템플릿 페이지 번역용)
+I18N_MISSING: set = set()
+LANGS = [("ko", "한국어", "ko_KR"), ("en", "English", "en_US"), ("ru", "Русский", "ru_RU")]
 
 
-def set_lang(lang: str) -> None:
-    global LANG
+def set_lang(lang: str, table: dict | None = None) -> None:
+    global LANG, I18N
     LANG = lang
+    I18N = table or {}
 
 
-def localize_template(html_text: str) -> str:
-    """템플릿 페이지(quests/kappa/keys)에 언어판 처리를 적용한다. ko 는 그대로."""
-    return html_text if LANG == "ko" else localize_html(html_text)
+def lang_path(path: str, lang: str | None = None) -> str:
+    """ko 경로(/guide/x/) → 해당 언어 경로(/guide/en/x/)."""
+    lang = lang or LANG
+    return path if lang == "ko" else f"/guide/{lang}/" + path[len("/guide/"):]
+
+
+def hreflang_html(path: str) -> str:
+    links = "".join(f'<link rel="alternate" hreflang="{l}" href="{SITE}{lang_path(path, l)}" />\n' for l, _, _ in LANGS)
+    return links + f'<link rel="alternate" hreflang="x-default" href="{SITE}{path}" />\n'
+
+
+def lang_switch_html(path: str) -> str:
+    """상단 언어 전환 — 절대 주소로 써서 en/ru 판의 링크 접두 처리에 안 걸리게."""
+    return '<div class="lang">' + "".join(
+        f'<a{" class=\"on\"" if l == LANG else ""} href="{SITE}{lang_path(path, l)}" hreflang="{l}">{name}</a>' for l, name, _ in LANGS) + "</div>"
+
+
+def localize_template(html_text: str, path: str) -> str:
+    """템플릿 페이지(quests/kappa/keys): 고정 문구 번역 + html lang·canonical·og 교체 + hreflang·언어 전환. ko 는 hreflang·전환만."""
+    import re as _re
+    html_text = html_text.replace("</head>", hreflang_html(path) + "</head>", 1)
+    html_text = _re.sub(r"(<nav>.*?</nav>)", lambda m: m.group(1) + lang_switch_html(path), html_text, count=1, flags=_re.S)
+    if LANG == "ko":
+        return html_text
+    import guide_i18n
+    html_text = guide_i18n.translate_text(html_text, I18N, I18N_MISSING)
+    html_text = html_text.replace('<html lang="ko">', f'<html lang="{LANG}">', 1)
+    html_text = html_text.replace(f'{SITE}{path}"', f'{SITE}{lang_path(path)}"')  # canonical·og:url
+    html_text = html_text.replace('content="ko_KR"', f'content="{dict((l, loc) for l, _, loc in LANGS)[LANG]}"')
+    return localize_html(html_text)
 
 
 def localize_html(html_text: str) -> str:
-    """en/ru 판: 내부 /guide/ 링크를 /guide/<lang>/ 로 바꾼다(자산 파일 제외). 고정 문구 번역은 i18n 표가 붙으면 여기서 적용."""
+    """en/ru 판: 내부 /guide/ 링크를 /guide/<lang>/ 로 바꾼다(자산 파일 제외)."""
     import re as _re
-    assets = ("/guide/guide.css", "/guide/sync.js", "/guide/gunsmith.json")
+    assets = ("/guide/guide.css", "/guide/gunsmith.json")  # sync.js 는 언어판마다 번역본이 /guide/<lang>/sync.js 에 따로 있다
 
     def _href(m):
         url = m.group(2)
         if url.startswith(assets) or url.startswith(f"/guide/{LANG}/"):
             return m.group(0)
         return f'{m.group(1)}="/guide/{LANG}/{url[len("/guide/"):]}"'
-    return _re.sub(r'(href|action)="(/guide/[^"]*)"', _href, html_text)
+    html_text = _re.sub(r'(href|action|src)="(/guide/[^"]*)"', _href, html_text)
+    # 랜딩·상태 페이지도 그 언어판으로
+    html_text = html_text.replace('href="/"', f'href="/{LANG}"').replace('href="/?src=guide"', f'href="/{LANG}?src=guide"')
+    html_text = html_text.replace('href="/status/"', f'href="/status/?lang={LANG}"')
+    # 번역 조각을 이어 붙이며 생긴 이중 공백 정리(태그·스크립트 밖 본문)
+    html_text = _re.sub(r"(?<=[^\s>])  +(?=[^\s<])", " ", html_text)
+    return html_text
 
 
 def is_event_mob(mob) -> bool:
@@ -130,7 +168,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
 # 데스크톱은 올리면 펼침, 좁은 화면·터치는 눌러 펼침(sync.js 의 메뉴 토글). 아이템 페이지들을 한 페이지로 합치지
 # 않은 이유: 페이지가 너무 커지고 검색 유입용 개별 주소를 잃는다.
 NAV_GROUPS = [
-    ("시작", "/guide/start/", [("start", "/guide/start/", "초반 가이드"), ("patch", "/guide/patch/", "패치 요약"),
+    ("시작하기", "/guide/start/", [("start", "/guide/start/", "초반 가이드"), ("patch", "/guide/patch/", "패치 요약"),
                                ("promo", "/guide/promo/", "프로모 코드")]),
     ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("hunt", "/guide/hunt/", "사냥 퀘스트"), ("favorites", "/guide/favorites/", "내 즐겨찾기"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
@@ -142,8 +180,8 @@ NAV_GROUPS = [
 ]
 
 
-def nav_html(active: str) -> str:
-    """가이드 상단 메뉴 — 정적 페이지와 템플릿 페이지(카파·열쇠·퀘스트)가 같은 걸 쓴다"""
+def nav_html(active: str, path: str | None = None) -> str:
+    """가이드 상단 메뉴 — 정적 페이지와 템플릿 페이지(카파·열쇠·퀘스트)가 같은 걸 쓴다. path 를 주면 언어 전환도 붙인다"""
     out = []
     for label, href, items in NAV_GROUPS:
         gon = any(k == active for k, _, _ in items)
@@ -152,7 +190,7 @@ def nav_html(active: str) -> str:
                    f'<div class="dd">{inner}</div></div>')
     # '시세 오버레이'는 nav 밖 형제로 둔다 — 넓은 화면에선 메뉴 바로 뒤, 폰에선 로고 줄 오른쪽(guide.css)
     ov = f'<a class="ov{" on" if active == "overlay" else ""}" href="/">시세 오버레이</a>'
-    return "<nav>" + "".join(out) + "</nav>" + ov
+    return "<nav>" + "".join(out) + "</nav>" + (lang_switch_html(path) if path else "") + ov
 
 
 def e(s) -> str:
@@ -344,8 +382,13 @@ class Ctx:
 
     def mob_name(self, mob):
         if is_event_mob(mob):  # 할로윈 감염자 — 로케일이 내부 ID(infectedScreamer)를 그대로 돌려주는 것도 있어 종류만 표시
-            return "감염된 타길라" if mob == "infectedTagilla" else "감염자"
+            if LANG == "ko":
+                return "감염된 타길라" if mob == "infectedTagilla" else "감염자"
+            n = self._loc(self.loc_maps, mob) or mob
+            return n if n != mob else {"en": "Infected", "ru": "Заражённый"}.get(LANG, "Infected")
         n = self._loc(self.loc_maps, mob) or self._loc(self.loc_tasks, mob) or TARGETS.get(mob) or mob
+        if LANG != "ko":  # en/ru 로케일은 보스 이름이 그 언어로 있다
+            return n
         # 한국어판도 영어로 두는 보스 이름 — 검색은 한글로 하니 음역을 앞에 붙인다
         for en, ko in MOB_KO.items():
             if n == en or n.startswith(en + " "):
@@ -560,9 +603,9 @@ class Ctx:
 
 def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = "", crumbs=None,
          og_type: str = "article", extra_head: str = "", scripts: str = "") -> str:
-    url = SITE + path
+    url = SITE + lang_path(path)
     crumbs = crumbs or []
-    navhtml = nav_html(nav)  # <nav>…</nav> + '시세 오버레이' 링크(형제)
+    navhtml = nav_html(nav, path)  # <nav>…</nav> + 언어 전환 + '시세 오버레이' 링크(형제)
     crumb_html = ""
     ld = []
     if crumbs:
@@ -571,26 +614,27 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
             (f'<a href="{href}">{e(name)}</a>' if href and i < len(items) - 1 else f"<span>{e(name)}</span>")
             for i, (name, href) in enumerate(items)) + "</nav>"
         ld.append({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
-            {"@type": "ListItem", "position": i + 1, "name": name, **({"item": SITE + href} if href else {})}
+            {"@type": "ListItem", "position": i + 1, "name": name, **({"item": SITE + lang_path(href)} if href else {})}
             for i, (name, href) in enumerate(items)]})
+    og_locale = dict((l, loc) for l, _, loc in LANGS)[LANG]
     ld_html = "".join(f'<script type="application/ld+json">{json.dumps(x, ensure_ascii=False)}</script>' for x in ld)
     ads_html = (f'\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
                 if ADSENSE_CLIENT else "")
     return f"""<!doctype html>
-<html lang="ko">
+<html lang="{LANG}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc)}" />
 <link rel="canonical" href="{e(url)}" />
-<meta property="og:type" content="{og_type}" />
+{hreflang_html(path)}<meta property="og:type" content="{og_type}" />
 <meta property="og:site_name" content="탈콥 가이드 · 타르코프 시세 오버레이" />
 <meta property="og:title" content="{e(title)}" />
 <meta property="og:description" content="{e(desc)}" />
 <meta property="og:url" content="{e(url)}" />
 <meta property="og:image" content="{SITE}/og.png" />
-<meta property="og:locale" content="ko_KR" />
+<meta property="og:locale" content="{og_locale}" />
 <meta name="theme-color" content="#c8aa64" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
 <link rel="stylesheet" href="/guide/guide.css" />
@@ -619,6 +663,8 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 def write(out: Path, path: str, html_text: str, urls: list):
     dest = out / path.strip("/").removeprefix("guide/") / "index.html" if path != "/guide/" else out / "index.html"
     dest.parent.mkdir(parents=True, exist_ok=True)
+    if LANG != "ko":
+        html_text = localize_html(html_text)
     dest.write_text(html_text, encoding="utf-8")
     urls.append(path)
 

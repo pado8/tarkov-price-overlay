@@ -239,3 +239,10 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 
 /* 이벤트 한정 표식(오염된 맵·감염자) — guide_static.EVENT_TAG */
 .evtag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(255,140,0,.16);color:#ffb366;border:1px solid rgba(255,140,0,.45);vertical-align:2px;margin-left:4px}
+
+/* 언어 전환(가이드 상단, guide_static.lang_switch_html) */
+.lang{display:inline-flex;gap:2px;margin-left:8px;vertical-align:middle;font-size:12px}
+.lang a{color:var(--muted);padding:3px 7px;border-radius:999px;border:1px solid transparent;text-decoration:none}
+.lang a:hover{color:var(--fg)}
+.lang a.on{color:var(--gold);border-color:var(--gold-dim)}
+@media (max-width:560px){.lang{margin-left:0;font-size:11px}}
