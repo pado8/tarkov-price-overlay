@@ -31,6 +31,7 @@
 .legal .toc a{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;color:var(--text)}
 .legal .toc a:hover{border-color:var(--gold);text-decoration:none}
 </style>
+<!--ga4--><script async src="https://www.googletagmanager.com/gtag/js?id=G-DJMB7WHJZ9"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DJMB7WHJZ9');</script><!--/ga4-->
 </head>
 <body>
 <header class="nav"><div class="wrap" style="display:flex;align-items:center;gap:14px;height:54px">
@@ -40,10 +41,10 @@
 
 <main class="legal">
 <h1>개인정보처리방침</h1>
-<p class="meta">적용 대상: tarkov.aquapado.com(메인·탈콥 가이드·서비스 상태 페이지)과 Windows용 "타르코프 시세 오버레이" 앱 · 운영자: pado(<a href="https://aquapado.com/" rel="noopener">aquapado.com</a>) · 제정 2026-10-27</p>
+<p class="meta">적용 대상: tarkov.aquapado.com(메인·탈콥 가이드·서비스 상태 페이지)과 Windows용 "타르코프 시세 오버레이" 앱 · 운영자: pado(<a href="https://aquapado.com/" rel="noopener">aquapado.com</a>) · 제정 2026-10-27 · 개정 2026-11-02</p>
 
 <div class="box">
-  <b>한 줄 요약</b> — 이 사이트와 앱은 <b>이름·이메일·계정 같은 개인정보를 요구하거나 저장하지 않습니다.</b> 사이트는 쿠키 없는 익명 방문 집계만 하고, 앱은 끌 수 있는 익명 사용 횟수만 보냅니다. 검색한 아이템 이름, 게임 화면, 좌표, 게임 메모리는 어디에도 전송되지 않습니다. 광고를 붙이게 되면 이 문서의 "광고" 항목을 먼저 갱신합니다.
+  <b>한 줄 요약</b> — 이 사이트와 앱은 <b>이름·이메일·계정 같은 개인정보를 요구하거나 저장하지 않습니다.</b> 사이트는 방문 집계(Vercel Web Analytics·Google Analytics)만 하고, 앱은 끌 수 있는 익명 사용 횟수만 보냅니다. 검색한 아이템 이름, 게임 화면, 좌표, 게임 메모리는 어디에도 전송되지 않습니다. 광고를 붙이게 되면 이 문서의 "광고" 항목을 먼저 갱신합니다.
 </div>
 
 <nav class="toc"><a href="#site">웹사이트</a><a href="#storage">브라우저 저장소</a><a href="#sync">오버레이 연동</a><a href="#app">오버레이 앱</a><a href="#ads">광고</a><a href="#third">제3자 서비스</a><a href="#rights">보관·권리·문의</a></nav>
@@ -53,6 +54,7 @@
 <thead><tr><th>항목</th><th>내용</th><th>식별 가능성</th></tr></thead>
 <tbody>
 <tr><td>방문 집계(Vercel Web Analytics)</td><td>페이지뷰·방문자 수·국가·기기 종류 같은 통계. 쿠키를 쓰지 않고 개인을 추적하지 않습니다.</td><td class="no">식별 불가(집계만)</td></tr>
+<tr><td>방문 집계(Google Analytics)</td><td>방문 페이지·유입 경로·브라우저 종류·대략적 지역을 집계하며, Google 쿠키(<code>_ga</code>로 시작)를 씁니다. <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">Google 애널리틱스 차단 도구</a>로 끌 수 있습니다.</td><td>쿠키 기반 온라인 식별자(이름·이메일과 연결하지 않음)</td></tr>
 <tr><td>자체 유입 비콘</td><td>어느 경로로 들어와 어디서 다운로드 버튼을 눌렀는지 보려고, 방문한 페이지 경로·이전 페이지 주소(리퍼러)·링크에 붙은 캠페인 표식(<code>?src=</code>)·같은 세션의 첫 진입 페이지를 보냅니다. 쿠키·방문자 ID는 없고, 봇은 제외하며, 페이지당 세션에 한 번만 보냅니다.</td><td class="no">식별 불가</td></tr>
 <tr><td>서버 접속 기록</td><td>호스팅(Vercel)이 표준 접속 로그를 남깁니다. 운영자는 이를 개인 식별에 쓰지 않습니다.</td><td>호스팅 사업자 정책에 따름</td></tr>
 </tbody>
@@ -110,6 +112,7 @@
 <tr><td>Neon</td><td>익명 사용 통계·피드백 저장(데이터베이스)</td><td>4번에 적은 익명 통계와 피드백 내용</td></tr>
 <tr><td>GitHub</td><td>소스 코드·릴리즈 배포·버그 제보</td><td>업데이트 확인 요청, 사용자가 직접 올린 이슈</td></tr>
 <tr><td>tarkov.dev / json.tarkov.dev</td><td>게임 공개 데이터</td><td>데이터 요청(아이템 이름은 보내지 않고 전체 목록을 받습니다)</td></tr>
+<tr><td>Google Analytics</td><td>사이트 방문 집계(앱은 해당 없음)</td><td>방문 페이지·유입 경로·브라우저 정보·IP로 추정한 대략적 지역</td></tr>
 <tr><td>Google(도입 시)</td><td>광고</td><td>5번 참고</td></tr>
 </tbody>
 </table>
