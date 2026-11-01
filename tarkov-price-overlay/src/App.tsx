@@ -743,7 +743,26 @@ type Region = {
   // Ammo Matrix panel: auto-expands on the card when the lookup result is
   // a weapon or a round. Off entirely hides the panel even on ammo/weapon.
   showAmmoMatrix: boolean;
+  // 피드백 #51: 카드 안 블록의 표시 순서. .prices 가 세로 flex 라 각 블록에
+  // CSS order 를 주면 JSX 순서를 안 바꾸고도 재배치된다. 시세 줄(플리·상인)은
+  // 항상 맨 위(order 0). 없는 키는 loadRegion 이 기본 순서로 채운다.
+  sectionOrder: SectionKey[];
 };
+
+// 카드 블록 키(설정 '표시 순서'와 secStyle 이 같이 쓴다). 기본값 = 지금까지의 JSX 순서.
+const SECTION_KEYS = [
+  "buyFor",
+  "bartersFor",
+  "bartersUsing",
+  "craftsFor",
+  "craftsUsing",
+  "gunsmith",
+  "hideoutNeeds",
+  "ammoMatrix",
+  "quests",
+  "slotLine",
+] as const;
+type SectionKey = (typeof SECTION_KEYS)[number];
 
 const DEFAULT_REGION: Region = {
   offsetX: 10,
@@ -776,6 +795,7 @@ const DEFAULT_REGION: Region = {
   bgOpacity: 85,
   showLootTier: true,
   showAmmoMatrix: true,
+  sectionOrder: [...SECTION_KEYS],
 };
 
 const STORAGE_KEY = "tarkov.captureRegion";
@@ -969,6 +989,17 @@ function loadRegion(): Region {
       merged.opacity = Math.max(20, Math.min(100, merged.opacity ?? 100));
       // bgOpacity may go to 0 (text stays visible, so it's recoverable).
       merged.bgOpacity = Math.max(0, Math.min(100, merged.bgOpacity ?? 85));
+      // sectionOrder: 저장된 순서를 지키되 새로 생긴 블록 키는 기본 순서대로 뒤에 붙이고, 모르는 키는 버린다.
+      const saved = Array.isArray(merged.sectionOrder) ? merged.sectionOrder : [];
+      const seen = new Set<string>();
+      const order: SectionKey[] = [];
+      for (const k of [...saved, ...SECTION_KEYS]) {
+        if ((SECTION_KEYS as readonly string[]).includes(k) && !seen.has(k)) {
+          seen.add(k);
+          order.push(k as SectionKey);
+        }
+      }
+      merged.sectionOrder = order;
       return merged;
     }
   } catch {}
@@ -1157,6 +1188,17 @@ function App() {
   const [result, setResult] = useState<LookupResult | null>(null);
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
+  // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
+  const secStyle = (k: SectionKey) => ({ order: Math.max(0, region.sectionOrder.indexOf(k)) + 1 });
+  const moveSection = (k: SectionKey, dir: -1 | 1) =>
+    setRegion((r) => {
+      const arr = [...r.sectionOrder];
+      const i = arr.indexOf(k);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= arr.length) return r;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      return { ...r, sectionOrder: arr };
+    });
   const [showSettings, setShowSettings] = useState(false);
   const [hotkey, setHotkey] = useState<string>(loadHotkey);
   const [toggleHotkey, setToggleHotkey] =
@@ -4306,6 +4348,40 @@ function App() {
                 }
               />
             </div>
+            {/* 피드백 #51: 카드 블록 표시 순서 — ▲▼로 옮기고 region.sectionOrder 에 저장 */}
+            {(() => {
+              const secLabel: Record<SectionKey, string> = {
+                buyFor: t.displayBuyFor,
+                bartersFor: t.displayBartersFor,
+                bartersUsing: t.displayBartersUsing,
+                craftsFor: t.displayCraftsFor,
+                craftsUsing: t.displayCraftsUsing,
+                gunsmith: t.gunsmithTitle,
+                hideoutNeeds: t.displayHideoutNeeds,
+                ammoMatrix: t.displayAmmoMatrix,
+                quests: t.displayQuests,
+                slotLine: t.secSlotLine,
+              };
+              return (
+                <div className="settings-row" style={{ display: "block" }}>
+                  <label title={t.displayOrderHint}>{t.displayOrderSection}</label>
+                  {region.sectionOrder.map((k, i) => (
+                    <div key={k} className="order-row">
+                      <span className="order-label">{secLabel[k]}</span>
+                      <button type="button" disabled={i === 0} title={t.moveUp} onClick={() => moveSection(k, -1)}>▲</button>
+                      <button
+                        type="button"
+                        disabled={i === region.sectionOrder.length - 1}
+                        title={t.moveDown}
+                        onClick={() => moveSection(k, 1)}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             <div className="settings-section-header">
               {t.questSyncSection}
@@ -5040,7 +5116,7 @@ function App() {
                   {region.showBuyFor &&
                     result.buy_for &&
                     result.buy_for.length > 0 && (
-                    <details className="all-traders" open={region.detailsOpenDefault}>
+                    <details className="all-traders" open={region.detailsOpenDefault} style={secStyle("buyFor")}>
                       <summary>
                         🏪 {t.buyFor} ({result.buy_for.length})
                       </summary>
@@ -5063,7 +5139,7 @@ function App() {
                   {region.showBartersFor &&
                     result.barters_for &&
                     result.barters_for.length > 0 && (
-                    <details className="all-traders barters" open={region.detailsOpenDefault}>
+                    <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersFor")}>
                       <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
                       <div className="trader-list">
                         {result.barters_for.map((b, idx) => (
@@ -5110,7 +5186,7 @@ function App() {
                   {region.showBartersUsing &&
                     result.barters_using &&
                     result.barters_using.length > 0 && (
-                    <details className="all-traders barters" open={region.detailsOpenDefault}>
+                    <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersUsing")}>
                       <summary>
                         🔁 {t.barterUsing} ({result.barters_using.length})
                       </summary>
@@ -5177,7 +5253,7 @@ function App() {
                       // available instead of locking the whole list.
                       const hasLevels = Object.keys(hideoutLevels).length > 0;
                       return (
-                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                        <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsFor")}>
                           <summary>
                             🏭 {t.craftFor} ({result.crafts_for.length})
                           </summary>
@@ -5235,7 +5311,7 @@ function App() {
                       const hasLevels = Object.keys(hideoutLevels).length > 0;
                       const craftsUsing = result.crafts_using;
                       return (
-                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                        <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsUsing")}>
                           <summary>
                             ⚗️ {t.craftUsing} ({craftsUsing.length})
                           </summary>
@@ -5295,7 +5371,7 @@ function App() {
                     })()
                   }
                   {region.showQuests && result.gunsmith && result.gunsmith.length > 0 && (
-                    <div className="quest-warning gunsmith" title={t.gunsmithHint}>
+                    <div className="quest-warning gunsmith" title={t.gunsmithHint} style={secStyle("gunsmith")}>
                       🔧 {t.gunsmithTitle} ({result.gunsmith.length})
                       <div className="quest-list">
                         {result.gunsmith.map((g, i) => (
@@ -5324,7 +5400,7 @@ function App() {
                         ? `${neededCount}/${total}`
                         : `${total}`;
                       return (
-                        <details className="all-traders barters" open={region.detailsOpenDefault}>
+                        <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("hideoutNeeds")}>
                           <summary>
                             🏗️ {t.hideoutNeed} ({countLabel})
                           </summary>
@@ -5397,7 +5473,7 @@ function App() {
                         // weapon or ammo. Other details (barters/crafts/
                         // quests) stay user-controlled because they're
                         // auxiliary info.
-                        <details className="all-traders barters" open>
+                        <details className="all-traders barters" open style={secStyle("ammoMatrix")}>
                           <summary>
                             🎯 {t.ammoCompare} · {display} ({slot.rounds.length})
                           </summary>
@@ -5515,7 +5591,7 @@ function App() {
                         (q) => q.task_status === "completed"
                       ).length;
                       return (
-                        <div className="quest-warning">
+                        <div className="quest-warning" style={secStyle("quests")}>
                           🎯 {t.usedInTasks} ({visibleQuests.length})
                           {remainingCount > 0 && (
                             <span className="quest-total">
@@ -5634,7 +5710,7 @@ function App() {
                       slot || (isSingleSlot && (showTierBadge || rawPrice != null));
                     return (
                       (showSlotLine || showWeightLine) && (
-                        <div className="slot-price">
+                        <div className="slot-price" style={secStyle("slotLine")}>
                           {showSlotLine && (
                             <span>
                               📦{" "}
