@@ -2686,6 +2686,43 @@ PROMO_GONE = [
 ]
 
 
+# 자동 점검 결과(scripts/promo_check.py → scripts/guide_data/promo_status.json): {checked, codes:{CODE:{active:[출처], expired:[출처]}}}
+def _load_promo_status() -> dict:
+    try:
+        return json.loads((Path(__file__).resolve().parent / "guide_data" / "promo_status.json").read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001 — 아직 한 번도 안 돌렸으면 빈 값
+        return {}
+
+
+PROMO_STATUS = _load_promo_status()
+
+
+def promo_status_html(code: str) -> str:
+    info = (PROMO_STATUS.get("codes") or {}).get(code)
+    if not info:
+        return ""
+    act, exp = info.get("active") or [], info.get("expired") or []
+    if not act and exp:
+        return f' <span class="badge b-any warn" title="{e(", ".join(exp))}">만료 의심</span>'
+    if act:
+        return f' <span class="badge b-any" title="{e(", ".join(act))}">{len(act)}곳에서 활성</span>'
+    return ""
+
+
+PROMO_JS = """<script>
+(function(){var PU="guide.promo.used";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var boxes=[].slice.call(document.querySelectorAll("input.pu-chk"));
+function render(){var pu=L(PU,{}),n=0;boxes.forEach(function(b){var on=!!pu[b.getAttribute("data-code")];b.checked=on;var tr=b.closest("tr");if(tr)tr.classList.toggle("done",on);if(on)n++});
+var s=document.getElementById("pu-sum");if(s)s.textContent="등록함 "+n+"/"+boxes.length}
+function linked(){return !!(window.__guideSync||L("guide.sync",null))}
+function push(){if(!linked())return;var pu=L(PU,{}),used=Object.keys(pu);var opt={method:"POST",mode:"cors",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({used:used})};opt.targetAddressSpace="loopback";
+fetch("http://127.0.0.1:8765/progress/promo",opt).then(function(r){return r.json()}).then(function(p){if(p&&p.ok){var cur=L(PU,{}),add=0;(p.promo_used||[]).forEach(function(c){if(!cur[c]){cur[c]=Date.now();add++}});if(add){S(PU,cur);render()}}}).catch(function(){})}
+boxes.forEach(function(b){b.addEventListener("change",function(){var pu=L(PU,{}),c=b.getAttribute("data-code");if(b.checked)pu[c]=Date.now();else delete pu[c];S(PU,pu);render();push()})});
+document.addEventListener("guide-sync",function(){render()});render();
+})();
+</script>"""
+
+
 def promo_page(ctx: Ctx) -> tuple[str, str]:
     by_mode: dict[str, list] = {}
     for code, mode, reward, note in PROMO_CODES:
@@ -2693,16 +2730,29 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
     secs = []
     for key, title, desc in PROMO_MODES:
         rows = "".join(
-            f'<tr><td class="n"><code class="promo">{e(code)}</code> <button type="button" class="cp" data-c="{e(code)}" aria-label="{e(code)} 복사">복사</button></td>'
+            f'<tr data-code="{e(code)}"><td class="n"><label class="pu"><input type="checkbox" class="pu-chk" data-code="{e(code)}" aria-label="{e(code)} 등록함" /> 등록함</label></td>'
+            f'<td class="n"><code class="promo">{e(code)}</code> <button type="button" class="cp" data-c="{e(code)}" aria-label="{e(code)} 복사">복사</button>{promo_status_html(code)}</td>'
             f'<td>{e(reward)}</td><td class="small muted">{e(note) or "—"}</td></tr>'
             for code, reward, note in by_mode.get(key, []))
         secs.append(f'<h2 class="sec" id="{key}">{e(title)} <span class="muted small">{len(by_mode.get(key, []))}개</span></h2>'
                     f'<p class="small muted">{desc}</p>'
-                    '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">코드</th><th>보상</th><th>비고</th></tr></thead>'
+                    '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">등록</th><th class="n">코드</th><th>보상</th><th>비고</th></tr></thead>'
                     f'<tbody>{rows}</tbody></table></div>')
+    auto_new = [c for c, info in (PROMO_STATUS.get("codes") or {}).items()
+                if c not in {x[0] for x in PROMO_CODES} and c not in {x[0].split(" ")[0] for x in PROMO_GONE} and len(info.get("active") or []) >= 3]
+    if auto_new:
+        secs.append('<h2 class="sec" id="auto">🆕 자동 감지된 새 코드 <span class="muted small">확인 중</span></h2>'
+                    '<p class="small muted">정리 사이트 3곳 이상에서 새로 보이는 코드입니다. 모드·보상은 아직 사람이 확인하지 않았으니 런처에 넣어 보고 결과를 알려 주세요.</p>'
+                    '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">등록</th><th class="n">코드</th><th>활성 확인</th></tr></thead><tbody>'
+                    + "".join(f'<tr data-code="{e(c)}"><td class="n"><label class="pu"><input type="checkbox" class="pu-chk" data-code="{e(c)}" /> 등록함</label></td>'
+                              f'<td class="n"><code class="promo">{e(c)}</code> <button type="button" class="cp" data-c="{e(c)}">복사</button></td>'
+                              f'<td class="small">{e(", ".join(PROMO_STATUS["codes"][c].get("active") or []))}</td></tr>' for c in auto_new)
+                    + "</tbody></table></div>")
     gone = "".join(f'<tr><td class="n"><code class="promo off">{e(c)}</code></td><td class="small">{e(m)}</td><td class="small">{why}</td></tr>' for c, m, why in PROMO_GONE)
     body = (f'<h1>프로모 코드 <span class="h1en">Promo codes</span></h1>'
-            f'<p class="sub">지금 쓸 수 있는 공식 코드 {len(PROMO_CODES)}개 · 마지막 확인 {PROMO_CHECKED}</p>'
+            f'<p class="sub">지금 쓸 수 있는 공식 코드 {len(PROMO_CODES)}개 · 사람 확인 {PROMO_CHECKED} · 자동 확인 {e(PROMO_STATUS.get("checked") or "—")} · <span id="pu-sum"></span></p>'
+            '<div class="note small">✅ <b>등록함</b>에 체크해 두면 이 브라우저에 저장되고, <b>오버레이 연동</b>이 켜진 PC에서는 앱에도 저장돼 다른 브라우저에서도 같은 체크가 보입니다. '
+            '코드 옆 <b>활성 n곳</b>은 자동 점검(매주)이 정리 사이트에서 그 코드를 "활성"으로 본 수, <span class="warn">만료 의심</span>은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.</div>'
             '<div class="note key"><b>넣는 기준</b> — 서로 다른 정리 사이트 3곳 이상이 최근 2주 안에 "활성"으로 확인했고, 디시 타르코프 갤러리에서도 쓴 보고가 있는 코드만 올립니다. '
             '한 곳이라도 만료로 적은 코드는 아래 "제외" 표로 내립니다. BSG는 만료일을 공지하지 않고 하루 만에 닫는 코드도 있어서, <b>보이면 바로 넣는 게 답</b>입니다. '
             '코드는 <b>모드별</b>로 들어오니 PVE 코드를 넣고 PVP 캐릭터로 접속하면 메신저에 아무것도 없습니다.</div>'
@@ -2724,7 +2774,7 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
                   'border:1px solid var(--line);border-radius:6px;padding:2px 7px;letter-spacing:.3px;user-select:all}code.promo.off{color:var(--muted);text-decoration:line-through;font-weight:600}'
                   'button.cp{margin-left:4px;font-size:11.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}'
                   'button.cp:hover{border-color:var(--gold)}button.cp.ok{border-color:var(--gold);color:var(--gold)}</style>')
-    scripts = ('<script>document.addEventListener("click",function(ev){var b=ev.target.closest("button.cp");if(!b)return;'
+    scripts = (PROMO_JS + '<script>document.addEventListener("click",function(ev){var b=ev.target.closest("button.cp");if(!b)return;'
                'var c=b.getAttribute("data-c");(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(function(){b.textContent="복사됨";b.classList.add("ok");'
                'setTimeout(function(){b.textContent="복사";b.classList.remove("ok")},1500)},function(){var r=document.createRange();r.selectNodeContents(b.previousElementSibling);'
                'var s=getSelection();s.removeAllRanges();s.addRange(r)})});</script>')
@@ -3011,7 +3061,9 @@ top.appendChild(a)}
 // 오버레이가 알려 준 서버(PVE/PVP)로 사이트 모드를 맞춘다 — 안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져와 "완료 n개"가 바뀐다
 function apply(p){if(p.mode==="pve"||p.mode==="regular"||p.mode==="pvp"||p.mode==="season"){var nm=p.mode==="pve"?"pve":"pvp";if(L(MK,"pvp")!==nm)S(MK,nm)}
 var done=L(KEY,{}),syn=L(SYNCED,{}),changed=0;(p.completed||[]).forEach(function(id){if(!done[id]){done[id]=1;changed++}syn[id]=1});if(changed)S(KEY,done);S(SYNCED,syn);
-var sy={ts:Date.now(),mode:p.mode,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0};S(SK,sy);window.__guideSync=sy;chip(sy,false);
+var sy={ts:Date.now(),mode:p.mode,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0,promo_used:p.promo_used||[]};S(SK,sy);window.__guideSync=sy;chip(sy,false);
+// 프로모 코드 '등록함' 체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)
+if(p.promo_used&&p.promo_used.length){var PU="guide.promo.used",pu=L(PU,{}),add=0;p.promo_used.forEach(function(c){if(!pu[c]){pu[c]=Date.now();add++}});if(add)S(PU,pu)}
 document.dispatchEvent(new CustomEvent("guide-sync",{detail:sy}))}
 // 1) 오버레이의 "가이드 열기" 버튼이 주소 해시(#sync=base64 JSON)로 넘긴 진행도 — 브라우저의 로컬 네트워크 정책과 무관하게 동작
 var h=location.hash||"";if(h.indexOf("#sync=")===0){try{var raw=decodeURIComponent(h.slice(6)),p0=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/-/g,"+").replace(/_/g,"/")))));

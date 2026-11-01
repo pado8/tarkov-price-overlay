@@ -29,6 +29,7 @@ print(f"[startup] DPI awareness: {DPI_STATUS}")
 import json
 import os
 import re
+import time
 import threading
 from contextlib import asynccontextmanager
 
@@ -104,14 +105,15 @@ class _ProgressCORS:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope.get("type") != "http" or scope.get("path") != "/progress":
+        # /progress(읽기) + /progress/promo(프로모 코드 '등록함' 체크 저장, 2026-11-02) 두 경로만
+        if scope.get("type") != "http" or scope.get("path") not in ("/progress", "/progress/promo"):
             return await self.app(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
         origin = headers.get("origin", "")
         allowed = bool(_SITE_ORIGIN_RE.match(origin))
         cors = [
             (b"access-control-allow-origin", origin.encode()),
-            (b"access-control-allow-methods", b"GET, OPTIONS"),
+            (b"access-control-allow-methods", b"GET, POST, OPTIONS"),
             (b"access-control-allow-headers", b"*"),
             (b"access-control-allow-private-network", b"true"),
             (b"access-control-max-age", b"600"),
@@ -1200,7 +1202,62 @@ def progress(game_mode: str = "regular") -> dict:
         **by,
         "hideout": _load_hideout_levels(),
         "gunsmith": gunsmith.status().get("updated") or None,
+        "promo_used": sorted(_load_promo_used().keys()),  # 가이드 프로모 페이지에서 '등록함'으로 체크한 코드(계정 1회 등록이라 PC 공용)
     }
+
+
+# ── 프로모 코드 '등록함' 체크 (2026-11-02) ──────────────────────────────────────
+# 가이드 /guide/promo/ 의 체크 상태를 이 PC(앱 상태 폴더)에 저장해, 브라우저를 바꿔도 같은 체크가 보이게 한다.
+# 계정당 1회 등록이라 사용자 단위로 들고 있으면 되고, 화면·개인정보는 들어 있지 않다(코드 문자열뿐).
+class PromoUsedRequest(BaseModel):
+    used: list[str] = []
+
+
+_PROMO_CODE_RE = re.compile(r"^[A-Z0-9_-]{3,24}$")
+_promo_used_cache: dict[str, int] | None = None
+
+
+def _promo_used_path():
+    from quest_tracker import _state_dir
+
+    return _state_dir() / "promo_used.json"
+
+
+def _load_promo_used() -> dict[str, int]:
+    global _promo_used_cache
+    if _promo_used_cache is None:
+        try:
+            _promo_used_cache = {str(k): int(v) for k, v in json.loads(_promo_used_path().read_text(encoding="utf-8")).items()
+                                 if _PROMO_CODE_RE.match(str(k))}
+        except Exception:  # noqa: BLE001 — 없거나 깨졌으면 빈 값
+            _promo_used_cache = {}
+    return _promo_used_cache
+
+
+def _reject_foreign_site_origin(request: Request) -> None:
+    """/progress/promo 전용: 가이드 사이트·로컬 검증 출처·앱 자체(Origin 없음/허용 목록)만 쓴다."""
+    origin = request.headers.get("origin")
+    if origin and not (_SITE_ORIGIN_RE.match(origin) or _allowed_origin.match(origin)):
+        raise HTTPException(status_code=403, detail="forbidden_origin")
+
+
+@app.post("/progress/promo", dependencies=[Depends(_reject_foreign_site_origin)])
+def progress_promo(req: PromoUsedRequest) -> dict:
+    """가이드가 보낸 '등록함' 코드 전체 목록으로 교체한다(체크 해제도 반영). 응답은 저장된 목록."""
+    global _promo_used_cache
+    now = int(time.time() * 1000)
+    old = _load_promo_used()
+    new: dict[str, int] = {}
+    for c in req.used[:200]:
+        code = str(c).strip().upper()
+        if _PROMO_CODE_RE.match(code):
+            new[code] = old.get(code) or now
+    _promo_used_cache = new
+    try:
+        _promo_used_path().write_text(json.dumps(new, ensure_ascii=False), encoding="utf-8")
+    except Exception as ex:  # noqa: BLE001
+        print(f"[sync] promo_used save failed: {ex}")
+    return {"ok": True, "promo_used": sorted(new.keys())}
 
 
 class RadarFolderRequest(BaseModel):

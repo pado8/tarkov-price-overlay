@@ -802,7 +802,7 @@
 "guide_static.py:249",
 "guide_static.py:258",
 "guide_static.py:2377",
-"guide_static.py:2704"
+"guide_static.py:2752"
 ],
 "n": 5
 },
@@ -811,8 +811,8 @@
 "where": [
 "guide_static.py:249",
 "guide_static.py:259",
-"guide_static.py:2941",
-"guide_static.py:2942"
+"guide_static.py:2991",
+"guide_static.py:2992"
 ],
 "n": 5
 },
@@ -1086,7 +1086,7 @@
 "ko": "공식 위키",
 "where": [
 "guide_static.py:739",
-"guide_static.py:2953"
+"guide_static.py:3003"
 ],
 "n": 2
 },
@@ -1343,8 +1343,8 @@
 "ko": "반드시 포함할 부품",
 "where": [
 "guide_static.py:862",
-"guide_static.py:2905",
-"guide_static.py:2938"
+"guide_static.py:2955",
+"guide_static.py:2988"
 ],
 "n": 3
 },
@@ -1688,7 +1688,7 @@
 "where": [
 "guide_static.py:1055",
 "guide_static.py:2123",
-"guide_static.py:2701"
+"guide_static.py:2739"
 ],
 "n": 3
 },
@@ -1885,7 +1885,7 @@
 "where": [
 "guide_static.py:1140",
 "guide_static.py:2042",
-"guide_static.py:2763",
+"guide_static.py:2813",
 "quests.html:124"
 ],
 "n": 4
@@ -2101,7 +2101,7 @@
 "guide_static.py:1307",
 "guide_static.py:1317",
 "guide_static.py:2095",
-"guide_static.py:2931"
+"guide_static.py:2981"
 ],
 "n": 9
 },
@@ -2575,10 +2575,9 @@
 {
 "ko": "같은 PC에서",
 "where": [
-"guide_static.py:1441",
-"guide_static.py:2991"
+"guide_static.py:1441"
 ],
-"n": 2
+"n": 1
 },
 {
 "ko": "를 켜고 상단",
@@ -2591,12 +2590,13 @@
 "ko": "오버레이 연동",
 "where": [
 "guide_static.py:1441",
-"guide_static.py:2991"
+"guide_static.py:2754",
+"guide_static.py:3041"
 ],
-"n": 2
+"n": 3
 },
 {
-"ko": "을 누르면, 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.",
+"ko": "을 누르면(다음 버전부터), 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.",
 "where": [
 "guide_static.py:1441"
 ],
@@ -3395,7 +3395,7 @@
 "where": [
 "guide_static.py:1927",
 "guide_static.py:2013",
-"guide_static.py:2762"
+"guide_static.py:2812"
 ],
 "n": 3
 },
@@ -3425,7 +3425,7 @@
 "where": [
 "guide_static.py:1928",
 "guide_static.py:2013",
-"guide_static.py:2763"
+"guide_static.py:2813"
 ],
 "n": 3
 },
@@ -3476,7 +3476,7 @@
 "where": [
 "guide_static.py:1930",
 "guide_static.py:1934",
-"guide_static.py:2762"
+"guide_static.py:2812"
 ],
 "n": 3
 },
@@ -3529,7 +3529,7 @@
 "where": [
 "guide_static.py:1932",
 "guide_static.py:1940",
-"guide_static.py:2762"
+"guide_static.py:2812"
 ],
 "n": 3
 },
@@ -3637,7 +3637,7 @@
 "ko": "프라퍼",
 "where": [
 "guide_static.py:1938",
-"guide_static.py:2762"
+"guide_static.py:2812"
 ],
 "n": 2
 },
@@ -3914,8 +3914,8 @@
 "where": [
 "guide_static.py:2013",
 "guide_static.py:2013",
-"guide_static.py:2925",
-"guide_static.py:2954"
+"guide_static.py:2975",
+"guide_static.py:3004"
 ],
 "n": 7
 },
@@ -4113,7 +4113,7 @@
 "ko": "예거",
 "where": [
 "guide_static.py:2028",
-"guide_static.py:2763"
+"guide_static.py:2813"
 ],
 "n": 2
 },
@@ -4128,7 +4128,7 @@
 "ko": "레프",
 "where": [
 "guide_static.py:2041",
-"guide_static.py:2763"
+"guide_static.py:2813"
 ],
 "n": 2
 },
@@ -4705,9 +4705,10 @@
 "where": [
 "guide_static.py:2235",
 "guide_static.py:2237",
+"guide_static.py:2708",
 "keys.html:84"
 ],
-"n": 3
+"n": 4
 },
 {
 "ko": "BTR 정류장",
@@ -5202,7 +5203,7 @@
 "ko": "건스미스 부품 총정리",
 "where": [
 "guide_static.py:2378",
-"guide_static.py:2935"
+"guide_static.py:2985"
 ],
 "n": 2
 },
@@ -6395,9 +6396,11 @@
 "ko": "활성",
 "where": [
 "guide_static.py:2681",
-"guide_static.py:2706"
+"guide_static.py:2708",
+"guide_static.py:2755",
+"guide_static.py:2756"
 ],
-"n": 2
+"n": 4
 },
 {
 "ko": "으로 두고 있어 런처에서 넣어 봐도 손해는 없음.",
@@ -6505,328 +6508,440 @@
 "n": 1
 },
 {
-"ko": "복사",
+"ko": "만료 의심",
 "where": [
-"guide_static.py:2696",
-"guide_static.py:2696",
-"guide_static.py:2729"
-],
-"n": 3
-},
-{
-"ko": "코드",
-"where": [
-"guide_static.py:2701",
-"guide_static.py:2719"
+"guide_static.py:2706",
+"guide_static.py:2755"
 ],
 "n": 2
 },
 {
+"ko": "등록함",
+"where": [
+"guide_static.py:2712",
+"guide_static.py:2733",
+"guide_static.py:2733",
+"guide_static.py:2747"
+],
+"n": 6
+},
+{
+"ko": "복사",
+"where": [
+"guide_static.py:2734",
+"guide_static.py:2734",
+"guide_static.py:2748",
+"guide_static.py:2779"
+],
+"n": 4
+},
+{
+"ko": "등록",
+"where": [
+"guide_static.py:2739",
+"guide_static.py:2746"
+],
+"n": 2
+},
+{
+"ko": "코드",
+"where": [
+"guide_static.py:2739",
+"guide_static.py:2746",
+"guide_static.py:2769"
+],
+"n": 3
+},
+{
 "ko": "비고",
 "where": [
-"guide_static.py:2701"
+"guide_static.py:2739"
+],
+"n": 1
+},
+{
+"ko": "🆕 자동 감지된 새 코드",
+"where": [
+"guide_static.py:2744"
+],
+"n": 1
+},
+{
+"ko": "확인 중",
+"where": [
+"guide_static.py:2744"
+],
+"n": 1
+},
+{
+"ko": "정리 사이트 3곳 이상에서 새로 보이는 코드입니다. 모드·보상은 아직 사람이 확인하지 않았으니 런처에 넣어 보고 결과를 알려 주세요.",
+"where": [
+"guide_static.py:2745"
+],
+"n": 1
+},
+{
+"ko": "활성 확인",
+"where": [
+"guide_static.py:2746"
 ],
 "n": 1
 },
 {
 "ko": "지금 쓸 수 있는 공식 코드",
 "where": [
-"guide_static.py:2705"
+"guide_static.py:2753"
 ],
 "n": 1
 },
 {
-"ko": "개 · 마지막 확인",
+"ko": "개 · 사람 확인",
 "where": [
-"guide_static.py:2705"
+"guide_static.py:2753"
+],
+"n": 1
+},
+{
+"ko": "· 자동 확인",
+"where": [
+"guide_static.py:2753"
+],
+"n": 1
+},
+{
+"ko": "에 체크해 두면 이 브라우저에 저장되고,",
+"where": [
+"guide_static.py:2754"
+],
+"n": 1
+},
+{
+"ko": "이 켜진 PC에서는 앱에도 저장돼 다른 브라우저에서도 같은 체크가 보입니다.",
+"where": [
+"guide_static.py:2754"
+],
+"n": 1
+},
+{
+"ko": "코드 옆",
+"where": [
+"guide_static.py:2755"
+],
+"n": 1
+},
+{
+"ko": "활성 n곳",
+"where": [
+"guide_static.py:2755"
+],
+"n": 1
+},
+{
+"ko": "은 자동 점검(매주)이 정리 사이트에서 그 코드를",
+"where": [
+"guide_static.py:2755"
+],
+"n": 1
+},
+{
+"ko": "으로 본 수,",
+"where": [
+"guide_static.py:2755"
+],
+"n": 1
+},
+{
+"ko": "은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.",
+"where": [
+"guide_static.py:2755"
 ],
 "n": 1
 },
 {
 "ko": "넣는 기준",
 "where": [
-"guide_static.py:2706"
+"guide_static.py:2756"
 ],
 "n": 1
 },
 {
 "ko": "— 서로 다른 정리 사이트 3곳 이상이 최근 2주 안에",
 "where": [
-"guide_static.py:2706"
+"guide_static.py:2756"
 ],
 "n": 1
 },
 {
 "ko": "으로 확인했고, 디시 타르코프 갤러리에서도 쓴 보고가 있는 코드만 올립니다.",
 "where": [
-"guide_static.py:2706"
+"guide_static.py:2756"
 ],
 "n": 1
 },
 {
 "ko": "한 곳이라도 만료로 적은 코드는 아래",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2757"
 ],
 "n": 1
 },
 {
 "ko": "제외",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2757"
 ],
 "n": 1
 },
 {
 "ko": "표로 내립니다. BSG는 만료일을 공지하지 않고 하루 만에 닫는 코드도 있어서,",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2757"
 ],
 "n": 1
 },
 {
 "ko": "보이면 바로 넣는 게 답",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2757"
 ],
 "n": 1
 },
 {
 "ko": "입니다.",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2757"
 ],
 "n": 1
 },
 {
 "ko": "코드는",
 "where": [
-"guide_static.py:2708"
+"guide_static.py:2758"
 ],
 "n": 1
 },
 {
 "ko": "모드별",
 "where": [
-"guide_static.py:2708"
+"guide_static.py:2758"
 ],
 "n": 1
 },
 {
 "ko": "로 들어오니 PVE 코드를 넣고 PVP 캐릭터로 접속하면 메신저에 아무것도 없습니다.",
 "where": [
-"guide_static.py:2708"
+"guide_static.py:2758"
 ],
 "n": 1
 },
 {
 "ko": "등록 방법",
 "where": [
-"guide_static.py:2709",
-"guide_static.py:2710"
+"guide_static.py:2759",
+"guide_static.py:2760"
 ],
 "n": 2
 },
 {
 "ko": "끝난·제외",
 "where": [
-"guide_static.py:2709"
+"guide_static.py:2759"
 ],
 "n": 1
 },
 {
 "ko": "런처",
 "where": [
-"guide_static.py:2711"
+"guide_static.py:2761"
 ],
 "n": 1
 },
 {
 "ko": ": 오른쪽 위 계정 이름 →",
 "where": [
-"guide_static.py:2711"
+"guide_static.py:2761"
 ],
 "n": 1
 },
 {
 "ko": "Activate code(코드 활성화)",
 "where": [
-"guide_static.py:2711"
+"guide_static.py:2761"
 ],
 "n": 1
 },
 {
 "ko": "→ 코드 입력 → Enter. 대소문자를 구분합니다.",
 "where": [
-"guide_static.py:2711"
+"guide_static.py:2761"
 ],
 "n": 1
 },
 {
 "ko": "웹",
 "where": [
-"guide_static.py:2712"
+"guide_static.py:2762"
 ],
 "n": 1
 },
 {
 "ko": "에 로그인해 입력해도 같습니다.",
 "where": [
-"guide_static.py:2712"
+"guide_static.py:2762"
 ],
 "n": 1
 },
 {
 "ko": "게임에",
 "where": [
-"guide_static.py:2713"
+"guide_static.py:2763"
 ],
 "n": 1
 },
 {
 "ko": "해당 모드 캐릭터",
 "where": [
-"guide_static.py:2713"
+"guide_static.py:2763"
 ],
 "n": 1
 },
 {
 "ko": "로 접속 → 오른쪽 아래",
 "where": [
-"guide_static.py:2713"
+"guide_static.py:2763"
 ],
 "n": 1
 },
 {
 "ko": "메신저",
 "where": [
-"guide_static.py:2713"
+"guide_static.py:2763"
 ],
 "n": 1
 },
 {
 "ko": "→ 보낸 사람 탭에서 수령. 보관함이 꽉 차면 안 들어오니 자리를 비워 두세요.",
 "where": [
-"guide_static.py:2713"
+"guide_static.py:2763"
 ],
 "n": 1
 },
 {
 "ko": "여러 개를 연달아 넣으면 잠깐 쿨다운이 걸립니다. 점검 중엔 등록이 안 되니 서버가 열린 뒤에 넣으세요.",
 "where": [
-"guide_static.py:2714"
+"guide_static.py:2764"
 ],
 "n": 1
 },
 {
 "ko": "이미 사용됨",
 "where": [
-"guide_static.py:2715"
+"guide_static.py:2765"
 ],
 "n": 1
 },
 {
 "ko": "은 계정당 1회라서,",
 "where": [
-"guide_static.py:2715"
+"guide_static.py:2765"
 ],
 "n": 1
 },
 {
 "ko": "유효하지 않음",
 "where": [
-"guide_static.py:2715"
+"guide_static.py:2765"
 ],
 "n": 1
 },
 {
 "ko": "은 만료라서 뜹니다. 두 번째가 뜨면 아래 표에서 내려야 하니 알려 주세요(시세 오버레이 앱 ⚙ → 피드백, 또는 디시 타르코프 갤러리).",
 "where": [
-"guide_static.py:2715"
+"guide_static.py:2765"
 ],
 "n": 1
 },
 {
 "ko": "최근 끝났거나 넣지 않은 것",
 "where": [
-"guide_static.py:2718"
+"guide_static.py:2768"
 ],
 "n": 1
 },
 {
 "ko": "모드",
 "where": [
-"guide_static.py:2719"
+"guide_static.py:2769"
 ],
 "n": 1
 },
 {
 "ko": "이유",
 "where": [
-"guide_static.py:2719"
+"guide_static.py:2769"
 ],
 "n": 1
 },
 {
 "ko": "확인 출처(2026-10-26): Dexerto(10-20 갱신)·PCGamesN(10-24)·Guided.news(10-14)·Timesaver(10-15)·games.gg(10-07)·tarkov.help, 디시 타르코프 갤러리 10-09·10-15 글, 인벤 기사(10-07), Battlestate Games 공식 X(10-15).",
 "where": [
-"guide_static.py:2721"
+"guide_static.py:2771"
 ],
 "n": 1
 },
 {
 "ko": "보상 구성은 사이트마다 조금씩 달라 공통되는 것만 적었습니다. 직접 받아 보고 다르면 알려 주세요.",
 "where": [
-"guide_static.py:2722"
+"guide_static.py:2772"
 ],
 "n": 1
 },
 {
 "ko": "복사됨",
 "where": [
-"guide_static.py:2728"
+"guide_static.py:2778"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 프로모 코드",
 "where": [
-"guide_static.py:2732"
+"guide_static.py:2782"
 ],
 "n": 1
 },
 {
 "ko": "— 지금 쓸 수 있는 공식 코드",
 "where": [
-"guide_static.py:2732"
+"guide_static.py:2782"
 ],
 "n": 1
 },
 {
 "ko": "개 (PVE·시즌·PVP) | 탈콥 가이드",
 "where": [
-"guide_static.py:2732"
+"guide_static.py:2782"
 ],
 "n": 1
 },
 {
 "ko": "타르코프(Escape from Tarkov) 프로모 코드",
 "where": [
-"guide_static.py:2733"
+"guide_static.py:2783"
 ],
 "n": 1
 },
 {
 "ko": "확인판: PVE 존 POLYGON·AUTOMATON·YYSTV·PVEPRESTIGE, KORD BREACH 시즌 WIPE·GAMESPARK·PCGAMESN, PVP 영구 존 6개. 보상·모드·런처 등록 방법·만료된 코드.",
 "where": [
-"guide_static.py:2733"
+"guide_static.py:2783"
 ],
 "n": 1
 },
 {
 "ko": "보유 체크를 모두 지울까요?",
 "where": [
-"guide_static.py:2743",
+"guide_static.py:2793",
 "kappa.html:105"
 ],
 "n": 2
@@ -6834,308 +6949,308 @@
 {
 "ko": "피스키퍼",
 "where": [
-"guide_static.py:2762"
+"guide_static.py:2812"
 ],
 "n": 1
 },
 {
 "ko": "펜스",
 "where": [
-"guide_static.py:2763"
+"guide_static.py:2813"
 ],
 "n": 1
 },
 {
 "ko": "플리마켓",
 "where": [
-"guide_static.py:2763"
+"guide_static.py:2813"
 ],
 "n": 1
 },
 {
 "ko": "(교환)",
 "where": [
-"guide_static.py:2826"
+"guide_static.py:2876"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립 부품",
 "where": [
-"guide_static.py:2830"
+"guide_static.py:2880"
 ],
 "n": 1
 },
 {
 "ko": "파는 곳 · 등급",
 "where": [
-"guide_static.py:2830"
+"guide_static.py:2880"
 ],
 "n": 1
 },
 {
 "ko": "기본 무기:",
 "where": [
-"guide_static.py:2832"
+"guide_static.py:2882"
 ],
 "n": 1
 },
 {
 "ko": "위키 예시 조립 보기",
 "where": [
-"guide_static.py:2835",
-"guide_static.py:2939"
+"guide_static.py:2885",
+"guide_static.py:2989"
 ],
 "n": 2
 },
 {
 "ko": "(여러 방법 중 하나 ·",
 "where": [
-"guide_static.py:2835"
+"guide_static.py:2885"
 ],
 "n": 1
 },
 {
 "ko": "출처",
 "where": [
-"guide_static.py:2836"
+"guide_static.py:2886"
 ],
 "n": 1
 },
 {
 "ko": "필수 종류:",
 "where": [
-"guide_static.py:2884"
+"guide_static.py:2934"
 ],
 "n": 1
 },
 {
 "ko": "없음 — 성능 조건만",
 "where": [
-"guide_static.py:2888"
+"guide_static.py:2938"
 ],
 "n": 1
 },
 {
 "ko": "메카닉 묶음",
 "where": [
-"guide_static.py:2891"
+"guide_static.py:2941"
 ],
 "n": 1
 },
 {
 "ko": "개 완료 뒤",
 "where": [
-"guide_static.py:2891"
+"guide_static.py:2941"
 ],
 "n": 1
 },
 {
 "ko": "메카닉 LL",
 "where": [
-"guide_static.py:2892"
+"guide_static.py:2942"
 ],
 "n": 1
 },
 {
 "ko": "바로 받음",
 "where": [
-"guide_static.py:2892"
+"guide_static.py:2942"
 ],
 "n": 1
 },
 {
 "ko": "무기",
 "where": [
-"guide_static.py:2905"
+"guide_static.py:2955"
 ],
 "n": 1
 },
 {
 "ko": "성능 조건",
 "where": [
-"guide_static.py:2905",
-"guide_static.py:2938"
+"guide_static.py:2955",
+"guide_static.py:2988"
 ],
 "n": 2
 },
 {
 "ko": "메카닉 무기 조립 퀘스트",
 "where": [
-"guide_static.py:2936"
+"guide_static.py:2986"
 ],
 "n": 1
 },
 {
 "ko": "개 · 반드시 포함할 부품",
 "where": [
-"guide_static.py:2936"
+"guide_static.py:2986"
 ],
 "n": 1
 },
 {
 "ko": "종 · 데이터 기준",
 "where": [
-"guide_static.py:2936"
+"guide_static.py:2986"
 ],
 "n": 1
 },
 {
 "ko": "쓰는 법",
 "where": [
-"guide_static.py:2937"
+"guide_static.py:2987"
 ],
 "n": 1
 },
 {
 "ko": "— 아래",
 "where": [
-"guide_static.py:2937"
+"guide_static.py:2987"
 ],
 "n": 1
 },
 {
 "ko": "전체 부품 체크리스트",
 "where": [
-"guide_static.py:2937",
-"guide_static.py:2941",
-"guide_static.py:2944"
+"guide_static.py:2987",
+"guide_static.py:2991",
+"guide_static.py:2994"
 ],
 "n": 3
 },
 {
 "ko": "의 이름을 플리마켓 검색창에 넣고 ★(즐겨찾기)를 눌러 두면 시세 볼 때 한 번에 모입니다.",
 "where": [
-"guide_static.py:2937"
+"guide_static.py:2987"
 ],
 "n": 1
 },
 {
 "ko": "표의",
 "where": [
-"guide_static.py:2938"
+"guide_static.py:2988"
 ],
 "n": 1
 },
 {
 "ko": "은 조립에 꼭 들어가야 하는 것이고, 그 외 인체공학·반동·무게 같은",
 "where": [
-"guide_static.py:2938"
+"guide_static.py:2988"
 ],
 "n": 1
 },
 {
 "ko": "은 어떤 부품으로든 맞추면 됩니다.",
 "where": [
-"guide_static.py:2938"
+"guide_static.py:2988"
 ],
 "n": 1
 },
 {
 "ko": "각 줄의",
 "where": [
-"guide_static.py:2939"
+"guide_static.py:2989"
 ],
 "n": 1
 },
 {
 "ko": "를 펼치면 공식 위키가 올린 조립 예시(부품·파는 상인·등급)가 나오고, 그 부품들도 체크리스트에",
 "where": [
-"guide_static.py:2939"
+"guide_static.py:2989"
 ],
 "n": 1
 },
 {
 "ko": "예시",
 "where": [
-"guide_static.py:2939",
-"guide_static.py:2950",
-"guide_static.py:2952"
+"guide_static.py:2989",
+"guide_static.py:3000",
+"guide_static.py:3002"
 ],
 "n": 3
 },
 {
 "ko": "열로 들어가 있습니다.",
 "where": [
-"guide_static.py:2939"
+"guide_static.py:2989"
 ],
 "n": 1
 },
 {
 "ko": "조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.",
 "where": [
-"guide_static.py:2940"
+"guide_static.py:2990"
 ],
 "n": 1
 },
 {
 "ko": "건스미스 마스터",
 "where": [
-"guide_static.py:2941",
-"guide_static.py:2943"
+"guide_static.py:2991",
+"guide_static.py:2993"
 ],
 "n": 2
 },
 {
 "ko": "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.",
 "where": [
-"guide_static.py:2942"
+"guide_static.py:2992"
 ],
 "n": 1
 },
 {
 "ko": "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.",
 "where": [
-"guide_static.py:2943"
+"guide_static.py:2993"
 ],
 "n": 1
 },
 {
 "ko": "부품 이름 검색 (한글·영문)",
 "where": [
-"guide_static.py:2945"
+"guide_static.py:2995"
 ],
 "n": 1
 },
 {
 "ko": "필수만",
 "where": [
-"guide_static.py:2946"
+"guide_static.py:2996"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립만",
 "where": [
-"guide_static.py:2946"
+"guide_static.py:2996"
 ],
 "n": 1
 },
 {
 "ko": "보유 숨기기",
 "where": [
-"guide_static.py:2947"
+"guide_static.py:2997"
 ],
 "n": 1
 },
 {
 "ko": "표시",
 "where": [
-"guide_static.py:2948"
+"guide_static.py:2998"
 ],
 "n": 1
 },
 {
 "ko": "· 보유",
 "where": [
-"guide_static.py:2948"
+"guide_static.py:2998"
 ],
 "n": 1
 },
 {
 "ko": "체크 초기화",
 "where": [
-"guide_static.py:2949",
+"guide_static.py:2999",
 "kappa.html:29"
 ],
 "n": 2
@@ -7143,409 +7258,430 @@
 {
 "ko": "부품",
 "where": [
-"guide_static.py:2950"
+"guide_static.py:3000"
 ],
 "n": 1
 },
 {
 "ko": "필수",
 "where": [
-"guide_static.py:2950",
-"guide_static.py:2952"
+"guide_static.py:3000",
+"guide_static.py:3002"
 ],
 "n": 2
 },
 {
 "ko": "쓰는 퀘스트",
 "where": [
-"guide_static.py:2950"
+"guide_static.py:3000"
 ],
 "n": 1
 },
 {
 "ko": "시세(PVP)",
 "where": [
-"guide_static.py:2950"
+"guide_static.py:3000"
 ],
 "n": 1
 },
 {
 "ko": "는 데이터상 반드시 포함해야 하는 횟수,",
 "where": [
-"guide_static.py:2952"
+"guide_static.py:3002"
 ],
 "n": 1
 },
 {
 "ko": "는 위키 예시 조립에 쓰인 횟수입니다. 출처: tarkov.dev 퀘스트 데이터(buildWeapon 목표),",
 "where": [
-"guide_static.py:2952"
+"guide_static.py:3002"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립은",
 "where": [
-"guide_static.py:2953"
+"guide_static.py:3003"
 ],
 "n": 1
 },
 {
 "ko": "(CC BY-NC-SA, 각 퀘스트 줄에 문서 링크).",
 "where": [
-"guide_static.py:2953"
+"guide_static.py:3003"
 ],
 "n": 1
 },
 {
 "ko": "시세는 24시간 평균이며",
 "where": [
-"guide_static.py:2954"
+"guide_static.py:3004"
 ],
 "n": 1
 },
 {
 "ko": "은 플리마켓 거래 불가 품목입니다.",
 "where": [
-"guide_static.py:2954"
+"guide_static.py:3004"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 건스미스 부품 총정리 — 퀘스트",
 "where": [
-"guide_static.py:2978"
+"guide_static.py:3028"
 ],
 "n": 1
 },
 {
 "ko": "개 필수 부품",
 "where": [
-"guide_static.py:2978"
+"guide_static.py:3028"
 ],
 "n": 1
 },
 {
 "ko": "종·성능 조건·즐겨찾기 체크리스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:2978"
+"guide_static.py:3028"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 건스미스(메카닉 무기 조립) 퀘스트",
 "where": [
-"guide_static.py:2979"
+"guide_static.py:3029"
 ],
 "n": 1
 },
 {
 "ko": "개 전부: 무기별 반드시 포함할 부품",
 "where": [
-"guide_static.py:2979"
+"guide_static.py:3029"
 ],
 "n": 1
 },
 {
 "ko": "종, 인체공학·반동·무게 조건,",
 "where": [
-"guide_static.py:2979"
+"guide_static.py:3029"
 ],
 "n": 1
 },
 {
 "ko": "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.",
 "where": [
-"guide_static.py:2980"
+"guide_static.py:3030"
 ],
 "n": 1
 },
 {
 "ko": "// 상단 그룹 메뉴: 마우스가 없는(터치) 환경이나 좁은 화면에선 그룹 제목을 누르면 펼치고, 다시 누르면 이동. 바깥 클릭이면 닫힘",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "방금",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "분 전",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "시간 전",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "🔗 오버레이 연동 · 완료",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "(시즌)",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "기준 ↻",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "마지막으로 받은 진행도(",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": ")를 쓰고 있어요. 지금은 오버레이를 직접 읽지 못했어요",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": ". 눌러서 다시 읽기. 크롬이",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "로컬 네트워크 접근",
 "where": [
-"guide_static.py:2991",
-"guide_static.py:2991"
+"guide_static.py:3041",
+"guide_static.py:3041"
 ],
 "n": 2
 },
 {
 "ko": "을 차단해 두었다면 주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "시세 오버레이가 게임 로그로 확인한 완료 퀘스트를 자동 반영 중",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "연동 다시 시도 중…",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "// 오버레이가 알려 준 서버(PVE/PVP)로 사이트 모드를 맞춘다 — 안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져와",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "완료 n개",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "가 바뀐다",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
+],
+"n": 1
+},
+{
+"ko": "// 프로모 코드",
+"where": [
+"guide_static.py:3041"
+],
+"n": 1
+},
+{
+"ko": "체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)",
+"where": [
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "// 1) 오버레이의",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "가이드 열기",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "버튼이 주소 해시(#sync=base64 JSON)로 넘긴 진행도 — 브라우저의 로컬 네트워크 정책과 무관하게 동작",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "// 2) 같은 PC의 사이드카에서 직접 읽기 — https 페이지에서 127.0.0.1 로 가려면 크롬은 targetAddressSpace:",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "이 필요하고,",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "//    처음 한 번",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "로컬 네트워크 접근 허용",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "창이 뜬다. 거부·미지원이면 조용히 마지막 연동 값만 보여 준다.",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "//    앱을 안 쓰는 방문자에게 권한 창을 띄우지 않도록, 자동 시도는 한 번이라도 연동된 브라우저에서만 하고,",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "//    처음인 브라우저에는 상단에",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "버튼을 두어 사용자가 눌렀을 때(사용자 동작) 시도한다.",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "응답 형식 오류",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "응답 없음(시간 초과)",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
-"ko": "🔗 오버레이 연동",
+"ko": "🔗 오버레이 연동 (다음 버전부터)",
 "where": [
-"guide_static.py:2991",
-"guide_static.py:2991"
+"guide_static.py:3041",
+"guide_static.py:3041"
 ],
 "n": 2
 },
 {
-"ko": "같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.",
+"ko": "다음 버전부터 쓸 수 있어요. 같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "연동 중…",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
-"ko": "오버레이를 찾지 못했어요.",
+"ko": "오버레이 연동은 다음 버전부터 쓸 수 있어요.",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
+],
+"n": 1
+},
+{
+"ko": "지금 버전의 앱에는 아직 이 기능이 없습니다. 새 버전을 설치했다면 같은 PC에서",
+"where": [
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "(연동 기능이 들어간 최신 버전)를 켜 두고 다시 눌러 주세요. 크롬이",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "을 차단해 두었다면",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "으로 바꾼 뒤 새로고침하세요. 그래도 안 되면 오버레이",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "설정 → 사이트 연동하기",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다.",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "닫기",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3041"
 ],
 "n": 1
 },

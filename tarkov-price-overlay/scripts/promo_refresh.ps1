@@ -1,0 +1,36 @@
+# 프로모 코드 자동 최신화 — 매주 예약 작업(작업 스케줄러 "TarkovGuidePromoRefresh")이 돌린다.
+#   1) scripts/promo_check.py 로 정리 사이트를 긁어 guide_data/promo_status.json 갱신
+#   2) 바뀐 게 있으면 가이드 세 언어(ko/en/ru) 재빌드 → vercel --prod → IndexNow(프로모 페이지)
+# 수동 실행: powershell -ExecutionPolicy Bypass -File scripts\promo_refresh.ps1 [-Force]
+# 로그: scripts\promo_refresh.log (최근 실행이 맨 아래)
+param([switch]$Force)
+$ErrorActionPreference = "Continue"
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+$py = Join-Path $root "python-core\.venv\Scripts\python.exe"
+$log = Join-Path $root "scripts\promo_refresh.log"
+$env:PYTHONIOENCODING = "utf-8"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+function Log($m) { $line = "{0} {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $m; Add-Content -Path $log -Value $line -Encoding UTF8; Write-Host $line }
+
+Set-Location $root
+Log "== promo_refresh 시작"
+& $py (Join-Path $root "scripts\promo_check.py") 2>&1 | ForEach-Object { Log $_ }
+$code = $LASTEXITCODE
+if ($code -ne 3 -and -not $Force) { Log "변경 없음(exit $code) — 재빌드 안 함"; exit 0 }
+
+foreach ($lang in @("ko", "en", "ru")) {
+    $env:GUIDE_LANG = $lang
+    & $py (Join-Path $root "scripts\build_guide.py") 2>&1 | Select-String "정적 페이지|한글 남은|Error|Traceback" | ForEach-Object { Log $_.Line }
+    if ($LASTEXITCODE -ne 0) { Log "빌드 실패($lang) — 배포 중단"; exit 1 }
+}
+Remove-Item Env:GUIDE_LANG -ErrorAction SilentlyContinue
+Push-Location (Join-Path $root "landing")
+$out = & vercel --prod --yes 2>&1
+Pop-Location
+$ready = ($out | Select-String '"readyState": "READY"') -ne $null
+Log ("배포 " + $(if ($ready) { "완료" } else { "실패: " + (($out | Select-Object -Last 5) -join " | ") }))
+if ($ready) {
+    $env:MSYS_NO_PATHCONV = "1"
+    & python (Join-Path $root "scripts\indexnow.py") "/guide/promo/" 2>&1 | ForEach-Object { Log $_ }
+}
+Log "== promo_refresh 끝"

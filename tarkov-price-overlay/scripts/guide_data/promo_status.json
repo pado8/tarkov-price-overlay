@@ -1,0 +1,543 @@
+{
+ "checked": "2026-11-02",
+ "fetched": [
+  "dexerto",
+  "gamesradar",
+  "pcgamesn",
+  "tarkov.help",
+  "guided.news",
+  "esports.ru"
+ ],
+ "failed": [],
+ "codes": {
+  "AIWPRTON": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "AKMN": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "AUTOMATON": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "BACKTORAID": {
+   "active": [
+    "dexerto",
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "gamesradar",
+    "guided.news"
+   ]
+  },
+  "BANANA": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "BANHAMMER": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "BITCOIN": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "BITCOINS": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "BOATTRIP": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "CAMERAMOTOR": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "ELVISVISTA": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "FAST": {
+   "active": [
+    "gamesradar",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "FLUX": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "GAMESPARK": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "GENERALSKIYE": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "GETWELLBEWELL": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "GIMMEWIRES": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "GOONSQUAD": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "INEEDSPACE": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "INVEN": {
+   "active": [
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "ITSADRILL": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "JUST150TARCOINS": {
+   "active": [],
+   "expired": [
+    "guided.news"
+   ]
+  },
+  "KANISTRA": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "KILLA": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "LETMEIN": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "LIGHTSOUT": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "LVL1SCAV": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "gamesradar"
+   ]
+  },
+  "LVL80BOSS": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "gamesradar"
+   ]
+  },
+  "MILSPEC": {
+   "active": [
+    "dexerto",
+    "gamesradar"
+   ],
+   "expired": []
+  },
+  "MRPUDLIK": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "NIKITAONGMNPODCAST": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "NIKITASVOICE": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "OBDOLBOS": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "OLOLO": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "PAY2WIN": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "PCGAMESN": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "PLIERMAN": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "POLYGON": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "PROMOCODE": {
+   "active": [
+    "dexerto",
+    "esports.ru"
+   ],
+   "expired": [
+    "gamesradar",
+    "guided.news"
+   ]
+  },
+  "PUBG": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "PVEPRESTIGE": {
+   "active": [
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "RBAV": {
+   "active": [
+    "gamesradar",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "RELEASEISCOMING": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "SBEUKOMAR": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "SCAVYBOI": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news",
+    "esports.ru"
+   ],
+   "expired": []
+  },
+  "SERVERMAN": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "SMELLOFNAPALM": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "SOTR": {
+   "active": [
+    "dexerto",
+    "gamesradar"
+   ],
+   "expired": []
+  },
+  "SPEAR": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "STANAG": {
+   "active": [
+    "dexerto",
+    "gamesradar"
+   ],
+   "expired": []
+  },
+  "SUDAKTUDAK": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "gamesradar",
+    "guided.news"
+   ]
+  },
+  "THICC": {
+   "active": [
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "THOR": {
+   "active": [],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "TOOLSET4FREE": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "UNDEADTARKOV": {
+   "active": [
+    "tarkov.help"
+   ],
+   "expired": []
+  },
+  "WILDHUNT": {
+   "active": [
+    "pcgamesn"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "WILWILBE": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "WINTERISHERE": {
+   "active": [
+    "pcgamesn",
+    "esports.ru"
+   ],
+   "expired": [
+    "dexerto",
+    "gamesradar"
+   ]
+  },
+  "WIPE": {
+   "active": [
+    "gamesradar",
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  },
+  "YYSTV": {
+   "active": [
+    "dexerto",
+    "gamesradar",
+    "pcgamesn",
+    "tarkov.help",
+    "guided.news"
+   ],
+   "expired": []
+  }
+ }
+}
