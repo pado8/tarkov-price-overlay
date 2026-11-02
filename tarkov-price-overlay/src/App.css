@@ -791,7 +791,7 @@ html, body, #root {
 }
 .hideout-level-summary::after {
   content: " ▶";
-  font-size: 9px;
+  font-size: var(--card-fs-xxs);
   opacity: 0.5;
   margin-left: 4px;
 }
@@ -823,13 +823,13 @@ html, body, #root {
 }
 .hideout-level-val {
   font-size: var(--card-fs-xxs);
-  color: var(--text-dim);
+  color: var(--text-muted);
   min-width: 26px;
   text-align: center;
   font-family: "Consolas", monospace;
 }
 .hd-step-btn {
-  background: var(--bg-input);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-default);
   border-radius: 3px;
   color: var(--text-secondary);
@@ -842,7 +842,7 @@ html, body, #root {
   flex-shrink: 0;
 }
 .hd-step-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
+  background: rgba(200, 170, 100, 0.15);
   color: var(--text-primary);
 }
 .hd-step-btn:disabled {
@@ -1159,7 +1159,7 @@ html, body, #root {
   background: rgba(20, 20, 20, 0.95);
   color: var(--warning);
   cursor: pointer;
-  font-size: 10px;
+  font-size: var(--card-fs-xxs);
 }
 .feedback-actions {
   display: flex;
@@ -1172,7 +1172,7 @@ html, body, #root {
   color: var(--text-muted);
 }
 .feedback-status.sent {
-  color: #6cc070;
+  color: var(--success);
 }
 .feedback-status.error {
   color: var(--warning);
@@ -1327,9 +1327,10 @@ html, body, #root {
   align-items: center;
   font-size: var(--card-fs-sm);
 }
+/* 라벨은 본문 글꼴 — Consolas 엔 한글이 없어 한글·영문이 다른 글꼴로 섞여 찍혔다.
+   값(숫자·키 이름)만 아래 input/select/hotkey 버튼에서 모노스페이스를 쓴다. */
 .settings-row label {
   color: var(--text-muted);
-  font-family: "Consolas", monospace;
 }
 .settings-row input[type="number"],
 .settings-row input[type="checkbox"],
@@ -1398,14 +1399,8 @@ html, body, #root {
   font-style: italic;
 }
 
-/* Font size control in settings */
+/* Font size control in settings — 다른 설정 셀렉트와 같은 모양(.settings-row select), 커서만 포인터 */
 .font-size-select {
-  background: #1a1a1a;
-  color: var(--gold-text);
-  border: 1px solid #444;
-  border-radius: var(--radius-md);
-  padding: 2px 4px;
-  font-size: var(--card-fs-xs);
   cursor: pointer;
 }
 
@@ -1435,9 +1430,9 @@ html, body, #root {
 }
 .opacity-number {
   width: 48px;
-  background: #1a1a1a;
+  background: rgba(0, 0, 0, 0.4);
   color: var(--gold-text);
-  border: 1px solid #c8aa64;
+  border: 1px solid var(--gold-text);
   border-radius: var(--radius-md);
   padding: 2px 4px;
   font-size: var(--card-fs-xs);
@@ -1643,8 +1638,8 @@ html, body, #root {
 .radar-dist { font-variant-numeric: tabular-nums; color: var(--gold-light); font-weight: 600; text-align: right; }
 .radar-arrow { display: inline-block; text-align: center; color: var(--text-secondary); font-weight: 700; line-height: 1; }
 .radar-dy { font-size: var(--card-fs-xs); white-space: nowrap; }
-.radar-dy.up { color: #8fd18f; }
-.radar-dy.down { color: #e0a070; }
+.radar-dy.up { color: var(--success); }
+.radar-dy.down { color: var(--warning); }
 .radar-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
 .radar-chk { display: inline-flex; align-items: center; gap: 4px; font-size: var(--card-fs-xs); color: var(--text-muted); cursor: pointer; }
 .radar-map { background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); font: inherit; font-size: var(--card-fs-xs); padding: 2px 4px; max-width: 100%; }
@@ -1655,9 +1650,9 @@ html, body, #root {
 .radar-mapwrap.drag { cursor: grabbing; }
 .radar-mapsvg { width: 100%; height: 100%; display: block; }
 .radar-maptools { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; }
-.radar-maptools button { font-size: 11px; padding: 2px 7px; background: rgba(0, 0, 0, 0.65); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
+.radar-maptools button { font-size: var(--card-fs-xs); padding: 2px 7px; background: rgba(0, 0, 0, 0.65); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
 .radar-maptools button:hover { border-color: var(--gold-bright); }
-.radar-mapscale { position: absolute; left: 6px; bottom: 4px; font-size: 10px; color: var(--text-muted); pointer-events: none; }
+.radar-mapscale { position: absolute; left: 6px; bottom: 4px; font-size: var(--card-fs-xxs); color: var(--text-muted); pointer-events: none; }
 .radar-layers { display: flex; flex-wrap: wrap; gap: 3px 4px; }
 /* 레이어 칩: 켜짐 = 색 점 + 밝은 글자, 꺼짐 = 흐리게 + 취소선(체크박스보다 좁아 미니맵 아래 한 줄에 들어간다) */
 .radar-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: var(--card-fs-xs); padding: 1px 7px; border: 1px solid var(--border-default); border-radius: 999px; background: rgba(0, 0, 0, 0.35); color: var(--text-primary); cursor: pointer; }
@@ -1669,12 +1664,12 @@ html, body, #root {
 /* 폭 고정: 카드가 넓어져도 슬라이더 길이가 안 변해야 끄는 손 위치와 값이 어긋나지 않는다 */
 .radar-size input { width: 110px; flex: none; margin: 0; accent-color: var(--gold-bright); cursor: pointer; }
 .radar-size-val { min-width: 3ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-secondary); }
-.radar-mapup { position: absolute; right: 6px; bottom: 4px; font-size: 10px; color: var(--text-muted); pointer-events: none; }
-.radar-mapcredit { position: absolute; right: 6px; top: 30px; font-size: 9px; color: var(--text-disabled); pointer-events: none; }
+.radar-mapup { position: absolute; right: 6px; bottom: 4px; font-size: var(--card-fs-xxs); color: var(--text-muted); pointer-events: none; }
+.radar-mapcredit { position: absolute; right: 6px; top: 30px; font-size: var(--card-fs-xxs); color: var(--text-disabled); pointer-events: none; }
 .radar-sw.img { background: #c9b48a; }
 .radar-floors { align-items: center; }
 .radar-floors .radar-kind { margin-right: 2px; }
-.radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: 11px; font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
+.radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: var(--card-fs-xs); font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
 .radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
 .radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); }
 .radar-mapsel b { color: var(--gold-light); }
@@ -1703,26 +1698,27 @@ html, body, #root {
 .radar-side .radar-row { font-size: var(--card-fs-sm); }
 
 /* 대상 목록: 퀘스트 개별 숨김(✕)과 '숨긴 퀘스트 n개' 복원 줄 */
-.radar-hide { flex: none; background: none; border: 0; color: var(--muted); font-size: 11px; line-height: 1; padding: 0 4px; cursor: pointer; opacity: 0.55; }
+.radar-hide { flex: none; background: none; border: 0; color: var(--text-muted); font-size: var(--card-fs-xs); line-height: 1; padding: 0 4px; cursor: pointer; opacity: 0.55; }
 .radar-row:hover .radar-hide, .radar-hide:focus-visible { opacity: 1; }
-.radar-hide:hover { color: var(--danger, #ff6b6b); }
-.radar-hidden { margin-top: 4px; font-size: 11px; color: var(--muted); }
-.radar-link { background: none; border: 0; color: var(--muted); font-size: 11px; padding: 2px 4px; cursor: pointer; text-decoration: underline dotted; }
-.radar-link:hover { color: var(--text); }
+.radar-hide:hover { color: var(--danger); }
+.radar-hidden { margin-top: 4px; font-size: var(--card-fs-xs); color: var(--text-muted); }
+.radar-link { background: none; border: 0; color: var(--text-muted); font-size: var(--card-fs-xs); padding: 2px 4px; cursor: pointer; text-decoration: underline dotted; }
+.radar-link:hover { color: var(--text-primary); }
 .radar-hidden-row { display: flex; align-items: center; gap: 6px; padding: 1px 0 1px 8px; }
 .radar-hidden-row .radar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.radar-guide { opacity: 0.75; font-size: 11px; }
-.radar-guide:hover { color: var(--text); }
+.radar-guide { opacity: 0.75; font-size: var(--card-fs-xs); }
+.radar-guide:hover { color: var(--text-primary); }
 .radar-flag.radar-key { color: var(--gold-bright); white-space: normal; display: inline; overflow: visible; }
 /* 시세로 조회한 열쇠가 여는 문: 지도 강조(깜빡이는 금색 고리) + 카드 한 줄 */
 .radar-keyring { animation: radar-keyring 1.4s ease-in-out infinite; }
 @keyframes radar-keyring { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .key-locks { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0 2px; font-size: var(--card-fs-sm); color: var(--gold-bright); }
-.key-locks .link-btn { background: none; border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 4px; padding: 0 6px; font-size: 11px; line-height: 18px; cursor: pointer; }
-.key-locks .link-btn:hover { color: var(--text); border-color: var(--gold); }
+.key-locks .link-btn { background: none; border: 1px solid var(--border-default); color: var(--gold-text); border-radius: var(--radius-md); padding: 0 6px; font-size: var(--card-fs-xs); line-height: 18px; cursor: pointer; }
+.key-locks .link-btn:hover { color: var(--text-primary); border-color: var(--gold-text); }
 
 /* 피드백 #51: 설정 "표시 순서" 목록 */
 .order-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
 .order-row .order-label { flex: 1; color: var(--text-muted); }
-.order-row button { font-size: 11px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border, #444); background: transparent; color: inherit; cursor: pointer; }
+.order-row button { font-size: var(--card-fs-xs); padding: 1px 6px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: transparent; color: inherit; cursor: pointer; }
+.order-row button:hover:not(:disabled) { background: rgba(200, 170, 100, 0.15); }
 .order-row button:disabled { opacity: 0.3; cursor: default; }

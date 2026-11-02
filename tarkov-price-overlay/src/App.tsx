@@ -1125,6 +1125,8 @@ function eventToAccelerator(e: KeyboardEvent): string | null {
  *  capture-region offsets and sizes. */
 function SliderField(props: {
   label: string;
+  /** 숫자 클릭 툴팁 — 언어별(t.opacityClickHint). 전엔 ko/en 하드코딩이라 러시아어 UI 에 한국어가 떴다. */
+  editHint: string;
   min: number;
   max: number;
   value: number;
@@ -1133,7 +1135,7 @@ function SliderField(props: {
   onStartEdit: () => void;
   onStopEdit: () => void;
 }) {
-  const { label, min, max, value, isEditing, onChange, onStartEdit, onStopEdit } = props;
+  const { label, editHint, min, max, value, isEditing, onChange, onStartEdit, onStopEdit } = props;
   return (
     <div className="settings-row">
       <label>{label}</label>
@@ -1173,7 +1175,7 @@ function SliderField(props: {
           <span
             className="opacity-readout"
             onClick={onStartEdit}
-            title="클릭해서 직접 입력 / Click to type"
+            title={editHint}
           >
             {value}
           </span>
@@ -1413,8 +1415,9 @@ function App() {
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
+  // "empty" = 내용 없이 보내기를 눌렀을 때(전송 실패와 다른 안내 — t.feedbackEmpty)
   const [feedbackStatus, setFeedbackStatus] = useState<
-    "idle" | "sending" | "sent" | "error"
+    "idle" | "sending" | "sent" | "error" | "empty"
   >("idle");
   const [showDonate, setShowDonate] = useState(false);
   // Default donate tab follows the user's UI language (Korean → KakaoPay first,
@@ -3873,12 +3876,13 @@ function App() {
                 <div className="feedback-actions">
                   <span
                     className={`feedback-status${
-                      feedbackStatus === "error" ? " error" : ""
+                      feedbackStatus === "error" || feedbackStatus === "empty" ? " error" : ""
                     }${feedbackStatus === "sent" ? " sent" : ""}`}
                   >
                     {feedbackStatus === "sending" && t.feedbackSending}
                     {feedbackStatus === "sent" && t.feedbackSuccess}
                     {feedbackStatus === "error" && t.feedbackError}
+                    {feedbackStatus === "empty" && t.feedbackEmpty}
                   </span>
                   <button
                     className="reset-btn feedback-send-btn"
@@ -3886,7 +3890,7 @@ function App() {
                     onClick={async () => {
                       const msg = feedbackText.trim();
                       if (!msg) {
-                        setFeedbackStatus("error");
+                        setFeedbackStatus("empty");
                         return;
                       }
                       setFeedbackStatus("sending");
@@ -4597,12 +4601,12 @@ function App() {
               <summary className="settings-section-header hideout-level-summary">
                 {t.hideoutLevelSection}
               </summary>
-              <div className="settings-hint" style={{ color: "#bbb", marginBottom: 4 }}>
+              <div className="settings-hint" style={{ color: "var(--text-muted)", marginBottom: 4 }}>
                 {t.hideoutLevelHint}
               </div>
               {hideoutStations.length === 0 ? (
                 <div className="settings-row">
-                  <span style={{ color: "var(--text-dim)", fontSize: "var(--card-fs-xs)" }}>
+                  <span style={{ color: "var(--text-muted)", fontSize: "var(--card-fs-xs)" }}>
                     {t.hideoutStationsLoading}
                   </span>
                 </div>
@@ -4616,7 +4620,7 @@ function App() {
                           <span
                             className="hideout-level-name"
                             title={s.name}
-                            style={cur >= s.maxLevel ? { color: "var(--text-dim)", textDecoration: "line-through" } : undefined}
+                            style={cur >= s.maxLevel ? { color: "var(--text-disabled)", textDecoration: "line-through" } : undefined}
                           >
                             {s.name}
                           </span>
@@ -4777,6 +4781,7 @@ function App() {
                   <SliderField
                     key={key}
                     label={label}
+                    editHint={t.opacityClickHint}
                     min={min}
                     max={max}
                     value={region[key] as number}
@@ -4842,6 +4847,7 @@ function App() {
                   <SliderField
                     key={key}
                     label={label}
+                    editHint={t.opacityClickHint}
                     min={min}
                     max={max}
                     value={region[key] as number}
@@ -5055,10 +5061,10 @@ function App() {
                           style={{
                             color:
                               trend.sign > 0
-                                ? "#4caf50"
+                                ? "var(--success-dim)"
                                 : trend.sign < 0
-                                  ? "#ff6b6b"
-                                  : "#999",
+                                  ? "var(--danger)"
+                                  : "var(--text-disabled)",
                           }}
                         >
                           {" "}
