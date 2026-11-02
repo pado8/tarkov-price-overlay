@@ -46,7 +46,9 @@ elseif ($target -eq "cloudflare") {
     # /MIR: 지운 파일도 따라 지운다. robocopy 는 0~7 이 성공(8 이상이 실패)
     robocopy $landing $stage /MIR /XF vercel.json /XD .vercel /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { Write-Host "[deploy] 스테이징 복사 실패(robocopy $LASTEXITCODE)"; exit 1 }
-    Copy-Item (Join-Path $root "scripts\cloudflare\_headers") (Join-Path $stage "_headers") -Force
+    # _headers 는 LF·BOM 없이 — 윈도우 저장소(autocrlf)라 CRLF 로 꺼내질 수 있고, PS5.1 Set-Content utf8 은 BOM 을 붙인다
+    $hdr = ([IO.File]::ReadAllText((Join-Path $root "scripts\cloudflare\_headers"))) -replace "`r`n", "`n"
+    [IO.File]::WriteAllText((Join-Path $stage "_headers"), $hdr.TrimStart([char]0xFEFF), (New-Object System.Text.UTF8Encoding($false)))
     $n = (Get-ChildItem $stage -Recurse -File).Count
     Write-Host "[deploy] 스테이징 $n 개 파일 → Cloudflare Pages '$project'"
     $out = & npx --yes wrangler@4 pages deploy $stage --project-name $project --branch main --commit-dirty=true 2>&1
