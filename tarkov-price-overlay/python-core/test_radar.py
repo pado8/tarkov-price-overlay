@@ -211,6 +211,20 @@ try:
 finally:
     r._settings_path = _orig_settings
 
+# 보스 구역 — 한 구역 이름 아래 멀리 떨어진 점 무리는 따로 낸다(해안선 '기상 관측소' 1km 갈라짐, 11-03)
+bm = {"bosses": [
+    {"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "ZoneMeteoStation", "name": "Weather Station", "chance": 1,
+        "positions": [{"x": 459, "z": 56}, {"x": 373, "z": 76}, {"x": -582, "z": 110}, {"x": 460, "z": 92}, {"x": -575, "z": 129}]}]},
+    {"mob": "bossSanitar", "spawnChance": 0.5, "spawnLocations": [{"spawnKey": "ZoneA", "name": "A", "chance": 1,
+        "positions": [{"x": 0, "z": 0}, {"x": 140, "z": 0}, {"x": 280, "z": 0}]}]},  # 140m 씩 이어진 사슬 = 한 무리
+], "spawns": []}
+bz = r.boss_zones(bm, {})
+ws = [z for z in bz if z["name"] == "ZoneMeteoStation"]
+eq("갈라진 구역은 무리 2개", sorted(len(z["pts"]) for z in ws), [2, 3])
+eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
+eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
+eq("150m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "ZoneA"], [3])
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

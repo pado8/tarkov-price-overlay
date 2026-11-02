@@ -421,10 +421,39 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             z = zones.setdefault(key, {"name": _loc(loc_maps, sl.get("name")) or _loc(loc_en, sl.get("name")) or key, "pts": pts, "bosses": []})
             if not any(x["name"] == bname for x in z["bosses"]):
                 z["bosses"].append({"name": bname, "chance": round(chance * float(sl.get("chance") or 1), 2)})
-    out = list(zones.values())
-    for z in out:
+    # 한 구역 이름 아래 점들이 지도 양 끝의 여러 무리로 갈라져 있는 경우가 있다(해안선 '온실' = 별장 4점 + 600m 떨어진 2점,
+    # '기상 관측소' = 1km 떨어진 2무리, 삼림 제재소·폐허 마을, 리저브 K 건물). 지도는 구역을 점 전체를 감싸는 사각형으로
+    # 그리므로 무리가 갈라지면 지도 절반을 덮는 상자가 됐다(11-03 사용자 지적). 어느 무리가 맞는지는 데이터로 가릴 수 없어
+    # 점은 그대로 두고, BOSS_CLUSTER_M 안으로 이어지는 점끼리 묶어 무리마다 따로 낸다(이름·보스·확률은 같게).
+    out = []
+    for z in zones.values():
         z["bosses"].sort(key=lambda x: -x["chance"])
+        for grp in _cluster_pts(z["pts"], BOSS_CLUSTER_M):
+            out.append({**z, "pts": grp})
     return out
+
+
+BOSS_CLUSTER_M = 150.0  # 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로
+
+
+def _cluster_pts(pts: list, th: float) -> list:
+    """점들을 '거리 th 이내로 이어지면 같은 무리'(단일 연결)로 나눈다. 무리 순서·무리 안 점 순서는 입력 순서를 따른다."""
+    n = len(pts)
+    parent = list(range(n))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i in range(n):
+        for j in range(i + 1, n):
+            if math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]) <= th:
+                parent[find(j)] = find(i)
+    groups: dict = {}
+    for i in range(n):
+        groups.setdefault(find(i), []).append(pts[i])
+    return sorted(groups.values(), key=lambda g: pts.index(g[0]))
 
 
 def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> dict:
