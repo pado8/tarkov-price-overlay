@@ -38,6 +38,7 @@ export type RadarTarget = {
   task?: string;
   slug?: string; // 가이드 퀘스트 페이지 slug(tarkov.dev normalizedName)
   keys?: string[]; // 목표에 필요한 열쇠(대체 열쇠는 ' / ')
+  story?: string; // 스토리(메인 퀘스트) 목표면 챕터 id — 사용자가 고른 챕터만 온다
   // 전체 지도용 게임 좌표(2단계)
   x?: number;
   y?: number;
@@ -54,6 +55,7 @@ export type RadarState = {
   light?: boolean;
   error?: string;
   active_quests?: number;
+  story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
 };
 
 // 지도 높이(px). 사용자가 슬라이더로 바꾸고 App 이 카드 폭을 여기에 맞춘다(창 폭 800 안에서 카드 최대 760).
@@ -75,10 +77,11 @@ const COLORS: Record<string, string> = {
   scav: "#f0f0f0", // RadarMap.SCAV_COLOR 와 같게 — 회색은 묻힌다
   transit: "#6fa8dc",
   quest: "var(--gold-bright)",
+  story: "#d6a6ff", // RadarMap 의 스토리 점과 같은 보라
 };
 
 const colorOf = (t: RadarTarget) =>
-  t.kind === "extract" ? (t.faction === "scav" ? COLORS.scav : COLORS.extract) : COLORS[t.kind];
+  t.kind === "extract" ? (t.faction === "scav" ? COLORS.scav : COLORS.extract) : t.kind === "quest" && t.story ? COLORS.story : COLORS[t.kind];
 
 function ago(sec: number, t: Strings): string {
   if (sec < 60) return t.radarAgoNow;
@@ -109,11 +112,13 @@ type Props = {
   onSize: (px: number) => void;
   fill?: boolean; // 패널이 크기를 정한다 — 크기 슬라이더 숨김
   highlightKey?: string | null; // 시세로 조회한 열쇠 — 지도에서 여는 문 강조
+  story: string; // 지도에 띄울 스토리 챕터 id("" = 안 띄움)
+  onPickStory: (id: string) => void;
 };
 
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory }: Props) {
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
   // 표시 필터(PMC 탈출구·트랜짓·퀘스트 + 스캐브는 showScav) — 지도 칩과 목록이 한 상태를 쓴다
@@ -139,7 +144,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const hiddenSet = new Set(hiddenQ.map((h) => h.id));
   const hideQuest = (x: RadarTarget) => {
     const id = questKey(x);
-    if (!hiddenSet.has(id)) saveHidden([...hiddenQ, { id, name: x.name }]);
+    if (!hiddenSet.has(id)) saveHidden([...hiddenQ, { id, name: x.story && x.objective ? `${x.name} · ${x.objective}` : x.name }]);
   };
   const restoreQuest = (id: string) => saveHidden(hiddenQ.filter((h) => h.id !== id));
   const pickFixed = (v: boolean) => {
@@ -267,7 +272,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <span className="radar-dot" style={{ background: colorOf(x) }} />
           <span className="radar-name">
             <span className="radar-kind">
-              {x.kind === "extract" ? t.radarExtract : x.kind === "transit" ? t.radarTransit : t.radarQuest}
+              {x.kind === "extract" ? t.radarExtract : x.kind === "transit" ? t.radarTransit : x.story ? t.radarStory : t.radarQuest}
             </span>{" "}
             {x.name}
             {x.kind === "quest" && x.objective && <span className="radar-sub">{x.objective}</span>}
@@ -354,6 +359,18 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       )}
       <div className="radar-foot">
         {mapPicker}
+        {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
+        {(data.story_chapters?.length ?? 0) > 0 && (
+          <select className="radar-map" value={story === "all" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
+            <option value="">{t.radarStoryOff}</option>
+            {data.story_chapters!.map((c) => (
+              <option key={c.id} value={c.id}>
+                {t.radarStory}: {c.name}
+              </option>
+            ))}
+            <option value="all">{t.radarStoryAll}</option>
+          </select>
+        )}
         {sizeCtl}
       </div>
       {fixedCtl}

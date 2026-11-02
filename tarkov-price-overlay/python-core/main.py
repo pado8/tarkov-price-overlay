@@ -1109,11 +1109,12 @@ def hideout_stations(lang: str = "en") -> list:
 
 
 @app.get("/radar")
-def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False) -> dict:
+def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
+                story: str | None = None) -> dict:
     """레이더(미니맵 1단계): 가장 최근 좌표 스크린샷 + 게임 로그로 판정한 맵 + 그 맵의 탈출구·트랜짓·
     진행 중 퀘스트 목표까지의 거리·상대 각도·높이 차. 게임 메모리는 읽지 않는다(radar.py 참고).
     앱이 1초마다 부르므로 지도 데이터는 스크린샷이 새로울 때나 사용자가 직접 열 때(full)만 받는다."""
-    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full)
+    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full, story=story or None)
 
 
 @app.get("/radar/keylocks")

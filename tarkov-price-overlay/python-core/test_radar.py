@@ -244,6 +244,32 @@ eq("스토리 퀘스트 합침", sorted(at), ["a", "s1"])
 eq("id 겹치면 상인 퀘스트 우선", at["a"]["name"], "trader")
 eq("story 없으면 그대로", sorted(r.all_tasks({"tasks": {"a": {}}})), ["a"])
 
+# 스토리 챕터 목표(11-03) — 고른 챕터만, 맵 변형(ground-zero-21 등)은 대표 맵으로, 구역은 중심 하나, 이름은 번역표
+_orig_story = r._STORY
+r._STORY = {"chapters": [{"id": "tour", "questId": "Q1", "name": "Tour", "order": 1}, {"id": "batya", "questId": "Q2", "name": "Batya", "order": 2}],
+            "marks": [{"id": "o1", "chapter": "tour", "quest": "s1", "en": "Use the intercom", "points": [{"map": "shoreline", "kind": "pin", "floor": -1, "pts": [[-917.0, 265.6]]}]},
+                      {"id": "o2", "chapter": "tour", "quest": "s2", "en": "Search the server room", "points": [{"map": "the-lab", "kind": "area", "floor": 0, "pts": [[0, 0], [10, 0], [10, 10], [0, 10]]}]},
+                      {"id": "o3", "chapter": "batya", "quest": "s3", "en": "Locate the ambush spot", "points": [{"map": "woods", "kind": "pin", "floor": -1, "pts": [[100, 200]]}]},
+                      {"id": "o4", "chapter": "batya", "quest": "s4", "en": "Find the camp", "points": [{"map": "ground-zero", "kind": "pin", "floor": -1, "pts": [[5, 5]]}]}]}
+loc = {"Q1 name": "투어", "o1": "항구 내 경비 병력과 교신하기 위해 인터콤 사용하기"}
+pose = {"x": -900.0, "y": 10.0, "z": 265.6, "heading": 0.0}
+st = r.story_targets("tour", "shoreline", pose, loc)
+eq("고른 챕터·그 맵의 목표만", [(x["task"], x["name"], x["objective"]) for x in st], [("o1", "투어", "항구 내 경비 병력과 교신하기 위해 인터콤 사용하기")])
+eq("퀘스트 대상 모양(kind·story·거리)", (st[0]["kind"], st[0]["story"], st[0]["dist"], st[0]["dy"]), ("quest", "tour", 17.0, 0.0))
+lab = r.story_targets("tour", "the-lab-dark", {"x": 0, "y": 0, "z": 0, "heading": None}, {})
+eq("맵 변형은 대표 맵으로 · 구역은 중심 · 번역 없으면 영어", [(x["x"], x["z"], x["objective"]) for x in lab], [(5.0, 5.0, "Search the server room")])
+eq("'all' 은 모든 챕터", sorted(x["task"] for x in r.story_targets("all", "ground-zero-21", pose, {})), ["o4"])
+eq("챕터 안 고르면 없음", r.story_targets("", "shoreline", pose, loc), [])
+eq("챕터 목록은 순서대로·번역 이름", r.story_chapters(loc), [{"id": "tour", "name": "투어"}, {"id": "batya", "name": "Batya"}])
+r._STORY["marks"] += [{"id": "o5", "chapter": "tour", "quest": "s5", "en": "Reach the engine room", "points": [{"map": "shoreline", "kind": "pin", "floor": 5, "pts": [[-917.3, 265.7]]}]},
+                      {"id": "o6", "chapter": "tour", "quest": "s6", "en": "Obtain the keycard", "points": [{"map": "shoreline", "kind": "pin", "floor": 5, "pts": [[-916.7, 265.9]]}]}]
+dup = r.story_targets("tour", "shoreline", pose, loc)
+eq("같은 자리 목표는 한 점으로 합치고 문구는 ' / '", [(x["task"], x["objective"]) for x in dup], [("o1", "항구 내 경비 병력과 교신하기 위해 인터콤 사용하기 / Reach the engine room / Obtain the keycard")])
+eq("안 쓰는 payload 없음", [k for k in dup[0] if k in ("floor", "outline")], [])
+eq("맵 별칭 표 공유(infected-lab→the-lab)", r.MAP_BASE.get("infected-lab"), "the-lab")
+eq("지도 그림 별칭도 같은 표", r._IMG_ALIAS is r.MAP_BASE, True)
+r._STORY = _orig_story
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

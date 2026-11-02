@@ -572,7 +572,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 return (
                   <g key={`q${i}`} onClick={() => pick({ name: `${q.name}${q.objective ? " · " + q.objective : ""}${q.keys?.length ? " · 🔑 " + q.keys.join(", ") : ""}`, p: [q.x!, q.y ?? myY, q.z!] })} opacity={op(q.x!, q.y ?? myY, q.z!)}>
                     <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
-                    <circle cx={s.x} cy={s.y} r={5} fill="#f0c040" stroke="#000" strokeWidth={0.8} />
+                    <circle cx={s.x} cy={s.y} r={5} fill={q.story ? "#d6a6ff" : "#f0c040"} stroke="#000" strokeWidth={0.8} />
                     {label(`q${i}`)}
                   </g>
                 );

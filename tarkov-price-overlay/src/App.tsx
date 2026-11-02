@@ -803,6 +803,7 @@ const STORAGE_KEY = "tarkov.captureRegion";
 const POSITION_KEY = "tarkov.windowPosition";
 const RADAR_ENABLED_KEY = "tarkov.radar.enabled";
 const RADAR_SCAV_KEY = "tarkov.radar.showScav";
+const RADAR_STORY_KEY = "tarkov.radar.story"; // 지도에 띄울 스토리 챕터 id("" = 안 띄움, "all" = 전부) — 게임이 스토리 진행을 로그에 안 남겨 사용자가 고른다
 // 새 스크린샷이 이보다 오래됐으면 지도를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
 const RADAR_POPUP_MAX_AGE_SEC = 60;
 const RADAR_MIN_OPACITY = 90;
@@ -1390,6 +1391,14 @@ function App() {
   const [paneSize, setPaneSize] = useState(400); // 오른쪽 지도 패널의 지도 높이(패널 높이에서 머리글·칩·안내 줄을 뺀 값)
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
+  const [radarStory, setRadarStory] = useState<string>(() => {
+    try {
+      return localStorage.getItem(RADAR_STORY_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const radarStoryRef = useRef<string>(radarStory);
   const radarLastShotRef = useRef<string | null | undefined>(undefined); // undefined = 아직 첫 확인 전
   const radarPollBusyRef = useRef(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
@@ -1865,6 +1874,7 @@ function App() {
     const q = new URLSearchParams({ lang: region.lang, game_mode: region.gameMode });
     if (full) q.set("full", "true");
     if (radarMapRef.current) q.set("map", radarMapRef.current);
+    if (radarStoryRef.current) q.set("story", radarStoryRef.current);
     return `${PYTHON_API}/radar?${q.toString()}`;
   };
   // 스크린샷 폴더 설정(사이드카에 저장) — 설정 패널을 열 때 읽고, 선택/초기화 때 보낸다
@@ -4961,6 +4971,15 @@ function App() {
               radarMapRef.current = id;
               void loadRadar();
             }}
+            story={radarStory}
+            onPickStory={(id) => {
+              radarStoryRef.current = id;
+              setRadarStory(id);
+              try {
+                localStorage.setItem(RADAR_STORY_KEY, id);
+              } catch {}
+              void loadRadar();
+            }}
             onClose={() => setRadarActive(false)}
             size={radarSize}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
@@ -5865,6 +5884,15 @@ function App() {
             }}
             onPickMap={(id) => {
               radarMapRef.current = id;
+              void loadRadar();
+            }}
+            story={radarStory}
+            onPickStory={(id) => {
+              radarStoryRef.current = id;
+              setRadarStory(id);
+              try {
+                localStorage.setItem(RADAR_STORY_KEY, id);
+              } catch {}
               void loadRadar();
             }}
             onClose={toggleWide}

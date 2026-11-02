@@ -1,0 +1,3639 @@
+{
+"_source": "Story objective positions: szepiz/tarkov-quest-data api/firstparty/story-marks.json (CC0-1.0, placed by hand and checked in game, generatedAt 2026-08-26). Chapter list and English fallback wording: tarkov-data-overlay (MIT) via the same project. Display names come from tarkov.dev locale at runtime.",
+"_url": "https://szepiz.github.io/tarkov-quest-data/api/firstparty/story-marks.json",
+"chapters": [
+{
+"id": "tour",
+"questId": "68cbd33676fe74b1e80bfd91",
+"name": "Tour",
+"order": 1
+},
+{
+"id": "falling-skies",
+"questId": "68cbcdc4c964ab83cc0c928e",
+"name": "Falling Skies",
+"order": 2
+},
+{
+"id": "batya",
+"questId": "68da36cf7cff54fc6109874a",
+"name": "Batya",
+"order": 3
+},
+{
+"id": "the-unheard",
+"questId": "6900927ab7d28358f80b9421",
+"name": "The Unheard",
+"order": 4
+},
+{
+"id": "blue-fire",
+"questId": "68e784b7fa3f1fa3770094ba",
+"name": "Blue Fire",
+"order": 5
+},
+{
+"id": "they-are-already-here",
+"questId": "6903d779fdfc4078740a4bd0",
+"name": "They Are Already Here",
+"order": 6
+},
+{
+"id": "accidental-witness",
+"questId": "69052e18e680c2d3e3034d3a",
+"name": "Accidental Witness",
+"order": 7
+},
+{
+"id": "the-labyrinth",
+"questId": "68e3a35002661eb2d30ce387",
+"name": "The Labyrinth",
+"order": 8
+},
+{
+"id": "the-ticket",
+"questId": "68da33fe00868edcb6025ac4",
+"name": "The Ticket",
+"order": 9
+},
+{
+"id": "boreas",
+"questId": "69d38381cea4b428690ea1d9",
+"name": "Boreas",
+"order": 10
+}
+],
+"marks": [
+{
+"id": "68c6a5ed545269faf1c4b157",
+"chapter": "tour",
+"quest": "68c6a4ece3e3d7f69d0a5bd9",
+"en": "Locate the entrance to the port Terminal",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-916.92,
+265.62
+]
+]
+}
+]
+},
+{
+"id": "68dd032d41e6616f5303a146",
+"chapter": "tour",
+"quest": "68c6a4ece3e3d7f69d0a5bd9",
+"en": "Find a way to contact the soldiers at the Terminal",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-917.03,
+265.62
+]
+]
+}
+]
+},
+{
+"id": "68de73eb5084448b61a168df",
+"chapter": "tour",
+"quest": "68c6a4ece3e3d7f69d0a5bd9",
+"en": "Use the intercom to contact the port garrison",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-917.35,
+265.83
+]
+]
+}
+]
+},
+{
+"id": "68c7e87321acda56046a7f4f",
+"chapter": "tour",
+"quest": "68c6aa0e2f0a1d31380ad618",
+"en": "Locate the entrance to the facility on Factory",
+"points": [
+{
+"map": "factory",
+"kind": "pin",
+"floor": 2,
+"pts": [
+[
+-26.51,
+-30.02
+]
+]
+}
+]
+},
+{
+"id": "68c7e86ff945792cfd97edfe",
+"chapter": "tour",
+"quest": "68c6aa0e2f0a1d31380ad618",
+"en": "Locate the entrance to the facility on Streets of Tarkov",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+212.02,
+83.49
+]
+]
+}
+]
+},
+{
+"id": "68c6aa469b0217ce22d6fb0b",
+"chapter": "tour",
+"quest": "68c6aa0e2f0a1d31380ad618",
+"en": "Search the top management offices in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-181.17,
+-368.2
+],
+[
+-180.58,
+-355.16
+],
+[
+-161.96,
+-355.16
+],
+[
+-161.96,
+-368.91
+],
+[
+-180.97,
+-368.38
+]
+]
+}
+]
+},
+{
+"id": "68c6aa43498b4da977128b3c",
+"chapter": "tour",
+"quest": "68c6aa0e2f0a1d31380ad618",
+"en": "Search the server room in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-139.63,
+-329.71
+],
+[
+-113.9,
+-329.5
+],
+[
+-114.36,
+-289.16
+],
+[
+-139.18,
+-288.95
+],
+[
+-139.41,
+-329.3
+]
+]
+}
+]
+},
+{
+"id": "68c6aa4040bb6d7ff66c0abb",
+"chapter": "tour",
+"quest": "68c6aa0e2f0a1d31380ad618",
+"en": "Locate the escape path through the drainage system in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "pin",
+"floor": 1,
+"pts": [
+[
+-131.08,
+-273.23
+]
+]
+}
+]
+},
+{
+"id": "678f6eae2ed26c2110cb9909",
+"chapter": "falling-skies",
+"quest": "678f6bd1e8d46e40ff021605",
+"en": "Retrieve the flash drive from one of the G-Wagon SUVs",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+336.57,
+317.87
+]
+]
+}
+]
+},
+{
+"id": "678f6edd6b76b693d0f62654",
+"chapter": "falling-skies",
+"quest": "678f6bd1e8d46e40ff021605",
+"en": "Locate the right G-Wagon SUV",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+336.58,
+317.88
+]
+]
+}
+]
+},
+{
+"id": "678fa00a09dd512f7d493bd0",
+"chapter": "falling-skies",
+"quest": "678f9df57252f8f0ae02f2d6",
+"en": "Retrieve the plane's flight recorder",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-248.18,
+-21.98
+]
+]
+}
+]
+},
+{
+"id": "678fa01c06932e11d6741b80",
+"chapter": "falling-skies",
+"quest": "678f9df57252f8f0ae02f2d6",
+"en": "Leave the flight recorder in the specified spot",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+242.75,
+427.24
+]
+]
+}
+]
+},
+{
+"id": "68fd39472a6fa09d4555bdc8",
+"chapter": "falling-skies",
+"quest": "679cdd71af268e67ff086be8",
+"en": "Find the pilots' transcript",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+401.74,
+-44.32
+]
+]
+}
+]
+},
+{
+"id": "679cde2cf433587bbd608420",
+"chapter": "falling-skies",
+"quest": "679cdd71af268e67ff086be8",
+"en": "Find Elektronik's secure flash drive",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+401.76,
+-42.14
+]
+]
+}
+]
+},
+{
+"id": "679cdee4ce3a208fee0ad65a",
+"chapter": "falling-skies",
+"quest": "679cdee4ce3a208fee0ad657",
+"en": "Retrieve the armored case",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-247.29,
+-21.26
+]
+]
+}
+]
+},
+{
+"id": "68dea804e88b45b0ecefa10d",
+"chapter": "batya",
+"quest": "68d6894a05ab6c954c01f65e",
+"en": "Locate the traces of the BEAR special squad",
+"points": [
+{
+"map": "customs",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+196.93,
+-159.48
+],
+[
+219.97,
+-155.12
+],
+[
+208.45,
+-95.77
+],
+[
+186.13,
+-100.13
+],
+[
+196.93,
+-158.52
+]
+]
+},
+{
+"map": "reserve",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+2.93,
+163.83
+],
+[
+-17.8,
+165.13
+],
+[
+-18.44,
+185.26
+],
+[
+3.58,
+182.88
+],
+[
+2.28,
+163.4
+]
+]
+},
+{
+"map": "shoreline",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-147.97,
+-308.23
+],
+[
+-161.12,
+-305.33
+],
+[
+-159.18,
+-292.76
+],
+[
+-146.23,
+-295.08
+],
+[
+-147.58,
+-307.84
+]
+]
+},
+{
+"map": "woods",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+297.83,
+-474.91
+],
+[
+224.7,
+-456.18
+],
+[
+253.45,
+-407.47
+],
+[
+307.21,
+-429.32
+],
+[
+292.21,
+-474.29
+]
+]
+}
+]
+},
+{
+"id": "68cad2c2abcd16d97906a2d2",
+"chapter": "batya",
+"quest": "68caba2ae86db94cdc051418",
+"en": "Locate and obtain the Bogatyr squad patch",
+"points": [
+{
+"map": "customs",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+502.66,
+94.83
+]
+]
+},
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+197.1,
+-603.11
+]
+]
+},
+{
+"map": "reserve",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-48.28,
+29.33
+]
+]
+},
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+78,
+164.47
+]
+]
+}
+]
+},
+{
+"id": "68cd75f985759834cdb8077e",
+"chapter": "batya",
+"quest": "68caba33f193c0b4fb01cc2d",
+"en": "Locate the Ryabina outpost",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+37.96,
+-323.49
+]
+]
+}
+]
+},
+{
+"id": "68cad2e086e6f96ff175b95d",
+"chapter": "batya",
+"quest": "68caba2ae86db94cdc051418",
+"en": "Locate and obtain a keepsake of one of the Bogatyrs",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+40.38,
+-319.52
+]
+]
+}
+]
+},
+{
+"id": "68cd76423e506353c08a0b71",
+"chapter": "batya",
+"quest": "68caba33f193c0b4fb01cc2d",
+"en": "Locate the Carousel outpost",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+91.53,
+-304.92
+],
+[
+47.51,
+-305.22
+],
+[
+48.1,
+-283.9
+],
+[
+91.82,
+-283.01
+],
+[
+91.53,
+-304.63
+]
+]
+}
+]
+},
+{
+"id": "68f9ef8a1dbc7a9f81001a94",
+"chapter": "batya",
+"quest": "68f9ef8a1dbc7a9f81001a87",
+"en": "Learn more about Strelets",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.12,
+-304.63
+],
+[
+46.63,
+-304.63
+],
+[
+47.22,
+-284.19
+],
+[
+92.71,
+-283.6
+],
+[
+93,
+-305.22
+]
+]
+}
+]
+},
+{
+"id": "68f9ef8a1dbc7a9f81001a92",
+"chapter": "batya",
+"quest": "68f9ef8a1dbc7a9f81001a87",
+"en": "Learn more about Taran",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.13,
+-283.42
+],
+[
+91.81,
+-304.82
+],
+[
+47.13,
+-304.82
+],
+[
+47.72,
+-284.13
+],
+[
+92.1,
+-283.33
+]
+]
+}
+]
+},
+{
+"id": "68cad2ddd5ccb3a7be444363",
+"chapter": "batya",
+"quest": "68caba2ae86db94cdc051418",
+"en": "Locate and obtain a personal item of one of the Bogatyrs",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.15,
+-304.77
+],
+[
+47.01,
+-304.9
+],
+[
+47.55,
+-284.09
+],
+[
+92.27,
+-283.29
+],
+[
+92.1,
+-304.94
+]
+]
+}
+]
+},
+{
+"id": "68f9eed31dbc7a9f81001a43",
+"chapter": "batya",
+"quest": "68f9eed31dbc7a9f81001a3a",
+"en": "Learn more about Voevoda",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.31,
+-305.15
+],
+[
+47.09,
+-305.24
+],
+[
+47.64,
+-284.04
+],
+[
+92.61,
+-283.45
+],
+[
+92.4,
+-305.32
+]
+]
+}
+]
+},
+{
+"id": "68f9ef8a1dbc7a9f81001a98",
+"chapter": "batya",
+"quest": "68f9ef8a1dbc7a9f81001a87",
+"en": "Find Voevoda's personal belongings",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.52,
+-305.14
+],
+[
+46.95,
+-304.69
+],
+[
+47.64,
+-284.01
+],
+[
+92.41,
+-283.36
+],
+[
+92.58,
+-305.13
+]
+]
+}
+]
+},
+{
+"id": "68cad2e142b4aa16844f4544",
+"chapter": "batya",
+"quest": "68caba2ae86db94cdc051418",
+"en": "Locate and obtain the squad commander's recorder",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+92.67,
+-305.15
+],
+[
+91.94,
+-283.22
+],
+[
+47.5,
+-284.1
+],
+[
+46.88,
+-304.8
+],
+[
+92.68,
+-305.18
+]
+]
+}
+]
+},
+{
+"id": "68cd423a99a8769285aa4a30",
+"chapter": "batya",
+"quest": "68caba2cc567ca20cc01c775",
+"en": "Locate the Gnezdo outpost",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-327.09,
+-71.96
+],
+[
+-320.32,
+-67.72
+],
+[
+-314.86,
+-61.06
+],
+[
+-313.12,
+-53.09
+],
+[
+-315.35,
+-46.36
+],
+[
+-318.77,
+-39.95
+],
+[
+-327.16,
+-31.92
+],
+[
+-335.73,
+-29.99
+],
+[
+-347.09,
+-32.1
+],
+[
+-355.42,
+-43.19
+],
+[
+-356.04,
+-54.4
+],
+[
+-351.07,
+-63.37
+],
+[
+-340.57,
+-70.4
+],
+[
+-330.82,
+-71.9
+],
+[
+-326.72,
+-72.33
+]
+]
+}
+]
+},
+{
+"id": "6915bb41efc107ce960110de",
+"chapter": "batya",
+"quest": "6915bb41efc107ce960110d9",
+"en": "Figure out what happened to the Bogatyr squad",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-312.35,
+-53.15
+],
+[
+-317.11,
+-65.08
+],
+[
+-323.03,
+-70.37
+],
+[
+-334,
+-72.17
+],
+[
+-345.76,
+-67.98
+],
+[
+-353.85,
+-59.51
+],
+[
+-356.23,
+-48.73
+],
+[
+-351.32,
+-36.51
+],
+[
+-340.86,
+-30.57
+],
+[
+-330.25,
+-30.5
+],
+[
+-322.24,
+-35.42
+],
+[
+-315.09,
+-45.19
+],
+[
+-312.13,
+-52.86
+]
+]
+}
+]
+},
+{
+"id": "68cd71414bff4d23910fa1f7",
+"chapter": "batya",
+"quest": "68caba2d7d1e2d4df2032efe",
+"en": "Locate the ambush spot",
+"points": [
+{
+"map": "woods",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-449.55,
+-64.55
+],
+[
+-417.66,
+-63.07
+],
+[
+-391.39,
+-53.63
+],
+[
+-393.75,
+-30.92
+],
+[
+-402.9,
+-9.38
+],
+[
+-412.94,
+-0.24
+],
+[
+-451.61,
+4.19
+],
+[
+-462.24,
+-4.37
+],
+[
+-466.08,
+-30.92
+],
+[
+-459.58,
+-54.22
+],
+[
+-451.32,
+-66.91
+],
+[
+-448.96,
+-65.43
+]
+]
+}
+]
+},
+{
+"id": "692eb9b4ad4cf9794040bc68",
+"chapter": "batya",
+"quest": "68fab1c73754850d130f5c61",
+"en": "Gain access to Lightkeeper",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+445.93,
+462.74
+]
+]
+}
+]
+},
+{
+"id": "69245fe39a65440680728ddb",
+"chapter": "batya",
+"quest": "68fab1c73754850d130f5c61",
+"en": "Bring all the Bogatyr squad's items to Lightkeeper",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+444.44,
+462.95
+]
+]
+}
+]
+},
+{
+"id": "68dbed2b5268b9d311f2d2d2",
+"chapter": "batya",
+"quest": "68caba3da331c68e8209b55a",
+"en": "Investigate the command bunker on Reserve",
+"points": [
+{
+"map": "reserve",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-88.35,
+45.31
+],
+[
+-101.22,
+1.87
+],
+[
+-159.46,
+17.14
+],
+[
+-149.3,
+62.96
+],
+[
+-87.68,
+48.03
+]
+]
+}
+]
+},
+{
+"id": "68dbed28d01c49f4ed397cea",
+"chapter": "batya",
+"quest": "68caba3da331c68e8209b55a",
+"en": "Investigate the BEAR camp on Lighthouse",
+"points": [
+{
+"map": "lighthouse",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+81.76,
+161.91
+],
+[
+79.51,
+167.25
+],
+[
+76.6,
+166.97
+],
+[
+75.38,
+164.81
+],
+[
+76.97,
+160.78
+],
+[
+79.22,
+159.94
+],
+[
+81.66,
+161.91
+]
+]
+}
+]
+},
+{
+"id": "68dbed24038b894e38a30aa1",
+"chapter": "batya",
+"quest": "68caba3da331c68e8209b55a",
+"en": "Investigate the BEAR camp east of the Ultra mall on Interchange",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-325.38,
+-71.57
+],
+[
+-348.23,
+-66.38
+],
+[
+-355.21,
+-57.57
+],
+[
+-353.38,
+-39.33
+],
+[
+-333.62,
+-30.04
+],
+[
+-317.54,
+-41.09
+],
+[
+-313.4,
+-57.52
+],
+[
+-325.04,
+-71.65
+]
+]
+}
+]
+},
+{
+"id": "68fac653495c7aedaef6cd69",
+"chapter": "batya",
+"quest": "68caba3fcc16a93b26096721",
+"en": "Investigate the cultist circle on Shoreline",
+"points": [
+{
+"map": "shoreline",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+249.44,
+422.08
+],
+[
+241.51,
+420.92
+],
+[
+238.42,
+437.36
+],
+[
+247.32,
+438.71
+],
+[
+249.44,
+422.66
+]
+]
+}
+]
+},
+{
+"id": "68dc05109075f2e13953ebec",
+"chapter": "batya",
+"quest": "68caba3fcc16a93b26096721",
+"en": "Investigate the cultist circle on Woods",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+198.05,
+-7.69
+]
+]
+}
+]
+},
+{
+"id": "690f8a20c616b5a85666d054",
+"chapter": "batya",
+"quest": "68caba3fcc16a93b26096721",
+"en": "Investigate the cultist circle on Customs",
+"points": [
+{
+"map": "customs",
+"kind": "area",
+"floor": 2,
+"pts": [
+[
+171.86,
+188.76
+],
+[
+187.67,
+186.63
+],
+[
+185.3,
+171.34
+],
+[
+169.88,
+173.47
+],
+[
+171.73,
+188.36
+]
+]
+}
+]
+},
+{
+"id": "68faaab4615a04b8ee0be802",
+"chapter": "batya",
+"quest": "68faaab4615a04b8ee0be7ff",
+"en": "Talk to Lightkeeper",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+445.06,
+462.9
+]
+]
+}
+]
+},
+{
+"id": "68ec51edb0e734a60d7544bd",
+"chapter": "the-unheard",
+"quest": "68ec5135459f4ca1d60c601d",
+"en": "Learn more about The Unheard",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+69.68,
+-77.98
+],
+[
+39.92,
+-78.74
+],
+[
+39.54,
+-44.46
+],
+[
+68.15,
+-44.85
+],
+[
+70.06,
+-77.98
+]
+]
+},
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-25.7,
+-121.02
+],
+[
+-48.21,
+-120.26
+],
+[
+-48.59,
+-108.83
+],
+[
+-25.32,
+-107.31
+],
+[
+-25.32,
+-120.26
+]
+]
+}
+]
+},
+{
+"id": "68ec56e7fdf6af65ee217461",
+"chapter": "the-unheard",
+"quest": "67ced00eceefc356a10fd405",
+"en": "Learn more about TerraGroup's activities",
+"points": [
+{
+"map": "ground-zero",
+"kind": "area",
+"floor": 1,
+"pts": [
+[
+-20.1,
+57.77
+],
+[
+-19.19,
+38.96
+],
+[
+-9.8,
+38.65
+],
+[
+-4.04,
+59.28
+],
+[
+-20.7,
+57.77
+]
+]
+}
+]
+},
+{
+"id": "68ec571087d1dcf9407e2439",
+"chapter": "the-unheard",
+"quest": "67ced00eceefc356a10fd405",
+"en": "Learn more about the \"fuel\" mentioned in the note",
+"points": [
+{
+"map": "the-lab",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-165.91,
+-377.17
+],
+[
+-166.11,
+-371.84
+],
+[
+-154.66,
+-371.31
+],
+[
+-154.26,
+-376.63
+],
+[
+-165.91,
+-377.34
+]
+]
+},
+{
+"map": "the-lab",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-160.19,
+-411.43
+],
+[
+-159.99,
+-391.9
+],
+[
+-140.84,
+-392.08
+],
+[
+-140.84,
+-410.54
+],
+[
+-160.58,
+-410.9
+]
+]
+}
+]
+},
+{
+"id": "68ec579e6fee9c2b91240914",
+"chapter": "the-unheard",
+"quest": "67ced00fd47d32692302aca6",
+"en": "Find more information about the special catalyst shipment",
+"points": [
+{
+"map": "factory",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-12.71,
+-5.86
+]
+]
+}
+]
+},
+{
+"id": "67e560b517db48126aa3489b",
+"chapter": "the-unheard",
+"quest": "67ced012152372f12708b7b6",
+"en": "Locate Rzhevsky's service vehicle",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+21.33,
+356.24
+]
+]
+}
+]
+},
+{
+"id": "68ec664b7c14902b2619508d",
+"chapter": "the-unheard",
+"quest": "67ced014c43709665f0fbe46",
+"en": "Locate and obtain the documents on the Blue Ice fuel catalyst research",
+"points": [
+{
+"map": "factory",
+"kind": "area",
+"floor": 2,
+"pts": [
+[
+-17.54,
+49.61
+],
+[
+-17.54,
+43.77
+],
+[
+-25.14,
+43.77
+],
+[
+-25.14,
+49.41
+],
+[
+-17.49,
+49.66
+]
+]
+}
+]
+},
+{
+"id": "68ec674cb90b000b931f25c6",
+"chapter": "the-unheard",
+"quest": "67ced0157844ea90d80fd6a5",
+"en": "Search for any mention of A.P. in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-220.56,
+-311.24
+],
+[
+-220.29,
+-297.82
+],
+[
+-200.57,
+-298.29
+],
+[
+-200.3,
+-311
+],
+[
+-220.56,
+-311.47
+]
+]
+},
+{
+"map": "the-lab",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-160.43,
+-411.25
+],
+[
+-160.05,
+-391.5
+],
+[
+-140.79,
+-391.97
+],
+[
+-140.78,
+-411.02
+],
+[
+-160.44,
+-411.25
+]
+]
+},
+{
+"map": "the-lab",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-272.52,
+-371.35
+],
+[
+-272.43,
+-358.93
+],
+[
+-249.12,
+-359.02
+],
+[
+-249.03,
+-371.18
+],
+[
+-272.71,
+-371.51
+]
+]
+}
+]
+},
+{
+"id": "67e561c8975a2620b00b388f",
+"chapter": "the-unheard",
+"quest": "67ced017029b9dbe190f3c77",
+"en": "Locate A.P.'s room in the Health Resort",
+"points": [
+{
+"map": "shoreline",
+"kind": "area",
+"floor": 2,
+"pts": [
+[
+-268.75,
+-105.83
+],
+[
+-299.8,
+-105.49
+],
+[
+-299.97,
+-92.2
+],
+[
+-306.87,
+-93.24
+],
+[
+-363.62,
+-93.41
+],
+[
+-363.62,
+-72.36
+],
+[
+-299.8,
+-72.36
+],
+[
+-299.8,
+-84.27
+],
+[
+-268.41,
+-84.96
+],
+[
+-268.23,
+-105.83
+]
+]
+},
+{
+"map": "shoreline",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-188.29,
+-92.91
+],
+[
+-204.9,
+-93.17
+],
+[
+-204.52,
+-72.85
+],
+[
+-187.01,
+-72.72
+],
+[
+-187.91,
+-93.29
+]
+]
+}
+]
+},
+{
+"id": "67e562960f167ed6145e0c93",
+"chapter": "the-unheard",
+"quest": "67ced01bc23108bd9e031725",
+"en": "Access A.P.'s corporate apartment",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": 1,
+"pts": [
+[
+133.79,
+-15.36
+],
+[
+139.92,
+-41.86
+],
+[
+147.41,
+-50.69
+],
+[
+147.07,
+-60.2
+],
+[
+142.64,
+-69.37
+],
+[
+138.56,
+-71.07
+],
+[
+123.93,
+-63.94
+],
+[
+106.57,
+-45.25
+],
+[
+100.45,
+-28.27
+],
+[
+101.13,
+-14
+],
+[
+133.79,
+-14
+]
+]
+}
+]
+},
+{
+"id": "68e79075869625375c90c382",
+"chapter": "blue-fire",
+"quest": "67b892b338076c36e50abfb5",
+"en": "Talk to Mechanic about the EMP blast",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": 1,
+"pts": [
+[
+70.51,
+301.77
+],
+[
+60.71,
+301.61
+],
+[
+60.55,
+325.52
+],
+[
+70.19,
+325.52
+],
+[
+70.49,
+301.89
+]
+]
+},
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+190.3,
+224.13
+],
+[
+185.59,
+224.23
+],
+[
+185.69,
+230.27
+],
+[
+190.3,
+230.06
+],
+[
+190.51,
+224.33
+]
+]
+}
+]
+},
+{
+"id": "67dc0086b21e6bd940578ced",
+"chapter": "blue-fire",
+"quest": "67b892b6b4c09aae5309c275",
+"en": "Plant the hacking device in the server room in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-121.9,
+-328.97
+]
+]
+}
+]
+},
+{
+"id": "68e8d7b563fa6ade0f6327e5",
+"chapter": "blue-fire",
+"quest": "67b892bb1c013f0fcb058246",
+"en": "Find a lead on Item 1156",
+"points": [
+{
+"map": "the-lab",
+"kind": "area",
+"floor": 0,
+"pts": [
+[
+-140.61,
+-410.92
+],
+[
+-160.53,
+-411.13
+],
+[
+-160.04,
+-391.47
+],
+[
+-140.79,
+-391.96
+],
+[
+-140.64,
+-410.92
+]
+]
+},
+{
+"map": "lighthouse",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-73.15,
+-98.98
+],
+[
+-92.01,
+-98.1
+],
+[
+-91.57,
+-44.19
+],
+[
+-72.72,
+-45.5
+],
+[
+-71.4,
+-100.29
+]
+]
+},
+{
+"map": "ground-zero",
+"kind": "area",
+"floor": 1,
+"pts": [
+[
+-20.01,
+58.72
+],
+[
+-3.13,
+58.36
+],
+[
+-8.31,
+39.29
+],
+[
+-20.01,
+39.6
+],
+[
+-20.1,
+58.65
+]
+]
+}
+]
+},
+{
+"id": "68e8d86c4164b921197ef0af",
+"chapter": "blue-fire",
+"quest": "67b892bd55eaf7b06d011436",
+"en": "Investigate the Rus Post office",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+42.83,
+127.15
+],
+[
+42.95,
+105.51
+],
+[
+32.35,
+105.16
+],
+[
+32.71,
+127.03
+],
+[
+43.07,
+126.79
+]
+]
+}
+]
+},
+{
+"id": "68e8d8c79a957773413b115f",
+"chapter": "blue-fire",
+"quest": "67b892bd55eaf7b06d011436",
+"en": "Locate the Rus Post car",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+25.2,
+111.22
+]
+]
+}
+]
+},
+{
+"id": "68bc19ad0be47ffe301db8a0",
+"chapter": "they-are-already-here",
+"quest": "68588ec88b0cb7b6f80f9339",
+"en": "Locate a place connected to the Eye of the World",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-303.88,
+-317.04
+]
+]
+}
+]
+},
+{
+"id": "68bc344f639c10be50558d6a",
+"chapter": "they-are-already-here",
+"quest": "68588eca1d2ea426e9085c29",
+"en": "Locate the cult victim's apartment",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-58.42,
+-146.59
+]
+]
+}
+]
+},
+{
+"id": "68bc4228fb3735a6fc5897dc",
+"chapter": "they-are-already-here",
+"quest": "68588eca1d2ea426e9085c29",
+"en": "Obtain the key to the apartment",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-303.76,
+-315.56
+]
+]
+}
+]
+},
+{
+"id": "68e2f41bf02c52291042a3aa",
+"chapter": "they-are-already-here",
+"quest": "68588eca1d2ea426e9085c29",
+"en": "Investigate the victim's apartment",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-59.22,
+-146.19
+]
+]
+}
+]
+},
+{
+"id": "68e2f43f658e1944967717d6",
+"chapter": "they-are-already-here",
+"quest": "68588eca1d2ea426e9085c29",
+"en": "Obtain the victim's first audio tape",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-48.69,
+-152.73
+],
+[
+-69.55,
+-152.32
+],
+[
+-69.55,
+-141.33
+],
+[
+-49,
+-141.44
+],
+[
+-48.69,
+-153.15
+]
+]
+}
+]
+},
+{
+"id": "68e2f412da3da7800550bcca",
+"chapter": "they-are-already-here",
+"quest": "68588eca1d2ea426e9085c29",
+"en": "Obtain and read the book that the cultists planted with Igor",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-48.99,
+-141.41
+],
+[
+-48.72,
+-152.81
+],
+[
+-69.63,
+-152.55
+],
+[
+-69.65,
+-141.28
+],
+[
+-49.01,
+-141.32
+]
+]
+}
+]
+},
+{
+"id": "68bc6bb66bdc2ed0e15d1762",
+"chapter": "they-are-already-here",
+"quest": "68588ed5c7a9b3b530005ec8",
+"en": "Locate the place marked with the Eye of the World on Lighthouse",
+"points": [
+{
+"map": "lighthouse",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-71.37,
+-97.93
+],
+[
+-91.33,
+-98.51
+],
+[
+-91.48,
+-44.02
+],
+[
+-71.29,
+-44.46
+],
+[
+-71.29,
+-98
+]
+]
+}
+]
+},
+{
+"id": "68bc6cda0fd9f69c1c860815",
+"chapter": "they-are-already-here",
+"quest": "68588ed5c7a9b3b530005ec8",
+"en": "Locate the victim's belongings",
+"points": [
+{
+"map": "lighthouse",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-71.2,
+-97.89
+],
+[
+-91.54,
+-98.34
+],
+[
+-91.39,
+-43.95
+],
+[
+-71.15,
+-44.46
+],
+[
+-71.11,
+-97.98
+]
+]
+}
+]
+},
+{
+"id": "68bc6e5e79239e9ac6b14897",
+"chapter": "they-are-already-here",
+"quest": "68588ed5c7a9b3b530005ec8",
+"en": "Locate and obtain the key mentioned in the victim's note",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-93.56,
+-10.54
+]
+]
+}
+]
+},
+{
+"id": "68bc683e2e2cb4ecf0c534e8",
+"chapter": "they-are-already-here",
+"quest": "68588ed4257202ddee073e07",
+"en": "Locate the place marked with the Eye of the World on Woods",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-129.78,
+-688.43
+]
+]
+}
+]
+},
+{
+"id": "68bc4e7c6152f6fbaa4f1201",
+"chapter": "they-are-already-here",
+"quest": "68588ed4257202ddee073e07",
+"en": "Locate the place marked with the Eye of the World on Shoreline",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-706.93,
+98.59
+]
+]
+}
+]
+},
+{
+"id": "68e3bb8a6e6d760057339232",
+"chapter": "they-are-already-here",
+"quest": "68588ed4257202ddee073e07",
+"en": "Investigate the area around the Sordi communications tower",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-709.42,
+103.66
+]
+]
+}
+]
+},
+{
+"id": "68bc5954ea85c1ca2df2c19c",
+"chapter": "they-are-already-here",
+"quest": "68588ed4257202ddee073e07",
+"en": "Repair the Sordi tower",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-708.64,
+99.22
+]
+]
+}
+]
+},
+{
+"id": "690413d50750895a590a3bc0",
+"chapter": "they-are-already-here",
+"quest": "690413d50750895a590a3bbd",
+"en": "Locate and obtain K. Arshavin's pass",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-93.53,
+-10.16
+]
+]
+}
+]
+},
+{
+"id": "68bc7db61eac78aabb22522c",
+"chapter": "they-are-already-here",
+"quest": "68588edb1dbd9790be0f5ee9",
+"en": "Gain access to NGO Cobalt's secret facility",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-140.08,
+-363.61
+],
+[
+-233.09,
+-363.3
+],
+[
+-233.4,
+-339.37
+],
+[
+-140.39,
+-338.44
+],
+[
+-139.46,
+-364.55
+]
+]
+}
+]
+},
+{
+"id": "68e57f11020d1274f717efaf",
+"chapter": "they-are-already-here",
+"quest": "68588edb1dbd9790be0f5ee9",
+"en": "Install a flash drive to download the data",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-141.09,
+-365.57
+],
+[
+-235.89,
+-366.05
+],
+[
+-236.09,
+-343.19
+],
+[
+-141.89,
+-341.77
+],
+[
+-141.02,
+-365.6
+]
+]
+}
+]
+},
+{
+"id": "690420e9f34c0074532b1aa2",
+"chapter": "they-are-already-here",
+"quest": "68588edf975681ee130def28",
+"en": "Find a way to disconnect the station from external agents",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-137.62,
+-337.14
+],
+[
+-137.49,
+-362.92
+],
+[
+-231.27,
+-361.65
+],
+[
+-231.27,
+-338.28
+],
+[
+-137.49,
+-337.39
+]
+]
+}
+]
+},
+{
+"id": "68f0f7d9a3fa68269236e047",
+"chapter": "accidental-witness",
+"quest": "68f0f54bdae477041501acfc",
+"en": "Figure out where Kozlov lived",
+"points": [
+{
+"map": "customs",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+236.1,
+126.27
+],
+[
+220,
+128.67
+],
+[
+225.78,
+169.98
+],
+[
+241.65,
+167.35
+],
+[
+236.1,
+126.49
+]
+]
+}
+]
+},
+{
+"id": "68f117d2c52671056c769396",
+"chapter": "accidental-witness",
+"quest": "68f0f5516871d33422038cd2",
+"en": "Access Skier's accomplice's apartment",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+100.3,
+143.63
+],
+[
+95.09,
+132.25
+],
+[
+107.46,
+126.56
+],
+[
+112.02,
+139.08
+],
+[
+100.79,
+143.79
+]
+]
+}
+]
+},
+{
+"id": "68f3c0bd71c8131919a831b9",
+"chapter": "accidental-witness",
+"quest": "68f0f556dae477041501acfe",
+"en": "Locate Anastasia's apartment",
+"points": [
+{
+"map": "streets-of-tarkov",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+243.57,
+222.49
+],
+[
+208.83,
+222.77
+],
+[
+209.53,
+239.28
+],
+[
+244.41,
+238.86
+],
+[
+244.13,
+221.93
+]
+]
+}
+]
+},
+{
+"id": "68f3c1a2c82e41734e534113",
+"chapter": "accidental-witness",
+"quest": "68f0f557ac6ab778470752ad",
+"en": "Locate courier Pasha",
+"points": [
+{
+"map": "customs",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+267.99,
+123.26
+],
+[
+245.47,
+129.1
+],
+[
+252.91,
+160.38
+],
+[
+277.7,
+153.29
+],
+[
+268.82,
+123.47
+]
+]
+}
+]
+},
+{
+"id": "68f3c3b9840a2e65ebc7fee1",
+"chapter": "accidental-witness",
+"quest": "68f0f55b6310272fc402e2dc",
+"en": "Locate Reshala's stash",
+"points": [
+{
+"map": "customs",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+110.16,
+-130.85
+],
+[
+64.79,
+-141.27
+],
+[
+62.39,
+-110.5
+],
+[
+66.23,
+-102.5
+],
+[
+88.32,
+-100.56
+],
+[
+107.52,
+-107.35
+],
+[
+109.2,
+-131.09
+]
+]
+}
+]
+},
+{
+"id": "68f3c5703dba2961fcf0fa76",
+"chapter": "accidental-witness",
+"quest": "68f0f55ea607c91a6006cebb",
+"en": "Locate Kozlov's hideout",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+298.6,
+119.96
+]
+]
+}
+]
+},
+{
+"id": "68f3c5983d4d0d0bb462815c",
+"chapter": "accidental-witness",
+"quest": "68f0f55ea607c91a6006cebb",
+"en": "Locate and obtain Kozlov's evidence",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+291.83,
+116.65
+]
+]
+},
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+298.93,
+117.3
+]
+]
+}
+]
+},
+{
+"id": "68e4dc6ce8f4a928b9c97683",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Locate the entrance to the underground facility beneath the Health Resort",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-199.98,
+-86.71
+]
+]
+}
+]
+},
+{
+"id": "68e4e3eca3ce127ce890ec2f",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Locate the traces of the BEAR squad in The Labyrinth",
+"points": [
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-15.52,
+-21.46
+]
+]
+}
+]
+},
+{
+"id": "68e4e506dbb7abb1bc047018",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Investigate the BEAR squad regroup spot at Item 1156",
+"points": [
+{
+"map": "the-labyrinth",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-12.3,
+20.88
+],
+[
+-12.3,
+37.16
+],
+[
+-3.5,
+37.22
+],
+[
+-3.38,
+26.41
+],
+[
+-8.97,
+20.82
+],
+[
+-12.24,
+20.82
+]
+]
+}
+]
+},
+{
+"id": "68e4e5235f8c749cfca48679",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Locate the squad leader",
+"points": [
+{
+"map": "the-labyrinth",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+17.82,
+3.87
+],
+[
+17.82,
+9.28
+],
+[
+23.8,
+9.28
+],
+[
+23.8,
+3.91
+],
+[
+17.91,
+3.87
+]
+]
+}
+]
+},
+{
+"id": "68ffe508dcb52296aa8a4006",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Investigate the lab staff bodies",
+"points": [
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-7.04,
+30.91
+]
+]
+},
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-13.38,
+51.56
+]
+]
+},
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+12.12,
+32.89
+]
+]
+},
+{
+"map": "the-labyrinth",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+6.35,
+1.57
+],
+[
+6.35,
+7.58
+],
+[
+13.46,
+7.64
+],
+[
+13.53,
+1.5
+],
+[
+6.28,
+1.5
+]
+]
+},
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-5.69,
+9.6
+]
+]
+}
+]
+},
+{
+"id": "68e4e8b45fae2c907a1c4343",
+"chapter": "the-labyrinth",
+"quest": "68e3a3d2ff05916c250a898b",
+"en": "Access the locked office",
+"points": [
+{
+"map": "the-labyrinth",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+8.91,
+7.79
+]
+]
+}
+]
+},
+{
+"id": "68ffd68b52fa44fe7cb35762",
+"chapter": "the-labyrinth",
+"quest": "68e3a3e51edf1ca810009a99",
+"en": "Locate and obtain the Labyrinth facility research report",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-275.94,
+474.2
+]
+]
+}
+]
+},
+{
+"id": "the-ticket-opt-1",
+"chapter": "the-ticket",
+"quest": null,
+"en": "Locate Prapor's camp on Lighthouse",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+78.06,
+164.55
+]
+]
+}
+]
+},
+{
+"id": "the-ticket-opt-4",
+"chapter": "the-ticket",
+"quest": null,
+"en": "Gain access to Lightkeeper",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+444.33,
+463.68
+]
+]
+}
+]
+},
+{
+"id": "the-ticket-main-29",
+"chapter": "the-ticket",
+"quest": null,
+"en": "Deliver items to Lightkeeper",
+"points": [
+{
+"map": "lighthouse",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+445.45,
+463.96
+]
+]
+}
+]
+},
+{
+"id": "the-ticket-opt-9",
+"chapter": "the-ticket",
+"quest": null,
+"en": "Launch yellow signal flare at ULTRA entrance on Interchange",
+"points": [
+{
+"map": "interchange",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+190.85,
+187.6
+],
+[
+120.86,
+190.69
+],
+[
+120.86,
+-297.37
+],
+[
+188.79,
+-297.37
+],
+[
+188.79,
+182.44
+]
+]
+}
+]
+},
+{
+"id": "the-ticket-main-7",
+"chapter": "the-ticket",
+"quest": null,
+"en": "Obtain the experimental signal jammer",
+"points": [
+{
+"map": "the-lab",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-93.4,
+-432.71
+]
+]
+}
+]
+},
+{
+"id": "69e7706fa8d4414fc6625f92",
+"chapter": "boreas",
+"quest": "69a9bc08babf5c053607fef7",
+"en": "Locate the equipment under the cellular tower on Woods",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+224.55,
+-703.76
+]
+]
+}
+]
+},
+{
+"id": "69e7713495d0cd5e8bea7be6",
+"chapter": "boreas",
+"quest": "69a9bc08babf5c053607fef7",
+"en": "Repair the equipment under the cellular tower on Woods",
+"points": [
+{
+"map": "woods",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+224.6,
+-703.76
+]
+]
+}
+]
+},
+{
+"id": "69aaf8f00bd9f1f0803617c6",
+"chapter": "boreas",
+"quest": "69aaecdf174ff467ef0acc38",
+"en": "Locate and obtain the Paradigm Shipping documentation",
+"points": [
+{
+"map": "lighthouse",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+24.97,
+-876.02
+],
+[
+25.29,
+-825.69
+],
+[
+58.11,
+-825.69
+],
+[
+58.11,
+-875.37
+],
+[
+24.32,
+-876.02
+]
+]
+}
+]
+},
+{
+"id": "69b2b143b6449f7050b302ed",
+"chapter": "boreas",
+"quest": "69b2b0cc0a7db6b331031267",
+"en": "Hand over the AMG-10 fluid to Prapor",
+"points": [
+{
+"map": "reserve",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-170.72,
+6.93
+],
+[
+-105.22,
+-11.84
+],
+[
+-111.45,
+-35.29
+],
+[
+-177.22,
+-16.79
+],
+[
+-171.5,
+6.67
+]
+]
+},
+{
+"map": "reserve",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-125.15,
+36.33
+]
+]
+},
+{
+"map": "reserve",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-118.85,
+49.29
+]
+]
+}
+]
+},
+{
+"id": "wiki-boreas-r4c5j1",
+"chapter": "boreas",
+"quest": null,
+"en": "Locate and obtain Skier's reports on Customs",
+"points": [
+{
+"map": "customs",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+128.97,
+-153.08
+]
+]
+}
+]
+},
+{
+"id": "wiki-boreas-1f52l8y",
+"chapter": "boreas",
+"quest": null,
+"en": "Burn Skier's reports on Customs",
+"points": [
+{
+"map": "customs",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+204.87,
+-121.16
+]
+]
+}
+]
+},
+{
+"id": "wiki-boreas-7w3mam",
+"chapter": "boreas",
+"quest": null,
+"en": "Eliminate any 10 targets at the smugglers' territories",
+"points": [
+{
+"map": "shoreline",
+"kind": "area",
+"floor": -1,
+"pts": [
+[
+-618.4,
+-261.24
+],
+[
+-585.76,
+-170.74
+],
+[
+-632.15,
+-155.28
+],
+[
+-665.36,
+-244.63
+],
+[
+-618.98,
+-262.96
+]
+]
+}
+]
+},
+{
+"id": "69ba8d651b499fbada0cd5ae",
+"chapter": "boreas",
+"quest": "69ba8cd91c440c14bb09a955",
+"en": "Board the smuggler hovercraft on Shoreline",
+"points": [
+{
+"map": "shoreline",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-309.83,
+530.87
+]
+]
+}
+]
+},
+{
+"id": "69d4f17c837544d785bbd4ac",
+"chapter": "boreas",
+"quest": "69ba8cd91c440c14bb09a955",
+"en": "Check if any crew members survived on the ship",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+7.41,
+32.05
+]
+]
+}
+]
+},
+{
+"id": "69ba8dfa4d29dbfc39cac747",
+"chapter": "boreas",
+"quest": "69ba8cd91c440c14bb09a955",
+"en": "Access the engine room",
+"points": [
+{
+"map": "icebreaker",
+"kind": "area",
+"floor": 4,
+"pts": [
+[
+6.26,
+15.6
+],
+[
+2.59,
+15.58
+],
+[
+2.54,
+22.44
+],
+[
+6.21,
+22.44
+],
+[
+6.28,
+15.71
+]
+]
+}
+]
+},
+{
+"id": "69ba8edc64dd474d456ab839",
+"chapter": "boreas",
+"quest": "69ba8cd91c440c14bb09a955",
+"en": "Locate and obtain the engine room keycard",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+-2.47,
+19.24
+]
+]
+}
+]
+},
+{
+"id": "69bab4f68c85b53b8e473911",
+"chapter": "boreas",
+"quest": "69baaaae8f45d6b3fa020ade",
+"en": "Reach the engine room",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 4,
+"pts": [
+[
+6.48,
+21.02
+]
+]
+}
+]
+},
+{
+"id": "69ba8ef59b8dfa643e494308",
+"chapter": "boreas",
+"quest": "69ba8cd91c440c14bb09a955",
+"en": "Find a way into the icebreaker superstructure",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 7,
+"pts": [
+[
+-9.43,
+15.59
+]
+]
+}
+]
+},
+{
+"id": "69bab557f31c7fb31a72591e",
+"chapter": "boreas",
+"quest": "69baaaae8f45d6b3fa020ade",
+"en": "Reach the damaged door on the roof of the engine room",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 7,
+"pts": [
+[
+-9.46,
+15.57
+]
+]
+}
+]
+},
+{
+"id": "69c6abd4808c26f357532e2a",
+"chapter": "boreas",
+"quest": "69baaaae8f45d6b3fa020ade",
+"en": "Ask the surviving scientist how to open the code-locked door on level 6",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+7.43,
+32.08
+]
+]
+}
+]
+},
+{
+"id": "69bbd7d580a1ca5ec83a0da5",
+"chapter": "boreas",
+"quest": "69bbd63fcc93b653fd061f39",
+"en": "Plant the hacking device in the server room in The Lab",
+"points": [
+{
+"map": "the-lab",
+"kind": "pin",
+"floor": -1,
+"pts": [
+[
+-121.89,
+-328.89
+]
+]
+}
+]
+},
+{
+"id": "69bbfae89ce356593c0e2f41",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Reach the engine room",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 4,
+"pts": [
+[
+6.43,
+21
+]
+]
+}
+]
+},
+{
+"id": "69bab5121a15490f84594dcb",
+"chapter": "boreas",
+"quest": "69baaaae8f45d6b3fa020ade",
+"en": "Locate and obtain the engine room keycard",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+-2.46,
+19.23
+]
+]
+}
+]
+},
+{
+"id": "69bbfae89ce356593c0e2f47",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Reach the damaged door on the roof of the engine room",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 7,
+"pts": [
+[
+-9.45,
+15.58
+]
+]
+}
+]
+},
+{
+"id": "69bbfae89ce356593c0e2f4c",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Reach the code-locked door",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 9,
+"pts": [
+[
+-6.37,
+17.61
+]
+]
+}
+]
+},
+{
+"id": "69bbfd1f4a8e7c1bc4896ea2",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Locate compartment C-1",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 11,
+"pts": [
+[
+-5.49,
+22.93
+]
+]
+}
+]
+},
+{
+"id": "69bc0278fe211e2c70fe4a6c",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Locate and obtain the keycard with access to compartment C-1",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 13,
+"pts": [
+[
+-4.65,
+30.45
+]
+]
+}
+]
+},
+{
+"id": "69bbfeb12980c03df915aa69",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Thaw the hatch on the roof of the bridge",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 14,
+"pts": [
+[
+-2.62,
+28.14
+]
+]
+}
+]
+},
+{
+"id": "69bbfe997ac0792bddc9e8f8",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Find something to thaw the hatch on the roof of the bridge",
+"points": [
+{
+"map": "icebreaker",
+"kind": "area",
+"floor": 7,
+"pts": [
+[
+2.41,
+31.92
+],
+[
+-5.42,
+31.95
+],
+[
+-5.36,
+34.42
+],
+[
+2.38,
+34.48
+],
+[
+2.41,
+32.07
+]
+]
+}
+]
+},
+{
+"id": "69c15087c6efee6666c3b4a9",
+"chapter": "boreas",
+"quest": "69c14feae2c5125aa504e9d7",
+"en": "Rescue the icebreaker captain",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 13,
+"pts": [
+[
+-4.32,
+30.87
+]
+]
+}
+]
+},
+{
+"id": "69bbfe405997a15939caf7c4",
+"chapter": "boreas",
+"quest": "69bbfae89ce356593c0e2f35",
+"en": "Access compartment C-1",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 11,
+"pts": [
+[
+-5.54,
+22.94
+]
+]
+}
+]
+},
+{
+"id": "69ca6719ce155703cfb50cd7",
+"chapter": "boreas",
+"quest": "69c14feae2c5125aa504e9d7",
+"en": "Inform the scientist about the captain’s death",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+7.43,
+32.08
+]
+]
+}
+]
+},
+{
+"id": "wiki-boreas-5zmovy",
+"chapter": "boreas",
+"quest": null,
+"en": "Inform the scientist that everything is ready for his evacuation",
+"points": [
+{
+"map": "icebreaker",
+"kind": "pin",
+"floor": 5,
+"pts": [
+[
+7.4,
+32.07
+]
+]
+}
+]
+}
+]
+}

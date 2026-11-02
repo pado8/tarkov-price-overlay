@@ -309,6 +309,78 @@ def quest_key_names(jmode: str, lang: str, tasks: dict) -> dict:
     return out
 
 
+# 같은 지형을 쓰는 맵 변형 → 대표 맵(퀘스트 구역·스토리 위치·지도 그림이 대표 맵 기준으로 적혀 있다).
+# build_targets·story_targets·map_image_meta 가 전부 이 표를 쓴다(11-03 리뷰: 세 곳 표가 달라 the-lab-dark 에서 상인 퀘스트가 빠졌음).
+MAP_BASE = {"night-factory": "factory", "infected-factory": "factory", "ground-zero-21": "ground-zero",
+            "the-lab-dark": "the-lab", "infected-lab": "the-lab"}
+
+_STORY: Optional[dict] = None
+
+
+def story_doc() -> dict:
+    """스토리(메인 퀘스트) 챕터 목록과 목표 위치 — data/story_marks.json.
+    위치 출처 = szepiz/tarkov-quest-data firstparty story-marks(CC0, 손으로 찍고 게임에서 확인, 2026-08-26). tarkov.dev 는
+    스토리 챕터 데이터를 운영에 내지 않고(11-03 확인), 게임도 스토리 단계 진행을 로그에 남기지 않아 자동 감지가 안 된다 →
+    사용자가 '진행 중인 챕터'를 고르면 그 챕터 목표만 지도에 낸다. 표시 이름은 tarkov.dev 번역표(챕터 = '<questId> name',
+    목표 = 목표 id 키)로, 없으면 파일의 영어 문구."""
+    global _STORY
+    if _STORY is None:
+        try:
+            base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+            _STORY = json.loads((base / "data" / "story_marks.json").read_text(encoding="utf-8"))
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"[radar] 스토리 데이터 로드 실패: {e}")
+            _STORY = {"chapters": [], "marks": []}
+    return _STORY
+
+
+def story_chapters(loc_tasks: dict) -> list[dict]:
+    """지도 패널의 챕터 선택 목록 [{id, name}] — 순서는 스토리 순."""
+    out = []
+    for c in sorted(story_doc().get("chapters") or [], key=lambda c: c.get("order") or 0):
+        out.append({"id": c["id"], "name": _loc(loc_tasks, f"{c.get('questId')} name", c.get("name") or c["id"])})
+    return out
+
+
+def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict) -> list[dict]:
+    """고른 챕터(또는 'all')의 목표 위치 → 퀘스트 대상과 같은 모양(kind='quest', story=챕터 id).
+    구역(area)은 윤곽 점들의 중심 하나로. 높이는 모르므로 내 높이와 같다고 본다(dy 0)."""
+    if not chapter:
+        return []
+    base = MAP_BASE.get(map_slug, map_slug)
+    names = {c["id"]: c for c in story_doc().get("chapters") or []}
+    px, py, pz = pose["x"], pose["y"], pose["z"]
+    hd = pose.get("heading")
+    out: list[dict] = []
+    seen: dict[tuple, dict] = {}  # (챕터, 반올림 x, z) → 이미 낸 대상: 같은 자리 목표(예: 쇄빙선 엔진실 3개)는 한 점으로, 목표 문구는 ' / '
+    for m in story_doc().get("marks") or []:
+        if chapter != "all" and m.get("chapter") != chapter:
+            continue
+        ch = names.get(m.get("chapter") or "", {})
+        cname = _loc(loc_tasks, f"{ch.get('questId')} name", ch.get("name") or m.get("chapter") or "")
+        desc = _loc(loc_tasks, m["id"], None) or m.get("en") or ""
+        for g in m.get("points") or []:
+            if g.get("map") != base or not g.get("pts"):
+                continue
+            pts = g["pts"]
+            tx = sum(p[0] for p in pts) / len(pts)
+            tz = sum(p[1] for p in pts) / len(pts)
+            key = (m.get("chapter"), round(tx), round(tz))
+            if key in seen:
+                prev = seen[key]
+                if desc and desc not in prev["objective"]:
+                    prev["objective"] = f"{prev['objective']} / {desc}" if prev["objective"] else desc
+                continue
+            dist, rel = relative(px, pz, hd, tx, tz)
+            tgt = {"kind": "quest", "name": cname, "dist": round(dist, 1), "rel": None if rel is None else round(rel, 1),
+                   "dy": 0.0, "x": round(tx, 1), "y": round(py, 1), "z": round(tz, 1),
+                   "objective": desc, "optional": False, "task": m["id"], "slug": None, "keys": None,
+                   "story": m.get("chapter")}
+            seen[key] = tgt
+            out.append(tgt)
+    return out
+
+
 def all_tasks(tasks_doc: dict) -> dict:
     """퀘스트 문서의 상인 퀘스트 + 메인(스토리) 퀘스트 → {id: 퀘스트}.
     tarkov.dev 는 스토리 챕터를 이미 같은 모양(챕터별 tasks = 상인 퀘스트와 같은 필드)으로 만들지만 운영 데이터에서는
@@ -333,7 +405,7 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
         return []
     mid, m = by_slug[map_slug]
     # 퀘스트 구역은 대표 맵 id로 적혀 있는 경우가 있다(야간 공장·21+ 등) → 같은 계열 id를 함께 본다
-    base = {"night-factory": "factory", "ground-zero-21": "ground-zero"}.get(map_slug, map_slug)
+    base = MAP_BASE.get(map_slug, map_slug)
     ids = {mid} | {i for i, mm in maps.items() if mm.get("normalizedName") in (base, map_slug)}
     px, py, pz = pose["x"], pose["y"], pose["z"]
     hd = pose.get("heading")
@@ -608,7 +680,7 @@ def map_image_svg(slug: str, layer: Optional[str] = None) -> Optional[bytes]:
 
 
 # 같은 그림을 쓰는 맵 변형(tarkov.dev 사이트는 대표 slug 하나만 가진다)
-_IMG_ALIAS = {"ground-zero-21": "ground-zero", "night-factory": "factory", "the-lab-dark": "the-lab"}
+_IMG_ALIAS = MAP_BASE
 
 
 def map_image_file(slug: str) -> Optional[Path]:
@@ -810,7 +882,7 @@ class RadarService:
         return {"map": mp, "locks": out}
 
     def state(self, lang: str = "ko", game_mode: str = "regular", map_override: Optional[str] = None,
-              full: bool = False) -> dict:
+              full: bool = False, story: Optional[str] = None) -> dict:
         with self._lock:
             folder = self._folder_override or screenshots_dir()
             res: dict = {"folder": str(folder) if folder else None,
@@ -856,6 +928,13 @@ class RadarService:
                 ({"id": mm.get("normalizedName"), "name": _loc(loc_maps, mm.get("name"), mm.get("normalizedName"))}
                  for mm in maps_doc.values() if mm.get("normalizedName") != "ground-zero-tutorial"),
                 key=lambda x: x["name"] or "")
+            try:
+                loc_story = _doc(f"{jmode}/tasks_{lang}") or {}
+                if lang == "ko":
+                    loc_story = quest_ko.overlay(loc_story)
+            except Exception:
+                loc_story = {}
+            res["story_chapters"] = story_chapters(loc_story)
             if slug:
                 mm = next((x for x in maps_doc.values() if x.get("normalizedName") == slug), None)
                 # rot = tarkov.dev 지도 그림 기준 기본 회전(coordinateRotation) — 지도 탭·고정 레이더가 그 지도와 같은 방향으로 보이게
@@ -883,6 +962,8 @@ class RadarService:
                     key_names = {}
                 res["targets"] = build_targets(maps_doc, slug, loc_maps, all_tasks(tasks_doc), loc_tasks,
                                                active, shot, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
+                if story:
+                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, shot, loc_tasks), key=lambda r: r["dist"])
                 res["active_quests"] = len(active)
             return res
 
