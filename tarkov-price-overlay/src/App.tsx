@@ -2889,9 +2889,13 @@ function App() {
       // 설정 패널이 열려 있으면 먼저 화면에 들어가는 높이로 잘라 둔다 — 창을 아래로 옮기거나(한계가 줄어듦)
       // 배너가 생겨 나머지 내용이 커졌을 때도 카드 스크롤(두 번째 막대)이 생기지 않게
       const se = settingsRef.current;
-      if (se && showSettingsRef.current) {
+      if (se && showSettingsRef.current && !resizingRef.current) {
+        // 목표 = min(저장된 선호 높이, 지금 들어가는 높이). 줄이기만 하면 작은 창에서 잘린 높이가 나란히 모드로
+        // 커진 뒤에도 그대로 남는다(11-02 확인) — 공간이 생기면 선호 높이까지 다시 편다. 끄는 중엔 손잡이가 우선
         const m = settingsMaxH();
-        if (se.offsetHeight > m) se.style.height = `${m}px`;
+        const pref = parseInt(localStorage.getItem(SETTINGS_HEIGHT_KEY) ?? "", 10) || se.offsetHeight;
+        const target = Math.max(200, Math.min(pref, m));
+        if (Math.abs(se.offsetHeight - target) > 1) se.style.height = `${target}px`;
       }
       if (wideModeRef.current) return; // 지도 나란히: 창은 모니터 크기 그대로
       // When the user has dragged an explicit card height (price-card view
