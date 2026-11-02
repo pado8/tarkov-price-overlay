@@ -309,6 +309,20 @@ def quest_key_names(jmode: str, lang: str, tasks: dict) -> dict:
     return out
 
 
+def all_tasks(tasks_doc: dict) -> dict:
+    """퀘스트 문서의 상인 퀘스트 + 메인(스토리) 퀘스트 → {id: 퀘스트}.
+    tarkov.dev 는 스토리 챕터를 이미 같은 모양(챕터별 tasks = 상인 퀘스트와 같은 필드)으로 만들지만 운영 데이터에서는
+    'not ready for prime time' 이라며 지운다(tarkov-data-manager update-quests.mjs, 2026-11 확인). 그래서 지금은 지도에
+    메인 퀘스트가 안 나온다(11-03 사용자 요청). 공개되면 바로 뜨도록 'story' 목록이 생기면 함께 읽는다. 상인 퀘스트와 id 가
+    겹치면 상인 퀘스트가 이긴다."""
+    out = dict((tasks_doc or {}).get("tasks") or {})
+    for ch in (tasks_doc or {}).get("story") or []:
+        for t in (ch or {}).get("tasks") or []:
+            if isinstance(t, dict) and t.get("id") and t["id"] not in out:
+                out[t["id"]] = t
+    return out
+
+
 def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, loc_tasks: dict,
                   active: set[str], pose: dict, loc_en: Optional[dict] = None,
                   key_names: Optional[dict] = None) -> list[dict]:
@@ -864,10 +878,10 @@ class RadarService:
                 except Exception:
                     tasks_doc, loc_tasks = {}, {}
                 try:
-                    key_names = quest_key_names(jmode, lang, tasks_doc.get("tasks") or {}) if active else {}
+                    key_names = quest_key_names(jmode, lang, all_tasks(tasks_doc)) if active else {}
                 except Exception:
                     key_names = {}
-                res["targets"] = build_targets(maps_doc, slug, loc_maps, tasks_doc.get("tasks") or {}, loc_tasks,
+                res["targets"] = build_targets(maps_doc, slug, loc_maps, all_tasks(tasks_doc), loc_tasks,
                                                active, shot, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
                 res["active_quests"] = len(active)
             return res

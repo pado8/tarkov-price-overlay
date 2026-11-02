@@ -237,6 +237,13 @@ sf = r.compact_map_features(sm, {"ScavRole/Marksman": "저격수"}, {})
 sn = [h for h in sf["hazards"] if h["type"] == "sniper"]
 eq("스폰 목록 저격 자리 추가(겹침·기존 구역 근처 제외)", [(h["name"], h["p"][0], h["p"][2]) for h in sn], [("저격수", 0.0, 0.0), ("저격수", -153.3, -269.4)])
 
+# 메인(스토리) 퀘스트 — tarkov.dev 가 'story' 를 공개하면 상인 퀘스트와 함께 읽는다(11-03)
+td = {"tasks": {"a": {"id": "a", "name": "trader"}}, "story": [{"id": "ch1", "tasks": [{"id": "s1", "name": "story1"}, {"id": "a", "name": "dup"}]}]}
+at = r.all_tasks(td)
+eq("스토리 퀘스트 합침", sorted(at), ["a", "s1"])
+eq("id 겹치면 상인 퀘스트 우선", at["a"]["name"], "trader")
+eq("story 없으면 그대로", sorted(r.all_tasks({"tasks": {"a": {}}})), ["a"])
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)
