@@ -28,7 +28,20 @@
     if (/^https?:\/\/tarkov\.aquapado\.com\//.test(ref)) ref = ""; // 새 탭 등으로 세션이 끊긴 내부 이동
     entry = { ref: ref, path: location.pathname, c: c };
     try { sessionStorage.setItem("ent", JSON.stringify(entry)); } catch (e) {}
+  } else if (!entry.c) {
+    // 2026-11-02: 세션 도중에 ?src= 가 붙은 페이지로 왔으면(가이드 → 랜딩 '다운로드' 버튼 = /?src=guide) 그 표식을 채운다.
+    // 전엔 세션 첫 페이지에서만 읽어 가이드에서 시작한 세션의 다운로드에 campaign 이 안 남았다.
+    try {
+      var q2 = new URLSearchParams(location.search);
+      var c2 = (q2.get("src") || q2.get("utm_source") || "").replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 24);
+      if (c2) { entry.c = c2; sessionStorage.setItem("ent", JSON.stringify(entry)); }
+    } catch (e) {}
   }
+  // GA4 커스텀 이벤트(페이지에 gtag 가 있을 때만). 방문자·클릭 수는 GA4 가 세고, Neon 비콘은 다운로드 행만 남긴다.
+  function ga(name, params) {
+    try { if (typeof window.gtag === "function") window.gtag("event", name, params || {}); } catch (e) {}
+  }
+  var onGuide = /^\/guide\//.test(location.pathname);
   function send(b) {
     b.path = location.pathname;
     b.ref = document.referrer;
@@ -59,7 +72,12 @@
     if (t) {
       var tg = /\/latest/.test(t.href) ? "latest" : "list";
       if (window.va) window.va("event", { name: "download_click", target: tg });
+      ga("download_click", { target: tg, site: onGuide ? "guide" : "landing", from_guide: entry.c && /^guide/.test(entry.c) ? 1 : 0 });
       send({ kind: "download", target: tg });
+      return;
     }
+    // 가이드 → 랜딩 '다운로드' 버튼(/?src=guide, /en?src=guide …). 통계 콘솔 '한눈에'의 "가이드에서 다운로드로" 가 이 수를 센다.
+    var g = onGuide && e.target.closest && e.target.closest('a[href*="src=guide"]');
+    if (g) ga("guide_download_cta", { page: location.pathname });
   });
 })();
