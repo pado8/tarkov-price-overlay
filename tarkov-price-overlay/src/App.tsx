@@ -449,7 +449,7 @@ function staleNote(result: { price_age_sec?: number | null; price_source?: strin
     : t.priceStaleMinutes.replace("{n}", String(Math.max(1, Math.floor(age / 60))));
   return (
     <div className="price-stale" title={t.priceStaleHint}>
-      ⏱ {text}
+      <Icon name="clock" /> {text}
     </div>
   );
 }
@@ -1936,6 +1936,7 @@ function App() {
       try {
         if (wideMode) {
           showCard(); // 숨김 타이머가 걸려 있었어도 취소
+          setRadarActive(false); // 카드 안 지도가 열려 있었으면 닫는다 — 지도는 오른쪽 패널 몫, 왼쪽은 시세
           // 고정(나란히) 상태에선 시세 카드가 비어 있지 않게 — 앱을 다시 켰거나 아직 조회 전이면 최근 검색 1건을 그대로 보여 준다
           if (status === "idle" && history.length > 0) {
             setResult(history[0].result);
@@ -3475,16 +3476,20 @@ function App() {
             >
               <Icon name="clock" />
             </button>
-            <button
-              className={`settings-btn${radarActive ? " active" : ""}`}
-              onClick={() => {
-                if (radarActive) setRadarActive(false);
-                else void openRadar(false);
-              }}
-              title={t.radarOpen}
-            >
-              <Icon name="map" />
-            </button>
+            {/* 지도 나란히 모드에선 오른쪽 패널이 이미 지도라 카드 안 지도 버튼은 뺀다
+                (눌리면 왼쪽 시세 카드까지 지도로 덮였다 — 11-02 제보) */}
+            {!wideMode && (
+              <button
+                className={`settings-btn${radarActive ? " active" : ""}`}
+                onClick={() => {
+                  if (radarActive) setRadarActive(false);
+                  else void openRadar(false);
+                }}
+                title={t.radarOpen}
+              >
+                <Icon name="map" />
+              </button>
+            )}
             <button
               className={`settings-btn${wideMode ? " active" : ""}`}
               onClick={toggleWide}
@@ -3684,7 +3689,7 @@ function App() {
               }}
               title={t.relaunchAsAdmin}
             >
-              🔑 {t.relaunchAsAdmin}
+              <Icon name="key" /> {t.relaunchAsAdmin}
             </button>
             <button
               className="settings-btn"
@@ -4309,7 +4314,7 @@ function App() {
               </div>
             </div>
             <div className="settings-row" title={t.pinHint}>
-              <label>📌 {t.pinWindow}</label>
+              <label><Icon name="pin" /> {t.pinWindow}</label>
               <input
                 type="checkbox"
                 checked={pinned}
@@ -4964,7 +4969,7 @@ function App() {
                     )
                   }
                 >
-                  📖
+                  <Icon name="book" />
                 </button>
               )}
             </div>
@@ -4989,7 +4994,7 @@ function App() {
             {keyLocks && keyLocks.map && (
               <div className="key-locks">
                 <span>
-                  🗺 {t.keyLocksLine.replace("{map}", keyLocks.map.name).replace("{n}", String(keyLocks.locks.length))}
+                  <Icon name="map" /> {t.keyLocksLine.replace("{map}", keyLocks.map.name).replace("{n}", String(keyLocks.locks.length))}
                   {keyLocks.locks[0]?.dist != null && ` · ${t.keyLocksNearest.replace("{d}", String(Math.round(keyLocks.locks[0].dist)))}`}
                 </span>
                 {!wideMode && !radarActive && (
@@ -5119,7 +5124,7 @@ function App() {
                     result.buy_for.length > 0 && (
                     <details className="all-traders" open={region.detailsOpenDefault} style={secStyle("buyFor")}>
                       <summary>
-                        🏪 {t.buyFor} ({result.buy_for.length})
+                        <Icon name="store" /> {t.buyFor} ({result.buy_for.length})
                       </summary>
                       <div className="trader-list">
                         {result.buy_for.map((bo) => (
@@ -5141,7 +5146,7 @@ function App() {
                     result.barters_for &&
                     result.barters_for.length > 0 && (
                     <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersFor")}>
-                      <summary>🔄 {t.barterFor} ({result.barters_for.length})</summary>
+                      <summary><Icon name="exchange" /> {t.barterFor} ({result.barters_for.length})</summary>
                       <div className="trader-list">
                         {result.barters_for.map((b, idx) => (
                           <div key={idx} className="barter-row">
@@ -5159,7 +5164,7 @@ function App() {
                                     className={`barter-quest-lock${done ? " unlocked" : ""}`}
                                     title={done ? t.barterQuestUnlockedHint : t.barterQuestLockHint}
                                   >
-                                    {done ? "✓" : "🔒"} {tu.name}
+                                    <Icon name={done ? "check" : "lock"} /> {tu.name}
                                   </span>
                                 );
                               })()}
@@ -5189,7 +5194,7 @@ function App() {
                     result.barters_using.length > 0 && (
                     <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersUsing")}>
                       <summary>
-                        🔁 {t.barterUsing} ({result.barters_using.length})
+                        <Icon name="send" /> {t.barterUsing} ({result.barters_using.length})
                       </summary>
                       <div className="trader-list">
                         {result.barters_using.map((u, idx) => (
@@ -5209,7 +5214,7 @@ function App() {
                                     className={`barter-quest-lock${done ? " unlocked" : ""}`}
                                     title={done ? t.barterQuestUnlockedHint : t.barterQuestLockHint}
                                   >
-                                    {done ? "✓" : "🔒"} {tu.name}
+                                    <Icon name={done ? "check" : "lock"} /> {tu.name}
                                   </span>
                                 );
                               })()}
@@ -5256,7 +5261,7 @@ function App() {
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsFor")}>
                           <summary>
-                            🏭 {t.craftFor} ({result.crafts_for.length})
+                            <Icon name="hammer" /> {t.craftFor} ({result.crafts_for.length})
                           </summary>
                           <div className="trader-list">
                             {result.crafts_for.map((c, idx) => {
@@ -5279,7 +5284,7 @@ function App() {
                                         className="craft-lock-badge"
                                         title={t.craftLockedHint}
                                       >
-                                        🔒 Lv{c.level} {t.craftLockedBadge}
+                                        <Icon name="lock" /> Lv{c.level} {t.craftLockedBadge}
                                       </span>
                                     )}
                                   </div>
@@ -5314,7 +5319,7 @@ function App() {
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsUsing")}>
                           <summary>
-                            ⚗️ {t.craftUsing} ({craftsUsing.length})
+                            <Icon name="flask" /> {t.craftUsing} ({craftsUsing.length})
                           </summary>
                           <div className="trader-list">
                             {craftsUsing.map((c, idx) => {
@@ -5337,7 +5342,7 @@ function App() {
                                         className="craft-lock-badge"
                                         title={t.craftLockedHint}
                                       >
-                                        🔒 Lv{c.level} {t.craftLockedBadge}
+                                        <Icon name="lock" /> Lv{c.level} {t.craftLockedBadge}
                                       </span>
                                     )}
                                   </div>
@@ -5373,7 +5378,7 @@ function App() {
                   }
                   {region.showQuests && result.gunsmith && result.gunsmith.length > 0 && (
                     <div className="quest-warning gunsmith" title={t.gunsmithHint} style={secStyle("gunsmith")}>
-                      🔧 {t.gunsmithTitle} ({result.gunsmith.length})
+                      <Icon name="wrench" /> {t.gunsmithTitle} ({result.gunsmith.length})
                       <div className="quest-list">
                         {result.gunsmith.map((g, i) => (
                           <div key={`${g.quest}-${g.kind}-${i}`} className="quest-row">
@@ -5403,7 +5408,7 @@ function App() {
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("hideoutNeeds")}>
                           <summary>
-                            🏗️ {t.hideoutNeed} ({countLabel})
+                            <Icon name="hideout" /> {t.hideoutNeed} ({countLabel})
                           </summary>
                           <div className="trader-list">
                             {result.needed_for_hideout.map((n, idx) => {
@@ -5441,7 +5446,7 @@ function App() {
                                       className="quest-fir"
                                       title={t.questFirHint}
                                     >
-                                      {t.questFirBadge}
+                                      <Icon name="lock" /> {t.questFirBadge}
                                     </span>
                                   )}
                                 </div>
@@ -5476,7 +5481,7 @@ function App() {
                         // auxiliary info.
                         <details className="all-traders barters" open style={secStyle("ammoMatrix")}>
                           <summary>
-                            🎯 {t.ammoCompare} · {display} ({slot.rounds.length})
+                            <Icon name="target" /> {t.ammoCompare} · {display} ({slot.rounds.length})
                           </summary>
                           <div className="ammo-matrix">
                             <div className="ammo-row ammo-row-head">
@@ -5593,7 +5598,7 @@ function App() {
                       ).length;
                       return (
                         <div className="quest-warning" style={secStyle("quests")}>
-                          🎯 {t.usedInTasks} ({visibleQuests.length})
+                          <Icon name="quests" /> {t.usedInTasks} ({visibleQuests.length})
                           {remainingCount > 0 && (
                             <span className="quest-total">
                               {" "}
@@ -5606,7 +5611,7 @@ function App() {
                               title={t.questCompletedHint}
                             >
                               {" "}
-                              · ✓ {completedShown}
+                              · <Icon name="check" /> {completedShown}
                             </span>
                           )}
                           <div className="quest-list">
@@ -5651,7 +5656,7 @@ function App() {
                                         className="quest-status-icon completed"
                                         title={t.questCompletedHint}
                                       >
-                                        ✓
+                                        <Icon name="check" />
                                       </span>
                                     )}
                                     {q.task_status === "started" && (
@@ -5672,7 +5677,7 @@ function App() {
                                         className="quest-fir"
                                         title={t.questFirHint}
                                       >
-                                        {t.questFirBadge}
+                                        <Icon name="lock" /> {t.questFirBadge}
                                       </span>
                                     ) : (
                                       q.count != null && (
@@ -5680,7 +5685,7 @@ function App() {
                                           className="quest-anyitem"
                                           title={t.questAnyHint}
                                         >
-                                          {t.questAnyBadge}
+                                          <Icon name="check" /> {t.questAnyBadge}
                                         </span>
                                       )
                                     )}
@@ -5714,7 +5719,7 @@ function App() {
                         <div className="slot-price" style={secStyle("slotLine")}>
                           {showSlotLine && (
                             <span>
-                              📦{" "}
+                              <Icon name="box" />{" "}
                               {isSingleSlot ? (
                                 rawPrice != null && (
                                   <strong>{fmt(rawPrice)}</strong>
@@ -5742,7 +5747,7 @@ function App() {
                           )}
                           {showWeightLine && (
                             <span className="weight-info">
-                              {slot || isSingleSlot ? " · " : ""}⚖ {result.weight!.toFixed(2)}kg
+                              {slot || isSingleSlot ? " · " : ""}<Icon name="scale" /> {result.weight!.toFixed(2)}kg
                               {result.flea_price != null &&
                                 result.weight! >= 0.05 && (
                                   <span className="weight-per">

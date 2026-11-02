@@ -275,7 +275,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               x.keys?.map((k) => (
                 <span className="radar-flag radar-key" key={k} title={t.radarKeyNeeded}>
                   {" "}
-                  🔑 {k}
+                  <Icon name="key" /> {k}
                 </span>
               ))}
             {condLabels(x, t).map((c) => (
@@ -292,12 +292,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
                 title={t.radarOpenGuide}
                 aria-label={t.radarOpenGuide}
               >
-                📖
+                <Icon name="book" />
               </button>
             )}
             {x.kind === "quest" && (
               <button type="button" className="radar-hide" onClick={() => hideQuest(x)} title={t.radarHideQuest} aria-label={t.radarHideQuest}>
-                ✕
+                <Icon name="x" />
               </button>
             )}
           </span>
