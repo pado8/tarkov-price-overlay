@@ -147,5 +147,21 @@ os.environ["TPO_PRICE_SOURCE"] = "graphql"
 check("TPO_PRICE_SOURCE=graphql 이면 GraphQL 먼저", ta._source_order() == ["graphql", "json"])
 os.environ.pop("TPO_PRICE_SOURCE", None)
 
+# 9) 같은 전체 이름 충돌 — 시세 없는 변형이 시세 있는 원본을 가리지 않는다(피드백 #52 진단)
+reset()
+ta._fetch_hideout_index = lambda lang: ({}, [])
+orig = {"id": "59fb0428", "name": "물품 보관함 (Item case)", "shortName": "물품 보관함", "types": ["container"],
+        "avg24hPrice": 900000, "sellFor": [], "width": 2, "height": 2, "weight": 1.0}
+variant = {"id": "6a997ccf", "name": "물품 보관함 (Item case)", "shortName": "물품 보관함", "types": ["container", "noFlea"],
+           "sellFor": [], "width": 2, "height": 2, "weight": 1.0}
+for label, order in (("원본 먼저", [orig, variant]), ("변형 먼저", [variant, orig])):
+    by = ta._install_catalog("ko", "regular", order, ({}, []), "json")
+    check(f"충돌({label}): 전체 이름은 시세 있는 원본", by["물품 보관함 (Item case)"]["id"] == "59fb0428")
+    check(f"충돌({label}): 짧은 이름 별칭도 원본", by["물품 보관함"]["id"] == "59fb0428")
+a = dict(orig, id="a1", name="Same"); b = dict(orig, id="b2", name="Same")
+check("둘 다 시세 있으면 예전대로 나중 것", ta._install_catalog("ko", "regular", [a, b], ({}, []), "json")["Same"]["id"] == "b2")
+a2 = dict(variant, id="a1", name="Same2"); b2 = dict(variant, id="b2", name="Same2")
+check("둘 다 시세 없으면 예전대로 나중 것", ta._install_catalog("ko", "regular", [a2, b2], ({}, []), "json")["Same2"]["id"] == "b2")
+
 print("\n" + ("전부 통과" if FAILS == 0 else f"{FAILS}건 실패"))
 sys.exit(1 if FAILS else 0)

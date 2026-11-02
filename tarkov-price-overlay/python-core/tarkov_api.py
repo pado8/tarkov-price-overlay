@@ -1106,11 +1106,25 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
             with _hideout_index_lock:
                 hideout_idx = _hideout_index_cache.get(lang, {})
     by_name: dict[str, dict] = {}
+    # 같은 전체 이름을 가진 아이템이 둘 이상이면(카탈로그에 46~53쌍) 예전엔 나중
+    # 것이 무조건 덮어썼다. 2026-11 패치가 기존 '물품 보관함(Item case)·무기
+    # 보관함(Weapon case)·문서 케이스'와 이름이 똑같은 거래 불가 변형(noFlea,
+    # 6a997…)을 추가하면서, 시세 있는 원본이 색인에서 사라져 진짜 케이스를 조회해도
+    # "시세 없음"이 떴다(피드백 #52 진단 중 발견, en·ru 는 무기 보관함까지).
+    # 5.45 gs 탄약 팩(120발)·Girl poster 도 같은 모양. 화면에 같은 이름으로 보이는
+    # 아이템이면 시세 있는 쪽이 사용자가 찾는 것이므로, 시세 없는 변형은 시세 있는
+    # 원본을 가리지 못하게 한다. 둘 다 있거나 둘 다 없으면 예전대로 나중 것이 이긴다.
+    # 짧은 이름 별칭은 아래에서 by_name[전체 이름] 을 거치므로 함께 바로잡힌다.
+    priced: dict[str, bool] = {}
     for it in items:
         name = it.get("name")
         if not name:
             continue
+        has_price = bool(it.get("avg24hPrice") or it.get("lastLowPrice") or it.get("low24hPrice"))
+        if name in by_name and priced.get(name) and not has_price:
+            continue
         by_name[name] = _build_cache_entry(it, hideout_idx)
+        priced[name] = has_price
     # Alias by shortName too so ground-pickup / inventory-full ("공간 부족
     # (MP9)") OCR matches the same entry as the full inventory name. Short
     # names COLLIDE across items — e.g. ko "MP9" is shared by the B&T MP9 gun,
