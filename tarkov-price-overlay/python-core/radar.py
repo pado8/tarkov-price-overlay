@@ -504,6 +504,23 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
         hazards.append({"name": _loc(loc_maps, h.get("name"), h.get("hazardType") or "hazard"),
                         "type": h.get("hazardType") or "", "p": note(pt(h["position"])) if ok(h.get("position")) else None,
                         "outline": ol})
+    # 저격 스캐브 자리: tarkov.dev 위험 구역(hazardType=sniper)은 맵 가장자리 저격 구역 위주라, 스폰 목록에만 있는
+    # 저격 스캐브 자리(zoneName 에 'Snipe' — 해안선 요양원 북쪽 ZoneBunkeSniper 등, categories 에 sniper 가 빠진 경우가 많다)가
+    # 지도에 아예 안 나왔다(11-03 사용자 지적: 해안선 마스터키 퀘스트 쪽 저격수 표시 없음). 같은 '저격수' 표시로 합친다.
+    # 서로 25m 안의 점·기존 저격 구역에서 25m 안의 점은 하나로(같은 자리 겹침 방지).
+    snipe_name = _loc(loc_maps, "ScavRole/Marksman") or _loc(loc_en, "ScavRole/Marksman") or "Sniper"
+    snipe_pts = [h["p"] for h in hazards if h["type"] == "sniper" and h.get("p")]
+    for s in m.get("spawns") or []:
+        if not ok(s.get("position")):
+            continue
+        cats = [str(c).lower() for c in (s.get("categories") or [])]
+        if "sniper" not in cats and "snipe" not in (s.get("zoneName") or "").lower():
+            continue
+        q = pt(s["position"])
+        if any(math.hypot(q[0] - o[0], q[2] - o[2]) <= 25 for o in snipe_pts):
+            continue
+        snipe_pts.append(q)
+        hazards.append({"name": snipe_name, "type": "sniper", "p": note(q), "outline": []})
     locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door", "key": lk.get("key") or None}  # key = 여는 열쇠 아이템 id(시세 조회한 열쇠 강조용)
              for lk in m.get("locks") or [] if ok(lk.get("position"))]
     containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]

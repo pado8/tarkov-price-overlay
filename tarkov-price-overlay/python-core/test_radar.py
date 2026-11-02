@@ -225,6 +225,18 @@ eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKn
 eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
 eq("150m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "ZoneA"], [3])
 
+# 저격 스캐브 자리 — 스폰 목록의 'Snipe' 구역도 저격수 표시로(해안선 요양원 북쪽, 11-03)
+sm = {"normalizedName": "", "hazards": [{"name": "ScavRole/Marksman", "hazardType": "sniper", "position": {"x": 0, "y": 0, "z": 0}, "outline": []}],
+      "spawns": [
+          {"zoneName": "ZoneBunkeSniper", "categories": ["bot"], "sides": ["scav"], "position": {"x": -153.3, "y": 10, "z": -269.4}},
+          {"zoneName": "ZoneBunkeSniper", "categories": ["bot"], "sides": ["scav"], "position": {"x": -152.3, "y": 10, "z": -269.4}},  # 1m 옆 = 하나로
+          {"zoneName": "ZoneX", "categories": ["bot", "sniper"], "sides": ["scav"], "position": {"x": 10, "y": 0, "z": 10}},  # 기존 저격 구역 25m 안 = 생략
+          {"zoneName": "ZoneRoad", "categories": ["bot"], "sides": ["scav"], "position": {"x": 300, "y": 0, "z": 300}},  # 일반 스캐브 = 아님
+      ]}
+sf = r.compact_map_features(sm, {"ScavRole/Marksman": "저격수"}, {})
+sn = [h for h in sf["hazards"] if h["type"] == "sniper"]
+eq("스폰 목록 저격 자리 추가(겹침·기존 구역 근처 제외)", [(h["name"], h["p"][0], h["p"][2]) for h in sn], [("저격수", 0.0, 0.0), ("저격수", -153.3, -269.4)])
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)
