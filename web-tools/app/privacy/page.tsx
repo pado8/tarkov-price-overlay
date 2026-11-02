@@ -44,7 +44,7 @@ export default function Privacy() {
           aboutads.info
         </a>
         에서 관리할 수 있습니다. 유럽경제지역·영국·스위스 방문자에게는 광고 전에 동의 창을 띄웁니다.
-        2026년 11월 2일부터 본 사이트에 Google AdSense 광고를 게재하고 있습니다.
+        현재(2026-10-27 기준) 본 사이트에는 제3자 광고가 게재되어 있지 않으며, 게재를 시작하면 이 항목을 먼저 갱신합니다.
       </p>
 
       <h2 className="mt-8 text-lg font-bold text-gray-900">4. 문의</h2>
