@@ -3487,7 +3487,7 @@ function App() {
               onClick={toggleWide}
               title={t.wideModeBtn}
             >
-              ⧉
+              💰🗺️
             </button>
             <button
               className="settings-btn"
