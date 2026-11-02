@@ -79,3 +79,6 @@ src-tauri/icons/ios/
 # Local-only drafts & test artifacts (never in the public repo)
 /marketing-plans/
 /_test_items.png
+
+# Cloudflare 배포 스테이징(deploy_landing.ps1 이 매번 다시 만든다)
+scripts/cloudflare/.stage/

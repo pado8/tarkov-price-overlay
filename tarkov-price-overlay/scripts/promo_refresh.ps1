@@ -1,6 +1,6 @@
-# 프로모 코드 자동 최신화 — 매주 예약 작업(작업 스케줄러 "TarkovGuidePromoRefresh")이 돌린다.
+﻿# 프로모 코드 자동 최신화 — 매주 예약 작업(작업 스케줄러 "TarkovGuidePromoRefresh")이 돌린다.
 #   1) scripts/promo_check.py 로 정리 사이트를 긁어 guide_data/promo_status.json 갱신
-#   2) 바뀐 게 있으면 가이드 세 언어(ko/en/ru) 재빌드 → vercel --prod → IndexNow(프로모 페이지)
+#   2) 바뀐 게 있으면 가이드 세 언어(ko/en/ru) 재빌드 → deploy_landing.ps1(hosting.txt 대로 Vercel/Cloudflare) → IndexNow(프로모 페이지)
 # 수동 실행: powershell -ExecutionPolicy Bypass -File scripts\promo_refresh.ps1 [-Force]
 # 로그: scripts\promo_refresh.log (최근 실행이 맨 아래)
 param([switch]$Force)
@@ -24,11 +24,12 @@ foreach ($lang in @("ko", "en", "ru")) {
     if ($LASTEXITCODE -ne 0) { Log "빌드 실패($lang) — 배포 중단"; exit 1 }
 }
 Remove-Item Env:GUIDE_LANG -ErrorAction SilentlyContinue
-Push-Location (Join-Path $root "landing")
-$out = & vercel --prod --yes --archive=tgz 2>&1   # 가이드 1,800쪽: 파일별 업로드는 무료 플랜 하루 5,000개 한도에 걸림
-Pop-Location
-$ready = ($out | Select-String '"readyState": "READY"') -ne $null
-Log ("배포 " + $(if ($ready) { "완료" } else { "실패: " + (($out | Select-Object -Last 5) -join " | ") }))
+# 배포는 deploy_landing.ps1 에 맡긴다 — scripts\hosting.txt(vercel|cloudflare) 대로 보내고,
+# Vercel 대상인데 광고 코드가 있으면 거부한다(Vercel Hobby 는 AdSense 금지, 2026-11-02).
+$out = & powershell -ExecutionPolicy Bypass -File (Join-Path $root "scripts\deploy_landing.ps1") 2>&1
+$ready = ($LASTEXITCODE -eq 0)
+$out | ForEach-Object { Log $_ }
+Log ("배포 " + $(if ($ready) { "완료" } else { "실패(exit $LASTEXITCODE)" }))
 if ($ready) {
     $env:MSYS_NO_PATHCONV = "1"
     & python (Join-Path $root "scripts\indexnow.py") "/guide/promo/" 2>&1 | ForEach-Object { Log $_ }

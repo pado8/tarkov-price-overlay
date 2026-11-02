@@ -47,6 +47,10 @@ def ad_page(f: Path) -> bool:
     (2026-10-27 광고 전략 결정: 광고는 가이드에만 — 무료 도구 다운로드 화면에 광고를 띄우지 않는다). 사이트 확인은
     aquapado.com 루트 ads.txt 로 끝났으므로 메인에 코드가 없어도 된다."""
     rel = f.relative_to(LANDING).as_posix()
+    # 건스미스(ko·en·ru)는 제외 — 위키(escapefromtarkov.fandom.com, CC BY-NC-SA = 비상업) 예시 조립을 옮겨 온 페이지라
+    # 광고를 달면 비상업 조건과 충돌할 수 있다(2026-11-02 라이선스 확인: api.php siteinfo rightsinfo).
+    if re.match(r"guide/(?:(?:en|ru)/)?gunsmith/", rel):
+        return False
     return rel.startswith("guide/")
 
 

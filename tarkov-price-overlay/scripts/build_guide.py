@@ -68,13 +68,13 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
         return m.group(1) if m else stamp
 
     alts = ['<xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/" />',
-            '<xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/en" />',
-            '<xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/ru" />',
+            '<xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/en/" />',
+            '<xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/ru/" />',
             '<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/" />']
     nl = chr(10)
     out = [SITEMAP_HEAD.rstrip(nl)]
-    for loc, pri in (("https://tarkov.aquapado.com/", "1.0"), ("https://tarkov.aquapado.com/en", "0.9"),
-                     ("https://tarkov.aquapado.com/ru", "0.9")):
+    for loc, pri in (("https://tarkov.aquapado.com/", "1.0"), ("https://tarkov.aquapado.com/en/", "0.9"),
+                     ("https://tarkov.aquapado.com/ru/", "0.9")):
         out += ["  <url>", f"    <loc>{loc}</loc>"] + [f"    {a}" for a in alts] + [
             f"    <lastmod>{old_lastmod(loc)}</lastmod>", "    <changefreq>weekly</changefreq>",
             f"    <priority>{pri}</priority>", "  </url>"]
@@ -393,6 +393,9 @@ def main() -> int:
     import ga4  # GA4도 같은 방식(ID 없으면 아무것도 안 넣음)
     n_ga, gid = ga4.apply()
     print(f"[guide] GA4: {gid or '끔'} · 바뀐 페이지 {n_ga}")
+    import hosting  # 호스팅별 조각(cloudflare 면 Vercel 분석 스크립트 제거) — scripts/hosting.txt
+    n_ho, host = hosting.apply()
+    print(f"[guide] 호스팅: {host} · 바뀐 페이지 {n_ho}")
     if lang != "ko":
         # 번역 누락 검사: 생성된 페이지에 한글이 남아 있으면 번역표에 없는 구간이다
         han = re.compile(r"[가-힣]")

@@ -125,7 +125,7 @@ def localize_html(html_text: str) -> str:
         return f'{m.group(1)}="/guide/{LANG}/{url[len("/guide/"):]}"'
     html_text = _re.sub(r'(href|action|src)="(/guide/[^"]*)"', _href, html_text)
     # 랜딩·상태 페이지도 그 언어판으로
-    html_text = html_text.replace('href="/"', f'href="/{LANG}"').replace('href="/?src=guide"', f'href="/{LANG}?src=guide"')
+    html_text = html_text.replace('href="/"', f'href="/{LANG}/"').replace('href="/?src=guide"', f'href="/{LANG}/?src=guide"')  # 끝 슬래시: Cloudflare Pages 는 /en → /en/ 308
     html_text = html_text.replace('href="/status/"', f'href="/status/?lang={LANG}"')
     # 번역 조각을 이어 붙이며 생긴 이중 공백 정리(태그·스크립트 밖 본문)
     html_text = _re.sub(r"(?<=[^\s>])  +(?=[^\s<])", " ", html_text)
