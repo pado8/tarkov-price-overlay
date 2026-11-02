@@ -9,6 +9,7 @@ import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialo
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize } from "./Radar";
+import { Icon } from "./Icon";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -3448,13 +3449,12 @@ function App() {
           <div className="header-actions">
             <span className="hotkey" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
               {/* Mouse bindings carry their own 🖱 prefix from
-                  formatHotkeyLabel — the fixed ⌨︎ would read as
-                  "⌨︎ : 🖱 휠클릭". Only show it for keyboard binds. */}
+                  formatHotkeyLabel — a fixed keyboard glyph would read as
+                  "⌨ 🖱 휠클릭". Only show it for keyboard binds. */}
               {!isMouseHotkey(hotkey) && (
-                <>
-                  <span className="hotkey-icon" aria-hidden="true">⌨︎</span>
-                  <span className="hotkey-sep">:</span>
-                </>
+                <span className="hotkey-icon" aria-hidden="true">
+                  <Icon name="keyboard" />
+                </span>
               )}
               <span className="hotkey-key">{formatHotkeyLabel(hotkey, t)}</span>
             </span>
@@ -3473,7 +3473,7 @@ function App() {
               }}
               title={t.history}
             >
-              🕒
+              <Icon name="clock" />
             </button>
             <button
               className={`settings-btn${radarActive ? " active" : ""}`}
@@ -3483,22 +3483,14 @@ function App() {
               }}
               title={t.radarOpen}
             >
-              🗺️
+              <Icon name="map" />
             </button>
             <button
               className={`settings-btn${wideMode ? " active" : ""}`}
               onClick={toggleWide}
               title={t.wideModeBtn}
             >
-              <svg className="wide-map-icon" viewBox="0 0 36 16" aria-hidden="true">
-                <circle cx="6.5" cy="8" r="5.5" fill="#e8b93c" />
-                <path d="M5.6 11.5V5.2h1.7a1.6 1.6 0 0 1 0 3.2H4.6M4.6 10h3" fill="none" stroke="#4a3505" strokeWidth="1" />
-                <path d="M15 8h4M17 6v4" stroke="currentColor" strokeWidth="1.3" />
-                <g transform="translate(20 1.5)">
-                  <path d="M1 3 6 1l5 2 5-2v9l-5 2-5-2-5 2z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                  <path d="M6 1v9M11 3v9" stroke="currentColor" strokeWidth="1" />
-                </g>
-              </svg>
+              <Icon name="wideMap" />
             </button>
             <button
               className="settings-btn"
@@ -3514,7 +3506,7 @@ function App() {
               })}
               title={t.settings}
             >
-              ⚙
+              <Icon name="gear" />
             </button>
             {pinned ? (
               // Pinned: replace ✕ with an inert 📌 badge so a misclick can't
@@ -3524,7 +3516,7 @@ function App() {
                 title={t.pinnedBadgeTitle}
                 aria-label={t.pinnedBadgeTitle}
               >
-                📌
+                <Icon name="pin" />
               </span>
             ) : (
               <button
@@ -3544,7 +3536,7 @@ function App() {
                 }}
                 title={t.hideToTrayTitle}
               >
-                ✕
+                <Icon name="x" />
               </button>
             )}
           </div>
@@ -3629,7 +3621,7 @@ function App() {
                   onClick={() => setDismissedUpdate(updateInfo.version)}
                   title={t.updateLater}
                 >
-                  ✕
+                  <Icon name="x" />
                 </button>
               </>
             )}
@@ -3669,7 +3661,7 @@ function App() {
                   }}
                   title={t.updateLater}
                 >
-                  ✕
+                  <Icon name="x" />
                 </button>
               </>
             )}
@@ -3702,7 +3694,7 @@ function App() {
               }}
               title={t.adminDismiss}
             >
-              ✕
+              <Icon name="x" />
             </button>
           </div>
         )}
@@ -3726,7 +3718,7 @@ function App() {
                 onClick={() => setRemoteAnnounce(null)}
                 title={t.dismiss}
               >
-                ✕
+                <Icon name="x" />
               </button>
             </div>
           )}
@@ -4719,7 +4711,7 @@ function App() {
                   onClick={() => setCaptureModalOpen(false)}
                   title={t.captureRegionCloseHint}
                 >
-                  ✕
+                  <Icon name="x" />
                 </button>
               </div>
               <div className="capture-modal-body">

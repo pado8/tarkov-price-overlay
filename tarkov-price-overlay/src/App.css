@@ -213,16 +213,15 @@ html, body, #root {
 }
 
 .hotkey-icon {
-  font-size: var(--card-fs-sm);
   line-height: 1;
   display: inline-flex;
   align-items: center;
-  font-family: "Segoe UI Symbol", "Segoe UI", system-ui, sans-serif;
 }
-
-.hotkey-sep {
-  opacity: 0.7;
-  line-height: 1;
+.hotkey-icon .ui-icon {
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: 0;
+  opacity: 0.85;
 }
 
 .hotkey-key {
@@ -1288,12 +1287,26 @@ html, body, #root {
 .reset-btn:hover {
   background: rgba(200, 170, 100, 0.15);
 }
-/* 지도 나란히 버튼: 루블 동전 + 지도 */
-.wide-map-icon {
-  width: 2.5em;
-  height: 1.25em;
+/* 단색 SVG 아이콘(Icon.tsx) — 버튼 글자색을 그대로 따르고(currentColor) 카드 폰트 크기에 같이 커진다 */
+.ui-icon {
+  width: 1.15em;
+  height: 1.15em;
   display: inline-block;
-  vertical-align: -0.25em;
+  vertical-align: -0.22em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* 지도 나란히 버튼: 루블 동전 + 지도(가로로 긴 아이콘) */
+.ui-icon-wide {
+  width: 2.5em;
+  height: 1.15em;
+}
+/* 아이콘만 있는 버튼은 위아래 여백을 조금 더 줘 글자 버튼과 높이를 맞춘다 */
+.settings-btn > .ui-icon:only-child {
+  margin: 1px 0;
 }
 .exit-btn {
   border-color: rgba(255, 100, 100, 0.5);

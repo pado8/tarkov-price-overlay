@@ -5,6 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
 import { RadarMap, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
 import type { Layers } from "./RadarMap";
+import { Icon } from "./Icon";
 
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
@@ -150,14 +151,14 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const header = (
     <div className="radar-head">
       <span className="radar-title">
-        🗺️ {data?.map ? data.map.name : t.radarTitle}
+        <Icon name="map" /> {data?.map ? data.map.name : t.radarTitle}
         {data?.map_source === "manual" && <span className="radar-src"> · {t.radarManual}</span>}
       </span>
       {data?.shot && (
         <span className={`radar-age${data.shot.age > STALE_SEC ? " stale" : ""}`}>{ago(data.shot.age, t)}</span>
       )}
       <button className="settings-btn" onClick={onClose} title={t.radarClose}>
-        ↩
+        <Icon name="back" />
       </button>
     </div>
   );
