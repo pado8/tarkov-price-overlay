@@ -42,13 +42,21 @@ def snippet(cid: str) -> str:
             f'crossorigin="anonymous"></script>{END}\n')
 
 
+def ad_page(f: Path) -> bool:
+    """광고를 싣는 페이지 = 탈콥 가이드(/guide/ 아래, ko·en·ru)만. 다운로드 페이지(메인)·상태·소개·방침에는 싣지 않는다
+    (2026-10-27 광고 전략 결정: 광고는 가이드에만 — 무료 도구 다운로드 화면에 광고를 띄우지 않는다). 사이트 확인은
+    aquapado.com 루트 ads.txt 로 끝났으므로 메인에 코드가 없어도 된다."""
+    rel = f.relative_to(LANDING).as_posix()
+    return rel.startswith("guide/")
+
+
 def apply() -> tuple[int, str | None]:
     cid = client_id()
     changed = 0
     for f in LANDING.rglob("*.html"):
         s = f.read_text(encoding="utf-8")
         t = BLOCK_RE.sub("", s)
-        if cid and "</head>" in t:
+        if cid and ad_page(f) and "</head>" in t:
             t = t.replace("</head>", snippet(cid) + "</head>", 1)
         if t != s:
             f.write_text(t, encoding="utf-8")
