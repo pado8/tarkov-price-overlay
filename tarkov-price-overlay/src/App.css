@@ -1366,6 +1366,8 @@ html, body, #root {
      onResizeHandleDown's `inSettings` branch) and persists the height. */
   height: 400px;
   overflow-y: auto;
+  /* height 에 넣는 값이 곧 실제 높이(여백·테두리 포함) — settingsMaxH 로 잘라 넣은 값이 14px 넘쳐 카드가 또 스크롤되던 것(11-02) */
+  box-sizing: border-box;
 }
 .settings::-webkit-scrollbar {
   width: 6px;

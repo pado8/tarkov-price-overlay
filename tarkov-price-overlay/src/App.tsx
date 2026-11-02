@@ -1468,6 +1468,17 @@ function App() {
     hideDelayRef.current = region.hideDelaySec;
   }, [region.hideDelaySec]);
 
+  /** 설정 패널이 지금 가질 수 있는 최대 높이(px) = 창이 커질 수 있는 한계(화면 아래 여백까지) − 오버레이 여백 −
+   *  패널을 뺀 카드 내용(헤더·배너·카드 안쪽 여백). 이 값 이하면 카드는 스크롤되지 않고 패널만 스크롤된다.
+   *  나란히 모드는 창이 모니터 크기로 고정이라 창 높이 자체가 한계. */
+  const settingsMaxH = (): number => {
+    const el = settingsRef.current;
+    const cardEl = cardRef.current;
+    if (!el || !cardEl) return 2000;
+    const others = cardEl.scrollHeight + (cardEl.offsetHeight - cardEl.clientHeight) - el.offsetHeight; // 카드 테두리 포함
+    const limit = wideModeRef.current ? window.innerHeight : maxWinHRef.current;
+    return Math.max(200, Math.min(2000, Math.floor(limit - WIN_VPAD - others)));
+  };
   // Settings panel: restore user's last-chosen height from localStorage
   // (CSS `resize: vertical`). Effect runs whenever the panel mounts (i.e.
   // every time showSettings flips to true). A ResizeObserver writes the
@@ -1481,20 +1492,21 @@ function App() {
     const el = settingsRef.current;
     const cardEl = cardRef.current;
     if (!el || !cardEl) return;
+    // 저장된 높이는 '원하는 높이'일 뿐 — 지금 화면에 들어가는 높이로 잘라 넣는다. 넓은 모니터·나란히 모드에서
+    // 키워 둔 값(예: 1,600px)을 작은 창에서 그대로 쓰면 카드도 스크롤되고 패널도 스크롤돼 막대가 둘 보였다(11-02 제보)
     const stored = localStorage.getItem(SETTINGS_HEIGHT_KEY);
-    if (stored) {
-      const n = parseInt(stored);
-      if (!isNaN(n) && n >= 200 && n <= 2000) el.style.height = `${n}px`;
-    }
+    const n = stored ? parseInt(stored) : NaN;
+    const want = !isNaN(n) && n >= 200 && n <= 2000 ? n : el.offsetHeight;
+    el.style.height = `${Math.min(want, settingsMaxH())}px`;
     const ro = new ResizeObserver(() => {
-      const h = el.offsetHeight;
-      if (h >= 200) localStorage.setItem(SETTINGS_HEIGHT_KEY, String(h));
+      // 높이 저장은 사용자가 손잡이를 끌었을 때(onResizeHandleDown 의 onUp)만 — 여기서 저장하면 화면에 맞춰
+      // 잘린 값이 '원하는 높이'를 덮어써 큰 화면으로 돌아가도 작은 패널로 남는다
       // 지도 나란히 모드: 창은 모니터 크기 그대로(여기서 800×내용 높이로 되돌리면 패널이 카드를 눌러 버린다)
       if (wideModeRef.current) return;
       // Re-measure the card and resize the window to match the new
       // natural content height. Uses the same formula as the card's
       // observer so the two paths agree.
-      const ch = Math.ceil(cardEl.scrollHeight) + WIN_VPAD;
+      const ch = Math.ceil(cardEl.scrollHeight + (cardEl.offsetHeight - cardEl.clientHeight)) + WIN_VPAD; // + 카드 테두리
       const clamped = Math.min(Math.max(ch, 100), screenMaxH());
       getCurrentWindow()
         .setSize(new LogicalSize(WIN_BASE_W, clamped))
@@ -2874,6 +2886,13 @@ function App() {
     if (!el) return;
     let raf = 0;
     const apply = () => {
+      // 설정 패널이 열려 있으면 먼저 화면에 들어가는 높이로 잘라 둔다 — 창을 아래로 옮기거나(한계가 줄어듦)
+      // 배너가 생겨 나머지 내용이 커졌을 때도 카드 스크롤(두 번째 막대)이 생기지 않게
+      const se = settingsRef.current;
+      if (se && showSettingsRef.current) {
+        const m = settingsMaxH();
+        if (se.offsetHeight > m) se.style.height = `${m}px`;
+      }
       if (wideModeRef.current) return; // 지도 나란히: 창은 모니터 크기 그대로
       // When the user has dragged an explicit card height (price-card view
       // only — settings mode returns null), size the window to that override
@@ -2881,8 +2900,10 @@ function App() {
       // content height and clips the dragged-taller card, making vertical
       // resize appear to do nothing.
       const override = cardHeightOverrideForResize();
+      // scrollHeight 엔 카드 테두리(위아래 1px씩)가 빠져 있다 — 그대로 쓰면 창이 늘 2px 모자라 내용이 꽉 찰 때마다
+      // 카드에 스크롤 막대가 생겼다(11-02 '스크롤이 두 개' 제보의 나머지 절반). offsetHeight−clientHeight = 테두리
       const contentH =
-        override != null ? override : Math.ceil(el.scrollHeight);
+        override != null ? override : Math.ceil(el.scrollHeight + (el.offsetHeight - el.clientHeight));
       const h = contentH + WIN_VPAD;
       const clamped = Math.min(Math.max(h, 100), maxWinHRef.current);
       getCurrentWindow()
@@ -3287,9 +3308,10 @@ function App() {
       Math.max(CARD_W_MIN, Math.min(CARD_W_MAX, Math.round(raw)));
     const clampH = (raw: number) =>
       Math.max(CARD_H_MIN, Math.min(maxH, Math.round(raw)));
-    // Settings panel bounds match the old dedicated drag-bar (200–2000px).
+    // Settings panel bounds: 200px ~ 화면에 들어가는 높이(settingsMaxH, 최대 2000). 끌기 시작할 때 한 번 잰다.
+    const settingsMax = settingsMaxH();
     const clampSettingsH = (raw: number) =>
-      Math.max(200, Math.min(2000, Math.round(raw)));
+      Math.max(200, Math.min(settingsMax, Math.round(raw)));
     resizingRef.current = true;
     cancelHideTimer();
     document.body.style.cursor = "nwse-resize";
