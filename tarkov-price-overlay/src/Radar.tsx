@@ -357,7 +357,11 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {sizeCtl}
       </div>
       {fixedCtl}
-      <div className="radar-note">{t.radarMapNote}</div>
+      {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
+      <details className="radar-help">
+        <summary>{t.radarHelp}</summary>
+        <div className="radar-note">{t.radarMapNote}</div>
+      </details>
     </div>
   );
 }

@@ -859,11 +859,15 @@ html, body, #root {
   cursor: default;
 }
 
-/* Quest sync settings panel rows */
-.settings-row-stack {
+/* 세로로 쌓는 설정 행(EFT 설치 경로·카드 블록 목록). 선택자를 .settings-row 와 겹쳐 써야
+   뒤에 나오는 .settings-row { align-items: center } 에 안 덮인다 — 전엔 덮여서 줄이 가운데로 몰렸다(11-02) */
+.settings-row.settings-row-stack {
   flex-direction: column;
   align-items: stretch;
   gap: 4px;
+}
+.settings-row.settings-row-stack > label {
+  text-align: left;
 }
 .quest-path-row {
   display: flex;
@@ -1282,6 +1286,17 @@ html, body, #root {
   font-size: var(--card-fs-sm);
   cursor: pointer;
   margin-left: 4px;
+  /* 게임 중 마우스로 누르는 버튼 — 최소 높이를 보장해 클릭 대상을 넓힌다(11-02 점검, 전엔 ~18px) */
+  min-height: 24px;
+  box-sizing: border-box;
+}
+/* 키보드 포커스 링 — WebView2 기본 파란 테두리 대신 금색(11-02 점검) */
+.card :focus-visible {
+  outline: 2px solid var(--gold-bright);
+  outline-offset: 1px;
+}
+.card :focus:not(:focus-visible) {
+  outline: none;
 }
 .settings-btn:hover,
 .reset-btn:hover {
@@ -1717,7 +1732,12 @@ html, body, #root {
 .radar-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
 .radar-chk { display: inline-flex; align-items: center; gap: 4px; font-size: var(--card-fs-xs); color: var(--text-muted); cursor: pointer; }
 .radar-map { background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); font: inherit; font-size: var(--card-fs-xs); padding: 2px 4px; max-width: 100%; }
-.radar-note { font-size: var(--card-fs-xs); color: var(--text-disabled); }
+.radar-note { font-size: var(--card-fs-xs); color: var(--text-disabled); margin-top: 3px; line-height: 1.4; }
+.radar-help > summary { font-size: var(--card-fs-xs); color: var(--text-muted); cursor: pointer; user-select: none; list-style: none; }
+.radar-help > summary::-webkit-details-marker { display: none; }
+.radar-help > summary::before { content: "▸ "; color: var(--gold-text); }
+.radar-help[open] > summary::before { content: "▾ "; }
+.radar-help > summary:hover { color: var(--gold-text); }
 
 /* ── 전체 지도(RadarMap.tsx) ── */
 .radar-mapwrap { position: relative; width: 100%; background: #0e0f12; border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
@@ -1730,7 +1750,7 @@ html, body, #root {
 .radar-layers { display: flex; flex-wrap: wrap; gap: 3px 4px; }
 /* 레이어 칩: 켜짐 = 색 점 + 밝은 글자, 꺼짐 = 흐리게 + 취소선(체크박스보다 좁아 미니맵 아래 한 줄에 들어간다) */
 .radar-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: var(--card-fs-xs); padding: 1px 7px; border: 1px solid var(--border-default); border-radius: 999px; background: rgba(0, 0, 0, 0.35); color: var(--text-primary); cursor: pointer; }
-.radar-chip:not(.on) { color: var(--text-disabled); text-decoration: line-through; }
+.radar-chip:not(.on) { color: var(--text-disabled); border-color: var(--border-subtle); } /* 꺼짐 = 흐리게만(취소선은 글자를 읽기 어렵게 했다) */
 .radar-chip:not(.on) .radar-sw { opacity: 0.35; }
 .radar-chip:hover { border-color: var(--gold-bright); }
 /* 크기 슬라이더(지도 높이) */
@@ -1790,9 +1810,11 @@ html, body, #root {
 .key-locks .link-btn { background: none; border: 1px solid var(--border-default); color: var(--gold-text); border-radius: var(--radius-md); padding: 0 6px; font-size: var(--card-fs-xs); line-height: 18px; cursor: pointer; }
 .key-locks .link-btn:hover { color: var(--text-primary); border-color: var(--gold-text); }
 
-/* 피드백 #51: 설정 "표시 순서" 목록 */
+/* 설정 "카드 블록" 목록(피드백 #51 순서 + 11-02 표시 체크 합침): [체크] 이름 ▲ ▼ */
 .order-row { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
-.order-row .order-label { flex: 1; color: var(--text-muted); }
+.order-row .order-label { flex: 1; color: var(--text-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-row input[type="checkbox"] { width: auto; margin: 0; flex: none; }
+.order-nocheck { display: inline-block; width: 13px; flex: none; } /* 체크 없는 줄(건스미스·칸당 가격)의 자리 맞춤 */
 .order-row button { font-size: var(--card-fs-xs); padding: 1px 6px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: transparent; color: inherit; cursor: pointer; }
 .order-row button:hover:not(:disabled) { background: rgba(200, 170, 100, 0.15); }
 .order-row button:disabled { opacity: 0.3; cursor: default; }

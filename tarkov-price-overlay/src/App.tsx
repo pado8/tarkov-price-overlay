@@ -852,12 +852,15 @@ function loadCardHeight(): number | null {
   return Math.max(CARD_H_MIN, n);
 }
 
-function loadQuestDisplayMode(): "pvp" | "pve" | "season" {
-  // Default PVE — most current players run PVE-only, and matches the
-  // historical legacy migration default for single-mode users.
+// 퀘스트 표시 서버. "follow" = 위 '게임 모드' 설정을 그대로 따른다(11-02 설정 재편: 게임 모드와 퀘스트 표시가
+// 따로 있어 헷갈린다는 점검 결과). 저장값이 없으면 follow — 전엔 PVE 고정 기본값이었다.
+type QuestModeSetting = "follow" | "pvp" | "pve" | "season";
+function loadQuestDisplayMode(): QuestModeSetting {
   const v = localStorage.getItem(QUEST_DISPLAY_MODE_KEY);
-  return v === "pvp" ? "pvp" : v === "season" ? "season" : "pve";
+  return v === "pvp" ? "pvp" : v === "season" ? "season" : v === "pve" ? "pve" : "follow";
 }
+const questModeOfGameMode = (g: GameMode): "pvp" | "pve" | "season" =>
+  g === "pve" ? "pve" : g === "pvp-season" ? "season" : "pvp";
 const WIN_BASE_W = 800;
 const FONT_DEFAULT = 13;
 // Card width drag-resize bounds (px). Min keeps the layout from collapsing;
@@ -1395,9 +1398,14 @@ function App() {
   );
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const [questPathInput, setQuestPathInput] = useState<string>("");
-  const [questDisplayMode, setQuestDisplayMode] = useState<"pvp" | "pve" | "season">(
+  const [questDisplayModeSetting, setQuestDisplayModeSetting] = useState<QuestModeSetting>(
     loadQuestDisplayMode
   );
+  // 실제로 카드·배지가 쓰는 서버 — follow 면 게임 모드에서 파생
+  const questDisplayMode: "pvp" | "pve" | "season" =
+    questDisplayModeSetting === "follow" ? questModeOfGameMode(region.gameMode) : questDisplayModeSetting;
+  // 와이프 리셋 대상(설정 › 퀘스트). 버튼 4개 나열 대신 선택 + 버튼 하나(11-02 설정 재편)
+  const [wipeScope, setWipeScope] = useState<"pvp" | "pve" | "season" | "all">(() => questDisplayMode);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
@@ -3412,7 +3420,8 @@ function App() {
         style={{
           "--card-fs": `${region.fontSize}px`,
           // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
-          width: `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0))}px`,
+          // 설정이 열려 있으면 최소 360px — 긴 라벨·셀렉트·버튼 묶음이 좁은 카드에서 서로 밀어내지 않게(11-02 점검)
+          width: `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`,
           // Explicit height only when the user dragged one AND we're in the
           // plain price-card view; otherwise auto (content height, capped by
           // max-height in CSS). Settings/capture-modal must not inherit the
@@ -3543,7 +3552,21 @@ function App() {
           </div>
         </div>
 
-        {!statsNoticeShown && (
+        {/* 배너는 한 번에 하나만(11-02 점검): 통계 안내 > 업데이트 > 관리자 권한 > 서버 공지.
+            첫 실행에 넷이 같이 떠 카드가 배너로 가득 차던 것 — 하나를 닫으면 다음 것이 보인다 */}
+        {(() => {
+          const banner = !statsNoticeShown
+            ? "consent"
+            : updateInfo && updateInfo.version !== dismissedUpdate
+              ? "update"
+              : adminInfo && adminInfo.is_admin === false && !adminDismissed
+                ? "admin"
+                : remoteAnnounce
+                  ? "announce"
+                  : null;
+          return (
+        <>
+        {banner === "consent" && (
           <div className="consent-banner">
             <div className="consent-opensource">{t.statsConsentOpenSource}</div>
             <div className="consent-text">{t.statsConsentBody}</div>
@@ -3574,7 +3597,7 @@ function App() {
           </div>
         )}
 
-        {updateInfo && updateInfo.version !== dismissedUpdate && (
+        {banner === "update" && updateInfo && (
           <div className="update-banner">
             {updatePhase === "idle" && (
               <>
@@ -3669,9 +3692,7 @@ function App() {
           </div>
         )}
 
-        {adminInfo &&
-          adminInfo.is_admin === false &&
-          !adminDismissed && (
+        {banner === "admin" && (
           <div className="admin-banner">
             <span className="admin-text">
               <Icon name="warn" /> {t.adminWarning}
@@ -3700,7 +3721,7 @@ function App() {
           </div>
         )}
 
-        {remoteAnnounce &&
+        {banner === "announce" && remoteAnnounce &&
           (region.lang === "ko"
             ? remoteAnnounce.ko || remoteAnnounce.en
             : region.lang === "ru"
@@ -3723,6 +3744,9 @@ function App() {
               </button>
             </div>
           )}
+        </>
+          );
+        })()}
 
         {historyVisible && (
           <div className="history-panel">
@@ -3996,6 +4020,9 @@ function App() {
                 </div>
               );
             })()}
+            <div className="settings-section-header">
+              {t.generalSection}
+            </div>
             <div className="settings-row" title={t.statsToggleHint}>
               <label>{t.statsToggle}</label>
               <input
@@ -4044,6 +4071,46 @@ function App() {
                 <option value="pvp-season">{t.gameModeSeason}</option>
               </select>
             </div>
+            <div className="settings-row">
+              <label>{t.sound}</label>
+              <input
+                type="checkbox"
+                checked={soundOn}
+                onChange={(e) => setSoundOn(e.target.checked)}
+              />
+            </div>
+            <div className="settings-row" title={t.autoHideHint}>
+              <label>{t.autoHideToggle}</label>
+              <input
+                type="checkbox"
+                checked={region.autoHide}
+                onChange={(e) => updateRegion("autoHide", e.target.checked)}
+              />
+            </div>
+            <div className="settings-row">
+              <label>{t.hideDelay}</label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                disabled={!region.autoHide}
+                value={region.hideDelaySec}
+                onChange={(e) =>
+                  updateRegion(
+                    "hideDelaySec",
+                    Math.max(1, Math.min(60, parseInt(e.target.value) || 1))
+                  )
+                }
+              />
+            </div>
+            <div className="settings-row" title={t.pinHint}>
+              <label><Icon name="pin" /> {t.pinWindow}</label>
+              <input
+                type="checkbox"
+                checked={pinned}
+                onChange={(e) => setPinned(e.target.checked)}
+              />
+            </div>
             <div className="settings-section-header">
               {t.inputSection}
             </div>
@@ -4090,57 +4157,8 @@ function App() {
             <div className="settings-hint">
               {hotkeyPassthrough ? t.hotkeyPassthroughOn.replace("{key}", formatHotkeyLabel(hotkey, t)) : t.hotkeyPassthroughHint}
             </div>
-            <div className="settings-row">
-              <label>{t.sound}</label>
-              <input
-                type="checkbox"
-                checked={soundOn}
-                onChange={(e) => setSoundOn(e.target.checked)}
-              />
-            </div>
-            <div className="settings-row">
-              <label>{t.autoCheckUpdate}</label>
-              <input
-                type="checkbox"
-                checked={autoCheckUpdate}
-                onChange={(e) => setAutoCheckUpdate(e.target.checked)}
-              />
-            </div>
-            <div className="settings-row">
-              <label>
-                {t.update}
-                <span className="settings-hint-inline">
-                  {" "}
-                  v{APP_VERSION}
-                </span>
-              </label>
-              <button
-                className="reset-btn"
-                onClick={() => {
-                  // Clear any earlier dismissal: a user who hid an update and
-                  // then explicitly clicks "check" wants to SEE it again —
-                  // otherwise the banner stays muted (updateInfo.version ===
-                  // dismissedUpdate) and the click looks like it did nothing.
-                  setDismissedUpdate(null);
-                  checkForUpdate();
-                }}
-                disabled={updateChecking}
-              >
-                {updateChecking
-                  ? t.updateChecking
-                  : updateCheckedAt && !updateInfo
-                    ? <><Icon name="check" /> {t.updateUpToDate}</>
-                    : t.updateCheckNow}
-              </button>
-            </div>
-            <div className="settings-row" title={t.statusPageHint}>
-              <label>{t.statusPage}</label>
-              <button
-                className="reset-btn"
-                onClick={() => openStatusPage(region.lang)}
-              >
-                {t.statusPageOpen}
-              </button>
+            <div className="settings-section-header">
+              {t.mapSection}
             </div>
             <div className="settings-row" title={t.wideModeHint}>
               <label>{t.wideMode}</label>
@@ -4199,30 +4217,6 @@ function App() {
               </select>
             </div>
             <div className="settings-hint">{t.radarPruneHint}</div>
-            <div className="settings-row" title={t.autoHideHint}>
-              <label>{t.autoHideToggle}</label>
-              <input
-                type="checkbox"
-                checked={region.autoHide}
-                onChange={(e) => updateRegion("autoHide", e.target.checked)}
-              />
-            </div>
-            <div className="settings-row">
-              <label>{t.hideDelay}</label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                disabled={!region.autoHide}
-                value={region.hideDelaySec}
-                onChange={(e) =>
-                  updateRegion(
-                    "hideDelaySec",
-                    Math.max(1, Math.min(60, parseInt(e.target.value) || 1))
-                  )
-                }
-              />
-            </div>
             <div className="settings-section-header">
               {t.displaySection}
             </div>
@@ -4309,29 +4303,24 @@ function App() {
                 <span className="opacity-readout">{region.bgOpacity}%</span>
               </div>
             </div>
-            <div className="settings-row" title={t.pinHint}>
-              <label><Icon name="pin" /> {t.pinWindow}</label>
+            <div className="settings-row">
+              <label title={t.detailsOpenHint}>{t.detailsOpenDefault}</label>
               <input
                 type="checkbox"
-                checked={pinned}
-                onChange={(e) => setPinned(e.target.checked)}
+                checked={region.detailsOpenDefault}
+                onChange={(e) =>
+                  updateRegion("detailsOpenDefault", e.target.checked)
+                }
               />
             </div>
+            {/* 시세 줄 안의 보조 항목(순서 없음) */}
             {(
               [
                 ["show24hRange", "displayRange24"],
                 ["showLastTrade", "displayLastTrade"],
                 ["highlightLastTrade", "displayHighlightLastTrade"],
-                ["showWeight", "displayWeight"],
-                ["showBuyFor", "displayBuyFor"],
-                ["showBartersFor", "displayBartersFor"],
-                ["showBartersUsing", "displayBartersUsing"],
-                ["showCraftsFor", "displayCraftsFor"],
-                ["showCraftsUsing", "displayCraftsUsing"],
-                ["showHideoutNeeds", "displayHideoutNeeds"],
-                ["showQuests", "displayQuests"],
                 ["showLootTier", "displayLootTier"],
-                ["showAmmoMatrix", "displayAmmoMatrix"],
+                ["showWeight", "displayWeight"],
               ] as const
             ).map(([key, labelKey]) => (
               <div key={key} className="settings-row">
@@ -4343,17 +4332,8 @@ function App() {
                 />
               </div>
             ))}
-            <div className="settings-row">
-              <label title={t.detailsOpenHint}>{t.detailsOpenDefault}</label>
-              <input
-                type="checkbox"
-                checked={region.detailsOpenDefault}
-                onChange={(e) =>
-                  updateRegion("detailsOpenDefault", e.target.checked)
-                }
-              />
-            </div>
-            {/* 피드백 #51: 카드 블록 표시 순서 — ▲▼로 옮기고 region.sectionOrder 에 저장 */}
+            {/* 카드 블록: 체크(표시 여부) + ▲▼(순서)를 한 목록으로 — 전엔 체크 13줄 + 순서 10줄이 같은 대상을 두 번 나열했다(11-02 설정 재편).
+                건스미스는 '퀘스트에 필요'와 같이 켜지고(showQuests), 칸당 가격 줄은 위 루팅 등급·무게 체크가 정한다 → 체크 없음 */}
             {(() => {
               const secLabel: Record<SectionKey, string> = {
                 buyFor: t.displayBuyFor,
@@ -4367,29 +4347,76 @@ function App() {
                 quests: t.displayQuests,
                 slotLine: t.secSlotLine,
               };
+              const secToggle: Partial<Record<SectionKey, keyof Region>> = {
+                buyFor: "showBuyFor",
+                bartersFor: "showBartersFor",
+                bartersUsing: "showBartersUsing",
+                craftsFor: "showCraftsFor",
+                craftsUsing: "showCraftsUsing",
+                hideoutNeeds: "showHideoutNeeds",
+                ammoMatrix: "showAmmoMatrix",
+                quests: "showQuests",
+              };
               return (
-                <div className="settings-row" style={{ display: "block" }}>
+                <div className="settings-row settings-row-stack">
                   <label title={t.displayOrderHint}>{t.displayOrderSection}</label>
-                  {region.sectionOrder.map((k, i) => (
-                    <div key={k} className="order-row">
-                      <span className="order-label">{secLabel[k]}</span>
-                      <button type="button" disabled={i === 0} title={t.moveUp} onClick={() => moveSection(k, -1)}>▲</button>
-                      <button
-                        type="button"
-                        disabled={i === region.sectionOrder.length - 1}
-                        title={t.moveDown}
-                        onClick={() => moveSection(k, 1)}
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  ))}
+                  <div className="settings-hint">{t.displayOrderHint}</div>
+                  {region.sectionOrder.map((k, i) => {
+                    const tk = secToggle[k];
+                    return (
+                      <div key={k} className="order-row">
+                        {tk ? (
+                          <input
+                            type="checkbox"
+                            checked={region[tk] as boolean}
+                            onChange={(e) => updateRegion(tk, e.target.checked as Region[typeof tk])}
+                            aria-label={secLabel[k]}
+                          />
+                        ) : (
+                          <span className="order-nocheck" aria-hidden="true" />
+                        )}
+                        <span className="order-label" title={k === "gunsmith" ? t.blockWithQuests : undefined}>
+                          {secLabel[k]}
+                          {k === "gunsmith" && <span className="settings-hint-inline"> · {t.blockWithQuests}</span>}
+                        </span>
+                        <button type="button" disabled={i === 0} title={t.moveUp} onClick={() => moveSection(k, -1)}>▲</button>
+                        <button
+                          type="button"
+                          disabled={i === region.sectionOrder.length - 1}
+                          title={t.moveDown}
+                          onClick={() => moveSection(k, 1)}
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}
 
             <div className="settings-section-header">
               {t.questSyncSection}
+            </div>
+            {/* 가장 영향이 큰 선택(어느 서버 진행도로 보일지)을 맨 위로. 기본은 게임 모드 따라가기 */}
+            <div className="settings-row">
+              <label title={t.questDisplayModeHint}>
+                {t.questDisplayMode}
+              </label>
+              <select
+                value={questDisplayModeSetting}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const v: QuestModeSetting = raw === "pvp" ? "pvp" : raw === "season" ? "season" : raw === "pve" ? "pve" : "follow";
+                  setQuestDisplayModeSetting(v);
+                  localStorage.setItem(QUEST_DISPLAY_MODE_KEY, v);
+                }}
+              >
+                <option value="follow">{t.questDisplayModeFollow} ({questModeOfGameMode(region.gameMode) === "season" ? t.gameModeSeason : questModeOfGameMode(region.gameMode).toUpperCase()})</option>
+                <option value="pve">PVE</option>
+                <option value="pvp">PVP</option>
+                <option value="season">{t.gameModeSeason}</option>
+              </select>
             </div>
             <div className="settings-row">
               <label title={t.questSyncEnableHint}>{t.questSyncEnable}</label>
@@ -4537,56 +4564,24 @@ function App() {
                     </button>
                   </div>
                 </div>
+                {/* 와이프 리셋: 파괴적이라 '수동 동기화'와 같은 글자의 버튼 4개를 나란히 두지 않고, 대상 선택 + 경고색 버튼 하나(확인창은 그대로) */}
                 <div className="settings-row">
                   <label title={t.questWipeResetHint}>{t.questWipeReset}</label>
                   <div className="quest-path-row">
+                    <select value={wipeScope} onChange={(e) => setWipeScope(e.target.value as typeof wipeScope)} aria-label={t.questWipeReset}>
+                      <option value="pvp">{t.questSyncResetPvpBtn}</option>
+                      <option value="pve">{t.questSyncResetPveBtn}</option>
+                      <option value="season">{t.questSyncResetSeasonBtn}</option>
+                      <option value="all">{t.questSyncResetBtn}</option>
+                    </select>
                     <button
-                      className="reset-btn"
-                      onClick={() => wipeResetQuests("pvp")}
+                      className="reset-btn exit-btn"
+                      onClick={() => wipeResetQuests(wipeScope === "all" ? undefined : wipeScope)}
                       title={t.questWipeResetHint}
                     >
-                      {t.questSyncResetPvpBtn}
-                    </button>
-                    <button
-                      className="reset-btn"
-                      onClick={() => wipeResetQuests("pve")}
-                      title={t.questWipeResetHint}
-                    >
-                      {t.questSyncResetPveBtn}
-                    </button>
-                    <button
-                      className="reset-btn"
-                      onClick={() => wipeResetQuests("season")}
-                      title={t.questWipeResetHint}
-                    >
-                      {t.questSyncResetSeasonBtn}
-                    </button>
-                    <button
-                      className="reset-btn"
-                      onClick={() => wipeResetQuests()}
-                      title={t.questWipeResetHint}
-                    >
-                      {t.questSyncResetBtn}
+                      <Icon name="warn" /> {t.questWipeResetBtn}
                     </button>
                   </div>
-                </div>
-                <div className="settings-row">
-                  <label title={t.questDisplayModeHint}>
-                    {t.questDisplayMode}
-                  </label>
-                  <select
-                    value={questDisplayMode}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      const v = raw === "pvp" ? "pvp" : raw === "season" ? "season" : "pve";
-                      setQuestDisplayMode(v);
-                      localStorage.setItem(QUEST_DISPLAY_MODE_KEY, v);
-                    }}
-                  >
-                    <option value="pve">PVE</option>
-                    <option value="pvp">PVP</option>
-                    <option value="season">{t.gameModeSeason}</option>
-                  </select>
                 </div>
               </>
             )}
@@ -4683,6 +4678,44 @@ function App() {
                 }}
               >
                 {t.windowRecoverBtn}
+              </button>
+            </div>
+            <div className="settings-section-header">
+              {t.infoSection}
+            </div>
+            <div className="settings-row">
+              <label>{t.autoCheckUpdate}</label>
+              <input
+                type="checkbox"
+                checked={autoCheckUpdate}
+                onChange={(e) => setAutoCheckUpdate(e.target.checked)}
+              />
+            </div>
+            <div className="settings-row">
+              <label>
+                {t.update}
+                <span className="settings-hint-inline">
+                  {" "}
+                  v{APP_VERSION}
+                </span>
+              </label>
+              <button
+                className="reset-btn"
+                onClick={() => {
+                  // Clear any earlier dismissal: a user who hid an update and
+                  // then explicitly clicks "check" wants to SEE it again —
+                  // otherwise the banner stays muted (updateInfo.version ===
+                  // dismissedUpdate) and the click looks like it did nothing.
+                  setDismissedUpdate(null);
+                  checkForUpdate();
+                }}
+                disabled={updateChecking}
+              >
+                {updateChecking
+                  ? t.updateChecking
+                  : updateCheckedAt && !updateInfo
+                    ? <><Icon name="check" /> {t.updateUpToDate}</>
+                    : t.updateCheckNow}
               </button>
             </div>
             <div className="copyright">
