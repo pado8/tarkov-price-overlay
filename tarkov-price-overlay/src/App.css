@@ -1278,6 +1278,13 @@ html, body, #root {
 .reset-btn:hover {
   background: rgba(200, 170, 100, 0.15);
 }
+/* 지도 나란히 버튼: 접힌 지도 + 루블 동전 */
+.wide-map-icon {
+  width: 1.45em;
+  height: 1.25em;
+  display: inline-block;
+  vertical-align: -0.25em;
+}
 .exit-btn {
   border-color: rgba(255, 100, 100, 0.5);
   color: var(--danger);

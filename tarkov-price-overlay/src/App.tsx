@@ -3487,7 +3487,12 @@ function App() {
               onClick={toggleWide}
               title={t.wideModeBtn}
             >
-              💰🗺️
+              <svg className="wide-map-icon" viewBox="0 0 20 16" aria-hidden="true">
+                <path d="M1 3 6 1l5 2 5-2v9l-5 2-5-2-5 2z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                <path d="M6 1v9M11 3v9" stroke="currentColor" strokeWidth="1" />
+                <circle cx="14.5" cy="10.5" r="5" fill="#e8b93c" stroke="#16140f" strokeWidth="1.2" />
+                <path d="M13.6 14V7.7h1.7a1.6 1.6 0 0 1 0 3.2h-2.7M12.6 12.5h3" fill="none" stroke="#4a3505" strokeWidth="1" />
+              </svg>
             </button>
             <button
               className="settings-btn"
