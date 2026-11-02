@@ -1278,9 +1278,9 @@ html, body, #root {
 .reset-btn:hover {
   background: rgba(200, 170, 100, 0.15);
 }
-/* 지도 나란히 버튼: 접힌 지도 + 루블 동전 */
+/* 지도 나란히 버튼: 루블 동전 + 지도 */
 .wide-map-icon {
-  width: 1.45em;
+  width: 2.8em;
   height: 1.25em;
   display: inline-block;
   vertical-align: -0.25em;
