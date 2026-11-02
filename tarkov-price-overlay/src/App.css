@@ -1613,10 +1613,9 @@ html, body, #root {
   font-weight: 700;
 }
 
-/* ── 레이더(미니맵 1단계, Radar.tsx) ─────────────────────────────── */
+/* ── 지도 패널(Radar.tsx) ─────────────────────────────── */
 .settings-btn.active { color: var(--gold-bright); border-color: var(--border-emphasis); }
 .radar { display: flex; flex-direction: column; gap: var(--sp-2); }
-.radar-stale .radar-svg, .radar-stale .radar-list { opacity: 0.55; }
 .radar-head { display: flex; align-items: center; gap: var(--sp-2); }
 .radar-title { font-weight: 700; color: var(--gold-text); flex: 1; min-width: 4em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* 최소 폭: 작은 크기·긴 언어에서도 맵 이름 일부는 보이게 */
 .radar-age { max-width: 9em; overflow: hidden; text-overflow: ellipsis; }
@@ -1624,13 +1623,6 @@ html, body, #root {
 .radar-age { font-size: var(--card-fs-xs); color: var(--text-muted); white-space: nowrap; }
 .radar-age.stale { color: var(--warning); }
 .radar-warn { font-size: var(--card-fs-sm); color: var(--warning); }
-.radar-svg { align-self: center; max-width: 100%; height: auto; }
-/* 레이더 원 안 배경 지도: 윤곽만 가늠되게 흑백·어둡게 */
-.radar-bg { opacity: 0.55; filter: grayscale(1) brightness(0.75) contrast(1.15); pointer-events: none; }
-.radar-ring { fill: rgba(200, 170, 100, 0.04); stroke: var(--border-default); stroke-width: 1; }
-.radar-axis { stroke: var(--border-subtle); stroke-width: 1; stroke-dasharray: 2 3; }
-.radar-scale { fill: var(--text-disabled); font-size: 8px; }
-.radar-label { fill: var(--text-secondary); font-size: 8.5px; paint-order: stroke; stroke: rgba(0, 0, 0, 0.75); stroke-width: 2.5px; }
 /* 내 위치 화살표: 어두운 지도 위에서 잘 보이게 밝은 초록 + 검은 테두리 + 빛(사용자 요청 10-28) */
 .radar-me { fill: #39ff14; stroke: #000; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.85)); }
 .radar-list { display: flex; flex-direction: column; gap: 3px; }
@@ -1651,10 +1643,7 @@ html, body, #root {
 .radar-map { background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); font: inherit; font-size: var(--card-fs-xs); padding: 2px 4px; max-width: 100%; }
 .radar-note { font-size: var(--card-fs-xs); color: var(--text-disabled); }
 
-/* ── 레이더 2단계: 전체 지도(API 좌표로 직접 그림) ── */
-.radar-tabs { display: inline-flex; gap: 2px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-default); border-radius: 6px; padding: 2px; }
-.radar-tab { font-size: var(--card-fs-xs); padding: 2px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; }
-.radar-tab.on { background: var(--gold-bright); color: #1a1408; font-weight: 700; }
+/* ── 전체 지도(RadarMap.tsx) ── */
 .radar-mapwrap { position: relative; width: 100%; background: #0e0f12; border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
 .radar-mapwrap.drag { cursor: grabbing; }
 .radar-mapsvg { width: 100%; height: 100%; display: block; }
@@ -1668,7 +1657,7 @@ html, body, #root {
 .radar-chip:not(.on) { color: var(--text-disabled); text-decoration: line-through; }
 .radar-chip:not(.on) .radar-sw { opacity: 0.35; }
 .radar-chip:hover { border-color: var(--gold-bright); }
-/* 크기 슬라이더(레이더 지름 = 지도 높이) */
+/* 크기 슬라이더(지도 높이) */
 .radar-size { display: inline-flex; align-items: center; gap: 5px; font-size: var(--card-fs-xs); color: var(--text-muted); }
 /* 폭 고정: 카드가 넓어져도 슬라이더 길이가 안 변해야 끄는 손 위치와 값이 어긋나지 않는다 */
 .radar-size input { width: 110px; flex: none; margin: 0; accent-color: var(--gold-bright); cursor: pointer; }
@@ -1706,7 +1695,7 @@ html, body, #root {
 .wide-pane .radar-side { max-height: calc(100vh - 170px); } /* 패널 높이 안에서 목록만 스크롤 */
 .radar-side .radar-row { font-size: var(--card-fs-sm); }
 
-/* 레이더 목록: 퀘스트 개별 숨김(✕)과 '숨긴 퀘스트 n개' 복원 줄 */
+/* 대상 목록: 퀘스트 개별 숨김(✕)과 '숨긴 퀘스트 n개' 복원 줄 */
 .radar-hide { flex: none; background: none; border: 0; color: var(--muted); font-size: 11px; line-height: 1; padding: 0 4px; cursor: pointer; opacity: 0.55; }
 .radar-row:hover .radar-hide, .radar-hide:focus-visible { opacity: 1; }
 .radar-hide:hover { color: var(--danger, #ff6b6b); }

@@ -190,7 +190,7 @@ type StatsEvent =
   | "lookup_noprice"
   | "hotkey"
   | "hotkey_fail"
-  // 레이더 사용 횟수만(detail 없음). 좌표·맵·파일명은 절대 보내지 않는다
+  // 지도 사용 횟수만(detail 없음). 좌표·맵·파일명은 절대 보내지 않는다
   | "radar_open"
   | "radar_shot";
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
@@ -802,12 +802,12 @@ const STORAGE_KEY = "tarkov.captureRegion";
 const POSITION_KEY = "tarkov.windowPosition";
 const RADAR_ENABLED_KEY = "tarkov.radar.enabled";
 const RADAR_SCAV_KEY = "tarkov.radar.showScav";
-// 새 스크린샷이 이보다 오래됐으면 레이더를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
+// 새 스크린샷이 이보다 오래됐으면 지도를 자동으로 띄우지 않는다(앱을 늦게 켰을 때 옛 스크린샷으로 뜨지 않게)
 const RADAR_POPUP_MAX_AGE_SEC = 60;
 const RADAR_MIN_OPACITY = 90;
 // 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
 const WIDE_KEY = "tarkov.wideMode";
-const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos"; // 레이더·지도 표시 중 카드 전체 불투명도 하한(%)
+const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos"; // 지도 표시 중 카드 전체 불투명도 하한(%)
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 // "조회 키를 게임에도 전달": RegisterHotKey 대신 키 상태만 엿들어 게임 스크린샷 키와 같은 키를 쓸 수 있게
@@ -1326,7 +1326,7 @@ function App() {
   // with their own sizing, so the override must yield to them — otherwise
   // the card box stays locked to the dragged height while the window sizes
   // to the sub-panel's content, leaving an empty gap or clipping it.
-  // 레이더·지도도 마찬가지 — 크기 슬라이더가 패널 크기를 정하므로 끌어 놓은 카드 높이에 갇히면 안 된다.
+  // 지도도 마찬가지 — 크기 슬라이더가 패널 크기를 정하므로 끌어 놓은 카드 높이에 갇히면 안 된다.
   const cardHeightOverrideForResize = (): number | null =>
     showSettingsRef.current || captureModalOpenRef.current || radarActiveRef.current
       ? null
@@ -1336,7 +1336,7 @@ function App() {
   // leaves the card rect mid-drag (the window would otherwise eat the drag).
   const resizingRef = useRef(false);
   const [historyVisible, setHistoryVisible] = useState(false);
-  // ── 레이더(미니맵 1단계) — 게임 스크린샷을 찍으면 그 위치 기준으로 띄운다(Radar.tsx, radar.py)
+  // ── 지도(미니맵) — 게임 스크린샷을 찍으면 그 위치 기준으로 띄운다(Radar.tsx, radar.py)
   const [radarActive, setRadarActive] = useState(false);
   const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
   radarActiveRef.current = radarActive;
@@ -1368,14 +1368,14 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, result?.item_id, radarEnabled]);
-  // 레이더가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
+  // 지도가 보는 스크린샷 폴더(사이드카가 기억; 자동 탐색 또는 사용자 지정)
   const [radarFolder, setRadarFolder] = useState<{ folder: string | null; source: "auto" | "manual"; auto: string | null; ok: boolean; prune_keep: number | null } | null>(null);
   const [radarFolderMsg, setRadarFolderMsg] = useState("");
   const [hotkeyPassthrough, setHotkeyPassthrough] = useState<boolean>(() => localStorage.getItem(HOTKEY_PASSTHROUGH_KEY) === "true");
   const hotkeyPassthroughRef = useRef(hotkeyPassthrough);
   hotkeyPassthroughRef.current = hotkeyPassthrough;
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
-  // 레이더 지름 = 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
+  // 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
   const [radarSize, setRadarSize] = useState<number>(loadRadarSize);
   const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
   const wideModeRef = useRef(wideMode);
@@ -1836,7 +1836,7 @@ function App() {
     setCardVisible(true);
   };
 
-  // ── 레이더 ─────────────────────────────────────────────────────────
+  // ── 지도 ───────────────────────────────────────────────────────────
   const radarUrl = (full: boolean) => {
     const q = new URLSearchParams({ lang: region.lang, game_mode: region.gameMode });
     if (full) q.set("full", "true");
@@ -1864,7 +1864,7 @@ function App() {
         return;
       }
       setRadarFolder(await res.json());
-      radarLastShotRef.current = undefined; // 새 폴더의 옛 스크린샷으로 레이더가 튀지 않게 기준 다시 잡기
+      radarLastShotRef.current = undefined; // 새 폴더의 옛 스크린샷으로 지도가 튀지 않게 기준 다시 잡기
       log(`radar: folder set to "${path || "(auto)"}"`);
     } catch (e) {
       setRadarFolderMsg(t.radarFolderInvalid);
@@ -1910,7 +1910,7 @@ function App() {
       setRadarLoading(false);
     }
   };
-  // 카드 위에 레이더를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
+  // 카드 위에 지도를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
   const openRadar = async (fromScreenshot: boolean) => {
     try {
       const win = getCurrentWindow();
@@ -2013,7 +2013,7 @@ function App() {
         const first = radarLastShotRef.current === undefined;
         if (id !== radarLastShotRef.current) {
           radarLastShotRef.current = id;
-          // 앱을 켠 직후의 첫 확인은 기준만 잡는다 — 지난 스크린샷으로 레이더가 튀어나오지 않게
+          // 앱을 켠 직후의 첫 확인은 기준만 잡는다 — 지난 스크린샷으로 지도가 튀어나오지 않게
           if (!first && d.shot && d.shot.age <= RADAR_POPUP_MAX_AGE_SEC) {
             radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지
             log(`radar: new screenshot ${id}`);
@@ -2977,8 +2977,8 @@ function App() {
         } catch {}
         showCard(); // bring card up + cancel any in-flight hide
         setShowSettings(false);
-        // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 레이더를 띄워 둔 채 조회한다 —
-        // 인벤토리 밖에서 누른 F2는 '스크린샷+레이더 갱신'이 목적이라 빈 조회로 레이더를 덮지 않게
+        // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
+        // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
         setStatus("loading");
         setError("");
@@ -3029,7 +3029,7 @@ function App() {
             return;
           }
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
-          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 레이더를 그대로 두고
+          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 지도를 그대로 두고
           // 빈 결과 카드로 덮지 않는다. 읽혔으면 평소처럼 시세 카드.
           if (data.item_name != null) setRadarActive(false);
           const keepRadar = hotkeyPassthroughRef.current && data.item_name == null;
@@ -3406,7 +3406,7 @@ function App() {
         className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
-          // 레이더·지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
+          // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
           width: `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0))}px`,
           // Explicit height only when the user dragged one AND we're in the
           // plain price-card view; otherwise auto (content height, capped by
@@ -3419,7 +3419,7 @@ function App() {
           // Auto-hide already handles the full 0→opacity transition via
           // .card-hidden. We only dim while visible so the fade-out can
           // still drop to 0 without fighting the user's preference.
-          // 레이더·지도가 열려 있으면 최소 90% — 점·이름표가 게임 화면에 묻히지 않게(사용자 설정은 그대로 둔다)
+          // 지도가 열려 있으면 최소 90% — 점·이름표가 게임 화면에 묻히지 않게(사용자 설정은 그대로 둔다)
           opacity: cardVisible ? (radarActive ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100 : undefined,
           // Background-only opacity: fades the dark panel behind the text
           // (consumed by .card's background rgba), text/icons stay opaque.
@@ -4989,12 +4989,7 @@ function App() {
                 {!wideMode && !radarActive && (
                   <button
                     className="link-btn"
-                    onClick={() => {
-                      try {
-                        localStorage.setItem("tarkov.radar.mode", "map");
-                      } catch {}
-                      void openRadar(false);
-                    }}
+                    onClick={() => void openRadar(false)}
                   >
                     {t.keyLocksShow}
                   </button>
@@ -5806,7 +5801,6 @@ function App() {
             size={paneSize}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={() => {}}
-            forceMode="map"
             fill
           />
         </div>

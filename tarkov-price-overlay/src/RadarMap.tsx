@@ -1,9 +1,9 @@
-// 레이더 2단계: 전체 지도(미니맵). SVG 지도 그림(CC BY-NC-SA·치트 금지 조항)은 쓰지 않고
+// 전체 지도(미니맵). SVG 지도 그림(CC BY-NC-SA·치트 금지 조항)은 쓰지 않고
 // 사이드카 /radar/map 이 tarkov.dev API 좌표로 추린 점·윤곽만 찍는다.
 // 미니맵이라 PMC 탈출구·스캐브 탈출구·트랜짓·퀘스트 위치만(각각 켜고 끔). 잠긴 문·위험·상자·스폰은 데이터만 받아 두고 아직 안 그린다.
 // 미니맵 동작: 새 스크린샷이 오면 내 위치로 돌아오고(확대 배율은 유지), 확대 배율은 기억한다.
 // 좌표계: 게임 x → 오른쪽, 게임 z → 위. 북쪽이 어디인지는 보장하지 않으므로(맵마다 다름) 사용자가 90°씩 돌릴 수 있고,
-// '고정' 을 끄면 레이더 탭처럼 바라보는 쪽이 위가 되게 지도가 돈다.
+// '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RadarState, RadarTarget } from "./Radar";
 
@@ -18,7 +18,7 @@ const FLOOR_KO: Record<string, string> = {
 };
 
 /** 내 높이·위치로 층 고르기 — extents 의 높이 범위 안이고(구역이 있으면 그 사각형 안) 처음 맞는 층. 없으면 null(지상) */
-export function autoFloor(layers: NonNullable<MapDoc["img"]>["layers"], x: number, y: number, z: number): string | null {
+function autoFloor(layers: NonNullable<MapDoc["img"]>["layers"], x: number, y: number, z: number): string | null {
   for (const l of layers) {
     for (const e of l.ext) {
       if (y < e.h[0] || y > e.h[1]) continue;
@@ -62,7 +62,7 @@ export type MapDoc = {
   switches: Pt[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·레이더 원·지도가 같은 필터) 여기엔 props 로 온다
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
 export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
@@ -83,8 +83,8 @@ type Props = {
 const cache = new Map<string, MapDoc>();
 const floorMemo: Record<string, string> = {}; // 맵별 층 선택(세션 동안)
 
-/** 맵별 90° 회전 설정(지도 탭에서 ↻로 돌린 값) — 레이더 고정 모드도 같은 기준을 쓴다 */
-export function loadMapRot(slug: string | null | undefined, fallback = 0): number {
+/** 맵별 90° 회전 설정(↻로 돌린 값) */
+function loadMapRot(slug: string | null | undefined, fallback = 0): number {
   if (!slug) return fallback;
   try {
     const v = localStorage.getItem(ROT_KEY);
@@ -112,8 +112,8 @@ function loadSpan(): number {
   return SPAN_DEFAULT;
 }
 
-/** 맵 문서(좌표·그림 메타) 받기 — 맵·언어별 캐시. 지도 탭과 레이더 탭(배경 지도)이 같이 쓴다 */
-export function useMapDoc(slug: string | null, lang: string): { doc: MapDoc | null; err: boolean } {
+/** 맵 문서(좌표·그림 메타) 받기 — 맵·언어별 캐시 */
+function useMapDoc(slug: string | null, lang: string): { doc: MapDoc | null; err: boolean } {
   const [doc, setDoc] = useState<MapDoc | null>(slug ? cache.get(`${slug}|${lang}`) ?? null : null);
   const [err, setErr] = useState(false);
   useEffect(() => {
@@ -145,7 +145,7 @@ export function useMapDoc(slug: string | null, lang: string): { doc: MapDoc | nu
 /** 지도 그림(tarkov.dev SVG)을 화면에 놓는 아핀 행렬. tarkov.dev 사이트와 같은 식 — (x, z)를 coordinateRotation 만큼 돌린 뒤
  * px = t0·rx + t1, py = −t2·rz + t3. 그림은 bounds 두 모서리의 투영 사각형을 꽉 채우므로 그림 픽셀 (u, v) → 투영 (pxmin+u, pymin+v)
  * → 역변환 → 게임 좌표 → 화면(toScreen). 전부 아핀이라 <image transform="matrix(…)"> 하나로 놓을 수 있다. */
-export function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: number, gz: number) => { x: number; y: number }): { W: number; H: number; matrix: string } | null {
+function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: number, gz: number) => { x: number; y: number }): { W: number; H: number; matrix: string } | null {
   const [t0, t1, t2, t3] = im.transform;
   const a = (im.rot * Math.PI) / 180;
   const ca = Math.cos(a), sa = Math.sin(a);
@@ -188,7 +188,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
-  // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 레이더를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
+  // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 지도를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
   const [floor, setFloorState] = useState<string>(() => (slug && floorMemo[slug]) || "auto");
   const setFloor = (f: string) => {
     setFloorState(f);
