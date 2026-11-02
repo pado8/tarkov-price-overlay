@@ -1649,6 +1649,16 @@ html, body, #root {
   flex: 0 0 auto;
   line-height: 1.4;
 }
+/* 범례 색 견본 — 이모지 🟦🟥🟨 대신, 미리보기 창과 같은 색의 작은 네모 */
+.legend-swatch {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-top: 0.25em;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
 .capture-legend-note {
   margin-top: 2px;
   padding-top: 4px;

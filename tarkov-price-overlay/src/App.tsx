@@ -3449,14 +3449,10 @@ function App() {
           <span className="title" data-tauri-drag-region={pinned || wideMode ? undefined : true}>{t.title}</span>
           <div className="header-actions">
             <span className="hotkey" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
-              {/* Mouse bindings carry their own 🖱 prefix from
-                  formatHotkeyLabel — a fixed keyboard glyph would read as
-                  "⌨ 🖱 휠클릭". Only show it for keyboard binds. */}
-              {!isMouseHotkey(hotkey) && (
-                <span className="hotkey-icon" aria-hidden="true">
-                  <Icon name="keyboard" />
-                </span>
-              )}
+              {/* 키보드 바인딩은 키보드, 마우스 바인딩(휠·X1·X2)은 마우스 아이콘 — 전엔 i18n 문구에 🖱 가 들어 있었다 */}
+              <span className="hotkey-icon" aria-hidden="true">
+                <Icon name={isMouseHotkey(hotkey) ? "mouse" : "keyboard"} />
+              </span>
               <span className="hotkey-key">{formatHotkeyLabel(hotkey, t)}</span>
             </span>
             <button
@@ -3583,7 +3579,7 @@ function App() {
             {updatePhase === "idle" && (
               <>
                 <span className="update-text">
-                  🆕 {t.updateAvailable} <strong>v{updateInfo.version}</strong>
+                  <Icon name="update" /> {t.updateAvailable} <strong>v{updateInfo.version}</strong>
                   {/* One-line release notes: seeing WHAT the update brings is
                       the cheapest adoption nudge there is. */}
                   {updateInfo.notes && (
@@ -3632,7 +3628,7 @@ function App() {
             )}
             {updatePhase === "downloading" && (
               <span className="update-text update-progress-wrap">
-                ⬇ {t.updateDownloading} {updateProgress}%
+                <Icon name="download" /> {t.updateDownloading} {updateProgress}%
                 <span className="update-progress-track" aria-hidden="true">
                   <span
                     className="update-progress-fill"
@@ -3642,12 +3638,12 @@ function App() {
               </span>
             )}
             {updatePhase === "ready" && (
-              <span className="update-text">✓ {t.updateRestarting}</span>
+              <span className="update-text"><Icon name="check" /> {t.updateRestarting}</span>
             )}
             {updatePhase === "error" && (
               <>
                 <span className="update-text">
-                  ⚠ {t.updateError}: {updateError}
+                  <Icon name="warn" /> {t.updateError}: {updateError}
                 </span>
                 <button
                   className="reset-btn update-btn"
@@ -3678,7 +3674,7 @@ function App() {
           !adminDismissed && (
           <div className="admin-banner">
             <span className="admin-text">
-              ⚠ {t.adminWarning}
+              <Icon name="warn" /> {t.adminWarning}
             </span>
             <button
               className="settings-btn"
@@ -3790,14 +3786,14 @@ function App() {
                   setShowDonate(false);
                 }}
               >
-                ✉ {t.feedback}
+                <Icon name="mail" /> {t.feedback}
               </button>
               <button
                 className="reset-btn status-btn"
                 onClick={() => openStatusPage(region.lang)}
                 title={t.statusPageHint}
               >
-                🌐 {t.statusPage}
+                <Icon name="globe" /> {t.statusPage}
               </button>
               <button
                 className="reset-btn donate-btn"
@@ -3808,7 +3804,7 @@ function App() {
                 }}
                 title={t.donateTitle}
               >
-                💝 {t.donate}
+                <Icon name="heart" /> {t.donate}
               </button>
             </div>
             {showFeedback && (
@@ -3851,7 +3847,7 @@ function App() {
                     </div>
                   ) : (
                     <label className="feedback-attach-label">
-                      📎 {t.feedbackAttachImage}
+                      <Icon name="paperclip" /> {t.feedbackAttachImage}
                       <input
                         type="file"
                         accept="image/*"
@@ -3877,7 +3873,7 @@ function App() {
                     }${feedbackStatus === "sent" ? " sent" : ""}`}
                   >
                     {feedbackStatus === "sending" && t.feedbackSending}
-                    {feedbackStatus === "sent" && t.feedbackSuccess}
+                    {feedbackStatus === "sent" && <><Icon name="check" /> {t.feedbackSuccess}</>}
                     {feedbackStatus === "error" && t.feedbackError}
                     {feedbackStatus === "empty" && t.feedbackEmpty}
                   </span>
@@ -4064,7 +4060,7 @@ function App() {
                   ? hotkeyConflict
                     ? t.hotkeyConflict
                     : t.recordingHotkey
-                  : formatHotkeyLabel(hotkey, t)}
+                  : <>{isMouseHotkey(hotkey) && <Icon name="mouse" />} {formatHotkeyLabel(hotkey, t)}</>}
               </button>
             </div>
             <div className="settings-row">
@@ -4080,7 +4076,7 @@ function App() {
                   ? hotkeyConflict
                     ? t.hotkeyConflict
                     : t.recordingHotkey
-                  : formatHotkeyLabel(toggleHotkey, t)}
+                  : <>{isMouseHotkey(toggleHotkey) && <Icon name="mouse" />} {formatHotkeyLabel(toggleHotkey, t)}</>}
               </button>
             </div>
             <div className="settings-row" title={t.hotkeyPassthroughHint}>
@@ -4133,7 +4129,7 @@ function App() {
                 {updateChecking
                   ? t.updateChecking
                   : updateCheckedAt && !updateInfo
-                    ? t.updateUpToDate
+                    ? <><Icon name="check" /> {t.updateUpToDate}</>
                     : t.updateCheckNow}
               </button>
             </div>
@@ -4421,10 +4417,11 @@ function App() {
                         : "quest-sync-warn"
                     }
                   >
+                    <Icon name={questStatus.effective_path_valid ? "check" : "warn"} />{" "}
                     {questStatus.effective_path_valid
                       ? questStatus.counts_by_mode
-                        ? `✓ PVP ${questStatus.counts_by_mode.pvp.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pvp.started}${t.questSyncCountStartedShort} / PVE ${questStatus.counts_by_mode.pve.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pve.started}${t.questSyncCountStartedShort}${questStatus.counts_by_mode.season && questStatus.counts_by_mode.season.completed + questStatus.counts_by_mode.season.started > 0 ? ` / ${t.gameModeSeason} ${questStatus.counts_by_mode.season.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.season.started}${t.questSyncCountStartedShort}` : ""}`
-                        : `✓ ${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
+                        ? `PVP ${questStatus.counts_by_mode.pvp.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pvp.started}${t.questSyncCountStartedShort} / PVE ${questStatus.counts_by_mode.pve.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.pve.started}${t.questSyncCountStartedShort}${questStatus.counts_by_mode.season && questStatus.counts_by_mode.season.completed + questStatus.counts_by_mode.season.started > 0 ? ` / ${t.gameModeSeason} ${questStatus.counts_by_mode.season.completed}${t.questSyncCountCompletedShort}·${questStatus.counts_by_mode.season.started}${t.questSyncCountStartedShort}` : ""}`
+                        : `${questStatus.completed_count} ${t.questSyncCompleted} / ${questStatus.started_count} ${t.questSyncStarted}`
                       : t.questSyncPathMissing}
                   </span>
                 </div>
@@ -4709,7 +4706,7 @@ function App() {
             >
               <div className="capture-modal-header">
                 <span id="capture-modal-title" className="capture-modal-title">
-                  📐 {t.captureRegionTitle}
+                  <Icon name="crop" /> {t.captureRegionTitle}
                 </span>
                 <button
                   className="settings-btn"
@@ -4737,15 +4734,16 @@ function App() {
                 </div>
                 <div className="capture-legend">
                   <div className="capture-legend-row">
-                    <span>🟦</span>
+                    {/* 색 견본 = 미리보기 창(main.tsx)의 실제 색: 청록 십자선·빨강 캡처 박스·노랑 땅바닥 박스 */}
+                    <span className="legend-swatch" style={{ background: "#00e5ff" }} aria-hidden="true" />
                     <span>{t.legendAnchor}</span>
                   </div>
                   <div className="capture-legend-row">
-                    <span>🟥</span>
+                    <span className="legend-swatch" style={{ background: "#ff4040" }} aria-hidden="true" />
                     <span>{t.legendPrimary}</span>
                   </div>
                   <div className="capture-legend-row">
-                    <span>🟨</span>
+                    <span className="legend-swatch" style={{ background: "#ffc040" }} aria-hidden="true" />
                     <span>{t.legendGround}</span>
                   </div>
                   <div className="capture-legend-note">
@@ -4923,7 +4921,7 @@ function App() {
         )}
         {!showSettings && !radarActive && status === "error" && (
           <div className="error">
-            ⚠ {error}{" "}
+            <Icon name="warn" /> {error}{" "}
             <button
               className="status-link"
               onClick={() => openStatusPage(region.lang)}
@@ -5664,7 +5662,7 @@ function App() {
                                         className="quest-status-icon started"
                                         title={t.questInProgressHint}
                                       >
-                                        ▶
+                                        <Icon name="play" />
                                       </span>
                                     )}
                                     {q.count != null && (

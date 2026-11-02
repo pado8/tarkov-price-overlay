@@ -6,7 +6,9 @@ import type { ReactNode } from "react";
 export type IconName =
   | "clock" | "map" | "wideMap" | "gear" | "x" | "pin" | "keyboard" | "back"
   // 본문 섹션(11-02 2차): 구매처·교환으로 얻기·이 아이템으로 교환·은신처 제작·재료로 쓰이는 제작·건스미스·은신처 업그레이드·탄약 비교·퀘스트·칸·무게·위키·잠금·완료·열쇠
-  | "store" | "exchange" | "send" | "hammer" | "flask" | "wrench" | "hideout" | "target" | "quests" | "box" | "scale" | "book" | "lock" | "check" | "key";
+  | "store" | "exchange" | "send" | "hammer" | "flask" | "wrench" | "hideout" | "target" | "quests" | "box" | "scale" | "book" | "lock" | "check" | "key"
+  // 설정·배너(11-02 3차): 피드백·서비스 상태·후원·캡처 영역·첨부·경고·업데이트·다운로드·진행 중·마우스 단축키·지도 회전
+  | "mail" | "globe" | "heart" | "crop" | "paperclip" | "warn" | "update" | "download" | "play" | "mouse" | "rotate";
 
 const PATHS: Record<Exclude<IconName, "wideMap">, ReactNode> = {
   clock: (
@@ -88,6 +90,43 @@ const PATHS: Record<Exclude<IconName, "wideMap">, ReactNode> = {
       <path d="M7.6 8.4 14 2M11 5l2 2M9 7l1.5 1.5" />
     </>
   ),
+  // 피드백: 편지
+  mail: (
+    <>
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" />
+      <path d="M1.5 5.2 8 9.5l6.5-4.3" />
+    </>
+  ),
+  // 서비스 상태: 지구본
+  globe: (
+    <>
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M1.5 8h13M8 1.5c-2.6 2.6-2.6 10.4 0 13M8 1.5c2.6 2.6 2.6 10.4 0 13" />
+    </>
+  ),
+  // 후원: 하트
+  heart: <path d="M8 13.5S2 9.8 2 5.8A3 3 0 0 1 8 4.5a3 3 0 0 1 6 1.3c0 4-6 7.7-6 7.7z" />,
+  // 캡처 영역: 자르기 틀
+  crop: <path d="M4 1.5v10.5h10.5M1.5 4h10.5v10.5" />,
+  // 이미지 첨부: 클립
+  paperclip: <path d="M13 7.5l-5.6 5.6a3 3 0 0 1-4.2-4.2l6-6a2 2 0 0 1 2.8 2.8l-6 6a1 1 0 0 1-1.4-1.4L10 5" />,
+  // 경고(관리자 권한·오류·경로 없음)
+  warn: <path d="M8 2 1.5 13.5h13zM8 6.5v3.5M8 12h.01" />,
+  // 새 버전: 순환 화살표
+  update: <path d="M13.5 8a5.5 5.5 0 0 1-9.6 3.7M2.5 8a5.5 5.5 0 0 1 9.6-3.7M12.5 2v2.8h-2.8M3.5 14v-2.8h2.8" />,
+  // 다운로드 중
+  download: <path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11" />,
+  // 진행 중인 퀘스트
+  play: <path d="M4.5 2.5v11l8-5.5z" />,
+  // 마우스 단축키(휠·X1·X2)
+  mouse: (
+    <>
+      <rect x="4.5" y="1.5" width="7" height="13" rx="3.5" />
+      <path d="M8 1.5v4" />
+    </>
+  ),
+  // 지도 90° 회전
+  rotate: <path d="M13 8a5 5 0 1 1-1.5-3.5M13.5 2.5v3h-3" />,
 };
 
 export function Icon({ name, className }: { name: IconName; className?: string }) {

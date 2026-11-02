@@ -6,6 +6,7 @@
 // '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RadarState, RadarTarget } from "./Radar";
+import { Icon } from "./Icon";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
@@ -589,9 +590,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
-          {view && <button type="button" onClick={centerMe} title={t.radarMapMe}>⌖ {t.radarMapMe}</button>}
+          {view && <button type="button" onClick={centerMe} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
           <button type="button" onClick={fit} title={t.radarMapFit}>{t.radarMapFit}</button>
-          {!headingUp && <button type="button" onClick={rotate} title={t.radarMapRotate}>↻</button>}
+          {!headingUp && <button type="button" onClick={rotate} title={t.radarMapRotate} aria-label={t.radarMapRotate}><Icon name="rotate" /></button>}
         </div>
         {v && <div className="radar-mapscale">━ {scaleM}m</div>}
         {headingUp && <div className="radar-mapup">▲ {t.radarMapHeadingUp}</div>}
