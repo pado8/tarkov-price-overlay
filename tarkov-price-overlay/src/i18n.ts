@@ -321,7 +321,7 @@ export const T = {
     sidecarDead:
       "조회 서버를 복구하지 못했어요. 트레이 아이콘 우클릭 → 종료 후 앱을 다시 실행해 주세요.",
     exit: "종료",
-    hideToTrayTitle: "트레이로 숨기기 (완전 종료는 트레이 우클릭 → 종료)",
+    hideToTrayTitle: "창 내리기 — 트레이로 숨김 (다시 띄우기: F2 조회·카드 토글 단축키·트레이 아이콘 / 완전 종료: 트레이 우클릭 → 종료)",
     feedback: "피드백",
     feedbackSubject: "타르코프 시세 오버레이 피드백",
     feedbackBody:
@@ -685,7 +685,7 @@ export const T = {
     sidecarDead:
       "The lookup server could not be recovered. Right-click the tray icon → Exit, then start the app again.",
     exit: "Exit",
-    hideToTrayTitle: "Hide to tray (right-click tray icon → Exit to fully quit)",
+    hideToTrayTitle: "Minimize to tray (bring back: F2 lookup, card toggle hotkey or tray icon / fully quit: right-click tray icon → Exit)",
     feedback: "Feedback",
     feedbackSubject: "Tarkov Price Overlay feedback",
     feedbackBody:
@@ -1049,7 +1049,7 @@ export const T = {
     sidecarDead:
       "Не удалось восстановить сервер запросов. ПКМ по значку в трее → Выход, затем запустите приложение снова.",
     exit: "Выход",
-    hideToTrayTitle: "Свернуть в трей (ПКМ по значку → Выход для полного закрытия)",
+    hideToTrayTitle: "Свернуть в трей (вернуть: поиск F2, горячая клавиша карточки или значок в трее / полностью закрыть: ПКМ по значку → Выход)",
     feedback: "Отзыв",
     feedbackSubject: "Отзыв об Оверлее цен Tarkov",
     feedbackBody:

@@ -3556,7 +3556,8 @@ function App() {
               </span>
             ) : (
               <button
-                className="settings-btn exit-btn"
+                className="settings-btn"
+                aria-label={t.hideToTrayTitle}
                 onClick={() => {
                   // Tear down React state before invoking the native hide so
                   // the preview-rect polling loop (which checks cardVisible
@@ -3572,7 +3573,8 @@ function App() {
                 }}
                 title={t.hideToTrayTitle}
               >
-                <Icon name="x" />
+                {/* 창 내리기(트레이) — 빨간 ✕ 는 '종료'로 읽혀서 최소화 기호 + 다른 버튼과 같은 금색으로(11-02 사용자 요청) */}
+                <Icon name="minimize" />
               </button>
             )}
           </div>

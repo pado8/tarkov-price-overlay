@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 
 export type IconName =
-  | "clock" | "map" | "wideMap" | "gear" | "x" | "pin" | "keyboard" | "back"
+  | "clock" | "map" | "wideMap" | "gear" | "x" | "minimize" | "pin" | "keyboard" | "back"
   // 본문 섹션(11-02 2차): 구매처·교환으로 얻기·이 아이템으로 교환·은신처 제작·재료로 쓰이는 제작·건스미스·은신처 업그레이드·탄약 비교·퀘스트·칸·무게·위키·잠금·완료·열쇠
   | "store" | "exchange" | "send" | "hammer" | "flask" | "wrench" | "hideout" | "target" | "quests" | "box" | "scale" | "book" | "lock" | "check" | "key"
   // 설정·배너(11-02 3차): 피드백·서비스 상태·후원·캡처 영역·첨부·경고·업데이트·다운로드·진행 중·마우스 단축키·지도 회전
@@ -31,6 +31,8 @@ const PATHS: Record<Exclude<IconName, "wideMap">, ReactNode> = {
     </g>
   ),
   x: <path d="M4 4l8 8M12 4l-8 8" />,
+  // 창 내리기(트레이로 숨김) — 윈도우 최소화 기호처럼 아래쪽 가로줄. ✕ 는 '종료'로 읽혀서 바꿨다(11-02)
+  minimize: <path d="M3.5 11.5h9" />,
   pin: (
     <path d="M10 1.5l4.5 4.5-1.3 1.3-.9-.3-2.6 2.6.3 2.8-1.3 1.3L5.9 11 2 14.9l-.9-.9L5 10.1 2.2 7.3l1.3-1.3 2.8.3 2.6-2.6-.3-.9z" />
   ),
