@@ -3480,7 +3480,7 @@ function App() {
               }}
               title={t.radarOpen}
             >
-              🧭
+              🗺️
             </button>
             <button
               className={`settings-btn${wideMode ? " active" : ""}`}

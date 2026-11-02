@@ -150,7 +150,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const header = (
     <div className="radar-head">
       <span className="radar-title">
-        🧭 {data?.map ? data.map.name : t.radarTitle}
+        🗺️ {data?.map ? data.map.name : t.radarTitle}
         {data?.map_source === "manual" && <span className="radar-src"> · {t.radarManual}</span>}
       </span>
       {data?.shot && (
