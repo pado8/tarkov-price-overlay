@@ -16,8 +16,8 @@ $landing = Join-Path $root "landing"
 $hostFile = Join-Path $root "scripts\hosting.txt"
 $target = if (Test-Path $hostFile) { (Get-Content $hostFile -Raw).Trim().ToLower() } else { "vercel" }
 $adFile = Join-Path $root "scripts\adsense_client.txt"
-$adId = if (Test-Path $adFile) { (Get-Content $adFile -Raw).Trim() } else { "" }
-$project = (Get-Content (Join-Path $root "scripts\cloudflare\project.txt") -Raw).Trim()   # Cloudflare Pages 프로젝트 이름
+$adId = if (Test-Path $adFile) { ([string](Get-Content $adFile -Raw)).Trim() } else { "" }   # 빈 파일이면 Get-Content -Raw 가 $null 이라 [string] 으로 감싼다(11-03)
+$project = ([string](Get-Content (Join-Path $root "scripts\cloudflare\project.txt") -Raw)).Trim()   # Cloudflare Pages 프로젝트 이름
 
 Write-Host ("[deploy] 대상=" + $target + " · 광고=" + $(if ($adId) { $adId } else { "없음" }))
 if (-not $SkipPrep) {
