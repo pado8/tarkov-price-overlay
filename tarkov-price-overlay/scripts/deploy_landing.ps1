@@ -5,7 +5,7 @@
 #   cloudflare : landing → scripts\cloudflare\.stage (vercel.json·.vercel 제외) + _headers 복사 → npx wrangler pages deploy
 # 배포 전에 adsense.py·hosting.py 를 돌려 광고·분석 조각을 상태에 맞춘다(-SkipPrep 로 생략).
 # 쓰는 곳: promo_refresh.ps1(주간 프로모 갱신), 수동 배포, cutover_cloudflare.ps1
-param([switch]$SkipPrep)
+param([switch]$SkipPrep, [switch]$Maintenance)   # -Maintenance: 전 경로를 '잠시 점검 중' 페이지로(cloudflare 만). 되돌리기 = 스위치 없이 다시 배포
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $env:PYTHONIOENCODING = "utf-8"
@@ -43,12 +43,24 @@ if ($target -eq "vercel") {
 elseif ($target -eq "cloudflare") {
     $stage = Join-Path $root "scripts\cloudflare\.stage"
     New-Item -ItemType Directory -Force $stage | Out-Null
-    # /MIR: 지운 파일도 따라 지운다. robocopy 는 0~7 이 성공(8 이상이 실패)
-    robocopy $landing $stage /MIR /XF vercel.json /XD .vercel /NFL /NDL /NJH /NJS /NP | Out-Null
-    if ($LASTEXITCODE -ge 8) { Write-Host "[deploy] 스테이징 복사 실패(robocopy $LASTEXITCODE)"; exit 1 }
-    # _headers 는 LF·BOM 없이 — 윈도우 저장소(autocrlf)라 CRLF 로 꺼내질 수 있고, PS5.1 Set-Content utf8 은 BOM 을 붙인다
-    $hdr = ([IO.File]::ReadAllText((Join-Path $root "scripts\cloudflare\_headers"))) -replace "`r`n", "`n"
-    [IO.File]::WriteAllText((Join-Path $stage "_headers"), $hdr.TrimStart([char]0xFEFF), (New-Object System.Text.UTF8Encoding($false)))
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
+    if ($Maintenance) {
+        # 점검 모드: 점검 페이지 하나 + _redirects(모든 경로 → /maintenance.html 200 rewrite) + 캐시 금지 헤더만 올린다.
+        # Pages 는 _redirects 의 200 을 같은 사이트 안 rewrite 로 처리한다(대상은 .html 없이 — Pages 가 .html 을 308 로 정규화해 루프가 난다). 복구 = 스위치 없이 다시 배포(전체 파일이 다시 올라감).
+        Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Force $stage | Out-Null
+        Copy-Item (Join-Path $landing "maintenance.html") (Join-Path $stage "maintenance.html")
+        [IO.File]::WriteAllText((Join-Path $stage "_redirects"), "/* /maintenance 200`n", $utf8)
+        [IO.File]::WriteAllText((Join-Path $stage "_headers"), "/*`n  Cache-Control: no-store`n  Retry-After: 300`n  X-Robots-Tag: noindex`n", $utf8)
+        Write-Host "[deploy] ⚠ 점검 모드: 전 경로가 '잠시 점검 중' 페이지로 바뀐다"
+    }
+    else {
+        # /MIR: 지운 파일도 따라 지운다. robocopy 는 0~7 이 성공(8 이상이 실패)
+        robocopy $landing $stage /MIR /XF vercel.json /XD .vercel /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { Write-Host "[deploy] 스테이징 복사 실패(robocopy $LASTEXITCODE)"; exit 1 }
+        # _headers 는 LF·BOM 없이 — 윈도우 저장소(autocrlf)라 CRLF 로 꺼내질 수 있고, PS5.1 Set-Content utf8 은 BOM 을 붙인다
+        $hdr = ([IO.File]::ReadAllText((Join-Path $root "scripts\cloudflare\_headers"))) -replace "`r`n", "`n"
+        [IO.File]::WriteAllText((Join-Path $stage "_headers"), $hdr.TrimStart([char]0xFEFF), $utf8)
+    }
     $n = (Get-ChildItem $stage -Recurse -File).Count
     Write-Host "[deploy] 스테이징 $n 개 파일 → Cloudflare Pages '$project'"
     $out = & npx --yes wrangler@4 pages deploy $stage --project-name $project --branch main --commit-dirty=true 2>&1
