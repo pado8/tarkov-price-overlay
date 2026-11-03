@@ -258,3 +258,6 @@ dl.faq{margin:0}
 dl.faq dt{font-weight:700;margin:12px 0 4px}
 dl.faq dt:first-child{margin-top:0}
 dl.faq dd{margin:0 0 6px;color:var(--muted,#b7bcc6);line-height:1.6}
+
+/* 같은 페이지 안 링크(#id)로 갈 때 상단 고정 메뉴에 제목이 가리지 않게 */
+section.box[id]{scroll-margin-top:84px}
