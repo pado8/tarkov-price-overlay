@@ -6,33 +6,19 @@ Allow: /
 User-agent: Yeti
 Allow: /
 
-# ── AI 학습용 수집기 차단 (2026-11-03) ──────────────────────────
-# 검색엔진(Googlebot·Yeti·Bingbot)·광고(Mediapartners-Google)·
-# 사용자 질문에 답하는 AI 비서(OAI-SearchBot·ChatGPT-User·Claude-User·PerplexityBot)는
-# 위 * 그룹에 따라 그대로 허용된다. 아래는 학습 데이터 수집·대량 긁기용만 막는다.
-User-agent: GPTBot
-User-agent: ClaudeBot
-User-agent: anthropic-ai
-User-agent: Google-Extended
-User-agent: CCBot
+# ── AI 수집기 (2026-11-03 저녁, 사용자 결정: 검색용·학습용 모두 허용) ──────────
+# 검색·답변용(OAI-SearchBot·ChatGPT-User·PerplexityBot·Claude-SearchBot·Claude-User·Googlebot)과
+# 학습·근거용(GPTBot·ClaudeBot·Google-Extended·CCBot·Applebot-Extended·meta-externalagent·Amazonbot·
+# cohere-ai·AI2Bot·PanguBot 등)은 위 * 그룹에 따라 허용한다 — 무료 앱·가이드를 모델이 알고 추천하는 쪽이 이득.
+# 아래는 AI 와 무관한 대량 긁기·데이터 중개·이미지 수집기만 막는다(규칙을 지키는 봇에게만 효력이 있음).
 User-agent: Bytespider
-User-agent: Applebot-Extended
-User-agent: meta-externalagent
-User-agent: Amazonbot
+User-agent: img2dataset
+User-agent: Scrapy
 User-agent: Diffbot
-User-agent: cohere-ai
-User-agent: cohere-training-data-crawler
-User-agent: ImagesiftBot
 User-agent: omgili
 User-agent: omgilibot
 User-agent: webzio-extended
-User-agent: PetalBot
-User-agent: Timpibot
-User-agent: AI2Bot
-User-agent: Ai2Bot-Dolma
-User-agent: PanguBot
-User-agent: img2dataset
-User-agent: Scrapy
+User-agent: ImagesiftBot
 Disallow: /
 
 # ── SEO 분석 수집기 차단 (경쟁 분석용 대량 크롤러, 검색 순위와 무관) ──
