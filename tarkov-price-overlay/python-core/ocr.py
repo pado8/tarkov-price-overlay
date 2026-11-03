@@ -150,6 +150,10 @@ _PRICE_STATUS_PATTERNS = [
     # Korean trader status copy (the reported case: Korean game language).
     # "이 아이템을 구매/판매할 수 없습니다", "거래 불가", "상인이 취급하지 않는".
     re.compile(r"(구매할 수 없|판매할 수 없|거래\s*불가|취급하지\s*않)"),
+    # 거래 화면 버튼 안내 "SPACE | 거래하기 | ₽1 141"(11-03 스크린샷 QA): 조각 'SPACE' 가 PACA 방탄복으로
+    # 퍼지 매칭되던 거짓 양성. 키 이름·버튼 문구만 단독 조각으로 왔을 때 노이즈로 본다(ru 문구는 미확인이라 안 넣음).
+    re.compile(r"^\s*(SPACE|TRADE)\s*$", re.IGNORECASE),
+    re.compile(r"^\s*거래하기\s*$"),
 ]
 
 

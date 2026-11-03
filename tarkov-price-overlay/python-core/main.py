@@ -650,6 +650,51 @@ def _monitor_center_box(
     return None
 
 
+# ── 진단용 캡처 저장(개발 PC 전용, 11-03) ─────────────────────────────────
+# 설정 화면엔 없다. %LOCALAPPDATA%\TarkovPriceOverlay\diag_capture.on 파일이 있거나(개발 PC 에서 손으로 만든다)
+# 환경변수 TARKOV_DIAG_CAPTURE=1 일 때만, 조회 시도마다 앱이 실제로 본 캡처 조각(PNG)과 OCR 조각·매칭 결과를
+# diag\ 폴더에 남긴다(log.jsonl 한 줄씩). 게임 없이 OCR·매칭 회귀 테스트를 돌리기 위한 자료. 플래그는 조회마다
+# 확인하므로 파일을 지우면 바로 꺼진다. 사용자 PC 엔 플래그가 없으니 아무것도 안 한다.
+def _diag_dir():
+    try:
+        from pathlib import Path as _P
+        base = _P(os.environ["TPO_DIAG_DIR"]) if os.environ.get("TPO_DIAG_DIR") else None
+        if base is None:
+            from quest_tracker import _state_dir
+            base = _state_dir()
+        if os.environ.get("TARKOV_DIAG_CAPTURE") == "1" or (base / "diag_capture.on").exists():
+            d = base / "diag"
+            d.mkdir(parents=True, exist_ok=True)
+            return d
+    except Exception as e:  # noqa: BLE001
+        print(f"[diag] flag check failed: {e!r}")
+    return None
+
+
+def _diag_save(label: str, x: int, y: int, w: int, h: int, image, fragments: list, text: str, price: dict,
+               lang: str, game_mode: str) -> None:
+    d = _diag_dir()
+    if d is None:
+        return
+    try:
+        import json as _json
+        import time as _time
+        from datetime import datetime as _dt
+        from PIL import Image as _Image
+        name = f"{_dt.now().strftime('%Y%m%d-%H%M%S-%f')[:-3]}_{label}"
+        arr = image[:, :, :3][:, :, ::-1] if getattr(image, "ndim", 0) == 3 and image.shape[-1] >= 3 else image
+        _Image.fromarray(arr).save(d / f"{name}.png")
+        rec = {"ts": round(_time.time(), 3), "file": f"{name}.png", "label": label, "region": [x, y, w, h],
+               "lang": lang, "game_mode": game_mode, "fragments": fragments, "text": text,
+               "matched": price.get("name"), "item_id": price.get("id") or price.get("item_id"),
+               "matched_from": price.get("matched_from")}
+        with open(d / "log.jsonl", "a", encoding="utf-8") as f:
+            f.write(_json.dumps(rec, ensure_ascii=False) + "\n")
+        print(f"[diag] saved {name}.png matched={price.get('name')!r}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[diag] save failed: {e!r}")
+
+
 def _capture_and_lookup(
     x: int,
     y: int,
@@ -819,6 +864,7 @@ def _capture_and_lookup(
         f"[timing/{label}] capture={t1 - t0:.3f}s ocr={t2 - t1:.3f}s "
         f"price_lookup={t3 - t2:.3f}s total={t3 - t0:.3f}s"
     )
+    _diag_save(label, x, y, width, height, image, fragments, text, price, lang, game_mode)
     return text, price
 
 

@@ -1164,8 +1164,40 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
     return by_name
 
 
+_ALIAS_DOC: dict | None = None
+
+
+def _item_aliases() -> dict[str, dict[str, str]]:
+    """data/item_alias.json → {lang: {별칭: 아이템 id}}. 한 번만 읽고, 없거나 깨졌으면 빈 표."""
+    global _ALIAS_DOC
+    if _ALIAS_DOC is None:
+        try:
+            import sys as _sys
+            from pathlib import Path as _P
+            base = _P(getattr(_sys, "_MEIPASS", "")) if getattr(_sys, "frozen", False) else _P(__file__).resolve().parent
+            doc = json.loads((base / "data" / "item_alias.json").read_text(encoding="utf-8"))
+            _ALIAS_DOC = {k: v for k, v in doc.items() if not k.startswith("_") and isinstance(v, dict)}
+        except Exception as e:  # noqa: BLE001
+            print(f"[cache] item_alias.json unavailable: {e!r}")
+            _ALIAS_DOC = {}
+    return _ALIAS_DOC
+
+
 def _finish_install(lang: str, game_mode: str, by_name: dict[str, dict], source: str, ts: float | None = None) -> None:
     """정규화 색인을 만들고 메모리 캐시에 설치. 네트워크 갱신(_install_catalog)과 디스크 복원(load_snapshots)이 같이 쓴다."""
+    # 별칭표(data/item_alias.json): 게임 툴팁 표기가 카탈로그 이름과 다른 아이템('Wires 전선' ↔ '전선 묶음 (Bundle of
+    # wires)'). 두 경로가 다 여기를 지나므로 스냅샷 복원 때도 붙는다. 기존 이름(전체·짧은 이름)은 절대 덮지 않는다.
+    aliases = _item_aliases().get(lang) or {}
+    if aliases:
+        by_id = {e.get("id"): e for e in by_name.values() if e.get("id")}
+        added = 0
+        for alias, item_id in aliases.items():
+            entry = by_id.get(item_id)
+            if entry is not None and alias not in by_name:
+                by_name[alias] = entry
+                added += 1
+        if added:
+            print(f"[cache] aliases ({lang}): {added}/{len(aliases)} attached")
     # Canonical (OCR-confusion-folded) index for the last-resort exact match.
     # Built once per refresh so the hot path pays a single dict lookup.
     canon_map: dict[str, dict | None] = {}
@@ -1349,7 +1381,12 @@ def _cache_lookup(
         names = _names_cache.get(lang)
     if not names:
         names = list(cache.keys())
-    matches = difflib.get_close_matches(item_name, names, n=1, cutoff=0.6)
+    # 짧은 조각은 더 엄격하게(11-03 스크린샷 QA 354장): 'SPACE'→PACA(0.67), 'Jnatt'→Wyatt(0.60) 같은
+    # 거짓 양성은 전부 5~7자 조각이 0.6 기준을 턱걸이로 넘은 것. 글자 수가 적을수록 한두 글자 차이가
+    # 비율을 크게 흔들므로 길이별 기준을 둔다. 'Bolte'→'Bolts'(0.80), 4자 1글자 오독(0.75)은 그대로 통과.
+    n_chars = len(item_name.strip())
+    cutoff = 0.75 if n_chars <= 5 else 0.7 if n_chars <= 8 else 0.6
+    matches = difflib.get_close_matches(item_name, names, n=1, cutoff=cutoff)
     if matches:
         hit = matches[0]
         # cache.get (not cache[hit]): the names list and the price cache can

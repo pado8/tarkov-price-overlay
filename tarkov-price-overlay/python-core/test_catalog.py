@@ -163,5 +163,46 @@ check("둘 다 시세 있으면 예전대로 나중 것", ta._install_catalog("k
 a2 = dict(variant, id="a1", name="Same2"); b2 = dict(variant, id="b2", name="Same2")
 check("둘 다 시세 없으면 예전대로 나중 것", ta._install_catalog("ko", "regular", [a2, b2], ({}, []), "json")["Same2"]["id"] == "b2")
 
+
+# 10) 11-03 스크린샷 QA 회귀 — 짧은 조각 거짓 양성·거래 버튼 노이즈·별칭표(data/item_alias.json)
+reset()
+import ocr  # noqa: E402
+base = {"sellFor": [], "avg24hPrice": 1000, "width": 1, "height": 1, "weight": 0.1}
+qa_items = [
+    dict(base, id="paca", name="PACA 방탄복 (PACA Soft Armor)", shortName="PACA", types=["armor"]),
+    dict(base, id="wyatt", name="Wyatt 탄창 (Wyatt mag)", shortName="Wyatt", types=["mods"]),
+    dict(base, id="bolts", name="Bolts", shortName="Bolts", types=["barter"]),
+    dict(base, id="5c06779c86f77426e00dd782", name="전선 묶음 (Bundle of wires)", shortName="전선", types=["barter"]),
+    dict(base, id="5d1b376e86f774252519444e", name="맹렬한 도끼런 밀주 병 (Bottle of Fierce Hatchling moonshine)", shortName="밀주", types=["barter"]),
+]
+ta._install_catalog("ko", "pve", qa_items, ({}, []), "json")
+
+
+def hit(text):
+    return ta.get_item_price(text, lang="ko", game_mode="pve", allow_cold=False).get("name")
+
+
+def hit_id(text):
+    return ta.get_item_price(text, lang="ko", game_mode="pve", allow_cold=False).get("id")
+
+
+check("짧은 조각 'SPACE' 는 PACA 로 안 간다", hit("SPACE") is None)
+check("짧은 조각 'Jnatt' 는 Wyatt 로 안 간다", hit("Jnatt") is None)
+check("'Bolte' 는 여전히 Bolts", hit("Bolte") == "Bolts")
+check("4자 1글자 오독 'PACB' 는 PACA(0.75)", hit("PACB") == "PACA 방탄복 (PACA Soft Armor)")
+check("별칭 'Wires 전선' → 전선 묶음", hit_id("Wires 전선") == "5c06779c86f77426e00dd782")
+check("별칭 퍼지 'Moanshine 문사인 \"명렬한 도끼런\" 밀주' → 밀주", hit_id('Moanshine 문사인 "명렬한 도끼런" 밀주') == "5d1b376e86f774252519444e")
+check("별칭은 기존 이름을 덮지 않음",
+      ta._price_cache[("ko", "pve")]["전선"]["id"] == "5c06779c86f77426e00dd782" and ta._price_cache[("ko", "pve")]["Bolts"]["id"] == "bolts")
+for noise in ("SPACE", " space ", "거래하기", "P 1 141", "P27 356"):
+    check(f"거래 화면 노이즈 {noise!r} 는 상태줄", ocr.is_price_or_status_line(noise))
+for name in ("PACA", "Salewa", "P226", "SPACE BLASTER", "전선"):
+    check(f"아이템 이름 {name!r} 는 상태줄 아님", not ocr.is_price_or_status_line(name))
+# 스냅샷 복원 경로(_finish_install 공유)에서도 별칭이 붙는다
+ta._save_snapshot("ko", "pve", ta._price_cache[("ko", "pve")], ({}, []), "json")
+reset()
+ta.load_snapshots()
+check("스냅샷 복원 뒤에도 별칭 'Wires 전선'", ta.has_price_cache("ko", "pve") and hit_id("Wires 전선") == "5c06779c86f77426e00dd782")
+
 print("\n" + ("전부 통과" if FAILS == 0 else f"{FAILS}건 실패"))
 sys.exit(1 if FAILS else 0)
