@@ -252,3 +252,9 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .lang a:hover{color:var(--fg)}
 .lang a.on{color:var(--gold);border-color:var(--gold-dim)}
 @media (max-width:560px){.lang{margin-left:0;font-size:11px}}
+
+/* 11-03 프레스티지 자주 묻는 질문 */
+dl.faq{margin:0}
+dl.faq dt{font-weight:700;margin:12px 0 4px}
+dl.faq dt:first-child{margin-top:0}
+dl.faq dd{margin:0 0 6px;color:var(--muted,#b7bcc6);line-height:1.6}

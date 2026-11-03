@@ -198,6 +198,37 @@ STATION_WIKI_DIFF = {
 }
 
 
+# 손글 공략 메모(공식 위키 Guide 절 대조, 사실만 내 말로). 키=영문 퀘스트 이름. 서치콘솔에서 노출은 많은데
+# 순위 6~8위라 클릭을 놓치는 페이지부터 채운다(11-03: 공세적 정찰 298노출·I Need More Power 190노출).
+# 문장을 추가하면 guide_i18n en/ru 표에도 번역을 넣을 것(빌드 끝 '한글 남은 0·누락 0').
+QUEST_NOTES = {
+    "Offensive Reconnaissance": {"rev": "2026-11-03", "lines": [
+        "시작은 해안선(Shoreline)입니다. 요양원 서관 지하에 미궁(The Labyrinth)으로 가는 트랜짓이 있고, 거기까지 가서 트랜짓을 타면 목표 1이 끝납니다.",
+        "트랜짓 앞문은 Knossos LLC facility key로 열어야 하고, 트랜짓 자체는 미궁 출입 키카드(Labrys access keycard)가 있어야 탈 수 있습니다. 선택 목표인 키카드 획득이 바로 이 카드입니다.",
+        "레이드에서 살아 나올 필요는 없습니다. 미궁에 도착한 것으로 목표가 인정됩니다.",
+        "받는 조건은 메카닉 LL3, 레벨 26, 선행 퀘스트 「숨겨진 내막」(Hidden Layer) 완료입니다.",
+        "끝내면 메카닉의 미궁 퀘스트 5개(Vacate the Premises, Hypotheses Testing, Confidential Info, Indisputable Authority, This Tape Sucks)가 열립니다.",
+    ]},
+    "I Need More Power": {"rev": "2026-11-03", "lines": [
+        "동관 발전기는 2층 220호에 있고 문은 항상 열려 있습니다.",
+        "서관 발전기는 2층 219호입니다. 219호 열쇠로 들어가도 되고, 220호 열쇠로 옆방에 들어가 공용 발코니에서 219호 안을 들여다봐도 목표가 인정됩니다. 열쇠는 둘 중 하나만 있으면 됩니다.",
+        "연료통 3개는 인레이드 표시가 있어야 하고, 금속 연료통과 여행용 연료통을 섞어 내도 되며 내구도는 상관없습니다.",
+        "두 발전기 목표는 요양원 한 번 방문으로 같이 끝낼 수 있습니다. 동관 220호를 먼저 보고 서관 2층으로 건너가면 됩니다.",
+        "보상 달러는 정보 센터 1단계면 1,155달러, 2단계면 1,265달러로 늘어납니다.",
+    ]},
+}
+
+
+def quest_notes_html(en_name: str) -> str:
+    import re as _re
+    d = QUEST_NOTES.get(_re.sub(r"\s*\[(?:PVP|PVE) ZONE\]\s*$", "", en_name or ""))
+    if not d:
+        return ""
+    lis = "".join(f"<li>{e(x)}</li>" for x in d["lines"])
+    return (f'<section class="box"><h2>공략 메모</h2><ul class="plain">{lis}</ul>'
+            f'<p class="small muted">공식 위키 공략 절과 대조해 정리 ({e(d["rev"])}). 패치로 바뀌었으면 피드백으로 알려 주세요.</p></section>')
+
+
 def wiki_diff_html(en_name: str, stamp: str) -> str:
     """퀘스트 페이지용 — 공개 데이터와 공식 위키가 다른 항목을 병기한다(값은 바꾸지 않음)."""
     import re as _re
@@ -1033,6 +1064,9 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
     if tp and tid in ctx.tasks_reg and _sig(tp) != _sig(ctx.tasks_reg[tid]):
         sections_main.append('<section class="box"><h2>PVE 버전 목표</h2><p class="small muted">PVE에서는 목표가 조금 다릅니다.</p><ol class="objs">'
                              + "".join(objective_html(ctx, o) for o in tp.get("objectives") or []) + "</ol></section>")
+    notes = quest_notes_html(en)
+    if notes:
+        sections_main.append(notes)
     # 다운로드 한 줄 안내 — 목표(PVE 목표 포함)를 다 본 바로 아래(11-03, 자리 표식 guide-quest)
     sections_main.append('<p class="qcta">레이드 중 아이템에 마우스 올리고 <b>F2</b> — 이 퀘스트에 필요한지·시세가 바로 떠요 <a href="/?src=guide-quest">무료 시세 오버레이 받기</a></p>')
     keys_html = ""
@@ -1097,7 +1131,7 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
             f'<div class="cols"><div class="col-main">{"".join(sections_main)}</div>'
             f'<aside class="col-side">{"".join(sections_side)}</aside></div></article>')
     map_txt = ", ".join(ctx.map_name(m) for m in maps[:3]) or "모든 지역"
-    title = f"{ko} 퀘스트 공략 — {trn} · 목표·필요템·보상 | 타르코프(탈콥) 가이드"
+    title = f"{ko}{(' (' + en_label + ')') if en_label else ''} 퀘스트 공략 — {trn} · 목표·필요템·보상 | 타르코프(탈콥) 가이드"
     desc = (f"타르코프 {trn} 퀘스트 '{ko}'({en}) 공략: 목표 {len(t.get('objectives') or [])}개, 필요 아이템·열쇠, 보상, "
             f"받는 조건과 다음 퀘스트. 지역: {map_txt}. 데이터 기준 {ctx.stamp}.")
     html_text = page(ctx, path=ctx.task_url(tid), title=title, desc=desc, body=body, nav="quests",
@@ -1332,7 +1366,7 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
 </tbody></table></div>
 <div class="note" id="norow" style="display:none">이 표에 없는 아이템이에요. 여기는 <b>퀘스트에 내거나 은신처에 넣는</b> 아이템만 모았습니다 — <b>퀘스트 보상으로 받는</b> 아이템(상자·파우치·열쇠 등)은 <a href="/guide/rewards/">보상으로 받는 아이템</a>에서 찾아보세요. 어떤 퀘스트가 주는지, 처음부터 어떤 순서로 깨야 하는지 나옵니다.</div>"""
     path = "/guide/items/"
-    title = "타르코프 퀘스트·은신처 필요 아이템 총정리 — 버리면 안 되는 템, 인레이드 수량 | 탈콥 가이드"
+    title = f"타르코프 퀘스트 아이템 목록 {ctx.stamp[:4]} — 퀘스트·은신처 필요 아이템 총정리, 버리면 안 되는 템·인레이드 수량 | 탈콥 가이드"
     desc = f"타르코프 전체 퀘스트 제출 아이템과 은신처 건설 재료 {len(trs)}종을 한 표로. 인레이드(FiR) 필요 수량, 일반 수량, 플리 시세, 쓰이는 퀘스트·은신처 단계. PVP·PVE 전환. 데이터 기준 {ctx.stamp}."
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="items",
                       crumbs=[("필요 아이템", None)], scripts=ITEMS_JS)
@@ -2101,6 +2135,44 @@ def prestige_cond(ctx: Ctx, c: dict) -> str:
     return e(d) if d and d != c.get("description") else e(ty)
 
 
+# 단계별 보상 — 공식 위키 Prestige 문서(2026-11-03 대조)를 사실만 내 말로 옮김. (단계, 업적, 스킬 이월 PVP, PVE, 이월 칸, 타르코인 PVE, 포스터 PVP / PVE, 그 외)
+PRESTIGE_REWARDS = [
+    (1, "Prestigious", "5%", "10%", "8×3", 50, "What You Seek / The Path",
+     "바닥 꾸미기 Luxury flooring · 가위·바위·보 제스처 · 장비대 마네킹 포즈 Feel My Gains"),
+    (2, "More Prestigious", "10%", "20%", "8×4", 50, "I Bear Loot / The Abyss",
+     "벽 꾸미기 Quiet Luxury · OK 제스처 · 일일·주간 작전 과제 +1개 · 푸시 대거(PVP Akula, PVE Kasatka) · 메인 메뉴 배경 CyberTark"),
+    (3, "Keeping Up the Pace", "15%", "30%", "8×5", 100, "Get a Life / Get Lost",
+     "천장 꾸미기 Dropped ceiling · 사격장 표적(PVP 까마귀, PVE 모기) · 마네킹 포즈 Honor · PMC Origins 피규어 · BEAR 목소리 Vitaly·USEC 목소리 Rob"),
+    (4, "Higher and Higher", "20%", "40%", "8×6", 100, "Get a Paw / Get Well",
+     "바닥 꾸미기 Gray wood · 사격장 표적(PVP 다트, PVE 개미) · 마네킹 포즈 Jomoon · 하와이안 셔츠(BEAR 초록, USEC 파랑)"),
+    (5, "Five Plus", "25%", "50%", "8×7", 100, "Killagirl / Dorm Snake",
+     "벽 꾸미기 White walls · 사격장 표적(PVP 쥐, PVE 호박벌) · 마네킹 포즈 T-pose · NKVD Finka 칼 · 외형 BEAR Basilevs·USEC Shawn"),
+    (6, "No Limit to Perfection", "30%", "50%", "8×8", 200, "Chronicles of Ryzhy / D'ya Like Dags",
+     "천장 꾸미기 Gilded ceiling · 사격장 표적(PVP 수탉, PVE 왕지네) · 마네킹 포즈 Praise! · 강화 PMC 피규어 · 특별판 감마 컨테이너 · 메인 메뉴 배경 Hotline Tarkov"),
+]
+
+
+def prestige_rewards_html() -> str:
+    rows = "".join(
+        f'<tr><td class="n"><b>{lv}</b></td><td>{e(ach)}</td><td class="n">{pvp} / {pve}</td><td class="n">{grid}</td><td class="n">{tc}</td><td>{e(poster)}</td><td class="small">{e(extra)}</td></tr>'
+        for lv, ach, pvp, pve, grid, tc, poster, extra in PRESTIGE_REWARDS)
+    return (
+        '<h2 class="sec" id="rewards">프레스티지 보상 단계별 (PVP·PVE 공통 + 차이)</h2>'
+        '<div class="box"><p class="small">모든 단계 공통: 그 단계 전용 도그태그·완장·업적·프로필 아이콘(닉네임 옆 표시)과 카리스마 스킬 +1. '
+        '스킬·무기 숙련도 이월 비율과 이월 칸은 단계가 오를수록 커지고, PVE는 타르코인을 추가로 받습니다. 프레스티지 단계와 보상은 프로필을 초기화해도 영구히 남습니다.</p></div>'
+        '<div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th class="n">단계</th><th>업적</th><th class="n">스킬 이월 PVP / PVE</th><th class="n">이월 칸</th><th class="n">타르코인(PVE)</th><th>포스터 PVP / PVE</th><th>그 외 보상</th></tr></thead>'
+        f'<tbody>{rows}</tbody></table></div>'
+        '<h2 class="sec" id="faq">프레스티지 자주 묻는 질문</h2>'
+        '<div class="box"><dl class="faq">'
+        '<dt>프레스티지를 하면 무엇이 남고 무엇이 사라지나요?</dt>'
+        '<dd>남는 것은 프로필 통계, 업적, 아레나 ARP 등급과 무기고 진행도, 그리고 위 표의 비율만큼의 스킬·무기 숙련도와 이월 칸에 넣은 아이템입니다. 레벨, 퀘스트 진행, 상인 평판, 은신처, 보관함의 나머지 아이템은 초기화됩니다.</dd>'
+        '<dt>PVE와 PVP 프레스티지는 어떻게 다른가요?</dt>'
+        '<dd>조건이 다릅니다. PVE 1단계는 레벨 15와 500만 루블만 있으면 되고, PVP 1단계는 레벨 25, 퀘스트 「New Beginning」, 은신처 3개(정보 센터 1·영양 유닛 2·휴식 공간 2), 1,000만 루블이 필요합니다. 2단계부터는 투어 완료와 스킬 조건이 양쪽에 붙습니다. 보상은 이월 비율이 PVE 쪽이 두 배 가까이 높고, PVE에만 타르코인이 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.</dd>'
+        '<dt>조건은 어디서 확인하나요?</dt>'
+        '<dd>위 PVE·PVP 표가 공개 데이터 기준 전체 조건입니다. 레벨·퀘스트·스토리 챕터 목표·스킬·은신처·보유 루블 여섯 가지를 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다.</dd>'
+        '</dl></div>')
+
+
 def prestige_page(ctx: Ctx) -> tuple[str, str]:
     secs = []
     for label, plist in (("PVE", ctx.prestige_pve), ("PVP", ctx.prestige_reg)):
@@ -2133,6 +2205,7 @@ def prestige_page(ctx: Ctx) -> tuple[str, str]:
             '"이월 칸" 크기만큼 허용된 종류의 아이템을 옮길 수 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.</div>'
             f'<nav class="toc"><a href="#pve">PVE</a><a href="#pvp">PVP</a><a href="/guide/start/">초기화 뒤 초반 가이드 →</a></nav>'
             + "".join(secs)
+            + prestige_rewards_html()
             + '<p class="small muted">출처: tarkov.dev 프레스티지 데이터, 패치 노트 1.2.0. 시세 오버레이 v1.2.5는 PVE 프레스티지를 게임 로그로 자동 감지해 퀘스트 진행을 새로 시작합니다.</p>')
     path = "/guide/prestige/"
     title = "타르코프 프레스티지 조건 총정리 — PVE·PVP 단계별 요구사항과 보상 | 탈콥 가이드"
