@@ -526,7 +526,8 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             key = sl.get("spawnKey") or sl.get("name")
             if not key:
                 continue
-            pts = [[round(float(p["x"]), 1), round(float(p["z"]), 1)] for p in sl.get("positions") or [] if ok(p)] or by_zone.get(key) or []
+            pts = ([[round(float(p["x"]), 1), round(float(p["z"]), 1)] for p in sl.get("positions") or [] if ok(p)]
+                   or by_zone.get(key) or [list(p) for p in BOSS_ANCHORS.get(m.get("normalizedName") or "", {}).get(key, [])])
             if not pts:
                 continue
             en_name = _loc(loc_en, sl.get("name")) or sl.get("name") or ""
@@ -556,6 +557,17 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
 
 
 BOSS_CLUSTER_M = 150.0  # 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로
+
+# 원본(tarkov.dev)에 좌표도, 같은 이름의 스폰 점도 없어 통째로 빠지던 보스 구역(11-03 전 맵 점검).
+# 같은 맵의 열쇠 문·탈출구 위치로 '대략의 자리'만 잡는다 — 점 1~2개라 지도는 윤곽 없이 배지만 그린다(구역 넓이는 모름).
+#   세관 ZoneDormitory = 기숙사 방 열쇠 문 22개의 건물별 중심(2층 기숙사 x225~234·z134~160 / 3층 기숙사 x173~195·z149~184)
+#   세관 ZoneGasStation = 'Gas station office/storage room key' 문 2개(새 주유소)
+#   해안선 ZonePort(산차르) = 'Pier Boat' 탈출구
+# 기준점을 못 찾은 구역(해안선 ZoneGateTowerRight·ZoneForestSpawn, 터미널·쇄빙선 내부 코드)은 그대로 생략.
+BOSS_ANCHORS: dict = {
+    "customs": {"ZoneDormitory": [(229.8, 145.3), (180.6, 167.1)], "ZoneGasStation": [(415.6, 37.1)]},
+    "shoreline": {"ZonePort": [(-335.9, 564.1)]},
+}
 
 
 def _cluster_pts(pts: list, th: float) -> list:

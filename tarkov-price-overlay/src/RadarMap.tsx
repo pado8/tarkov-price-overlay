@@ -166,10 +166,47 @@ function imageMatrix(im: NonNullable<MapDoc["img"]>, toScreen: (gx: number, gz: 
   return { W, H, matrix: [sx.x - s0.x, sx.y - s0.y, sy.x - s0.x, sy.y - s0.y, s0.x, s0.y].map((n) => n.toFixed(4)).join(" ") };
 }
 
-const BOSS_PAD = 12; // 구역 사각형 여유(m)
-function bossBox(pts: [number, number][]) {
-  const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
-  return { x1: Math.min(...xs) - BOSS_PAD, x2: Math.max(...xs) + BOSS_PAD, z1: Math.min(...zs) - BOSS_PAD, z2: Math.max(...zs) + BOSS_PAD };
+// 보스 구역 윤곽(11-03 사용자 요청: 사각형 대신 지형처럼, 구역을 모르면 아이콘만).
+// 점마다 반경 BOSS_PAD 원을 두고 그 전체를 감싸는 볼록 껍질 = 점 2개면 캡슐, 여러 개면 모서리가 둥근 다각형.
+// 지도 변환(toScreen)은 회전·확대·뒤집기뿐이라 게임 좌표에서 감싼 모양이 화면에서도 그대로 감싼 모양이다.
+const BOSS_PAD = 14; // 윤곽 여유(m)
+const BOSS_ARC = 14; // 점마다 원을 몇 조각으로 근사할지
+function bossCenter(pts: [number, number][]): [number, number] {
+  return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+}
+/** 점들이 '면'으로 퍼져 있는가 — 주성분의 짧은 축 표준편차가 BOSS_MIN_SPREAD 이상. 한 줄로 늘어선 점(삼림 제재소 3점)은
+ *  윤곽이 길쭉한 막대가 돼 구역처럼 보이지 않으므로 넓이를 모르는 것으로 보고 배지만 찍는다. */
+const BOSS_MIN_SPREAD = 8; // m
+function bossIsArea(pts: [number, number][]): boolean {
+  if (pts.length < 3) return false;
+  const [mx, mz] = bossCenter(pts);
+  let sxx = 0, szz = 0, sxz = 0;
+  for (const [x, z] of pts) { sxx += (x - mx) ** 2; szz += (z - mz) ** 2; sxz += (x - mx) * (z - mz); }
+  sxx /= pts.length; szz /= pts.length; sxz /= pts.length;
+  const minor = (sxx + szz) / 2 - Math.sqrt(((sxx - szz) / 2) ** 2 + sxz ** 2); // 공분산 행렬의 작은 고윳값
+  return Math.sqrt(Math.max(0, minor)) >= BOSS_MIN_SPREAD;
+}
+function bossHull(pts: [number, number][]): [number, number][] {
+  const ring: [number, number][] = [];
+  for (const [x, z] of pts)
+    for (let k = 0; k < BOSS_ARC; k++) {
+      const a = (k / BOSS_ARC) * Math.PI * 2;
+      ring.push([x + Math.cos(a) * BOSS_PAD, z + Math.sin(a) * BOSS_PAD]);
+    }
+  // 모노톤 체인 볼록 껍질
+  ring.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  const cross = (o: [number, number], a: [number, number], b: [number, number]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower: [number, number][] = [], upper: [number, number][] = [];
+  for (const p of ring) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  for (let i = ring.length - 1; i >= 0; i--) {
+    const p = ring[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  return lower.slice(0, -1).concat(upper.slice(0, -1));
 }
 function bossText(z: NonNullable<MapDoc["bosses"]>[number], max = 9): string {
   return z.bosses.slice(0, max).map((b) => `${b.name} ${Math.round(b.chance * 100)}%`).join(", ");
@@ -399,7 +436,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
-    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
       if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -546,18 +583,25 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               })}
             {layers.spawns &&
               (doc.bosses ?? []).map((z, i) => {
-                // 구역 = 스폰 점들을 감싸는 사각형(여유 12m) — tarkov.dev 처럼 붉게 칠하고 해골. 맵 전역(anywhere)이면 상자 없이 점선 원 하나
-                const b = bossBox(z.pts);
-                const c = toScreen((b.x1 + b.x2) / 2, (b.z1 + b.z2) / 2);
-                const corners = [[b.x1, b.z1], [b.x2, b.z1], [b.x2, b.z2], [b.x1, b.z2]] as [number, number][];
+                // 스폰 점이 면으로 퍼져 있으면(3개 이상·일렬 아님) 구역 넓이를 안다 → 점들을 둥글게 감싼 윤곽(bossHull) + 가운데 배지.
+                // 1~2개거나 한 줄이면 넓이를 모름(길쭉한 캡슐이 오해를 부름) → 윤곽 없이 점마다 배지. 맵 전역(anywhere)이면 점선 원 하나.
+                const [cx, cz] = bossCenter(z.pts);
+                const c = toScreen(cx, cz);
+                const shape = !z.anywhere && bossIsArea(z.pts);
+                const badges = shape || z.anywhere ? [c] : z.pts.map((q) => toScreen(q[0], q[1]));
                 return (
-                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2] })}>
+                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
                     {z.anywhere ? (
-                      <circle cx={c.x} cy={c.y} r={13} fill="rgba(220,40,40,0.18)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="3 2" />
-                    ) : (
-                      <polygon points={poly(corners)} fill="rgba(220,40,40,0.22)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="4 2" />
-                    )}
-                    <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize={14} fill="#ff4d4d" stroke="#000" strokeWidth={0.6}>☠</text>
+                      <circle cx={c.x} cy={c.y} r={14} fill="rgba(220,40,40,0.14)" stroke="#e53935" strokeWidth={1.2} strokeDasharray="3 2" />
+                    ) : shape ? (
+                      <polygon points={poly(bossHull(z.pts))} fill="rgba(229,57,53,0.17)" stroke="#e53935" strokeWidth={1.2} strokeLinejoin="round" />
+                    ) : null}
+                    {badges.map((b, k) => (
+                      <g key={k}>
+                        <circle cx={b.x} cy={b.y} r={9} fill="#e53935" stroke="#3a0606" strokeWidth={1.4} />
+                        <text x={b.x} y={b.y + 4.3} textAnchor="middle" fontSize={12} fill="#1c0303" fontWeight={700}>☠</text>
+                      </g>
+                    ))}
                     {label(`bz${i}`)}
                   </g>
                 );
