@@ -771,7 +771,8 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
         // Tell the webview so it can stop promising "auto-recovering" — at
         // this point only an app restart brings lookups back, and the user
         // deserves accurate instructions instead of an infinite F2 loop.
-        let _ = app.emit("sidecar-dead", ());
+        // 11-03: 마지막 실패 이유를 같이 보낸다(텔레메트리 sidecar_fail dead:<이유>).
+        let _ = app.emit("sidecar-dead", why.to_string());
         return;
     }
     // Exponential backoff (2,4,8,16,32s ≈ 62s window): a fixed 2s delay
@@ -846,6 +847,7 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     // dead in that case and must heal the same way.
     tauri::async_runtime::spawn(async move {
         let mut saw_terminated = false;
+        let mut exit_code: Option<i32> = None;
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
@@ -859,6 +861,7 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
                 }
                 CommandEvent::Terminated(payload) => {
                     saw_terminated = true;
+                    exit_code = payload.code;
                     println!("[sidecar] terminated: code={:?}", payload.code);
                     break;
                 }
@@ -874,11 +877,14 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
             attempt + 1
         };
         let why = if saw_terminated {
-            "unexpected exit"
+            match exit_code {
+                Some(c) => format!("unexpected exit code={c}"),
+                None => "unexpected exit".to_string(),
+            }
         } else {
-            "event channel closed without Terminated"
+            "event channel closed without Terminated".to_string()
         };
-        schedule_sidecar_restart(app, next, why);
+        schedule_sidecar_restart(app, next, &why);
     });
 }
 

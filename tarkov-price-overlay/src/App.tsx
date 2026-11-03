@@ -81,12 +81,19 @@ function computeLootTier(
   return "D";
 }
 
+// 마지막 진단 호출이 왜 실패했는지(사이드카가 끝내 안 뜰 때 sidecar_fail 에 실어 보낸다)
+let lastDiagErr = "";
 async function fetchDiagnostics(): Promise<Diagnostics | null> {
   try {
     const res = await fetch(`${PYTHON_API}/diagnostics`);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      lastDiagErr = `http_${res.status}`;
+      return null;
+    }
+    lastDiagErr = "";
     return await res.json();
-  } catch {
+  } catch (e) {
+    lastDiagErr = e instanceof Error && e.name === "AbortError" ? "timeout" : "refused";
     return null;
   }
 }
@@ -216,7 +223,12 @@ type StatsEvent =
   // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
   | "install_mode" // 세션당 1회. detail = portable | installer
   | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
-  | "update_apply"; // detail = downloaded | install_now | install_quit | error | blocked:<min>
+  | "update_apply" // detail = downloaded | install_now | install_quit | error | blocked:<min>
+  // 11-03 2차 계측(v1.2.6). 전부 실행당 1회 또는 하루 1회라 행 수 영향은 하루 수백.
+  | "sidecar_fail" // 사이드카가 끝내 안 뜸. detail = probe_refused|probe_timeout|probe_http_<n>|dead:<이유>
+  | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
+  | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
+  | "daily"; // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
 // Every event used to be its own POST → its own INSERT → its own wake of the
 // (autosuspending) Postgres compute, so a busy raid kept the DB awake all
@@ -338,6 +350,7 @@ function scheduleStatsFlush(): void {
   if (statsFlushTimer != null) return;
   statsFlushTimer = setTimeout(async () => {
     statsFlushTimer = null;
+    dailyRollover(); // 며칠씩 켜 두는 사용자: 자정 지난 첫 창에서 전날 요약을 싣는다
     await flushStats();
     // Anything left means the send failed (or arrived mid-flight): keep the
     // cadence so the next window retries. New events re-arm the timer
@@ -346,13 +359,14 @@ function scheduleStatsFlush(): void {
   }, msToNextFlushWindow());
 }
 
-const reportEvent = (eventType: StatsEvent, detail?: string) => {
+const reportEvent = (eventType: StatsEvent, detail?: string, ts?: number) => {
   if (!loadStatsEnabled()) return;
   statsQueue.push({
     install_id: ensureInstallId(),
     event_type: eventType,
     version: APP_VERSION,
-    ts: Date.now(),
+    // ts 를 넘기면 그 시각으로 기록(하루 요약을 '그날'에 싣기 위해). 서버는 30일 안이면 믿는다.
+    ts: ts ?? Date.now(),
     ...(detail ? { detail } : {}),
   });
   if (statsQueue.length > STATS_QUEUE_CAP) {
@@ -362,10 +376,59 @@ const reportEvent = (eventType: StatsEvent, detail?: string) => {
   scheduleStatsFlush();
 };
 
+// ── 11-03 하루 요약 누적기 ─────────────────────────────────────────────
+// 기능마다 이벤트를 따로 보내지 않고 사용자당 하루 한 행에 횟수를 묶는다(행 수 하루 ~80).
+// KST 날짜가 바뀐 뒤 처음 손댈 때(또는 플러시 창·다음 실행 때) 전날 치를 전날 23:59 시각으로 보낸다.
+const DAILY_KEY = "tarkov.stats.daily";
+type DailyAcc = { d: string; c: Record<string, number>; lat: number[] };
+const kstDay = (ms = Date.now()) => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
+let dailyAcc: DailyAcc = { d: kstDay(), c: {}, lat: [] };
+try {
+  const raw = localStorage.getItem(DAILY_KEY);
+  if (raw) {
+    const p = JSON.parse(raw);
+    if (p && typeof p.d === "string" && p.c && Array.isArray(p.lat)) dailyAcc = p;
+  }
+} catch {}
+const persistDaily = () => {
+  try {
+    localStorage.setItem(DAILY_KEY, JSON.stringify(dailyAcc));
+  } catch {}
+};
+function dailyRollover(): void {
+  const today = kstDay();
+  if (dailyAcc.d === today) return;
+  const parts = Object.entries(dailyAcc.c)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${k}=${v}`);
+  if (dailyAcc.lat.length) {
+    const s = [...dailyAcc.lat].sort((a, b) => a - b);
+    parts.push(`lat=${s[Math.floor(s.length / 2)]}`, `n=${s.length}`);
+  }
+  if (parts.length && /^\d{4}-\d{2}-\d{2}$/.test(dailyAcc.d)) {
+    reportEvent("daily", parts.join(";").slice(0, 64), Date.parse(`${dailyAcc.d}T23:59:00+09:00`));
+  }
+  dailyAcc = { d: today, c: {}, lat: [] };
+  persistDaily();
+}
+/** 기능 사용 1회. key 는 짧게(hist·man·wide·pin·fb·don). */
+function dailyAdd(key: string, n = 1): void {
+  dailyRollover();
+  dailyAcc.c[key] = (dailyAcc.c[key] ?? 0) + n;
+  persistDaily();
+}
+/** 성공 조회 응답 시간(ms). 하루 500개까지만 담는다(중앙값만 보내니 충분). */
+function dailyLat(ms: number): void {
+  dailyRollover();
+  if (dailyAcc.lat.length < 500 && Number.isFinite(ms) && ms >= 0) dailyAcc.lat.push(Math.round(ms));
+  persistDaily();
+}
+
 // Startup: adopt anything a previous session couldn't deliver (app closed
 // before a window, or the DB was down) and put it on the next window.
 if (typeof window !== "undefined") {
   loadStatsQueue();
+  dailyRollover(); // 전날 요약이 남아 있으면 지금 큐에 싣는다
   if (statsQueue.length) scheduleStatsFlush();
   // Persist-only on teardown. We deliberately do NOT fire a send here: an
   // unload-time POST is an isolated, random-time DB wake, and the queue now
@@ -1440,6 +1503,7 @@ function App() {
   // update_check 텔레메트리 중복 방지 — 같은 결과는 세션에 한 번만
   const updateCheckReportedRef = useRef<string | null>(null);
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
+  const questCfgReportedRef = useRef(false);
   const [questPathInput, setQuestPathInput] = useState<string>("");
   const [questDisplayModeSetting, setQuestDisplayModeSetting] = useState<QuestModeSetting>(
     loadQuestDisplayMode
@@ -1498,9 +1562,12 @@ function App() {
   // switch to an honest "restart the app" instruction instead.
   const sidecarDeadRef = useRef(false);
   useEffect(() => {
-    const un = listen("sidecar-dead", () => {
+    const un = listen<string>("sidecar-dead", (e) => {
       log("React: sidecar-dead received — restart budget exhausted");
       sidecarDeadRef.current = true;
+      // 이유(spawn failed: … / unexpected exit code=…)를 짧은 태그로. 경로·개인정보 없음.
+      const why = String(e.payload ?? "").toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, 50);
+      reportEvent("sidecar_fail", `dead:${why || "unknown"}`);
     });
     return () => {
       un.then((fn) => fn());
@@ -1602,6 +1669,31 @@ function App() {
       // mid-session edit. Lets the dashboard split the "never looked up" cohort
       // into "rebound the key" vs. a true activation gap.
       reportEvent("hotkey", hotkeyKind(loadHotkey()));
+      // 11-03 화면 해상도·배율(물리 픽셀): 빈 캡처·오독 실패가 특정 환경에 몰리는지 보기 위해
+      try {
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.round((window.screen?.width ?? 0) * dpr);
+        const h = Math.round((window.screen?.height ?? 0) * dpr);
+        if (w > 0 && h > 0) reportEvent("display", `${w}x${h}@${Math.round(dpr * 100)}`);
+      } catch {}
+      // 11-03 설정 한 줄: 언어·게임 언어·모드·지도·나란히·단축키·키 공유·자동 숨김·퀘스트 표시(≤64자)
+      try {
+        const r = loadRegion();
+        reportEvent(
+          "config",
+          [
+            `l=${r.lang}`,
+            `g=${r.gameLang ?? "-"}`,
+            `m=${r.gameMode}`,
+            `map=${localStorage.getItem(RADAR_ENABLED_KEY) !== "false" ? 1 : 0}`,
+            `w=${localStorage.getItem(WIDE_KEY) === "1" ? 1 : 0}`,
+            `hk=${hotkeyKind(loadHotkey())}`,
+            `s=${localStorage.getItem(HOTKEY_PASSTHROUGH_KEY) === "true" ? 1 : 0}`,
+            `ah=${r.autoHide ? 1 : 0}`,
+            `q=${r.showQuests ? 1 : 0}`,
+          ].join(";").slice(0, 64)
+        );
+      } catch {}
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2073,6 +2165,7 @@ function App() {
       try {
         localStorage.setItem(WIDE_KEY, v ? "0" : "1");
       } catch {}
+      if (!v) dailyAdd("wide"); // 켠 횟수만
       return !v;
     });
   };
@@ -2340,6 +2433,7 @@ function App() {
       // take well over 3s. Retry (every 2s, ~24s cap) so the admin-rights
       // banner and the elevation telemetry don't silently miss on cold boots.
       if (++tries < 12) timer = window.setTimeout(probe, 2000);
+      else reportEvent("sidecar_fail", `probe_${lastDiagErr || "unknown"}`); // ~24초 안에 못 뜸
     };
     probe();
     return () => {
@@ -2731,6 +2825,11 @@ function App() {
       if (!res.ok) return false;
       const data: QuestStatus = await res.json();
       setQuestStatus(data);
+      // 11-03 퀘스트 연동 켬 여부·경로 유효·퀘스트 수(세션당 1회) — 실제로 켜는 사람 수를 처음 재는 것
+      if (!questCfgReportedRef.current) {
+        questCfgReportedRef.current = true;
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0}`);
+      }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
       void handlePrestige(data.prestige_by_mode);
@@ -3201,6 +3300,7 @@ function App() {
         const controller = new AbortController();
         lookupAbortRef.current = controller;
         const timeoutId = setTimeout(() => controller.abort(), 120000);
+        const t0 = performance.now(); // 응답 시간(하루 요약의 lat 중앙값)
         try {
           const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
             method: "POST",
@@ -3251,10 +3351,14 @@ function App() {
             // Tag wide-rescue successes too: without it the rescue's hit
             // rate (and its false positives) hide inside plain "lookup" and
             // the rescue's precision can never be measured post-release.
+            // 11-03: 성공 조회에 공개 카탈로그 아이템 id 를 붙인다 → 콘솔 '가장 많이 찾는 아이템'.
+            // OCR 원문은 여전히 안 보낸다. 확대 재시도 성공은 "wide:<id>" 로 구분 유지.
+            const okId = typeof data.item_id === "string" ? data.item_id.slice(0, 32) : "";
             reportEvent(
               "lookup",
-              data.attempt === "wide" ? "wide" : undefined
+              data.attempt === "wide" ? (okId ? `wide:${okId}` : "wide") : okId || undefined
             );
+            dailyLat(performance.now() - t0);
           }
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -3383,6 +3487,7 @@ function App() {
       // supersedes any F2 capture still running in the sidecar.
       client_seq: seq,
     });
+    dailyAdd("man"); // 직접 입력·기록 재조회 횟수(하루 요약)
     try {
       const res = await fetchWithRetryOnce(`${PYTHON_API}/lookup`, {
         method: "POST",
@@ -3408,7 +3513,8 @@ function App() {
       } else if (data.flea_price == null && data.trader_price == null) {
         reportEvent("lookup_noprice", data.item_id ?? undefined);
       } else {
-        reportEvent("lookup");
+        // "manual:<id>" — 콘솔이 F2 와 수동을 나눠 세고, 아이템 순위에도 같이 들어간다
+        reportEvent("lookup", typeof data.item_id === "string" ? `manual:${data.item_id.slice(0, 32)}` : "manual");
       }
     } catch (e) {
       const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
@@ -3647,6 +3753,7 @@ function App() {
                   if (!v) {
                     setShowSettings(false);
                     setShowDonate(false);
+                    dailyAdd("hist");
                   }
                   return !v;
                 });
@@ -4027,6 +4134,7 @@ function App() {
               <button
                 className="reset-btn feedback-btn"
                 onClick={() => {
+                  if (!showFeedback) dailyAdd("fb");
                   setShowFeedback((s) => !s);
                   setFeedbackStatus("idle");
                   setShowDonate(false);
@@ -4044,6 +4152,7 @@ function App() {
               <button
                 className="reset-btn donate-btn"
                 onClick={() => {
+                  if (!showDonate) dailyAdd("don");
                   setShowDonate((s) => !s);
                   setDonateCopied(false);
                   setShowFeedback(false);
@@ -4330,7 +4439,10 @@ function App() {
               <input
                 type="checkbox"
                 checked={pinned}
-                onChange={(e) => setPinned(e.target.checked)}
+                onChange={(e) => {
+                  setPinned(e.target.checked);
+                  if (e.target.checked) dailyAdd("pin");
+                }}
               />
             </div>
             <div className="settings-section-header">
