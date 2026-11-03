@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize } from "./Radar";
 import { Icon } from "./Icon";
+import { keepScreenOnEmpty, statusAfterKept } from "./lookupOutcome";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -1279,6 +1280,11 @@ function SliderField(props: {
 function App() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<LookupResult | null>(null);
+  // F2 리스너는 한 번만 등록되는 클로저라 최신 상태를 ref 로 읽는다(키 공유 시 '조회 중' 되돌리기용, lookupOutcome.ts)
+  const statusRef = useRef<Status>("idle");
+  statusRef.current = status;
+  const hasResultRef = useRef(false);
+  hasResultRef.current = result != null;
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
@@ -3266,6 +3272,7 @@ function App() {
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
         // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
+        const prevStatus = statusRef.current; // 키 공유로 결과를 숨기게 되면 이 상태로 되돌린다
         setStatus("loading");
         setError("");
         // New lookup generation: invalidates any still-running older lookup
@@ -3316,11 +3323,20 @@ function App() {
             return;
           }
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
-          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 지도를 그대로 두고
+          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 지도가 보이는 동안은
           // 빈 결과 카드로 덮지 않는다. 읽혔으면 평소처럼 시세 카드.
+          // 11-03: 예전엔 결과를 안 그리면서 상태도 "loading" 에 남겨, 나란히 모드·지도 닫힘에서
+          // "조회 중…"이 카드가 사라질 때까지 멈춰 보였다 → 지도가 실제로 보일 때만 숨기고, 상태는 조회 직전으로 되돌린다.
           if (data.item_name != null) setRadarActive(false);
-          const keepRadar = hotkeyPassthroughRef.current && data.item_name == null;
-          if (!keepRadar) {
+          const keepScreen = keepScreenOnEmpty({
+            passthrough: hotkeyPassthroughRef.current,
+            matched: data.item_name != null,
+            mapInCard: radarActiveRef.current,
+            wideMode: wideModeRef.current,
+          });
+          if (keepScreen) {
+            setStatus(statusAfterKept(prevStatus, hasResultRef.current));
+          } else {
             setResult(data);
             setStatus("success");
           }
