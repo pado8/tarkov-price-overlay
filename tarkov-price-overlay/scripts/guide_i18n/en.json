@@ -1198,5 +1198,9 @@
 "PVE와 PVP 프레스티지는 어떻게 다른가요?": "How do PVE and PVP prestige differ?",
 "조건이 다릅니다. PVE 1단계는 레벨 15와 500만 루블만 있으면 되고, PVP 1단계는 레벨 25, 퀘스트 「New Beginning」, 은신처 3개(정보 센터 1·영양 유닛 2·휴식 공간 2), 1,000만 루블이 필요합니다. 2단계부터는 투어 완료와 스킬 조건이 양쪽에 붙습니다. 보상은 이월 비율이 PVE 쪽이 두 배 가까이 높고, PVE에만 타르코인이 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.": "The conditions differ. PVE level 1 needs only level 15 and 5,000,000 roubles; PVP level 1 needs level 25, the quest New Beginning, three hideout modules (Intelligence Center 1, Nutrition Unit 2, Rest Space 2) and 10,000,000 roubles. From level 2 both require completing the Tour and skill levels. For rewards, the PVE carry-over percentage is nearly double, and TarCoins are PVE-only. PVE prestige resets only the PVE character.",
 "조건은 어디서 확인하나요?": "Where do I check the conditions?",
-"위 PVE·PVP 표가 공개 데이터 기준 전체 조건입니다. 레벨·퀘스트·스토리 챕터 목표·스킬·은신처·보유 루블 여섯 가지를 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다.": "The PVE and PVP tables above are the full conditions from public data. All six must be met: level, quests, story chapter objectives, skills, hideout and roubles on hand. From level 5, completing Collector (Kappa) is also required."
+"위 PVE·PVP 표가 공개 데이터 기준 전체 조건입니다. 레벨·퀘스트·스토리 챕터 목표·스킬·은신처·보유 루블 여섯 가지를 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다.": "The PVE and PVP tables above are the full conditions from public data. All six must be met: level, quests, story chapter objectives, skills, hideout and roubles on hand. From level 5, completing Collector (Kappa) is also required.",
+"이전 퀘스트": "Previous quests",
+"먼저 깨야 하는 퀘스트는 없습니다.": "No quest has to be completed first.",
+"앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).": "It unlocks after the previous quest group (see Requirements).",
+"레벨·상인 등급만 맞으면 받을 수 있습니다.": "You can take it once your level and loyalty level are high enough."
 }

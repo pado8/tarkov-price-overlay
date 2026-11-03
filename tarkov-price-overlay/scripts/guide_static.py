@@ -1111,6 +1111,17 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         sections_side.append(f'<section class="box"><h2>처음부터 순서 <span class="muted small">먼저 깰 퀘스트 {len(ch)}개</span></h2>'
                              f'<ol class="chain">{lis}<li class="tgt">{e(ko)} <span class="muted small">이 퀘스트</span></li></ol>'
                              '<p class="muted small">선행 조건을 끝까지 거슬러 올라가 먼저 하는 순서로 늘어놓았습니다. 완료로 표시한 퀘스트는 흐리게 보입니다.</p></section>')
+    # 이전 퀘스트 = 바로 앞 선행(한 단계만). 끝까지 거슬러 올라간 목록은 '처음부터 순서'
+    prev = [r for r in t.get("taskRequirements") or [] if r.get("task") in ctx.tasks]
+    if prev:
+        lis = "".join(
+            f'<li>{ctx.task_link(r["task"])} <span class="muted small">{e(ctx.trader_name(ctx.tasks[r["task"]].get("trader")))}'
+            + "".join(f' · {e(STATUS.get(s, s))}' for s in r.get("status") or []) + "</span></li>" for r in prev)
+        sections_side.append(f'<section class="box"><h2>이전 퀘스트</h2><ul class="plain">{lis}</ul></section>')
+    else:
+        sections_side.append('<section class="box"><h2>이전 퀘스트</h2><p class="muted small">먼저 깨야 하는 퀘스트는 없습니다. '
+                             + ('앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).' if ctx.batch_req(t) else '레벨·상인 등급만 맞으면 받을 수 있습니다.')
+                             + '</p></section>')
     nxt = sorted(set(ctx.next_of.get(tid, [])), key=lambda x: ctx.task_names(x)[0])
     if nxt:
         lis = "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span></li>' for x in nxt)
