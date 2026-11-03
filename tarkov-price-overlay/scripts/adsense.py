@@ -22,6 +22,12 @@ LANDING = ROOT / "landing"
 CLIENT_FILE = ROOT / "scripts" / "adsense_client.txt"
 START, END = "<!--adsense-->", "<!--/adsense-->"
 BLOCK_RE = re.compile(re.escape(START) + r".*?" + re.escape(END) + r"\n?", re.S)
+# 애드블록 안내(2026-11-03): 광고 페이지 </body> 앞에 넣는 두 번째 블록. 우회·강제 없음 — 감지되면 작은 안내 바 하나(7일 닫기).
+AB_START, AB_END = "<!--adblock-->", "<!--/adblock-->"
+AB_RE = re.compile(re.escape(AB_START) + r".*?" + re.escape(AB_END) + r"\n?", re.S)
+# 구글 공식 '광고 차단 복구' 태그(애드센스 → 개인정보보호 및 메시지 → 광고 차단 복구에서 메시지를 '게시'한 뒤에만 의미 있음).
+# scripts/adblock_recovery.txt 가 "on" 이면 <head> 에 넣는다. 메시지 미게시 상태에서 넣어도 해는 없지만 아무것도 안 뜬다.
+RECOVERY_FILE = ROOT / "scripts" / "adblock_recovery.txt"
 CLIENT_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -42,6 +48,49 @@ def snippet(cid: str) -> str:
             f'crossorigin="anonymous"></script>{END}\n')
 
 
+def recovery_on() -> bool:
+    return RECOVERY_FILE.exists() and RECOVERY_FILE.read_text(encoding="utf-8").strip().lower() == "on"
+
+
+def recovery_snippet(cid: str) -> str:
+    """Funding Choices(광고 차단 복구) 표준 태그 — 애드센스가 주는 것과 같은 형식. pub ID 만 다르다."""
+    pub = cid.replace("ca-", "")
+    return (f'<script async src="https://fundingchoicesmessages.google.com/i/{pub}?ers=1"></script>'
+            '<script>(function(){function signalGooglefcPresent(){if(!window.frames["googlefcPresent"]){if(document.body){'
+            'const iframe=document.createElement("iframe");iframe.style="width:0;height:0;border:none;z-index:-1000;left:-1000px;top:-1000px;";'
+            'iframe.style.display="none";iframe.name="googlefcPresent";document.body.appendChild(iframe);}else{setTimeout(signalGooglefcPresent,0);}}}'
+            'signalGooglefcPresent();})();</script>')
+
+
+def adblock_snippet() -> str:
+    """경량 감지 + 정중한 안내 바. adsbygoogle.js 가 안 실렸거나(스크립트 차단) 미끼 요소가 숨겨지면(코스메틱 필터) 하단에 한 줄.
+    닫으면 7일 숨김(localStorage). GA4 가 있으면 adblock_on 이벤트 1회. 콘텐츠를 가리거나 막지 않는다."""
+    return (AB_START + '<style>#tgab{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#1f1f19;border-top:1px solid #3a352b;'
+            'color:#e9e7e0;font-size:13.5px;line-height:1.5;padding:10px 14px;display:none;box-shadow:0 -6px 20px rgba(0,0,0,.35)}'
+            '#tgab .in{max-width:1100px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}#tgab b{color:#c8aa64}'
+            '#tgab .sp{flex:1;min-width:200px}#tgab button{background:none;border:1px solid #3a352b;color:#e9e7e0;border-radius:8px;padding:5px 10px;'
+            'font:inherit;font-size:12.5px;cursor:pointer}#tgab button.y{border-color:#c8aa64;color:#c8aa64}#tgab .how{display:none;width:100%;color:#9d988b;font-size:12.5px}'
+            '#tgab.open .how{display:block}</style>'
+            '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
+            '<button class="y" id="tgab-h"></button><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
+            '<script>(function(){var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko";'
+            'var T={ko:["광고가 차단돼 있어요.","탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.","허용하는 법","닫기",'
+            '"브라우저 주소창 옆 차단 확장 아이콘 → ‘이 사이트에서 끄기’(또는 ‘허용’) → 새로고침. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않습니다."],'
+            'en:["Ads are blocked.","This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.","How to allow","Close",'
+            '"Click your ad blocker icon next to the address bar → ‘Disable on this site’ (or Allow) → reload. Ads are kept to a minimum, no pop-ups or sticky ads."],'
+            'ru:["Реклама заблокирована.","Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.","Как разрешить","Закрыть",'
+            '"Нажмите значок блокировщика рядом с адресной строкой → ‘Отключить на этом сайте’ → обновите страницу. Рекламы минимум, без всплывающих окон."]}[L];'
+            'var K="tg_adblk_hide";try{if(+localStorage.getItem(K)>Date.now())return;}catch(e){}'
+            'function blocked(){var b=document.createElement("div");b.className="ad adsbox ad-placement textads banner-ads";b.style.cssText="position:absolute;left:-9999px;top:0;height:10px;width:10px";b.innerHTML="&nbsp;";document.body.appendChild(b);'
+            'var hid=b.offsetHeight===0||getComputedStyle(b).display==="none";b.parentNode.removeChild(b);var noScript=!(window.adsbygoogle&&window.adsbygoogle.loaded);return hid||noScript;}'
+            'function show(){var el=document.getElementById("tgab");if(!el)return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
+            'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-x").textContent=T[3];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
+            'document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");};'
+            'document.getElementById("tgab-x").onclick=function(){el.style.display="none";try{localStorage.setItem(K,String(Date.now()+7*864e5));}catch(e){}};'
+            'try{if(window.gtag)gtag("event","adblock_on",{page_path:P});}catch(e){}}'
+            'window.addEventListener("load",function(){setTimeout(function(){if(blocked())show();},2500);});})();</script>' + AB_END + "\n")
+
+
 def ad_page(f: Path) -> bool:
     """광고를 싣는 페이지 = 탈콥 가이드(/guide/ 아래, ko·en·ru)만. 다운로드 페이지(메인)·상태·소개·방침에는 싣지 않는다
     (2026-10-27 광고 전략 결정: 광고는 가이드에만 — 무료 도구 다운로드 화면에 광고를 띄우지 않는다). 사이트 확인은
@@ -59,9 +108,12 @@ def apply() -> tuple[int, str | None]:
     changed = 0
     for f in LANDING.rglob("*.html"):
         s = f.read_text(encoding="utf-8")
-        t = BLOCK_RE.sub("", s)
+        t = AB_RE.sub("", BLOCK_RE.sub("", s))
         if cid and ad_page(f) and "</head>" in t:
-            t = t.replace("</head>", snippet(cid) + "</head>", 1)
+            head = snippet(cid) + (recovery_snippet(cid) if recovery_on() else "")
+            t = t.replace("</head>", head + "</head>", 1)
+            if "</body>" in t:
+                t = t.replace("</body>", adblock_snippet() + "</body>", 1)
         if t != s:
             f.write_text(t, encoding="utf-8")
             changed += 1
@@ -75,5 +127,5 @@ def apply() -> tuple[int, str | None]:
 
 if __name__ == "__main__":
     n, cid = apply()
-    print(f"[adsense] {'게시자 ' + cid if cid else '끔(ID 없음)'} · 바뀐 페이지 {n}개 · ads.txt {'있음' if cid else '없음'}")
+    print(f"[adsense] {'게시자 ' + cid if cid else '끔(ID 없음)'} · 바뀐 페이지 {n}개 · ads.txt {'있음' if cid else '없음'} · 애드블록 안내 {'있음' if cid else '없음'} · 복구 태그 {'on' if recovery_on() else 'off'}")
     sys.exit(0)
