@@ -1195,6 +1195,8 @@ def radar_map_image(map: str, layer: str | None = None):
 class HideoutSyncRequest(BaseModel):
     """앱 프런트가 설정에서 고른 은신처 단계 {station_id: level}. 사이트 연동(/progress)에 같이 실어 준다."""
     levels: dict[str, int] = {}
+    # 앱이 지금 쓰는 퀘스트 서버(pvp/pve/season). 가이드 사이트가 처음 연동할 때 사이트 기본값(PVP) 대신 이걸 따른다(1.2.6~).
+    mode: str | None = None
 
 
 _hideout_levels_cache: dict[str, int] | None = None
@@ -1216,9 +1218,30 @@ def _load_hideout_levels() -> dict[str, int]:
     return _hideout_levels_cache
 
 
+_app_mode_cache: str | None = None
+
+
+def _app_mode_path():
+    from quest_tracker import _state_dir
+
+    return _state_dir() / "app_quest_mode.json"
+
+
+def _load_app_mode() -> str | None:
+    """앱이 마지막으로 알려 준 퀘스트 서버. 사이드카만 다시 떠도(앱은 그대로) 기억하도록 파일에도 둔다."""
+    global _app_mode_cache
+    if _app_mode_cache is None:
+        try:
+            v = json.loads(_app_mode_path().read_text(encoding="utf-8")).get("mode")
+            _app_mode_cache = v if v in ("pvp", "pve", "season") else ""
+        except Exception:  # noqa: BLE001 — 없거나 깨졌으면 모름
+            _app_mode_cache = ""
+    return _app_mode_cache or None
+
+
 @app.post("/sync/hideout", dependencies=[Depends(_reject_foreign_origin)])
 def sync_hideout(req: HideoutSyncRequest) -> dict:
-    global _hideout_levels_cache
+    global _hideout_levels_cache, _app_mode_cache
     levels = {str(k): int(v) for k, v in (req.levels or {}).items() if int(v) > 0}
     _hideout_levels_cache = levels
     try:
@@ -1227,15 +1250,27 @@ def sync_hideout(req: HideoutSyncRequest) -> dict:
         p.write_text(json.dumps(levels), encoding="utf-8")
     except Exception as ex:  # noqa: BLE001
         print(f"[sync] hideout levels save failed: {ex}")
-    return {"ok": True, "count": len(levels)}
+    if req.mode:
+        m = _normalize_request_mode(req.mode)
+        if m != _load_app_mode():
+            _app_mode_cache = m
+            try:
+                _app_mode_path().write_text(json.dumps({"mode": m}), encoding="utf-8")
+            except Exception as ex:  # noqa: BLE001
+                print(f"[sync] app mode save failed: {ex}")
+    return {"ok": True, "count": len(levels), "mode": _load_app_mode()}
 
 
 @app.get("/progress")
-def progress(game_mode: str = "regular") -> dict:
+def progress(game_mode: str | None = None) -> dict:
     """가이드 사이트용 진행도 요약 — 게임 로그에서 읽은 퀘스트 상태(모드별) + 앱 설정의 은신처 단계.
     읽기 전용이고 화면 내용은 전혀 들어 있지 않다. CORS 는 _ProgressCORS 가 이 경로에만 붙인다."""
     tracker = get_tracker()
-    mode = _normalize_request_mode(game_mode)
+    # game_mode 없음·"auto" = 앱이 지금 쓰는 서버(사이트 첫 연동용). 앱이 아직 안 알려 줬으면 예전처럼 PVP.
+    if game_mode in (None, "", "auto"):
+        mode, mode_source = (_load_app_mode() or "pvp"), "app"
+    else:
+        mode, mode_source = _normalize_request_mode(game_mode), "request"
     st = tracker.all_status(mode)
     by = {"completed": [], "started": [], "failed": []}
     for qid, status in st.items():
@@ -1244,6 +1279,8 @@ def progress(game_mode: str = "regular") -> dict:
     return {
         "ok": True,
         "mode": mode,
+        "mode_source": mode_source,
+        "app_mode": _load_app_mode(),
         "enabled": tracker.is_enabled(),
         "quest_count": len(st),
         **by,

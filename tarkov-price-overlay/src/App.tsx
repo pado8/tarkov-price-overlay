@@ -2688,7 +2688,7 @@ function App() {
   const openGuideWithProgress = async () => {
     let hash = "";
     try {
-      const r = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(region.gameMode)}`);
+      const r = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(questDisplayMode)}`);
       if (r.ok) {
         const p = await r.json();
         const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0 };
@@ -2712,7 +2712,8 @@ function App() {
       fetch(`${PYTHON_API}/sync/hideout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ levels: hideoutLevels }),
+        // mode = 앱이 지금 쓰는 퀘스트 서버 → 가이드 사이트 첫 연동이 사이트 기본값(PVP) 대신 이걸 따른다
+        body: JSON.stringify({ levels: hideoutLevels, mode: questDisplayMode }),
       }).catch(() => {
         if (++tries < 4) timer = window.setTimeout(push, 15000);
       });
@@ -2721,7 +2722,7 @@ function App() {
     return () => {
       if (timer !== null) clearTimeout(timer);
     };
-  }, [hideoutLevels]);
+  }, [hideoutLevels, questDisplayMode]);
 
   // Hideout levels helpers
   const updateHideoutLevel = (stationId: string, level: number) => {

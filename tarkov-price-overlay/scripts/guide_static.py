@@ -3038,6 +3038,9 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
 # 오버레이가 꺼져 있으면 조용히 아무것도 안 한다. 사용자 데이터는 이 브라우저 밖으로 나가지 않는다.
 # 사이드카 쪽은 /progress 한 경로에만 이 사이트 출처를 허용한다(main.py _ProgressCORS).
 # ─────────────────────────────────────────────────────────────
+# qmode(): 처음 연동하는 브라우저는 사이트 기본값(PVP)이 아니라 "auto" 로 물어 사이드카가 앱이 쓰는 퀘스트 서버로 답하게 한다
+# (사이드카 1.2.6~, 11-03 수정 — 전엔 PVE 사용자가 사이트 버튼을 처음 누르면 PVP 진행도가 들어왔다). 연동된 뒤엔 첫 연동 때
+# 앱 모드로 맞춰진 사이트 모드를 쓰고, 시즌 서버는 사이트 모드에 없어 마지막 연동이 시즌이면 시즌으로 묻는다.
 SYNC_JS = r"""(function(){
 // 상단 그룹 메뉴: 마우스가 없는(터치) 환경이나 좁은 화면에선 그룹 제목을 누르면 펼치고, 다시 누르면 이동. 바깥 클릭이면 닫힘
 var noHover=window.matchMedia&&window.matchMedia("(hover: none)").matches;
@@ -3050,6 +3053,7 @@ if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced",SE="guide.sync.err";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
+function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"방금":ago<60?ago+"분 전":Math.round(ago/60)+"시간 전";
 var base="🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)");
@@ -3074,7 +3078,7 @@ if(p0&&p0.completed){p0.ok=true;apply(p0);history.replaceState(null,"",location.
 //    처음인 브라우저에는 상단에 "오버레이 연동" 버튼을 두어 사용자가 눌렀을 때(사용자 동작) 시도한다.
 function pull(manual){var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},manual?25000:12000);
 var opt={signal:ctrl&&ctrl.signal,cache:"no-store",mode:"cors"};opt.targetAddressSpace="loopback";
-return fetch("http://127.0.0.1:8765/progress?game_mode="+gmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p);return true}throw new Error("응답 형식 오류")})
+return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p);return true}throw new Error("응답 형식 오류")})
 .catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
