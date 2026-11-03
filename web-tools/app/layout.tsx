@@ -26,6 +26,8 @@ export const metadata: Metadata = {
     images: ['/og.png'],
   },
   robots: { index: true, follow: true },
+  // 네이버 서치어드바이저 소유 확인 (2026-11-03). <meta name="naver-site-verification"> 로 출력된다.
+  verification: { other: { 'naver-site-verification': 'd1d792f4af1596a629c53fe34fb2e190941b6dcc' } },
 };
 
 // 사이트 단위 구조화 데이터 — 검색결과에 사이트명·검색창이 잡히게 한다.
