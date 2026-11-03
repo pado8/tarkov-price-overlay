@@ -1393,9 +1393,9 @@ function App() {
   const radarMapRef = useRef<string | null>(null);
   const [radarStory, setRadarStory] = useState<string>(() => {
     try {
-      return localStorage.getItem(RADAR_STORY_KEY) ?? "";
+      return localStorage.getItem(RADAR_STORY_KEY) ?? "auto"; // 기본 = 로그 추정(자동)
     } catch {
-      return "";
+      return "auto";
     }
   });
   const radarStoryRef = useRef<string>(radarStory);

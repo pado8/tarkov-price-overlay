@@ -56,6 +56,7 @@ export type RadarState = {
   error?: string;
   active_quests?: number;
   story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
+  story_auto?: string[]; // '자동' 일 때 로그로 추정한 진행 중 챕터 id 들(없으면 빈 배열)
 };
 
 // 지도 높이(px). 사용자가 슬라이더로 바꾸고 App 이 카드 폭을 여기에 맞춘다(창 폭 800 안에서 카드 최대 760).
@@ -346,6 +347,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
       {heading == null && <div className="hint">{t.radarDirUnknown}</div>}
+      {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
           <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} />
@@ -361,8 +363,9 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {mapPicker}
         {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
         {(data.story_chapters?.length ?? 0) > 0 && (
-          <select className="radar-map" value={story === "all" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
+          <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
             <option value="">{t.radarStoryOff}</option>
+            <option value="auto">{t.radarStoryAuto}</option>
             {data.story_chapters!.map((c) => (
               <option key={c.id} value={c.id}>
                 {t.radarStory}: {c.name}

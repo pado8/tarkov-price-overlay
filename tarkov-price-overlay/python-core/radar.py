@@ -342,10 +342,32 @@ def story_chapters(loc_tasks: dict) -> list[dict]:
     return out
 
 
-def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict) -> list[dict]:
-    """고른 챕터(또는 'all')의 목표 위치 → 퀘스트 대상과 같은 모양(kind='quest', story=챕터 id).
-    구역(area)은 윤곽 점들의 중심 하나로. 높이는 모르므로 내 높이와 같다고 본다(dy 0)."""
+def story_auto_quests(game_mode: str = "regular") -> dict[str, list[str]]:
+    """'자동' 모드: 게임 출력 로그 경고로 추정한 (챕터 → 최근 받은 하위 퀘스트 id)(story_progress 참고). 로그를 못 읽으면 빈 dict."""
+    try:
+        import quest_tracker as qt
+        import story_progress
+        tr = qt.get_tracker()
+        inst = tr._effective_install_path()
+        folders = qt._list_log_folders(inst) if inst else []
+        if not folders:
+            return {}
+        ids = {c["questId"]: c["id"] for c in story_doc().get("chapters") or [] if c.get("questId")}
+        prog = story_progress.get_progress(folders[-60:], ids, qt._state_dir() / "story_progress.json")
+        has_marks = {m.get("quest") for m in story_doc().get("marks") or [] if m.get("quest")}
+        return story_progress.pick_auto(prog, has_marks=has_marks)
+    except Exception as e:  # noqa: BLE001
+        log.warning(f"[radar] 스토리 자동 추정 실패: {e}")
+        return {}
+
+
+def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict, auto: Optional[dict] = None) -> list[dict]:
+    """고른 챕터(또는 'all'·'auto')의 목표 위치 → 퀘스트 대상과 같은 모양(kind='quest', story=챕터 id).
+    'auto' 는 auto={챕터: [하위 퀘스트 id…]} 에 든 하위 퀘스트의 목표만. 구역(area)은 윤곽 점들의 중심 하나로.
+    높이는 모르므로 내 높이와 같다고 본다(dy 0)."""
     if not chapter:
+        return []
+    if chapter == "auto" and not auto:
         return []
     base = MAP_BASE.get(map_slug, map_slug)
     names = {c["id"]: c for c in story_doc().get("chapters") or []}
@@ -354,7 +376,10 @@ def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict) -> l
     out: list[dict] = []
     seen: dict[tuple, dict] = {}  # (챕터, 반올림 x, z) → 이미 낸 대상: 같은 자리 목표(예: 쇄빙선 엔진실 3개)는 한 점으로, 목표 문구는 ' / '
     for m in story_doc().get("marks") or []:
-        if chapter != "all" and m.get("chapter") != chapter:
+        if chapter == "auto":
+            if m.get("quest") not in set((auto or {}).get(m.get("chapter") or "", [])):
+                continue
+        elif chapter != "all" and m.get("chapter") != chapter:
             continue
         ch = names.get(m.get("chapter") or "", {})
         cname = _loc(loc_tasks, f"{ch.get('questId')} name", ch.get("name") or m.get("chapter") or "")
@@ -963,7 +988,10 @@ class RadarService:
                 res["targets"] = build_targets(maps_doc, slug, loc_maps, all_tasks(tasks_doc), loc_tasks,
                                                active, shot, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
                 if story:
-                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, shot, loc_tasks), key=lambda r: r["dist"])
+                    auto = story_auto_quests(game_mode) if story == "auto" else None
+                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, shot, loc_tasks, auto=auto), key=lambda r: r["dist"])
+                    if story == "auto":
+                        res["story_auto"] = sorted(auto or {})  # 추정된 진행 중 챕터(slug) — 화면 안내용
                 res["active_quests"] = len(active)
             return res
 
