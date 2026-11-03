@@ -210,15 +210,72 @@ fn async_key(_vk: u16) -> u16 {
 /// 지워지므로 조회·토글이 같은 키를 쓸 때 두 번 읽으면 둘째가 못 본다). 주 키는 "지금 눌림(0x8000)
 /// 또는 지난 폴링 이후 눌린 적 있음(0x0001)". 수식키는 등록 방식과 똑같이 **정확히** 일치해야 한다 —
 /// F2 바인딩은 Shift+F2에 울리지 않는다.
-fn poll_key_down(pk: &PollKey, main_state: u16) -> bool {
+fn poll_mods_match(pk: &PollKey) -> bool {
     const VK_SHIFT: u16 = 0x10;
     const VK_CONTROL: u16 = 0x11;
     const VK_MENU: u16 = 0x12; // Alt
     let held = |vk: u16| async_key(vk) & 0x8000 != 0;
-    (main_state & 0x8001) != 0
-        && pk.shift == held(VK_SHIFT)
-        && pk.ctrl == held(VK_CONTROL)
-        && pk.alt == held(VK_MENU)
+    pk.shift == held(VK_SHIFT) && pk.ctrl == held(VK_CONTROL) && pk.alt == held(VK_MENU)
+}
+
+/// 엿듣기 키 한 틱 판정 → (울림, 지금 주 키 눌림). 울림 = **주 키가 이번 틱에 새로 눌렸고**(0x8000 상승,
+/// 또는 틱 사이 짧은 탭 = 0x0001 만 남음) **그 순간** 수식키가 정확히 일치할 때. 주 키를 누르고 있는 동안
+/// 수식키만 바뀌는 건 새 누름이 아니다.
+/// 2026-11-04: 예전엔 '주 키 눌림 && 수식키 일치' 조합의 상승을 봤다 — 조회 F2 + 토글 Shift+F2 일 때
+/// Shift+F2 를 누르고 Shift 를 F2 보다 먼저 떼면 'F2 && Shift 없음' 이 새로 참이 돼 빈 곳 조회가 한 번 더 터졌다.
+fn key_edge(prev_main_down: bool, main_state: u16, mods_match: bool) -> (bool, bool) {
+    let down = main_state & 0x8000 != 0;
+    let tapped = !down && main_state & 0x0001 != 0;
+    let fired = mods_match && !prev_main_down && (down || tapped);
+    (fired, down)
+}
+
+#[cfg(test)]
+mod key_edge_tests {
+    use super::key_edge;
+    const DOWN: u16 = 0x8000;
+    const TAP: u16 = 0x0001;
+    /// 조회=F2(수식키 없음)·토글=Shift+F2 가 같은 주 키를 나눠 쓰는 상황을 틱 단위로 흉내 낸다.
+    /// steps = (주 키 상태, Shift 눌림). 반환 = (조회 울린 횟수, 토글 울린 횟수)
+    fn run(steps: &[(u16, bool)]) -> (u32, u32) {
+        let (mut pl, mut pt, mut nl, mut nt) = (false, false, 0, 0);
+        for &(st, shift) in steps {
+            let (fl, dl) = key_edge(pl, st, !shift);
+            let (ft, dt) = key_edge(pt, st, shift);
+            pl = dl;
+            pt = dt;
+            nl += fl as u32;
+            nt += ft as u32;
+        }
+        (nl, nt)
+    }
+    #[test]
+    fn shift_f2_then_release_shift_first_does_not_fire_lookup() {
+        // Shift 누름 → F2 누름(토글) → Shift 먼저 뗌(F2 계속 눌림) → F2 뗌
+        assert_eq!(run(&[(0, true), (DOWN | TAP, true), (DOWN, true), (DOWN, false), (DOWN, false), (0, false)]), (0, 1));
+    }
+    #[test]
+    fn shift_f2_release_f2_first() {
+        assert_eq!(run(&[(0, true), (DOWN | TAP, true), (0, true), (0, false)]), (0, 1));
+    }
+    #[test]
+    fn plain_f2_fires_lookup_once_while_held() {
+        assert_eq!(run(&[(0, false), (DOWN | TAP, false), (DOWN, false), (DOWN, false), (0, false)]), (1, 0));
+    }
+    #[test]
+    fn quick_tap_between_ticks_still_fires() {
+        assert_eq!(run(&[(0, false), (TAP, false), (0, false)]), (1, 0));
+        assert_eq!(run(&[(0, true), (TAP, true), (0, true)]), (0, 1));
+    }
+    #[test]
+    fn f2_held_then_shift_pressed_is_not_toggle() {
+        // F2 를 누른 채 Shift 를 눌러도 토글이 아니다(새 누름 아님)
+        assert_eq!(run(&[(0, false), (DOWN | TAP, false), (DOWN, true), (DOWN, true), (0, true)]), (1, 0));
+    }
+    #[test]
+    fn two_presses_fire_twice() {
+        assert_eq!(run(&[(DOWN | TAP, false), (0, false), (DOWN | TAP, false), (0, false)]), (2, 0));
+    }
 }
 
 fn notify_minimized_to_tray(app: &tauri::AppHandle) {
@@ -466,8 +523,11 @@ fn spawn_mouse_hotkey_thread(
                     .into_iter()
                     .enumerate()
                 {
-                    let now = pk.map(|p| poll_key_down(&p, state)).unwrap_or(false);
-                    if now && !prev_key[i] {
+                    let (fired, main_down) = match pk {
+                        Some(p) => key_edge(prev_key[i], state, poll_mods_match(&p)),
+                        None => (false, false),
+                    };
+                    if fired {
                         if let Some(window) = app.get_webview_window("main") {
                             if !window.is_visible().unwrap_or(true) {
                                 reveal_overlay_no_activate(&window);
@@ -480,7 +540,7 @@ fn spawn_mouse_hotkey_thread(
                         println!("[hotkey] {event_name} (passthrough {:?}) cursor=({}, {})", pk, pos.x, pos.y);
                         let _ = app.emit(event_name, pos);
                     }
-                    prev_key[i] = now;
+                    prev_key[i] = main_down;
                 }
             } else {
                 prev_key = [false; 2];

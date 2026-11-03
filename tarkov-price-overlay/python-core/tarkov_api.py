@@ -1373,7 +1373,14 @@ def _cache_lookup(
     # the live catalog: e.g. 'SALEWA' fuzzy-matched 'SAW' when fuzzy ran
     # first; canon resolves it exactly with zero mis-matches). Ambiguous
     # folds are indexed as None and fall through to fuzzy/prefix below.
-    canon_map = _canon_cache.get((lang, game_mode))
+    # 짧은 조각은 '추정 일치'(정규화·퍼지)를 하지 않는다(2026-11-04 '빈 곳에서 조회해도 뭐든 답한다' 제보).
+    # 빈 바닥·벽·UI 테두리에서 OCR 이 흔히 내는 2~3글자 잡문자열이 정규화로 'll/Il/1l'→L1 주사기, 'ss'→스페이서,
+    # 퍼지로 'RU'→루블(RUB 0.8), 'PMC'→PM 권총, 'USE'→USEC 인식표처럼 한 글자 긴 짧은 이름에 붙었다
+    # (difflib 2M/(a+b): 2자 vs 3자 0.8, 3자 vs 4~5자 0.75~0.86 — 컷오프 0.75 를 넘는다). 무작위 2~3자 실험에서
+    # 11~17% 가 무언가에 매칭 → 이 조건으로 약 1%. 정확 일치(AP·PS·SAS·MP9·CAT)는 위에서 이미 끝나 그대로다.
+    # 잃는 것 = 3자 이하 짧은 이름의 1글자 오독 구제(실험상 재현율 약 2%p 감소, 'MP8'·'PP9' 처럼 지금도 오답인 경우가 대부분).
+    n_chars = len(item_name.strip())
+    canon_map = _canon_cache.get((lang, game_mode)) if n_chars >= 3 else None
     if canon_map:
         entry = canon_map.get(_canon(item_name))
         if entry is not None:
@@ -1391,9 +1398,8 @@ def _cache_lookup(
     # 짧은 조각은 더 엄격하게(11-03 스크린샷 QA 354장): 'SPACE'→PACA(0.67), 'Jnatt'→Wyatt(0.60) 같은
     # 거짓 양성은 전부 5~7자 조각이 0.6 기준을 턱걸이로 넘은 것. 글자 수가 적을수록 한두 글자 차이가
     # 비율을 크게 흔들므로 길이별 기준을 둔다. 'Bolte'→'Bolts'(0.80), 4자 1글자 오독(0.75)은 그대로 통과.
-    n_chars = len(item_name.strip())
     cutoff = 0.75 if n_chars <= 5 else 0.7 if n_chars <= 8 else 0.6
-    matches = difflib.get_close_matches(item_name, names, n=1, cutoff=cutoff)
+    matches = difflib.get_close_matches(item_name, names, n=1, cutoff=cutoff) if n_chars >= 4 else []
     if matches:
         hit = matches[0]
         # cache.get (not cache[hit]): the names list and the price cache can

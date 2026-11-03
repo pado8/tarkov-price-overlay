@@ -1823,6 +1823,13 @@ html, body, #root {
 .radar-side { flex: 0 0 300px; overflow-y: auto; padding-right: 4px; }
 .wide-pane .radar-side { max-height: calc(100vh - 170px); } /* 패널 높이 안에서 목록만 스크롤 */
 .radar-side .radar-row { font-size: var(--card-fs-sm); }
+/* 세로 모니터(높이 > 폭)의 나란히 모드: 시세 카드 위(높이 38% 까지, 넘치면 카드 안에서 스크롤) → 지도 아래 전체 폭 →
+   대상 목록은 지도 밑 한 줄 띠(--side-h). 가로 배치는 폭 1080 세로 모니터에서 지도가 300px 남짓으로 눌렸다(11-04 피드백) */
+.overlay.wide.portrait { flex-direction: column; align-items: stretch; }
+.overlay.wide.portrait > .card:not(.wide-pane) { align-self: flex-start; height: auto !important; max-height: 38vh !important; }
+.overlay.wide.portrait .wide-pane { flex: 1 1 0; height: auto; min-height: 0; }
+.overlay.wide.portrait .radar-maprow { flex-direction: column; align-items: stretch; }
+.overlay.wide.portrait .radar-side { flex: 0 0 auto; max-height: var(--side-h, 28vh); }
 
 /* 대상 목록: 퀘스트 개별 숨김(✕)과 '숨긴 퀘스트 n개' 복원 줄 */
 .radar-hide { flex: none; background: none; border: 0; color: var(--text-muted); font-size: var(--card-fs-xs); line-height: 1; padding: 0 4px; cursor: pointer; opacity: 0.55; }

@@ -1399,6 +1399,9 @@ function App() {
   // both as "no matrix" for rendering).
   const [ammoData, setAmmoData] = useState<AmmoData | null>(null);
   const [cardVisible, setCardVisible] = useState(true);
+  // 토글 핫키가 '지금 보이는지'를 상태 업데이터 밖에서 읽기 위한 거울(업데이터 안에서 타이머를 거는 부작용을 없앤다)
+  const cardVisibleRef = useRef(cardVisible);
+  cardVisibleRef.current = cardVisible;
   // Pin: locks window move (drag region off), resize (handle hidden) and the
   // ✕ button so a mid-raid misclick can't displace or close the overlay.
   // Unpinning stays available in settings.
@@ -1483,6 +1486,9 @@ function App() {
   const wideModeRef = useRef(wideMode);
   wideModeRef.current = wideMode;
   const paneRef = useRef<HTMLDivElement>(null);
+  // 세로 모니터(높이 > 폭)에서 나란히 모드 = 카드 위·지도 아래 전체 폭·목록은 지도 밑(11-04 피드백 "세로 서브모니터에서 공간 활용이 아쉽다")
+  const [portrait, setPortrait] = useState(false);
+  const [sideH, setSideH] = useState(0); // 세로 배치에서 대상 목록에 주는 높이(px)
   const [paneSize, setPaneSize] = useState(400); // 오른쪽 지도 패널의 지도 높이(패널 높이에서 머리글·칩·안내 줄을 뺀 값)
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
@@ -1955,6 +1961,28 @@ function App() {
   // will take over the moment it leaves; scheduling here would only
   // wrongly hide while the user is still hovering.
   const mouseOverCardRef = useRef(false);
+  // 커서가 지금 카드(지도 나란히 패널 포함) 위인가 — 물리 px 로 비교. 클릭 투과 폴링과 숨김 직전 확인이 같이 쓴다.
+  // CSS→물리 변환은 창의 scaleFactor(카드가 실제로 있는 모니터 배율)로 한다 — devicePixelRatio 는 모니터를 옮기면
+  // 늦게 바뀌거나 주 모니터 값을 돌려줘 카드 위 커서를 '밖'으로 읽었다(id20). EDGE_PAD 는 125% 같은 분수 배율에서
+  // 테두리에 걸친 커서가 안/밖을 오가지 않게 하는 여유. 카드가 없거나 크기가 0 이면 false.
+  const cursorOverCard = async (): Promise<boolean> => {
+    const cardEl = cardRef.current;
+    if (!cardEl) return false;
+    const rect = cardEl.getBoundingClientRect();
+    if (!(rect.width > 0 && rect.height > 0)) return false;
+    const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
+    const win = getCurrentWindow();
+    const [winPos, winScale] = await Promise.all([win.outerPosition(), win.scaleFactor()]);
+    const cursor = await invoke<{ x: number; y: number }>("get_cursor_position");
+    const dpr = winScale || window.devicePixelRatio || 1;
+    const EDGE_PAD = 6;
+    const hit = (r: DOMRect) =>
+      cursor.x >= winPos.x + Math.floor(r.left * dpr) - EDGE_PAD &&
+      cursor.x < winPos.x + Math.ceil((r.left + r.width) * dpr) + EDGE_PAD &&
+      cursor.y >= winPos.y + Math.floor(r.top * dpr) - EDGE_PAD &&
+      cursor.y < winPos.y + Math.ceil((r.top + r.height) * dpr) + EDGE_PAD;
+    return hit(rect) || (!!paneRect && paneRect.width > 0 && hit(paneRect));
+  };
   useEffect(() => {
     const wasOpen = settingsOpenRef.current;
     settingsOpenRef.current = showSettings;
@@ -2002,11 +2030,31 @@ function App() {
     // result would land on an already-hidden card (the lookup's own finally
     // schedules the hide once it completes).
     if (lookupInFlightRef.current) return;
-    const ms = Math.max(1, hideDelayRef.current) * 1000;
-    hideTimerRef.current = window.setTimeout(() => {
-      setCardVisible(false);
+    armHide(Math.max(1, hideDelayRef.current) * 1000);
+  };
+  // 숨김 타이머. 숨기기 **직전에 커서를 직접 다시 본다** — 커서가 카드(·나란히 패널) 위면 숨기지 않고 같은 간격으로
+  // 다시 잰다. 2026-11-04 제보 'Shift+F2 로 숨겼다 띄운 뒤 마우스를 올리면 카드가 사라짐': 실제 앱에서 토글로 띄울 때
+  // 걸린 타이머를 커서 폴링이 끝내 취소하지 못하고 커서 아래에서 카드가 사라지는 것을 재현했다(폴링의 진입 판정이
+  // 놓친 정확한 경로는 못 박지 못함). 어느 경로로 타이머가 남든 '커서 아래에서 사라짐'은 여기서 막는다.
+  const armHide = (ms: number) => {
+    const handle = window.setTimeout(async () => {
+      let on = false;
+      try {
+        on = await cursorOverCard();
+      } catch {}
+      if (hideTimerRef.current !== handle) return; // 그 사이 취소되거나 새 타이머로 바뀜
+      if (!autoHideRef.current || wideModeRef.current || settingsOpenRef.current || lookupInFlightRef.current) {
+        hideTimerRef.current = null; // 그 사이 숨기면 안 되는 상태가 됨 — 각자 끝날 때 다시 건다
+        return;
+      }
+      if (on) {
+        armHide(ms); // 커서가 카드 위 — 떠난 뒤에 숨긴다
+        return;
+      }
       hideTimerRef.current = null;
+      setCardVisible(false);
     }, ms);
+    hideTimerRef.current = handle;
   };
   const showCard = () => {
     cancelHideTimer();
@@ -2166,7 +2214,13 @@ function App() {
   useEffect(() => {
     const el = paneRef.current;
     if (!wideMode || !el) return;
-    const read = () => setPaneSize(Math.max(200, el.clientHeight - 210));
+    const read = () => {
+      const p = window.innerHeight > window.innerWidth * 1.05;
+      const side = p ? Math.round(Math.min(window.innerHeight * 0.28, 360)) : 0;
+      setPortrait(p);
+      setSideH(side);
+      setPaneSize(Math.max(200, el.clientHeight - 210 - (p ? side + 12 : 0))); // 세로면 목록 몫(+간격)을 지도 높이에서 뺀다
+    };
     const ro = new ResizeObserver(read);
     ro.observe(el);
     read();
@@ -2257,10 +2311,7 @@ function App() {
     // cursor that's already resting on the card when it appears is seen as a
     // clean enter-transition that cancels the auto-hide.
     mouseOverCardRef.current = false;
-    // Pad (physical px) added around the card rect for the inside-test, so a
-    // cursor parked on the edge — or fractional-DPI rounding (e.g. 125%) —
-    // doesn't flip the on-card state and wrongly trigger the hide.
-    const EDGE_PAD = 6;
+    // 안/밖 판정(테두리 여유 EDGE_PAD·창 배율 변환 포함)은 cursorOverCard 한 곳에서 한다
 
     const poll = async () => {
       if (cancelled) return;
@@ -2272,66 +2323,27 @@ function App() {
         return;
       }
       try {
-        const cardEl = cardRef.current;
-        if (cardEl) {
-          const rect = cardEl.getBoundingClientRect();
-          const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
-          if (rect.width > 0 && rect.height > 0) {
-            const [winPos, winScale] = await Promise.all([
-              win.outerPosition(),
-              win.scaleFactor(),
-            ]);
-            // CSS→physical conversion uses the WINDOW's authoritative scale
-            // factor (the monitor the card is actually on), NOT
-            // window.devicePixelRatio. WebView2's devicePixelRatio can lag
-            // when the window moves between different-DPI monitors or report
-            // the primary monitor's scale on a secondary — either makes the
-            // computed card rect the wrong size, so the inside-test reads a
-            // cursor that's visually ON the card as "outside" → the card
-            // won't capture the wheel (scroll leaks to the game) AND
-            // auto-hide fires. The window-fit logic already switched to the
-            // per-monitor scaleFactor for this exact reason (id20); the
-            // click-through poll was the last holdout on devicePixelRatio.
-            const dpr = winScale || window.devicePixelRatio || 1;
-            // Whole-pixel, padded rect (see EDGE_PAD) so the inside-test
-            // doesn't oscillate on the card edge at fractional DPI.
-            const left = winPos.x + Math.floor(rect.left * dpr) - EDGE_PAD;
-            const top = winPos.y + Math.floor(rect.top * dpr) - EDGE_PAD;
-            const right =
-              winPos.x + Math.ceil((rect.left + rect.width) * dpr) + EDGE_PAD;
-            const bottom =
-              winPos.y + Math.ceil((rect.top + rect.height) * dpr) + EDGE_PAD;
-            const cursor = await invoke<{ x: number; y: number }>(
-              "get_cursor_position"
-            );
-            let inside =
-              cursor.x >= left &&
-              cursor.x < right &&
-              cursor.y >= top &&
-              cursor.y < bottom;
-            if (!inside && paneRect && paneRect.width > 0) {
-              const pl = winPos.x + Math.floor(paneRect.left * dpr) - EDGE_PAD;
-              const pt = winPos.y + Math.floor(paneRect.top * dpr) - EDGE_PAD;
-              const pr = winPos.x + Math.ceil((paneRect.left + paneRect.width) * dpr) + EDGE_PAD;
-              const pb = winPos.y + Math.ceil((paneRect.top + paneRect.height) * dpr) + EDGE_PAD;
-              inside = cursor.x >= pl && cursor.x < pr && cursor.y >= pt && cursor.y < pb;
-            }
-            setIgnore(!inside);
-            // Drive auto-hide from the poll — the single source of truth for
-            // "cursor on card". The card's DOM mouseenter/mouseleave fire
-            // unreliably because the window is click-through most of the time,
-            // so a cursor that lands on the card and stops never cancelled the
-            // hide (the original bug: hovering didn't keep the card alive).
-            // Edge-triggered so the timer isn't restarted every 40ms.
-            if (inside !== mouseOverCardRef.current) {
-              mouseOverCardRef.current = inside;
-              if (inside) {
-                cancelHideTimer();
-              } else if (!recordingHotkeyRef.current) {
-                scheduleHide();
-              }
-            }
+        const inside = await cursorOverCard();
+        // 이 폴링이 속한 효과가 끝났으면(카드를 숨김 등) 여기서 멈춘다. 늦게 돌아온 이전 폴링이 숨김 효과 뒤에
+        // 클릭 투과를 끄거나(숨긴 창이 게임 마우스를 가로챔) 커서 상태를 덮어쓰던 경쟁을 막는다(11-04).
+        if (cancelled) return;
+        setIgnore(!inside);
+        // Drive auto-hide from the poll — the single source of truth for
+        // "cursor on card". The card's DOM mouseenter/mouseleave fire
+        // unreliably because the window is click-through most of the time,
+        // so a cursor that lands on the card and stops never cancelled the
+        // hide (the original bug: hovering didn't keep the card alive).
+        // Edge-triggered so the timer isn't restarted every 40ms.
+        if (inside !== mouseOverCardRef.current) {
+          mouseOverCardRef.current = inside;
+          if (inside) {
+            cancelHideTimer();
+          } else if (!recordingHotkeyRef.current) {
+            scheduleHide();
           }
+        } else if (inside && hideTimerRef.current !== null) {
+          // 커서가 카드 위인데 타이머가 살아 있으면(진입 순간을 놓친 경우) 매 틱 취소 — 커서 아래에서 사라지지 않게
+          cancelHideTimer();
         }
       } catch {}
       if (!cancelled) setTimeout(poll, 40);
@@ -3443,18 +3455,13 @@ function App() {
           await invoke("show_overlay_passive");
         }
       } catch {}
-      // Internal card visibility flip.
-      setCardVisible((v) => {
-        if (v) {
-          // Hide now: cancel any pending auto-hide and clear state next tick.
-          cancelHideTimer();
-          return false;
-        }
-        // Show: bring card up, schedule a fresh auto-hide.
-        cancelHideTimer();
-        scheduleHide();
-        return true;
-      });
+      // Internal card visibility flip. 업데이터 함수 안에서 타이머를 걸지 않는다(React 가 업데이터를 다시 부를 수
+      // 있어 부작용이 두 번 날 수 있다) — 거울 ref 로 다음 값을 정하고 ref 도 바로 바꿔 연타도 한 번씩 뒤집힌다.
+      const show = !cardVisibleRef.current;
+      cardVisibleRef.current = show;
+      cancelHideTimer();
+      setCardVisible(show);
+      if (show) scheduleHide(); // 커서가 카드 위면 폴링이 곧 취소하고, 못 해도 숨기기 직전 확인이 막는다
     });
     return () => {
       unlisten.then((fn) => fn());
@@ -3713,7 +3720,7 @@ function App() {
   };
 
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}`}>
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}`}>
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -6210,6 +6217,7 @@ function App() {
             "--card-fs": `${region.fontSize}px`,
             opacity: Math.max(region.opacity, RADAR_MIN_OPACITY) / 100,
             ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
+            ["--side-h" as string]: sideH ? `${sideH}px` : undefined,
           } as React.CSSProperties}
         >
           <RadarPanel
