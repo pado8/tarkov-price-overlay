@@ -129,6 +129,12 @@
 
 ![검색 기록 화면](assets/screenshots/02-history.png)
 
+지도 — 내 위치·탈출구·진행 중 퀘스트 목표·스토리 챕터 목표·보스 구역. 게임 스크린샷 파일 이름의 좌표와 게임 로그만 읽습니다.
+
+![지도](assets/screenshots/07-map.png)
+
+![지도 나란히 모드](assets/screenshots/08-wide.png)
+
 ### 3-1. 탄약 비교 매트릭스 — 무기/탄약 캡처 시 자동 표시
 
 무기나 탄약에 F2 누르면 같은 구경 탄 전체가 한 표로 정리됩니다. 관통력 내림차순 정렬, 현재 라운드 자동 하이라이트.
@@ -469,6 +475,12 @@ Grab one from **[Releases](https://github.com/pado8/tarkov-price-overlay-release
 Want to recheck something you just looked up? Click 🕒 in the card header to see the last 15 lookups; click any entry to re-query.
 
 ![History panel](assets/screenshots/en/02-history.png)
+
+Map — your position, extracts, active quest objectives, story chapter objectives and boss zones. Reads only the coordinates in the game's screenshot file names and the game log.
+
+![Map](assets/screenshots/en/07-map.png)
+
+![Side-by-side map mode](assets/screenshots/en/08-wide.png)
 
 ### 4. If recognition is off
 
