@@ -15,6 +15,10 @@ import requests
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "python-core" / "data" / "td_maps.json"
 SRC = "https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json"
+# 그림이 좌표와 안 맞아 넣지 않는 맵(11-04 검증: 그림 위에 스폰·탈출구를 같은 투영식으로 찍어 봄)
+SKIP_TILES = {
+    "icebreaker": "transform 세로 배율 3.5 가 그림과 안 맞음 — 선체가 스폰 범위의 46% 길이로 그려져 스폰 56개 중 15개·헬기 탈출구가 그림 밖(가로 2.0 은 맞음)",
+}
 
 
 def main() -> int:
@@ -25,6 +29,9 @@ def main() -> int:
         slug = m.get("normalizedName")
         for x in m.get("maps") or []:
             if x.get("projection") != "interactive" or not x.get("bounds") or not x.get("transform"):
+                continue
+            if slug in SKIP_TILES:
+                print(f"[td_maps] {slug}: 건너뜀 — {SKIP_TILES[slug]}")
                 continue
             svg = x.get("svgPath")
             tiles = None if svg else x.get("tilePath")  # 11-04: SVG 가 없는 맵(연구소·미궁·쇄빙선)은 타일 PNG — 사이드카가 이어 붙인다

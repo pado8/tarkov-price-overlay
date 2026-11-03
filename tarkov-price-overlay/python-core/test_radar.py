@@ -273,10 +273,10 @@ r._STORY = _orig_story
 # 보스 구역 — '아무 스캐브 스폰'은 상자 대신 맵 전역 표식(점 하나), 코드형 구역 이름은 비움(11-03 전 맵 점검)
 am = {"bosses": [{"mob": "sectantPriest", "spawnChance": 0.2, "spawnLocations": [{"spawnKey": "ZoneSandbox", "name": "Any scav spawn", "chance": 1,
         "positions": [{"x": 0, "z": 0}, {"x": 400, "z": 0}, {"x": 0, "z": 400}, {"x": 400, "z": 400}]}]},
-    {"mob": "blackDivision", "spawnChance": 0.8, "spawnLocations": [{"spawnKey": "2BDPort28", "name": "2BDPort28", "chance": 1, "positions": [{"x": 10, "z": 10}]}]}], "spawns": []}
+    {"mob": "bossKilla", "spawnChance": 0.8, "spawnLocations": [{"spawnKey": "2BDPort28", "name": "2BDPort28", "chance": 1, "positions": [{"x": 10, "z": 10}]}]}], "spawns": []}
 az = r.boss_zones(am, {}, {"Any scav spawn": "Any scav spawn", "2BDPort28": "2BDPort28"})
 eq("맵 전역은 점 하나·anywhere", [(z["anywhere"], z["pts"]) for z in az if z["bosses"][0]["name"] == "sectantPriest"], [(True, [[200.0, 200.0]])])
-eq("코드형 구역 이름은 비움", [z["name"] for z in az if z["bosses"][0]["name"] == "blackDivision"], [""])
+eq("코드형 구역 이름은 비움", [z["name"] for z in az if z["bosses"][0]["name"] == "bossKilla"], [""])  # 11-04: 블랙 디비전은 보스 구역에서 빠져 킬라로
 # 11-04: 원본에 없는 스폰 장소 보충(등대 군즈 정수장) — 같은 보스의 맵 확률, 정수장 스폰 구역 점들
 lh = {"normalizedName": "lighthouse",
       "spawns": [{"zoneName": "Zone_TreatmentBeach", "position": {"x": 59, "y": 0, "z": -610}},
@@ -288,6 +288,21 @@ eq("등대 군즈 = 별장 + 정수장", sorted(z["name"] for z in lz), ["Chalet
 eq("정수장 확률 = 보스 맵 확률", [z["bosses"][0]["chance"] for z in lz if z["name"] == "Water Treatment Plant"], [0.18])
 eq("다른 맵엔 보충 안 함", [z["name"] for z in r.boss_zones({**lh, "normalizedName": "woods"}, {}, {})], ["Chalet"])
 eq("이벤트 맵은 일반 맵 데이터로", (r.EVENT_MAPS.get("infected-lab"), r.EVENT_MAPS.get("infected-factory")), ("the-lab", "factory"))
+# 11-04: 레이더(PmcBot)는 보스가 아니다 — 보스 구역에서 뺀다
+lab = {"normalizedName": "the-lab", "spawns": [],
+       "bosses": [{"mob": "PmcBot", "spawnChance": 0.6, "spawnLocations": [{"spawnKey": "BotZoneFloor1", "name": "First Floor", "chance": 1, "positions": [{"x": -200, "y": 0, "z": -300}]}]},
+                  {"mob": "bossTagilla", "spawnChance": 0.3, "spawnLocations": [{"spawnKey": "Z", "name": "Z", "chance": 1, "positions": [{"x": -210, "y": 0, "z": -310}]}]}]}
+eq("레이더는 보스 구역에서 제외", [b["name"] for z in r.boss_zones(lab, {}, {}) for b in z["bosses"]], ["bossTagilla"])
+# 11-04: 로그는 보스 구역에서 빼고 저격수처럼 조준점 — 40m 안 점은 한 표식, 확률 = 그 구역 최대
+rg = {"normalizedName": "lighthouse", "spawns": [],
+      "bosses": [{"mob": "exUsecFree", "spawnChance": 0.87, "spawnLocations": [{"spawnKey": "Zone_Chalet", "name": "Chalet", "chance": 1,
+                   "positions": [{"x": 0, "y": 5, "z": 0}, {"x": 20, "y": 5, "z": 0}, {"x": 300, "y": 2, "z": 0}]}]},
+                 {"mob": "exUsecFree", "spawnChance": 0.44, "spawnLocations": [{"spawnKey": "Zone_Chalet", "name": "Chalet", "chance": 1, "positions": []}]}]}
+eq("로그는 보스 구역에 없음", r.boss_zones(rg, {}, {}), [])
+rs = r.rogue_spots(rg, {}, {})
+eq("로그 조준점 = 무리마다 하나", [(h["type"], h["p"]) for h in rs], [("rogue", [10.0, 5.0, 0.0]), ("rogue", [300.0, 2.0, 0.0])])
+eq("로그 이름·확률(최대) — 번역표 없으면 Rogue", rs[0]["name"], "Rogue · Chalet 87%")
+eq("지도 문서 위험 구역에 로그 포함", sum(1 for h in r.compact_map_features({**rg, "extracts": [], "transits": [], "hazards": []}, {}, {})["hazards"] if h["type"] == "rogue"), 2)
 
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys

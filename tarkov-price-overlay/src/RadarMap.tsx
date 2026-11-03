@@ -520,15 +520,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 const p = hazardPt(x);
                 if (!p) return null;
                 const s = toScreen(p[0], p[2]);
-                if (x.type === "sniper") {
+                if (x.type === "sniper" || x.type === "rogue") {
                   // 저격수 스캐브: tarkov.dev 처럼 조준점 하나(구역 윤곽은 안 그림 — 빨간 표시가 너무 많아진다)
+                  // 로그(11-04): 보스가 아니라 보스 구역에서 빼고 같은 조준점으로 — 색만 달리(노랑)
+                  const c = x.type === "rogue" ? "#ffc94d" : "#f5f5f5";
                   return (
                     <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
                       <circle cx={s.x} cy={s.y} r={10} fill="transparent" />
-                      <circle cx={s.x} cy={s.y} r={6} fill="rgba(0,0,0,0.35)" stroke="#f5f5f5" strokeWidth={1.2} />
-                      <line x1={s.x - 9} y1={s.y} x2={s.x + 9} y2={s.y} stroke="#f5f5f5" strokeWidth={1.2} />
-                      <line x1={s.x} y1={s.y - 9} x2={s.x} y2={s.y + 9} stroke="#f5f5f5" strokeWidth={1.2} />
-                      <circle cx={s.x} cy={s.y} r={1.5} fill="#ff4d4d" />
+                      <circle cx={s.x} cy={s.y} r={6} fill="rgba(0,0,0,0.35)" stroke={c} strokeWidth={1.2} />
+                      <line x1={s.x - 9} y1={s.y} x2={s.x + 9} y2={s.y} stroke={c} strokeWidth={1.2} />
+                      <line x1={s.x} y1={s.y - 9} x2={s.x} y2={s.y + 9} stroke={c} strokeWidth={1.2} />
+                      <circle cx={s.x} cy={s.y} r={1.5} fill={x.type === "rogue" ? "#ffc94d" : "#ff4d4d"} />
                       {label(`hz${i}`)}
                     </g>
                   );

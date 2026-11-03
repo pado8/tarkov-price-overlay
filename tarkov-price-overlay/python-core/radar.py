@@ -521,7 +521,7 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
     zones: dict = {}
     for b in m.get("bosses") or []:
         mob = b.get("mob") or ""
-        if not mob or mob.startswith("pmc"):
+        if not mob or mob.startswith("pmc") or mob in NON_BOSS_MOBS:
             continue
         bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
         chance = float(b.get("spawnChance") or 0)
@@ -571,6 +571,51 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
 
 
 BOSS_CLUSTER_M = 150.0  # 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로
+
+# tarkov.dev bosses[] 에 섞여 있지만 보스가 아닌 무리 — 보스 구역에 넣지 않는다(11-04 사용자 결정).
+# 'pmc' 로 시작하는 것(pmcBEAR·pmcUSEC·pmcBotBlackDiv)은 위에서 따로 뺀다.
+#   레이더(PmcBot) · 센트리(Sentry, 해안선 정문 망루) · 터미널 세력(blackDivision·vsRF·vsRFSniper) · 감염자(infected*, 감염 타길라는 보스라 남김)
+# 로그(ROGUE_MOBS)도 보스 구역에선 빼고, 대신 위험 구역 레이어에 저격수처럼 조준점 표식으로 낸다(rogue_spots).
+ROGUE_MOBS: set = {"exUsec", "exUsecFree", "ExUsec"}
+NON_BOSS_MOBS: set = {"PmcBot", "Sentry", "blackDivision", "vsRF", "vsRFSniper",
+                      "infectedScreamer", "infectedAssault", "infectedPmc"} | ROGUE_MOBS
+ROGUE_CLUSTER_M = 40.0  # 로그 스폰 점 묶기 — 무리마다 표식 하나(저격수 표식처럼 점 하나씩)
+
+
+def rogue_spots(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
+    """맵의 로그 스폰(bosses[] 의 exUsec 계열) → 위험 구역 레이어용 조준점 [{name, type:'rogue', p:[x,y,z], outline:[]}].
+    좌표는 spawnLocations.positions, 없으면 같은 zoneName 의 스폰 점. 40m 안 점끼리 묶어 무리 중심 하나. 확률은 그 구역 최대값."""
+    def ok(p):
+        return isinstance(p, dict) and p.get("x") is not None and p.get("z") is not None
+    by_zone: dict = {}
+    for s in m.get("spawns") or []:
+        if s.get("zoneName") and ok(s.get("position")):
+            q = s["position"]
+            by_zone.setdefault(s["zoneName"], []).append([float(q["x"]), float(q.get("y") or 0), float(q["z"])])
+    zones: dict = {}
+    for b in m.get("bosses") or []:
+        if (b.get("mob") or "") not in ROGUE_MOBS:
+            continue
+        rname = _loc(loc_maps, b["mob"]) or _loc(loc_en, b["mob"]) or "Rogue"
+        for sl in b.get("spawnLocations") or []:
+            key = sl.get("spawnKey") or sl.get("name")
+            if not key:
+                continue
+            pts = [[float(p["x"]), float(p.get("y") or 0), float(p["z"])] for p in sl.get("positions") or [] if ok(p)] or by_zone.get(key) or []
+            if not pts:
+                continue
+            zname = _loc(loc_maps, sl.get("name")) or _loc(loc_en, sl.get("name")) or sl.get("name") or ""
+            if re.search(r"\d", zname) and " " not in zname:
+                zname = ""
+            z = zones.setdefault(key, {"rname": rname, "zname": zname, "pts": pts, "chance": 0.0})
+            z["chance"] = max(z["chance"], float(b.get("spawnChance") or 0) * float(sl.get("chance") or 1))
+    out = []
+    for z in zones.values():
+        for grp in _cluster_pts([[p[0], p[2], p[1]] for p in z["pts"]], ROGUE_CLUSTER_M):
+            cx = sum(p[0] for p in grp) / len(grp); cz = sum(p[1] for p in grp) / len(grp); cy = sum(p[2] for p in grp) / len(grp)
+            name = " · ".join(x for x in (z["rname"], z["zname"]) if x) + f" {round(z['chance'] * 100)}%"
+            out.append({"name": name, "type": "rogue", "p": [round(cx, 1), round(cy, 1), round(cz, 1)], "outline": []})
+    return out
 
 # 원본(tarkov.dev)에 좌표도, 같은 이름의 스폰 점도 없어 통째로 빠지던 보스 구역(11-03 전 맵 점검).
 # 같은 맵의 열쇠 문·탈출구 위치로 '대략의 자리'만 잡는다 — 점 1~2개라 지도는 윤곽 없이 배지만 그린다(구역 넓이는 모름).
@@ -677,6 +722,9 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
             continue
         snipe_pts.append(q)
         hazards.append({"name": snipe_name, "type": "sniper", "p": note(q), "outline": []})
+    for h in rogue_spots(m, loc_maps, loc_en):  # 로그 = 저격수처럼 조준점(11-04 사용자 결정, 보스 구역에선 뺌)
+        h["p"] = note(h["p"])
+        hazards.append(h)
     locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door", "key": lk.get("key") or None}  # key = 여는 열쇠 아이템 id(시세 조회한 열쇠 강조용)
              for lk in m.get("locks") or [] if ok(lk.get("position"))]
     containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]
