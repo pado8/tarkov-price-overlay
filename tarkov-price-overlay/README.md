@@ -42,6 +42,7 @@
 | 기능 | 설명 |
 |---|---|
 | **F2 한 번에** | 마우스 올린 위치 캡처 → OCR → 가격 정보 표시 (1초 내외) |
+| **🗺️ 지도** | 게임 스크린샷 키 한 번 → 내 위치 기준 탈출구·트랜짓·퀘스트 목표·보스 구역·스토리 목표의 방향·거리. '나란히 보기'로 시세 카드 + 전체 지도 (게임 메모리는 읽지 않음) |
 | **플리 마켓** | 현재가 · 24h 범위 · 직전 거래가 · 칸당 가격 (₽/slot) |
 | **상인 정보** | 최고가 상인 · 구매처 · 필요 상인 레벨 |
 | **바터** | 이 아이템으로 얻는 바터 / 이 아이템이 재료인 바터 (양방향) |
@@ -129,11 +130,6 @@
 
 ![검색 기록 화면](assets/screenshots/02-history.png)
 
-지도 — 내 위치·탈출구·진행 중 퀘스트 목표·스토리 챕터 목표·보스 구역. 게임 스크린샷 파일 이름의 좌표와 게임 로그만 읽습니다.
-
-![지도](assets/screenshots/07-map.png)
-
-![지도 나란히 모드](assets/screenshots/08-wide.png)
 
 ### 3-1. 탄약 비교 매트릭스 — 무기/탄약 캡처 시 자동 표시
 
@@ -162,6 +158,22 @@ EFT 게임 로그를 직접 파싱해서 본인이 어떤 퀘스트를 완료/�
 - ✓ 완료 (회색) / ▶ 진행중 (골드) / 미시작 (일반) 3단계 색상 구분
 - 외부 API/토큰 불필요 — 파일 읽기만 사용 (안전)
 - 설정 → 퀘스트 동기화에서 EFT 설치 경로 + 표시 모드 변경 가능
+
+### 3-4. 지도 — 스크린샷 키 한 번으로 내 위치 기준 지도
+
+게임 설정의 **스크린샷 키(기본 PrtScn)** 를 누르면 그 자리 기준으로 탈출구·트랜짓·진행 중 퀘스트 목표·보스 구역·메인 스토리 챕터 목표의 **방향·거리·층 차이**를 보여줍니다. 위치는 스크린샷을 찍을 때만 갱신되며, 게임이 **스크린샷 파일 이름에 적어 두는 좌표**와 게임 로그만 읽습니다(게임 메모리는 읽지 않음).
+
+- 설정 → 지도 → **'스크린샷 찍으면 지도 띄우기'**: 스크린샷마다 지도가 자동으로 뜸
+- 설정 → **'지도 나란히 보기'**: 창을 지금 있는 모니터에 꽉 채우고 왼쪽엔 시세 카드, 오른쪽엔 전체 지도 (모니터가 둘이면 하나를 통째로)
+- **'조회 키를 게임에도 전달'**을 켜고 게임의 스크린샷 키를 조회 키와 같게 두면, 한 번 눌러 시세 조회 + 지도 갱신. 아이템을 읽으면 시세, 못 읽으면(인벤토리 밖) 지도가 뜹니다
+- 시세로 조회한 열쇠가 **지금 맵에서 여는 문**도 지도에 표시
+- 게임 스크린샷은 장당 5~7MB라 **'지도용 스크린샷 자동 정리'**를 켜면 좌표가 적힌 것만 오래된 순으로 휴지통에 보냅니다
+
+![지도](assets/screenshots/07-map.png)
+
+![지도 나란히 모드](assets/screenshots/08-wide.png)
+
+지도 그림·좌표: [tarkov.dev](https://tarkov.dev) (CC BY-NC-SA 4.0) · 스토리 목표 좌표: szepiz/tarkov-quest-data (CC0)
 
 ### 4. 인식이 잘 안 될 때
 
@@ -269,7 +281,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📜 업데이트 내역 (요약)
 
-- **v1.2.6** — **지도에 메인 스토리 목표 + 지도 대수술**: 투어·바티야 등 **스토리 챕터 10개의 목표 위치**를 지도에(보라 점), 게임 로그로 **지금 하는 챕터를 자동 추정** + **보스 구역**을 사각형 대신 스폰 점을 둥글게 감싼 윤곽으로, 구역을 모르면 해골 배지만 · 등대 군즈 **정수장** 스폰 추가 · 레이더·센트리·터미널 세력·감염자는 보스 구역에서 제외하고 **로그는 저격수처럼 조준점**으로 + **연구소·미궁 지도 그림** 추가(오염된 공장·연구소는 일반 맵으로) + 시세로 조회한 **열쇠가 지금 맵에서 여는 문** 표시 + 저격 스캐브 자리 보강 + 레이더 모드 제거(지도만) + **조회 키를 게임에도 전달**일 때 읽으면 시세·못 읽으면 지도가 뜨고, 카드가 '조회 중…'에 멈추던 문제 수정 + 같은 이름의 거래 불가 변형이 시세를 가리던 문제 수정 + 카드 블록 **표시 순서** 설정(피드백 #51) + 설정 패널 재편·아이콘 통일·최소화 버튼 + **조용한 자동 업데이트**(새 버전을 받아 두고 앱 끌 때 설치, 설정에서 끔) + 시세 서버 장애 대비 2차 출처 + 사이트 연동이 앱의 퀘스트 서버(PVE 등)를 따름
+- **v1.2.6** — **🗺️ 지도 추가 (신기능)**: 게임의 스크린샷 키(기본 PrtScn)를 누르면 **내 위치 기준으로 탈출구·트랜짓·진행 중 퀘스트 목표·보스 구역·메인 스토리 목표의 방향과 거리**를 지도에 표시 + 설정 **'지도 나란히 보기'** — 모니터를 꽉 채워 왼쪽 시세 카드·오른쪽 전체 지도(듀얼 모니터면 하나를 통째로) + 시세로 조회한 **열쇠가 지금 맵에서 여는 문** 표시 + 게임 메모리는 읽지 않고 스크린샷 파일 이름의 좌표와 게임 로그만 읽음. 세부: 투어·바티야 등 **스토리 챕터 10개의 목표 위치**(보라 점)와 게임 로그로 **지금 하는 챕터 자동 추정** · 보스 구역은 스폰 점을 둥글게 감싼 윤곽(구역을 모르면 해골 배지만), 등대 군즈 정수장 포함, 로그는 저격수처럼 조준점 · 연구소·미궁 지도 그림 · 저격 스캐브 자리 보강 + **조회 키를 게임에도 전달**일 때 읽으면 시세·못 읽으면 지도가 뜨고, 카드가 '조회 중…'에 멈추던 문제 수정 + 같은 이름의 거래 불가 변형이 시세를 가리던 문제 수정 + 카드 블록 **표시 순서** 설정(피드백 #51) + 설정 패널 재편·아이콘 통일·최소화 버튼 + **조용한 자동 업데이트**(새 버전을 받아 두고 앱 끌 때 설치, 설정에서 끔) + 시세 서버 장애 대비 2차 출처 + 사이트 연동이 앱의 퀘스트 서버(PVE 등)를 따름
 - **v1.2.5** — **시즌 캐릭터 지원 + 퀘스트 동기화 대수술**: 설정 → 게임 모드 → **시즌**을 고르면 시즌(KORD BREACH) 시세·교환·제작·은신처 정보가 나오고 시즌 퀘스트 진행도도 따로 동기화합니다 (피드백 반영) + **PVE 프레스티지 자동 인식** — 프레스티지하면 그 시점부터 퀘스트 기록을 알아서 새로 셉니다(와이프 리셋 불필요) + **PVE 퀘스트가 PVP로 기록되던 문제 수정** (오버레이를 게임보다 먼저 켜 두면 그 세션의 퀘스트가 PVP로 들어가던 버그) + 게임을 끄지 않고 캐릭터를 바꿔도 PVE·시즌·PVP 기록이 섞이지 않음 + **탄약 비교표 복구** (시세 서버 장애 중 비어 있던 문제, 피드백 2건) + **교환에 필요한 개수(×N)**와 **이 아이템이 재료인 제작** 패널 (피드백 반영) + 카드에서 은신처·퀘스트 줄을 **눌러 달성 표시** + 설정 '직전 거래 강조'·'서비스 상태' 페이지 + 일부 아이템 오인식 수정 (AK-74N이 AKS-74N으로 잡히던 문제, PP-9 Klin 탄약표)
 - **v1.2.4** — **장애 중에도 퀘스트·교환·제작·은신처 정보 복구**: 시세 원본(tarkov.dev)이 다운되면 v1.2.3은 시세만 보여줬는데, 이제 대체 데이터 소스에서 **퀘스트·교환(바터)·제작·은신처 정보까지 전부** 가져옵니다 ("어느 퀘스트에 필요한지 안 뜬다" 피드백 반영) + **📖 위키 링크 버튼** (아이템 이름 옆, 요청 2건 반영) + 익명 통계 전송 방식 개선 (전송 실패 시에도 유실되지 않고 재시도 — 사용자 체감 변화 없음)
 - **v1.2.3** — **시세 서버 장애 대응 (긴급)**: 시세 원본인 tarkov.dev의 GraphQL API가 다운되면(2026년 7월 다일간 장애) 시세 조회가 전부 실패하던 문제에 대응 — 자동으로 대체 데이터 소스(json.tarkov.dev)로 우회해 **플리·상인 시세 조회를 복구**합니다. 장애 중에는 바터·퀘스트·제작·은신처 정보가 일부 표시되지 않을 수 있으며(시세·상인가는 정상), tarkov.dev가 복구되면 **자동으로 전체 기능이 돌아옵니다**.
@@ -410,6 +422,7 @@ Flea current/24h range/last trade · top trader price · barters (both direction
 | Feature | Description |
 |---|---|
 | **One-key lookup** | Hover, press F2, see prices in ~1 second |
+| **🗺️ Map** | One press of the game's screenshot key → extracts, transits, quest objectives, boss zones and story objectives with direction & distance from you. Side-by-side mode puts price cards next to the full map (no game memory read) |
 | **Flea market** | Current price · 24h range · last trade · ₽/slot |
 | **Trader info** | Best trader price · buy-from vendors · required trader level |
 | **Barter** | Both directions — barters that produce / consume this item |
@@ -477,11 +490,22 @@ Want to recheck something you just looked up? Click 🕒 in the card header to s
 
 ![History panel](assets/screenshots/en/02-history.png)
 
-Map — your position, extracts, active quest objectives, story chapter objectives and boss zones. Reads only the coordinates in the game's screenshot file names and the game log.
+
+### 3-4. Map — one press of the screenshot key, a map from where you stand
+
+Press the game's **screenshot key (PrtScn by default)** and the map shows extracts, transits, active quest objectives, boss zones and main-story chapter objectives with **direction, distance and floor difference** from your position. The position updates only when you take a screenshot; the app reads only the **coordinates the game writes into the screenshot file name** and the game's text logs (never game memory).
+
+- Settings → Map → **'Show map when you take a screenshot'**: the map pops up on every screenshot
+- Settings → **'Side-by-side map'**: fills the current monitor with price cards on the left and the full map on the right (or takes over a second monitor)
+- Turn on **'Pass the lookup key to the game too'** and set the game's screenshot key to the same key: one press looks up prices and refreshes the map. A read shows prices; a miss (outside the inventory) shows the map
+- The **door a looked-up key opens** on the current map is marked too
+- Game screenshots are 5–7 MB each, so **'Auto-clean map screenshots'** moves only the ones with coordinates to the Recycle Bin, oldest first
 
 ![Map](assets/screenshots/en/07-map.png)
 
 ![Side-by-side map mode](assets/screenshots/en/08-wide.png)
+
+Map images & coordinates: [tarkov.dev](https://tarkov.dev) (CC BY-NC-SA 4.0) · story objective coordinates: szepiz/tarkov-quest-data (CC0)
 
 ### 4. If recognition is off
 
@@ -580,7 +604,7 @@ A. Open a [GitHub Issue](https://github.com/pado8/tarkov-price-overlay-releases/
 
 ## 📜 Changelog (recent)
 
-- **v1.2.6** — **Main-story objectives on the map + map overhaul**: objectives of the **10 story chapters** (Tour, Batya…) drawn on the map (purple dots), with the **current chapter inferred from the game log** + **boss zones** drawn as rounded outlines around spawn points instead of boxes (badge only when the area is unknown) · Goons' **Water Treatment Plant** spawn on Lighthouse added · Raiders, Sentries, Terminal factions and Infected removed from boss zones; **Rogues shown like snipers** (crosshair) + **Labs and Labyrinth map images** (Infected Factory/Labs use the regular map data) + the **door a looked-up key opens** on the current map + more sniper spots + radar mode removed (map only) + with **'pass the lookup key to the game'** on, a read shows prices and a miss shows the map, and the card no longer sticks on 'Looking up…' + fixed untradeable variants hiding a priced item + **card block order** setting (feedback #51) + settings panel rework, unified icons, minimize button + **quiet auto-update** (downloads in the background, installs when you close the app; can be turned off) + secondary price source for outages + site sync follows the app's quest server (PvE etc.)
+- **v1.2.6** — **🗺️ New: in-game map**: press the game's screenshot key (PrtScn by default) and the map shows **extracts, transits, active quest objectives, boss zones and main-story objectives with direction and distance from where you stand** + **'Side-by-side map'** in Settings fills your monitor with price cards on the left and the full map on the right (or takes over a second monitor) + the **door a looked-up key opens** on the current map + no game memory is read — only the coordinates the game writes into screenshot file names and its text logs. Details: objectives of the **10 story chapters** (Tour, Batya…) as purple dots, with the **current chapter inferred from the game log** · boss zones as rounded outlines around spawn points (badge only when the area is unknown), Goons' Water Treatment Plant on Lighthouse included, Rogues shown like snipers (crosshair) · Labs and Labyrinth map images · more sniper spots + with **'Pass the lookup key to the game too'** on, a read shows prices and a miss shows the map, and the card no longer sticks on 'Looking up…' + fixed untradeable variants hiding a priced item + **card block order** setting (feedback #51) + settings panel rework, unified icons, minimize button + **quiet auto-update** (downloads in the background, installs when you close the app; can be turned off) + secondary price source for outages + site sync follows the app's quest server (PvE etc.)
 - **v1.2.5** — **Season character support + quest sync overhaul**: pick Settings → Game mode → **Season** for season (KORD BREACH) prices, barters, crafts and hideout info, with season quest progress synced separately (from feedback) + **PvE prestige detected automatically** — quest progress restarts from that moment on its own (no wipe reset needed) + **fixed PvE quests being recorded as PvP** (when the overlay was started before the game, that session's quests went to PvP) + switching characters without restarting the game no longer mixes PvE / Season / PvP progress + **ammo comparison table restored** (empty during the data-source outage, two reports) + **how many items a barter needs (×N)** and a **crafts that use this item** panel (from feedback) + **click hideout / quest rows on the card to mark them done** + new settings 'Highlight last trade' and a 'Service status' page + item misreads fixed (AK-74N matched as AKS-74N, PP-9 Klin ammo table)
 - **v1.2.4** — **Quest / barter / craft / hideout info restored during outages**: when the data source (tarkov.dev) is down, v1.2.3 showed prices only; the backup source now supplies **quests, barters, crafts and hideout requirements too** (from feedback: "it doesn't show which quest needs this") + **📖 wiki link button** next to the item name (two user requests) + more reliable anonymous stats (queued and retried instead of dropped on failure — no user-facing change)
 - **v1.2.3** — **Data-source outage resilience (hotfix)**: when tarkov.dev's GraphQL API goes down (it had a multi-day outage in July 2026), price lookups used to fail entirely — the app now automatically falls back to a backup data source (json.tarkov.dev) so **flea & trader price lookups keep working**. During the outage barter/quest/craft/hideout info may be missing (prices are fine), and **full features return automatically** once tarkov.dev is back.
