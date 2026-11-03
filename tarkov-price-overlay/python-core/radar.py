@@ -529,7 +529,14 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             pts = [[round(float(p["x"]), 1), round(float(p["z"]), 1)] for p in sl.get("positions") or [] if ok(p)] or by_zone.get(key) or []
             if not pts:
                 continue
-            z = zones.setdefault(key, {"name": _loc(loc_maps, sl.get("name")) or _loc(loc_en, sl.get("name")) or key, "pts": pts, "bosses": []})
+            en_name = _loc(loc_en, sl.get("name")) or sl.get("name") or ""
+            # '아무 스캐브 스폰'(BotZone·ZoneSandbox): 맵의 스캐브 스폰 전부가 후보 → 상자로 그리면 지도 전체를 덮는다(그라운드 제로 64점, 공장).
+            # 점은 중심 하나만 두고 anywhere 표시 → 프런트가 상자 대신 '맵 전역' 표식으로 그린다.
+            anywhere = en_name.lower() == "any scav spawn" or key in ("BotZone", "ZoneSandbox")
+            zname = _loc(loc_maps, sl.get("name")) or en_name or key
+            if re.search(r"\d", zname) and " " not in zname:
+                zname = ""  # '2BDPort28' 같은 내부 코드(터미널·쇄빙선)는 이름으로 안 보여 준다 → 보스 이름만
+            z = zones.setdefault(key, {"name": zname, "pts": pts, "bosses": [], "anywhere": anywhere})
             if not any(x["name"] == bname for x in z["bosses"]):
                 z["bosses"].append({"name": bname, "chance": round(chance * float(sl.get("chance") or 1), 2)})
     # 한 구역 이름 아래 점들이 지도 양 끝의 여러 무리로 갈라져 있는 경우가 있다(해안선 '온실' = 별장 4점 + 600m 떨어진 2점,
@@ -539,6 +546,10 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
     out = []
     for z in zones.values():
         z["bosses"].sort(key=lambda x: -x["chance"])
+        if z.get("anywhere"):
+            cx = sum(p[0] for p in z["pts"]) / len(z["pts"]); cz = sum(p[1] for p in z["pts"]) / len(z["pts"])
+            out.append({**z, "pts": [[round(cx, 1), round(cz, 1)]]})
+            continue
         for grp in _cluster_pts(z["pts"], BOSS_CLUSTER_M):
             out.append({**z, "pts": grp})
     return out

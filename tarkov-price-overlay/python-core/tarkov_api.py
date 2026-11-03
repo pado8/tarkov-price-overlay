@@ -1198,7 +1198,9 @@ def _refresher_loop() -> None:
     except Exception as e:  # noqa: BLE001
         print(f"[cache] snapshot restore failed: {e!r}")
     while True:
-        for lang in ("ko", "en"):
+        # ru 도 미리 받아 둔다(11-03): 빠져 있어 러시아어 조회가 전부 아이템별 GraphQL 네트워크 경로로 갔고,
+        # tarkov.dev GraphQL 장애 땐 러시아어 사용자는 조회가 아예 안 됐다(스냅샷 ~6MB 씩 3개 추가).
+        for lang in ("ko", "en", "ru"):
             for game_mode in ("regular", "pve", "pvp-season"):
                 try:
                     _refresh_one(lang, game_mode)

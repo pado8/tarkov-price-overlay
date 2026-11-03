@@ -58,7 +58,7 @@ export type MapDoc = {
   locks: { p: Pt; type: string; key?: string | null }[]; // key = 여는 열쇠 아이템 id
   containers: Pt[];
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
-  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[] }[]; // 보스 스폰 구역(구역별 합침)
+  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
   weapons: Pt[];
   switches: Pt[];
 };
@@ -173,6 +173,11 @@ function bossBox(pts: [number, number][]) {
 }
 function bossText(z: NonNullable<MapDoc["bosses"]>[number], max = 9): string {
   return z.bosses.slice(0, max).map((b) => `${b.name} ${Math.round(b.chance * 100)}%`).join(", ");
+}
+// 이름표·팝업 문구: "구역 · 보스 n%" — 구역 이름이 없으면(내부 코드) 보스만, 맵 전역이면 '(맵 전역)' 덧붙임
+function bossLabel(z: NonNullable<MapDoc["bosses"]>[number], t: Strings, max = 9): string {
+  const body = `${z.name ? z.name + " · " : ""}${bossText(z, max)}`;
+  return z.anywhere ? `${body} (${t.radarBossAnywhere})` : body;
 }
 
 function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
@@ -394,7 +399,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
-    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: `${z.name} · ${bossText(z, 1)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const b = bossBox(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2], off: 10, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
       if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -541,14 +546,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               })}
             {layers.spawns &&
               (doc.bosses ?? []).map((z, i) => {
-                // 구역 = 스폰 점들을 감싸는 사각형(여유 12m) — tarkov.dev 처럼 붉게 칠하고 해골
+                // 구역 = 스폰 점들을 감싸는 사각형(여유 12m) — tarkov.dev 처럼 붉게 칠하고 해골. 맵 전역(anywhere)이면 상자 없이 점선 원 하나
                 const b = bossBox(z.pts);
                 const c = toScreen((b.x1 + b.x2) / 2, (b.z1 + b.z2) / 2);
                 const corners = [[b.x1, b.z1], [b.x2, b.z1], [b.x2, b.z2], [b.x1, b.z2]] as [number, number][];
-                const text = bossText(z);
                 return (
-                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${z.name}: ${text}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2] })}>
-                    <polygon points={poly(corners)} fill="rgba(220,40,40,0.22)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="4 2" />
+                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [(b.x1 + b.x2) / 2, myY, (b.z1 + b.z2) / 2] })}>
+                    {z.anywhere ? (
+                      <circle cx={c.x} cy={c.y} r={13} fill="rgba(220,40,40,0.18)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="3 2" />
+                    ) : (
+                      <polygon points={poly(corners)} fill="rgba(220,40,40,0.22)" stroke="#ff4d4d" strokeWidth={1.2} strokeDasharray="4 2" />
+                    )}
                     <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize={14} fill="#ff4d4d" stroke="#000" strokeWidth={0.6}>☠</text>
                     {label(`bz${i}`)}
                   </g>

@@ -219,11 +219,11 @@ bm = {"bosses": [
         "positions": [{"x": 0, "z": 0}, {"x": 140, "z": 0}, {"x": 280, "z": 0}]}]},  # 140m 씩 이어진 사슬 = 한 무리
 ], "spawns": []}
 bz = r.boss_zones(bm, {})
-ws = [z for z in bz if z["name"] == "ZoneMeteoStation"]
+ws = [z for z in bz if z["name"] == "Weather Station"]
 eq("갈라진 구역은 무리 2개", sorted(len(z["pts"]) for z in ws), [2, 3])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
 eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
-eq("150m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "ZoneA"], [3])
+eq("150m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
 
 # 저격 스캐브 자리 — 스폰 목록의 'Snipe' 구역도 저격수 표시로(해안선 요양원 북쪽, 11-03)
 sm = {"normalizedName": "", "hazards": [{"name": "ScavRole/Marksman", "hazardType": "sniper", "position": {"x": 0, "y": 0, "z": 0}, "outline": []}],
@@ -269,6 +269,14 @@ eq("안 쓰는 payload 없음", [k for k in dup[0] if k in ("floor", "outline")]
 eq("맵 별칭 표 공유(infected-lab→the-lab)", r.MAP_BASE.get("infected-lab"), "the-lab")
 eq("지도 그림 별칭도 같은 표", r._IMG_ALIAS is r.MAP_BASE, True)
 r._STORY = _orig_story
+
+# 보스 구역 — '아무 스캐브 스폰'은 상자 대신 맵 전역 표식(점 하나), 코드형 구역 이름은 비움(11-03 전 맵 점검)
+am = {"bosses": [{"mob": "sectantPriest", "spawnChance": 0.2, "spawnLocations": [{"spawnKey": "ZoneSandbox", "name": "Any scav spawn", "chance": 1,
+        "positions": [{"x": 0, "z": 0}, {"x": 400, "z": 0}, {"x": 0, "z": 400}, {"x": 400, "z": 400}]}]},
+    {"mob": "blackDivision", "spawnChance": 0.8, "spawnLocations": [{"spawnKey": "2BDPort28", "name": "2BDPort28", "chance": 1, "positions": [{"x": 10, "z": 10}]}]}], "spawns": []}
+az = r.boss_zones(am, {}, {"Any scav spawn": "Any scav spawn", "2BDPort28": "2BDPort28"})
+eq("맵 전역은 점 하나·anywhere", [(z["anywhere"], z["pts"]) for z in az if z["bosses"][0]["name"] == "sectantPriest"], [(True, [[200.0, 200.0]])])
+eq("코드형 구역 이름은 비움", [z["name"] for z in az if z["bosses"][0]["name"] == "blackDivision"], [""])
 
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys

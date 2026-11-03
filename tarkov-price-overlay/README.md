@@ -94,7 +94,7 @@
 - ❌ 절대 수집 안 함: 검색한 아이템 이름, 화면, 마우스 좌표, 게임 내용, 개인정보, IP
 - ⚙️ opt-out — 기본 ON, 첫 실행 1회 안내, 설정에서 끄기 가능. 피드백(설정 → ✉)도 같은 백엔드에 저장됨
 - 🔓 수집 코드는 `src/App.tsx`의 `reportEvent` 참고
-- 🗺️ 지도(개발 중): 게임이 스크린샷을 저장할 때 **파일명에 적어 두는 좌표·방향**과 게임 `application` 로그의 맵 로딩 줄만 **이 PC 안에서** 읽습니다. 게임 메모리는 읽지 않습니다. 통계로는 **지도를 연 횟수**(직접 열기/스크린샷 자동)만 보내고, 좌표·맵 이름·스크린샷 내용은 어디에도 보내지 않습니다. 설정에서 끌 수 있고, "스크린샷 자동 정리"를 켜면 좌표가 적힌 스크린샷만 오래된 것부터 **휴지통**으로 보냅니다(영구 삭제 아님, 기본 꺼짐)
+- 🗺️ 지도: 게임이 스크린샷을 저장할 때 **파일명에 적어 두는 좌표·방향**, 게임 `application` 로그의 맵 로딩 줄, 그리고 `output` 로그의 퀘스트 조건 경고 줄(스토리 챕터 진행 추정용)만 **이 PC 안에서** 읽습니다. 게임 메모리는 읽지 않습니다. 통계로는 **지도를 연 횟수**(직접 열기/스크린샷 자동)만 보내고, 좌표·맵 이름·스크린샷 내용은 어디에도 보내지 않습니다. 설정에서 끌 수 있고, "스크린샷 자동 정리"를 켜면 좌표가 적힌 스크린샷만 오래된 것부터 **휴지통**으로 보냅니다(영구 삭제 아님, 기본 꺼짐)
 
 ---
 
@@ -431,6 +431,7 @@ This program uses **screen capture + OCR (text recognition) only**.
 - ❌ Does **NOT** hook the game window or use low-level keyboard hooks
 - ❌ Does **NOT** modify any game files
 - ✅ Uses standard Win32 desktop capture (BitBlt) + a transparent topmost window + `RegisterHotKey` (OS-level hotkey)
+- 🗺️ Map: reads only the coordinates the game writes into screenshot file names, the map-loading lines of the game's `application` log and the quest-condition warning lines of the `output` log (to infer story chapter progress) — all on this PC. Coordinates, map names and screenshots are never sent anywhere; only a count of map opens goes to the anonymous stats.
 
 Technically this is **the same category as YouTube screen recorders or Discord screen sharing**. It is fundamentally different from memory hacks, ESP, or aimbots.
 
