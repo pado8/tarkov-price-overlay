@@ -107,6 +107,8 @@
   document.getElementById("mode").addEventListener("click", function (e) {
     var v = e.target.getAttribute("data-v"); if (!v) return; mode = v; save(MODEKEY, v); setSeg("mode", v); render();
   });
+  document.addEventListener("guide-sync", function () { mode = load(MODEKEY, "pvp"); setSeg("mode", mode); render();
+  });
   document.getElementById("reset").addEventListener("click", function () {
     if (confirm("Clear all owned checks?")) { have = {}; save(KEY, have); render(); }
   });

@@ -68,7 +68,7 @@ r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
 document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· completed excluded "+cutn+"items"):"";
 var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href="/guide/en/rewards/"+(q?"?q="+encodeURIComponent(q):"")}}
-document.addEventListener("guide-sync",render);
+document.addEventListener("guide-sync",function(){mode=L(MK,"pvp");seg("mode",mode);render()});
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
 ["firOnly","hideHave"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("q").addEventListener("input",render);
