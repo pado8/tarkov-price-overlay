@@ -1185,11 +1185,12 @@ def radar_map_image(map: str, layer: str | None = None):
     """전체 지도 배경 그림(tarkov.dev SVG, CC BY-NC-SA 4.0 · 비영리·출처 표기). 사이드카가 7일 캐시해 되돌려준다.
     layer = 층 그룹 id(td_maps.json layers[].g) — 그 층만 켜고 바탕은 흐리게. 없으면 바탕(지상)만."""
     from fastapi.responses import Response
-    from radar import map_image_svg
-    data = map_image_svg(map, layer or None)
-    if data is None:
+    from radar import map_image_bytes
+    got = map_image_bytes(map, layer or None)  # SVG 맵은 SVG, 타일 맵(연구소·미궁·쇄빙선, 11-04)은 이어 붙인 PNG
+    if got is None:
         raise HTTPException(status_code=404, detail="no_map_image")
-    return Response(content=data, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+    data, mime = got
+    return Response(content=data, media_type=mime, headers={"Cache-Control": "public, max-age=86400"})
 
 
 class HideoutSyncRequest(BaseModel):

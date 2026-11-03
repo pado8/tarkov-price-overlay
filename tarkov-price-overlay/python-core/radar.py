@@ -716,8 +716,104 @@ def map_image_meta(slug: str) -> Optional[dict]:
     x = _TD_MAPS.get(_IMG_ALIAS.get(slug, slug))
     if not x:
         return None
+    author = x.get("author") or "tarkov.dev"
+    credit = "tarkov.dev (CC BY-NC-SA 4.0)" if author.lower() == "tarkov.dev" else f"{author} · tarkov.dev (CC BY-NC-SA 4.0)"
     return {"url": f"/radar/mapimg?map={slug}", "rot": x.get("rot") or 0, "bounds": x["bounds"], "transform": x["transform"],
-            "credit": "tarkov.dev (CC BY-NC-SA 4.0)", "base": x.get("base"), "layers": x.get("layers") or []}
+            "credit": credit, "base": x.get("base"),
+            "layers": [{k: v for k, v in l.items() if k != "tiles"} for l in x.get("layers") or []]}
+
+
+# ── 타일 지도(11-04): SVG 가 없는 맵(연구소·미궁·쇄빙선)은 tarkov.dev 사이트가 Leaflet 타일 PNG 로 그린다.
+# 좌표는 SVG 맵과 같은 식(CRS.Simple + transform, 확대 z 에서 화면 px = 투영 px × 2^z, 타일 하나 = tileSize px).
+# 사이드카가 bounds 를 투영한 사각형만큼 타일을 받아 PNG 한 장으로 이어 붙여 캐시한다 → 프런트는 SVG 와 똑같이 그 사각형에 깐다.
+_TILE_TARGET_PX = 2400  # 이어 붙인 그림의 긴 변 목표(px) — 이 근처가 되는 확대 단계를 고른다
+_TILE_WORKERS = 6
+
+
+def _tile_plan(x: dict) -> dict:
+    """bounds 투영 사각형 → (확대 z, 타일 범위, 잘라낼 상자). 프런트 imageMatrix 와 같은 투영식."""
+    t0, t1, t2, t3 = x["transform"]
+    a = math.radians(x.get("rot") or 0)
+    ca, sa = math.cos(a), math.sin(a)
+
+    def proj(gx, gz):
+        return t0 * (gx * ca - gz * sa) + t1, -t2 * (gx * sa + gz * ca) + t3
+    (ax, ay), (bx, by) = proj(*x["bounds"][0]), proj(*x["bounds"][1])
+    pxmin, pxmax, pymin, pymax = min(ax, bx), max(ax, bx), min(ay, by), max(ay, by)
+    span = max(pxmax - pxmin, pymax - pymin)
+    zmin, zmax = int(x.get("minZoom") or 0), int(x.get("maxZoom") or 5)
+    z = max(zmin, min(zmax, round(math.log2(_TILE_TARGET_PX / span)) if span > 0 else zmax))  # 목표에 가장 가까운 단계(올림이면 3500px+로 무거워짐)
+    s, ts = 2 ** z, int(x.get("tileSize") or 256)
+    X0, X1 = math.floor(pxmin * s / ts), math.floor((pxmax * s - 1e-6) / ts)
+    Y0, Y1 = math.floor(pymin * s / ts), math.floor((pymax * s - 1e-6) / ts)
+    crop = (round(pxmin * s - X0 * ts), round(pymin * s - Y0 * ts), round(pxmax * s - X0 * ts), round(pymax * s - Y0 * ts))
+    return {"z": z, "ts": ts, "X": (X0, X1), "Y": (Y0, Y1), "crop": crop}
+
+
+def map_tile_png(slug: str, layer: Optional[str] = None) -> Optional[Path]:
+    """타일 맵 그림 PNG(층마다 따로, 7일 캐시). layer = td_maps.json layers[].g(L0…) — 없으면 바탕 층. 타일 맵이 아니면 None."""
+    map_image_meta(slug)  # _TD_MAPS 적재
+    x = (_TD_MAPS or {}).get(_IMG_ALIAS.get(slug, slug))
+    if not x or not x.get("tiles"):
+        return None
+    lay = next((l for l in x.get("layers") or [] if l.get("g") == layer and l.get("tiles")), None) if layer else None
+    tpath = lay["tiles"] if lay else x["tiles"]
+    from quest_tracker import _state_dir
+    d = _state_dir() / "mapimg"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{_IMG_ALIAS.get(slug, slug)}{'-' + lay['g'] if lay else ''}.png"
+    if f.exists() and f.stat().st_size > 1000 and time.time() - f.stat().st_mtime < _MAPIMG_TTL:
+        return f
+    try:
+        import io
+        from concurrent.futures import ThreadPoolExecutor
+
+        import requests
+        from PIL import Image
+        p = _tile_plan(x)
+        ts, z = p["ts"], p["z"]
+        (X0, X1), (Y0, Y1) = p["X"], p["Y"]
+        canvas = Image.new("RGBA", ((X1 - X0 + 1) * ts, (Y1 - Y0 + 1) * ts), (0, 0, 0, 0))
+        sess = requests.Session()
+        sess.headers["User-Agent"] = "tarkov-price-overlay radar"
+
+        def fetch(xy):
+            tx, ty = xy
+            try:
+                r = sess.get(tpath.replace("{z}", str(z)).replace("{x}", str(tx)).replace("{y}", str(ty)), timeout=30)
+                if r.status_code != 200 or not r.content.startswith(b"\x89PNG"):
+                    return xy, None  # 바깥 타일은 없다(투명으로 둔다)
+                return xy, Image.open(io.BytesIO(r.content)).convert("RGBA")
+            except Exception:  # noqa: BLE001
+                return xy, None
+        got = 0
+        with ThreadPoolExecutor(_TILE_WORKERS) as ex:
+            for (tx, ty), im in ex.map(fetch, [(tx, ty) for tx in range(X0, X1 + 1) for ty in range(Y0, Y1 + 1)]):
+                if im is not None:
+                    canvas.paste(im.resize((ts, ts)) if im.size != (ts, ts) else im, ((tx - X0) * ts, (ty - Y0) * ts))
+                    got += 1
+        if not got:
+            raise ValueError("no tiles")
+        canvas.crop(p["crop"]).save(f, "PNG", optimize=True)
+        log.info(f"[radar] 타일 지도 {f.name}: z{z} 타일 {got}개")
+        return f
+    except Exception as e:  # noqa: BLE001 — 옛 캐시라도 있으면 그걸로
+        log.warning(f"[radar] 타일 지도 실패 {slug}/{layer}: {e}")
+        return f if f.exists() and f.stat().st_size > 1000 else None
+
+
+def map_image_bytes(slug: str, layer: Optional[str] = None) -> Optional[tuple]:
+    """지도 그림 (바이트, MIME). SVG 맵은 층 처리한 SVG, 타일 맵은 이어 붙인 PNG."""
+    meta = map_image_meta(slug)
+    if meta is None:
+        return None
+    x = (_TD_MAPS or {}).get(_IMG_ALIAS.get(slug, slug)) or {}
+    if x.get("tiles"):
+        allowed = {l["g"] for l in meta["layers"]}
+        f = map_tile_png(slug, layer if layer in allowed else None)
+        return (f.read_bytes(), "image/png") if f else None
+    data = map_image_svg(slug, layer)
+    return (data, "image/svg+xml") if data else None
 
 
 _SVG_G_RE = re.compile(r"<g\b[^>]*\bid=\"([^\"]+)\"")
