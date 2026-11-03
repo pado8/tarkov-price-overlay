@@ -77,6 +77,12 @@ label.chk{display:inline-flex;gap:6px;align-items:center;font-size:13.5px;color:
 .cta b{color:var(--gold)}
 .cta a.btn{background:var(--gold);color:#15140f;font-weight:800;padding:8px 14px;border-radius:8px}
 .cta a.btn:hover{text-decoration:none;filter:brightness(1.08)}
+/* 11-03 다운로드 안내 배치: 상단 메뉴 금색 버튼(.ovcta) + 퀘스트 목표 아래 한 줄(.qcta) */
+.top .ov.ovcta{color:#15140f;background:var(--gold);font-weight:800}
+.top .ov.ovcta:hover,.top .ov.ovcta.on{color:#15140f;background:var(--gold);filter:brightness(1.08)}
+.qcta{margin:-4px 0 14px;padding:9px 12px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:8px;background:var(--bg2);color:var(--muted);font-size:14px}
+.qcta b{color:var(--gold)}
+.qcta a{font-weight:700;white-space:nowrap;margin-left:4px}
 footer{color:var(--muted);font-size:12.5px;padding:24px 0 40px;border-top:1px solid var(--line);margin-top:30px}
 .empty{color:var(--muted);padding:20px;text-align:center}
 @media (max-width:560px){

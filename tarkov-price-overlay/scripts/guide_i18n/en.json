@@ -1161,5 +1161,7 @@
 "은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.": "means no site lists it as active and at least one lists it as expired.",
 "// 프로모 코드": "// promo codes",
 "체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)": "check — merge the list stored in the app (same PC) into the browser checks (add only)",
-"곳에서 활성": "sites list it active"
+"곳에서 활성": "sites list it active",
+"— 이 퀘스트에 필요한지·시세가 바로 떠요": "— instantly see whether this quest needs it and what it sells for",
+"무료 시세 오버레이": "Free Price Overlay"
 }

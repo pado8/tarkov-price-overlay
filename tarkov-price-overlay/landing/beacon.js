@@ -78,6 +78,6 @@
     }
     // 가이드 → 랜딩 '다운로드' 버튼(/?src=guide, /en?src=guide …). 통계 콘솔 '한눈에'의 "가이드에서 다운로드로" 가 이 수를 센다.
     var g = onGuide && e.target.closest && e.target.closest('a[href*="src=guide"]');
-    if (g) ga("guide_download_cta", { page: location.pathname });
+    if (g) ga("guide_download_cta", { page: location.pathname, place: ((g.getAttribute("href") || "").match(/src=(guide[\w-]*)/) || [])[1] || "guide" });
   });
 })();

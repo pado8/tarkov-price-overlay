@@ -125,7 +125,8 @@ def localize_html(html_text: str) -> str:
         return f'{m.group(1)}="/guide/{LANG}/{url[len("/guide/"):]}"'
     html_text = _re.sub(r'(href|action|src)="(/guide/[^"]*)"', _href, html_text)
     # 랜딩·상태 페이지도 그 언어판으로
-    html_text = html_text.replace('href="/"', f'href="/{LANG}/"').replace('href="/?src=guide"', f'href="/{LANG}/?src=guide"')  # 끝 슬래시: Cloudflare Pages 는 /en → /en/ 308
+    html_text = html_text.replace('href="/"', f'href="/{LANG}/"')  # 끝 슬래시: Cloudflare Pages 는 /en → /en/ 308
+    html_text = _re.sub(r'href="/\?src=([A-Za-z0-9_-]+)"', lambda m: f'href="/{LANG}/?src={m.group(1)}"', html_text)  # guide·guide-nav·guide-quest·guide-start
     html_text = html_text.replace('href="/status/"', f'href="/status/?lang={LANG}"')
     # 번역 조각을 이어 붙이며 생긴 이중 공백 정리(태그·스크립트 밖 본문)
     html_text = _re.sub(r"(?<=[^\s>])  +(?=[^\s<])", " ", html_text)
@@ -275,7 +276,8 @@ def nav_html(active: str, path: str | None = None) -> str:
         out.append(f'<div class="g{" on" if gon else ""}"><a class="gt" href="{href}">{label}<span class="car" aria-hidden="true">▾</span></a>'
                    f'<div class="dd">{inner}</div></div>')
     # '시세 오버레이'는 nav 밖 형제로 둔다 — 넓은 화면에선 메뉴 바로 뒤, 폰에선 로고 줄 오른쪽(guide.css)
-    ov = f'<a class="ov{" on" if active == "overlay" else ""}" href="/">시세 오버레이</a>'
+    # 11-03: 회색 글자 링크라 다운로드 버튼으로 안 보였다(가이드 174명 중 하단 버튼 클릭 3) → 금색 버튼 + 자리 표식 guide-nav
+    ov = f'<a class="ov ovcta{" on" if active == "overlay" else ""}" href="/?src=guide-nav">무료 시세 오버레이</a>'
     return "<nav>" + "".join(out) + "</nav>" + (lang_switch_html(path) if path else "") + ov
 
 
@@ -1031,6 +1033,8 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
     if tp and tid in ctx.tasks_reg and _sig(tp) != _sig(ctx.tasks_reg[tid]):
         sections_main.append('<section class="box"><h2>PVE 버전 목표</h2><p class="small muted">PVE에서는 목표가 조금 다릅니다.</p><ol class="objs">'
                              + "".join(objective_html(ctx, o) for o in tp.get("objectives") or []) + "</ol></section>")
+    # 다운로드 한 줄 안내 — 목표(PVE 목표 포함)를 다 본 바로 아래(11-03, 자리 표식 guide-quest)
+    sections_main.append('<p class="qcta">레이드 중 아이템에 마우스 올리고 <b>F2</b> — 이 퀘스트에 필요한지·시세가 바로 떠요 <a href="/?src=guide-quest">무료 시세 오버레이 받기</a></p>')
     keys_html = ""
     for nk in t.get("neededKeys") or []:
         ks = _flat(nk.get("keys"))
