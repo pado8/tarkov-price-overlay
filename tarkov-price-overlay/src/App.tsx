@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize } from "./Radar";
 import { Icon } from "./Icon";
-import { keepScreenOnEmpty, statusAfterKept } from "./lookupOutcome";
+import { viewAfterLookup, shotAction } from "./lookupOutcome";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -1285,6 +1285,8 @@ function App() {
   statusRef.current = status;
   const hasResultRef = useRef(false);
   hasResultRef.current = result != null;
+  // 같은 키(조회 키를 게임에도 전달)로 마지막에 누른 시각 — 그 누름이 만든 스크린샷이 시세 카드를 덮지 않게(lookupOutcome.shotAction)
+  const sharedPressAtRef = useRef(-1e12);
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
@@ -2087,7 +2089,8 @@ function App() {
     }
   };
   // 카드 위에 지도를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
-  const openRadar = async (fromScreenshot: boolean) => {
+  // report=false: 같은 키 + 못 읽음으로 여는 경우 — 그 누름의 스크린샷이 감지될 때 radar_shot 이 한 번 따로 집계되므로 중복 보고하지 않는다
+  const openRadar = async (fromScreenshot: boolean, report = true) => {
     try {
       const win = getCurrentWindow();
       if (!(await win.isVisible())) await invoke("show_overlay_passive");
@@ -2096,10 +2099,13 @@ function App() {
     setShowSettings(false);
     setHistoryVisible(false);
     setRadarActive(true);
-    reportEvent(fromScreenshot ? "radar_shot" : "radar_open");
+    if (report) reportEvent(fromScreenshot ? "radar_shot" : "radar_open");
     await loadRadar();
     if (fromScreenshot) scheduleHide();
   };
+  // F2 리스너는 한 번만 등록되는 클로저라, 같은 키 + 못 읽음일 때 지도를 여는 건 최신 openRadar 를 ref 로 부른다
+  const openRadarRef = useRef(openRadar);
+  openRadarRef.current = openRadar;
   // 지도 나란히 모드 — 켜면 지금 있는 모니터에 창을 꽉 채우고(위치는 저장), 끄면 저장한 위치·내용 크기로
   useEffect(() => {
     const win = getCurrentWindow();
@@ -2195,9 +2201,15 @@ function App() {
           if (!first && d.shot && d.shot.age <= RADAR_POPUP_MAX_AGE_SEC) {
             radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지
             log(`radar: new screenshot ${id}`);
-            if (wideModeRef.current) {
-              // 지도가 오른쪽에 늘 떠 있으니 카드(시세)는 그대로 두고 데이터만 갱신
-              showCard();
+            const act = shotAction({
+              wideMode: wideModeRef.current,
+              passthrough: hotkeyPassthroughRef.current,
+              lookupInFlight: lookupInFlightRef.current,
+              msSincePress: performance.now() - sharedPressAtRef.current,
+            });
+            if (act === "refresh") {
+              // 나란히 모드(지도가 오른쪽에 늘 있음) 또는 같은 키로 방금 누른 스크린샷(조회 결과가 화면을 정함) — 데이터만 갱신
+              if (wideModeRef.current) showCard();
               reportEvent("radar_shot");
               void loadRadar();
             } else {
@@ -3272,6 +3284,7 @@ function App() {
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
         // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
+        else sharedPressAtRef.current = performance.now();
         const prevStatus = statusRef.current; // 키 공유로 결과를 숨기게 되면 이 상태로 되돌린다
         setStatus("loading");
         setError("");
@@ -3323,22 +3336,23 @@ function App() {
             return;
           }
           log(`React: result item_name=${data.item_name} raw="${data.raw_text}"`);
-          // 키 공유 모드에서 아이템을 못 읽었으면(인벤토리 밖 스크린샷용 누름) 지도가 보이는 동안은
-          // 빈 결과 카드로 덮지 않는다. 읽혔으면 평소처럼 시세 카드.
-          // 11-03: 예전엔 결과를 안 그리면서 상태도 "loading" 에 남겨, 나란히 모드·지도 닫힘에서
-          // "조회 중…"이 카드가 사라질 때까지 멈춰 보였다 → 지도가 실제로 보일 때만 숨기고, 상태는 조회 직전으로 되돌린다.
+          // 화면 결정(lookupOutcome.viewAfterLookup): 읽었거나 키가 따로면 결과 카드. 같은 키 + 못 읽음(인벤토리 밖
+          // 스크린샷용 누름)이면 보통 모드는 지도, 나란히 모드는 화면 그대로 — 둘 다 상태는 조회 직전으로 되돌린다
+          // (11-03: 예전엔 "loading" 에 남아 '조회 중…'이 멈췄고, 보통 모드는 스크린샷 감지 속도에 따라 지도·못 찾음이 갈렸다).
           if (data.item_name != null) setRadarActive(false);
-          const keepScreen = keepScreenOnEmpty({
+          const view = viewAfterLookup({
             passthrough: hotkeyPassthroughRef.current,
             matched: data.item_name != null,
-            mapInCard: radarActiveRef.current,
             wideMode: wideModeRef.current,
+            prev: prevStatus,
+            hasResult: hasResultRef.current,
           });
-          if (keepScreen) {
-            setStatus(statusAfterKept(prevStatus, hasResultRef.current));
-          } else {
+          if (view.kind === "result") {
             setResult(data);
             setStatus("success");
+          } else {
+            setStatus(view.status);
+            if (view.kind === "map") void openRadarRef.current(true, false);
           }
           // Wide-rescue matches stay OUT of history: the enlarged box can
           // read static UI captions ("BODY ARMOR", trader names…) that the
