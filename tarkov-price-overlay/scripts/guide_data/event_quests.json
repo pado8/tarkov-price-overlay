@@ -1,0 +1,1224 @@
+{
+ "prefix": "Halloween:",
+ "quests": {
+  "Halloween: A New Vaccine": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [
+    "Infected Factory",
+    "Infected Lab"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Initial Examination",
+     "note": "+15 mins"
+    },
+    {
+     "title": "Halloween: Tightening the Quarantine",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: High-Risk, High-Reward",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Survive and extract from Infected Factory",
+    "Survive and extract from Infected Lab",
+    "(Optional) Obtain the special item to use the exfil",
+    "Hand over 2,000 USD",
+    "Survive and extract from Infected Factory or Infected Lab"
+   ],
+   "rewards": [
+    {
+     "exp": 41000,
+     "money": [
+      [
+       300000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Mr. Holodilnick thermal bag",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    },
+    {
+     "exp": 41000,
+     "money": [
+      [
+       150000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       2,
+       "TerraGroup Labs access keycard",
+       ""
+      ],
+      [
+       2,
+       "Surv12 field surgical kit",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [
+    "Completing Halloween: Tightening the Quarantine fail this quest."
+   ],
+   "notes": []
+  },
+  "Halloween: Blind the Enemy": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [
+    "Woods",
+    "Customs",
+    "Lighthouse",
+    "Reserve",
+    "Shoreline"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Enemy of My Enemy",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [],
+   "obj": [
+    "Hand over the RDA-78 vaccine",
+    "Destroy 2 cameras at the train depot on Woods",
+    "Destroy 3 cameras at the dorms on Customs",
+    "Destroy 3 cameras at the water treatment plant on Lighthouse",
+    "Destroy 3 cameras at the train depot on Reserve",
+    "Destroy 3 cameras at the Health Resort on Shoreline"
+   ],
+   "rewards": [
+    {
+     "exp": 60000,
+     "money": [
+      [
+       4000,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Weapon case",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [
+      "Shields Up!"
+     ],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Coincidence?": {
+   "rev": "2026-11-01",
+   "trader": "Skier",
+   "maps": [
+    "Lighthouse"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Danger Zone",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: Enemy of My Enemy",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Locate the source of the signal on Lighthouse",
+    "Obtain any clues in the area",
+    "Hand over the found clue"
+   ],
+   "rewards": [
+    {
+     "exp": 42000,
+     "money": [
+      [
+       2700,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Kalashnikov PKM 7.62x54R machine gun",
+       ""
+      ],
+      [
+       2,
+       "PK 7.62x54R 100-round box",
+       ""
+      ],
+      [
+       10,
+       "7.62x54mm R BT gzh ammo pack (20 pcs)",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Danger Zone": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [
+    "Ground Zero",
+    "Customs",
+    "Woods",
+    "Interchange",
+    "Shoreline",
+    "Streets of Tarkov",
+    "Lighthouse",
+    "Reserve"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Tightening the Quarantine",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: Prototyping",
+     "note": ""
+    },
+    {
+     "title": "Halloween: Coincidence?",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Eliminate 15 any targets on Ground Zero or Customs",
+    "Eliminate 15 any targets on Woods or Interchange",
+    "Eliminate 15 any targets on Shoreline or Streets of Tarkov",
+    "Eliminate 15 any targets on Lighthouse or Reserve"
+   ],
+   "rewards": [
+    {
+     "exp": 44000,
+     "money": [
+      [
+       2800,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Weapon repair kit",
+       ""
+      ],
+      [
+       1,
+       "IOTV Gen4 body armor (Full Protection Kit, MultiCam)",
+       ""
+      ],
+      [
+       2,
+       "Infected tissue sample",
+       ""
+      ]
+     ],
+     "barters": [
+      [
+       "Lucky Scav Junk box",
+       "Therapist",
+       1
+      ],
+      [
+       "Medicine case",
+       "Therapist",
+       2
+      ]
+     ],
+     "achv": [],
+     "other": [
+      "+2 daily operational tasks with Infected tissue sample reward"
+     ]
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Enemy of My Enemy": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: Coincidence?",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: Blind the Enemy",
+     "note": ""
+    },
+    {
+     "title": "Halloween: Enemy of My Enemy - An Agreement",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Hand over the clues to Therapist"
+   ],
+   "rewards": [
+    {
+     "exp": 24000,
+     "money": [
+      [
+       1800,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       3,
+       "BNTI Gzhel-K body armor",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Enemy of My Enemy - An Agreement": {
+   "rev": "2026-11-01",
+   "trader": "Therapist",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: Enemy of My Enemy",
+     "note": "Accept"
+    }
+   ],
+   "prev_accept": true,
+   "next": [],
+   "obj": [
+    "Hand over the clues",
+    "(Optional) Obtain the virus clue"
+   ],
+   "rewards": [
+    {
+     "exp": 18000,
+     "money": [
+      [
+       150000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "RDA-78 vaccine (Replicative DNA Attenuator)",
+       ""
+      ],
+      [
+       2,
+       "TG-Vi-24 vaccine prototype (B.1.2 strain)",
+       ""
+      ]
+     ],
+     "barters": [
+      [
+       "RDA-78 vaccine (Replicative DNA Attenuator)",
+       "Therapist",
+       1
+      ],
+      [
+       "SWORD International Mk-18 .338 LM marksman rifle",
+       "Jaeger",
+       1
+      ],
+      [
+       "T-7 Thermal Goggles with a Night Vision mount",
+       "Jaeger",
+       2
+      ],
+      [
+       "Kalashnikov PKP 7.62x54R infantry machine gun",
+       "Prapor",
+       1
+      ],
+      [
+       "RB-BK marked key",
+       "Prapor",
+       2
+      ],
+      [
+       "Trijicon REAP-IR thermal scope",
+       "Skier",
+       1
+      ],
+      [
+       "Weapon case",
+       "Skier",
+       2
+      ],
+      [
+       "BNTI Zhuk body armor (EMR)",
+       "Ragman",
+       1
+      ],
+      [
+       "Milkor M32A1 MSGL 40mm grenade launcher",
+       "Peacekeeper",
+       1
+      ],
+      [
+       "T H I C C item case",
+       "Peacekeeper",
+       2
+      ]
+     ],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: First Results": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: High-Risk, High-Reward",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: For the Greater Good",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Eliminate 25 infected while they are under the effect of the experimental gas grenade",
+    "(Optional) Obtain the RDA-68 experimental CS gas grenade"
+   ],
+   "rewards": [
+    {
+     "exp": 42000,
+     "money": [
+      [
+       300000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       5,
+       "Grizzly medical kit",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Follow-Up Examination": {
+   "rev": "2026-11-03",
+   "trader": "Therapist",
+   "maps": [
+    "Infected Lab",
+    "Infected Factory"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: The Best Defense",
+     "note": "Accept"
+    }
+   ],
+   "prev_accept": true,
+   "next": [
+    {
+     "title": "Halloween: Unexpected Help",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Locate the dead scientist in a hazmat suit on Infected Lab or Infected Factory",
+    "Open the scientist's body using Medical instruments",
+    "Obtain the blood sample on Infected Lab or Infected Factory",
+    "Hand over the blood sample"
+   ],
+   "rewards": [
+    {
+     "exp": 40000,
+     "money": [
+      [
+       2700,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       2,
+       "TerraGroup Labs access keycard",
+       ""
+      ],
+      [
+       2,
+       "Adrenaline injector",
+       ""
+      ],
+      [
+       2,
+       "Trimadol stimulant injector",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: For the Greater Good": {
+   "rev": "2026-11-01",
+   "trader": "Therapist",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: First Results",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: For the Greater Good - An Agreement",
+     "note": ""
+    },
+    {
+     "title": "Halloween: The Final Push",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Hand over the infection data to Skier"
+   ],
+   "rewards": [
+    {
+     "exp": 24000,
+     "money": [
+      [
+       150000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       4,
+       "TerraGroup Labs access keycard",
+       ""
+      ],
+      [
+       2,
+       "Ibuprofen painkillers",
+       ""
+      ],
+      [
+       2,
+       "Augmentin antibiotic pills",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: For the Greater Good - An Agreement": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: For the Greater Good",
+     "note": "Accept"
+    }
+   ],
+   "prev_accept": true,
+   "next": [],
+   "obj": [
+    "Hand over the infection data"
+   ],
+   "rewards": [
+    {
+     "exp": 18000,
+     "money": [
+      [
+       1800,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       2,
+       "Infected tissue sample",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": [
+    "This quest gets automatically added to the quest list upon accepting Halloween: For the Greater Good."
+   ]
+  },
+  "Halloween: High-Risk, High-Reward": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [
+    "Infected Factory",
+    "Infected Lab"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: A New Vaccine",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: First Results",
+     "note": ""
+    },
+    {
+     "title": "Halloween: Studying the Enemy",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Eliminate 30 infected on Infected Factory or Infected Lab"
+   ],
+   "rewards": [
+    {
+     "exp": 41000,
+     "money": [
+      [
+       300000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       3,
+       "Propital regenerative stimulant injector",
+       ""
+      ],
+      [
+       3,
+       "Zagustin hemostatic drug injector",
+       ""
+      ],
+      [
+       2,
+       "TG-Vi-24 vaccine prototype (B.1.2 strain)",
+       ""
+      ]
+     ],
+     "barters": [
+      [
+       "FLIR RS-32 2.25-9x 35mm 60Hz thermal riflescope",
+       "Jaeger",
+       1
+      ],
+      [
+       "RShG-2 72.5mm rocket launcher",
+       "Prapor",
+       1
+      ],
+      [
+       "DevTac Ronin helmet",
+       "Ragman",
+       1
+      ],
+      [
+       "SIG MCX-SPEAR 6.8x51 assault rifle",
+       "Peacekeeper",
+       1
+      ]
+     ],
+     "achv": [],
+     "other": [
+      "+2 daily operational tasks with TG-Vi-24 vaccine prototype (B.1.2 strain) reward"
+     ]
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Initial Examination": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [
+    "Lighthouse"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Unexpected Help",
+     "note": "Accept"
+    }
+   ],
+   "prev_accept": true,
+   "next": [
+    {
+     "title": "Halloween: Tightening the Quarantine",
+     "note": "+15 mins"
+    }
+   ],
+   "obj": [
+    "Hand over vaccine shipment"
+   ],
+   "rewards": [
+    {
+     "exp": 38000,
+     "money": [
+      [
+       200000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Document case",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [
+    "You can handover it to Therapist, or stash the vaccine in Halloween: Unexpected Help. Stashing the vaccine batch will fail this quest."
+   ],
+   "notes": [
+    "This quest gets automatically added to the quest list upon accepting Halloween: Unexpected Help."
+   ]
+  },
+  "Halloween: Prototyping": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: Danger Zone",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [],
+   "obj": [
+    "Obtain 2 new TG-Vi-24 vaccine prototype",
+    "Hand over the items"
+   ],
+   "rewards": [
+    {
+     "exp": 34000,
+     "money": [
+      [
+       1800,
+       "Euros"
+      ]
+     ],
+     "items": [],
+     "barters": [
+      [
+       "MPS Auto Assault-12 Gen 2 12ga automatic shotgun",
+       "Skier",
+       11
+      ],
+      [
+       "Sako TRG M10 .338 LM bolt-action sniper rifle",
+       "Skier",
+       2
+      ],
+      [
+       "Physical Bitcoin",
+       "Skier",
+       3
+      ]
+     ],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Rumors": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [
+    "Infected Factory"
+   ],
+   "prev": [],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: The Best Defense",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Visit the Infected Factory",
+    "Eliminate 10 infected on Infected Factory"
+   ],
+   "rewards": [
+    {
+     "exp": 26000,
+     "money": [
+      [
+       1800,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "MPS Auto Assault-12 Gen 2 12ga automatic shotgun",
+       "(variant TerraGroup Labs)"
+      ],
+      [
+       3,
+       "AA-12 12ga 20-round drum magazine",
+       ""
+      ],
+      [
+       4,
+       "12/70 SuperFormance HP slug ammo pack (25 pcs)",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Studying the Enemy": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: High-Risk, High-Reward",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [],
+   "obj": [
+    "Hand over 2 new infected tissue sample"
+   ],
+   "rewards": [
+    {
+     "exp": 34000,
+     "money": [
+      [
+       150000,
+       "Roubles"
+      ]
+     ],
+     "items": [],
+     "barters": [
+      [
+       "Lucky Scav Junk box",
+       "Therapist",
+       1
+      ],
+      [
+       "Medicine case",
+       "Therapist",
+       2
+      ],
+      [
+       "TerraGroup Labs keycard (Green)",
+       "Therapist",
+       3
+      ],
+      [
+       "Item case",
+       "Therapist",
+       4
+      ]
+     ],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: The Best Defense": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [
+    "Infected Lab"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Rumors",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: Follow-Up Examination",
+     "note": ""
+    },
+    {
+     "title": "Halloween: Unexpected Help",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Visit the Infected Lab",
+    "(Optional) Obtain the special item to use the exfil",
+    "(Optional) Survive and extract from Infected Lab",
+    "Eliminate 10 infected on Infected Lab"
+   ],
+   "rewards": [
+    {
+     "exp": 36000,
+     "money": [
+      [
+       2700,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Norinco QBZ-191 5.8x42 assault rifle",
+       ""
+      ],
+      [
+       3,
+       "QBZ-191 5.8x42 30-round magazine",
+       ""
+      ],
+      [
+       4,
+       "5.8x42mm DBX95 ammo pack (30 pcs)",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: The Final Push": {
+   "rev": "2026-11-02",
+   "trader": "Therapist",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: For the Greater Good",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [],
+   "obj": [
+    "Eliminate 30 infected while they are under the effect of the experimental gas grenade",
+    "(Optional) Obtain the RDA-78 experimental CS gas grenade",
+    "Eliminate the infected Tagilla"
+   ],
+   "rewards": [
+    {
+     "exp": 60000,
+     "money": [
+      [
+       450000,
+       "Roubles"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Item case",
+       ""
+      ],
+      [
+       1,
+       "RDA-78 vaccine (Replicative DNA Attenuator)",
+       ""
+      ],
+      [
+       2,
+       "TG-Vi-24 vaccine prototype (B.1.2 strain)",
+       ""
+      ]
+     ],
+     "barters": [
+      [
+       "RDA-78 vaccine (Replicative DNA Attenuator)",
+       "Therapist",
+       1
+      ],
+      [
+       "SWORD International Mk-18 .338 LM marksman rifle",
+       "Jaeger",
+       1
+      ],
+      [
+       "T-7 Thermal Goggles with a Night Vision mount",
+       "Jaeger",
+       2
+      ],
+      [
+       "Kalashnikov PKP 7.62x54R infantry machine gun",
+       "Prapor",
+       1
+      ],
+      [
+       "RB-BK marked key",
+       "Prapor",
+       2
+      ],
+      [
+       "Trijicon REAP-IR thermal scope",
+       "Skier",
+       1
+      ],
+      [
+       "Weapon case",
+       "Skier",
+       2
+      ],
+      [
+       "BNTI Zhuk body armor (EMR)",
+       "Ragman",
+       1
+      ],
+      [
+       "Milkor M32A1 MSGL 40mm grenade launcher",
+       "Peacekeeper",
+       1
+      ],
+      [
+       "T H I C C item case",
+       "Peacekeeper",
+       2
+      ]
+     ],
+     "achv": [
+      "Triumph of Science"
+     ],
+     "other": []
+    }
+   ],
+   "choice": [],
+   "notes": []
+  },
+  "Halloween: Tightening the Quarantine": {
+   "rev": "2026-11-01",
+   "trader": "Skier",
+   "maps": [],
+   "prev": [
+    {
+     "title": "Halloween: A New Vaccine",
+     "note": "Accept"
+    },
+    {
+     "title": "Halloween: Unexpected Help",
+     "note": "+15-60 mins"
+    }
+   ],
+   "prev_accept": true,
+   "next": [
+    {
+     "title": "Halloween: Danger Zone",
+     "note": ""
+    }
+   ],
+   "obj": [
+    "Hand over the found in raid item: 5 Any Medkits that can remove heavy bleeding",
+    "Hand over the found in raid item: 2 Any medical balm",
+    "Hand over the found in raid item: 2 Any surgical kit",
+    "Hand over the found in raid item: 7 Any Medkits that can remove heavy bleeding",
+    "Hand over the found in raid item: 3 Any medical balm",
+    "Hand over the found in raid item: 3 Any surgical kit"
+   ],
+   "rewards": [
+    {
+     "exp": 48000,
+     "money": [
+      [
+       1800,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Kalashnikov AK-12 5.45x39 assault rifle",
+       ""
+      ],
+      [
+       3,
+       "AK-12 5.45x39 early model 30-round magazine",
+       ""
+      ],
+      [
+       1,
+       "5.45x39mm 7N40 ammo pack (120 pcs)",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    },
+    {
+     "exp": 48000,
+     "money": [
+      [
+       2700,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Money case",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [
+    "Completing Halloween: A New Vaccine fail this quest."
+   ],
+   "notes": [
+    "This quest gets automatically added to the quest list upon accepting Halloween: A New Vaccine."
+   ]
+  },
+  "Halloween: Unexpected Help": {
+   "rev": "2026-11-02",
+   "trader": "Skier",
+   "maps": [
+    "Lighthouse",
+    "Customs"
+   ],
+   "prev": [
+    {
+     "title": "Halloween: Follow-Up Examination",
+     "note": ""
+    },
+    {
+     "title": "Halloween: The Best Defense",
+     "note": ""
+    }
+   ],
+   "prev_accept": false,
+   "next": [
+    {
+     "title": "Halloween: Tightening the Quarantine",
+     "note": "+15-60 mins"
+    }
+   ],
+   "obj": [
+    "Locate and obtain the vaccine shipment at the water treatment plant on Lighthouse",
+    "Stash the vaccine shipment in room 105 of the two-story dorm on Customs"
+   ],
+   "rewards": [
+    {
+     "exp": 38000,
+     "money": [
+      [
+       2700,
+       "Euros"
+      ]
+     ],
+     "items": [
+      [
+       1,
+       "Ammunition case",
+       ""
+      ]
+     ],
+     "barters": [],
+     "achv": [],
+     "other": []
+    }
+   ],
+   "choice": [
+    "You can either stash the vaccine batch, or handover it to Therapist in Halloween: Initial Examination. Handing the vaccine batch to Therapist will fail this quest."
+   ],
+   "notes": []
+  }
+ }
+}

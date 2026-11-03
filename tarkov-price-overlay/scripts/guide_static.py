@@ -62,7 +62,7 @@ MOB_KO = {"Kaban Guard (Sniper)": "카반 경호원(저격)", "Kaban Guard": "�
           "Shturman Guard": "슈트르만 경호원", "Sanitar Guard": "세니타 경호원",
           "Infected Tagilla": "감염된 타길라", "infectedScreamer": "감염자"}
 # 현재 게임 버전 — 허브·초반·패치 페이지 문구에 쓴다. 패치 때 올릴 것(공식 위키 Changelog 기준).
-GAME_VERSION = "1.3.0"
+GAME_VERSION = "1.3.0.1"
 # 진행 중 이벤트 — tarkov.dev 데이터에 이벤트 기간 값이 그대로 들어오므로(오염된 맵·감염자·보스 확률 변화)
 # 이벤트 한정 내용은 반드시 표시하고, 이벤트가 끝나면 다시 생성해야 평소 값으로 돌아간다.
 EVENT_NAME, EVENT_SINCE = "할로윈 이벤트", "2026-10-29"
@@ -291,7 +291,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
 NAV_GROUPS = [
     ("시작하기", "/guide/start/", [("start", "/guide/start/", "초반 가이드"), ("patch", "/guide/patch/", "패치 요약"),
                                ("promo", "/guide/promo/", "프로모 코드")]),
-    ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("hunt", "/guide/hunt/", "사냥 퀘스트"), ("favorites", "/guide/favorites/", "내 즐겨찾기"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
+    ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("hunt", "/guide/hunt/", "사냥 퀘스트"), ("favorites", "/guide/favorites/", "내 즐겨찾기"), ("event", "/guide/event/", "이벤트 퀘스트"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
     ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
                                 ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
@@ -1533,6 +1533,127 @@ def _hunt_classes(names) -> set:
     return cls
 
 
+# ─────────────────────────────────────────────────────────────
+# 진행 중 이벤트 퀘스트 — 공개 데이터에 없어 위키에서 모은다(scripts/wiki_event_quests.py → guide_data/event_quests.json)
+# 문장 번역은 guide_data/event_quests_i18n.json (en 판은 위키 원문). 아이템·상인·맵 이름은 공개 데이터 이름표로.
+# ─────────────────────────────────────────────────────────────
+EVENT_QUESTS_PATH = Path(__file__).resolve().parent / "guide_data" / "event_quests.json"
+EVENT_I18N_PATH = Path(__file__).resolve().parent / "guide_data" / "event_quests_i18n.json"
+EVENT_CUR = {"Roubles": "₽", "Dollars": "$", "Euros": "€"}
+
+
+def event_page(ctx: Ctx) -> tuple[str, str] | None:
+    import re as _re
+    if not EVENT_QUESTS_PATH.exists():
+        return None
+    doc = json.loads(EVENT_QUESTS_PATH.read_text(encoding="utf-8"))
+    Q = doc.get("quests") or {}
+    if not Q:
+        return None
+    tr = json.loads(EVENT_I18N_PATH.read_text(encoding="utf-8")) if EVENT_I18N_PATH.exists() else {}
+
+    def t_(s: str) -> str:
+        return s if LANG == "en" else ((tr.get(s) or {}).get(LANG) or s)
+
+    # 영문 이름 → 공개 데이터 id (아이템·상인·맵)
+    by_en: dict[str, str] = {}
+    for iid in list(ctx.items) + list(ctx.items_pve):
+        it = ctx.item(iid)
+        if it and it.get("en"):
+            by_en.setdefault(it["en"].lower(), iid)
+    tr_by = {(v.get("normalizedName") or "").lower(): k for k, v in ctx.traders.items()}
+    map_by = {(m.get("normalizedName") or "").lower(): k for k, m in ctx.maps.items()}
+
+    def slug(title: str) -> str:
+        return _re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+
+    def qlink(title: str) -> str:
+        return f'<a href="#{slug(title)}">{e(t_(title))}</a>' if title in Q else e(t_(title))
+
+    def trader(name: str) -> str:
+        tid = tr_by.get(name.lower().replace(" ", "-"))
+        return e(ctx.trader_name(tid)) if tid else e(name)
+
+    def mp(name: str) -> str:
+        mid = map_by.get(name.lower().replace(" ", "-"))
+        return ctx.map_link(mid) if mid else e(name)
+
+    def item(n: int, name: str) -> str:
+        iid = by_en.get(name.lower())
+        if iid:
+            return ctx.chip(iid, n)
+        cnt = f' <span class="cnt">×{n}</span>' if n != 1 else ""
+        return f'<span class="chip">{e(name)}{cnt}</span>'
+
+    def rel(arr) -> str:
+        return " · ".join(qlink(r["title"]) + (f' <span class="muted small">({e(t_(r["note"]))})</span>' if r.get("note") else "") for r in arr)
+
+    # 연결 순서: 이전 퀘스트가 이 묶음에 없는 것부터, 다음 퀘스트를 따라 너비 우선
+    order: list[str] = []
+    queue = sorted(t for t, o in Q.items() if not any(p["title"] in Q for p in o.get("prev") or []))
+    while queue:
+        t = queue.pop(0)
+        if t in order:
+            continue
+        order.append(t)
+        queue += [n["title"] for n in Q[t].get("next") or [] if n["title"] in Q and n["title"] not in order]
+    order += [t for t in sorted(Q) if t not in order]
+
+    boxes = []
+    for t in order:
+        o = Q[t]
+        rows = [f'<tr><th>상인</th><td>{trader(o.get("trader") or "")}</td></tr>']
+        if o.get("maps"):
+            rows.append(f'<tr><th>맵</th><td>{" · ".join(mp(m) for m in o["maps"])}</td></tr>')
+        prev_html = rel(o.get("prev") or []) or "없음 — 이벤트 첫 퀘스트"
+        rows.append(f"<tr><th>이전 퀘스트</th><td>{prev_html}</td></tr>")
+        rows.append(f'<tr><th>다음 퀘스트</th><td>{rel(o.get("next") or []) or "없음"}</td></tr>')
+        objs = "".join(f"<li>{e(t_(x))}</li>" for x in o.get("obj") or [])
+        warn = "".join(f'<div class="note">⚠ <b>선택 분기</b> — {e(t_(x))}</div>' for x in o.get("choice") or [])
+        notes = "".join(f'<p class="muted small">{e(t_(x))}</p>' for x in o.get("notes") or [])
+        rws = []
+        sets = o.get("rewards") or []
+        for k, rs in enumerate(sets):
+            parts = []
+            if rs.get("exp"):
+                parts.append(f'<span class="chip money"><b>경험치 +{fmt_int(rs["exp"])}</b></span>')
+            for amt, cur in rs.get("money") or []:
+                sym = EVENT_CUR.get(cur, cur)
+                txt = f"{fmt_int(amt)}₽" if sym == "₽" else f"{sym}{fmt_int(amt)}"
+                parts.append(f'<span class="chip money"><b>{txt}</b></span>')
+            parts += [item(n, name) for n, name, _v in rs.get("items") or []]
+            extra = []
+            for name, trn, ll in rs.get("barters") or []:
+                iid = by_en.get(name.lower())
+                nm = (ctx.item(iid) or {}).get("n") if iid else name
+                extra.append(f"<li>물물교환 해금: {e(nm)} — {trader(trn)} LL{ll}</li>")
+            extra += [f"<li>업적: {e(a)}</li>" for a in rs.get("achv") or []]
+            extra += [f"<li>{e(t_(x))}</li>" for x in rs.get("other") or []]
+            head = '<p class="small muted">보상 묶음 ' + str(k + 1) + " (선택한 길에 따라 다름)</p>" if len(sets) > 1 else ""
+            rws.append(head + f'<div class="chips">{"".join(parts)}</div>' + (f'<ul class="plain small">{"".join(extra)}</ul>' if extra else ""))
+        wiki = "https://escapefromtarkov.fandom.com/wiki/" + t.replace(" ", "_")
+        en_h = f' <span class="h1en">{e(t)}</span>' if LANG != "en" else ""
+        boxes.append(
+            f'<section class="box" id="{slug(t)}"><h2>{e(t_(t))}{en_h}</h2>'
+            f'<table class="kv">{"".join(rows)}</table>{warn}'
+            f"<h3>목표</h3><ul>{objs}</ul>{notes}"
+            f'<h3>보상</h3>{"".join(rws)}'
+            f'<p class="small"><a href="{e(wiki)}" target="_blank" rel="noopener">공식 위키(영문)</a> · 위키 수정 {e(o.get("rev") or "")}</p></section>')
+    toc = "".join(f'<li><a href="#{slug(t)}">{e(t_(t))}</a> <span class="muted small">{trader(Q[t].get("trader") or "")}</span></li>' for t in order)
+    n = len(order)
+    path = "/guide/event/"
+    title = f"타르코프 {EVENT_NAME} 퀘스트 {n}개 — 목표·보상·선택 분기 한국어 정리 | 탈콥 가이드"
+    desc = f"타르코프 {EVENT_NAME}({EVENT_SINCE}~) 퀘스트 {n}개: 스키어·테라피스트 퀘스트 순서, 목표, 보상, 물물교환 해금, 서로 실패시키는 선택 분기."
+    body = (f'<h1>{EVENT_NAME} 퀘스트 <span class="h1en">{n}개</span></h1>'
+            f'<p class="sub">{EVENT_SINCE}부터 진행 중 · 공개 데이터에 아직 없는 퀘스트라 공식 위키 내용을 옮겨 정리 · 위키 수정일은 퀘스트마다 표시</p>'
+            '<div class="note">이벤트 퀘스트는 오버레이 연동·완료 체크·지도 표시에 아직 들어가지 않습니다(공개 데이터에 없어서). '
+            '<b>선택 분기</b> 표시가 있는 퀘스트는 한쪽을 끝내면 다른 쪽이 실패하니 먼저 읽어 보세요.</div>'
+            f'<section class="box"><h2>순서</h2><ol>{toc}</ol></section>'
+            + "".join(boxes)
+            + '<p class="small muted">출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서. 이벤트가 끝나면 이 페이지도 내립니다.</p>')
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="event", crumbs=[("이벤트 퀘스트", None)])
+
+
 def hunt_page(ctx: Ctx) -> tuple[str, str]:
     """사냥 퀘스트 — 적 처치(shoot) 목표가 있는 퀘스트만 모아 대상·무기·조건을 한눈에. ★ 즐겨찾기(guide.fav)는 브라우저 저장."""
     rows = []
@@ -2479,7 +2600,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/crafts/", "제작 수익표", "은신처 제작 재료비·판매가·시간당 이익 순위", f'{counts.get("crafts", 0)}개'),
         ("/guide/ammo/", "탄약표", "구경별 관통력·데미지·방어구 피해·상인 구매처", f'{counts.get("ammo", 0)}종'),
         ("/guide/prestige/", "프레스티지", "PVE·PVP 단계별 조건과 보상", "1.2.0 PVE 반영"),
-        ("/guide/patch/", "패치 요약", f"1.0.5~{GAME_VERSION} 주요 변경 한국어 정리", "2026-05~10"),
+        ("/guide/patch/", "패치 요약", f"1.0.5~{GAME_VERSION} 주요 변경 한국어 정리", "2026-05~11"),
         ("/guide/promo/", "프로모 코드", "지금 쓸 수 있는 공식 프로모 코드 · 모드별 · 등록 방법", f'{counts.get("promo", 0)}개 · {PROMO_CHECKED}'),
         ("/guide/gunsmith/", "건스미스 부품 총정리", "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)", f'{counts.get("gunsmith_q", 0)}개 퀘스트 · 부품 {counts.get("gunsmith_p", 0)}종'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
@@ -2699,6 +2820,10 @@ def ammo_page(ctx: Ctx) -> tuple[str, str]:
 
 
 PATCHES = [
+    ("1.3.0.1", "2026-11-03", [
+        "오염된 공장 일부 구역의 조명 오류 수정",
+        "오염된 연구소의 과학자 시체 하나를 뒤질 수 없던 문제 수정",
+        "할로윈 메인 메뉴 배경: 텍스처 낮음에서 저해상도로 보이던 문제·레이드 후 애니메이션이 사라지던 문제 수정"]),
     ("1.3.0", "2026-10-29·30", [
         "<b>할로윈 이벤트</b>: 연구소에서 퍼진 감염으로 <b>오염된 공장·오염된 연구소</b> 맵 추가(맵 선택 화면에서 맵별 감염 정도 표시), 감염자(민간인·연구원·PMC·블랙 디비전 요원)와 감염된 타길라 출현(공장·인터체인지에도 가끔), 감염자에게 맞으면 '바이러스' 효과(잠시 청력 상실·수분 감소, 탈출하거나 죽어야 해제), 할로윈 퀘스트 19개, 플레이어 스캐브가 스캐브를 죽여도 카르마 감점 없음, 월드에 사탕 든 호박 배치",
         "날씨 계절이 가을로 전환 · PVE 고레벨 맵에 고난도 PMC 봇 추가 · 화폐·귀중품 일부의 충돌 범위를 키워 줍기 쉽게",
@@ -3223,6 +3348,9 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     write(out, p, h, urls)
     p, h = hunt_page(ctx)
     write(out, p, h, urls)
+    evp = event_page(ctx)  # 진행 중 이벤트 퀘스트(위키) — 데이터가 없으면 페이지를 만들지 않는다
+    if evp:
+        write(out, evp[0], evp[1], urls)
     p, h = favorites_page(ctx)
     write(out, p, h, urls)
     rewards_n = h.count('<details class="rw"')
