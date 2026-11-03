@@ -43,10 +43,11 @@ def client_id() -> str | None:
     return v
 
 
-def snippet(cid: str) -> str:
+def snippet(cid: str, recovery: bool = False) -> str:
+    """<head> 블록. 복구 태그도 마커 안에 넣어 재실행 때 통째로 제자리 치환되게 한다(마커 밖이면 돌릴 때마다 중복)."""
     return (f'{START}<meta name="google-adsense-account" content="{cid}" />'
             f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={cid}" '
-            f'crossorigin="anonymous"></script>{END}\n')
+            f'crossorigin="anonymous"></script>' + (recovery_snippet(cid) if recovery else "") + f'{END}\n')
 
 
 def recovery_on() -> bool:
@@ -105,21 +106,28 @@ def ad_page(f: Path) -> bool:
     return rel.startswith("guide/")
 
 
+def _place(t: str, rx: "re.Pattern[str]", new: str, anchor: str) -> str:
+    """블록이 이미 있으면 그 자리에서 바꾸고, 없으면 anchor 앞에 넣는다 — 빌드가 만든 산출물에 다시 돌려도 바이트가 같게(멱등)."""
+    if rx.search(t):
+        return rx.sub(lambda m: new, t, count=1)
+    return t.replace(anchor, new + anchor, 1)
+
+
 def apply() -> tuple[int, str | None]:
     cid = client_id()
+    rec = recovery_on()
     changed = 0
     for f in LANDING.rglob("*.html"):
         s = f.read_text(encoding="utf-8")
-        t = AB_RE.sub("", BLOCK_RE.sub("", s))
-        if cid and ad_page(f) and "</head>" in t:
-            head = snippet(cid) + (recovery_snippet(cid) if recovery_on() else "")
-            t = t.replace("</head>", head + "</head>", 1)
-            if "</body>" in t:
-                rel = f.relative_to(LANDING).as_posix()
-                lang = "en" if rel.startswith("guide/en/") else "ru" if rel.startswith("guide/ru/") else "ko"
-                t = t.replace("</body>", adblock_snippet(lang) + "</body>", 1)
+        if cid and ad_page(f) and "</head>" in s:
+            t = _place(s, BLOCK_RE, snippet(cid, rec), "</head>")
+            rel = f.relative_to(LANDING).as_posix()
+            lang = "en" if rel.startswith("guide/en/") else "ru" if rel.startswith("guide/ru/") else "ko"
+            t = _place(t, AB_RE, adblock_snippet(lang), "</body>") if "</body>" in t else AB_RE.sub("", t)
+        else:
+            t = AB_RE.sub("", BLOCK_RE.sub("", s))
         if t != s:
-            f.write_text(t, encoding="utf-8")
+            f.write_text(t, encoding="utf-8", newline="\n")  # 빌드(LF)와 같게 — 기본값이면 Windows 에서 CRLF 로 바뀌어 전 파일이 더러워진다
             changed += 1
     ads = LANDING / "ads.txt"
     if cid:
