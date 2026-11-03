@@ -1,0 +1,63 @@
+name: data-mirror
+
+# json.tarkov.dev 문서를 매일 받아 'data-mirror' 사전 릴리즈 자산으로 올린다.
+# 앱(사이드카)은 json.tarkov.dev 가 안 될 때만 이 자산을 읽는다(2차 출처).
+# 배경: api.tarkov.dev GraphQL 이 2026-07-21부터 죽어 json.tarkov.dev 가 단일 출처가 됐다(2026-11-03).
+# 사전 릴리즈(prerelease)라 'latest' 릴리즈(업데이터 latest.json)에는 영향이 없다.
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # 매일 12:17 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download json.tarkov.dev documents
+        shell: bash
+        run: |
+          set -u
+          mkdir -p out
+          ok=0; fail=0
+          fetch() {
+            local path="$1"; local file="out/${path//\//__}.json"
+            if curl -fsSL --retry 3 --retry-delay 5 -m 180 -A "tarkov-price-overlay-mirror" "https://json.tarkov.dev/$path" -o "$file" \
+               && python3 -c "import json,sys; json.load(open(sys.argv[1], encoding='utf-8'))" "$file"; then
+              ok=$((ok+1)); echo "ok   $path ($(stat -c %s "$file") B)"
+            else
+              fail=$((fail+1)); rm -f "$file"; echo "skip $path"
+            fi
+          }
+          for mode in regular pve pvp-season; do
+            for name in items tasks barters hideout crafts traders maps; do
+              fetch "$mode/$name"
+              for lang in ko en ru; do fetch "$mode/${name}_${lang}"; done
+            done
+          done
+          fetch "pvp-season/season"
+          for lang in ko en ru; do fetch "pvp-season/season_${lang}"; done
+          fetch "status"
+          echo "downloaded=$ok skipped=$fail"
+          # 핵심 문서가 하나라도 비면 올리지 않는다(깨진 미러가 정상 미러를 덮어쓰지 않게)
+          for must in regular__items regular__tasks regular__traders pve__items; do
+            [ -s "out/$must.json" ] || { echo "missing $must — abort"; exit 1; }
+          done
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > out/mirror_updated_at.txt
+
+      - name: Upload to data-mirror prerelease
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -u
+          if ! gh release view data-mirror >/dev/null 2>&1; then
+            gh release create data-mirror --prerelease --title "Data mirror (json.tarkov.dev)" \
+              --notes "앱이 json.tarkov.dev 에 접속하지 못할 때만 쓰는 2차 출처. 매일 자동 갱신. 사용자가 받을 것 없음."
+          fi
+          gh release upload data-mirror out/* --clobber
+          echo "uploaded $(ls out | wc -l) files"

@@ -388,26 +388,33 @@ def _fetch_ammo(lang: str) -> dict:
     """Pulls every ammo entry from tarkov.dev and groups by caliber.
     Returns {"calibers": {caliber_raw: {display, rounds: [...]}}}.
     Empty dict on any failure so the frontend can degrade gracefully."""
-    try:
-        response = requests.post(
-            TARKOV_API_URL,
-            json={"query": _QUERY_AMMO, "variables": {"lang": lang}},
-            timeout=20,
-        )
-        response.raise_for_status()
-        rows = (response.json().get("data") or {}).get("ammo") or []
-    except Exception as e:
-        # GraphQL이 죽어 있으면(2026-07~ 장기 장애) json 폴백에서 같은 행 모양을
-        # 뽑아온다. 이게 없어서 탄약 매트릭스만 장애 내내 비어 있었고 사용자
-        # 제보(#45)로 드러났다 — items/quests/barters는 폴백이 있는데 /ammo만
-        # 빠져 있었다.
-        print(f"[ammo] GraphQL failed for lang={lang}: {e!r} - trying json.tarkov.dev fallback")
+    # 11-03: 카탈로그와 같은 순서(json 먼저, GraphQL 은 예비). GraphQL 은 2026-07-21부터 origin 이 죽어
+    # 'GraphQL server unavailable' 만 돌려주므로(the-hideout/tarkov-api#474) 먼저 두면 매번 헛걸음이다.
+    # TPO_PRICE_SOURCE=graphql 이면 _source_order() 가 순서를 뒤집어 준다(시험용).
+    rows: list = []
+    last: Exception | None = None
+    for src in _source_order():
         try:
-            import tarkov_json_fallback
-            rows = tarkov_json_fallback.fetch_ammo(lang)
-        except Exception as e2:
-            print(f"[ammo] fallback also failed for lang={lang}: {e2!r}")
-            return {"calibers": {}}
+            if src == "json":
+                import tarkov_json_fallback
+                rows = tarkov_json_fallback.fetch_ammo(lang)
+            else:
+                response = requests.post(
+                    TARKOV_API_URL,
+                    json={"query": _QUERY_AMMO, "variables": {"lang": lang}},
+                    timeout=20,
+                )
+                response.raise_for_status()
+                rows = (response.json().get("data") or {}).get("ammo") or []
+            if rows:
+                break
+            raise RuntimeError(f"{src} returned no ammo rows")
+        except Exception as e:  # noqa: BLE001
+            last = e
+            print(f"[ammo] {src} failed for lang={lang}: {e!r} - trying next source")
+    if not rows:
+        print(f"[ammo] all sources failed for lang={lang}: {last!r}")
+        return {"calibers": {}}
 
     by_caliber: dict[str, dict] = {}
     for r in rows:

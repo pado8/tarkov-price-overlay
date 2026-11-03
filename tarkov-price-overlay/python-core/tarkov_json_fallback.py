@@ -44,10 +44,29 @@ _raw_lock = threading.Lock()
 _raw_cache: dict[str, tuple[float, dict]] = {}  # key: "<mode>/items" or "<mode>/traders"
 
 
+# 2차 출처(2026-11-03): json.tarkov.dev 가 안 될 때만 읽는 우리 미러. 배포 저장소의 data-mirror 사전
+# 릴리즈 자산으로, GitHub Actions 가 매일 12:17 KST 에 갱신한다. 파일명은 경로의 '/' 를 '__' 로.
+# 배경: GraphQL(api.tarkov.dev)이 7월부터 죽어 json.tarkov.dev 가 단일 출처였다.
+_MIRROR_BASE = "https://github.com/pado8/tarkov-price-overlay-releases/releases/download/data-mirror"
+_mirror_used = False  # 진단용: 이번 프로세스에서 미러를 한 번이라도 썼는지
+
+
 def _get(path: str) -> dict:
-    r = requests.get(f"{_JSON_BASE}/{path}", headers=_HEADERS, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    try:
+        r = requests.get(f"{_JSON_BASE}/{path}", headers=_HEADERS, timeout=60)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:  # noqa: BLE001
+        # 404(없는 로케일 등)는 미러에도 없을 가능성이 커 그대로 올린다 — 호출자가 영어로 대체한다.
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        if status == 404:
+            raise
+        global _mirror_used
+        print(f"[fallback] json.tarkov.dev {path} failed: {e!r} - trying mirror")
+        r2 = requests.get(f"{_MIRROR_BASE}/{path.replace('/', '__')}.json", headers=_HEADERS, timeout=90)
+        r2.raise_for_status()
+        _mirror_used = True
+        return r2.json()
 
 
 def _get_cached(path: str) -> dict:
