@@ -1311,7 +1311,7 @@ r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
 document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";
 var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href="/guide/rewards/"+(q?"?q="+encodeURIComponent(q):"")}}
-document.addEventListener("guide-sync",render);
+document.addEventListener("guide-sync",function(){mode=L(MK,"pvp");seg("mode",mode);render()});
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
 ["firOnly","hideHave"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("q").addEventListener("input",render);
@@ -1898,6 +1898,7 @@ HIDEOUT_JS = """<script>
 (function(){var D=JSON.parse(document.getElementById("hdata").textContent),KEY="guide.hideout.levels",MK="guide.mode";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var cur=L(KEY,{}),mode=L(MK,"pvp");if(D.pve===undefined)mode="pvp";
+function fromSync(){var sy=window.__guideSync||L("guide.sync",null),hl=(sy&&sy.hideout)||{},n=0;Object.keys(hl).forEach(function(sid){var v=+hl[sid]||0;if(v>(+cur[sid]||0)){cur[sid]=v;n++}});if(n)S(KEY,cur);var note=document.getElementById("hsync");if(note&&sy&&Object.keys(hl).length){note.style.display="";}return n}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c]})}
 function seg(v){document.querySelectorAll("#hmode button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-v")===v)})}
 function money(id,c){var s=D.money[id];if(!s)return null;return s==="₽"?c.toLocaleString("ko-KR")+"₽":s+c.toLocaleString("ko-KR")}
@@ -1910,6 +1911,8 @@ var it=D.items,html=rows.map(function(r){var x=it[r.id]||{n:r.id};return '<span 
 var cs=Object.keys(cash).map(function(k){return money(k,cash[k])}).join(" + ");
 document.getElementById("hneed").innerHTML=(html?'<div class="chips">'+html+'</div>':'<p class="muted">모든 시설을 끝까지 올렸습니다 🎉</p>')+(cs?'<p class="small" style="margin-top:8px">돈: <b>'+esc(cs)+'</b></p>':'');
 document.getElementById("hcount").textContent=rows.length;}
+fromSync();
+document.addEventListener("guide-sync",function(){fromSync();mode=L(MK,"pvp");if(D.pve===undefined)mode="pvp";seg(mode);document.querySelectorAll("#hsel select").forEach(function(s){s.value=String(cur[s.getAttribute("data-s")]||0)});render()});
 document.querySelectorAll("#hsel select").forEach(function(sel){var sid=sel.getAttribute("data-s");sel.value=String(cur[sid]||0);
 sel.addEventListener("change",function(){cur[sid]=+sel.value;S(KEY,cur);render()})});
 seg(mode);document.getElementById("hmode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg(v);render()});
@@ -1968,6 +1971,7 @@ def hideout_index(ctx: Ctx) -> tuple[str, str]:
 다른 시설의 선행 조건으로 가장 많이 쓰이는 시설: {tip} — 이 시설들을 먼저 올리면 막히는 곳이 줄어듭니다.</div>
 <section class="box"><h2>남은 재료 계산기</h2><p class="small muted">시설마다 지금 단계를 고르면 끝까지 올리는 데 남은 재료를 합쳐 보여 줍니다(이 브라우저에 저장).</p>
 <div class="controls"><div class="seg" id="hmode"><button data-v="pvp" class="on">PVP</button><button data-v="pve">PVE</button></div><button class="seg" id="hreset" style="padding:6px 10px;background:var(--panel);color:var(--muted);cursor:pointer;font:inherit;font-size:12px">입력 초기화</button></div>
+<p class="note small" id="hsync" style="display:none">🔗 오버레이 연동으로 받은 은신처 단계를 채웠어요. 직접 고른 단계가 더 높으면 그대로 둡니다.</p>
 <div class="hsel" id="hsel">{"".join(sels)}</div>
 <h3>남은 재료 <span class="muted small"><span id="hcount">0</span>종</span></h3><div id="hneed"></div></section>
 <div class="box tbl" style="padding:4px 8px"><table class="tot"><thead><tr><th>시설</th><th class="n">단계</th><th>1단계 선행 조건</th><th class="n">다른 시설 해금</th><th>최종 단계 효과</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>
@@ -2554,7 +2558,7 @@ var c=r.querySelectorAll("td.m");c[0].textContent=f(d[p+"co"]);c[1].textContent=
 c[2].className="m n "+(+d[p+"pr"]>0?"up":"down");c[3].className="m n "+(+d[p+"ph"]>0?"up":"down");});
 var tb=document.querySelector("#ctbl tbody");rows.slice().sort(function(a,b){return(+b.dataset[p+"ph"]||-1e12)-(+a.dataset[p+"ph"]||-1e12)}).forEach(function(r){tb.appendChild(r)});}
 seg(mode);document.getElementById("cmode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;try{localStorage.setItem(MK,JSON.stringify(v))}catch(x){}seg(v);render()});
-["cst","cpos"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("cq").addEventListener("input",render);render();})();
+["cst","cpos"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("cq").addEventListener("input",render);document.addEventListener("guide-sync",function(){mode=L(MK,"pvp");seg(mode);render()});render();})();
 </script>"""
 
 
@@ -3154,6 +3158,8 @@ if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x
 (function(){
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced",SE="guide.sync.err";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function ev(n,prm,once){try{if(once){var sk="gsev."+n;if(sessionStorage.getItem(sk))return;sessionStorage.setItem(sk,"1")}if(window.gtag)gtag("event",n,prm||{})}catch(e){}}
+function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
@@ -3165,7 +3171,7 @@ a.title=stale?("마지막으로 받은 진행도("+agoTxt+")를 쓰고 있어요
 if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.dataset.busy)return;a.dataset.busy="1";a.textContent="연동 다시 시도 중…";pull(true).then(function(ok){delete a.dataset.busy;if(ok)return;chip(sy,true);help()})});
 top.appendChild(a)}
 // 오버레이가 알려 준 서버(PVE/PVP)로 사이트 모드를 맞춘다 — 안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져와 "완료 n개"가 바뀐다
-function apply(p){if(p.mode==="pve"||p.mode==="regular"||p.mode==="pvp"||p.mode==="season"){var nm=p.mode==="pve"?"pve":"pvp";if(L(MK,"pvp")!==nm)S(MK,nm)}
+function apply(p,how){if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length)},how==="auto");if(p.mode==="pve"||p.mode==="regular"||p.mode==="pvp"||p.mode==="season"){var nm=p.mode==="pve"?"pve":"pvp";if(L(MK,"pvp")!==nm)S(MK,nm)}
 var done=L(KEY,{}),syn=L(SYNCED,{}),changed=0;(p.completed||[]).forEach(function(id){if(!done[id]){done[id]=1;changed++}syn[id]=1});if(changed)S(KEY,done);S(SYNCED,syn);
 var sy={ts:Date.now(),mode:p.mode,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0,promo_used:p.promo_used||[]};S(SK,sy);window.__guideSync=sy;chip(sy,false);
 // 프로모 코드 '등록함' 체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)
@@ -3173,20 +3179,20 @@ if(p.promo_used&&p.promo_used.length){var PU="guide.promo.used",pu=L(PU,{}),add=
 document.dispatchEvent(new CustomEvent("guide-sync",{detail:sy}))}
 // 1) 오버레이의 "가이드 열기" 버튼이 주소 해시(#sync=base64 JSON)로 넘긴 진행도 — 브라우저의 로컬 네트워크 정책과 무관하게 동작
 var h=location.hash||"";if(h.indexOf("#sync=")===0){try{var raw=decodeURIComponent(h.slice(6)),p0=JSON.parse(decodeURIComponent(escape(atob(raw.replace(/-/g,"+").replace(/_/g,"/")))));
-if(p0&&p0.completed){p0.ok=true;apply(p0);history.replaceState(null,"",location.pathname+location.search)}}catch(e){}}
+if(p0&&p0.completed){p0.ok=true;apply(p0,"hash");history.replaceState(null,"",location.pathname+location.search)}}catch(e){}}
 // 2) 같은 PC의 사이드카에서 직접 읽기 — https 페이지에서 127.0.0.1 로 가려면 크롬은 targetAddressSpace:"loopback" 이 필요하고,
 //    처음 한 번 "로컬 네트워크 접근 허용" 창이 뜬다. 거부·미지원이면 조용히 마지막 연동 값만 보여 준다.
 //    앱을 안 쓰는 방문자에게 권한 창을 띄우지 않도록, 자동 시도는 한 번이라도 연동된 브라우저에서만 하고,
 //    처음인 브라우저에는 상단에 "오버레이 연동" 버튼을 두어 사용자가 눌렀을 때(사용자 동작) 시도한다.
 function pull(manual){var ctrl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctrl)ctrl.abort()},manual?25000:12000);
 var opt={signal:ctrl&&ctrl.signal,cache:"no-store",mode:"cors"};opt.targetAddressSpace="loopback";
-return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p);return true}throw new Error("응답 형식 오류")})
-.catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
+return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(function(r){return r.json()}).then(function(p){clearTimeout(tm);if(p&&p.ok){try{localStorage.removeItem(SE)}catch(x){}apply(p,manual?"manual":"auto");return true}throw new Error("응답 형식 오류")})
+.catch(function(e){clearTimeout(tm);var why=(e&&e.name==="AbortError")?"timeout":(e&&e.name)||"error";ev(manual?"sync_fail_manual":"sync_fail_auto",{reason:why},!manual);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"응답 없음(시간 초과)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
 var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 오버레이 연동";
 b.title="같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.";
-b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.textContent="연동 중…";
+b.addEventListener("click",function(){if(b.disabled)return;ev("sync_click");b.disabled=true;b.textContent="연동 중…";
 pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 오버레이 연동";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";

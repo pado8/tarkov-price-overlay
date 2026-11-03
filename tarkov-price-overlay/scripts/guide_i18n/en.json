@@ -1205,5 +1205,8 @@
 "레벨·상인 등급만 맞으면 받을 수 있습니다.": "You can take it once your level and loyalty level are high enough.",
 "데이터에는 받는 조건이 하나도 없습니다.": "The data lists no requirements at all.",
 "게임에서 이 퀘스트가 안 보이면 데이터에 빠진 조건이 있을 수 있으니 공식 위키를 확인하세요.": "If this quest does not show up in game, the data may be missing a requirement, so check the official wiki.",
-"공개 데이터엔 없고 공식 위키 정보 상자에만 있는 연결입니다.": "Link that is only in the official wiki infobox, not in the public data."
+"공개 데이터엔 없고 공식 위키 정보 상자에만 있는 연결입니다.": "Link that is only in the official wiki infobox, not in the public data.",
+"오버레이 연동으로 받은 은신처 단계를 채웠어요.": "Filled in the Hideout levels received from the overlay sync.",
+"직접 고른 단계가 더 높으면 그대로 둡니다.": "Levels you picked yourself are kept if they are higher.",
+"🔗 오버레이 연동으로 받은 은신처 단계를 채웠어요. 직접 고른 단계가 더 높으면 그대로 둡니다.": "🔗 Filled in the Hideout levels received from the overlay sync. Levels you picked yourself are kept if they are higher."
 }
