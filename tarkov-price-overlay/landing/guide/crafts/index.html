@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="/guide/guide.css" />
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "탈콥 가이드", "item": "https://tarkov.aquapado.com/guide/"}, {"@type": "ListItem", "position": 2, "name": "제작 수익"}]}</script>
 <!--ga4--><script async src="https://www.googletagmanager.com/gtag/js?id=G-DJMB7WHJZ9"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DJMB7WHJZ9');</script><!--/ga4-->
+<!--adsense--><meta name="google-adsense-account" content="ca-pub-5433916923351258" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5433916923351258" crossorigin="anonymous"></script><!--/adsense-->
 </head>
 <body>
 <div class="top"><div class="wrap">
@@ -59,7 +60,6 @@ var tb=document.querySelector("#ctbl tbody");rows.slice().sort(function(a,b){ret
 seg(mode);document.getElementById("cmode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;try{localStorage.setItem(MK,JSON.stringify(v))}catch(x){}seg(v);render()});
 ["cst","cpos"].forEach(function(id){document.getElementById(id).addEventListener("change",render)});document.getElementById("cq").addEventListener("input",render);render();})();
 </script>
-<script defer src="/_vercel/insights/script.js"></script>
 <script src="/beacon.js"></script>
 </body>
 </html>

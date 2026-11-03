@@ -53,10 +53,9 @@
 <table>
 <thead><tr><th>항목</th><th>내용</th><th>식별 가능성</th></tr></thead>
 <tbody>
-<tr><td>방문 집계(Vercel Web Analytics)</td><td>페이지뷰·방문자 수·국가·기기 종류 같은 통계. 쿠키를 쓰지 않고 개인을 추적하지 않습니다.</td><td class="no">식별 불가(집계만)</td></tr>
 <tr><td>방문 집계(Google Analytics)</td><td>방문 페이지·유입 경로·브라우저 종류·대략적 지역을 집계하며, Google 쿠키(<code>_ga</code>로 시작)를 씁니다. <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">Google 애널리틱스 차단 도구</a>로 끌 수 있습니다.</td><td>쿠키 기반 온라인 식별자(이름·이메일과 연결하지 않음)</td></tr>
 <tr><td>자체 유입 비콘</td><td>어느 경로로 들어와 어디서 다운로드 버튼을 눌렀는지 보려고, 방문한 페이지 경로·이전 페이지 주소(리퍼러)·링크에 붙은 캠페인 표식(<code>?src=</code>)·같은 세션의 첫 진입 페이지를 보냅니다. 쿠키·방문자 ID는 없고, 봇은 제외하며, 페이지당 세션에 한 번만 보냅니다.</td><td class="no">식별 불가</td></tr>
-<tr><td>서버 접속 기록</td><td>호스팅(Vercel)이 표준 접속 로그를 남깁니다. 운영자는 이를 개인 식별에 쓰지 않습니다.</td><td>호스팅 사업자 정책에 따름</td></tr>
+<tr><td>서버 접속 기록</td><td>호스팅(Cloudflare·Vercel)이 표준 접속 로그를 남깁니다. 운영자는 이를 개인 식별에 쓰지 않습니다.</td><td>호스팅 사업자 정책에 따름</td></tr>
 </tbody>
 </table>
 <p>회원가입·로그인·댓글 기능이 없으므로 이름, 이메일, 비밀번호를 받지 않습니다.</p>
@@ -96,7 +95,7 @@
 </ul>
 
 <h2 id="ads">5. 광고</h2>
-<p><b>현재 이 사이트와 앱에는 제3자 광고가 없습니다.</b> 운영비를 위해 탈콥 가이드 등 웹페이지에 Google AdSense 광고를 도입할 수 있으며, 도입하면 이 항목을 먼저 갱신합니다. 도입 시 적용되는 내용은 다음과 같습니다.</p>
+<p><b>2026년 11월 3일부터 탈콥 가이드(tarkov.aquapado.com/guide/) 페이지에 Google AdSense 광고를 게재합니다.</b> 운영비를 위한 것이며, 다운로드 페이지(메인)·상태·소개 페이지, 건스미스 페이지와 오버레이 앱에는 광고가 없습니다. 광고에는 다음 내용이 적용됩니다.</p>
 <ul>
   <li>Google을 포함한 제3자 광고 사업자는 쿠키나 유사 기술을 사용해 이 사이트와 다른 사이트 방문 기록을 바탕으로 광고를 보여 줄 수 있습니다.</li>
   <li>개인 맞춤 광고는 <a href="https://adssettings.google.com/" rel="noopener">Google 광고 설정</a>에서 끌 수 있고, 다른 사업자의 쿠키는 <a href="https://www.aboutads.info/choices/" rel="noopener">aboutads.info</a>에서 관리할 수 있습니다.</li>
@@ -108,12 +107,13 @@
 <table>
 <thead><tr><th>서비스</th><th>용도</th><th>전달되는 것</th></tr></thead>
 <tbody>
-<tr><td>Vercel</td><td>사이트·API 호스팅, 방문 집계</td><td>표준 접속 정보, 익명 집계</td></tr>
+<tr><td>Cloudflare</td><td>사이트 호스팅(tarkov.aquapado.com)</td><td>표준 접속 정보</td></tr>
+<tr><td>Vercel</td><td>API 호스팅(api.aquapado.com)</td><td>표준 접속 정보</td></tr>
 <tr><td>Neon</td><td>익명 사용 통계·피드백 저장(데이터베이스)</td><td>4번에 적은 익명 통계와 피드백 내용</td></tr>
 <tr><td>GitHub</td><td>소스 코드·릴리즈 배포·버그 제보</td><td>업데이트 확인 요청, 사용자가 직접 올린 이슈</td></tr>
 <tr><td>tarkov.dev / json.tarkov.dev</td><td>게임 공개 데이터</td><td>데이터 요청(아이템 이름은 보내지 않고 전체 목록을 받습니다)</td></tr>
 <tr><td>Google Analytics</td><td>사이트 방문 집계(앱은 해당 없음)</td><td>방문 페이지·유입 경로·브라우저 정보·IP로 추정한 대략적 지역</td></tr>
-<tr><td>Google(도입 시)</td><td>광고</td><td>5번 참고</td></tr>
+<tr><td>Google AdSense</td><td>가이드 페이지 광고</td><td>5번 참고</td></tr>
 </tbody>
 </table>
 
@@ -134,7 +134,6 @@
     <div style="display:flex;gap:18px;flex-wrap:wrap"><a href="/">타르코프 시세 오버레이</a><a href="/guide/">탈콥 가이드</a><a href="/status/">서비스 상태</a><a href="/about/">소개</a><a href="/privacy/">개인정보처리방침</a></div>
   </div>
 </div></footer>
-<script defer src="/_vercel/insights/script.js"></script>
 <script src="/beacon.js"></script>
 </body>
 </html>

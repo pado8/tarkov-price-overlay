@@ -33,7 +33,7 @@ switch ($Phase) {
         $list = & npx --yes wrangler@4 pages project list 2>&1
         if (($list | Select-String "\b$project\b") -eq $null) {
             Say "Pages 프로젝트 '$project' 만들기"
-            & npx --yes wrangler@4 pages project create $project --production-branch main 2>&1 | Select-Object -Last 4 | ForEach-Object { Say "  $_" }
+            & npx --yes wrangler@4 pages project create $project --production-branch main --force 2>&1 | Select-Object -Last 4 | ForEach-Object { Say "  $_" }
             $list = & npx --yes wrangler@4 pages project list 2>&1
         }
         $line = $list | Select-String "\b$project\b" | Select-Object -First 1
