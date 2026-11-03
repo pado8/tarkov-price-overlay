@@ -774,6 +774,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 </main>
 <footer><div class="wrap">게임 데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터(기준 {e(ctx.stamp)}) · 설명 문구는 <a href="https://escapefromtarkov.fandom.com/" rel="noopener">공식 위키</a>와 패치 노트를 참고해 직접 정리 · 체크 표시는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a> · <a href="/status/">서비스 상태</a> · <a href="/about/">소개</a> · <a href="/privacy/">개인정보처리방침</a> · <a href="/">타르코프 시세 오버레이</a></div></footer>
 <script src="/guide/sync.js" defer></script>
+<script src="/guide/search.js" defer></script>
 {scripts}
 <script defer src="/_vercel/insights/script.js"></script>
 <script src="/beacon.js"></script>

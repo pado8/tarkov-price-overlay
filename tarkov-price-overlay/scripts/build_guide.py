@@ -366,6 +366,8 @@ def main() -> int:
         tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)  # 언어 전환은 localize_template 이 붙인다
         if 'src="/guide/sync.js"' not in tpl:  # 오버레이 연동 스크립트 — page() 로 만드는 페이지와 같게
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)
+        if 'src="/guide/search.js"' not in tpl:  # 전체 검색창 — page() 로 만드는 페이지와 같게
+            tpl = tpl.replace("</body>", '<script src="/guide/search.js" defer></script>\n</body>', 1)
         if 'href="/privacy/"' not in tpl:  # 개인정보처리방침 링크 — 광고 심사 요건, page() 푸터와 같게
             tpl = tpl.replace("</div></footer>", ' · <a href="/privacy/">개인정보처리방침</a></div></footer>', 1)
         if 'href="/about/"' not in tpl:  # 사이트 소개·운영자 링크 — 광고 심사 요건(운영 주체·연락처), 방침 링크 앞에
@@ -385,6 +387,8 @@ def main() -> int:
     print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개 ({lang})")
     if lang == "ko":
         write_sitemap(guide_urls, stamp)
+    import guide_search  # 전체 검색 색인(search.json)·검색창(search.js) — 만들어진 페이지를 훑어서
+    print(f"[guide] 검색 색인: {guide_search.apply(out_dir, lang, pages['keys']['items'])}개")
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")
     (OUT / "guide.css").write_text(css, encoding="utf-8")
     import adsense  # 새로 만든 페이지에도 AdSense 코드 유지(ID 없으면 아무것도 안 넣음)

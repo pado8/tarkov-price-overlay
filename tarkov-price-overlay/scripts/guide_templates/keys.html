@@ -130,6 +130,7 @@
   mapsEl.addEventListener("click", function (e) { var v = e.target.getAttribute("data-v"); if (!v) return; cur = v; history.replaceState(null, "", v === "all" ? location.pathname : "#" + v); setSeg("maps", v); render(); });
   ["q", "onlyQuest", "hideOwned", "sort"].forEach(function (id) { document.getElementById(id).addEventListener(id === "q" ? "input" : "change", render); });
   document.getElementById("mode").addEventListener("click", function (e) { var v = e.target.getAttribute("data-v"); if (!v) return; mode = v; save(MODEKEY, v); setSeg("mode", v); render(); });
+  var q0 = new URLSearchParams(location.search).get("q"); if (q0) document.getElementById("q").value = q0;
   render();
 })();
 </script>
