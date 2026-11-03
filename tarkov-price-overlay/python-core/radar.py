@@ -313,6 +313,9 @@ def quest_key_names(jmode: str, lang: str, tasks: dict) -> dict:
 # build_targets·story_targets·map_image_meta 가 전부 이 표를 쓴다(11-03 리뷰: 세 곳 표가 달라 the-lab-dark 에서 상인 퀘스트가 빠졌음).
 MAP_BASE = {"night-factory": "factory", "infected-factory": "factory", "ground-zero-21": "ground-zero",
             "the-lab-dark": "the-lab", "infected-lab": "the-lab"}
+# 이벤트 변형(오염된 공장·연구소): tarkov.dev 에 맵 항목만 있고 탈출구 등 데이터가 비어 있다(11-04 확인: 탈출구 0).
+# 같은 맵을 쓰는 이벤트라 지도 선택 목록에서는 빼고, 로그·수동 선택으로 들어오면 일반 맵 데이터로 통째로 대신한다.
+EVENT_MAPS = {"infected-factory": "factory", "infected-lab": "the-lab"}
 
 _STORY: Optional[dict] = None
 
@@ -540,6 +543,17 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             z = zones.setdefault(key, {"name": zname, "pts": pts, "bosses": [], "anywhere": anywhere})
             if not any(x["name"] == bname for x in z["bosses"]):
                 z["bosses"].append({"name": bname, "chance": round(chance * float(sl.get("chance") or 1), 2)})
+    for map_slug, mob, en_name, keys in BOSS_EXTRA:
+        if m.get("normalizedName") != map_slug:
+            continue
+        b = next((x for x in m.get("bosses") or [] if x.get("mob") == mob), None)
+        pts = [p for k in keys for p in by_zone.get(k, [])]
+        if not b or not pts:
+            continue
+        bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
+        z = zones.setdefault(f"extra:{mob}:{en_name}", {"name": en_name, "pts": pts, "bosses": [], "anywhere": False})
+        if not any(x["name"] == bname for x in z["bosses"]):
+            z["bosses"].append({"name": bname, "chance": round(float(b.get("spawnChance") or 0), 2)})
     # 한 구역 이름 아래 점들이 지도 양 끝의 여러 무리로 갈라져 있는 경우가 있다(해안선 '온실' = 별장 4점 + 600m 떨어진 2점,
     # '기상 관측소' = 1km 떨어진 2무리, 삼림 제재소·폐허 마을, 리저브 K 건물). 지도는 구역을 점 전체를 감싸는 사각형으로
     # 그리므로 무리가 갈라지면 지도 절반을 덮는 상자가 됐다(11-03 사용자 지적). 어느 무리가 맞는지는 데이터로 가릴 수 없어
@@ -568,6 +582,14 @@ BOSS_ANCHORS: dict = {
     "customs": {"ZoneDormitory": [(229.8, 145.3), (180.6, 167.1)], "ZoneGasStation": [(415.6, 37.1)]},
     "shoreline": {"ZonePort": [(-335.9, 564.1)]},
 }
+
+# 원본 bosses[].spawnLocations 에 아예 없는 스폰 장소(11-04, 사용자 지적 + 공식 위키 확인).
+#   등대 군즈(Knight): 위키 Knight 문서 "At the water treatment plant in the north, and at the blue chalet" —
+#   tarkov.dev 는 별장(Zone_Chalet)만 갖고 있다. 정수장 쪽 보스 범주 스폰 구역 셋의 점으로 채운다(확률은 같은 보스의 맵 확률).
+# (맵, 보스 mob, 표시 이름, 스폰 zoneName 들)
+BOSS_EXTRA: list = [
+    ("lighthouse", "bossKnight", "Water Treatment Plant", ["Zone_TreatmentBeach", "Zone_TreatmentContainers", "Zone_TreatmentRocks"]),
+]
 
 
 def _cluster_pts(pts: list, th: float) -> list:
@@ -759,6 +781,7 @@ _map_cache: dict = {}
 
 def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     """전체 지도용 정적 좌표 문서(맵·언어별 캐시). 없는 맵이면 None."""
+    slug = EVENT_MAPS.get(slug, slug)
     key = (slug, lang)
     with _data_lock:
         hit = _map_cache.get(key)
@@ -961,6 +984,8 @@ class RadarService:
                     source = "log" if slug else None
                 except Exception as e:  # 로그를 못 읽어도 레이더는 수동 선택으로 쓸 수 있다
                     log.warning(f"[radar] 로그 맵 판정 실패: {e}")
+            if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
+                slug = EVENT_MAPS[slug]
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC
             if not (full or fresh or map_override):
@@ -974,7 +999,8 @@ class RadarService:
                 return res
             res["maps"] = sorted(
                 ({"id": mm.get("normalizedName"), "name": _loc(loc_maps, mm.get("name"), mm.get("normalizedName"))}
-                 for mm in maps_doc.values() if mm.get("normalizedName") != "ground-zero-tutorial"),
+                 for mm in maps_doc.values()
+                 if mm.get("normalizedName") != "ground-zero-tutorial" and mm.get("normalizedName") not in EVENT_MAPS),
                 key=lambda x: x["name"] or "")
             try:
                 loc_story = _doc(f"{jmode}/tasks_{lang}") or {}

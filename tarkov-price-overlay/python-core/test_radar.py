@@ -277,6 +277,17 @@ am = {"bosses": [{"mob": "sectantPriest", "spawnChance": 0.2, "spawnLocations": 
 az = r.boss_zones(am, {}, {"Any scav spawn": "Any scav spawn", "2BDPort28": "2BDPort28"})
 eq("맵 전역은 점 하나·anywhere", [(z["anywhere"], z["pts"]) for z in az if z["bosses"][0]["name"] == "sectantPriest"], [(True, [[200.0, 200.0]])])
 eq("코드형 구역 이름은 비움", [z["name"] for z in az if z["bosses"][0]["name"] == "blackDivision"], [""])
+# 11-04: 원본에 없는 스폰 장소 보충(등대 군즈 정수장) — 같은 보스의 맵 확률, 정수장 스폰 구역 점들
+lh = {"normalizedName": "lighthouse",
+      "spawns": [{"zoneName": "Zone_TreatmentBeach", "position": {"x": 59, "y": 0, "z": -610}},
+                 {"zoneName": "Zone_TreatmentRocks", "position": {"x": -40, "y": 0, "z": -640}},
+                 {"zoneName": "Zone_Chalet", "position": {"x": -100, "y": 0, "z": -55}}],
+      "bosses": [{"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "Zone_Chalet", "name": "Chalet", "chance": 1}]}]}
+lz = r.boss_zones(lh, {}, {})
+eq("등대 군즈 = 별장 + 정수장", sorted(z["name"] for z in lz), ["Chalet", "Water Treatment Plant"])
+eq("정수장 확률 = 보스 맵 확률", [z["bosses"][0]["chance"] for z in lz if z["name"] == "Water Treatment Plant"], [0.18])
+eq("다른 맵엔 보충 안 함", [z["name"] for z in r.boss_zones({**lh, "normalizedName": "woods"}, {}, {})], ["Chalet"])
+eq("이벤트 맵은 일반 맵 데이터로", (r.EVENT_MAPS.get("infected-lab"), r.EVENT_MAPS.get("infected-factory")), ("the-lab", "factory"))
 
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
