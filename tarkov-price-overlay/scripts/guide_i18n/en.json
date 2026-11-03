@@ -1202,5 +1202,8 @@
 "이전 퀘스트": "Previous quests",
 "먼저 깨야 하는 퀘스트는 없습니다.": "No quest has to be completed first.",
 "앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).": "It unlocks after the previous quest group (see Requirements).",
-"레벨·상인 등급만 맞으면 받을 수 있습니다.": "You can take it once your level and loyalty level are high enough."
+"레벨·상인 등급만 맞으면 받을 수 있습니다.": "You can take it once your level and loyalty level are high enough.",
+"데이터에는 받는 조건이 하나도 없습니다.": "The data lists no requirements at all.",
+"게임에서 이 퀘스트가 안 보이면 데이터에 빠진 조건이 있을 수 있으니 공식 위키를 확인하세요.": "If this quest does not show up in game, the data may be missing a requirement, so check the official wiki.",
+"공개 데이터엔 없고 공식 위키 정보 상자에만 있는 연결입니다.": "Link that is only in the official wiki infobox, not in the public data."
 }

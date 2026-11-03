@@ -48,6 +48,9 @@ BUILD_ATTR = {"accuracy": "정확도(MOA)", "durability": "내구도", "effectiv
               "ergonomics": "인체공학", "height": "세로 칸", "width": "가로 칸", "magazineCapacity": "탄창 용량",
               "muzzleVelocity": "총구 속도", "recoil": "반동 합계", "weight": "무게(kg)"}
 STATUS = {"complete": "완료", "active": "진행 중", "failed": "실패", "started": "시작"}
+# 공식 위키에만 있는 선행·다음 연결 — scripts/wiki_quest_links.py 가 만든다(없으면 빈 표)
+WIKI_LINKS_PATH = Path(__file__).resolve().parent / "guide_data" / "wiki_quest_links.json"
+WIKI_LINKS: dict = json.loads(WIKI_LINKS_PATH.read_text(encoding="utf-8")) if WIKI_LINKS_PATH.exists() else {}
 # 기본 건스미스의 옛 '파트 N' 번호(공식 위키 퀘스트 아이콘 파일명 GunsmithPart{N} 기준, 2026-10-27) — 같은 묶음 단계 안에서 순서를 정할 때만 쓴다.
 # 데이터엔 기본 건스미스끼리 선행 관계가 없어(1.1.0 묶음 방식) 이 번호가 없으면 알파벳순이 돼 AK-105가 맨 앞에 왔었다.
 GUNSMITH_LEGACY = {"MP-133": 1, "AKS-74U": 2, "HK MP5": 3, "OP-SKS": 4, "M4A1": 4, "Model 870": 7, "AKM": 8,
@@ -1113,19 +1116,29 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
                              '<p class="muted small">선행 조건을 끝까지 거슬러 올라가 먼저 하는 순서로 늘어놓았습니다. 완료로 표시한 퀘스트는 흐리게 보입니다.</p></section>')
     # 이전 퀘스트 = 바로 앞 선행(한 단계만). 끝까지 거슬러 올라간 목록은 '처음부터 순서'
     prev = [r for r in t.get("taskRequirements") or [] if r.get("task") in ctx.tasks]
-    if prev:
+    wl = WIKI_LINKS.get(tid) or {}
+    wprev = [q for q in wl.get("prev") or [] if q in ctx.tasks]
+    wnote = '<p class="muted small"><span class="badge b-done">위키</span> 공개 데이터엔 없고 공식 위키 정보 상자에만 있는 연결입니다.</p>'
+    if prev or wprev:
         lis = "".join(
             f'<li>{ctx.task_link(r["task"])} <span class="muted small">{e(ctx.trader_name(ctx.tasks[r["task"]].get("trader")))}'
             + "".join(f' · {e(STATUS.get(s, s))}' for s in r.get("status") or []) + "</span></li>" for r in prev)
-        sections_side.append(f'<section class="box"><h2>이전 퀘스트</h2><ul class="plain">{lis}</ul></section>')
+        lis += "".join(f'<li>{ctx.task_link(q)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[q].get("trader")))}</span> <span class="badge b-done">위키</span></li>' for q in wprev)
+        sections_side.append(f'<section class="box"><h2>이전 퀘스트</h2><ul class="plain">{lis}</ul>' + (wnote if wprev else "") + '</section>')
+    elif not (t.get("traderRequirements") or t.get("otherRequirements")) and (t.get("minPlayerLevel") or 0) <= 1:
+        # 조건이 전부 비어 있음 = 데이터 누락일 수 있다(퍼니셔 1·사냥꾼의 길 등) — '없다'고 단정하지 않는다
+        sections_side.append('<section class="box"><h2>이전 퀘스트</h2><p class="muted small">데이터에는 받는 조건이 하나도 없습니다. '
+                             '게임에서 이 퀘스트가 안 보이면 데이터에 빠진 조건이 있을 수 있으니 공식 위키를 확인하세요.</p></section>')
     else:
         sections_side.append('<section class="box"><h2>이전 퀘스트</h2><p class="muted small">먼저 깨야 하는 퀘스트는 없습니다. '
                              + ('앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).' if ctx.batch_req(t) else '레벨·상인 등급만 맞으면 받을 수 있습니다.')
                              + '</p></section>')
     nxt = sorted(set(ctx.next_of.get(tid, [])), key=lambda x: ctx.task_names(x)[0])
-    if nxt:
+    wnxt = sorted({q for q in wl.get("next") or [] if q in ctx.tasks} - set(nxt), key=lambda x: ctx.task_names(x)[0])
+    if nxt or wnxt:
         lis = "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span></li>' for x in nxt)
-        sections_side.append(f'<section class="box"><h2>다음 퀘스트</h2><ul class="plain">{lis}</ul></section>')
+        lis += "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span> <span class="badge b-done">위키</span></li>' for x in wnxt)
+        sections_side.append(f'<section class="box"><h2>다음 퀘스트</h2><ul class="plain">{lis}</ul>' + (wnote if wnxt else "") + '</section>')
     else:
         sections_side.append('<section class="box"><h2>다음 퀘스트</h2><p class="muted small">이 퀘스트를 선행 조건으로 삼는 퀘스트는 없습니다. '
                              '1.1.0 이후 대부분은 상인 등급·묶음으로 열립니다.</p></section>')
