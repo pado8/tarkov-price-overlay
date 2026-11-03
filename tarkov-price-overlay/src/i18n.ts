@@ -283,6 +283,13 @@ export const T = {
     updateOpenPage: "다운로드 페이지 열기",
     updatePortableHint:
       "포터블 버전은 자동 설치 시 다른 폴더에 새로 설치돼요. 페이지에서 새 포터블 ZIP을 받아 현재 폴더에 덮어쓰세요.",
+    updateDownloaded: "다운로드 완료 — 앱을 닫을 때 자동으로 설치돼요",
+    updateApplyNow: "지금 적용",
+    autoInstallUpdate: "새 버전 자동 설치",
+    autoInstallUpdateHint: "뒤에서 받아 두고 앱을 닫을 때 설치",
+    forcedUpdateTitle: "업데이트가 필요해요",
+    forcedUpdateBody:
+      "지금 쓰는 v{cur}은 더 이상 지원되지 않아요. v{min} 이상으로 업데이트해야 계속 쓸 수 있어요.",
     adminWarning: "타르코프 안에서 F2 안 먹히면 관리자 권한으로 다시 실행하세요 (BattlEye 권한 차이 때문)",
     relaunchAsAdmin: "관리자로 재실행",
     adminDismiss: "다시 보지 않기",
@@ -655,6 +662,13 @@ export const T = {
     updateOpenPage: "Open downloads page",
     updatePortableHint:
       "Portable builds install elsewhere when auto-updated. Grab the new portable ZIP from the page and overwrite the current folder.",
+    updateDownloaded: "downloaded — installs automatically when you close the app",
+    updateApplyNow: "Apply now",
+    autoInstallUpdate: "Install updates automatically",
+    autoInstallUpdateHint: "downloads in the background, installs on close",
+    forcedUpdateTitle: "Update required",
+    forcedUpdateBody:
+      "v{cur} is no longer supported. Update to v{min} or newer to keep using the overlay.",
     adminWarning: "If F2 doesn't work inside Tarkov, relaunch as administrator (BattlEye privilege mismatch)",
     relaunchAsAdmin: "Relaunch as admin",
     adminDismiss: "Don't show again",
@@ -1027,6 +1041,13 @@ export const T = {
     updateOpenPage: "Открыть страницу загрузок",
     updatePortableHint:
       "Портативные сборки при авто-обновлении ставятся в другую папку. Скачайте новый портативный ZIP со страницы и перезапишите текущую папку.",
+    updateDownloaded: "скачано — установится автоматически при закрытии приложения",
+    updateApplyNow: "Применить сейчас",
+    autoInstallUpdate: "Устанавливать обновления автоматически",
+    autoInstallUpdateHint: "скачивается в фоне, ставится при закрытии",
+    forcedUpdateTitle: "Требуется обновление",
+    forcedUpdateBody:
+      "Версия v{cur} больше не поддерживается. Обновитесь до v{min} или новее, чтобы продолжить.",
     adminWarning: "Если F2 не работает в Tarkov, перезапустите от администратора (из-за прав BattlEye)",
     relaunchAsAdmin: "Перезапуск от админа",
     adminDismiss: "Больше не показывать",

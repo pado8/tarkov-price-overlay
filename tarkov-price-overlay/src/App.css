@@ -973,6 +973,37 @@ html, body, #root {
 }
 
 /* Update banner */
+/* 11-03 최소 버전 차단 화면 — 창(=카드) 전체를 덮고 닫기 버튼이 없다 */
+.forced-update {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px;
+  text-align: center;
+  background: rgba(10, 10, 12, 0.96);
+  color: var(--gold-light);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.forced-update-title {
+  font-weight: 700;
+  font-size: var(--card-fs-md, 14px);
+}
+.forced-update-body {
+  font-size: var(--card-fs-sm);
+  line-height: 1.45;
+  max-width: 320px;
+}
+.forced-update-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 .update-banner {
   display: flex;
   align-items: center;

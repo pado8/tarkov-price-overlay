@@ -15,6 +15,9 @@ import "./App.css";
 declare const __APP_VERSION__: string;
 const APP_VERSION = __APP_VERSION__;
 const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
+// 11-03 조용한 자동 업데이트(설치판): 새 버전을 뒤에서 받아 두고 앱을 닫을 때 설치.
+// 배너의 '지금 설치'를 안 누르는 사람(1.2.5 공개 8일째 보급 73%에서 정체)을 흡수한다.
+const UPDATE_AUTO_INSTALL_KEY = "tarkov.autoInstallUpdate";
 // One-shot dismiss for the "run as administrator" diagnostic banner. We
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
@@ -34,6 +37,20 @@ const PRESTIGE_SEEN_KEY = "tarkov.prestigeSeen";
 function loadAutoCheckUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_CHECK_KEY);
   return v == null ? true : v === "true";
+}
+function loadAutoInstallUpdate(): boolean {
+  const v = localStorage.getItem(UPDATE_AUTO_INSTALL_KEY);
+  return v == null ? true : v === "true";
+}
+// "1.2.10" vs "1.2.9" 같은 숫자 비교(문자열 비교 함정 방지). 음수=a가 낮음.
+function cmpVersion(a: string, b: string): number {
+  const pa = a.split(".").map((x) => parseInt(x, 10) || 0);
+  const pb = b.split(".").map((x) => parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
 }
 
 type Diagnostics = {
@@ -82,7 +99,9 @@ type UpdateInfo = { version: string; notes: string | null };
 //   ready      — download + signature verify done, installer is on disk;
 //                NSIS launches automatically on relaunch
 //   error      — download/verify/install threw; we surface the message
-type UpdatePhase = "idle" | "downloading" | "ready" | "error";
+//   downloaded — (11-03) 자동 업데이트가 뒤에서 받아 둔 상태. 앱을 닫을 때 설치하거나
+//                배너의 '지금 적용'으로 바로 설치
+type UpdatePhase = "idle" | "downloading" | "downloaded" | "ready" | "error";
 const FEEDBACK_EMAIL = "floe9235@gmail.com";
 const KAKAOPAY_URL = "https://qr.kakaopay.com/Ej8AkkdEJ";
 const PAYPAL_URL = "https://paypal.me/tarkovoverlay";
@@ -193,7 +212,11 @@ type StatsEvent =
   | "hotkey_fail"
   // 지도 사용 횟수만(detail 없음). 좌표·맵·파일명은 절대 보내지 않는다
   | "radar_open"
-  | "radar_shot";
+  | "radar_shot"
+  // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
+  | "install_mode" // 세션당 1회. detail = portable | installer
+  | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
+  | "update_apply"; // detail = downloaded | install_now | install_quit | error | blocked:<min>
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
 // Every event used to be its own POST → its own INSERT → its own wake of the
 // (autosuspending) Postgres compute, so a busy raid kept the DB awake all
@@ -1280,6 +1303,7 @@ function App() {
   // users see a "open downloads page" link instead of the in-app NSIS
   // installer flow, which would install a second copy elsewhere.
   const [isPortable, setIsPortable] = useState<boolean>(false);
+  const isPortableRef = useRef(false);
   const [hideoutLevels, setHideoutLevels] = useState<Record<string, number>>(
     () => {
       try {
@@ -1405,6 +1429,16 @@ function App() {
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
     loadAutoCheckUpdate
   );
+  const [autoInstallUpdate, setAutoInstallUpdate] = useState<boolean>(loadAutoInstallUpdate);
+  // 4시간 주기 재확인 클로저가 현재 값을 읽도록 ref 로도 든다
+  const autoInstallRef = useRef(loadAutoInstallUpdate());
+  useEffect(() => {
+    autoInstallRef.current = autoInstallUpdate;
+  }, [autoInstallUpdate]);
+  // 서버 공지의 min_version 보다 낮은 버전이면 차단 화면(11-03 최소 버전 레버)
+  const [forcedMinVersion, setForcedMinVersion] = useState<string | null>(null);
+  // update_check 텔레메트리 중복 방지 — 같은 결과는 세션에 한 번만
+  const updateCheckReportedRef = useRef<string | null>(null);
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const [questPathInput, setQuestPathInput] = useState<string>("");
   const [questDisplayModeSetting, setQuestDisplayModeSetting] = useState<QuestModeSetting>(
@@ -1579,7 +1613,9 @@ function App() {
     invoke<boolean>("is_portable_install")
       .then((v) => {
         setIsPortable(v);
+        isPortableRef.current = v;
         log(`portable: ${v}`);
+        reportEvent("install_mode", v ? "portable" : "installer");
       })
       .catch(() => {});
   }, []);
@@ -1592,7 +1628,15 @@ function App() {
     fetch(ANNOUNCEMENT_ENDPOINT)
       .then((r) => r.json())
       .then((a) => {
-        if (!a || !a.active || (!a.ko && !a.en && !a.ru)) return;
+        if (!a) return;
+        // 11-03 최소 버전 레버: 공지가 꺼져 있어도 min_version 은 내려온다.
+        if (typeof a.min_version === "string" && /^\d+(\.\d+)*$/.test(a.min_version)
+            && cmpVersion(APP_VERSION, a.min_version) < 0) {
+          setForcedMinVersion(a.min_version);
+          log(`update: forced — ${APP_VERSION} < min ${a.min_version}`);
+          reportEvent("update_apply", `blocked:${a.min_version.slice(0, 16)}`);
+        }
+        if (!a.active || (!a.ko && !a.en && !a.ru)) return;
         const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
         let seen: { id?: number; date?: string } = {};
         try {
@@ -2263,6 +2307,9 @@ function App() {
   useEffect(() => {
     localStorage.setItem(UPDATE_CHECK_KEY, String(autoCheckUpdate));
   }, [autoCheckUpdate]);
+  useEffect(() => {
+    localStorage.setItem(UPDATE_AUTO_INSTALL_KEY, String(autoInstallUpdate));
+  }, [autoInstallUpdate]);
 
   // Probe sidecar diagnostics on mount, retrying until it answers (the sidecar
   // can take >3s on a cold start while it loads OCR models). Drives the admin-
@@ -2352,6 +2399,7 @@ function App() {
     if (
       updateCheckingRef.current ||
       updatePhaseRef.current === "downloading" ||
+      updatePhaseRef.current === "downloaded" || // 받아 둔 게 있으면 닫을 때 설치 — 다시 확인하지 않는다
       updatePhaseRef.current === "ready"
     )
       return;
@@ -2371,14 +2419,20 @@ function App() {
         setUpdateInfo({ version: update.version, notes: update.body ?? null });
         setUpdatePhase("idle");
         log(`update: ${APP_VERSION} -> ${update.version} available`);
+        reportUpdateCheck(`available:${update.version.slice(0, 16)}`);
+        // 조용한 자동 업데이트(설치판만): 지금 받아 두고 앱을 닫을 때 설치한다.
+        // 포터블은 exe 교체가 안 되니 기존대로 배너에서 페이지로 보낸다.
+        if (autoInstallRef.current && !isPortableRef.current) void downloadUpdateQuietly(update);
       } else {
         pendingUpdateRef.current = null;
         setUpdateInfo(null);
         log(`update: up to date (${APP_VERSION})`);
+        reportUpdateCheck("none");
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       log(`update: check failed — ${msg}`);
+      reportUpdateCheck("error");
       setUpdateError(msg);
       // Keep any previously-seen updateInfo: a transient network failure on
       // a periodic re-check must not erase a valid update banner for 4h.
@@ -2388,9 +2442,69 @@ function App() {
     }
   };
 
+  const reportUpdateCheck = (detail: string) => {
+    if (updateCheckReportedRef.current === detail) return;
+    updateCheckReportedRef.current = detail;
+    reportEvent("update_check", detail);
+  };
+
+  // 11-03 조용한 자동 업데이트 1단계: 서명 검증까지 끝낸 설치 파일을 받아만 둔다.
+  // 설치는 트레이 '종료' 때(아래 tray-exit 리스너) 또는 배너 '지금 적용'.
+  const downloadUpdateQuietly = async (update: Update) => {
+    setUpdatePhase("downloading");
+    setUpdateProgress(0);
+    setUpdateError(null);
+    let downloaded = 0;
+    let total = 0;
+    try {
+      await update.download((event) => {
+        if (event.event === "Started") {
+          total = event.data.contentLength ?? 0;
+        } else if (event.event === "Progress") {
+          downloaded += event.data.chunkLength;
+          if (total > 0) setUpdateProgress(Math.min(100, Math.round((downloaded / total) * 100)));
+        } else if (event.event === "Finished") {
+          setUpdateProgress(100);
+        }
+      });
+      setUpdatePhase("downloaded");
+      log(`update: ${update.version} downloaded — installs on quit`);
+      reportEvent("update_apply", "downloaded");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log(`update: background download failed — ${msg}`);
+      setUpdateError(msg);
+      setUpdatePhase("error");
+      reportEvent("update_apply", "error");
+    }
+  };
+
+  // 받아 둔 업데이트를 지금 설치(앱 종료 → 설치 프로그램).
+  const applyDownloadedUpdate = async () => {
+    const update = pendingUpdateRef.current;
+    if (!update) return;
+    await message(t.updateStartGuide, { title: t.updateStartTitle, kind: "info" });
+    setUpdatePhase("ready");
+    reportEvent("update_apply", "install_now");
+    try {
+      await invoke("prepare_quit").catch(() => {});
+      await update.install();
+      await relaunch();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log(`update: install failed — ${msg}`);
+      setUpdateError(msg);
+      setUpdatePhase("error");
+      reportEvent("update_apply", "error");
+    }
+  };
+
   const installUpdate = async () => {
     const update = pendingUpdateRef.current;
     if (!update) return;
+    if (updatePhaseRef.current === "downloaded") return applyDownloadedUpdate();
+    if (updatePhaseRef.current === "downloading") return; // 자동 다운로드가 받는 중 — 겹치지 않게
+    reportEvent("update_apply", "install_now");
     // Tell the user what's about to happen: the app closes and the installer
     // downloads + launches with a gap before the setup window appears. Without
     // this, that silent gap reads like the update stalled. (t is the active
@@ -2426,8 +2540,32 @@ function App() {
       log(`update: install failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
+      reportEvent("update_apply", "error");
     }
   };
+
+  // 트레이 '종료': Rust 가 바로 끝내지 않고 이 이벤트를 먼저 보낸다(8초 안에 exit_app 이
+  // 안 오면 Rust 쪽 안전장치가 강제 종료). 받아 둔 업데이트가 있으면 여기서 설치한다 —
+  // 설치 프로그램이 앱·사이드카를 정리하고(installer-hooks.nsh) 프로세스를 끝낸다.
+  useEffect(() => {
+    const un = listen("tray-exit", async () => {
+      const update = pendingUpdateRef.current;
+      if (update && updatePhaseRef.current === "downloaded") {
+        log(`update: installing ${update.version} on quit`);
+        reportEvent("update_apply", "install_quit");
+        try {
+          await invoke("prepare_quit").catch(() => {});
+          await update.install();
+        } catch (e) {
+          log(`update: install on quit failed — ${String(e)}`);
+        }
+      }
+      invoke("exit_app").catch(() => {});
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
 
   // Auto-check shortly after mount, then every 4h while running. The overlay
   // is tray-resident and often stays up for DAYS — a single startup check
@@ -3590,6 +3728,35 @@ function App() {
           </div>
         </div>
 
+        {/* 11-03 최소 버전 레버: 공지 API 의 min_version 보다 낮으면 카드 전체를 덮는다(닫기 없음).
+            시세 API 가 바뀌어 구버전이 깨졌을 때만 서버에서 올리는 용도 */}
+        {forcedMinVersion && (
+          <div className="forced-update" role="dialog" aria-modal="true">
+            <div className="forced-update-title"><Icon name="update" /> {t.forcedUpdateTitle}</div>
+            <div className="forced-update-body">
+              {t.forcedUpdateBody.replace("{cur}", APP_VERSION).replace("{min}", forcedMinVersion)}
+            </div>
+            <div className="forced-update-actions">
+              {isPortable || !updateInfo ? (
+                <button
+                  className="reset-btn update-btn"
+                  onClick={() => openUrl(RELEASES_PAGE_URL).catch((e) => log(`update: open releases page failed — ${String(e)}`))}
+                >
+                  {t.updateOpenPage}
+                </button>
+              ) : updatePhase === "downloaded" ? (
+                <button className="reset-btn update-btn" onClick={applyDownloadedUpdate}>{t.updateApplyNow}</button>
+              ) : updatePhase === "downloading" ? (
+                <span>{t.updateDownloading} {updateProgress}%</span>
+              ) : updatePhase === "ready" ? (
+                <span>{t.updateRestarting}</span>
+              ) : (
+                <button className="reset-btn update-btn" onClick={installUpdate}>{t.updateInstall}</button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 배너는 한 번에 하나만(11-02 점검): 통계 안내 > 업데이트 > 관리자 권한 > 서버 공지.
             첫 실행에 넷이 같이 떠 카드가 배너로 가득 차던 것 — 하나를 닫으면 다음 것이 보인다 */}
         {(() => {
@@ -3697,6 +3864,23 @@ function App() {
                   />
                 </span>
               </span>
+            )}
+            {updatePhase === "downloaded" && (
+              <>
+                <span className="update-text">
+                  <Icon name="check" /> <strong>v{updateInfo.version}</strong> {t.updateDownloaded}
+                </span>
+                <button className="reset-btn update-btn" onClick={applyDownloadedUpdate}>
+                  {t.updateApplyNow}
+                </button>
+                <button
+                  className="settings-btn"
+                  onClick={() => setDismissedUpdate(updateInfo.version)}
+                  title={t.updateLater}
+                >
+                  <Icon name="x" />
+                </button>
+              </>
             )}
             {updatePhase === "ready" && (
               <span className="update-text"><Icon name="check" /> {t.updateRestarting}</span>
@@ -4729,6 +4913,19 @@ function App() {
                 onChange={(e) => setAutoCheckUpdate(e.target.checked)}
               />
             </div>
+            {!isPortable && (
+              <div className="settings-row">
+                <label>
+                  {t.autoInstallUpdate}
+                  <span className="settings-hint-inline"> {t.autoInstallUpdateHint}</span>
+                </label>
+                <input
+                  type="checkbox"
+                  checked={autoInstallUpdate}
+                  onChange={(e) => setAutoInstallUpdate(e.target.checked)}
+                />
+              </div>
+            )}
             <div className="settings-row">
               <label>
                 {t.update}

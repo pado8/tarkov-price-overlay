@@ -681,8 +681,11 @@ fn resolve_install_id(candidate: String) -> String {
     id
 }
 
+/// 종료 준비만(quitting 플래그 + 마우스 훅 정지 + 사이드카 kill). 11-03: 받아 둔
+/// 업데이트를 종료 때 설치할 때 설치 프로그램이 프로세스를 끝내기 전에 사이드카를
+/// 먼저 정리하려고 exit_app 에서 분리했다.
 #[tauri::command]
-fn exit_app(app: tauri::AppHandle) {
+fn prepare_quit(app: tauri::AppHandle) {
     if let Some(state) = app.try_state::<IsQuitting>() {
         state.0.store(true, Ordering::SeqCst);
     }
@@ -692,9 +695,14 @@ fn exit_app(app: tauri::AppHandle) {
     if let Some(state) = app.try_state::<SidecarChild>() {
         if let Some(child) = state.0.lock().unwrap().take() {
             let _ = child.kill();
-            println!("[sidecar] killed on exit_app");
+            println!("[sidecar] killed on prepare_quit");
         }
     }
+}
+
+#[tauri::command]
+fn exit_app(app: tauri::AppHandle) {
+    prepare_quit(app.clone());
     app.exit(0);
 }
 
@@ -965,6 +973,7 @@ pub fn run() {
             std::env::var("TPO_HOTKEY_PASSTHROUGH").map(|v| v == "1").unwrap_or(false),
         )))
         .invoke_handler(tauri::generate_handler![
+            prepare_quit,
             get_cursor_position,
             log_msg,
             register_lookup_hotkey,
@@ -1047,19 +1056,16 @@ pub fn run() {
                         }
                     }
                     "exit" => {
-                        if let Some(state) = app.try_state::<IsQuitting>() {
-                            state.0.store(true, Ordering::SeqCst);
-                        }
-                        if let Some(state) = app.try_state::<MouseHotkeyStop>() {
-                            state.0.store(true, Ordering::SeqCst);
-                        }
-                        if let Some(state) = app.try_state::<SidecarChild>() {
-                            if let Some(child) = state.0.lock().unwrap().take() {
-                                let _ = child.kill();
-                                println!("[sidecar] killed via tray exit");
-                            }
-                        }
-                        app.exit(0);
+                        // 11-03: 바로 끝내지 않고 JS 에 먼저 알린다 — 받아 둔 업데이트가
+                        // 있으면 JS 가 설치를 띄운 뒤 exit_app 을 부른다. 웹뷰가 먹통이면
+                        // 8초 뒤 여기서 강제 종료(안전장치).
+                        let _ = app.emit("tray-exit", ());
+                        let app2 = app.clone();
+                        std::thread::spawn(move || {
+                            std::thread::sleep(std::time::Duration::from_secs(8));
+                            println!("[tray] exit fallback after 8s");
+                            exit_app(app2);
+                        });
                     }
                     _ => {}
                 })
