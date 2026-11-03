@@ -13,6 +13,7 @@
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -62,7 +63,13 @@ def recovery_snippet(cid: str) -> str:
             'signalGooglefcPresent();})();</script>')
 
 
-def adblock_snippet() -> str:
+AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫기, 방법 설명] — 페이지 언어 것만 심는다(en/ru 산출물에 한글 0)
+    "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "브라우저 주소창 옆 차단 확장 아이콘 → ‘이 사이트에서 끄기’(또는 ‘허용’) → 새로고침. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않습니다."],
+    "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "Click your ad blocker icon next to the address bar → ‘Disable on this site’ (or Allow) → reload. Ads are kept to a minimum, no pop-ups or sticky ads."],
+    "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "Нажмите значок блокировщика рядом с адресной строкой → ‘Отключить на этом сайте’ → обновите страницу. Рекламы минимум, без всплывающих окон."],
+}
+
+def adblock_snippet(lang: str = "ko") -> str:
     """경량 감지 + 정중한 안내 바. adsbygoogle.js 가 안 실렸거나(스크립트 차단) 미끼 요소가 숨겨지면(코스메틱 필터) 하단에 한 줄.
     닫으면 7일 숨김(localStorage). GA4 가 있으면 adblock_on 이벤트 1회. 콘텐츠를 가리거나 막지 않는다."""
     return (AB_START + '<style>#tgab{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#1f1f19;border-top:1px solid #3a352b;'
@@ -73,13 +80,8 @@ def adblock_snippet() -> str:
             '#tgab.open .how{display:block}</style>'
             '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
             '<button class="y" id="tgab-h"></button><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
-            '<script>(function(){var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko";'
-            'var T={ko:["광고가 차단돼 있어요.","탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.","허용하는 법","닫기",'
-            '"브라우저 주소창 옆 차단 확장 아이콘 → ‘이 사이트에서 끄기’(또는 ‘허용’) → 새로고침. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않습니다."],'
-            'en:["Ads are blocked.","This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.","How to allow","Close",'
-            '"Click your ad blocker icon next to the address bar → ‘Disable on this site’ (or Allow) → reload. Ads are kept to a minimum, no pop-ups or sticky ads."],'
-            'ru:["Реклама заблокирована.","Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.","Как разрешить","Закрыть",'
-            '"Нажмите значок блокировщика рядом с адресной строкой → ‘Отключить на этом сайте’ → обновите страницу. Рекламы минимум, без всплывающих окон."]}[L];'
+            '<script>(function(){var P=location.pathname;'
+            'var T=' + json.dumps(AB_TEXT.get(lang) or AB_TEXT["ko"], ensure_ascii=False) + ';'
             'var K="tg_adblk_hide";try{if(+localStorage.getItem(K)>Date.now())return;}catch(e){}'
             'function blocked(){var b=document.createElement("div");b.className="ad adsbox ad-placement textads banner-ads";b.style.cssText="position:absolute;left:-9999px;top:0;height:10px;width:10px";b.innerHTML="&nbsp;";document.body.appendChild(b);'
             'var hid=b.offsetHeight===0||getComputedStyle(b).display==="none";b.parentNode.removeChild(b);var noScript=!(window.adsbygoogle&&window.adsbygoogle.loaded);return hid||noScript;}'
@@ -113,7 +115,9 @@ def apply() -> tuple[int, str | None]:
             head = snippet(cid) + (recovery_snippet(cid) if recovery_on() else "")
             t = t.replace("</head>", head + "</head>", 1)
             if "</body>" in t:
-                t = t.replace("</body>", adblock_snippet() + "</body>", 1)
+                rel = f.relative_to(LANDING).as_posix()
+                lang = "en" if rel.startswith("guide/en/") else "ru" if rel.startswith("guide/ru/") else "ko"
+                t = t.replace("</body>", adblock_snippet(lang) + "</body>", 1)
         if t != s:
             f.write_text(t, encoding="utf-8")
             changed += 1

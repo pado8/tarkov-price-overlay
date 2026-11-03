@@ -39,12 +39,12 @@ return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(funct
 .catch(function(e){clearTimeout(tm);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"Нет ответа (тайм-аут)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
-var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Связь с оверлеем (в следующей версии)";
-b.title="Будет доступно в следующей версии. Загружает в этот браузер прогресс квестов·уровни убежища из оверлея цен, запущенного на этом же ПК. Данные не покидают браузер.";
+var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Связь с оверлеем";
+b.title="Загружает в этот браузер прогресс квестов·уровни убежища из оверлея цен, запущенного на этом же ПК. Данные не покидают браузер.";
 b.addEventListener("click",function(){if(b.disabled)return;b.disabled=true;b.textContent="Подключение…";
-pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Связь с оверлеем (в следующей версии)";help()})});
+pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Связь с оверлеем";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
-h.innerHTML='<b>Связь с оверлеем появится в следующей версии.</b> В текущей версии приложения этой функции ещё нет. После установки новой версии на этом же ПК запустите <a href="/">Оверлей цен</a>(последняя версия с функцией связи) должен быть запущен — затем нажмите снова. Если Chrome блокирует "доступ к локальной сети", измените: <b>замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить</b> и обновите страницу. Если не помогло, откройте этот сайт кнопкой <b>Настройки → Связать с сайтом</b> в оверлее — прогресс передастся вместе с переходом. <button type="button" class="x" aria-label="Закрыть">✕</button>';
+h.innerHTML='<b>Оверлей не найден.</b> Запустите на этом же ПК <a href="/">Оверлей цен</a>(последняя версия с функцией связи) должен быть запущен — затем нажмите снова. Если Chrome блокирует "доступ к локальной сети", измените: <b>замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить</b> и обновите страницу. Если не помогло, откройте этот сайт кнопкой <b>Настройки → Связать с сайтом</b> в оверлее — прогресс передастся вместе с переходом. <button type="button" class="x" aria-label="Закрыть">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })();
