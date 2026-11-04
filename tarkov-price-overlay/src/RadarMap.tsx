@@ -439,6 +439,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const op = (x: number, y: number, z: number) =>
     floorLayers.length && me && autoFloor(floorLayers, x, y, z) !== myFloor && Math.abs(y - myY) > FLOOR_M ? DIM : 1;
   const questTargets: RadarTarget[] = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null && !hiddenQuests.has(x.task ?? x.name));
+  // 퀘스트가 하나도 안 찍힐 때 이유 한 줄(11-04 댓글 "연동해도 지도에 퀘스트가 안 뜬다") — 지도 퀘스트는 게임 로그 추적기의
+  // '진행 중'만 쓰고, 사이트 연동과는 별개라 0개면 왜인지 알 길이 없었다. active_quests 는 좌표 스크린샷 + 맵 감지 때만 온다.
+  const questAll = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null).length;
+  const questNote =
+    !layers.quests || questTargets.length > 0 || data.active_quests == null
+      ? null
+      : questAll > 0
+        ? t.radarQuestAllHidden
+        : data.active_quests === 0
+          ? t.radarQuestNoneActive
+          : t.radarQuestNoneHere.replace("{n}", String(data.active_quests));
 
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
   const showExtract = (faction: string) => (faction === "scav" ? showScav : layers.pmc);
@@ -694,6 +705,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>
+      {questNote && <div className="radar-note">{questNote}</div>}
       {doc?.img && showImg && doc.img.layers.length > 0 && (
         <div className="radar-layers radar-floors">
           <span className="radar-kind">{t.radarFloor}</span>
