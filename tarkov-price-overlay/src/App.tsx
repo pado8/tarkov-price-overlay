@@ -8,6 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
+import { useParty } from "./party";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
@@ -1534,7 +1535,26 @@ function App() {
   const [radarData, setRadarData] = useState<RadarState | null>(null);
   const radarDataRef = useRef<RadarState | null>(null); // 폴링 클로저용(넓게 보기에서 아직 못 받았으면 다시 받기)
   radarDataRef.current = radarData;
+  useEffect(() => {
+    sendShotRef.current(false);
+  }, [radarData?.shot?.id, radarData?.map?.id]);
   const [radarLoading, setRadarLoading] = useState(false);
+  // ── 파티 방(친구 위치 공유, 11-05) — 스크린샷을 찍을 때마다 내 위치를 방으로(party.ts, ops/party-worker) ──
+  const sendShotRef = useRef<(force: boolean) => void>(() => {});
+  const party = useParty({ onCount: (k) => dailyAdd(k), onHello: () => sendShotRef.current(true) });
+  const partyRef = useRef(party);
+  partyRef.current = party;
+  const partySentRef = useRef<string | null>(null); // 이미 보낸 스크린샷 id(같은 위치 두 번 안 보냄)
+  sendShotRef.current = (force: boolean) => {
+    const d = radarDataRef.current;
+    const p = partyRef.current;
+    if (!p.code || !d?.shot || !d.map) return;
+    // 새 스크린샷은 2분 안의 것만(앱을 늦게 켠 옛 스크린샷 제외), 방에 막 들어왔을 땐 30분 안의 마지막 위치
+    if (d.shot.age > (force ? 1800 : 120)) return;
+    if (!force && partySentRef.current === d.shot.id) return;
+    const yaw = d.shot.heading == null ? 0 : (d.shot.heading * Math.PI) / 180; // 방위(도) → 라디안
+    if (p.sendPos(d.map.id, d.shot.x, d.shot.z, yaw, Date.now() - d.shot.age * 1000)) partySentRef.current = d.shot.id;
+  };
   const [radarEnabled, setRadarEnabled] = useState<boolean>(() => localStorage.getItem(RADAR_ENABLED_KEY) !== "false");
   // 시세로 조회한 아이템이 열쇠면, 지금 맵에서 그 열쇠로 여는 문·트렁크(사이드카 /radar/keylocks) — 카드 한 줄 + 지도 강조
   type KeyLocks = { map: { id: string; name: string } | null; locks: { p: [number, number, number]; type: string; dist: number | null; rel: number | null; dy: number | null }[] };
@@ -5715,6 +5735,7 @@ function App() {
 
         {!showSettings && radarActive && (
           <RadarPanel
+            party={party}
             data={radarData}
             loading={radarLoading}
             t={t}
@@ -6760,6 +6781,7 @@ function App() {
           } as React.CSSProperties}
         >
           <RadarPanel
+            party={party}
             data={radarData}
             loading={radarLoading}
             mapAlpha={mapAlpha}

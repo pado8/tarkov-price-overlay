@@ -1957,3 +1957,23 @@ html, body, #root {
 /* PiP: 창 = 지도 크기 그대로(오버레이 여백 없음) */
 .overlay.pip { padding: 0; }
 .overlay.pip > .card { max-height: none !important; height: auto; }
+
+/* 파티 방 친구 점(11-05) — 배정 색 원 + 방향 + 이름·경과 시간. 새 위치는 2초 반짝 */
+.radar-friendlabel { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: rgba(0, 0, 0, 0.9); stroke-width: 2.8px; pointer-events: none; }
+.radar-friend { cursor: pointer; }
+.radar-friend.flash .radar-friend-dot { animation: radar-friend-flash 0.5s ease-in-out 4; }
+@keyframes radar-friend-flash { 0%, 100% { r: 5.5px; stroke: #000; } 50% { r: 9px; stroke: #fff; } }
+/* 파티 패널 */
+.party { border: 1px solid var(--border-default); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; font-size: var(--card-fs-xs); background: rgba(0, 0, 0, 0.25); }
+.party-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.party input[type="text"] { background: rgba(0, 0, 0, 0.4); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; padding: 2px 6px; font: inherit; width: 9em; }
+.party input.code { text-transform: uppercase; letter-spacing: 1px; width: 7em; font-family: Consolas, monospace; }
+.party button { font-size: var(--card-fs-xs); padding: 2px 8px; background: rgba(0, 0, 0, 0.45); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
+.party button:hover { border-color: var(--gold-bright); }
+.party-code { font-family: Consolas, monospace; font-size: calc(var(--card-fs) * 1.15); letter-spacing: 2px; color: var(--gold-bright); font-weight: 700; }
+.party-mem { display: flex; align-items: center; gap: 6px; }
+.party-dot { width: 9px; height: 9px; border-radius: 50%; border: 1px solid #000; flex: none; }
+.party-mem .st { margin-left: auto; color: var(--text-muted); }
+.party-note { color: var(--text-muted); }
+.party-warn { color: var(--warning, #e8b84a); }
+.radar-party-btn.on { border-color: var(--gold-bright); color: var(--gold-bright); }

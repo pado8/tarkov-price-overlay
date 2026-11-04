@@ -6,6 +6,7 @@
 // '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RadarState, RadarTarget } from "./Radar";
+import type { Friend } from "./party";
 import { Icon } from "./Icon";
 
 const PYTHON_API = "http://127.0.0.1:8765";
@@ -83,7 +84,17 @@ type Props = {
   bigMe?: boolean; // 내 위치 크게(1.4배·흰 테두리) — 다른 표시와 헷갈린다는 요청 대응(11-04)
   mini?: boolean; // 미니맵 모드 — 정사각형 지도만(칩·층·안내 줄 없음), 도구 버튼은 마우스를 올렸을 때만(CSS)
   mapAlpha?: number; // 지도 그림·바탕 불투명도 0~1(표식은 그대로) — 11-05 피드백 '맵도 0~100'
+  friends?: Friend[]; // 파티 방 친구 중 이 맵에 있는 사람(위치 있는 것만) — 11-05
 };
+const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
+const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
+const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
+export function friendAgo(ms: number, t: Strings): string {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  if (sec < 60) return (t.partyAgoSec ?? "{n}s").replace("{n}", String(sec));
+  if (sec < 3600) return (t.radarAgoMin ?? "{n}m").replace("{n}", String(Math.floor(sec / 60)));
+  return (t.radarAgoHour ?? "{n}h").replace("{n}", String(Math.floor(sec / 3600)));
+}
 
 const cache = new Map<string, MapDoc>();
 const floorMemo: Record<string, string> = {}; // 맵별 층 선택(세션 동안)
@@ -231,7 +242,17 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1 }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends }: Props) {
+  // 친구 경과 시간·반짝임·흐림 — 그릴 때마다 지금 시각으로 계산하고, 친구가 있으면 1초마다 다시 그린다
+  // (시각을 상태로 들고 있으면 처음 그린 시각에 멈춘 채 시작해 '12초 전'이 '8초 전'으로 나왔다 — 11-05 시험에서 발견)
+  const [, setTick] = useState(0);
+  const hasFriends = !!friends?.length;
+  useEffect(() => {
+    if (!hasFriends) return;
+    const iv = window.setInterval(() => setTick((n) => n + 1), 1000);
+    return () => window.clearInterval(iv);
+  }, [hasFriends]);
+  const nowMs = Date.now();
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
@@ -668,6 +689,26 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   </g>
                 );
               })}
+            {friends?.map((f) => {
+              if (f.x == null || f.z == null || f.at == null) return null;
+              const fx = f.x, fz = f.z;
+              const age = nowMs - f.at;
+              if (age > FRIEND_HIDE_MS) return null;
+              const s = toScreen(f.x, f.z);
+              // 친구 yaw 는 라디안(방위, 내 heading 과 같은 기준) → 내 화살표와 같은 식으로 화면 각 = 방위 − eff
+              const h = f.yaw == null ? null : (f.yaw * 180) / Math.PI - eff;
+              const flash = f.rx != null && nowMs - f.rx < FRIEND_FLASH_MS;
+              return (
+                <g key={`fr-${f.mid}`} className={`radar-friend${flash ? " flash" : ""}`} opacity={age > FRIEND_DIM_MS ? 0.4 : 1} onClick={() => pick({ name: `${f.name} · ${friendAgo(age, t)}`, p: [fx, myY, fz] })}>
+                  <circle cx={s.x} cy={s.y} r={12} fill="transparent" />
+                  {h != null && <path d={`M ${s.x} ${s.y - 11} L ${s.x + 4.5} ${s.y - 4} L ${s.x - 4.5} ${s.y - 4} Z`} fill={f.color} stroke="#000" strokeWidth={0.8} transform={`rotate(${h} ${s.x} ${s.y})`} />}
+                  <circle cx={s.x} cy={s.y} r={5.5} fill={f.color} stroke="#000" strokeWidth={1.2} className="radar-friend-dot" />
+                  <text x={s.x + 8} y={s.y + 3.5} className="radar-friendlabel" style={{ fill: f.color }}>
+                    {f.name} · {friendAgo(age, t)}
+                  </text>
+                </g>
+              );
+            })}
             {me && (() => {
               const s = toScreen(me.x, me.z);
               const h = heading == null ? null : heading - eff;

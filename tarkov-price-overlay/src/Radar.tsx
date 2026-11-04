@@ -1,11 +1,15 @@
 // 지도 패널(RadarMap + 대상 목록). 데이터는 사이드카 /radar(radar.py)가 계산한다 —
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
 import { RadarMap, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
 import type { Layers } from "./RadarMap";
 import { Icon } from "./Icon";
+import { type useParty, type Friend, normCode, validCode, defaultPartyName } from "./party";
+import { friendAgo } from "./RadarMap";
+
+type PartyApi = ReturnType<typeof useParty>;
 
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 // 카드(App.tsx guideUrl)와 같은 규칙: UI 언어별 가이드 + src=app(GA4 앱발 방문 표식)
@@ -145,12 +149,17 @@ type Props = {
   dragRegion?: boolean; // 미니맵 옮기기 손잡이를 창 끌기 영역으로(고정 모드면 false)
   pip?: boolean; // PiP 중(창 = 지도 크기) — 도구는 옮기기·작게·크게·PiP 끄기만
   onPip?: (v: boolean) => void;
+  party?: PartyApi; // 파티 방(친구 위치 공유) — 없으면 버튼도 없음
 };
 
 const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, pip, onPip }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, pip, onPip, party }: Props) {
+  const [showParty, setShowParty] = useState(false);
+  // 이 맵에 있는 친구(위치가 있는 사람만) — 지도에 그린다. 다른 맵 친구는 파티 패널 목록에만
+  const mapId = data?.map?.id ?? null;
+  const friendsHere: Friend[] = party && mapId ? party.friends.filter((f) => f.map === mapId && f.x != null) : [];
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [bigMe, setBigMe] = useState<boolean>(() => localStorage.getItem(BIGME_KEY) === "1");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
@@ -215,7 +224,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     return (
       <div className="radar radar-mini" style={{ width: miniSize }}>
         {ready ? (
-          <RadarMap data={data!} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={miniSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mini mapAlpha={mapAlpha / 100} />
+          <RadarMap data={data!} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={miniSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mini mapAlpha={mapAlpha / 100} friends={friendsHere} />
         ) : (
           <div className="radar-mini-msg" style={{ width: miniSize, height: Math.round(miniSize * 0.5) }}>{msg}</div>
         )}
@@ -423,12 +432,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
           <div className="radar-side">{targetList}</div>
         </div>
       ) : (
         <>
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
           {targetList}
         </>
       )}
@@ -458,6 +467,13 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <span className="radar-size-val">{mapAlpha}%</span>
         </label>
       )}
+      {party && (
+        <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
+          👥 {t.partyBtn}
+          {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
+        </button>
+      )}
+      {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
       {onMini && !fill && (
         <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
           <Icon name="map" /> {t.radarMini}
@@ -474,4 +490,81 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
 
 function error(data: RadarState, t: Strings) {
   return data.error ? <div className="radar-warn">{t.radarDataError}</div> : null;
+}
+
+function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; maps: { id: string; name: string }[]; mapId: string | null }) {
+  const [codeIn, setCodeIn] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [bad, setBad] = useState(false);
+  const [, tick] = useState(0);
+  // 목록의 '12초 전'을 갱신
+  useEffect(() => {
+    const iv = window.setInterval(() => tick((n) => n + 1), 5000);
+    return () => window.clearInterval(iv);
+  }, []);
+  const mapName = (id?: string) => maps.find((m) => m.id === id)?.name ?? id ?? "?";
+  const now = Date.now();
+  const copy = () => {
+    if (!party.code) return;
+    void navigator.clipboard?.writeText(party.code).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    }).catch(() => {});
+  };
+  const doJoin = () => {
+    const c = normCode(codeIn);
+    if (!validCode(c)) {
+      setBad(true);
+      return;
+    }
+    setBad(false);
+    party.join(c);
+    setCodeIn("");
+  };
+  return (
+    <div className="party">
+      <div className="party-row">
+        <b>{t.partyTitle}</b>
+        <input type="text" value={party.name} placeholder={defaultPartyName()} maxLength={16} onChange={(e) => party.setName(e.target.value)} aria-label={t.partyNamePh} title={t.partyNamePh} />
+      </div>
+      {!party.code ? (
+        <div className="party-row">
+          <button type="button" onClick={() => party.create()}>{t.partyCreate}</button>
+          <input type="text" className="code" value={codeIn} placeholder={t.partyCodePh} maxLength={8} onChange={(e) => setCodeIn(normCode(e.target.value))} onKeyDown={(e) => e.key === "Enter" && doJoin()} aria-label={t.partyCodePh} />
+          <button type="button" onClick={doJoin}>{t.partyJoin}</button>
+          {bad && <span className="party-warn">{t.partyBadCode}</span>}
+          {party.status === "full" && <span className="party-warn">{t.partyFull}</span>}
+        </div>
+      ) : (
+        <>
+          <div className="party-row">
+            <span className="party-note">{t.partyRoom}</span>
+            <span className="party-code">{party.code}</span>
+            <button type="button" onClick={copy}>{copied ? t.partyCopied : t.partyCopy}</button>
+            <button type="button" onClick={() => party.leave()}>{t.partyLeave}</button>
+            {party.status === "connecting" && <span className="party-warn">{t.partyConnecting}</span>}
+            {party.status === "error" && <span className="party-warn">{t.partyError}</span>}
+          </div>
+          <label className="radar-chk">
+            <input type="checkbox" checked={party.share} onChange={(e) => party.setShare(e.target.checked)} /> {t.partyShare}
+          </label>
+          {party.me && (
+            <div className="party-mem">
+              <span className="party-dot" style={{ background: party.me.color }} /> {party.name.trim() || defaultPartyName()} ({t.partyMe})
+            </div>
+          )}
+          {party.friends.length === 0 && party.status === "on" && <div className="party-note">{t.partyNoMembers}</div>}
+          {party.friends.map((f) => (
+            <div className="party-mem" key={f.mid}>
+              <span className="party-dot" style={{ background: f.color, opacity: f.online ? 1 : 0.4 }} /> {f.name}
+              <span className="st">
+                {!f.online ? t.partyOffline : f.at == null ? t.partyNoPos : f.map !== mapId ? t.partyOtherMap.replace("{map}", mapName(f.map)) : friendAgo(now - f.at, t)}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+      <div className="party-note">{t.partyNote}</div>
+    </div>
+  );
 }
