@@ -101,8 +101,8 @@ html, body, #root {
   font-size: var(--card-fs);
   /* --card-bg-alpha is set inline from the bgOpacity setting (0-1).
      Background-only transparency: text/icons keep full opacity. */
-  background: rgba(20, 20, 20, var(--card-bg-alpha, 0.85));
-  border: 1px solid var(--border-emphasis);
+  background: rgba(20, 20, 20, calc(var(--card-bg-alpha, 0.85) * var(--card-op, 1)));
+  border: 1px solid color-mix(in srgb, var(--border-emphasis) calc(var(--card-op, 1) * 100%), transparent);
   border-radius: var(--radius-lg);
   padding: 10px 14px;
   /* width set via inline style */
@@ -111,13 +111,13 @@ html, body, #root {
      pins to the card's *visible* bottom-right corner regardless of scroll
      position or whether content fills the (possibly drag-enlarged) card. */
   position: relative;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, calc(0.5 * var(--card-op, 1)));
   /* Subtle dark text-shadow gives every label an outline so muted greys
      stay legible when the user drops card opacity to 20-40% and bright
      game UI bleeds through. Invisible on the dark card itself; pulls
      weight only when the backdrop becomes light. */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(calc(4px * var(--card-op, 1)));
   opacity: 1;
   transition: opacity 0.25s ease-out;
   /* Cap height to viewport so very tall content (long history, all detail
@@ -1848,6 +1848,8 @@ html, body, #root {
 .radar-floors .radar-kind { margin-right: 2px; }
 .radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: var(--card-fs-xs); font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
 .radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
+/* 지도 이름표(탈출구·퀘스트 이름)도 지도 불투명도를 따른다 — 11-05 '지도 그림만 투명해지고 글씨는 그대로' 피드백. 점·화살표 표식은 그대로 */
+.radar-mapwrap .radar-maplabel { opacity: var(--map-alpha, 1); }
 .radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); }
 .radar-mapsel b { color: var(--gold-light); }
 .radar-mapmsg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--card-fs-sm); pointer-events: none; }
@@ -1940,3 +1942,18 @@ html, body, #root {
 .radar-mini .radar-mapwrap { box-sizing: border-box; }
 .radar-mini .radar-maptools { top: auto; bottom: 4px; right: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 8px); }
 .radar-mini-tools { flex-wrap: wrap; max-width: calc(100% - 8px); }
+
+/* ── 카드 불투명도 = 줄마다(11-05) ────────────────────────────────────────
+   예전엔 .card 전체에 opacity 를 줬는데, 그러면 안쪽 요소를 더 진하게 할 수 없다. 이제 --card-op 를 카드 바로 아래 자식
+   (머리글은 그 안의 항목, 설정 패널은 각 줄)에 준다. 설정 버튼과 설정의 '전체/배경 불투명도' 두 줄은 최소 50% —
+   너무 낮췄을 때도 설정을 다시 찾아 되돌릴 수 있게(사용자 요청). 배경·테두리·그림자·흐림은 .card 규칙에서 같은 값으로 곱한다. */
+.card > :not(.header):not(.settings) { opacity: var(--card-op, 1); }
+.card > .header > :not(.header-actions),
+.card > .header > .header-actions > * { opacity: var(--card-op, 1); }
+.card > .header > .header-actions > .settings-gear { opacity: max(var(--card-op, 1), 0.5); }
+.card > .settings > * { opacity: var(--card-op, 1); }
+.card > .settings > .settings-row.op-row { opacity: max(var(--card-op, 1), 0.5); }
+.card > .header { border-bottom-color: rgba(200, 170, 100, calc(0.3 * var(--card-op, 1))); }
+/* PiP: 창 = 지도 크기 그대로(오버레이 여백 없음) */
+.overlay.pip { padding: 0; }
+.overlay.pip > .card { max-height: none !important; height: auto; }

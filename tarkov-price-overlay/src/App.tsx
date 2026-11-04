@@ -8,7 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
-import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
+import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
 import "./App.css";
@@ -1593,6 +1593,21 @@ function App() {
   const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
   const wideModeRef = useRef(wideMode);
   wideModeRef.current = wideMode;
+  // PiP(11-05 피드백 '진짜 아무것도 안 뜨고 미니맵만 게임 위에'): 미니맵일 때 창 자체를 지도 크기로 줄여 화면 오른쪽에.
+  // 창은 평소 폭 800 고정(높이만 카드에 맞춤)이라 카드만 줄여서는 '창이 안 줄어든다'. F2 조회로 지도가 닫히면 저절로 풀리고
+  // 원래 자리에 시세 카드가 뜬다(다음 스크린샷으로 지도가 다시 열리면 다시 PiP).
+  const [pipOn, setPipOn] = useState<boolean>(() => localStorage.getItem(RADAR_PIP_KEY) === "1");
+  const pipActive = pipOn && radarMini && radarActive && !showSettings && !wideMode;
+  const pipActiveRef = useRef(pipActive);
+  pipActiveRef.current = pipActive;
+  const pipPrevRef = useRef<{ x: number; y: number } | null>(null); // PiP 들어가기 전 창 위치(물리 px)
+  const pipMoveArmedAtRef = useRef(0); // 이 시각 전의 창 이동은 PiP 가 옮긴 것 — 사용자 위치로 저장하지 않는다
+  const pickPip = (v: boolean) => {
+    setPipOn(v);
+    try {
+      localStorage.setItem(RADAR_PIP_KEY, v ? "1" : "0");
+    } catch {}
+  };
   const paneRef = useRef<HTMLDivElement>(null);
   // 세로 모니터(높이 > 폭)에서 나란히 모드 = 카드 위·지도 아래 전체 폭·목록은 지도 밑(11-04 피드백 "세로 서브모니터에서 공간 활용이 아쉽다")
   const [portrait, setPortrait] = useState(false);
@@ -2171,6 +2186,7 @@ function App() {
     if (!autoHideRef.current) return;
     // 지도 나란히 모드 = 모니터 하나를 통째로 쓰는 상태라 숨기지 않는다
     if (wideModeRef.current) return;
+    if (pipActiveRef.current) return; // PiP 미니맵도 계속 떠 있어야 한다
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
     // Cursor parked on the card keeps it alive. Without this, any
@@ -2309,6 +2325,55 @@ function App() {
   // F2 리스너는 한 번만 등록되는 클로저라, 같은 키 + 못 읽음일 때 지도를 여는 건 최신 openRadar 를 ref 로 부른다
   const openRadarRef = useRef(openRadar);
   openRadarRef.current = openRadar;
+  // ── PiP 창: 켜면 지금 위치를 기억하고 창을 미니맵 크기로 줄여 화면 오른쪽(또는 끌어 둔 자리)에, 끄면 원래 위치·내용 크기로 ──
+  useEffect(() => {
+    const win = getCurrentWindow();
+    let dead = false;
+    (async () => {
+      try {
+        if (pipActive) {
+          const entering = !pipPrevRef.current;
+          const [pos, size, sf] = await Promise.all([win.outerPosition(), win.outerSize(), win.scaleFactor()]);
+          if (dead) return;
+          if (entering) pipPrevRef.current = { x: pos.x, y: pos.y };
+          const wpx = Math.round(miniSize * sf);
+          pipMoveArmedAtRef.current = Date.now() + 800;
+          await win.setSize(new LogicalSize(miniSize, miniSize));
+          let target: { x: number; y: number } | null = null;
+          if (entering) {
+            // 끌어 둔 자리가 지금 연결된 모니터 안이면 거기, 아니면 지금 모니터 오른쪽 위쪽
+            try {
+              const r = JSON.parse(localStorage.getItem(RADAR_PIP_POS_KEY) || "null");
+              const mons = await availableMonitors();
+              if (r && Number.isFinite(r.x) && Number.isFinite(r.y) && mons.some((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height)) target = r;
+            } catch {}
+            if (!target) {
+              const mon = await currentMonitor();
+              if (mon) target = { x: mon.position.x + mon.size.width - wpx - Math.round(16 * sf), y: mon.position.y + Math.round(mon.size.height * 0.12) };
+            }
+          } else {
+            target = { x: pos.x + size.width - wpx, y: pos.y }; // 크기만 바뀜 — 오른쪽 끝을 그대로
+          }
+          if (dead) return;
+          if (target) await win.setPosition(new PhysicalPosition(target.x, target.y));
+          log(`pip: ${entering ? "on" : "resize"} ${miniSize}px @ ${target?.x},${target?.y}`);
+        } else if (pipPrevRef.current) {
+          const p = pipPrevRef.current;
+          pipPrevRef.current = null;
+          pipMoveArmedAtRef.current = Date.now() + 800;
+          applyRef.current?.(); // 폭 800·내용 높이로
+          await win.setPosition(new PhysicalPosition(p.x, p.y));
+          log("pip: off");
+        }
+      } catch (e) {
+        log(`pip: failed ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
+    return () => {
+      dead = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pipActive, miniSize]);
   // 지도 나란히 모드 — 켜면 지금 있는 모니터에 창을 꽉 채우고(위치는 저장), 끄면 저장한 위치·내용 크기로
   useEffect(() => {
     const win = getCurrentWindow();
@@ -3410,6 +3475,13 @@ function App() {
 
     const unlistenPromise = win.listen("tauri://move", () => {
       if (wideModeRef.current) return; // 모니터 원점으로 옮긴 건 사용자 위치가 아니다
+      if (pipActiveRef.current) {
+        // PiP 창을 끌어 옮긴 위치는 따로 기억(카드 자리 POSITION_KEY 는 그대로 둬야 끌 때 돌아간다)
+        if (Date.now() < pipMoveArmedAtRef.current) return;
+        win.outerPosition().then((pos) => localStorage.setItem(RADAR_PIP_POS_KEY, JSON.stringify({ x: pos.x, y: pos.y }))).catch(() => {});
+        return;
+      }
+      if (Date.now() < pipMoveArmedAtRef.current) return; // PiP 를 끄며 원래 자리로 되돌린 이동
       win.outerPosition().then((pos) => {
         localStorage.setItem(
           POSITION_KEY,
@@ -3451,6 +3523,7 @@ function App() {
         if (Math.abs(se.offsetHeight - target) > 1) se.style.height = `${target}px`;
       }
       if (wideModeRef.current) return; // 지도 나란히: 창은 모니터 크기 그대로
+      if (pipActiveRef.current) return; // PiP: 창 = 지도 크기(PiP 효과가 정한다)
       // When the user has dragged an explicit card height (price-card view
       // only — settings mode returns null), size the window to that override
       // instead of the content's scrollHeight. Otherwise the window stays at
@@ -4001,7 +4074,7 @@ function App() {
 
   const miniOn = radarMini && radarActive && !showSettings && !wideMode; // 미니맵 모드가 실제로 보이는 조건(나란히·설정 중엔 아님)
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}`}>
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}`}>
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -4035,7 +4108,9 @@ function App() {
           // still drop to 0 without fighting the user's preference.
           // 지도가 열려 있으면 최소 90% — 점·이름표가 게임 화면에 묻히지 않게(사용자 설정은 그대로 둔다)
           // 미니맵 모드는 하한 없이 사용자 설정 그대로(게임 화면 위에 얹는 용도) — 지도 그림만 따로 '지도 불투명도'로 조절
-          opacity: cardVisible ? (radarActive && !miniOn ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100 : undefined,
+          // 11-05: 카드 전체 opacity 대신 줄마다(--card-op, App.css) — 부모가 투명하면 자식을 더 진하게 못 해서,
+          // 설정 버튼·설정의 두 불투명도 줄은 최소 50% 로 남겨 다시 찾을 수 있게(사용자 요청). 숨김(.card-hidden)은 카드 전체 opacity 0 그대로
+          ["--card-op" as string]: String((radarActive && !miniOn ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100),
           // Background-only opacity: fades the dark panel behind the text
           // (consumed by .card's background rgba), text/icons stay opaque.
           ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
@@ -4105,7 +4180,7 @@ function App() {
               <Icon name="wideMap" />
             </button>
             <button
-              className="settings-btn"
+              className="settings-btn settings-gear"
               onClick={() => setShowSettings((s) => {
                 if (s) {
                   setShowDonate(false);
@@ -4941,7 +5016,7 @@ function App() {
                 ))}
               </select>
             </div>
-            <div className="settings-row">
+            <div className="settings-row op-row">
               <label title={t.opacityHint}>{t.opacity}</label>
               <div className="opacity-row">
                 <input
@@ -4993,7 +5068,7 @@ function App() {
                 )}
               </div>
             </div>
-            <div className="settings-row">
+            <div className="settings-row op-row">
               <label title={t.bgOpacityHint}>{t.bgOpacity}</label>
               <div className="opacity-row">
                 <input
@@ -5671,6 +5746,8 @@ function App() {
             mapAlpha={mapAlpha}
             onMapAlpha={pickMapAlpha}
             dragRegion={!pinned}
+            pip={pipActive}
+            onPip={pickPip}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={(px) => {
               setRadarSize(px);

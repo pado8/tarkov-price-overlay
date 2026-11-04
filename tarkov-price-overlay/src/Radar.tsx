@@ -71,6 +71,8 @@ export const RADAR_SIZE_DEFAULT = 240;
 export const RADAR_MINI_KEY = "tarkov.radar.mini";
 export const RADAR_MINI_SIZE_KEY = "tarkov.radar.miniSize";
 export const RADAR_MAP_ALPHA_KEY = "tarkov.radar.mapAlpha"; // 0~100, 지도 그림·바탕만(표식은 그대로)
+export const RADAR_PIP_KEY = "tarkov.radar.pip"; // "1" = 미니맵을 창째로 작게 화면 오른쪽에(PiP)
+export const RADAR_PIP_POS_KEY = "tarkov.radar.pipPos"; // PiP 창을 끌어 옮긴 위치(물리 px)
 export const RADAR_MINI_MIN = 100;
 export const RADAR_MINI_MAX = 600;
 export const RADAR_MINI_DEFAULT = 220;
@@ -141,12 +143,14 @@ type Props = {
   mapAlpha?: number; // 0~100
   onMapAlpha?: (v: number) => void;
   dragRegion?: boolean; // 미니맵 옮기기 손잡이를 창 끌기 영역으로(고정 모드면 false)
+  pip?: boolean; // PiP 중(창 = 지도 크기) — 도구는 옮기기·작게·크게·PiP 끄기만
+  onPip?: (v: boolean) => void;
 };
 
 const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, pip, onPip }: Props) {
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [bigMe, setBigMe] = useState<boolean>(() => localStorage.getItem(BIGME_KEY) === "1");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
@@ -220,7 +224,14 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <span className="radar-mini-grip" data-tauri-drag-region={dragRegion ? true : undefined} title={t.radarMiniDrag}>⠿</span>
           <button type="button" onClick={() => step(-20)} disabled={miniSize <= RADAR_MINI_MIN} title={t.radarMiniSmaller} aria-label={t.radarMiniSmaller}>−</button>
           <button type="button" onClick={() => step(20)} disabled={miniSize >= RADAR_MINI_MAX} title={t.radarMiniBigger} aria-label={t.radarMiniBigger}>+</button>
-          <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
+          {pip ? (
+            <button type="button" onClick={() => onPip?.(false)} title={t.radarPipOff}>{t.radarPipOff}</button>
+          ) : (
+            <>
+              {onPip && <button type="button" onClick={() => onPip(true)} title={t.radarPipHint}>{t.radarPip}</button>}
+              <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
+            </>
+          )}
         </div>
       </div>
     );
