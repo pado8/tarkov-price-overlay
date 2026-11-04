@@ -1,0 +1,13 @@
+{
+  // aquapado 파티 방 — 탈콥 시세 오버레이 지도의 친구 위치 공유 중계(웹소켓). 배포: npx wrangler@4 deploy
+  // 방 코드 하나 = Durable Object 하나(PartyRoom). 위치는 메모리(소켓 첨부)에만, 저장소·DB 에 남기지 않는다.
+  "name": "aquapado-party",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-11-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "PartyRoom" }]
+  },
+  // Workers Free 는 SQLite 기반 Durable Objects 만 가능 → new_sqlite_classes (저장소는 실제로 쓰지 않음)
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PartyRoom"] }],
+  "observability": { "enabled": true }
+}
