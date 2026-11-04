@@ -896,7 +896,9 @@ const RADAR_POPUP_MAX_AGE_SEC = 60;
 const RADAR_MIN_OPACITY = 90;
 // 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
 const WIDE_KEY = "tarkov.wideMode";
-const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos"; // 지도 표시 중 카드 전체 불투명도 하한(%)
+const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos";
+// 나란히 모드 창을 사용자가 끌어서 바꾼 크기·위치(물리 px). 없으면 모니터 전체(11-04 피드백 #54)
+const WIDE_RECT_KEY = "tarkov.wideMode.rect"; // 지도 표시 중 카드 전체 불투명도 하한(%)
 const HOTKEY_KEY = "tarkov.hotkey";
 const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 // "조회 키를 게임에도 전달": RegisterHotKey 대신 키 상태만 엿들어 게임 스크린샷 키와 같은 키를 쓸 수 있게
@@ -950,6 +952,9 @@ function loadQuestDisplayMode(): QuestModeSetting {
 const questModeOfGameMode = (g: GameMode): "pvp" | "pve" | "season" =>
   g === "pve" ? "pve" : g === "pvp-season" ? "season" : "pvp";
 const WIN_BASE_W = 800;
+// 나란히 모드 창 최소 크기(논리 px) — 이보다 작으면 시세 카드와 지도가 한 줄에 안 들어간다
+const WIDE_MIN_W = 720;
+const WIDE_MIN_H = 420;
 const FONT_DEFAULT = 13;
 // Card width drag-resize bounds (px). Min keeps the layout from collapsing;
 // max stays within the 800px logical window so the card never clips at the
@@ -2185,15 +2190,26 @@ function App() {
           } catch {}
           if (!mon) mon = await currentMonitor();
           if (dead) return;
-          if (mon) {
-            await win.setPosition(new PhysicalPosition(mon.position.x, mon.position.y));
-            await win.setSize(new PhysicalSize(mon.size.width, mon.size.height));
+          wideSaveArmedAtRef.current = Date.now() + 1500; // 켜는 순간의 이동·크기 변경은 '사용자가 바꾼 크기'가 아니다
+          await win.setMinSize(new LogicalSize(WIDE_MIN_W, WIDE_MIN_H)).catch(() => {});
+          const saved = await savedWideRect();
+          if (dead) return;
+          if (saved) {
+            await win.setPosition(new PhysicalPosition(saved.x, saved.y));
+            await win.setSize(new PhysicalSize(saved.w, saved.h));
+            log(`wide: on (saved ${saved.w}x${saved.h} @ ${saved.x},${saved.y})`);
+          } else {
+            if (mon) {
+              await win.setPosition(new PhysicalPosition(mon.position.x, mon.position.y));
+              await win.setSize(new PhysicalSize(mon.size.width, mon.size.height));
+            }
+            log(`wide: on (monitor ${mon?.name ?? "?"} ${mon?.size.width}x${mon?.size.height})`);
           }
-          log(`wide: on (monitor ${mon?.name ?? "?"} ${mon?.size.width}x${mon?.size.height})`);
           void loadRadar();
         } else {
           const raw = localStorage.getItem(WIDE_PREV_POS_KEY);
           localStorage.removeItem(WIDE_PREV_POS_KEY);
+          await win.setMinSize(null).catch(() => {}); // 일반 카드 창은 내용 높이(100px~)까지 줄어든다
           applyRef.current?.(); // 내용 크기로 되돌린다
           if (raw) {
             const { x, y } = JSON.parse(raw);
@@ -2210,6 +2226,74 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wideMode]);
+  // ── 나란히 모드 창 크기·위치(피드백 #54) ─────────────────────────────
+  // 모니터 전체가 기본. 패널 오른쪽 아래 모서리를 끌면 크기, 시세 카드 머리글을 끌면 위치가 바뀌고 그 값을 기억한다
+  // (다음에 켤 때 그대로). 모서리를 두 번 누르면 지금 모니터 전체로 되돌리고 기억도 지운다.
+  // 저장값의 왼쪽 위가 지금 연결된 어느 모니터에도 없으면(모니터를 뺐을 때) 무시하고 모니터 전체로.
+  const wideSaveArmedAtRef = useRef(0);
+  const savedWideRect = async (): Promise<{ x: number; y: number; w: number; h: number } | null> => {
+    try {
+      const r = JSON.parse(localStorage.getItem(WIDE_RECT_KEY) || "null");
+      if (!r || ![r.x, r.y, r.w, r.h].every(Number.isFinite) || r.w < 200 || r.h < 150) return null;
+      const mons = await availableMonitors();
+      const ok = mons.some((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height);
+      return ok ? r : null;
+    } catch {
+      return null;
+    }
+  };
+  useEffect(() => {
+    if (!wideMode) return;
+    const win = getCurrentWindow();
+    let timer = 0;
+    const save = () => {
+      if (Date.now() < wideSaveArmedAtRef.current) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        resizingRef.current = false; // 모서리 끌기가 끝났다(크기 변경 이벤트가 0.4초 멈춤)
+        if (!wideModeRef.current || Date.now() < wideSaveArmedAtRef.current) return;
+        try {
+          const [pos, size] = await Promise.all([win.outerPosition(), win.outerSize()]);
+          localStorage.setItem(WIDE_RECT_KEY, JSON.stringify({ x: pos.x, y: pos.y, w: size.width, h: size.height }));
+        } catch {}
+      }, 400);
+    };
+    const unMoved = win.onMoved(save);
+    const unResized = win.onResized(save);
+    return () => {
+      window.clearTimeout(timer);
+      unMoved.then((f) => f()).catch(() => {});
+      unResized.then((f) => f()).catch(() => {});
+    };
+  }, [wideMode]);
+  const onWideResizeDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    // 끄는 동안 클릭 투과를 켜지 않게(커서가 잠깐 패널 밖으로 빠져도) — 크기 변경이 멈추면 save 가 푼다
+    resizingRef.current = true;
+    window.setTimeout(() => {
+      resizingRef.current = false;
+    }, 15000); // 안전장치: 끌기 이벤트가 전혀 안 오면
+    getCurrentWindow()
+      .startResizeDragging("SouthEast")
+      .catch((err) => {
+        resizingRef.current = false;
+        log(`wide: resize drag failed ${String(err)}`);
+      });
+  };
+  const resetWideRect = async () => {
+    localStorage.removeItem(WIDE_RECT_KEY);
+    wideSaveArmedAtRef.current = Date.now() + 1500;
+    try {
+      const win = getCurrentWindow();
+      const mon = await currentMonitor();
+      if (mon) {
+        await win.setPosition(new PhysicalPosition(mon.position.x, mon.position.y));
+        await win.setSize(new PhysicalSize(mon.size.width, mon.size.height));
+        log(`wide: reset to monitor ${mon.size.width}x${mon.size.height}`);
+      }
+    } catch {}
+  };
   // 오른쪽 패널 높이 → 지도 높이(머리글·칩·맵 선택·안내 줄 몫을 뺀다)
   useEffect(() => {
     const el = paneRef.current;
@@ -3772,10 +3856,10 @@ function App() {
         {/* Pinned: drop the drag-region attributes so the OS can't move the
             window via the header — that's the only move affordance in a
             borderless window. */}
-        <div className="header" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
-          <span className="title" data-tauri-drag-region={pinned || wideMode ? undefined : true}>{t.title}</span>
+        <div className="header" data-tauri-drag-region={pinned ? undefined : true}>
+          <span className="title" data-tauri-drag-region={pinned ? undefined : true}>{t.title}</span>
           <div className="header-actions">
-            <span className="hotkey" data-tauri-drag-region={pinned || wideMode ? undefined : true}>
+            <span className="hotkey" data-tauri-drag-region={pinned ? undefined : true}>
               {/* 키보드 바인딩은 키보드, 마우스 바인딩(휠·X1·X2)은 마우스 아이콘 — 전엔 i18n 문구에 🖱 가 들어 있었다 */}
               <span className="hotkey-icon" aria-hidden="true">
                 <Icon name={isMouseHotkey(hotkey) ? "mouse" : "keyboard"} />
@@ -6249,6 +6333,14 @@ function App() {
             onSize={() => {}}
             fill
           />
+          {!pinned && (
+            <div
+              className="card-resize-handle wide-resize-handle"
+              title={t.wideResizeHint}
+              onPointerDown={onWideResizeDown}
+              onDoubleClick={() => void resetWideRect()}
+            />
+          )}
         </div>
       )}
     </div>

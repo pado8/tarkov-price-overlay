@@ -1817,6 +1817,8 @@ html, body, #root {
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
 .wide-pane .radar-mapblock { flex: 1; min-height: 0; }
+/* 나란히 모드 창 크기 손잡이(패널 오른쪽 아래) — 카드 손잡이와 같은 모양, 지도 위에 얹힌다 */
+.wide-pane .wide-resize-handle { width: 18px; height: 18px; z-index: 6; }
 /* 지도 나란히 패널: 지도 왼쪽 + 대상 목록 오른쪽 열 */
 .radar-maprow { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
 .radar-maprow .radar-mapblock { flex: 1 1 auto; min-width: 0; }
