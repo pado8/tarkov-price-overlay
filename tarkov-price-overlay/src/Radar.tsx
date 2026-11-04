@@ -117,10 +117,12 @@ type Props = {
   onPickStory: (id: string) => void;
 };
 
+const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory }: Props) {
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
+  const [bigMe, setBigMe] = useState<boolean>(() => localStorage.getItem(BIGME_KEY) === "1");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
   // 표시 필터(PMC 탈출구·트랜짓·퀘스트 + 스캐브는 showScav) — 지도 칩과 목록이 한 상태를 쓴다
   const [layers, setLayers] = useState<Layers>(() => loadJson(LAYER_KEY, DEFAULT_LAYERS));
@@ -148,6 +150,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     if (!hiddenSet.has(id)) saveHidden([...hiddenQ, { id, name: x.story && x.objective ? `${x.name} · ${x.objective}` : x.name }]);
   };
   const restoreQuest = (id: string) => saveHidden(hiddenQ.filter((h) => h.id !== id));
+  const pickBigMe = (v: boolean) => {
+    setBigMe(v);
+    try {
+      localStorage.setItem(BIGME_KEY, v ? "1" : "0");
+    } catch {}
+  };
   const pickFixed = (v: boolean) => {
     setFixed(v);
     try {
@@ -254,6 +262,11 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       <input type="checkbox" checked={fixed} onChange={(e) => pickFixed(e.target.checked)} /> {t.radarFixed}
     </label>
   );
+  const bigMeCtl = (
+    <label className="radar-chk" title={t.radarBigMeHint}>
+      <input type="checkbox" checked={bigMe} onChange={(e) => pickBigMe(e.target.checked)} /> {t.radarBigMe}
+    </label>
+  );
 
   // 목록은 지도와 같은 필터: 탈출구(PMC/공용 = pmc 칩, 스캐브 = showScav)·트랜짓·퀘스트(+개별 숨김)
   const visible = data.targets.filter((x) =>
@@ -350,12 +363,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} />
           <div className="radar-side">{targetList}</div>
         </div>
       ) : (
         <>
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} />
           {targetList}
         </>
       )}
@@ -377,6 +390,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         {sizeCtl}
       </div>
       {fixedCtl}
+      {bigMeCtl}
       {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
       <details className="radar-help">
         <summary>{t.radarHelp}</summary>

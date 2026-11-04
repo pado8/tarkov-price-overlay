@@ -1796,6 +1796,9 @@ html, body, #root {
 .radar-warn { font-size: var(--card-fs-sm); color: var(--warning); }
 /* 내 위치 화살표: 어두운 지도 위에서 잘 보이게 밝은 초록 + 검은 테두리 + 빛(사용자 요청 10-28) */
 .radar-me { fill: #39ff14; stroke: #000; stroke-width: 1.4; filter: drop-shadow(0 0 3px rgba(57, 255, 20, 0.85)); }
+/* 내 위치 크게(11-04): 흰 테두리 + 초록 원 — 깜빡임 애니메이션은 게임 위 투명 창을 계속 다시 그리게 하므로 쓰지 않는다 */
+.radar-me.big { stroke: #fff; stroke-width: 2; }
+.radar-me-halo { fill: rgba(57, 255, 20, 0.16); stroke: rgba(255, 255, 255, 0.9); stroke-width: 1.5; pointer-events: none; }
 .radar-list { display: flex; flex-direction: column; gap: 3px; }
 .radar-row { display: grid; grid-template-columns: 8px 1fr auto 16px auto; align-items: start; gap: 6px; font-size: var(--card-fs-sm); }
 .radar-row > .radar-dot { margin-top: 5px; }
@@ -1826,6 +1829,7 @@ html, body, #root {
 .radar-maptools { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; }
 .radar-maptools button { font-size: var(--card-fs-xs); padding: 2px 7px; background: rgba(0, 0, 0, 0.65); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
 .radar-maptools button:hover { border-color: var(--gold-bright); }
+.radar-maptools button.on { border-color: var(--gold-bright); color: var(--gold-bright); background: rgba(60, 48, 10, 0.85); }
 .radar-mapscale { position: absolute; left: 6px; bottom: 4px; font-size: var(--card-fs-xxs); color: var(--text-muted); pointer-events: none; }
 .radar-layers { display: flex; flex-wrap: wrap; gap: 3px 4px; }
 /* 레이어 칩: 켜짐 = 색 점 + 밝은 글자, 꺼짐 = 흐리게 + 취소선(체크박스보다 좁아 미니맵 아래 한 줄에 들어간다) */

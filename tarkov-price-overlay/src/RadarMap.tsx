@@ -1,7 +1,7 @@
 // 전체 지도(미니맵). SVG 지도 그림(CC BY-NC-SA·치트 금지 조항)은 쓰지 않고
 // 사이드카 /radar/map 이 tarkov.dev API 좌표로 추린 점·윤곽만 찍는다.
 // 미니맵이라 PMC 탈출구·스캐브 탈출구·트랜짓·퀘스트 위치만(각각 켜고 끔). 잠긴 문·위험·상자·스폰은 데이터만 받아 두고 아직 안 그린다.
-// 미니맵 동작: 새 스크린샷이 오면 내 위치로 돌아오고(확대 배율은 유지), 확대 배율은 기억한다.
+// 미니맵 동작: 새 스크린샷이 오면 내 위치로 돌아오고(확대 배율은 유지), 확대 배율은 기억한다. 🔒 화면 잠금이면 보던 화면에 머문다(11-04).
 // 좌표계: 게임 x → 오른쪽, 게임 z → 위. 북쪽이 어디인지는 보장하지 않으므로(맵마다 다름) 사용자가 90°씩 돌릴 수 있고,
 // '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +12,7 @@ const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
 export const LAYER_KEY = "tarkov.radar.mapLayers";
 const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔
+const HOLD_KEY = "tarkov.radar.mapHold"; // "1" = 화면 잠금(새 스크린샷이 와도 보던 화면 유지)
 // tarkov.dev 층 이름 → 한국어(한국어 UI 일 때만)
 const FLOOR_KO: Record<string, string> = {
   "2nd Floor": "2층", "3rd Floor": "3층", "4th Floor": "4층", "5th Floor": "5층", "Second Level": "2층",
@@ -79,6 +80,7 @@ type Props = {
   size: number; // 지도 높이(px). 폭은 카드 폭을 따라간다
   fixed: boolean; // true = 지도 고정(↻ 90° 회전만) · false = 바라보는 쪽이 위
   highlightKey?: string | null; // 시세로 조회한 열쇠 아이템 id — 이 열쇠로 여는 문을 금색으로 강조(잠긴 문 레이어와 무관)
+  bigMe?: boolean; // 내 위치 크게(흰 테두리·초록 원) — 다른 표시와 헷갈린다는 요청 대응(11-04)
 };
 
 const cache = new Map<string, MapDoc>();
@@ -227,7 +229,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe }: Props) {
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
@@ -257,6 +259,19 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const dragRef = useRef<{ x: number; y: number; cx: number; cz: number; moved: boolean } | null>(null);
   const movedRef = useRef(false); // 끌고 난 뒤 따라오는 click 은 선택으로 치지 않는다
   const [dragging, setDragging] = useState(false);
+  // 화면 잠금(타르코프 도서관 '자동 이동 잠금' 벤치마킹 11-04): 퀘스트 목표 쪽을 보다가 스크린샷을 찍어도 화면이 내 위치로 튀지 않게
+  const [hold, setHold] = useState<boolean>(() => localStorage.getItem(HOLD_KEY) === "1");
+  const holdRef = useRef(hold);
+  holdRef.current = hold;
+  const toggleHold = () =>
+    setHold((h) => {
+      try {
+        localStorage.setItem(HOLD_KEY, h ? "0" : "1");
+      } catch {}
+      return !h;
+    });
+  // 직전에 보이던 화면(맵 id 와 함께). 새 스크린샷 효과보다 늦게 갱신돼야 '바뀌기 전' 화면이 남는다 — 아래 v 계산 뒤 효과에서 갱신
+  const lastVRef = useRef<{ slug: string | null; v: { cx: number; cz: number; s: number } | null } | null>(null);
 
   // 맵이 바뀌면 회전·보기 초기화
   useEffect(() => {
@@ -270,10 +285,16 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const myY = me?.y ?? 0;
   const heading = me?.heading ?? null;
 
-  // 새 스크린샷(위치가 바뀜) → 미니맵답게 내 위치로 돌아온다. 확대 배율(span)은 그대로
+  // 새 스크린샷(위치가 바뀜) → 미니맵답게 내 위치로 돌아온다. 확대 배율(span)은 그대로.
+  // 화면 잠금이면 보던 화면을 그대로 둔다 — 내 위치를 따라가던 중(view=null)이어도 바뀌기 전 화면에 고정. 맵이 바뀐 경우는 예외(옛 맵 좌표라 의미 없음)
   useEffect(() => {
-    setView(null);
-  }, [me?.x, me?.z]);
+    if (!holdRef.current) {
+      setView(null);
+      return;
+    }
+    const last = lastVRef.current;
+    setView((cur) => cur ?? (last && last.slug === slug ? last.v : null));
+  }, [me?.x, me?.z]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -291,6 +312,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     return { cx: me.x, cz: me.z, s: Math.min(box.w, box.h) / span };
   }, [me?.x, me?.z, box.w, box.h, span]); // eslint-disable-line react-hooks/exhaustive-deps
   const v = view ?? baseView;
+  useEffect(() => {
+    lastVRef.current = { slug, v };
+  });
 
   // 실제 회전(세계를 반시계로 eff 만큼): 고정이면 맵별 90° 값, 아니면 바라보는 쪽이 위.
   // toScreen 은 방위 β 인 대상을 화면 각 β − eff(위에서 시계 방향)에 놓으므로, 바라보는 쪽(β = heading)이 위(0)가 되려면 eff = heading.
@@ -634,16 +658,24 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {me && (() => {
               const s = toScreen(me.x, me.z);
               const h = heading == null ? null : heading - eff;
-              return h == null ? (
-                <circle cx={s.x} cy={s.y} r={6} className="radar-me" />
-              ) : (
-                <path d={`M ${s.x} ${s.y - 12} L ${s.x + 8} ${s.y + 8} L ${s.x} ${s.y + 4} L ${s.x - 8} ${s.y + 8} Z`} className="radar-me" transform={`rotate(${h} ${s.x} ${s.y})`} />
+              const k = bigMe ? 1.5 : 1;
+              const cls = `radar-me${bigMe ? " big" : ""}`;
+              return (
+                <g>
+                  {bigMe && <circle cx={s.x} cy={s.y} r={20} className="radar-me-halo" />}
+                  {h == null ? (
+                    <circle cx={s.x} cy={s.y} r={6 * k} className={cls} />
+                  ) : (
+                    <path d={`M ${s.x} ${s.y - 12 * k} L ${s.x + 8 * k} ${s.y + 8 * k} L ${s.x} ${s.y + 4 * k} L ${s.x - 8 * k} ${s.y + 8 * k} Z`} className={cls} transform={`rotate(${h} ${s.x} ${s.y})`} />
+                  )}
+                </g>
               );
             })()}
           </svg>
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
+          <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={toggleHold} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
           {view && <button type="button" onClick={centerMe} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
           <button type="button" onClick={fit} title={t.radarMapFit}>{t.radarMapFit}</button>
           {!headingUp && <button type="button" onClick={rotate} title={t.radarMapRotate} aria-label={t.radarMapRotate}><Icon name="rotate" /></button>}
