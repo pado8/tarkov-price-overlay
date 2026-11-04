@@ -245,6 +245,44 @@ QUEST_NOTES = {
         "두 발전기 목표는 요양원 한 번 방문으로 같이 끝낼 수 있습니다. 동관 220호를 먼저 보고 서관 2층으로 건너가면 됩니다.",
         "보상 달러는 정보 센터 1단계면 1,155달러, 2단계면 1,265달러로 늘어납니다.",
     ]},
+    # 11-04 2차: 서치콘솔 10-05~11-01 노출 100+ · 5~8위 쪽(가택 연금 232·패러디 209·악의 146·리저브 전문가 138·
+    # 거부할 수 없는 128·인체공학 127). 위키 원문=미디어위키 API(wikitext) Guide 절.
+    "House Arrest": {"rev": "2026-11-04", "lines": [
+        "실종된 일행이 갇혀 있던 곳은 타르코프 시내 체칸나야 15 아파트 건물 3층의 1번 감방입니다. 이 층은 서쪽 계단으로만 올라갈 수 있습니다.",
+        "감방 문은 Iron gate key로 열어야 합니다. 열쇠 없이는 첫 목표를 끝낼 수 없습니다.",
+        "채무자는 파인우드 호텔 북쪽 건물 2층 206호에 있습니다. 이 방은 열쇠가 필요 없습니다.",
+        "건네줄 체칸나야 15 아파트 열쇠는 인레이드 표시가 없어도 됩니다.",
+        "BEAR 진영은 같은 흐름의 짝 퀘스트 「채무자」(Debtor)를 받습니다.",
+    ]},
+    "Ill-Wisher": {"rev": "2026-11-04", "lines": [
+        "신호 발신지 두 곳은 해안선의 안테나입니다. 첫째는 요양원 서관 옥상, 둘째는 기상 관측소에 있습니다.",
+        "전파 방해기(Signal Jammer)는 2개가 필요하고 메카닉 LL1에서 살 수 있습니다.",
+        "두 곳 모두 안테나를 찾은 뒤 그 자리에 방해기를 설치해야 목표가 끝납니다.",
+    ]},
+    "Irresistible": {"rev": "2026-11-04", "lines": [
+        "분실된 무기 상자는 인터체인지 쇼핑몰 남서쪽 컨테이너 야적장의 빨간 컨테이너 안에 있습니다.",
+        "이 컨테이너를 열려면 발전소 전원을 켜 둔 상태에서 오브젝트 #21WS 키카드를 써야 합니다.",
+        "무기 상자는 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Is This a Reference?": {"rev": "2026-11-04", "lines": [
+        "Wi-Fi 카메라 27개를 8개 맵에 하나씩 설치합니다. 타르코프 시내 4곳, 그라운드 제로 3곳, 등대 4곳, 리저브 3곳, 세관 3곳, 공장 7곳, 삼림 1곳, 해안선 2곳입니다.",
+        "카메라는 메카닉 LL1 바터로 얻을 수 있고, Informed Means Armed 퀘스트를 받은 뒤에는 메카닉에게서 바로 살 수도 있습니다.",
+        "공장 사무실 3층의 잠긴 방(음모론자의 방)은 공장 비상구 열쇠로 엽니다. 공장 목표 중 열쇠가 필요한 곳은 여기뿐입니다.",
+        "타르코프 시내의 피자를 좋아하는 양서류들의 은신처는 Sewer River 탈출구 안쪽이라 대부분 탈출 구역에 걸립니다. 왼쪽 벽에 바짝 붙으면 탈출하지 않고 설치할 수 있는 좁은 자리가 있습니다.",
+        "공장의 하늘로 가는 계단은 Gate 3 탈출구 안에 있습니다. 세관은 6번 창고 2층 두 곳(남쪽 화장실과 북쪽)과 3층 기숙사 2층 212호입니다.",
+        "해안선은 서쪽 마을 동편 1번 집 안의 방(문을 부수고 들어가야 함)과 부두 사무실 건물 화장실입니다.",
+    ]},
+    "Passion for Ergonomics": {"rev": "2026-11-04", "lines": [
+        "맞춤 공구 세트는 세관 차고 단지의 11번 차고 안에 있습니다.",
+        "스폰 자리는 여러 곳입니다. 차 밑, 선반 아래 바닥, 차 뒤 바닥, 차 앞 바닥을 차례로 확인하세요.",
+        "공구 세트는 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Reserve Expert": {"rev": "2026-11-04", "lines": [
+        "열쇠는 방마다 따로 필요합니다. 동쪽 막사(블랙 폰) 4층 첫 번째 무기고만 철창문이 항상 열려 있습니다.",
+        "블랙 폰의 세 방은 모두 학교(블랙 비숍) 쪽 면에 있습니다. 3층 방은 RB-OB 열쇠, 2층 두 번째 무기고는 RB-ORB3 열쇠로 엽니다.",
+        "남쪽 막사(화이트 폰)의 두 방은 블랙 폰 쪽 면에 있습니다. 4층 첫 번째 무기고는 RB-ORB1 열쇠, 2층 두 번째 무기고는 RB-ORB2 열쇠로 엽니다.",
+        "건네줄 방탄복 3벌은 FORT Redut-M, FORT Defender-2, 6B43 Zabralo-Sh 중 아무거나 섞어도 되지만 인레이드여야 합니다.",
+    ]},
 }
 
 
@@ -1209,8 +1247,27 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
             f'<aside class="col-side">{"".join(sections_side)}</aside></div></article>')
     map_txt = ", ".join(ctx.map_name(m) for m in maps[:3]) or "모든 지역"
     title = f"{ko}{(' (' + en_label + ')') if en_label else ''} 퀘스트 공략 — {trn} · 목표·필요템·보상 | 타르코프(탈콥) 가이드"
-    desc = (f"타르코프 {trn} 퀘스트 '{ko}'({en}) 공략: 목표 {len(t.get('objectives') or [])}개, 필요 아이템·열쇠, 보상, "
-            f"받는 조건과 다음 퀘스트. 지역: {map_txt}. 데이터 기준 {ctx.stamp}.")
+    # 11-04: 설명을 틀 문장 대신 실제 공략 첫 줄로 시작한다(서치콘솔 6~9위 쪽 클릭률 2.8~4%).
+    # 손글 메모가 있으면 첫 줄, 없으면 필수 목표 문장 앞의 두 개.
+    nd = QUEST_NOTES.get(re.sub(r"\s*\[(?:PVP|PVE) ZONE\]\s*$", "", en or ""))
+    if nd:
+        lead = nd["lines"][0]
+    else:
+        objs_txt = []
+        for o in t.get("objectives") or []:
+            d = ctx.tk(o.get("description"), None)
+            if o.get("optional") or not d or d == o.get("description"):
+                continue
+            d = re.sub(r"\s+", " ", d).strip().rstrip(".")
+            if d not in objs_txt:
+                objs_txt.append(d)
+        lead = (" · ".join(objs_txt[:2]) + ".") if objs_txt else ""
+    if len(lead) > 120:
+        cut = lead[:118]
+        sp = cut.rfind(" ")
+        lead = (cut[:sp] if sp >= 80 else cut).rstrip(" ,·—") + "…"  # en/ru 단어 중간에서 끊지 않게
+    desc = (f"타르코프 {trn} 퀘스트 「{ko}」 공략: {lead} "
+            f"지역 {map_txt} · 필요템·열쇠·보상·다음 퀘스트 정리.")
     html_text = page(ctx, path=ctx.task_url(tid), title=title, desc=desc, body=body, nav="quests",
                      crumbs=[("퀘스트", "/guide/quests/"), (trn, f"/guide/quests/{trs}/"), (ko, None)], scripts=QUEST_JS)
     return ctx.task_url(tid), html_text
