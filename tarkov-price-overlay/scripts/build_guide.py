@@ -374,7 +374,8 @@ def main() -> int:
             tpl = tpl.replace(' · <a href="/privacy/">', ' · <a href="/about/">소개</a> · <a href="/privacy/">', 1)
         payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
         # 번역은 자리표시자를 채우기 전에(추출 때와 같은 구간이어야 표에 맞는다)
-        page = guide_static.localize_template(tpl, f"/guide/{name}/").replace("__DATA__", payload).replace("__STAMP__", stamp)
+        page = (guide_static.localize_template(tpl, f"/guide/{name}/").replace("__DATA__", payload).replace("__STAMP__", stamp)
+                .replace("__DONATE__", guide_static.donate_url()))  # 11-04 푸터 후원 링크(ko 카카오페이 / en·ru PayPal)
         dest = out_dir / name / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(page, encoding="utf-8")

@@ -84,10 +84,10 @@ def recovery_snippet(cid: str) -> str:
             'signalGooglefcPresent();})();</script>')
 
 
-AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫기, 방법 설명] — 페이지 언어 것만 심는다(en/ru 산출물에 한글 0)
-    "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "uBlock Origin: 주소창 옆 uBlock 아이콘 → 큰 전원 버튼(이 사이트에서 끄기) → 새로고침. 다른 차단 확장도 같은 방식으로 이 사이트만 꺼 주세요. 휴대폰·공유기의 광고 차단 DNS(AdGuard DNS 등)를 쓰면 그쪽에서 이 사이트를 허용해야 합니다."],
-    "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "uBlock Origin: click the uBlock icon next to the address bar → the big power button (disable on this site) → reload. Other blockers work the same way — turn them off for this site only. If you use an ad-blocking DNS on your phone or router (AdGuard DNS etc.), allow this site there."],
-    "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "uBlock Origin: нажмите значок uBlock рядом с адресной строкой → большую кнопку питания (отключить на этом сайте) → обновите страницу. Другие блокировщики отключаются так же — только для этого сайта. Если используете DNS с блокировкой рекламы на телефоне или роутере (AdGuard DNS и т. п.), разрешите этот сайт там."],
+AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫기, 방법 설명, 후원 버튼] — 페이지 언어 것만 심는다(en/ru 산출물에 한글 0)
+    "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "uBlock Origin: 주소창 옆 uBlock 아이콘 → 큰 전원 버튼(이 사이트에서 끄기) → 새로고침. 다른 차단 확장도 같은 방식으로 이 사이트만 꺼 주세요. 휴대폰·공유기의 광고 차단 DNS(AdGuard DNS 등)를 쓰면 그쪽에서 이 사이트를 허용해야 합니다.", "💛 광고 대신 후원으로 응원"],
+    "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "uBlock Origin: click the uBlock icon next to the address bar → the big power button (disable on this site) → reload. Other blockers work the same way — turn them off for this site only. If you use an ad-blocking DNS on your phone or router (AdGuard DNS etc.), allow this site there.", "💛 Support instead of ads"],
+    "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "uBlock Origin: нажмите значок uBlock рядом с адресной строкой → большую кнопку питания (отключить на этом сайте) → обновите страницу. Другие блокировщики отключаются так же — только для этого сайта. Если используете DNS с блокировкой рекламы на телефоне или роутере (AdGuard DNS и т. п.), разрешите этот сайт там.", "💛 Поддержать вместо рекламы"],
 }
 
 def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
@@ -98,9 +98,13 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             '#tgab .in{max-width:1100px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}#tgab b{color:#c8aa64}'
             '#tgab .sp{flex:1;min-width:200px}#tgab button{background:none;border:1px solid #3a352b;color:#e9e7e0;border-radius:8px;padding:5px 10px;'
             'font:inherit;font-size:12.5px;cursor:pointer}#tgab button.y{border-color:#c8aa64;color:#c8aa64}#tgab .how{display:none;width:100%;color:#9d988b;font-size:12.5px}'
-            '#tgab.open .how{display:block}#tgab button:disabled{opacity:.45;cursor:default}</style>'
+            '#tgab.open .how{display:block}#tgab button:disabled{opacity:.45;cursor:default}'
+            '#tgab a.d{border:1px solid #3a352b;color:#e0c98a;border-radius:8px;padding:5px 10px;font-size:12.5px;text-decoration:none}</style>'
             '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
-            '<button class="y" id="tgab-h"></button><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
+            # 11-04: 광고를 끈 사람에게 '광고 대신 후원' 선택지 — 앱 후원 패널과 같은 주소(ko 카카오페이 / en·ru PayPal)
+            '<button class="y" id="tgab-h"></button><a class="d" id="tgab-d" target="_blank" rel="noopener" href="'
+            + ("https://qr.kakaopay.com/Ej8AkkdEJ" if lang == "ko" else "https://paypal.me/tarkovoverlay")
+            + '"></a><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
             '<script>(function(){var P=location.pathname;'
             'var T=' + json.dumps(AB_TEXT.get(lang) or AB_TEXT["ko"], ensure_ascii=False) + ';'
             # 11-04 사용자 결정: 닫기는 그 방문(세션)에만 — 새로 들어오면 다시 뜬다(예전 7일 숨김 값은 지운다).
@@ -120,6 +124,7 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             "function filled(){return !!document.querySelector('ins.adsbygoogle[data-ad-status=\"filled\"]');}"
             'function show(){var el=document.getElementById("tgab");if(!el||sg(K))return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
             'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
+            'var dl=document.getElementById("tgab-d");dl.textContent=T[5];dl.onclick=function(){try{if(window.gtag)gtag("event","donate_click",{donate_loc:"adblock_bar",page_path:P});}catch(e){}};'
             'var hw=0;document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");if(!hw++)ev("adblock_how");};'
             # 닫기는 5초 뒤에 켜진다(남은 초를 버튼에 표시)
             'var x=document.getElementById("tgab-x"),c=5;x.disabled=true;x.textContent=T[3]+" ("+c+")";'

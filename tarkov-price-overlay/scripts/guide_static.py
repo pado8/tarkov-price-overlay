@@ -373,6 +373,14 @@ def fmt_dur(sec) -> str:
 # '아래 중 아무거나' 후보가 이보다 많으면 접힌 목록도 만들지 않는다(chips_alt) — 페이지 크기 방어
 ALT_LIST_MAX = 120
 
+# 11-04 후원 링크(앱 후원 패널과 같은 주소) — 한국어판은 카카오페이, 영어·러시아어판은 PayPal
+DONATE_KO = "https://qr.kakaopay.com/Ej8AkkdEJ"
+DONATE_INTL = "https://paypal.me/tarkovoverlay"
+
+
+def donate_url() -> str:
+    return DONATE_KO if LANG == "ko" else DONATE_INTL
+
 
 @dataclass
 class Ctx:
@@ -809,7 +817,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 {body}
 <div class="cta"><span>레이드 중 아이템에 마우스 올리고 <b>F2 한 번</b> — 시세·퀘스트·은신처에 필요한지 바로 확인</span><a class="btn" href="/?src=guide">무료 시세 오버레이 받기</a></div>
 </main>
-<footer><div class="wrap">게임 데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터(기준 {e(ctx.stamp)}) · 설명 문구는 <a href="https://escapefromtarkov.fandom.com/" rel="noopener">공식 위키</a>와 패치 노트를 참고해 직접 정리 · 체크 표시는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a> · <a href="/status/">서비스 상태</a> · <a href="/about/">소개</a> · <a href="/privacy/">개인정보처리방침</a> · <a href="/">타르코프 시세 오버레이</a></div></footer>
+<footer><div class="wrap">게임 데이터: <a href="https://tarkov.dev" rel="noopener">tarkov.dev</a> 공개 데이터(기준 {e(ctx.stamp)}) · 설명 문구는 <a href="https://escapefromtarkov.fandom.com/" rel="noopener">공식 위키</a>와 패치 노트를 참고해 직접 정리 · 체크 표시는 이 브라우저에만 저장 · <a href="/guide/">가이드 홈</a> · <a href="/status/">서비스 상태</a> · <a href="/about/">소개</a> · <a href="/privacy/">개인정보처리방침</a> · <a href="/">타르코프 시세 오버레이</a> · <a href="{donate_url()}" target="_blank" rel="noopener" onclick="try{{gtag('event','donate_click',{{donate_loc:'guide_footer'}})}}catch(e){{}}">💛 개발자 응원하기</a></div></footer>
 <script src="/guide/sync.js" defer></script>
 <script src="/guide/search.js" defer></script>
 {scripts}
