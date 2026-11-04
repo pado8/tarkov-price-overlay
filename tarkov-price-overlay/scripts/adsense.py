@@ -29,6 +29,13 @@ AB_RE = re.compile(re.escape(AB_START) + r".*?" + re.escape(AB_END) + r"\n?", re
 # 구글 공식 '광고 차단 복구' 태그(애드센스 → 개인정보보호 및 메시지 → 광고 차단 복구에서 메시지를 '게시'한 뒤에만 의미 있음).
 # scripts/adblock_recovery.txt 가 "on" 이면 <head> 에 넣는다. 메시지 미게시 상태에서 넣어도 해는 없지만 아무것도 안 뜬다.
 RECOVERY_FILE = ROOT / "scripts" / "adblock_recovery.txt"
+# 우리 안내 바 스위치(2026-11-04 사용자 결정: 끔 — Google '광고 차단 복구' 메시지로 대신한다). "on" 일 때만 넣고,
+# 복구 태그가 켜져 있으면 "on" 이어도 넣지 않는다(같은 요청을 두 번 받지 않게). 파일이 없으면 끔.
+BAR_FILE = ROOT / "scripts" / "adblock_bar.txt"
+
+
+def bar_on() -> bool:
+    return BAR_FILE.exists() and BAR_FILE.read_text(encoding="utf-8").strip().lower() == "on" and not recovery_on()
 CLIENT_RE = re.compile(r"^ca-pub-\d{10,20}$")
 
 
@@ -119,6 +126,7 @@ def _place(t: str, rx: "re.Pattern[str]", new: str, anchor: str) -> str:
 def apply() -> tuple[int, str | None]:
     cid = client_id()
     rec = recovery_on()
+    bar = bar_on()
     changed = 0
     for f in LANDING.rglob("*.html"):
         s = f.read_text(encoding="utf-8")
@@ -126,7 +134,7 @@ def apply() -> tuple[int, str | None]:
             t = _place(s, BLOCK_RE, snippet(cid, rec), "</head>")
             rel = f.relative_to(LANDING).as_posix()
             lang = "en" if rel.startswith("guide/en/") else "ru" if rel.startswith("guide/ru/") else "ko"
-            t = _place(t, AB_RE, adblock_snippet(lang), "</body>") if "</body>" in t else AB_RE.sub("", t)
+            t = _place(t, AB_RE, adblock_snippet(lang), "</body>") if bar and "</body>" in t else AB_RE.sub("", t)
         else:
             t = AB_RE.sub("", BLOCK_RE.sub("", s))
         if t != s:
@@ -149,5 +157,5 @@ def apply() -> tuple[int, str | None]:
 
 if __name__ == "__main__":
     n, cid = apply()
-    print(f"[adsense] {'게시자 ' + cid if cid else '끔(ID 없음)'} · 바뀐 페이지 {n}개 · ads.txt {'있음' if cid else '없음'} · 애드블록 안내 {'있음' if cid else '없음'} · 복구 태그 {'on' if recovery_on() else 'off'}")
+    print(f"[adsense] {'게시자 ' + cid if cid else '끔(ID 없음)'} · 바뀐 페이지 {n}개 · ads.txt {'있음' if cid else '없음'} · 애드블록 안내 {'있음' if cid and bar_on() else '없음'} · 복구 태그 {'on' if recovery_on() else 'off'}")
     sys.exit(0)
