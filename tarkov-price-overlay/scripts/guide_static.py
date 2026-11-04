@@ -283,7 +283,70 @@ QUEST_NOTES = {
         "남쪽 막사(화이트 폰)의 두 방은 블랙 폰 쪽 면에 있습니다. 4층 첫 번째 무기고는 RB-ORB1 열쇠, 2층 두 번째 무기고는 RB-ORB2 열쇠로 엽니다.",
         "건네줄 방탄복 3벌은 FORT Redut-M, FORT Defender-2, 6B43 Zabralo-Sh 중 아무거나 섞어도 되지만 인레이드여야 합니다.",
     ]},
+    # 11-04 3차: 도살자 130·동호회 108·오디오 애호가(검색어 60)·도시 약품(검색어 59, 9.3위)·항공 우편 41
+    "The Tarkov Butcher": {"rev": "2026-11-04", "lines": [
+        "화학 물질 컨테이너는 그라운드 제로 지하에 있는 트럭 트레일러 안에 있습니다.",
+        "숨길 곳은 타르코프 시내 내무부 아카데미 앞입니다. 목표 문구에는 경찰서 옆으로 적혀 있습니다.",
+        "이 퀘스트 아이템은 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Hobby Club": {"rev": "2026-11-04", "lines": [
+        "AK-50 본체는 은신처 작업대 3단계에서 직접 제작합니다. 퀘스트를 받으면 제작법이 열립니다.",
+        "핸드가드는 이 퀘스트를 받으면 열리는 「공정 가격」(Fair Price) 퀘스트 줄의 파트 2에서 얻고, 인레이드여야 합니다.",
+        "AK-50 총열은 리저브에서 K 표시가 붙은 창고 건물 중 6번 또는 4번 안에 있습니다.",
+        "더스트 커버는 세관 군 검문소 망루 2층의 안락의자 위에 있습니다.",
+        "네 부품은 모두 세관 새 주유소 남서쪽 언덕 위 오두막 안의 파란 사물함에 숨깁니다.",
+        "이 퀘스트 아이템은 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Audiophile": {"rev": "2026-11-04", "lines": [
+        "음악가들의 모임 장소는 타르코프 시내 프리모르스키 48번지 아파트 4층 10호의 음악실입니다.",
+        "옆 건물 프리모르스키 46번지 계단에서 구름다리로 건너가야 하고, 그 문은 프리모르스키 46-48번지 구름다리 열쇠로 엽니다. 나갈 때는 10호 현관문을 안쪽에서 부수고 나갈 수 있습니다.",
+        "기타 피크는 음악실과 옆 침실에 스폰 자리가 10곳입니다. 작고 방이 어두우니 손전등을 챙기세요.",
+        "음악실 6곳: 들어가서 왼쪽 바닥 책 더미의 노란 책 위(엎드려야 보임), 드럼 옆 오른쪽 스피커 위, 드럼 앞 바닥의 파란 컵 안, 작은 금속 선반의 라디오 옆, 연필이 놓인 책상 위, 발코니 근처 큰 선반의 상자 옆.",
+        "침실 4곳: 들어가서 오른쪽 벽과 소포 사이 바닥, 옷장 옆 오른쪽 선반의 다리미 옆, 침대 왼쪽 협탁 맨 아래 칸, 창가 화장대 위.",
+        "이 퀘스트 아이템은 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Urban Medicine": {"rev": "2026-11-04", "lines": [
+        "화학 실험실은 타르코프 시내 LexOs 자동차 정비소의 차고 안에 있습니다.",
+        "LexOs 대리점 부지에는 클레이모어 지뢰가 많이 깔려 있으니 조심하세요.",
+        "보관함 스폰 자리는 10곳입니다. 왼쪽 첫 침대 밑, 왼쪽 첫 선반의 위아래 칸과 그 옆 시체 밑, 왼쪽 두 번째 선반 옆, 안쪽 카트 밑, 장기 운반 상자가 있는 오른쪽 침대 밑 두 곳, 오른쪽 안쪽 구석의 주황·검정 상자 사이와 상자 뒤.",
+        "이 퀘스트 아이템은 퀘스트를 받은 상태에서만 나타나고, 줍는 즉시 퀘스트 아이템 칸으로 들어갑니다. 탈출에 실패하면 잃습니다.",
+    ]},
+    "Airmail": {"rev": "2026-11-04", "lines": [
+        "삼림 동쪽의 옛 제재소 한가운데에서 빨간 신호탄을 하늘로 쏴야 합니다. 새 제재소가 아니라 옛 제재소입니다.",
+        "신호탄이 일정 높이까지 올라가지 않으면 목표가 끝나지 않습니다. 손에 드는 RSP-30은 위로 향하되 너무 뒤로 젖히면 등 뒤로 떨어집니다.",
+        "RSP-30 빨간 신호탄은 메카닉이 게임 안 우편으로 줍니다. 대신 레프 LL3에서 파는 26x75mm 빨간 신호탄을 신호권총으로 쏴도 됩니다.",
+    ]},
 }
+
+# 맵 공략 메모 — QUEST_NOTES 와 같은 규칙(공식 위키 대조·사실만, 문장마다 guide_i18n en/ru 번역 필수). 키=맵 slug.
+# 11-04: 쇄빙선 노출 272·8위 — 입장 방법·보험·보스 자리가 데이터에 없다.
+MAP_NOTES = {
+    "icebreaker": {"rev": "2026-11-04", "lines": [
+        "처음에는 등대나 해안선 부두의 트랜짓으로만 들어갈 수 있고, 그 전에 스토리 챕터 Boreas에서 이 맵을 열어야 합니다. 트랜짓을 타려면 Sudak-Tudak 선박 수리 키트가 필요합니다.",
+        "「계획 고수」(Stick to It) 퀘스트 줄을 끝내면 맵 선택 화면에서 바로 들어갈 수 있습니다. 이때도 선박 수리 키트는 필요합니다.",
+        "이 맵에 두고 온 보험 아이템은 돌아오지 않습니다.",
+        "웨지(The Wedge)는 3층 체육관에서 호위 3~6명과 함께, 나이트(Knight)는 0층에서 로그 호위 2명과 함께 나옵니다. 블랙 디비전과 웨지 호위의 수는 레이드 인원에 따라 달라집니다.",
+        "PMC 탈출구는 헬기 하나뿐입니다. 신호탄 구역 안에서 초록 신호탄을 하늘로 쏴야 하고, 충분히 높이 올라가지 않으면 헬기가 오지 않습니다.",
+    ]},
+}
+
+
+def _lead_cut(s: str, n: int = 120) -> str:
+    """검색 결과 설명 첫머리용 — n자 넘으면 단어 경계에서 자르고 … (en/ru 단어 중간에서 끊지 않게)."""
+    if len(s) <= n:
+        return s
+    cut = s[: n - 2]
+    sp = cut.rfind(" ")
+    return (cut[:sp] if sp >= n * 2 // 3 else cut).rstrip(" ,·—") + "…"
+
+
+def map_notes_html(slug: str) -> str:
+    d = MAP_NOTES.get(slug or "")
+    if not d:
+        return ""
+    lis = "".join(f"<li>{e(x)}</li>" for x in d["lines"])
+    return (f'<section class="box"><h2>공략 메모</h2><ul class="plain">{lis}</ul>'
+            f'<p class="small muted">공식 위키 공략 절과 대조해 정리 ({e(d["rev"])}). 패치로 바뀌었으면 피드백으로 알려 주세요.</p></section>')
 
 
 def quest_notes_html(en_name: str) -> str:
@@ -1262,10 +1325,7 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
             if d not in objs_txt:
                 objs_txt.append(d)
         lead = (" · ".join(objs_txt[:2]) + ".") if objs_txt else ""
-    if len(lead) > 120:
-        cut = lead[:118]
-        sp = cut.rfind(" ")
-        lead = (cut[:sp] if sp >= 80 else cut).rstrip(" ,·—") + "…"  # en/ru 단어 중간에서 끊지 않게
+    lead = _lead_cut(lead)
     desc = (f"타르코프 {trn} 퀘스트 「{ko}」 공략: {lead} "
             f"지역 {map_txt} · 필요템·열쇠·보상·다음 퀘스트 정리.")
     html_text = page(ctx, path=ctx.task_url(tid), title=title, desc=desc, body=body, nav="quests",
@@ -2588,6 +2648,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
             + (f'<p class="small muted">{e(desc_ko)}</p>' if desc_ko else "")
             + f'<section class="box"><h2>기본 정보</h2><table class="kv">{"".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in rows)}'
             + (f"<tr><th>등장 적</th><td class=small>{enemies}</td></tr>" if enemies else "") + "</table></section>"
+            + map_notes_html(slug)
             + (('<section class="box"><h2>보스</h2>'
                 + (event_note("감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.") if (has_event_mob and not is_event_map) else "")
                 + '<div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
@@ -2600,6 +2661,9 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     boss_names = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or []))
     title = f"타르코프 {name} 공략 정보 — 탈출구·보스·퀘스트 {len(qs)}개 | 탈콥 가이드"
     desc = f"타르코프 {name}({en_name}) 맵 정보: 레이드 {m.get('raidDuration')}분, {m.get('players')}명, 보스 {boss_names or '없음'}, 탈출구 {len(m.get('extracts') or [])}개, 트랜짓, 이 맵 퀘스트 {len(qs)}개. 데이터 기준 {ctx.stamp}."
+    if slug in MAP_NOTES:  # 11-04: 메모가 있는 맵은 공략 첫 줄로 시작(퀘스트 쪽과 같은 이유)
+        nm = name if (not en_name or en_name == name) else f"{name}({en_name})"  # en 판은 이름이 두 번 나오지 않게
+        desc = f"타르코프 {nm} 맵 공략: {_lead_cut(MAP_NOTES[slug]['lines'][0])} 보스 {boss_names or '없음'} · 탈출구 · 퀘스트 {len(qs)}개 정리."
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="maps", crumbs=[("맵", "/guide/maps/"), (name, None)])
 
 
