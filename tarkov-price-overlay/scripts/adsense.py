@@ -92,18 +92,24 @@ AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫�
 
 def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
     """경량 감지 + 정중한 안내 바. adsbygoogle.js 가 안 실렸거나(스크립트 차단) 미끼 요소가 숨겨지면(코스메틱 필터) 하단에 한 줄.
-    닫으면 7일 숨김(localStorage). GA4 가 있으면 adblock_on 이벤트 1회. 콘텐츠를 가리거나 막지 않는다."""
+    닫기는 5초 뒤에 켜지고, 닫으면 그 세션만 숨김(sessionStorage). GA4 이벤트는 스크립트 안 주석 참고. 콘텐츠를 가리거나 막지 않는다."""
     return (AB_START + '<style>#tgab{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#1f1f19;border-top:1px solid #3a352b;'
             'color:#e9e7e0;font-size:13.5px;line-height:1.5;padding:10px 14px;display:none;box-shadow:0 -6px 20px rgba(0,0,0,.35)}'
             '#tgab .in{max-width:1100px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}#tgab b{color:#c8aa64}'
             '#tgab .sp{flex:1;min-width:200px}#tgab button{background:none;border:1px solid #3a352b;color:#e9e7e0;border-radius:8px;padding:5px 10px;'
             'font:inherit;font-size:12.5px;cursor:pointer}#tgab button.y{border-color:#c8aa64;color:#c8aa64}#tgab .how{display:none;width:100%;color:#9d988b;font-size:12.5px}'
-            '#tgab.open .how{display:block}</style>'
+            '#tgab.open .how{display:block}#tgab button:disabled{opacity:.45;cursor:default}</style>'
             '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
             '<button class="y" id="tgab-h"></button><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
             '<script>(function(){var P=location.pathname;'
             'var T=' + json.dumps(AB_TEXT.get(lang) or AB_TEXT["ko"], ensure_ascii=False) + ';'
-            'var K="tg_adblk_hide";try{if(+localStorage.getItem(K)>Date.now())return;}catch(e){}'
+            # 11-04 사용자 결정: 닫기는 그 방문(세션)에만 — 새로 들어오면 다시 뜬다(예전 7일 숨김 값은 지운다).
+            # GA4 이벤트: adblock_on(세션 1번) · adblock_how · adblock_close · adblock_allowed(이 세션에 바를 본 뒤 차단을 풀고 다시 열었을 때).
+            # uBlock 은 GA4 도 막으므로 adblock_on 은 GA 를 안 막는 차단기(AdBlock 등)만 잡히는 하한값이다. 반대로 adblock_allowed 는 차단을 푼 뒤라 GA 가 살아 있어 잡힌다.
+            'var K="tg_adblk_s";function sg(k){try{return sessionStorage.getItem(k);}catch(e){return null;}}function ss(k){try{sessionStorage.setItem(k,"1");}catch(e){}}'
+            'function ev(n){try{if(window.gtag)gtag("event",n,{page_path:P});}catch(e){}}'
+            'try{localStorage.removeItem("tg_adblk_hide");}catch(e){}'
+            'function ok(){if(sg("tg_adblk_seen")&&!sg("tg_adblk_ok")){ss("tg_adblk_ok");ev("adblock_allowed");}}'
             'function bait(){var b=document.createElement("div");b.className="ad adsbox ad-placement textads banner-ads";b.style.cssText="position:absolute;left:-9999px;top:0;height:10px;width:10px";b.innerHTML="&nbsp;";document.body.appendChild(b);'
             'var hid=b.offsetHeight===0||getComputedStyle(b).display==="none";b.parentNode.removeChild(b);return hid;}'
             'function scriptOk(){return !!(window.adsbygoogle&&window.adsbygoogle.loaded);}'
@@ -112,14 +118,17 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             # 보조 모드는 adsbygoogle.loaded 를 믿지 않는다 — uBlock Origin 은 광고 스크립트를 가짜(googlesyndication_adsbygoogle.js)로
             # 바꿔 끼우고 그 가짜가 loaded:true 를 세워 차단 감지를 속인다(11-04 사용자 실측: uBO 에서 바가 안 뜸). 대신 광고가 실제로 채워졌는지 본다
             "function filled(){return !!document.querySelector('ins.adsbygoogle[data-ad-status=\"filled\"]');}"
-            'function show(){var el=document.getElementById("tgab");if(!el)return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
-            'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-x").textContent=T[3];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
-            'document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");};'
-            'document.getElementById("tgab-x").onclick=function(){el.style.display="none";try{localStorage.setItem(K,String(Date.now()+7*864e5));}catch(e){}};'
-            'try{if(window.gtag)gtag("event","adblock_on",{page_path:P});}catch(e){}}'
+            'function show(){var el=document.getElementById("tgab");if(!el||sg(K))return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
+            'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
+            'var hw=0;document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");if(!hw++)ev("adblock_how");};'
+            # 닫기는 5초 뒤에 켜진다(남은 초를 버튼에 표시)
+            'var x=document.getElementById("tgab-x"),c=5;x.disabled=true;x.textContent=T[3]+" ("+c+")";'
+            'var iv=setInterval(function(){if(--c<=0){clearInterval(iv);x.disabled=false;x.textContent=T[3];}else{x.textContent=T[3]+" ("+c+")";}},1000);'
+            'x.onclick=function(){el.style.display="none";ss(K);ev("adblock_close");};'
+            'if(!sg("tg_adblk_seen")){ss("tg_adblk_seen");ev("adblock_on");}}'
             # 2026-11-04 '차단을 껐는데도 안내가 뜬다' 제보: 예전엔 로드 2.5초 뒤 한 번만 봐서 느린 회선에서 스크립트가 늦게 실리면
             # 차단으로 오판할 수 있었다 → 미끼가 숨겨지면 바로, 스크립트는 1초 간격으로 최대 10번 기다린 뒤에만 '차단'.
-            'window.addEventListener("load",function(){var n=0;setTimeout(function tick(){' + ("if(fcOk()||filled())return;" if fallback else "if(n===0&&bait()){show();return;}if(scriptOk())return;") + 'if(++n>=10){show();return;}setTimeout(tick,1000);},1500);});})();</script>' + AB_END + "\n")
+            'window.addEventListener("load",function(){var n=0;setTimeout(function tick(){' + ("if(fcOk()||filled()){ok();return;}" if fallback else "if(n===0&&bait()){show();return;}if(scriptOk()){ok();return;}") + 'if(++n>=10){show();return;}setTimeout(tick,1000);},1500);});})();</script>' + AB_END + "\n")
 
 
 def ad_page(f: Path) -> bool:
