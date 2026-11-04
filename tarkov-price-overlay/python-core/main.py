@@ -1400,8 +1400,16 @@ def progress(game_mode: str | None = None) -> dict:
     for qid, status in st.items():
         if status in by:
             by[status].append(qid)
+    # 게임 로그 폴더를 찾았는가 — 못 찾으면 완료 목록이 비어 있어도 '연동 성공'처럼 보이므로 사이트가 경고를 띄운다(11-04)
+    try:
+        import quest_tracker as qt
+        _inst = tracker._effective_install_path()
+        log_ok = bool(_inst) and bool(qt._list_log_folders(_inst))
+    except Exception:  # noqa: BLE001
+        log_ok = False
     return {
         "ok": True,
+        "log_ok": log_ok,
         "mode": mode,
         "mode_source": mode_source,
         "app_mode": _load_app_mode(),

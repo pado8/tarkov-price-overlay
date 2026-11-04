@@ -2959,19 +2959,24 @@ function App() {
   // 가이드 사이트를 진행도와 함께 연다. 사이트의 sync.js 가 주소 해시(#sync=base64 JSON)를 읽어 완료 퀘스트를
   // 반영하므로, 브라우저가 127.0.0.1 접근을 막는 환경에서도 연동이 된다. 실패하면 그냥 가이드만 연다.
   const openGuideWithProgress = async () => {
-    let hash = "";
+    // 11-04: 진행도를 못 읽으면 #sync-fail=<이유> 로 열어 사이트가 GA4(sync_fail_hash)로 센다 — 전엔 그냥 열려 실패가 안 보였다
+    let hash = "#sync-fail=sidecar";
     try {
       const r = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(questDisplayMode)}`);
       if (r.ok) {
         const p = await r.json();
-        const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0 };
+        const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0, log_ok: p.log_ok };
         const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        hash = `#sync=${encodeURIComponent(b64)}`;
+        // 윈도우 명령줄(브라우저 실행) 한도 32,767자 아래로 — 넘으면 사이트의 직접 읽기(버튼)로 연동하게 둔다
+        hash = b64.length < 30000 ? `#sync=${encodeURIComponent(b64)}` : "#sync-fail=too_long";
+      } else {
+        hash = `#sync-fail=http_${r.status}`;
       }
     } catch {
-      // 사이드카가 없으면 진행도 없이 연다
+      // 사이드카가 없으면 진행도 없이 연다(hash = sidecar)
     }
-    openUrl(`${GUIDE_URL}items/${hash}`).catch((e) => {
+    // UI 언어별 가이드(en/ru 앱이 한국어 가이드를 열던 것, 11-04) + src=app 표식
+    openUrl(`${guideBase(region.lang)}items/?src=app${hash}`).catch((e) => {
       log(`guide: openUrl failed — ${String(e)}`);
     });
   };
