@@ -155,7 +155,7 @@ def localize_template(html_text: str, path: str) -> str:
 def localize_html(html_text: str) -> str:
     """en/ru 판: 내부 /guide/ 링크를 /guide/<lang>/ 로 바꾼다(자산 파일 제외)."""
     import re as _re
-    assets = ("/guide/guide.css", "/guide/gunsmith.json")  # sync.js 는 언어판마다 번역본이 /guide/<lang>/sync.js 에 따로 있다
+    assets = ("/guide/guide.css", "/guide/gunsmith.json", "/guide/noicon.svg")  # sync.js 는 언어판마다 번역본이 /guide/<lang>/sync.js 에 따로 있다
 
     def _href(m):
         url = m.group(2)
@@ -737,7 +737,7 @@ class Ctx:
                 "n": self._loc(self.loc_items, it.get("name"), en),
                 "en": en,
                 "s": self._loc(self.loc_items, it.get("shortName"), self._loc(self.loc_items_en, it.get("shortName"), "")),
-                "img": it.get("iconLink") or it.get("gridImageLink"),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
+                "img": icon_url(it.get("iconLink"), it.get("gridImageLink")),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
                 "pvp": it.get("avg24hPrice"),
                 "pve": pv.get("avg24hPrice"),
                 "wiki": it.get("wikiLink"),
@@ -747,7 +747,7 @@ class Ctx:
             qi = self.quest_items.get(iid)
             if qi:
                 info = {"id": iid, "n": self.tk(f"{iid} Name", iid), "en": self._loc(self.loc_tasks_en, f"{iid} Name", ""),
-                        "s": self.tk(f"{iid} ShortName", ""), "img": qi.get("iconLink") or qi.get("gridImageLink"),
+                        "s": self.tk(f"{iid} ShortName", ""), "img": icon_url(qi.get("iconLink"), qi.get("gridImageLink")),
                         "quest": True, "desc": self.tk(f"{iid} Description", "")}
             elif iid in MISSING_ITEMS:
                 nm = MISSING_ITEMS[iid]
@@ -948,6 +948,18 @@ class Ctx:
 # ─────────────────────────────────────────────────────────────
 
 # 상단 검색창 자리(search.js 가 채운다) — 미리 두어야 늦게 끼워 넣을 때 휴대폰 헤더가 밀리지 않는다(11-04 점검 CLS)
+# tarkov.dev 가 아직 그림을 안 만든 새 아이템은 아이콘 주소가 unknown-item-*.jpg(거의 검은 칸)로 온다 → 가이드 중립 아이콘으로.
+# 진짜 그림이 생기면 다음 빌드에서 자동으로 그쪽을 쓴다. 위키 그림은 봇 차단(Cloudflare 확인 화면)이라 받지 않는다(11-04).
+NOICON = "/guide/noicon.svg"
+
+
+def icon_url(*urls):
+    for u in urls:
+        if u and "unknown-item" not in u:
+            return u
+    return NOICON
+
+
 OG_IMAGE = {"ko": "og.png", "en": "og-en.png", "ru": "og-ru.png"}  # 언어판 공유 미리보기 그림(11-04: en/ru 도 한국어 그림을 쓰던 것)
 GSEARCH_SLOT = '<div class="gsearch" role="search"><input type="search" autocomplete="off" aria-label="검색" /></div>'
 
@@ -2663,7 +2675,7 @@ def prestige_page(ctx: Ctx) -> tuple[str, str]:
                 rwp.append(", ".join(f'{e(ctx.trader_name(x.get("trader")))} 평판 +{x.get("standing")}' for x in rw["traderStanding"]))
             tf = (p.get("transferSettings") or [{}])[0] or {}
             carry = f'{tf.get("gridWidth")}×{tf.get("gridHeight")}칸' if tf.get("gridWidth") else "—"
-            img = f'<img src="{e(p.get("iconLink"))}" alt="" width="40" height="40" loading="lazy" />' if p.get("iconLink") else ""
+            img = f'<img src="{e(icon_url(p.get("iconLink")))}" alt="" width="40" height="40" loading="lazy" />' if p.get("iconLink") else ""
             rows.append(f'<tr><td class="n">{img}<br><b>{p.get("prestigeLevel")}</b></td><td><ul class="plain">{conds}</ul></td>'
                         f'<td>{"<br>".join(rwp) or "—"}</td><td class="n small">{carry}</td></tr>')
         if rows:

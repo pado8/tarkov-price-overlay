@@ -4,7 +4,7 @@
 "d": "2026-11-04"
 },
 "/guide/ammo/": {
-"h": "c0018b66f53eeea1",
+"h": "226844e23b91a305",
 "d": "2026-11-04"
 },
 "/guide/bosses/": {
@@ -12,7 +12,7 @@
 "d": "2026-11-04"
 },
 "/guide/crafts/": {
-"h": "a037035f14c8034a",
+"h": "cbde09e0105c032f",
 "d": "2026-11-04"
 },
 "/guide/en/": {
@@ -20,7 +20,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/ammo/": {
-"h": "4980edba01dc8b30",
+"h": "98c9c3650b0635e6",
 "d": "2026-11-04"
 },
 "/guide/en/bosses/": {
@@ -28,15 +28,15 @@
 "d": "2026-11-04"
 },
 "/guide/en/crafts/": {
-"h": "426bc3ee48c0c269",
+"h": "4eb347ce9ace85c8",
 "d": "2026-11-04"
 },
 "/guide/en/event/": {
-"h": "3c92ce21e68eab94",
+"h": "ecea015569a18d94",
 "d": "2026-11-04"
 },
 "/guide/en/gunsmith/": {
-"h": "cd47a5f604b0eed5",
+"h": "5df2ffb795a173d2",
 "d": "2026-11-04"
 },
 "/guide/en/hideout/": {
@@ -148,11 +148,11 @@
 "d": "2026-11-04"
 },
 "/guide/en/hunt/": {
-"h": "42312315d502f029",
+"h": "04856996ee4eadc7",
 "d": "2026-11-04"
 },
 "/guide/en/items/": {
-"h": "24a04cae10aca016",
+"h": "7822533f295f7214",
 "d": "2026-11-04"
 },
 "/guide/en/kappa/": {
@@ -236,7 +236,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/prestige/": {
-"h": "fed838f8a154ca8c",
+"h": "3c676e42f9630ae6",
 "d": "2026-11-04"
 },
 "/guide/en/promo/": {
@@ -244,7 +244,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest-items/": {
-"h": "3f7a7c04645efc33",
+"h": "f502128846485115",
 "d": "2026-11-04"
 },
 "/guide/en/quest/a-big-loss-usec/": {
@@ -708,7 +708,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/district-patrol/": {
-"h": "01bffbee134d94d0",
+"h": "fcced186685d652b",
 "d": "2026-11-04"
 },
 "/guide/en/quest/documents/": {
@@ -1420,7 +1420,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/peacekeeping-mission/": {
-"h": "cdb225408e9507d6",
+"h": "c40ea8fa30f00cb3",
 "d": "2026-11-04"
 },
 "/guide/en/quest/perfect-mediator/": {
@@ -1756,7 +1756,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/sisyphus/": {
-"h": "87204082cc57a53e",
+"h": "ed953b6331d2e13c",
 "d": "2026-11-04"
 },
 "/guide/en/quest/slaughterhouse/": {
@@ -1828,7 +1828,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/stimulating-demand/": {
-"h": "9f9dd749dd9b7ee5",
+"h": "f6e81af9e0cabd0d",
 "d": "2026-11-04"
 },
 "/guide/en/quest/stirrup/": {
@@ -2088,7 +2088,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/the-punisher-part-6/": {
-"h": "953c65747ab695e6",
+"h": "3d3cac4b150e2f0c",
 "d": "2026-11-04"
 },
 "/guide/en/quest/the-secret-recipe/": {
@@ -2264,7 +2264,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/trophies/": {
-"h": "23136f8493d7bdb6",
+"h": "e63d6cc9ecadc937",
 "d": "2026-11-04"
 },
 "/guide/en/quest/trouble-in-the-big-city/": {
@@ -2400,7 +2400,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/rewards/": {
-"h": "af6e2d0a02e65553",
+"h": "ed3eb0d5df5311c3",
 "d": "2026-11-04"
 },
 "/guide/en/start/": {
@@ -2408,11 +2408,11 @@
 "d": "2026-11-04"
 },
 "/guide/event/": {
-"h": "a9fc515623d3216d",
+"h": "27cc4eb0e75fff12",
 "d": "2026-11-04"
 },
 "/guide/gunsmith/": {
-"h": "731ae12037720e03",
+"h": "dc87502e67e56daa",
 "d": "2026-11-04"
 },
 "/guide/hideout/": {
@@ -2524,11 +2524,11 @@
 "d": "2026-11-04"
 },
 "/guide/hunt/": {
-"h": "21c0d16ac7130192",
+"h": "91889f94cb5d8c41",
 "d": "2026-11-04"
 },
 "/guide/items/": {
-"h": "121e009f88780b8a",
+"h": "813491fd03f13b37",
 "d": "2026-11-04"
 },
 "/guide/kappa/": {
@@ -2612,7 +2612,7 @@
 "d": "2026-11-04"
 },
 "/guide/prestige/": {
-"h": "4bc7df4f550dc44e",
+"h": "5b0d7ae0950c6cd2",
 "d": "2026-11-04"
 },
 "/guide/promo/": {
@@ -2620,7 +2620,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest-items/": {
-"h": "1b4c0e78bdccaba7",
+"h": "d683d344ef5f1cf3",
 "d": "2026-11-04"
 },
 "/guide/quest/a-big-loss-usec/": {
@@ -3084,7 +3084,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/district-patrol/": {
-"h": "08d57eb7987913e9",
+"h": "84bc127b4a5369e5",
 "d": "2026-11-04"
 },
 "/guide/quest/documents/": {
@@ -3796,7 +3796,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/peacekeeping-mission/": {
-"h": "4772241f903f58a7",
+"h": "7945a9707761b07c",
 "d": "2026-11-04"
 },
 "/guide/quest/perfect-mediator/": {
@@ -4132,7 +4132,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/sisyphus/": {
-"h": "2e4a45d7f51db2b2",
+"h": "9bc99cc88ec94b2d",
 "d": "2026-11-04"
 },
 "/guide/quest/slaughterhouse/": {
@@ -4204,7 +4204,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/stimulating-demand/": {
-"h": "bbd839dfd6c59aec",
+"h": "c6c198dfff97c7da",
 "d": "2026-11-04"
 },
 "/guide/quest/stirrup/": {
@@ -4464,7 +4464,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/the-punisher-part-6/": {
-"h": "d00235affd1419e8",
+"h": "bbfe9f5c009c9713",
 "d": "2026-11-04"
 },
 "/guide/quest/the-secret-recipe/": {
@@ -4640,7 +4640,7 @@
 "d": "2026-11-04"
 },
 "/guide/quest/trophies/": {
-"h": "9e5e97a94dc01f40",
+"h": "f39e731f02270075",
 "d": "2026-11-04"
 },
 "/guide/quest/trouble-in-the-big-city/": {
@@ -4776,7 +4776,7 @@
 "d": "2026-11-04"
 },
 "/guide/rewards/": {
-"h": "8b910c759d4401b5",
+"h": "31f6ddafc21ce2ee",
 "d": "2026-11-04"
 },
 "/guide/ru/": {
@@ -4784,7 +4784,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/ammo/": {
-"h": "bf908bdc7e6ff21e",
+"h": "ea0d26d7b99ce166",
 "d": "2026-11-04"
 },
 "/guide/ru/bosses/": {
@@ -4792,15 +4792,15 @@
 "d": "2026-11-04"
 },
 "/guide/ru/crafts/": {
-"h": "2cff71a6d21cd854",
+"h": "3fe62ed27e8566c6",
 "d": "2026-11-04"
 },
 "/guide/ru/event/": {
-"h": "a53db9fe81fe7dab",
+"h": "aa5c40fb45aec7f0",
 "d": "2026-11-04"
 },
 "/guide/ru/gunsmith/": {
-"h": "2eae510c8d824e85",
+"h": "271b544173dd5b7d",
 "d": "2026-11-04"
 },
 "/guide/ru/hideout/": {
@@ -4912,11 +4912,11 @@
 "d": "2026-11-04"
 },
 "/guide/ru/hunt/": {
-"h": "01b7d6a013331d8a",
+"h": "d93bed92c50840cc",
 "d": "2026-11-04"
 },
 "/guide/ru/items/": {
-"h": "20d300fb1e42a8e1",
+"h": "b82817d0044f16f9",
 "d": "2026-11-04"
 },
 "/guide/ru/kappa/": {
@@ -5000,7 +5000,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/prestige/": {
-"h": "61ae96040be29664",
+"h": "210c4dca88de363b",
 "d": "2026-11-04"
 },
 "/guide/ru/promo/": {
@@ -5008,7 +5008,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest-items/": {
-"h": "e79393e9241ad2a2",
+"h": "7931349f2b0b5b18",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/a-big-loss-usec/": {
@@ -5472,7 +5472,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/district-patrol/": {
-"h": "18db6e450dffe6bd",
+"h": "257aa11d34a1a9dd",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/documents/": {
@@ -6184,7 +6184,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/peacekeeping-mission/": {
-"h": "de480615fe013103",
+"h": "85d5f22f22d31905",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/perfect-mediator/": {
@@ -6520,7 +6520,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/sisyphus/": {
-"h": "08f907c60f8e9279",
+"h": "4a6dda68366e8f1f",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/slaughterhouse/": {
@@ -6592,7 +6592,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/stimulating-demand/": {
-"h": "aad4adf29fde2497",
+"h": "8c92df6d5269d7e1",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/stirrup/": {
@@ -6852,7 +6852,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/the-punisher-part-6/": {
-"h": "61d4289ce3f82039",
+"h": "f25261855bfb8d39",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/the-secret-recipe/": {
@@ -7028,7 +7028,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/trophies/": {
-"h": "e94928a2a2592a1c",
+"h": "625801cd5775207e",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/trouble-in-the-big-city/": {
@@ -7164,7 +7164,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/rewards/": {
-"h": "9325863bd6f2f595",
+"h": "84db9e8422538959",
 "d": "2026-11-04"
 },
 "/guide/ru/start/": {

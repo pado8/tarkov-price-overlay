@@ -308,7 +308,7 @@ def main() -> int:
             "n": loc(loc_items, it.get("name"), en),
             "en": en,
             "s": loc(loc_items, it.get("shortName"), loc(loc_items_en, it.get("shortName"), "")),
-            "img": it.get("iconLink") or it.get("gridImageLink"),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
+            "img": guide_static.icon_url(it.get("iconLink"), it.get("gridImageLink")),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
             "w": it.get("width") or 1,
             "h": it.get("height") or 1,
             "pvp": it.get("avg24hPrice"),
@@ -551,6 +551,7 @@ def main() -> int:
     print(f"[guide] 검색 색인: {guide_search.apply(out_dir, lang, pages['keys']['items'])}개")
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")
     (OUT / "guide.css").write_text(css, encoding="utf-8")
+    (OUT / "noicon.svg").write_text((ROOT / "scripts" / "guide_templates" / "noicon.svg").read_text(encoding="utf-8"), encoding="utf-8")
     import adsense  # 새로 만든 페이지에도 AdSense 코드 유지(ID 없으면 아무것도 안 넣음)
     n_ad, cid = adsense.apply()
     print(f"[guide] AdSense: {cid or '끔'} · 바뀐 페이지 {n_ad}")
