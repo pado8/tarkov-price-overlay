@@ -89,8 +89,9 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
         galts = [f'<xhtml:link rel="alternate" hreflang="{l}" href="https://tarkov.aquapado.com{guide_static.lang_path(u, l)}" />'
                  for l, _, _ in guide_static.LANGS] + [f'<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com{u}" />']
         for l, _, _ in guide_static.LANGS:
-            out += ["  <url>", f"    <loc>https://tarkov.aquapado.com{guide_static.lang_path(u, l)}</loc>"] + [f"    {a}" for a in galts] + [
-                f"    <lastmod>{stamp}</lastmod>", "    <changefreq>weekly</changefreq>",
+            loc = f"https://tarkov.aquapado.com{guide_static.lang_path(u, l)}"
+            out += ["  <url>", f"    <loc>{loc}</loc>"] + [f"    {a}" for a in galts] + [
+                f"    <lastmod>{old_lastmod(loc)}</lastmod>", "    <changefreq>weekly</changefreq>",  # 실제 날짜는 refresh_lastmod 가 정한다
                 f"    <priority>{pri_of(u) if l == 'ko' else '0.5'}</priority>", "  </url>"]
     # 개인정보처리방침(landing/privacy/index.html, 손글) — 광고 심사·검색 노출용으로 사이트맵에 포함
     out += ["  <url>", "    <loc>https://tarkov.aquapado.com/privacy/</loc>",
@@ -103,6 +104,61 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
     out.append("</urlset>")
     sm.write_text(nl.join(out) + nl, encoding="utf-8")
     print(f"[guide] sitemap: {len(set(guide_urls)) * 3 + 5} URL (가이드 {len(set(guide_urls))}쪽 × 3개 언어)")
+
+
+# 11-04: 사이트맵 lastmod 를 '내용이 실제로 바뀐 날'로. 전엔 빌드마다 1,794쪽 전부 빌드 날짜가 찍혀
+# 구글이 lastmod 를 믿지 않게 된다(늘 바뀌는 값은 무시). 쪽마다 제목·설명·<main> 본문의 지문을 저장해 두고
+# 지문이 같으면 예전 날짜를 유지한다. 본문 안 날짜 표기('데이터 기준 YYYY-MM-DD')·스크립트·주석은 지문에서 뺀다.
+# 시세가 들어간 쪽(필요 아이템·카파·열쇠 등)은 값이 바뀐 날마다 실제로 날짜가 올라간다(맞는 동작).
+# 세 언어 빌드가 각각 끝날 때 부른다 — 사이트맵은 ko 빌드 때만 다시 쓰지만 en/ru 쪽은 그 뒤에 만들어지므로.
+LASTMOD_F = ROOT / "scripts" / "guide_data" / "page_lastmod.json"
+
+
+def _page_print(html_text: str) -> str:
+    import hashlib
+    t = re.search(r"<title>.*?</title>", html_text, re.S)
+    d = re.search(r'<meta name="description" content="[^"]*"', html_text)
+    m = re.search(r"<main\b.*?</main>", html_text, re.S)
+    s = (t.group(0) if t else "") + (d.group(0) if d else "") + (m.group(0) if m else html_text)
+    s = re.sub(r"<script\b.*?</script>|<!--.*?-->", "", s, flags=re.S)
+    s = re.sub(r"\d{4}-\d{2}-\d{2}", "", s)
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
+
+
+def refresh_lastmod(stamp: str) -> None:
+    sm = ROOT / "landing" / "sitemap.xml"
+    if not sm.exists():
+        return
+    text = sm.read_text(encoding="utf-8")
+    try:
+        store = json.loads(LASTMOD_F.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        store = {}
+    new_store: dict = {}
+    changed = 0
+
+    def rep(mo):
+        nonlocal changed
+        block, loc = mo.group(0), mo.group(1)
+        path = loc.replace("https://tarkov.aquapado.com", "")
+        if not path.startswith("/guide/"):
+            return block
+        f = ROOT / "landing" / path.lstrip("/") / "index.html"
+        if not f.exists():
+            return block
+        h = _page_print(f.read_text(encoding="utf-8"))
+        rec = store.get(path) or {}
+        d = rec.get("d") if rec.get("h") == h else stamp
+        if d == stamp and rec.get("d") != stamp:
+            changed += 1
+        new_store[path] = {"h": h, "d": d}
+        return re.sub(r"<lastmod>[^<]*</lastmod>", f"<lastmod>{d}</lastmod>", block, count=1)
+
+    text = re.sub(r"<url>\s*<loc>([^<]+)</loc>.*?</url>", rep, text, flags=re.S)
+    sm.write_text(text, encoding="utf-8")
+    LASTMOD_F.parent.mkdir(parents=True, exist_ok=True)
+    LASTMOD_F.write_text(json.dumps(dict(sorted(new_store.items())), ensure_ascii=False, indent=0), encoding="utf-8")
+    print(f"[guide] sitemap lastmod: 오늘 바뀐 쪽 {changed}개 / 가이드 {len(new_store)}쪽")
 
 
 def main() -> int:
@@ -347,6 +403,7 @@ def main() -> int:
         hideout_reg=get("regular/hideout") or {}, hideout_pve=get("pve/hideout") or {},
         loc_hideout=get(f"regular/hideout{sfx}") or {},
         crafts_reg=get("regular/crafts") or [], crafts_pve=get("pve/crafts") or [],
+        loc_maps_en=get("regular/maps_en") or {},
     )
     for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
         suf = ctx.display_suffix.get(q["id"])
@@ -429,6 +486,7 @@ def main() -> int:
         print(f"[guide] {lang}: 한글 남은 페이지 {left}개 · 번역표 누락 구간 {len(i18n_missing)}개 → {miss_f.name}")
         for s in sample:
             print("   ", s)
+    refresh_lastmod(stamp)
     print(f"[guide] 완료 {time.time() - t0:.1f}s → {out_dir}")
     return 0
 

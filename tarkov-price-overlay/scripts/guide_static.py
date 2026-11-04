@@ -22,6 +22,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python-core"))
 import extract_conditions  # noqa: E402 — 탈출구 조건(앱 레이더와 같은 표)
+import extract_current  # noqa: E402 — 지금 게임에 있는 탈출구만(위키 Extractions 표, 앱 레이더와 같은 필터)
 
 SITE = "https://tarkov.aquapado.com"
 # Google AdSense 게시자 ID(예: "ca-pub-1234567890123456"). 비어 있으면 광고 스크립트를 넣지 않는다.
@@ -508,6 +509,7 @@ class Ctx:
     loc_hideout: dict
     crafts_reg: list
     crafts_pve: list
+    loc_maps_en: dict = field(default_factory=dict)  # 탈출구 영문 이름 → 위키 표 매칭용
     tasks: dict = field(default_factory=dict)
     task_modes: dict = field(default_factory=dict)
     _item_cache: dict = field(default_factory=dict)
@@ -760,7 +762,7 @@ class Ctx:
                 if q not in seen:
                     seen.add(q)
                     stack.append(q)
-        order = sorted(need, key=lambda q: (self.depth(q), (self.tasks[q].get("minPlayerLevel") or 0), self.task_names(q)[0]))
+        order = sorted(need, key=lambda q: (self.depth(q), (self.tasks[q].get("minPlayerLevel") or 0), self.task_names(q)[0], q))  # 같은 이름(독립의 대가 1·2번째)도 빌드마다 같은 순서로 — 사이트맵 lastmod 판정
         return [(q, need[q]) for q in order]
 
     def early_tasks(self, traders: list[str], max_batch: int = 1) -> list[str]:
@@ -1287,8 +1289,8 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         sections_side.append('<section class="box"><h2>이전 퀘스트</h2><p class="muted small">먼저 깨야 하는 퀘스트는 없습니다. '
                              + ('앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).' if ctx.batch_req(t) else '레벨·상인 등급만 맞으면 받을 수 있습니다.')
                              + '</p></section>')
-    nxt = sorted(set(ctx.next_of.get(tid, [])), key=lambda x: ctx.task_names(x)[0])
-    wnxt = sorted({q for q in wl.get("next") or [] if q in ctx.tasks} - set(nxt), key=lambda x: ctx.task_names(x)[0])
+    nxt = sorted(set(ctx.next_of.get(tid, [])), key=lambda x: (ctx.task_names(x)[0], x))
+    wnxt = sorted({q for q in wl.get("next") or [] if q in ctx.tasks} - set(nxt), key=lambda x: (ctx.task_names(x)[0], x))
     if nxt or wnxt:
         lis = "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span></li>' for x in nxt)
         lis += "".join(f'<li>{ctx.task_link(x)} <span class="muted small">{e(ctx.trader_name(ctx.tasks[x].get("trader")))}</span> <span class="badge b-done">위키</span></li>' for x in wnxt)
@@ -2553,6 +2555,39 @@ def map_quests(ctx: Ctx, mid: str) -> list[str]:
     return out
 
 
+_WIKI_EX_ROWS: dict | None = None
+
+
+def current_extracts(ctx: Ctx, slug: str, m: dict) -> tuple[list, list]:
+    """(지금 게임에 있는 탈출구 [(ex, 진영)], 위키 표에만 있는 탈출구 [(영문 이름, 진영)]).
+
+    tarkov.dev 지도 문서엔 1.0 개편 전 탈출구(그라운드 제로 UN Roadblock·세관 RUAF Roadblock 등)가 남아 있다(11-04 점검)
+    → 위키 Extractions 표(python-core/data/extracts_current.json, scripts/wiki_extracts.py)로 거르고 진영도 표 값으로,
+    PMC·스캐브 두 줄로 든 같은 탈출구는 하나만 — 앱 레이더(radar.py)와 같은 규칙. 표에 없는 맵(터미널 등)은 그대로."""
+    global _WIKI_EX_ROWS
+    if _WIKI_EX_ROWS is None:
+        try:
+            _WIKI_EX_ROWS = json.loads(extract_current._data_path().read_text(encoding="utf-8")).get("maps") or {}
+        except Exception:  # noqa: BLE001
+            _WIKI_EX_ROWS = {}
+    rows = _WIKI_EX_ROWS.get(slug) or []
+    use = bool(rows and ctx.loc_maps_en)
+    out, seen = [], set()
+    for ex in m.get("extracts") or []:
+        if (slug, ex.get("name")) in EXTRACT_SKIP:
+            continue
+        keep, wfac, wkey = (extract_current.lookup(slug, ctx._loc(ctx.loc_maps_en, ex.get("name"), None))
+                            if use else (True, None, ""))
+        if not keep or (wkey and wkey in seen):
+            continue
+        if wkey:
+            seen.add(wkey)
+        out.append((ex, wfac or ex.get("faction") or "shared"))
+    wiki_only = [(r["name"], r.get("faction") or "shared") for r in rows
+                 if use and extract_current.norm(r["name"]) not in seen]
+    return out, wiki_only
+
+
 def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     m = ctx.maps[mid]
     slug = m.get("normalizedName")
@@ -2594,10 +2629,8 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                          f'<td class="small">{e(", ".join(g["zones"]))}</td><td class="small">{e(" / ".join(g["escorts"]))}</td></tr>')
     is_event_map = slug in EVENT_MAPS
     ex_groups: dict[str, list] = {}
-    for ex in m.get("extracts") or []:
-        if (slug, ex.get("name")) in EXTRACT_SKIP:
-            continue
-        fac = ex.get("faction") or "shared"
+    cur_ex, wiki_only = current_extracts(ctx, slug, m)
+    for ex, fac in cur_ex:
         cond = []  # 이미 안전한 HTML 조각만 넣는다(칩 HTML을 다시 이스케이프하면 글자로 보인다)
         # 조건은 위키 기준 표(python-core/extract_conditions.py). 데이터의 switches 는 맵 전체 스위치가
         # 모든 탈출구에 붙어 있어 조건으로 쓰면 틀린다.
@@ -2612,6 +2645,9 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                 cond.append("필요 아이템 " + ctx.chip(give["id"], give["count"]))
         ex_groups.setdefault(fac, []).append(f'<li><b>{e(ctx._loc(ctx.loc_maps, ex.get("name"), ex.get("name")))}</b>'
                                              + (f'<div class="xcond small">{" · ".join(cond)}</div>' if cond else "") + "</li>")
+    for wn, fac in wiki_only:  # 위키 표엔 있는데 공개 데이터엔 없는 탈출구 — 이름만(영문 원문)
+        ex_groups.setdefault(fac, []).append(f'<li><b>{e(wn)}</b><div class="xcond small">공식 위키 표 기준 · 위치·조건은 공식 위키에서 확인</div></li>')
+    n_ex = len(cur_ex) + len(wiki_only)
     fac_label = {"pmc": "PMC", "scav": "스캐브", "shared": "공용(PMC·스캐브)"}
     ex_html = "".join(f'<div><h3>{fac_label.get(f, f)} <span class="muted small">{len(v)}개</span></h3><ul class="plain">{"".join(v)}</ul></div>'
                       for f, v in sorted(ex_groups.items(), key=lambda kv: ["pmc", "shared", "scav"].index(kv[0]) if kv[0] in ("pmc", "shared", "scav") else 9))
@@ -2639,11 +2675,11 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     for tid in qs:
         by_tr.setdefault(ctx.trader_slug(ctx.tasks[tid].get("trader")), []).append(tid)
     q_html = "".join(f'<div><h3>{e(ctx.trader_name(ctx.trader_by_slug.get(s)))} <span class="muted small">{len(v)}</span></h3><ul class="plain">'
-                     + "".join(f"<li>{ctx.task_link(x)}</li>" for x in sorted(v, key=lambda x: ctx.task_names(x)[0])) + "</ul></div>"
+                     + "".join(f"<li>{ctx.task_link(x)}</li>" for x in sorted(v, key=lambda x: (ctx.task_names(x)[0], x))) + "</ul></div>"
                      for s, v in sorted(by_tr.items(), key=lambda kv: TRADER_ORDER.index(kv[0]) if kv[0] in TRADER_ORDER else 99))
     enemies = ", ".join(dict.fromkeys(e(ctx.mob_name(x)) for x in m.get("enemies") or [] if not str(x).startswith("follower")))
     body = (f'<h1>{e(name)} <span class="h1en">{e(en_name)}</span>{" " + EVENT_TAG if is_event_map else ""}</h1>'
-            f'<p class="sub">맵 정보 · 보스 {len(boss_rows)} · 탈출구 {len(m.get("extracts") or [])} · 관련 퀘스트 {len(qs)} · 데이터 기준 {e(ctx.stamp)}</p>'
+            f'<p class="sub">맵 정보 · 보스 {len(boss_rows)} · 탈출구 {n_ex} · 관련 퀘스트 {len(qs)} · 데이터 기준 {e(ctx.stamp)}</p>'
             + (event_note("이 맵은 이벤트 기간에만 들어갈 수 있습니다.") if is_event_map else "")
             + (f'<p class="small muted">{e(desc_ko)}</p>' if desc_ko else "")
             + f'<section class="box"><h2>기본 정보</h2><table class="kv">{"".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in rows)}'
@@ -2653,14 +2689,14 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                 + (event_note("감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.") if (has_event_mob and not is_event_map) else "")
                 + '<div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
                 + "".join(boss_rows) + "</tbody></table></div></section>") if boss_rows else "")
-            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있지만, 공식 위키 표에 아직 없는 새 탈출구(1.2.0 세관 추가분 등)는 조건을 확인하지 못했습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
+            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">목록은 공식 위키 탈출구 표 기준으로 지금 게임에 있는 것만 남겼습니다(공개 데이터에 남아 있던 1.0 개편 전 탈출구는 뺐습니다). 조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
             + (f'<section class="box"><h2>탈출구</h2><p class="small">{HAND_EXTRACTS[slug]}</p></section>' if (not ex_html and slug in HAND_EXTRACTS) else "")
             + (f'<section class="box"><h2>다른 맵으로 이동(트랜짓)</h2><ul class="plain">{"".join(tr_rows)}</ul></section>' if tr_rows else "")
             + (f'<section class="box"><h2>이 맵의 퀘스트 {len(qs)}개</h2><div class="cols3">{q_html}</div></section>' if q_html else ""))
     path = f"/guide/maps/{slug}/"
     boss_names = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or []))
     title = f"타르코프 {name} 공략 정보 — 탈출구·보스·퀘스트 {len(qs)}개 | 탈콥 가이드"
-    desc = f"타르코프 {name}({en_name}) 맵 정보: 레이드 {m.get('raidDuration')}분, {m.get('players')}명, 보스 {boss_names or '없음'}, 탈출구 {len(m.get('extracts') or [])}개, 트랜짓, 이 맵 퀘스트 {len(qs)}개. 데이터 기준 {ctx.stamp}."
+    desc = f"타르코프 {name}({en_name}) 맵 정보: 레이드 {m.get('raidDuration')}분, {m.get('players')}명, 보스 {boss_names or '없음'}, 탈출구 {n_ex}개, 트랜짓, 이 맵 퀘스트 {len(qs)}개. 데이터 기준 {ctx.stamp}."
     if slug in MAP_NOTES:  # 11-04: 메모가 있는 맵은 공략 첫 줄로 시작(퀘스트 쪽과 같은 이유)
         nm = name if (not en_name or en_name == name) else f"{name}({en_name})"  # en 판은 이름이 두 번 나오지 않게
         desc = f"타르코프 {nm} 맵 공략: {_lead_cut(MAP_NOTES[slug]['lines'][0])} 보스 {boss_names or '없음'} · 탈출구 · 퀘스트 {len(qs)}개 정리."
@@ -2687,7 +2723,7 @@ def maps_index(ctx: Ctx) -> tuple[str, str]:
         bosses = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or [] if str(b.get("mob", "")).startswith("boss")))
         nq = len(map_quests(ctx, mid))
         cards.append(f'<a class="hub" href="/guide/maps/{e(m.get("normalizedName"))}/"><div class="t">{e(ctx.map_name(mid))}{" " + EVENT_TAG if m.get("normalizedName") in EVENT_MAPS else ""}</div>'
-                     f'<div class="d">레이드 {m.get("raidDuration") or "—"}분 · {e(m.get("players") or "—")}명 · 탈출구 {len(m.get("extracts") or [])}</div>'
+                     f'<div class="d">레이드 {m.get("raidDuration") or "—"}분 · {e(m.get("players") or "—")}명 · 탈출구 {sum(map(len, current_extracts(ctx, m.get("normalizedName") or "", m)))}</div>'
                      f'<div class="d">보스: {e(bosses) or "없음"}</div><div class="d">퀘스트 {nq}개</div></a>')
     body = (f'<h1>맵 정보 <span class="h1en">Maps</span></h1><p class="sub">맵 {len(cards)}개 · 보스·탈출구·트랜짓·퀘스트 · 데이터 기준 {e(ctx.stamp)}</p>'
             f'<div class="cards">{"".join(cards)}</div>'
