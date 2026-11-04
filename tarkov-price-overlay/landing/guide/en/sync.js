@@ -10,7 +10,7 @@ document.addEventListener("click",function(ev){document.querySelectorAll("detail
 })();
 (function(){
 var MK="guide.mode",SK="guide.sync",SE="guide.sync.err";
-function gL(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function gS(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}function gmig(){try{var y=localStorage.getItem("guide.quests.synced");if(y==null)return;var s=JSON.parse(y)||{},d=gL("guide.quests",{});Object.keys(s).forEach(function(k){delete d[k]});gS("guide.quests",d);localStorage.removeItem("guide.quests.synced")}catch(e){}}function gsm(){var m=gL("guide.mode","pvp")==="pve"?"pve":"regular",l=gL("guide.sync",null);return (m==="regular"&&l&&l.mode==="season")?"season":m}function gsync(){var w=window.__guideSync;if(w&&w.smode===gsm())return w;return gL("guide.sync.m."+gsm(),null)}function gdone(){gmig();var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),o={};Object.keys(d).forEach(function(k){o[k]=1});((y&&y.completed)||[]).forEach(function(k){if(!off[k])o[k]=1});return o}function gset(id,on){var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),inS=((y&&y.completed)||[]).indexOf(id)>=0;if(on){d[id]=1;delete off[id]}else{delete d[id];if(inS)off[id]=1}gS("guide.quests",d);gS("guide.quests.off",off)}
+function gL(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function gS(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}function gmig(){try{var y=localStorage.getItem("guide.quests.synced");if(y==null)return;var s=JSON.parse(y)||{},d=gL("guide.quests",{});Object.keys(s).forEach(function(k){delete d[k]});gS("guide.quests",d);localStorage.removeItem("guide.quests.synced")}catch(e){}}function gsm(){var m=gL("guide.mode","pvp")==="pve"?"pve":"regular",l=gL("guide.sync",null);return (m==="regular"&&l&&l.mode==="season")?"season":m}function gsync(){var w=window.__guideSync;if(w&&w.smode===gsm())return w;return gL("guide.sync.m."+gsm(),null)}function gdone(){gmig();var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),o={};Object.keys(d).forEach(function(k){o[k]=1});((y&&y.completed)||[]).forEach(function(k){if(!off[k])o[k]=1});return o}function gllE(){var x=gL("guide.ll.est."+gsm(),null);return (x&&x.est)||{}}function gllM(){return gL("guide.ll.man."+gsm(),{})}function gmyll(t){var m=gllM(),e=gllE();return +(m[t]||e[t]||0)}function gset(id,on){var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),inS=((y&&y.completed)||[]).indexOf(id)>=0;if(on){d[id]=1;delete off[id]}else{delete d[id];if(inS)off[id]=1}gS("guide.quests",d);gS("guide.quests.off",off)}
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function ev(n,prm,once){try{if(once){var sk="gsev."+n;if(sessionStorage.getItem(sk))return;sessionStorage.setItem(sk,"1")}if(window.gtag)gtag("event",n,prm||{})}catch(e){}}
 function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
@@ -30,13 +30,15 @@ if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.datase
 top.appendChild(a)}
 // Received progress is stored in that server (PVP/PVE/season) slot (guide.sync.m.<Mode>) as a 'replacement' — never mixed with manual checks (guide.quests) (11-04).
 // The site mode also follows the overlay server (otherwise the next page auto-read would fetch the other server progress).
+// trader LL lower bound (11-04) — highest LL required by completed or started tasks (you got them, so at least that level). ll.json = build-made task → [trader, LL]
+function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var e={},q=(d&&d.q)||{};(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(e[x[0]]||0))e[x[0]]=x[1]});S("guide.ll.est."+sm,{ts:Date.now(),est:e});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
 function apply(p,how){var first=!L(SK,null);
 if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length),first:first?1:0,log_ok:p.log_ok===false?0:1},how==="auto");
 if(first)try{if(window.gtag)gtag("set","user_properties",{guide_synced:"1"})}catch(e){}
 if(p.mode==="pve"||p.mode==="regular"||p.mode==="pvp"||p.mode==="season"){var nm=p.mode==="pve"?"pve":"pvp";if(L(MK,"pvp")!==nm)S(MK,nm)}
 gmig();var sm=smodeOf(p.mode);
 var sy={ts:Date.now(),mode:p.mode,smode:sm,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0,promo_used:p.promo_used||[],log_ok:p.log_ok};
-S(SK,sy);S("guide.sync.m."+sm,sy);window.__guideSync=sy;chip(sy,false);
+S(SK,sy);S("guide.sync.m."+sm,sy);window.__guideSync=sy;chip(sy,false);llEst(sy,sm);
 // promo codes 'redeemed' check — merge the list stored in the app (same PC) into the browser checks (add only)
 if(p.promo_used&&p.promo_used.length){var PU="guide.promo.used",pu=L(PU,{}),add=0;p.promo_used.forEach(function(c){if(!pu[c]){pu[c]=Date.now();add++}});if(add)S(PU,pu)}
 document.dispatchEvent(new CustomEvent("guide-sync",{detail:sy}))}
