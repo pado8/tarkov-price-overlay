@@ -429,6 +429,7 @@ def main() -> int:
     }
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
+        tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)  # 완료 퀘스트 공용 함수(직접 체크 ∪ 지금 모드 연동분)
         tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)  # 언어 전환은 localize_template 이 붙인다
         if 'src="/guide/sync.js"' not in tpl:  # 오버레이 연동 스크립트 — page() 로 만드는 페이지와 같게
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)
