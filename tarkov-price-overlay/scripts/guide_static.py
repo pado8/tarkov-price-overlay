@@ -55,6 +55,13 @@ MISSING_ITEMS = {
 }
 # 공식 위키에만 있는 선행·다음 연결 — scripts/wiki_quest_links.py 가 만든다(없으면 빈 표)
 WIKI_LINKS_PATH = Path(__file__).resolve().parent / "guide_data" / "wiki_quest_links.json"
+# 1.1.0 묶음 카운터(variableId) → {trader, ll} — scripts/wiki_bundle_ll.py 가 위키 정보 상자로 만든다
+# + 데이터엔 LL 조건이 없는데 위키 정보 상자엔 LL이 있는 퀘스트 {task id: [위키 제목, LL]}
+try:
+    _bll = json.loads((Path(__file__).resolve().parent / "guide_data" / "bundle_ll.json").read_text(encoding="utf-8"))
+    BUNDLE_LL, QUEST_WIKI_LL = _bll.get("vars") or {}, _bll.get("quests") or {}
+except Exception:  # noqa: BLE001
+    BUNDLE_LL, QUEST_WIKI_LL = {}, {}
 WIKI_LINKS: dict = json.loads(WIKI_LINKS_PATH.read_text(encoding="utf-8")) if WIKI_LINKS_PATH.exists() else {}
 # 기본 건스미스의 옛 '파트 N' 번호(공식 위키 퀘스트 아이콘 파일명 GunsmithPart{N} 기준, 2026-10-27) — 같은 묶음 단계 안에서 순서를 정할 때만 쓴다.
 # 데이터엔 기본 건스미스끼리 선행 관계가 없어(1.1.0 묶음 방식) 이 번호가 없으면 알파벳순이 돼 AK-105가 맨 앞에 왔었다.
@@ -793,8 +800,19 @@ class Ctx:
         return [x for x in self.tasks if ok(x)]
 
     def trader_ll(self, t):
-        return max((r.get("value") or 0 for r in t.get("traderRequirements") or []
-                    if r.get("requirementType") == "level"), default=1) or 1
+        """퀘스트를 받는 상인 LL. 데이터의 traderRequirements 가 우선, 없으면 1.1.0 묶음 카운터의 LL(위키 표 bundle_ll.json).
+        11-04 점검 전엔 카운터를 무시하고 LL1로 가정해 128개가 틀렸다(타르코프식 외교 = 실제 테라피스트 LL3)."""
+        explicit = max((r.get("value") or 0 for r in t.get("traderRequirements") or []
+                        if r.get("requirementType") == "level"), default=0)
+        return max(explicit, self.bundle_ll(t) or 0) or 1
+
+    def bundle_ll(self, t):
+        """데이터에 없는 LL — 1.1.0 묶음 카운터가 가리키는 LL 또는 위키 정보 상자 LL(scripts/wiki_bundle_ll.py). 모르면 None."""
+        lls = [BUNDLE_LL[o["variableId"]]["ll"] for o in t.get("otherRequirements") or []
+               if o.get("type") == "globalVariable" and o.get("variableId") in BUNDLE_LL]
+        if t.get("id") in QUEST_WIKI_LL:
+            lls.append(QUEST_WIKI_LL[t["id"]][1])
+        return max(lls) if lls else None
 
     def batch_req(self, t):
         return max((o.get("value") or 0 for o in t.get("otherRequirements") or [] if o.get("type") == "globalVariable"), default=0)
@@ -1141,7 +1159,24 @@ def requirements_html(ctx: Ctx, t: dict) -> str:
     lv = t.get("minPlayerLevel") or 0
     rows.append(("레벨", f"{lv} 이상" if lv > 1 else "제한 없음"))
     tr_req = [r for r in t.get("traderRequirements") or [] if r.get("requirementType") == "level"]
-    rows.append(("상인 등급", ", ".join(f'{e(ctx.trader_name(r.get("trader")))} LL{r.get("value")} 이상' for r in tr_req) or "LL1"))
+    bll = ctx.bundle_ll(t)
+    if tr_req:
+        ll_txt = ", ".join(f'{e(ctx.trader_name(r.get("trader")))} LL{r.get("value")} 이상' for r in tr_req)
+    elif bll:
+        ll_txt = (f'{e(ctx.trader_name(t.get("trader")))} LL{bll} 이상 <span class="muted small">'
+                  + ("(묶음 기준 · 공식 위키)" if ctx.batch_req(t) else "(공식 위키 기준 · 공개 데이터엔 없음)") + "</span>")
+    elif ctx.batch_req(t):
+        ll_txt = '<span class="muted">확인 필요</span>'
+    else:
+        ll_txt = "LL1"
+    rows.append(("상인 등급", ll_txt))
+    # 상인 평판 조건(펜스 = 스캐브 카르마) — 11-04 전엔 level 만 써서 수집가(카르마 3)·손해 배상(카르마 -1 이하) 등 8개가 빠져 있었다
+    for r in t.get("traderRequirements") or []:
+        if r.get("requirementType") == "reputation":
+            op = {">=": "이상", ">": "초과", "<=": "이하", "<": "미만"}.get(r.get("compareMethod"), e(r.get("compareMethod") or ""))
+            is_fence = ctx.trader_slug(r.get("trader")) == "fence"
+            rows.append(("상인 평판", f'<b>{e(ctx.trader_name(r.get("trader")))} 평판 {r.get("value")} {op}</b>'
+                                   + (' <span class="muted small">(펜스 평판 = 스캐브 카르마)</span>' if is_fence else "")))
     reqs = [r for r in t.get("taskRequirements") or [] if r.get("task") in ctx.tasks]
     if reqs:
         lines = []
@@ -1151,8 +1186,9 @@ def requirements_html(ctx: Ctx, t: dict) -> str:
         rows.append(("선행 퀘스트", "<br>".join(lines)))
     b = ctx.batch_req(t)
     if b:
-        rows.append(("묶음 해금", f'{e(ctx.trader_name(t.get("trader")))}의 앞 묶음 퀘스트 <b>{b}개</b> 완료 후 '
-                               f'<span class="muted small">(1.1.0 묶음 방식)</span>'))
+        rows.append(("묶음 해금", (f'{e(ctx.trader_name(t.get("trader")))} LL{bll} 묶음 퀘스트 <b>{b}개</b> 완료 후 ' if bll else
+                                   f'{e(ctx.trader_name(t.get("trader")))}의 앞 묶음 퀘스트 <b>{b}개</b> 완료 후 ')
+                               + '<span class="muted small">(1.1.0 묶음 방식)</span>'))
     for o in t.get("otherRequirements") or []:
         if o.get("type") == "dialogue":
             rows.append(("대화", ", ".join(e(ctx.trader_name(x)) for x in o.get("traders") or []) + "와 대화"))

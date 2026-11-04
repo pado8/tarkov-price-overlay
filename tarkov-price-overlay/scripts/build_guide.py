@@ -303,6 +303,10 @@ def main() -> int:
                     if r.get("requirementType") == "level"],
         "trader": trader_name(col.get("trader")),
         "wiki": col.get("wikiLink"),
+        # 펜스 평판(스캐브 카르마) 조건 — 11-04 점검 전엔 빠져 있었다(수집가 = 카르마 3 이상)
+        "rep": [[trader_name(r.get("trader")), {">=": "≥", "<=": "≤"}.get(r.get("compareMethod"), r.get("compareMethod")), r.get("value")]
+                for r in col.get("traderRequirements") or []
+                if r.get("requirementType") == "reputation"],
     }
 
     # ── 퀘스트 ────────────────────────────────────────────────

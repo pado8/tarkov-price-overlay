@@ -1,0 +1,237 @@
+{
+ "checked": "2026-11-04",
+ "source": "escapefromtarkov.fandom.com 퀘스트 정보 상자 'LL requirement'",
+ "vars": {
+  "6a20540cf1b67a977cc5a088": {
+   "trader": "54cb50c76803fa8b248b4571",
+   "ll": 1,
+   "n": 8,
+   "agree": 8,
+   "conflicts": []
+  },
+  "6a2688488bba18e0b0187a04": {
+   "trader": "54cb50c76803fa8b248b4571",
+   "ll": 2,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a3171c927ca9591bf4db1c4": {
+   "trader": "5a7c2eca46aef81a7ca2145d",
+   "ll": 1,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a32651a811905ed0cac0973": {
+   "trader": "54cb50c76803fa8b248b4571",
+   "ll": 3,
+   "n": 7,
+   "agree": 7,
+   "conflicts": []
+  },
+  "6a326525789ae12ecb0b2807": {
+   "trader": "54cb50c76803fa8b248b4571",
+   "ll": 4,
+   "n": 5,
+   "agree": 5,
+   "conflicts": []
+  },
+  "6a3c0fefbea2d2ad581c090b": {
+   "trader": "5a7c2eca46aef81a7ca2145d",
+   "ll": 2,
+   "n": 11,
+   "agree": 11,
+   "conflicts": []
+  },
+  "6a3cf95c6b35530c4a4f532e": {
+   "trader": "5a7c2eca46aef81a7ca2145d",
+   "ll": 3,
+   "n": 12,
+   "agree": 12,
+   "conflicts": []
+  },
+  "6a3d1c0990e9ffe15463e961": {
+   "trader": "5a7c2eca46aef81a7ca2145d",
+   "ll": 4,
+   "n": 2,
+   "agree": 2,
+   "conflicts": []
+  },
+  "6a43a01ccc83aceedd35f09c": {
+   "trader": "5c0647fdd443bc2504c2d371",
+   "ll": 1,
+   "n": 8,
+   "agree": 7,
+   "conflicts": []
+  },
+  "6a43a095bfef0cd74c298963": {
+   "trader": "5c0647fdd443bc2504c2d371",
+   "ll": 2,
+   "n": 4,
+   "agree": 4,
+   "conflicts": []
+  },
+  "6a43a13633c97d216dfc85de": {
+   "trader": "5c0647fdd443bc2504c2d371",
+   "ll": 3,
+   "n": 7,
+   "agree": 7,
+   "conflicts": []
+  },
+  "6a43a16dde81644a7951f31b": {
+   "trader": "5c0647fdd443bc2504c2d371",
+   "ll": 4,
+   "n": 3,
+   "agree": 3,
+   "conflicts": []
+  },
+  "6a4b339f18db62e03b4f7ded": {
+   "trader": "5ac3b934156ae10c4430e83c",
+   "ll": 1,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a4b4e6a30dac4b01af220aa": {
+   "trader": "5ac3b934156ae10c4430e83c",
+   "ll": 2,
+   "n": 7,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a4b9c9a60b56d421cceea18": {
+   "trader": "5ac3b934156ae10c4430e83c",
+   "ll": 3,
+   "n": 5,
+   "agree": 5,
+   "conflicts": []
+  },
+  "6a4e4ab3ecd1145894d00990": {
+   "trader": "54cb57776803fa99248b456e",
+   "ll": 1,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a4e4aed3ded7a18126603f6": {
+   "trader": "54cb57776803fa99248b456e",
+   "ll": 2,
+   "n": 6,
+   "agree": 5,
+   "conflicts": []
+  },
+  "6a4e4b28629dc64c4001967c": {
+   "trader": "54cb57776803fa99248b456e",
+   "ll": 3,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a56925b1c30ba5a77c7c518": {
+   "trader": "54cb57776803fa99248b456e",
+   "ll": 4,
+   "n": 1,
+   "agree": 1,
+   "conflicts": []
+  },
+  "6a59f3ba06c8949abad30871": {
+   "trader": "58330581ace78e27b8b10cee",
+   "ll": 1,
+   "n": 8,
+   "agree": 8,
+   "conflicts": []
+  },
+  "6a5a111de1f417ac80a163e5": {
+   "trader": "58330581ace78e27b8b10cee",
+   "ll": 2,
+   "n": 9,
+   "agree": 9,
+   "conflicts": []
+  },
+  "6a5a115181116e807b55f258": {
+   "trader": "58330581ace78e27b8b10cee",
+   "ll": 3,
+   "n": 7,
+   "agree": 7,
+   "conflicts": []
+  },
+  "6a5a1192efde11cc7105b18f": {
+   "trader": "58330581ace78e27b8b10cee",
+   "ll": 4,
+   "n": 2,
+   "agree": 2,
+   "conflicts": []
+  },
+  "6a5ba40fe5c4eaef5610f232": {
+   "trader": "5935c25fb3acc3127c3d8cd9",
+   "ll": 1,
+   "n": 6,
+   "agree": 6,
+   "conflicts": []
+  },
+  "6a5ba450a7851e16ce0bde44": {
+   "trader": "5935c25fb3acc3127c3d8cd9",
+   "ll": 2,
+   "n": 9,
+   "agree": 9,
+   "conflicts": []
+  },
+  "6a5ba48b8cfd0bddb3d4d2e1": {
+   "trader": "5935c25fb3acc3127c3d8cd9",
+   "ll": 3,
+   "n": 4,
+   "agree": 4,
+   "conflicts": []
+  },
+  "6a5ba4c57cbb93b629051591": {
+   "trader": "5935c25fb3acc3127c3d8cd9",
+   "ll": 4,
+   "n": 7,
+   "agree": 7,
+   "conflicts": []
+  }
+ },
+ "quests": {
+  "5d25e2e286f77444001e2e48": [
+   "The Huntsman Path - Sellout",
+   2
+  ],
+  "60c0c018f7afb4354815096a": [
+   "The Huntsman Path - Factory Chief",
+   2
+  ],
+  "60e71b9bbd90872cb85440f3": [
+   "Capturing Outposts",
+   2
+  ],
+  "6391359b9444fb141f4e6ee6": [
+   "You've Got Mail",
+   2
+  ],
+  "639136d68ba6894d155e77cf": [
+   "Green Corridor",
+   2
+  ],
+  "64e7b971f9d6fa49d6769b44": [
+   "The Huntsman Path - Big Game",
+   2
+  ],
+  "64e7b9bffd30422ed03dad38": [
+   "District Patrol",
+   2
+  ],
+  "6578eb36e5020875d64645cd": [
+   "The Huntsman Path - Crooked Cop",
+   2
+  ],
+  "669fa399033a3ce9870338a8": [
+   "Possessor",
+   2
+  ],
+  "6752f6d83038f7df520c83e8": [
+   "A Helping Hand",
+   2
+  ]
+ }
+}
