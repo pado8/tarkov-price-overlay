@@ -155,6 +155,8 @@ const RELEASES_PAGE_URL =
   "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest";
 // 1.2.7 포터블에서 설치판으로 옮겨 온 뒤 '옛 포터블 폴더는 지워도 돼요' 안내용(값 = 옛 폴더 경로, 닫으면 지움)
 const PORTABLE_SWITCHED_KEY = "portableSwitchedFrom";
+// 포터블 업데이트 배너를 닫은 뒤 다시 띄우기까지(트레이에 켜 둔 채일 때). 재시작하면 원래대로 바로 다시 뜬다
+const PORTABLE_RENAG_MS = 5 * 24 * 60 * 60 * 1000;
 
 // Anonymous device identifier. The canonical copy lives in a machine-wide file
 // (%PROGRAMDATA%\TarkovPriceOverlay\install_id, written by the Rust backend),
@@ -1612,6 +1614,24 @@ function App() {
   const [wipeScope, setWipeScope] = useState<"pvp" | "pve" | "season" | "all">(() => questDisplayMode);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [dismissedUpdate, setDismissedUpdate] = useState<string | null>(null);
+  // 11-04 포터블은 스스로 업데이트되지 않아 배너가 유일한 통로다. 닫아도(메모리에만 기억 — 재시작하면 다시 뜸)
+  // 트레이에 며칠씩 켜 두면 계속 숨어 있었다 → 포터블에 한해 닫은 지 5일이 지나면 다시 띄운다.
+  const dismissedAtRef = useRef(0);
+  const dismissUpdate = (version: string) => {
+    dismissedAtRef.current = Date.now();
+    setDismissedUpdate(version);
+  };
+  useEffect(() => {
+    const iv = window.setInterval(() => {
+      if (!isPortableRef.current || !dismissedAtRef.current) return;
+      if (Date.now() - dismissedAtRef.current < PORTABLE_RENAG_MS) return;
+      dismissedAtRef.current = 0;
+      setDismissedUpdate(null);
+      log("update: portable banner re-shown (5 days since dismiss)");
+      reportEvent("update_apply", "portable_renag");
+    }, 60 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, []);
   const [updateChecking, setUpdateChecking] = useState<boolean>(false);
   const [updateCheckedAt, setUpdateCheckedAt] = useState<number | null>(null);
   const [updatePhase, setUpdatePhase] = useState<UpdatePhase>("idle");
@@ -4271,7 +4291,7 @@ function App() {
                 )}
                 <button
                   className="settings-btn"
-                  onClick={() => setDismissedUpdate(updateInfo.version)}
+                  onClick={() => dismissUpdate(updateInfo.version)}
                   title={t.updateLater}
                 >
                   <Icon name="x" />
@@ -4299,7 +4319,7 @@ function App() {
                 </button>
                 <button
                   className="settings-btn"
-                  onClick={() => setDismissedUpdate(updateInfo.version)}
+                  onClick={() => dismissUpdate(updateInfo.version)}
                   title={t.updateLater}
                 >
                   <Icon name="x" />
@@ -4327,7 +4347,7 @@ function App() {
                     // resume, and mute this version's banner.
                     setUpdatePhase("idle");
                     setUpdateError(null);
-                    setDismissedUpdate(updateInfo.version);
+                    dismissUpdate(updateInfo.version);
                   }}
                   title={t.updateLater}
                 >
