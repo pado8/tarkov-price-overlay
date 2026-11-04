@@ -66,7 +66,8 @@ eq("합성: 글자 없는 검정 상자 → 툴팁 아님", td.has_tooltip(synth
 eq("빈 그림 → 판정 불가는 '있음'(기다리지 않음)", td.has_tooltip(np.zeros((0, 0, 3), np.uint8)), True)
 
 # 3) 대기 흐름 — 캡처를 바꿔 끼운다
-main.TOOLTIP_WAIT_STEPS = (0.05, 0.05)
+main.TOOLTIP_POLL_SEC = 0.01
+main.TOOLTIP_WAIT_MAX_SEC = 0.08
 main._lookup_superseded = lambda seq: False
 ATT = [("primary", 10, 10, 400, 93), ("mirror", 0, 10, 400, 93), ("ground", 5, 50, 284, 70)]
 
@@ -95,9 +96,11 @@ eq("거울 쪽 툴팁도 present", r, "present")
 r, dt, c = run({"primary": [NONE], "mirror": [NONE], "ground": [LABEL]})
 eq("바닥 이름표 → label, 기다리지 않음", (r, dt < 0.04), ("label", True))
 r, dt, c = run({"primary": [NONE, TIP], "mirror": [NONE], "ground": [NONE]})
-eq("한 번 기다려 툴팁 뜸 → waited_ok", (r, 0.04 <= dt < 0.2), ("waited_ok", True))
+eq("첫 확인에서 툴팁 뜸 → waited_ok, 바로 끝", (r, dt < 0.05, c["primary"]), ("waited_ok", True, 2))
+r, dt, c = run({"primary": [NONE, NONE, NONE, NONE, TIP], "mirror": [NONE], "ground": [NONE]})
+eq("네 번째 확인에서 뜸 → 그 순간 끝(상한 전)", (r, c["primary"], dt < main.TOOLTIP_WAIT_MAX_SEC), ("waited_ok", 5, True))
 r, dt, c = run({"primary": [NONE], "mirror": [NONE], "ground": [NONE]})
-eq("끝내 없음 → waited_none, 두 번만 기다림", (r, c["primary"]), ("waited_none", 3))
+eq("끝내 없음 → waited_none, 상한에서 멈춤", (r, main.TOOLTIP_WAIT_MAX_SEC <= dt < main.TOOLTIP_WAIT_MAX_SEC + 0.1), ("waited_none", True))
 os.environ["TPO_TOOLTIP_WAIT"] = "0"
 r, dt, c = run({"primary": [NONE], "mirror": [NONE], "ground": [NONE]})
 eq("TPO_TOOLTIP_WAIT=0 → skip, 캡처 안 함", (r, c["primary"]), ("skip", 0))
@@ -114,6 +117,17 @@ def boom(*a):
 main.capture_region = boom
 main._lookup_superseded = lambda seq: False
 eq("캡처 오류 → skip(예전처럼 바로 읽음)", main._wait_for_tooltip(ATT, 1), "skip")
+
+# 4) 진단 기록: 플래그가 있을 때만 대기 결과 한 줄
+import json  # noqa: E402
+state_dir = tmp / "TarkovPriceOverlay"
+main._diag_note({"kind": "tooltip_wait", "state": "waited_ok", "ms": 123})
+eq("플래그 없으면 진단 기록 없음", (state_dir / "diag" / "log.jsonl").exists(), False)
+state_dir.mkdir(parents=True, exist_ok=True)
+(state_dir / "diag_capture.on").write_text("", encoding="utf-8")
+main._diag_note({"kind": "tooltip_wait", "state": "waited_ok", "ms": 123})
+rec = json.loads((state_dir / "diag" / "log.jsonl").read_text(encoding="utf-8").strip().splitlines()[-1])
+eq("플래그 있으면 대기 결과 한 줄", (rec["kind"], rec["state"], rec["ms"], "ts" in rec), ("tooltip_wait", "waited_ok", 123, True))
 
 print("\n" + ("전부 통과" if not fails else f"{fails}건 실패"))
 sys.exit(1 if fails else 0)

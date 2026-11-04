@@ -681,6 +681,20 @@ def _diag_dir():
     return None
 
 
+def _diag_note(rec: dict) -> None:
+    """진단 기록(log.jsonl)에 그림 없는 한 줄. 플래그가 없으면 아무것도 안 한다."""
+    d = _diag_dir()
+    if d is None:
+        return
+    try:
+        import json as _json
+        import time as _time
+        with open(d / "log.jsonl", "a", encoding="utf-8") as f:
+            f.write(_json.dumps({"ts": round(_time.time(), 3), **rec}, ensure_ascii=False) + "\n")
+    except Exception as e:  # noqa: BLE001
+        print(f"[diag] note failed: {e!r}")
+
+
 def _diag_save(label: str, x: int, y: int, w: int, h: int, image, fragments: list, text: str, price: dict,
                lang: str, game_mode: str) -> None:
     d = _diag_dir()
@@ -708,11 +722,13 @@ def _diag_save(label: str, x: int, y: int, w: int, h: int, image, fragments: lis
 # ── 툴팁 대기(11-04) ──────────────────────────────────────────────────────
 # 인벤토리는 아이템에 마우스를 올리고 잠깐 뒤에야 이름 툴팁이 뜬다. 그 전에 F2 를 누르면 캡처 상자에 툴팁 대신
 # 인벤토리 칸 글자(짧은 이름·개수)가 찍혀 엉뚱한 아이템으로 매칭되거나 못 찾는다. 읽기 전에 인벤토리 상자(오른쪽·거울)에
-# 툴팁 패널이 있는지 보고(tooltip_detect: 순검정 바탕 + 87 테두리), 없고 조준점 아래 바닥 이름표도 없으면 0.3초씩 최대
-# 두 번 다시 찍어 툴팁을 기다린다. 툴팁이 이미 떠 있거나 바닥 조회면 기다리지 않는다. 판정이 빗나가도 결과는 예전과 같고
-# 최대 0.6초 늦어질 뿐(11-03 스크린샷: 실제 아이템 툴팁 전부 검출, 툴팁 없는 화면을 '있음'으로 5.7%).
+# 툴팁 패널이 있는지 보고(tooltip_detect: 순검정 바탕 + 87 테두리), 없고 조준점 아래 바닥 이름표도 없으면 툴팁이 뜰 때까지
+# TOOLTIP_POLL_SEC 마다 다시 찍어 보고 뜨는 순간 읽는다(최대 TOOLTIP_WAIT_MAX_SEC). 툴팁이 이미 떠 있거나 바닥 조회면 기다리지
+# 않는다. 판정이 빗나가도 결과는 예전과 같고 최대 대기만큼 늦어질 뿐(11-03 스크린샷: 실제 아이템 툴팁 전부 검출, 툴팁 없는
+# 화면을 '있음'으로 5.7%). EFT 툴팁 지연은 공개값이 없어 상한은 실측(진단 기록의 tooltip_ms, dev/tooltip-latency.py)으로 정한다.
 # TPO_TOOLTIP_WAIT=0 으로 끈다(시험·비교용).
-TOOLTIP_WAIT_STEPS = (0.3, 0.3)
+TOOLTIP_POLL_SEC = 0.05
+TOOLTIP_WAIT_MAX_SEC = 0.6
 
 
 def _wait_for_tooltip(attempts: list, client_seq) -> str:
@@ -737,8 +753,9 @@ def _wait_for_tooltip(attempts: list, client_seq) -> str:
             return "present"
         if "ground" in boxes and has_label(capture_region(*boxes["ground"])):
             return "label"
-        for delay in TOOLTIP_WAIT_STEPS:
-            time.sleep(delay)
+        deadline = time.perf_counter() + TOOLTIP_WAIT_MAX_SEC
+        while time.perf_counter() < deadline:
+            time.sleep(TOOLTIP_POLL_SEC)
             if _lookup_superseded(client_seq):
                 return "superseded"
             if tooltip_now():
@@ -1120,7 +1137,9 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     rescue_pool: list[str] = []
     tip_t0 = time.perf_counter()
     tip_state = _wait_for_tooltip(attempts, req.client_seq)
-    print(f"[tooltip] {tip_state} ({(time.perf_counter() - tip_t0) * 1000:.0f}ms)")
+    tip_ms = round((time.perf_counter() - tip_t0) * 1000)
+    print(f"[tooltip] {tip_state} ({tip_ms}ms)")
+    _diag_note({"kind": "tooltip_wait", "state": tip_state, "ms": tip_ms})  # 개발 PC 에서만: F2 뒤 툴팁이 뜨기까지 실측
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
