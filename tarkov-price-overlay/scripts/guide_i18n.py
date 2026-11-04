@@ -27,7 +27,7 @@ HAN = re.compile(r"[가-힣]")
 ROOT = Path(__file__).resolve().parent
 I18N_DIR = ROOT / "guide_i18n"
 SOURCES = [ROOT / "guide_static.py", ROOT.parent / "python-core" / "extract_conditions.py"]
-TEMPLATES = [ROOT / "guide_templates" / n for n in ("quests.html", "kappa.html", "keys.html")]
+TEMPLATES = [ROOT / "guide_templates" / n for n in ("quests.html", "kappa.html", "keys.html", "keyfinder.html")]
 
 
 def load_table(lang: str) -> dict:

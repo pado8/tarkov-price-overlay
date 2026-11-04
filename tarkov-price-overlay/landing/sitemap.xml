@@ -332,6 +332,36 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://tarkov.aquapado.com/guide/keyfinder/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/en/keyfinder/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/ru/keyfinder/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/keyfinder/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/keyfinder/" />
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://tarkov.aquapado.com/guide/keys/</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/keys/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/keys/" />

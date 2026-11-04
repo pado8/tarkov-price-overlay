@@ -1,0 +1,316 @@
+{
+ "57a349b2245977762b199ec7": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "590de4a286f77423d9312a32": {
+  "maps": [
+   "customs"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The trunk of the white scribbled-on car at the dorms on Customs."
+ },
+ "59148f8286f7741b951ea113": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "591ae8f986f77406f854be45": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "593858c486f774253a24cb52": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "5a0ea69f86f7741cd5406619": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The first floor, room 108 of the East Wing in the Health Resort on Shoreline."
+ },
+ "5a0ec70e86f7742c0b518fba": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The second floor, room 207 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0ee62286f774369454a7ac": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The second floor, room 209 of the East Wing in the Health Resort on Shoreline."
+ },
+ "5a0ee72c86f77436955d3435": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The second floor, room 213 of the East Wing in the Health Resort on Shoreline."
+ },
+ "5a0ee76686f7743698200d5c": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The second floor, room 216 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0eeb1a86f774688b70aa5c": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 303 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0eeb8e86f77461257ed71a": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 309 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0eebed86f77461230ddb3d": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 325 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0eedb386f77403506300be": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 322 of the East Wing in the Health Resort on Shoreline."
+ },
+ "5a0eff2986f7741fd654e684": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 321 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5a0f006986f7741ffd2fe484": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "Safe on the second floor of the weather station on Shoreline next to a desk."
+ },
+ "5a0f045e86f7745b0f0d0e42": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "Safe in the gas station on Shoreline."
+ },
+ "5a0f068686f7745b0d4ea242": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "Unlocks the safe on the second floor in the locked Villa on Shoreline."
+ },
+ "5a0f075686f7745bcc42ee12": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "5a0f08bc86f77478f33b84c2": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "5a0f0f5886f7741c4e32a472": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "*On the 2nd floor of the north wing of the health resort on Shoreline"
+ },
+ "5a13ee1986f774794d4c14cd": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "The third floor, room 323 of the West Wing in the Health Resort on Shoreline."
+ },
+ "5ad7217186f7746744498875": {
+  "maps": [
+   "interchange"
+  ],
+  "none": false,
+  "q": [
+   "Supervisor"
+  ],
+  "lock": "Cash registers in the front of the OLI store on Interchange."
+ },
+ "5ad7242b86f7740a6a3abd43": {
+  "maps": [
+   "interchange"
+  ],
+  "none": false,
+  "q": [
+   "Supervisor"
+  ],
+  "lock": "* Cash registers in the front of the Idea store on Interchange."
+ },
+ "5ad7247386f7747487619dc3": {
+  "maps": [
+   "interchange"
+  ],
+  "none": false,
+  "q": [
+   "Supervisor"
+  ],
+  "lock": "Cash registers in the front of the Goshan store on Interchange."
+ },
+ "5d08d21286f774736e7c94c3": {
+  "maps": [
+   "woods"
+  ],
+  "none": false,
+  "q": [
+   "The Huntsman Path - Woods Keeper"
+  ],
+  "lock": "In the sawmill area on Woods, on top of a tire next to a wood log pile."
+ },
+ "5d80cb8786f774405611c7d9": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "62a09ec84f842e1bd12da3f2": {
+  "maps": [],
+  "none": true,
+  "q": [
+   "Collector"
+  ],
+  "lock": "None."
+ },
+ "6391fcf5744e45201147080f": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "63a39ddda3a2b32b5f6e007a": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "63a39e5b234195315d4020bf": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "63a39e6acd6db0635c1975fe": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "63a39f18c2d53c2c6839c1d3": {
+  "maps": [
+   "streets-of-tarkov"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "Room 206 on the second floor of the northern Pinewood hotel building at Streets of Tarkov."
+ },
+ "6582dc63cafcd9485374dbc5": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "678fa929819ddc4c350c0317": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "67ab3d4b83869afd170fdd3f": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "67bdea8667098e658f064695": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "67bdf04d66ca1d79a2024637": {
+  "maps": [
+   "shoreline"
+  ],
+  "none": false,
+  "q": [],
+  "lock": "Port garrison intercom on Shoreline."
+ },
+ "67bdf0e67c1ef7a648043531": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "67c031b79320f644db06f456": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "67e183377c6c2011970f3149": {
+  "maps": [],
+  "none": false,
+  "q": [],
+  "lock": ""
+ },
+ "68e7d904aded99fd1a0624f2": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ },
+ "68e7d984308332889e0b5e71": {
+  "maps": [],
+  "none": true,
+  "q": [],
+  "lock": "None."
+ }
+}

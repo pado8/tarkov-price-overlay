@@ -488,7 +488,7 @@ NAV_GROUPS = [
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
     ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
                                 ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
-                                ("keys", "/guide/keys/", "열쇠"), ("ammo", "/guide/ammo/", "탄약표")]),
+                                ("keys", "/guide/keys/", "열쇠"), ("keyfinder", "/guide/keyfinder/", "내 열쇠들 어느 맵에?"), ("ammo", "/guide/ammo/", "탄약표")]),
     ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
     ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스")]),
 ]
@@ -2976,6 +2976,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/gunsmith/", "건스미스 부품 총정리", "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)", f'{counts.get("gunsmith_q", 0)}개 퀘스트 · 부품 {counts.get("gunsmith_p", 0)}종'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
         ("/guide/keys/", "맵별 열쇠", "여는 곳·퀘스트 필요 키·시세", f'{counts.get("keys", 0)}개'),
+        ("/guide/keyfinder/", "내 열쇠들 어느 맵에?", "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리", f'열쇠 {counts.get("keyfinder", 0)}종'),
     ]
     html_cards = "".join(f'<a class="hub" href="{href}"><div class="t">{e(t)}</div><div class="d">{e(d)}</div><div class="n2">{e(n)}</div></a>' for href, t, d, n in cards)
     body = (f'<h1>탈콥 가이드 <span class="h1en">타르코프 한국어 정리</span></h1>'

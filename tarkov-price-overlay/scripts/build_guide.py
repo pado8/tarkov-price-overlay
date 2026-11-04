@@ -166,6 +166,60 @@ def refresh_lastmod(stamp: str) -> None:
     print(f"[guide] sitemap lastmod: 오늘 바뀐 쪽 {changed}개 / 가이드 {len(new_store)}쪽")
 
 
+def keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info, loc, loc_maps, loc_short) -> dict:
+    """'내 열쇠들 어느 맵에?'(/guide/keyfinder/) 데이터 — 열쇠 전부(지도 자물쇠에 없는 것 포함) + 세 언어 짧은 이름.
+
+    스크린샷의 칸 위 글자(게임이 칸 폭에 맞춰 자른 짧은 이름)를 읽어 이 표의 짧은 이름 앞부분과 맞춘다.
+    게임 언어와 사이트 언어가 다를 수 있어 짧은 이름은 ko·en·ru 를 모두 넣는다.
+    사용처 = 열쇠 페이지와 같은 지도 자물쇠(KEY_SKIP 적용 뒤) + 맵 입장 키 + 위키 보충표(scripts/wiki_keys.py 결과)."""
+    wiki_f = ROOT / "scripts" / "guide_data" / "key_wiki_uses.json"
+    wiki = json.loads(wiki_f.read_text(encoding="utf-8")) if wiki_f.exists() else {}
+    names = {}
+    for m in maps.values():
+        nn = m.get("normalizedName")
+        if nn and nn not in MAP_SKIP:
+            names.setdefault(nn, loc(loc_maps, m.get("name"), nn))
+    order = [x for x in MAP_ORDER if x in names] + sorted(x for x in names if x not in MAP_ORDER)
+    q_by_en = {}
+    for q in qlist:
+        q_by_en.setdefault(q["en"], q["n"])
+    uses: dict[str, list] = {}
+    for mp in key_maps:
+        for a in mp["access"]:
+            uses.setdefault(a, []).append([mp["id"], [], 1, 0])
+        for k in mp["keys"]:
+            uses.setdefault(k["id"], []).append([mp["id"], k["q"], 0, 0])
+    keys = []
+    for iid, it in items_reg.items():
+        if "keys" not in (it.get("types") or []):
+            continue
+        info = item_info(iid)
+        if not info:
+            continue
+        short = list(dict.fromkeys(s for s in (loc(loc_short[l], it.get("shortName"), "") for l in ("ko", "en", "ru")) if s))
+        if not short:
+            continue
+        nm = info["n"]
+        if info["en"] and nm.endswith(f'({info["en"]})'):  # 한국어판 이름의 '(영어)' 꼬리 — 영어는 아랫줄에 따로 보여 준다
+            nm = nm[: -len(info["en"]) - 2].strip() or nm
+        row = {"i": iid, "s": short, "n": nm, "e": info["en"], "img": info["img"], "w": info.get("wiki")}
+        u = uses.get(iid)
+        wk = wiki.get(iid)
+        if not u and wk and wk.get("maps"):
+            wq = [q_by_en.get(x, x) for x in wk.get("q") or []]
+            u = [[m, wq, 0, 1] for m in wk["maps"] if m in names]
+        if u:
+            row["u"] = u
+        elif wk and wk.get("none"):
+            row["x"] = 1  # 여는 곳 없음(퀘스트 납품·수집용)
+            if wk.get("q"):
+                row["wq"] = [q_by_en.get(x, x) for x in wk["q"]]
+        keys.append(row)
+    keys.sort(key=lambda r: r["e"] or "")
+    print(f"[guide] keyfinder: 열쇠 {len(keys)} · 맵 있음 {sum(1 for r in keys if r.get('u'))} · 여는 곳 없음 {sum(1 for r in keys if r.get('x'))}")
+    return {"maps": [{"id": x, "n": names[x]} for x in order], "keys": keys}
+
+
 def main() -> int:
     t0 = time.time()
     # 언어판: GUIDE_LANG=ko(기본)·en·ru. ko 외는 tarkov.dev 해당 로케일 표를 쓰고 /guide/<lang>/ 아래에 쓴다.
@@ -438,6 +492,8 @@ def main() -> int:
                    "items": items_for({i for q in qlist for g in q["give"] for i in g["i"]} |
                                       {k for q in qlist for k in q["keys"]})},
     }
+    pages["keyfinder"] = keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info, loc, loc_maps,
+                                        {l: (loc_items if l == lang else get(f"regular/items_{l}") or {}) for l in ("ko", "en", "ru")})
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
         tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)
@@ -468,16 +524,17 @@ def main() -> int:
         # 번역은 자리표시자를 채우기 전에(추출 때와 같은 구간이어야 표에 맞는다)
         page = (guide_static.localize_template(tpl, f"/guide/{name}/").replace("__DATA__", payload).replace("__STAMP__", stamp)
                 .replace("__DONATE__", guide_static.donate_url()))  # 11-04 푸터 후원 링크(ko 카카오페이 / en·ru PayPal)
+        page = page.replace("__NKEYS__", str(len(data.get("keys") or [])))  # 열쇠 찾기 페이지의 인식 가능 열쇠 수
         dest = out_dir / name / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(page, encoding="utf-8")
         print(f"[guide] {name}: {len(page) / 1024:.0f} KB")
     # ── 정적 페이지(퀘스트 상세·상인별·아이템·은신처·초반·프레스티지·맵·보스·가이드 홈) ──
     collector_ids = {k["id"] for k in kappa}
-    guide_urls = ["/guide/kappa/", "/guide/keys/", "/guide/quests/"]
+    guide_urls = ["/guide/kappa/", "/guide/keys/", "/guide/quests/", "/guide/keyfinder/"]
     guide_urls += guide_static.build_all(ctx, out_dir, collector_ids, {
-        "kappa": len(kappa), "keys": len(pages["keys"]["items"])})
-    print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개 ({lang})")
+        "kappa": len(kappa), "keys": len(pages["keys"]["items"]), "keyfinder": len(pages["keyfinder"]["keys"])})
+    print(f"[guide] 정적 페이지 {len(guide_urls) - 4}개 ({lang})")
     if lang == "ko":
         write_sitemap(guide_urls, stamp)
         # 11-04 오버레이 카드의 '가이드에서 보기' 버튼용 — 어느 아이템이 어느 목록 페이지에 행으로 있는지.
@@ -510,6 +567,8 @@ def main() -> int:
         sample: list[str] = []
         for f in out_dir.rglob("index.html"):
             txt = f.read_text(encoding="utf-8")
+            if f.parent.name == "keyfinder":  # 열쇠 찾기 데이터의 한글 짧은 이름은 한국어 게임 화면 인식용(일부러 넣은 것)
+                txt = re.sub(r'<script id="data" type="application/json">.*?</script>', "", txt, flags=re.S)
             n = len(han.findall(re.sub(r'<details class="lang">.*?</details>', "", txt, flags=re.S)))  # 언어 메뉴의 "한국어"는 일부러 남긴 것
             if n:
                 left += 1
