@@ -36,8 +36,27 @@
 ; ExecShell too spawned a SECOND instance, which single-instance (v1.1.1+)
 ; then killed with a confusing "already running" toast right after every
 ; auto-update.
+;
+; 1.2.7 portable -> installer switch: the app's in-app updater always runs
+; setup in update mode (/UPDATE), and in that mode the Tauri template's
+; CreateOrUpdateStartMenuShortcut / CreateOrUpdateDesktopShortcut return
+; early -> a portable user who switched would end up with NO shortcuts.
+; The portable app writes from_portable.json (Rust mark_portable_switch)
+; right before launching setup; when we see it, create both shortcuts by
+; calling the template's own functions (keeps the AUMID + naming rules)
+; with UpdateMode temporarily cleared. The installed app deletes the file on
+; its first run, so later ordinary updates don't recreate shortcuts the user
+; removed. currentUser install -> SetShellVarContext current -> $LOCALAPPDATA
+; is the same %LOCALAPPDATA% the app's app_local_data_dir() resolves under
+; (BUNDLEID = tauri.conf identifier = that folder's name).
 !macro NSIS_HOOK_POSTINSTALL
   ${If} $UpdateMode <> 1
     ExecShell "" "$INSTDIR\tarkov-price-overlay.exe"
+  ${ElseIf} ${FileExists} "$LOCALAPPDATA\${BUNDLEID}\from_portable.json"
+    DetailPrint "Switching from portable: creating shortcuts..."
+    StrCpy $UpdateMode 0
+    Call CreateOrUpdateStartMenuShortcut
+    Call CreateOrUpdateDesktopShortcut
+    StrCpy $UpdateMode 1
   ${EndIf}
 !macroend

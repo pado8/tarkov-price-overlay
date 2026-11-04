@@ -153,6 +153,8 @@ const openStatusPage = (lang: Lang) => {
 };
 const RELEASES_PAGE_URL =
   "https://github.com/pado8/tarkov-price-overlay-releases/releases/latest";
+// 1.2.7 포터블에서 설치판으로 옮겨 온 뒤 '옛 포터블 폴더는 지워도 돼요' 안내용(값 = 옛 폴더 경로, 닫으면 지움)
+const PORTABLE_SWITCHED_KEY = "portableSwitchedFrom";
 
 // Anonymous device identifier. The canonical copy lives in a machine-wide file
 // (%PROGRAMDATA%\TarkovPriceOverlay\install_id, written by the Rust backend),
@@ -1445,6 +1447,17 @@ function App() {
   // installer flow, which would install a second copy elsewhere.
   const [isPortable, setIsPortable] = useState<boolean>(false);
   const isPortableRef = useRef(false);
+  // 1.2.7 포터블 → 설치판 전환. installedCopy = 포터블로 켰는데 이 PC 에 설치판이 있음(작업 표시줄에 고정한 옛 포터블 대책).
+  // switchedFrom = 설치판 첫 실행에서 읽은 옛 포터블 폴더 — '지워도 돼요' 안내를 닫을 때까지 남긴다.
+  const [installedCopy, setInstalledCopy] = useState<string | null>(null);
+  const [installedCopyDismissed, setInstalledCopyDismissed] = useState(false);
+  const [switchedFrom, setSwitchedFrom] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(PORTABLE_SWITCHED_KEY);
+    } catch {
+      return null;
+    }
+  });
   const [hideoutLevels, setHideoutLevels] = useState<Record<string, number>>(
     () => {
       try {
@@ -1792,6 +1805,35 @@ function App() {
         isPortableRef.current = v;
         log(`portable: ${v}`);
         reportEvent("install_mode", v ? "portable" : "installer");
+        if (v) {
+          invoke<string | null>("find_installed_copy")
+            .then((p) => {
+              if (p) {
+                log(`portable: installed copy found — ${p}`);
+                setInstalledCopy(p);
+              }
+            })
+            .catch(() => {});
+        } else {
+          // 설치판 첫 실행: 포터블에서 전환해 왔는지(표시 파일은 Rust 가 읽고 바로 지운다 — 한 번만)
+          invoke<{ portable_dir?: string; from_version?: string; start_menu_shortcut?: boolean; desktop_shortcut?: boolean } | null>(
+            "take_portable_switch"
+          )
+            .then((m) => {
+              if (!m) return;
+              log(
+                `portable switch: from v${m.from_version ?? "?"} (${m.portable_dir ?? "?"}) — shortcuts start_menu=${m.start_menu_shortcut} desktop=${m.desktop_shortcut}`
+              );
+              reportEvent("update_apply", m.start_menu_shortcut ? "portable_switched" : "portable_switched_nolnk");
+              if (m.portable_dir) {
+                try {
+                  localStorage.setItem(PORTABLE_SWITCHED_KEY, m.portable_dir);
+                } catch {}
+                setSwitchedFrom(m.portable_dir);
+              }
+            })
+            .catch(() => {});
+        }
       })
       .catch(() => {});
   }, []);
@@ -2772,17 +2814,21 @@ function App() {
     }
   };
 
-  const installUpdate = async () => {
+  // onClick 에 바로 넘기는 installUpdate 는 인자 없음. 포터블 전환은 runInstall(true) 로 같은 흐름을 탄다
+  const installUpdate = () => runInstall(false);
+  const runInstall = async (portableSwitch: boolean) => {
     const update = pendingUpdateRef.current;
     if (!update) return;
     if (updatePhaseRef.current === "downloaded") return applyDownloadedUpdate();
     if (updatePhaseRef.current === "downloading") return; // 자동 다운로드가 받는 중 — 겹치지 않게
-    reportEvent("update_apply", "install_now");
-    // Tell the user what's about to happen: the app closes and the installer
-    // downloads + launches with a gap before the setup window appears. Without
-    // this, that silent gap reads like the update stalled. (t is the active
-    // language strings.)
-    await message(t.updateStartGuide, { title: t.updateStartTitle, kind: "info" });
+    if (!portableSwitch) {
+      reportEvent("update_apply", "install_now");
+      // Tell the user what's about to happen: the app closes and the installer
+      // downloads + launches with a gap before the setup window appears. Without
+      // this, that silent gap reads like the update stalled. (t is the active
+      // language strings.) 포터블 전환은 확인 창에 같은 안내가 들어 있어 생략.
+      await message(t.updateStartGuide, { title: t.updateStartTitle, kind: "info" });
+    }
     setUpdatePhase("downloading");
     setUpdateProgress(0);
     setUpdateError(null);
@@ -2813,8 +2859,36 @@ function App() {
       log(`update: install failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
-      reportEvent("update_apply", "error");
+      reportEvent("update_apply", portableSwitch ? "portable_switch_error" : "error");
     }
+  };
+
+  // 1.2.7 포터블 → 설치판 원클릭 전환: 동의를 받은 뒤에만 받는다(포터블은 자동 다운로드 안 함).
+  // 같은 설치 파일·같은 진행률 UI 를 쓰고, 설치 직전에 표시 파일을 남겨 설치 훅이 바로가기를 만들게 한다.
+  const startPortableSwitch = async () => {
+    const update = pendingUpdateRef.current;
+    if (!update) return;
+    if (updatePhaseRef.current === "downloading" || updatePhaseRef.current === "ready") return;
+    const yes = await ask(t.portableSwitchConfirm.replace("{ver}", update.version), {
+      title: t.portableSwitchTitle,
+      kind: "info",
+      okLabel: t.portableSwitchOk,
+      cancelLabel: t.portableSwitchCancel,
+    }).catch(() => false);
+    if (!yes) {
+      log("portable switch: cancelled");
+      return;
+    }
+    reportEvent("update_apply", "portable_switch_click");
+    try {
+      const at = await invoke<string>("mark_portable_switch", { fromVersion: APP_VERSION });
+      log(`portable switch: marker written — ${at}`);
+    } catch (e) {
+      // 표시 파일을 못 남겨도 설치는 된다(바로가기만 안 생김) — 막지 않고 기록만
+      log(`portable switch: marker failed — ${String(e)}`);
+      reportEvent("update_apply", "portable_switch_error");
+    }
+    await runInstall(true);
   };
 
   // 트레이 '종료': Rust 가 바로 끝내지 않고 이 이벤트를 먼저 보낸다(8초 안에 exit_app 이
@@ -4035,13 +4109,23 @@ function App() {
               {t.forcedUpdateBody.replace("{cur}", APP_VERSION).replace("{min}", forcedMinVersion)}
             </div>
             <div className="forced-update-actions">
-              {isPortable || !updateInfo ? (
+              {!updateInfo ? (
                 <button
                   className="reset-btn update-btn"
                   onClick={() => openUrl(RELEASES_PAGE_URL).catch((e) => log(`update: open releases page failed — ${String(e)}`))}
                 >
                   {t.updateOpenPage}
                 </button>
+              ) : isPortable && (updatePhase === "idle" || updatePhase === "error") ? (
+                <>
+                  <button className="reset-btn update-btn" onClick={startPortableSwitch}>{t.portableSwitchBtn}</button>
+                  <button
+                    className="reset-btn"
+                    onClick={() => openUrl(RELEASES_PAGE_URL).catch((e) => log(`update: open releases page failed — ${String(e)}`))}
+                  >
+                    {t.updateOpenPage}
+                  </button>
+                </>
               ) : updatePhase === "downloaded" ? (
                 <button className="reset-btn update-btn" onClick={applyDownloadedUpdate}>{t.updateApplyNow}</button>
               ) : updatePhase === "downloading" ? (
@@ -4060,6 +4144,10 @@ function App() {
         {(() => {
           const banner = !statsNoticeShown
             ? "consent"
+            : isPortable && installedCopy && !installedCopyDismissed
+              ? "installed"
+              : !isPortable && switchedFrom
+                ? "switched"
             : updateInfo && updateInfo.version !== dismissedUpdate
               ? "update"
               : adminInfo && adminInfo.is_admin === false && !adminDismissed
@@ -4089,6 +4177,53 @@ function App() {
           </div>
         )}
 
+        {banner === "installed" && (
+          <div className="update-banner">
+            <span className="update-text">
+              <Icon name="update" /> {t.portableInstalledFound}
+            </span>
+            <button
+              className="reset-btn update-btn"
+              onClick={() => {
+                reportEvent("update_apply", "portable_open_installed");
+                invoke("launch_installed_copy").catch((e) => log(`portable: launch installed failed — ${String(e)}`));
+              }}
+            >
+              {t.portableOpenInstalled}
+            </button>
+            <button className="settings-btn" onClick={() => setInstalledCopyDismissed(true)} title={t.updateLater}>
+              <Icon name="x" />
+            </button>
+          </div>
+        )}
+
+        {banner === "switched" && switchedFrom && (
+          <div className="update-banner">
+            <span className="update-text">
+              <Icon name="check" /> {t.portableSwitchedDone}
+            </span>
+            <button
+              className="reset-btn"
+              onClick={() => invoke("open_folder", { path: switchedFrom }).catch((e) => log(`portable: open folder failed — ${String(e)}`))}
+              title={switchedFrom}
+            >
+              {t.portableOpenFolder}
+            </button>
+            <button
+              className="settings-btn"
+              onClick={() => {
+                try {
+                  localStorage.removeItem(PORTABLE_SWITCHED_KEY);
+                } catch {}
+                setSwitchedFrom(null);
+              }}
+              title={t.dismiss}
+            >
+              <Icon name="x" />
+            </button>
+          </div>
+        )}
+
         {banner === "update" && updateInfo && (
           <div className="update-banner">
             {updatePhase === "idle" && (
@@ -4109,21 +4244,23 @@ function App() {
                   )}
                 </span>
                 {isPortable ? (
-                  // Portable users: send them to the downloads page rather
-                  // than firing downloadAndInstall(), which would install a
-                  // second copy at the default NSIS path and leave the
-                  // portable folder untouched.
-                  <button
-                    className="reset-btn update-btn"
-                    onClick={() =>
-                      openUrl(RELEASES_PAGE_URL).catch((e) =>
-                        log(`update: open releases page failed — ${String(e)}`)
-                      )
-                    }
-                    title={t.updatePortableHint}
-                  >
-                    {t.updateOpenPage}
-                  </button>
+                  // 1.2.7: 포터블도 같은 설치 파일로 '설치판으로 전환'(동의 후). 포터블 폴더는 그대로 남고
+                  // 설정·진행은 이어진다. 새 포터블 ZIP 을 직접 받고 싶은 사람을 위해 페이지 버튼도 남긴다.
+                  <>
+                    <button className="reset-btn update-btn" onClick={startPortableSwitch} title={t.updatePortableHint}>
+                      {t.portableSwitchBtn}
+                    </button>
+                    <button
+                      className="reset-btn"
+                      onClick={() =>
+                        openUrl(RELEASES_PAGE_URL).catch((e) =>
+                          log(`update: open releases page failed — ${String(e)}`)
+                        )
+                      }
+                    >
+                      {t.updateOpenPage}
+                    </button>
+                  </>
                 ) : (
                   <button
                     className="reset-btn update-btn"
@@ -4179,7 +4316,7 @@ function App() {
                 </span>
                 <button
                   className="reset-btn update-btn"
-                  onClick={installUpdate}
+                  onClick={isPortable ? startPortableSwitch : installUpdate}
                 >
                   {t.updateRetry}
                 </button>

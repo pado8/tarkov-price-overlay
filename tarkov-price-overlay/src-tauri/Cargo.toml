@@ -25,3 +25,7 @@ tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 device_query = "2"
+
+# 1.2.7 포터블→설치판: 설치판 위치(제거 정보 InstallLocation)를 UTF-16 그대로 읽기. 이미 트리에 있는 버전이라 새로 받는 크레이트 없음
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_System_Registry", "Win32_Foundation"] }

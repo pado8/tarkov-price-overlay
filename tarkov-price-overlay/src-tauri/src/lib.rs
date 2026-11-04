@@ -690,6 +690,168 @@ fn is_portable_install() -> bool {
     exe_dir.join("_portable.marker").exists()
 }
 
+// ── 포터블 → 설치판 원클릭 전환 (1.2.7) ─────────────────────────────────────
+// 포터블은 exe 를 스스로 바꿀 수 없어 옛 버전에 머문다. 업데이터의 설치 파일을 그대로 돌리면
+// %LOCALAPPDATA%\Tarkov Price Overlay 에 설치판이 생기고, 데이터(WebView2 = %LOCALAPPDATA%\com.tarkov.overlay,
+// 퀘스트 상태 = %LOCALAPPDATA%\TarkovPriceOverlay, 설치 ID = %PROGRAMDATA%)는 exe 위치와 무관해 그대로 이어진다.
+// 함정: 업데이터는 설치 파일을 '업데이트 모드'(/UPDATE)로 돌리고, 그 모드에선 Tauri 템플릿이 시작 메뉴·바탕화면
+// 바로가기 생성을 건너뛴다 → 전환 직후 바로가기 0개. 그래서 설치 직전에 이 표시 파일을 남기고,
+// installer-hooks.nsh 의 POSTINSTALL 이 이 파일을 보면 바로가기를 만든다. 설치판 첫 실행이 읽고 지운다.
+const PORTABLE_SWITCH_MARKER: &str = "from_portable.json";
+const INSTALLED_EXE: &str = "tarkov-price-overlay.exe";
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
+fn now_ms() -> u128 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0)
+}
+
+/// 포터블에서 '설치판으로 전환'을 누른 직후(설치 파일 실행 직전) 부른다.
+#[tauri::command]
+fn mark_portable_switch(app: tauri::AppHandle, from_version: String) -> Result<String, String> {
+    let dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let portable_dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.to_string_lossy().into_owned()))
+        .unwrap_or_default();
+    let body = serde_json::json!({
+        "portable_dir": portable_dir,
+        "from_version": from_version.chars().take(32).collect::<String>(),
+        "ts": now_ms() as u64,
+    });
+    let path = dir.join(PORTABLE_SWITCH_MARKER);
+    std::fs::write(&path, body.to_string()).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+/// 설치판 첫 실행: 표시 파일이 있으면 내용을 돌려주고 지운다(한 번만). 바로가기가 실제로 생겼는지도 같이 본다.
+#[tauri::command]
+fn take_portable_switch(app: tauri::AppHandle) -> Option<serde_json::Value> {
+    if is_portable_install() {
+        return None;
+    }
+    let path = app.path().app_local_data_dir().ok()?.join(PORTABLE_SWITCH_MARKER);
+    let raw = std::fs::read_to_string(&path).ok()?;
+    let _ = std::fs::remove_file(&path);
+    let mut v: serde_json::Value = serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!({}));
+    let lnk_name = format!("{}.lnk", product_name(&app));
+    let lnk = |base: Option<std::path::PathBuf>| base.map(|b| b.join(&lnk_name).exists()).unwrap_or(false);
+    let start_menu = lnk(std::env::var_os("APPDATA").map(|a| {
+        std::path::PathBuf::from(a).join("Microsoft\\Windows\\Start Menu\\Programs")
+    }));
+    let desktop = lnk(app.path().desktop_dir().ok());
+    if let Some(o) = v.as_object_mut() {
+        o.insert("start_menu_shortcut".into(), start_menu.into());
+        o.insert("desktop_shortcut".into(), desktop.into());
+    }
+    Some(v)
+}
+
+/// 레지스트리 제거 정보의 InstallLocation (NSIS 가 따옴표로 감싸 적는다). HKCU 먼저, 없으면 HKLM.
+/// reg.exe 출력은 한국어 윈도우에서 cp949 라 한글 사용자 폴더 경로가 깨져서 API 로 UTF-16 을 직접 읽는다.
+#[cfg(windows)]
+fn registry_install_location(product: &str) -> Option<std::path::PathBuf> {
+    use windows_sys::Win32::System::Registry::{RegGetValueW, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, RRF_RT_REG_SZ};
+    let wide = |s: &str| s.encode_utf16().chain(std::iter::once(0)).collect::<Vec<u16>>();
+    let sub = wide(&format!("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{product}"));
+    let name = wide("InstallLocation");
+    for root in [HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE] {
+        let mut buf = vec![0u16; 2048];
+        let mut size: u32 = (buf.len() * 2) as u32;
+        // SAFETY: 버퍼 크기를 바이트로 넘기고, 성공 시 size 는 실제로 쓴 바이트 수(끝 NUL 포함)
+        let rc = unsafe {
+            RegGetValueW(root, sub.as_ptr(), name.as_ptr(), RRF_RT_REG_SZ, std::ptr::null_mut(), buf.as_mut_ptr().cast(), &mut size)
+        };
+        if rc != 0 {
+            continue;
+        }
+        let n = (size as usize / 2).min(buf.len());
+        let s = String::from_utf16_lossy(&buf[..n]);
+        let v = s.trim_end_matches('\0').trim().trim_matches('"').trim();
+        if !v.is_empty() {
+            return Some(std::path::PathBuf::from(v));
+        }
+    }
+    None
+}
+
+#[cfg(not(windows))]
+fn registry_install_location(_product: &str) -> Option<std::path::PathBuf> {
+    None
+}
+
+/// tauri.conf productName = NSIS 제거 정보 키 이름 = 바로가기 이름
+fn product_name(app: &tauri::AppHandle) -> String {
+    app.config().product_name.clone().unwrap_or_else(|| "Tarkov Price Overlay".into())
+}
+
+fn installed_copy_path(product: &str) -> Option<std::path::PathBuf> {
+    let exe = registry_install_location(product)?.join(INSTALLED_EXE);
+    if !exe.is_file() {
+        return None;
+    }
+    // 지금 돌고 있는 exe 자신이면(설치 폴더에 포터블 표시가 있는 이상한 경우) 안내하지 않는다
+    if let Ok(cur) = std::env::current_exe() {
+        if cur.canonicalize().ok() == exe.canonicalize().ok() {
+            return None;
+        }
+    }
+    Some(exe)
+}
+
+/// 포터블 실행 중일 때만: 이 PC 에 설치판이 있으면 그 exe 경로.
+#[tauri::command]
+fn find_installed_copy(app: tauri::AppHandle) -> Option<String> {
+    if !is_portable_install() {
+        return None;
+    }
+    installed_copy_path(&product_name(&app)).map(|p| p.to_string_lossy().into_owned())
+}
+
+/// 설치판을 켜고 이 포터블은 끝낸다. 설치판이 단일 실행 잠금·사이드카 포트를 잡을 수 있게
+/// 1.5초 뒤에 켜지도록 숨은 PowerShell 에 맡기고 바로 종료한다(relaunch_as_admin 과 같은 방식).
+#[tauri::command]
+fn launch_installed_copy(app: tauri::AppHandle) -> Result<(), String> {
+    let exe = installed_copy_path(&product_name(&app)).ok_or_else(|| "installed copy not found".to_string())?;
+    let exe_str = exe.to_string_lossy().replace('\'', "''");
+    let mut cmd = std::process::Command::new("powershell");
+    cmd.args([
+        "-NoProfile",
+        "-WindowStyle",
+        "Hidden",
+        "-Command",
+        &format!("Start-Sleep -Milliseconds 1500; Start-Process -FilePath '{exe_str}'"),
+    ]);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.spawn().map_err(|e| format!("launch installed failed: {e}"))?;
+    prepare_quit(app.clone());
+    app.exit(0);
+    Ok(())
+}
+
+/// 탐색기로 폴더 열기(옛 포터블 폴더 안내용). 실제 있는 폴더만.
+#[tauri::command]
+fn open_folder(path: String) -> Result<(), String> {
+    let p = std::path::PathBuf::from(&path);
+    if !p.is_dir() {
+        return Err("folder not found".into());
+    }
+    std::process::Command::new("explorer")
+        .arg(p)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 /// Resolve the stable, machine-wide install id and persist it.
 ///
 /// The id used to live ONLY in WebView2 localStorage, which a reinstall, a
@@ -1054,6 +1216,11 @@ pub fn run() {
             show_preview_rect,
             hide_preview_rect,
             is_portable_install,
+            mark_portable_switch,
+            take_portable_switch,
+            find_installed_copy,
+            launch_installed_copy,
+            open_folder,
             resolve_install_id,
             exit_app,
             relaunch_as_admin,
