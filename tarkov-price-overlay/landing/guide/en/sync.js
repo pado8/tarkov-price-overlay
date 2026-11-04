@@ -5,6 +5,8 @@ document.addEventListener("click",function(ev){var gt=ev.target.closest(".top na
 if(!gt){open.forEach(function(g){g.classList.remove("open")});return}
 var g=gt.parentNode,narrow=window.innerWidth<900;if(!(noHover||narrow))return;
 if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x.classList.remove("open")});g.classList.add("open")}});
+
+document.addEventListener("click",function(ev){document.querySelectorAll("details.lang[open]").forEach(function(d){if(!d.contains(ev.target))d.removeAttribute("open")})});
 })();
 (function(){
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced",SE="guide.sync.err";
