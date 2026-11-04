@@ -110,6 +110,9 @@ export const T = {
     wideCaptureHint:
       "캡처 영역을 넓혀 다시 읽었지만 일치하는 아이템을 못 찾았어요. 설정 → 캡처 영역에서 빨간 박스를 아이템 이름에 맞춰 주세요.",
     noMarketPrice: "거래 불가 — 플리·상인 시세 없음 (퀘스트/특수 아이템)",
+    noPriceYet: "아직 시세 없음 — 새 아이템이거나 거래가 적어요. 데이터가 들어오면 자동으로 나와요",
+    catalogRefreshingHint: "아이템 목록을 새로 받는 중이에요 — 새로 추가된 아이템이면 몇 초 뒤 다시 F2를 눌러 보세요.",
+    recentPatchHint: "게임이 {h}시간 전에 업데이트됐어요 — 새 아이템은 데이터가 들어오기까지 몇 시간 걸릴 수 있어요.",
     flea: "플리",
     fleaLow24: "플리 24h 최저",
     fleaRange24: "플리 24h 범위",
@@ -498,6 +501,9 @@ export const T = {
     wideCaptureHint:
       "Widened the capture box and retried, but still couldn't match an item. Align the red box to the item name in Settings → capture region.",
     noMarketPrice: "Untradeable — no flea/trader price (quest/special item)",
+    noPriceYet: "No price yet — a new item or rarely traded. It will show up once data arrives",
+    catalogRefreshingHint: "Refreshing the item list — if this is a newly added item, press F2 again in a few seconds.",
+    recentPatchHint: "The game updated {h}h ago — data for new items can take a few hours to arrive.",
     flea: "Flea",
     fleaLow24: "Flea 24h low",
     fleaRange24: "Flea 24h range",
@@ -886,6 +892,9 @@ export const T = {
     wideCaptureHint:
       "Область захвата расширена и перечитана, но совпадений не найдено. Выровняйте красную рамку по названию предмета в Настройки → область захвата.",
     noMarketPrice: "Не продаётся — нет цены барахолки/торговца (квестовый/особый предмет)",
+    noPriceYet: "Цены пока нет — новый или редко продаваемый предмет. Появится, когда придут данные",
+    catalogRefreshingHint: "Обновляем список предметов — если это новый предмет, нажмите F2 ещё раз через несколько секунд.",
+    recentPatchHint: "Игра обновилась {h} ч назад — данные о новых предметах могут появиться через несколько часов.",
     flea: "Барахолка",
     fleaLow24: "Барахолка мин. 24ч",
     fleaRange24: "Барахолка диапазон 24ч",

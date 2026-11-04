@@ -907,6 +907,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "wiki": item.get("wikiLink"),
         # 11-04 가이드 연결: 열쇠면 카드 버튼이 가이드 열쇠 페이지로 간다
         "is_key": "keys" in (item.get("types") or []),
+        # 11-04: 플리 금지 아이템(이벤트·화폐·보관함 등). 시세가 비었을 때 카드가 '거래 불가'와 '아직 시세 없음(새 아이템·거래 적음)'을 가른다
+        "no_flea": "noFlea" in (item.get("types") or []),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_high_24h": item.get("high24hPrice"),
@@ -1038,6 +1040,64 @@ def _fetch_catalog_items(lang: str, game_mode: str) -> tuple[list[dict], tuple |
             last = e
             print(f"[cache] {src} failed for ({lang},{game_mode}): {e!r} - trying next source")
     raise last if last else RuntimeError("no catalog source")
+
+
+# ── 못 찾음 → 카탈로그 즉시 재갱신(11-04) ─────────────────────────────────
+# 패치 직후 새 아이템은 tarkov.dev 에 들어오기 전까지 목록에 없다. 예전엔 못 찾은 이름을 GraphQL 로 한 번 더 찾았지만
+# GraphQL 은 07-21 부터 422 로 죽어 있어 아무것도 못 했다. 대신 못 찾음이 나오면 그 (언어, 서버) 목록을 백그라운드로
+# 바로 다시 받는다 — tarkov.dev 에 막 들어온 아이템이면 10분 주기를 기다리지 않고 다음 F2 부터 잡힌다. 같은 목록은
+# 5분에 한 번만, 정기 갱신 직후(2분 안)엔 하지 않는다(원본 캐시 TTL 120초라 어차피 같은 데이터).
+FORCED_REFRESH_MIN_GAP_SEC = 300
+FORCED_REFRESH_SKIP_IF_FRESH_SEC = 120
+_forced_lock = threading.Lock()
+_forced_at: dict[tuple[str, str], float] = {}
+_forced_running: set[tuple[str, str]] = set()
+
+
+def request_catalog_refresh(lang: str, game_mode: str) -> bool:
+    """못 찾음 뒤 호출. 재갱신을 시작했으면 True(카드가 '목록 받는 중 — 몇 초 뒤 다시 F2'를 안내)."""
+    key = (lang, game_mode)
+    now = time.time()
+    with _forced_lock:
+        if key in _forced_running:
+            return True
+        if now - _forced_at.get(key, 0.0) < FORCED_REFRESH_MIN_GAP_SEC:
+            return False
+        with _price_cache_lock:
+            fresh = now - _price_cache_ts.get(key, 0.0) < FORCED_REFRESH_SKIP_IF_FRESH_SEC
+        if fresh:
+            return False
+        _forced_at[key] = now
+        _forced_running.add(key)
+    threading.Thread(target=_forced_refresh, args=(lang, game_mode), daemon=True).start()
+    return True
+
+
+def catalog_refresh_running(lang: str, game_mode: str) -> bool:
+    with _forced_lock:
+        return (lang, game_mode) in _forced_running
+
+
+def _forced_refresh(lang: str, game_mode: str) -> None:
+    key = (lang, game_mode)
+    try:
+        with _price_cache_lock:
+            before = {e.get("id") for e in (_price_cache.get(key) or {}).values()}
+        try:
+            import tarkov_json_fallback as _jf
+            with _jf._raw_lock:
+                _jf._raw_cache.clear()  # 원본 캐시(120초)를 비워 정말 새로 받는다
+        except Exception:  # noqa: BLE001
+            pass
+        _refresh_one(lang, game_mode)
+        with _price_cache_lock:
+            after = {e.get("id") for e in (_price_cache.get(key) or {}).values()}
+        print(f"[cache] forced refresh ({lang},{game_mode}) after no-match: new items {len(after - before)}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[cache] forced refresh ({lang},{game_mode}) failed: {e!r}")
+    finally:
+        with _forced_lock:
+            _forced_running.discard(key)
 
 
 def _refresh_one(lang: str, game_mode: str) -> int:

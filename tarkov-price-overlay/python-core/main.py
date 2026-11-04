@@ -301,6 +301,9 @@ class LookupResponse(BaseModel):
     wiki: str | None = None  # Fandom wiki page (card link button) — 가이드가 다루지 않는 아이템의 대체 링크
     is_key: bool = False  # 11-04 열쇠면 카드 버튼이 가이드 열쇠 페이지로
     guide_page: str | None = None  # 11-04 'keys'|'items' — 가이드 목록 페이지에 이 아이템 행이 있음(없으면 위키)
+    no_flea: bool | None = None  # 11-04 플리 금지 아이템(시세 없음일 때 '거래 불가' vs '아직 시세 없음'), 옛 스냅샷은 None
+    catalog_refreshing: bool = False  # 11-04 못 찾음 뒤 아이템 목록을 새로 받는 중 → '몇 초 뒤 다시 F2'
+    game_updated_hours: int | None = None  # 11-04 게임이 새 버전으로 바뀐 지 몇 시간(48시간 안일 때만)
     flea_price: int | None
     flea_low_24h: int | None = None
     flea_high_24h: int | None = None
@@ -344,6 +347,8 @@ def _build_response(
     game_mode: str = "regular",
     attempt: str | None = None,
     lang: str = "ko",
+    catalog_refreshing: bool = False,
+    game_updated_hours: int | None = None,
 ) -> LookupResponse:
     """Single source of truth that maps a get_item_price() dict into the
     Pydantic response. Both the F2-capture and override_text paths use it,
@@ -411,6 +416,9 @@ def _build_response(
         wiki=price.get("wiki"),
         is_key=bool(price.get("is_key")),
         guide_page=guide_index.page_for(price.get("id")),
+        no_flea=price.get("no_flea"),
+        catalog_refreshing=catalog_refreshing,
+        game_updated_hours=game_updated_hours,
         flea_price=price.get("flea"),
         flea_low_24h=price.get("flea_low_24h"),
         flea_high_24h=price.get("flea_high_24h"),
@@ -945,35 +953,67 @@ def _cold_rescue(
     game_mode: str,
     corrections: dict[str, str],
 ) -> tuple[str, dict] | None:
-    """One deferred cold-path (network) try after ALL cache-only probes
-    failed. This is what preserves brand-new patch items (in the ≤10min gap
-    before the catalog cache refreshes) now that the in-flow probes are
-    cache-only: pick the most promising read strings and let the server
-    substring search / fuzzy have one shot. Capped at 2 candidates so the
-    worst-case lookup pays ≤2 round trips instead of the old one-per-string
-    (which multiplied into ~7s). Only runs when the cache is populated —
-    on a true cold start the in-flow probes already went to the network."""
-    if not has_price_cache(lang, game_mode):
+    """못 찾음 뒤 마지막 한 번(11-04 교체). 예전엔 읽은 글자를 GraphQL 로 한 번 더 찾았지만 GraphQL 은 07-21 부터 422 로
+    죽어 있다. 이제는 그 (언어, 서버) 아이템 목록을 백그라운드로 즉시 다시 받게만 하고(5분에 한 번), 이번 조회는 못 찾음으로
+    끝낸다 — 카드가 catalog_refreshing 으로 '몇 초 뒤 다시 F2'를 안내하고, tarkov.dev 에 막 들어온 새 아이템이면 다음 F2 에 잡힌다.
+    빈 캐시(첫 실행)는 흐름 안의 조회가 이미 네트워크로 갔으므로 아무것도 안 한다."""
+    if not has_price_cache(lang, game_mode) or not any(len(s.strip()) >= 3 for s in rescue_pool):
         return None
-    seen: set[str] = set()
-    candidates: list[str] = []
-    for s in sorted((s.strip() for s in rescue_pool), key=len, reverse=True):
-        if len(s) < 3 or s in seen:
-            continue
-        seen.add(s)
-        candidates.append(s)
-        if len(candidates) >= 2:
-            break
-    for cand in candidates:
-        price = get_item_price(
-            cand, lang=lang, game_mode=game_mode, corrections=corrections,
-            allow_cold=True,
-        )
-        if price.get("name") is not None:
-            print(f"[lookup] cold rescue matched {cand!r} -> {price['name']!r}")
-            return cand, price
+    try:
+        from tarkov_api import request_catalog_refresh
+        if request_catalog_refresh(lang, game_mode):
+            print(f"[lookup] no match - catalog refresh requested ({lang},{game_mode})")
+    except Exception as e:  # noqa: BLE001
+        print(f"[lookup] catalog refresh request failed: {e!r}")
     return None
 
+
+# ── 게임 업데이트 직후 안내(11-04) ───────────────────────────────────────
+# 게임 로그 폴더 이름의 버전(log_2026.11.03_1-39-48_1.3.0.0.48484)으로 '새 버전을 처음 본 시각'을 구한다. 이전 버전 폴더가
+# 있어야만 계산한다(로그를 지웠거나 새로 깔았으면 언제 바뀌었는지 모른다 → 안내 안 함). 48시간 안이면 시간을 돌려준다.
+_GAME_UPD_CACHE: dict = {"t": 0.0, "v": None}
+GAME_UPDATE_HINT_HOURS = 48
+
+
+def _recent_game_update_hours() -> int | None:
+    now = time.time()
+    if now - _GAME_UPD_CACHE["t"] < 600:
+        return _GAME_UPD_CACHE["v"]
+    v = None
+    try:
+        import quest_tracker as qt
+        import story_progress as sp
+        from datetime import datetime as _dt
+        inst = qt.get_tracker()._effective_install_path()
+        metas = [sp.folder_meta(f.name) for f in (qt._list_log_folders(inst) if inst else [])]
+        metas = [(ts, ver) for ts, ver in metas if ver]
+        v = _hours_since_version_change(metas, now)
+    except Exception as e:  # noqa: BLE001
+        print(f"[lookup] game update check failed: {e!r}")
+    _GAME_UPD_CACHE.update(t=now, v=v)
+    return v
+
+
+def _hours_since_version_change(metas: list, now: float) -> int | None:
+    """metas = [("YYYY-MM-DD HH:MM:SS", 버전)…] 시간순. 마지막 버전으로 바뀐 첫 폴더부터 지금까지 시간(48시간 안일 때만).
+    버전은 앞 세 자리(1.3.0)만 비교한다 — 1.3.0.0 → 1.3.0.1 같은 핫픽스는 새 아이템이 거의 없어 이틀 내내 안내하면 잡음이다."""
+    from datetime import datetime as _dt
+    if not metas:
+        return None
+    major = lambda v: ".".join(str(v).split(".")[:3])
+    latest = major(metas[-1][1])
+    idx = None
+    for i in range(len(metas) - 1, -1, -1):
+        if major(metas[i][1]) != latest:
+            idx = i
+            break
+    if idx is None:
+        return None  # 이전 버전 기록이 없다 — 언제 바뀌었는지 모른다
+    first = _dt.strptime(metas[idx + 1][0], "%Y-%m-%d %H:%M:%S").timestamp()
+    hours = (now - first) / 3600
+    if hours < 0 or hours > GAME_UPDATE_HINT_HOURS:
+        return None
+    return int(hours)
 
 # Server-side supersession for rapid F2. /lookup is a *sync* endpoint, so
 # FastAPI runs each call in its own thread-pool worker — the client aborting a
@@ -1194,7 +1234,14 @@ def lookup(req: CaptureRequest) -> LookupResponse:
 
     # No match: report the most informative text read across attempts.
     final_text = text if price.get("name") is not None else best_text
-    return _build_response(final_text, price, game_mode, attempt=attempt_used, lang=req.lang)
+    no_match = price.get("name") is None
+    try:
+        from tarkov_api import catalog_refresh_running
+        refreshing = no_match and catalog_refresh_running(lang, game_mode)
+    except Exception:  # noqa: BLE001
+        refreshing = False
+    return _build_response(final_text, price, game_mode, attempt=attempt_used, lang=req.lang,
+                           catalog_refreshing=refreshing, game_updated_hours=_recent_game_update_hours())
 
 
 # ─── Quest tracker endpoints ─────────────────────────────────────────

@@ -751,6 +751,10 @@ type LookupResult = {
   gunsmith?: { quest: string; kind: "req" | "ex"; weapon: string | null }[];
   // 이 시세가 몇 초 전 카탈로그인지 · 출처(json/graphql/disk). 디스크 복원이거나 3시간 넘으면 "N시간 전 시세" 배지
   price_age_sec?: number | null;
+  // 11-04 새 아이템 대응: 플리 금지 여부(시세 없음이 '거래 불가'인지 '아직 시세 없음'인지) · 목록 재갱신 중 · 게임 업데이트 뒤 시간
+  no_flea?: boolean | null;
+  catalog_refreshing?: boolean;
+  game_updated_hours?: number | null;
   price_source?: string | null;
   // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
   // panel and pre-selects the relevant caliber. null for everything else.
@@ -5592,6 +5596,13 @@ function App() {
               result.attempt === "wide" && (
                 <div className="hint">{t.wideCaptureHint}</div>
               )}
+            {/* 11-04 새 아이템: 못 찾으면 사이드카가 목록을 바로 다시 받는다 · 게임 업데이트 직후면 그 사실을 알린다 */}
+            {!result.item_name && result.catalog_refreshing && (
+              <div className="hint">{t.catalogRefreshingHint}</div>
+            )}
+            {!result.item_name && result.raw_text.trim() && result.game_updated_hours != null && (
+              <div className="hint">{t.recentPatchHint.replace("{h}", String(result.game_updated_hours))}</div>
+            )}
             {/* 11-04 첫 설정 도움 — 연달아 못 읽을 때만(조건은 trackF2Outcome) */}
             {!result.item_name && captureHelp && (
               <div className="capture-help" role="status">
@@ -5698,7 +5709,13 @@ function App() {
                 <div className="prices">
                   {staleNote(result, t)}
                   {noMarketPrice ? (
-                    <div className="no-market-note">{t.noMarketPrice}</div>
+                    <div className="no-market-note">
+                      {/* 플리 금지가 아닌데 시세가 비었으면 새 아이템이거나 거래가 적은 것 — '거래 불가'로 단정하지 않는다 */}
+                      {result.no_flea === false ? t.noPriceYet : t.noMarketPrice}
+                      {result.no_flea === false && result.game_updated_hours != null && (
+                        <div>{t.recentPatchHint.replace("{h}", String(result.game_updated_hours))}</div>
+                      )}
+                    </div>
                   ) : (
                     <>
                   <div className="price">
