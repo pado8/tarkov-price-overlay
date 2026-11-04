@@ -417,7 +417,7 @@ def main() -> int:
         sample: list[str] = []
         for f in out_dir.rglob("index.html"):
             txt = f.read_text(encoding="utf-8")
-            n = len(han.findall(txt))
+            n = len(han.findall(re.sub(r'<details class="lang">.*?</details>', "", txt, flags=re.S)))  # 언어 메뉴의 "한국어"는 일부러 남긴 것
             if n:
                 left += 1
                 if len(sample) < 5:

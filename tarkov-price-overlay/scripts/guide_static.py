@@ -75,7 +75,8 @@ EVENT_TAG = '<span class="evtag">🎃 이벤트 한정</span>'
 LANG = "ko"
 I18N: dict = {}      # ko 구간 → 번역 (en/ru 빌드에서 템플릿 페이지 번역용)
 I18N_MISSING: set = set()
-LANGS = [("ko", "한국어", "ko_KR"), ("en", "English", "en_US"), ("ru", "Русский", "ru_RU")]
+# 언어 이름은 언어 메뉴에서 각 언어 그대로 보여야 해서 한글을 이스케이프로 적는다(번역 표가 "Korean" 으로 바꾸지 않게)
+LANGS = [("ko", "\ud55c\uad6d\uc5b4", "ko_KR"), ("en", "English", "en_US"), ("ru", "Русский", "ru_RU")]
 
 
 def set_lang(lang: str, table: dict | None = None) -> None:
@@ -95,21 +96,42 @@ def hreflang_html(path: str) -> str:
     return links + f'<link rel="alternate" hreflang="x-default" href="{SITE}{path}" />\n'
 
 
+# 언어 전환 국기 — Windows 크롬·엣지는 국기 이모지를 'KR' 글자로 보여 줘서 작은 인라인 SVG 로 그린다(태극 문양은 단순화)
+FLAG_SVG = {
+    "ko": '<svg viewBox="0 0 36 24" aria-hidden="true"><rect width="36" height="24" fill="#fff"/>'
+          '<path d="M12 12a6 6 0 0 1 12 0a3 3 0 0 1-6 0a3 3 0 0 0-6 0z" fill="#cd2e3a"/>'
+          '<path d="M12 12a6 6 0 0 0 12 0a3 3 0 0 0-6 0a3 3 0 0 1-6 0z" fill="#0047a0"/>'
+          '<g stroke="#000" stroke-width="1.1"><path d="M4.5 6.5l3-4.5M6 7.5l3-4.5M7.5 8.5l3-4.5"/><path d="M25.5 15.5l3 4.5M27 14.5l3 4.5M28.5 13.5l3 4.5"/>'
+          '<path d="M25.5 8.5l3-4.5M27 7.5l3-4.5M28.5 6.5l3-4.5"/><path d="M4.5 17.5l3 4.5M6 16.5l3 4.5M7.5 15.5l3 4.5"/></g></svg>',
+    "en": '<svg viewBox="0 0 38 24" aria-hidden="true"><rect width="38" height="24" fill="#fff"/>'
+          '<path d="M0 0h38M0 3.7h38M0 7.4h38M0 11.1h38M0 14.8h38M0 18.5h38M0 22.2h38" stroke="#b22234" stroke-width="1.85" transform="translate(0 .92)"/>'
+          '<rect width="16" height="12.9" fill="#3c3b6e"/><g fill="#fff"><circle cx="3" cy="2.6" r=".9"/><circle cx="8" cy="2.6" r=".9"/><circle cx="13" cy="2.6" r=".9"/>'
+          '<circle cx="5.5" cy="6.4" r=".9"/><circle cx="10.5" cy="6.4" r=".9"/><circle cx="3" cy="10.2" r=".9"/><circle cx="8" cy="10.2" r=".9"/><circle cx="13" cy="10.2" r=".9"/></g></svg>',
+    "ru": '<svg viewBox="0 0 36 24" aria-hidden="true"><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#0039a6"/><rect y="16" width="36" height="8" fill="#d52b1e"/></svg>',
+}
+FLAG_CODE = {"ko": "KR", "en": "US", "ru": "RU"}
+
+
 def lang_switch_html(path: str) -> str:
-    """상단 언어 전환 — 절대 주소로 써서 en/ru 판의 링크 접두 처리에 안 걸리게."""
-    return '<div class="lang">' + "".join(
-        f'<a{" class=\"on\"" if l == LANG else ""} href="{SITE}{lang_path(path, l)}" hreflang="{l}">{name}</a>' for l, name, _ in LANGS) + "</div>"
+    """상단 언어 전환(국기 + 국가코드 드롭다운) — 절대 주소로 써서 en/ru 판의 링크 접두 처리에 안 걸리게."""
+    items = "".join(
+        f'<a{" class=\"on\"" if l == LANG else ""} href="{SITE}{lang_path(path, l)}" hreflang="{l}" lang="{l}">'
+        f'{FLAG_SVG[l]}<b>{FLAG_CODE[l]}</b><span>{name}</span></a>' for l, name, _ in LANGS)
+    return (f'<details class="lang"><summary aria-label="Language">{FLAG_SVG[LANG]}<b>{FLAG_CODE[LANG]}</b></summary>'
+            f'<div class="lmenu">{items}</div></details>')
 
 
 def localize_template(html_text: str, path: str) -> str:
     """템플릿 페이지(quests/kappa/keys): 고정 문구 번역 + html lang·canonical·og 교체 + hreflang·언어 전환. ko 는 hreflang·전환만."""
     import re as _re
     html_text = html_text.replace("</head>", hreflang_html(path) + "</head>", 1)
+    if LANG != "ko":
+        import guide_i18n
+        html_text = guide_i18n.translate_text(html_text, I18N, I18N_MISSING)
+    # 언어 메뉴는 번역 뒤에 넣는다 — 먼저 넣으면 '한국어'가 'Korean'으로 번역된다
     html_text = _re.sub(r"(<nav>.*?</nav>)", lambda m: m.group(1) + lang_switch_html(path), html_text, count=1, flags=_re.S)
     if LANG == "ko":
         return html_text
-    import guide_i18n
-    html_text = guide_i18n.translate_text(html_text, I18N, I18N_MISSING)
     html_text = html_text.replace('<html lang="ko">', f'<html lang="{LANG}">', 1)
     html_text = html_text.replace(f'{SITE}{path}"', f'{SITE}{lang_path(path)}"')  # canonical·og:url
     html_text = html_text.replace('content="ko_KR"', f'content="{dict((l, loc) for l, _, loc in LANGS)[LANG]}"')
@@ -3279,6 +3301,8 @@ document.addEventListener("click",function(ev){var gt=ev.target.closest(".top na
 if(!gt){open.forEach(function(g){g.classList.remove("open")});return}
 var g=gt.parentNode,narrow=window.innerWidth<900;if(!(noHover||narrow))return;
 if(!g.classList.contains("open")){ev.preventDefault();open.forEach(function(x){x.classList.remove("open")});g.classList.add("open")}});
+
+document.addEventListener("click",function(ev){document.querySelectorAll("details.lang[open]").forEach(function(d){if(!d.contains(ev.target))d.removeAttribute("open")})});
 })();
 (function(){
 var MK="guide.mode",KEY="guide.quests",SK="guide.sync",SYNCED="guide.quests.synced",SE="guide.sync.err";
