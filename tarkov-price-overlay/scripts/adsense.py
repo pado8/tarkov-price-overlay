@@ -109,6 +109,9 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             'function scriptOk(){return !!(window.adsbygoogle&&window.adsbygoogle.loaded);}'
             # Google 메시지 스크립트가 실리면 googlefc.AdBlockerStatusEnum 이 생긴다(googlefc 자체는 광고 스크립트도 만들어서 근거가 못 됨 — 11-04 실측)
             'function fcOk(){return !!(window.googlefc&&window.googlefc.AdBlockerStatusEnum);}'
+            # 보조 모드는 adsbygoogle.loaded 를 믿지 않는다 — uBlock Origin 은 광고 스크립트를 가짜(googlesyndication_adsbygoogle.js)로
+            # 바꿔 끼우고 그 가짜가 loaded:true 를 세워 차단 감지를 속인다(11-04 사용자 실측: uBO 에서 바가 안 뜸). 대신 광고가 실제로 채워졌는지 본다
+            "function filled(){return !!document.querySelector('ins.adsbygoogle[data-ad-status=\"filled\"]');}"
             'function show(){var el=document.getElementById("tgab");if(!el)return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
             'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-x").textContent=T[3];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
             'document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");};'
@@ -116,7 +119,7 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             'try{if(window.gtag)gtag("event","adblock_on",{page_path:P});}catch(e){}}'
             # 2026-11-04 '차단을 껐는데도 안내가 뜬다' 제보: 예전엔 로드 2.5초 뒤 한 번만 봐서 느린 회선에서 스크립트가 늦게 실리면
             # 차단으로 오판할 수 있었다 → 미끼가 숨겨지면 바로, 스크립트는 1초 간격으로 최대 10번 기다린 뒤에만 '차단'.
-            'window.addEventListener("load",function(){var n=0;setTimeout(function tick(){' + ("if(scriptOk()||fcOk())return;" if fallback else "if(n===0&&bait()){show();return;}if(scriptOk())return;") + 'if(++n>=10){show();return;}setTimeout(tick,1000);},1500);});})();</script>' + AB_END + "\n")
+            'window.addEventListener("load",function(){var n=0;setTimeout(function tick(){' + ("if(fcOk()||filled())return;" if fallback else "if(n===0&&bait()){show();return;}if(scriptOk())return;") + 'if(++n>=10){show();return;}setTimeout(tick,1000);},1500);});})();</script>' + AB_END + "\n")
 
 
 def ad_page(f: Path) -> bool:

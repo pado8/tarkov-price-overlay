@@ -72,6 +72,8 @@ section{padding:56px 0}
 .shot{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
 .shot img{max-width:100%;height:auto;border-radius:7px;display:block;margin:0 auto 9px;border:1px solid #00000030}
 .shot span{font-size:12.5px;color:var(--muted)}
+/* F2 누르는 두 장면(인벤토리 툴팁·레이드 바닥 이름표) — 넓은 사진 두 장 */
+.gal.two{grid-template-columns:1fr 1fr}
 
 /* safety */
 .safety{background:linear-gradient(180deg,#171710,#14130e);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -145,7 +147,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
   .gal{grid-template-columns:1fr 1fr}
   .steps,.safe-grid,.dl-cards,.voices{grid-template-columns:1fr}
 }
-@media(max-width:480px){ .feat{grid-template-columns:1fr} }
+@media(max-width:480px){ .feat{grid-template-columns:1fr} .gal.two{grid-template-columns:1fr} }
 
 /* 상단 메뉴의 가이드 링크: 줄바꿈 금지, 좁은 화면에선 숨김(하단 링크로 대체) */
 .nav-guide{white-space:nowrap}
