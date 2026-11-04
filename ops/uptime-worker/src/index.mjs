@@ -8,7 +8,6 @@
 const TARGETS = [
   { name: "타르코프 랜딩", url: "https://tarkov.aquapado.com/", expect: "타르코프" },
   { name: "탈콥 가이드", url: "https://tarkov.aquapado.com/guide/", expect: "탈콥" },
-  { name: "뚝딱툴즈", url: "https://tools.aquapado.com/", expect: "뚝딱" },
   // every: 5 = 5분마다만(실패 중이면 매분). 두 곳은 Vercel 서버 렌더링이라 매분 열면 함수 호출·Active CPU(무료 월 4시간)를
   // 갉아먹는다(11-03 감시 시작 뒤 Vercel 함수 호출 하루 3천→6천, 그중 알파 32%·PoE 15%).
   { name: "PoE Tools", url: "https://poe.aquapado.com/", expect: "PoE", every: 5 },
