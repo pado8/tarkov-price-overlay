@@ -1822,7 +1822,7 @@ html, body, #root {
 .radar-help > summary:hover { color: var(--gold-text); }
 
 /* ── 전체 지도(RadarMap.tsx) ── */
-.radar-mapwrap { position: relative; width: 100%; background: #0e0f12; border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+.radar-mapwrap { position: relative; width: 100%; background: rgba(14, 15, 18, var(--map-alpha, 1)); border: 1px solid var(--border-default); border-radius: 6px; overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
 .radar-mapwrap.drag { cursor: grabbing; }
 .radar-mapsvg { width: 100%; height: 100%; display: block; }
 .radar-maptools { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; }
@@ -1910,3 +1910,33 @@ html, body, #root {
 .order-row button { font-size: var(--card-fs-xs); padding: 1px 6px; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: transparent; color: inherit; cursor: pointer; }
 .order-row button:hover:not(:disabled) { background: rgba(200, 170, 100, 0.15); }
 .order-row button:disabled { opacity: 0.3; cursor: default; }
+
+/* ── 미니맵 모드(11-05 피드백 '진짜 미니맵처럼 게임 위에') ──────────────────────
+   카드 머리글·안내·목록은 전부 숨기고 지도만. 카드 배경·테두리·그림자·흐림도 없앤다 —
+   남은 어두운 부분은 지도 바탕뿐이고 그건 '지도 불투명도'(--map-alpha)로 0까지 내릴 수 있다. */
+.card.card-mini { padding: 0; background: transparent; border: none; box-shadow: none; backdrop-filter: none; border-radius: 0; overflow: visible; }
+.card.card-mini > :not(.radar) { display: none !important; }
+.radar-mini { position: relative; gap: 0; }
+.radar-mini .radar-mapwrap { border-color: rgba(255, 255, 255, calc(0.18 * var(--map-alpha, 1) + 0.04)); border-radius: 8px; }
+.radar-mini .radar-maptools,
+.radar-mini .radar-mapcredit,
+.radar-mini .radar-mapup,
+.radar-mini-tools { opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.radar-mini:hover .radar-maptools,
+.radar-mini:hover .radar-mapcredit,
+.radar-mini:hover .radar-mapup,
+.radar-mini:hover .radar-mini-tools { opacity: 1; pointer-events: auto; }
+.radar-mini .radar-mapscale { opacity: 0.7; }
+.radar-mini-tools { position: absolute; left: 4px; top: 4px; display: flex; gap: 3px; z-index: 2; }
+.radar-mini-tools button,
+.radar-mini-grip { font-size: var(--card-fs-xs); padding: 2px 7px; background: rgba(0, 0, 0, 0.7); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; line-height: 1.4; }
+.radar-mini-tools button:hover { border-color: var(--gold-bright); }
+.radar-mini-tools button:disabled { opacity: 0.4; cursor: default; }
+.radar-mini-grip { cursor: move; user-select: none; }
+.radar-mini-msg { display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; box-sizing: border-box; font-size: var(--card-fs-xs); color: var(--text-secondary); background: rgba(14, 15, 18, 0.8); border: 1px solid var(--border-default); border-radius: 8px; }
+.radar-mini-stale { position: absolute; left: 6px; bottom: 6px; font-size: var(--card-fs-xxs); color: var(--warning, #e8b84a); background: rgba(0, 0, 0, 0.6); padding: 1px 5px; border-radius: 3px; pointer-events: none; }
+.radar-mini-btn { align-self: flex-start; font-size: var(--card-fs-xs); padding: 3px 9px; background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.radar-mini-btn:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
+.radar-mini .radar-mapwrap { box-sizing: border-box; }
+.radar-mini .radar-maptools { top: auto; bottom: 4px; right: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 8px); }
+.radar-mini-tools { flex-wrap: wrap; max-width: calc(100% - 8px); }

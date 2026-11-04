@@ -81,6 +81,8 @@ type Props = {
   fixed: boolean; // true = 지도 고정(↻ 90° 회전만) · false = 바라보는 쪽이 위
   highlightKey?: string | null; // 시세로 조회한 열쇠 아이템 id — 이 열쇠로 여는 문을 금색으로 강조(잠긴 문 레이어와 무관)
   bigMe?: boolean; // 내 위치 크게(1.4배·흰 테두리) — 다른 표시와 헷갈린다는 요청 대응(11-04)
+  mini?: boolean; // 미니맵 모드 — 정사각형 지도만(칩·층·안내 줄 없음), 도구 버튼은 마우스를 올렸을 때만(CSS)
+  mapAlpha?: number; // 지도 그림·바탕 불투명도 0~1(표식은 그대로) — 11-05 피드백 '맵도 0~100'
 };
 
 const cache = new Map<string, MapDoc>();
@@ -229,7 +231,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1 }: Props) {
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
@@ -526,7 +528,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const mx = imageMatrix(im, toScreen);
     if (!mx) return null;
     const href = `${PYTHON_API}${im.url}` + (floorNow ? `&layer=${encodeURIComponent(floorNow)}` : "");
-    return <image href={href} width={mx.W} height={mx.H} preserveAspectRatio="none" transform={`matrix(${mx.matrix})`} opacity={0.9} style={{ pointerEvents: "none" }} />;
+    return <image href={href} width={mx.W} height={mx.H} preserveAspectRatio="none" transform={`matrix(${mx.matrix})`} opacity={0.9 * mapAlpha} style={{ pointerEvents: "none" }} />;
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
@@ -536,11 +538,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   );
 
   return (
-    <div className="radar-mapblock">
+    <div className={`radar-mapblock${mini ? " mini" : ""}`}>
       <div
         ref={wrapRef}
         className={`radar-mapwrap${dragging ? " drag" : ""}`}
-        style={{ height: size }}
+        style={{ height: size, ...(mini ? { width: size } : {}), ["--map-alpha" as string]: String(mapAlpha) } as React.CSSProperties}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -695,7 +697,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
-      <div className="radar-layers">
+      {!mini && <div className="radar-layers">
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => onToggleLayer("pmc"))}
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
         {chip(layers.transits, "transit", t.radarLayerTransits, () => onToggleLayer("transits"))}
@@ -704,9 +706,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
         {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
-      </div>
-      {questNote && <div className="radar-note">{questNote}</div>}
-      {doc?.img && showImg && doc.img.layers.length > 0 && (
+      </div>}
+      {!mini && questNote && <div className="radar-note">{questNote}</div>}
+      {!mini && doc?.img && showImg && doc.img.layers.length > 0 && (
         <div className="radar-layers radar-floors">
           <span className="radar-kind">{t.radarFloor}</span>
           <button type="button" className={`radar-chip${floor === "auto" ? " on" : ""}`} aria-pressed={floor === "auto"} onClick={() => setFloor("auto")}>
@@ -718,7 +720,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           ))}
         </div>
       )}
-      {sel && (
+      {sel && !mini && (
         <div className="radar-mapsel">
           <b>{sel.name}</b> · {Math.round(dist(sel.p))}m
           {Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}

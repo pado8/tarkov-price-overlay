@@ -67,6 +67,22 @@ export const RADAR_SIZE_KEY = "tarkov.radar.size";
 export const RADAR_SIZE_MIN = 160;
 export const RADAR_SIZE_MAX = 600;
 export const RADAR_SIZE_DEFAULT = 240;
+// 미니맵 모드(11-05 피드백 '진짜 미니맵처럼 게임 위에') — 정사각형 지도만. 크기·켜짐·지도 불투명도는 따로 저장
+export const RADAR_MINI_KEY = "tarkov.radar.mini";
+export const RADAR_MINI_SIZE_KEY = "tarkov.radar.miniSize";
+export const RADAR_MAP_ALPHA_KEY = "tarkov.radar.mapAlpha"; // 0~100, 지도 그림·바탕만(표식은 그대로)
+export const RADAR_MINI_MIN = 100;
+export const RADAR_MINI_MAX = 600;
+export const RADAR_MINI_DEFAULT = 220;
+function loadNum(key: string, lo: number, hi: number, dflt: number): number {
+  try {
+    const n = parseInt(localStorage.getItem(key) ?? "", 10);
+    if (Number.isFinite(n)) return Math.max(lo, Math.min(hi, n));
+  } catch {}
+  return dflt;
+}
+export const loadMiniSize = () => loadNum(RADAR_MINI_SIZE_KEY, RADAR_MINI_MIN, RADAR_MINI_MAX, RADAR_MINI_DEFAULT);
+export const loadMapAlpha = () => loadNum(RADAR_MAP_ALPHA_KEY, 0, 100, 100);
 export function loadRadarSize(): number {
   try {
     const n = parseInt(localStorage.getItem(RADAR_SIZE_KEY) ?? "", 10);
@@ -118,12 +134,19 @@ type Props = {
   highlightKey?: string | null; // 시세로 조회한 열쇠 — 지도에서 여는 문 강조
   story: string; // 지도에 띄울 스토리 챕터 id("" = 안 띄움)
   onPickStory: (id: string) => void;
+  mini?: boolean; // 미니맵 모드(카드 안에서만 — 나란히 패널은 안 씀)
+  onMini?: (v: boolean) => void;
+  miniSize?: number;
+  onMiniSize?: (px: number) => void;
+  mapAlpha?: number; // 0~100
+  onMapAlpha?: (v: number) => void;
+  dragRegion?: boolean; // 미니맵 옮기기 손잡이를 창 끌기 영역으로(고정 모드면 false)
 };
 
 const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion }: Props) {
   const [fixed, setFixed] = useState<boolean>(() => localStorage.getItem(FIXED_KEY) !== "0");
   const [bigMe, setBigMe] = useState<boolean>(() => localStorage.getItem(BIGME_KEY) === "1");
   const [sizeDraft, setSizeDraft] = useState<number | null>(null); // 슬라이더를 끄는 동안의 값(적용 전)
@@ -179,6 +202,29 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       </button>
     </div>
   );
+
+  if (mini) {
+    // 지도만 남긴 미니맵 — 상태 안내도 지도 자리 안에서 한 줄로. 도구(옮기기·작게·크게·펼치기)는 마우스를 올렸을 때만(CSS)
+    const ready = !!(data && data.folder && data.shot && data.map);
+    const msg = !data ? (loading ? t.hintLoading : t.radarNoShot) : !data.folder ? t.radarNoFolder : !data.shot ? t.radarNoShot : t.radarNoMap;
+    const step = (d: number) => onMiniSize?.(Math.max(RADAR_MINI_MIN, Math.min(RADAR_MINI_MAX, miniSize + d)));
+    return (
+      <div className="radar radar-mini" style={{ width: miniSize }}>
+        {ready ? (
+          <RadarMap data={data!} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={miniSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mini mapAlpha={mapAlpha / 100} />
+        ) : (
+          <div className="radar-mini-msg" style={{ width: miniSize, height: Math.round(miniSize * 0.5) }}>{msg}</div>
+        )}
+        {ready && data!.shot!.age > STALE_SEC && <div className="radar-mini-stale" title={t.radarStale}>{ago(data!.shot!.age, t)}</div>}
+        <div className="radar-mini-tools">
+          <span className="radar-mini-grip" data-tauri-drag-region={dragRegion ? true : undefined} title={t.radarMiniDrag}>⠿</span>
+          <button type="button" onClick={() => step(-20)} disabled={miniSize <= RADAR_MINI_MIN} title={t.radarMiniSmaller} aria-label={t.radarMiniSmaller}>−</button>
+          <button type="button" onClick={() => step(20)} disabled={miniSize >= RADAR_MINI_MAX} title={t.radarMiniBigger} aria-label={t.radarMiniBigger}>+</button>
+          <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!data) {
     return (
@@ -366,12 +412,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} />
           <div className="radar-side">{targetList}</div>
         </div>
       ) : (
         <>
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} />
           {targetList}
         </>
       )}
@@ -394,6 +440,18 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       </div>
       {fixedCtl}
       {bigMeCtl}
+      {onMapAlpha && (
+        <label className="radar-size" title={t.radarMapOpacityHint}>
+          <span>{t.radarMapOpacity}</span>
+          <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
+          <span className="radar-size-val">{mapAlpha}%</span>
+        </label>
+      )}
+      {onMini && !fill && (
+        <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
+          <Icon name="map" /> {t.radarMini}
+        </button>
+      )}
       {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
       <details className="radar-help">
         <summary>{t.radarHelp}</summary>

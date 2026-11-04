@@ -8,7 +8,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
 import { T, type Lang, type GameMode } from "./i18n";
-import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize } from "./Radar";
+import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
 import "./App.css";
@@ -1568,6 +1568,28 @@ function App() {
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
   // 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
   const [radarSize, setRadarSize] = useState<number>(loadRadarSize);
+  // 미니맵 모드(11-05 피드백): 카드 머리글·목록·칩 없이 정사각형 지도만 — 크기·지도 불투명도는 따로 저장
+  const [radarMini, setRadarMini] = useState<boolean>(() => localStorage.getItem(RADAR_MINI_KEY) === "1");
+  const [miniSize, setMiniSize] = useState<number>(loadMiniSize);
+  const [mapAlpha, setMapAlpha] = useState<number>(loadMapAlpha);
+  const pickRadarMini = (v: boolean) => {
+    setRadarMini(v);
+    try {
+      localStorage.setItem(RADAR_MINI_KEY, v ? "1" : "0");
+    } catch {}
+  };
+  const pickMiniSize = (px: number) => {
+    setMiniSize(px);
+    try {
+      localStorage.setItem(RADAR_MINI_SIZE_KEY, String(px));
+    } catch {}
+  };
+  const pickMapAlpha = (v: number) => {
+    setMapAlpha(v);
+    try {
+      localStorage.setItem(RADAR_MAP_ALPHA_KEY, String(v));
+    } catch {}
+  };
   const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
   const wideModeRef = useRef(wideMode);
   wideModeRef.current = wideMode;
@@ -3977,6 +3999,7 @@ function App() {
     }
   };
 
+  const miniOn = radarMini && radarActive && !showSettings && !wideMode; // 미니맵 모드가 실제로 보이는 조건(나란히·설정 중엔 아님)
   return (
     <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}`}>
       {hoverTip && (
@@ -3992,12 +4015,13 @@ function App() {
       )}
       <div
         ref={cardRef}
-        className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}`}
+        className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}${miniOn ? " card-mini" : ""}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
           // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
           // 설정이 열려 있으면 최소 360px — 긴 라벨·셀렉트·버튼 묶음이 좁은 카드에서 서로 밀어내지 않게(11-02 점검)
-          width: `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`,
+          // 미니맵 모드는 지도 크기 그대로(카드 기본 폭·사용자가 넓힌 폭 무시 — '어느 선 이하로 안 줄어든다' 피드백)
+          width: miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`,
           // Explicit height only when the user dragged one AND we're in the
           // plain price-card view; otherwise auto (content height, capped by
           // max-height in CSS). Settings/capture-modal must not inherit the
@@ -4010,7 +4034,8 @@ function App() {
           // .card-hidden. We only dim while visible so the fade-out can
           // still drop to 0 without fighting the user's preference.
           // 지도가 열려 있으면 최소 90% — 점·이름표가 게임 화면에 묻히지 않게(사용자 설정은 그대로 둔다)
-          opacity: cardVisible ? (radarActive ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100 : undefined,
+          // 미니맵 모드는 하한 없이 사용자 설정 그대로(게임 화면 위에 얹는 용도) — 지도 그림만 따로 '지도 불투명도'로 조절
+          opacity: cardVisible ? (radarActive && !miniOn ? Math.max(region.opacity, RADAR_MIN_OPACITY) : region.opacity) / 100 : undefined,
           // Background-only opacity: fades the dark panel behind the text
           // (consumed by .card's background rgba), text/icons stay opaque.
           ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
@@ -5639,6 +5664,13 @@ function App() {
             }}
             onClose={() => setRadarActive(false)}
             size={radarSize}
+            mini={miniOn}
+            onMini={pickRadarMini}
+            miniSize={miniSize}
+            onMiniSize={pickMiniSize}
+            mapAlpha={mapAlpha}
+            onMapAlpha={pickMapAlpha}
+            dragRegion={!pinned}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={(px) => {
               setRadarSize(px);
@@ -6653,6 +6685,8 @@ function App() {
           <RadarPanel
             data={radarData}
             loading={radarLoading}
+            mapAlpha={mapAlpha}
+            onMapAlpha={pickMapAlpha}
             t={t}
             lang={region.lang}
             showScav={radarShowScav}
