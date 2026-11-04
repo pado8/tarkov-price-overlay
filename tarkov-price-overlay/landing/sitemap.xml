@@ -182,36 +182,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://tarkov.aquapado.com/guide/favorites/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/favorites/" />
-    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/favorites/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://tarkov.aquapado.com/guide/en/favorites/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/favorites/" />
-    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/favorites/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://tarkov.aquapado.com/guide/ru/favorites/</loc>
-    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/favorites/" />
-    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/favorites/" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/favorites/" />
-    <lastmod>2026-11-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://tarkov.aquapado.com/guide/gunsmith/</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/gunsmith/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/gunsmith/" />

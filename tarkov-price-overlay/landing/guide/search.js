@@ -1,8 +1,8 @@
 (function(){
 var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
-var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지"},
-en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page"},
-ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница"}}[L];
+var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",fz:"비슷한 결과"},
+en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",fz:"Similar"},
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
 var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"
@@ -17,20 +17,29 @@ var box=document.createElement("div");box.className="gsearch";box.setAttribute("
 var inp=document.createElement("input");inp.type="search";inp.placeholder=T.ph;inp.setAttribute("aria-label",T.ph);inp.autocomplete="off";
 var ul=document.createElement("ul");ul.hidden=true;box.appendChild(inp);box.appendChild(ul);
 var brand=top.querySelector(".brand");if(brand&&brand.nextSibling)top.insertBefore(box,brand.nextSibling);else top.appendChild(box);
-var idx=null,loading=null,hits=[],sel=0;
+var idx=null,loading=null,hits=[],sel=0,fuzzy=false;
 function norm(s){return String(s||"").toLowerCase().replace(/[\s\-_.,:;'"’()\[\]·…!?]/g,"")}
+// 초성 검색(ㅋㅍ → 카파) — 한글 음절만 초성으로, 나머지 글자는 그대로
+var CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";function cho(s){var o="";for(var i=0;i<s.length;i++){var c=s.charCodeAt(i)-44032;o+=(c>=0&&c<11172)?CHO.charAt(Math.floor(c/588)):s.charAt(i)}return o}
+// 한 글자 오타(대뷔 → 데뷔): 같은 길이 구간에서 한 글자만 다르면 비슷한 결과로
+function near(s,q){var n=q.length;if(n<2||s.length<n)return false;for(var i=0;i+n<=(n<3?n:s.length);i++){var d=0;for(var j=0;j<n&&d<2;j++)if(s.charCodeAt(i+j)!==q.charCodeAt(j))d++;if(d<2)return true}return false}
 function load(){if(idx)return Promise.resolve(idx);if(loading)return loading;
-loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){return{k:r[0],n:r[1],a:r[2],u:r[3],s:norm(r[1]),z:norm(r[2]+" "+(r[4]||""))}});return idx}).catch(function(){idx=[];return idx});return loading}
-var ORD={q:0,i:1,k:2,h:3,m:4,t:5,p:6};
-function find(q){var nq=norm(q);if(!nq)return[];var out=[];
+loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){var s=norm(r[1]);return{k:r[0],n:r[1],a:r[2],u:r[3],s:s,z:norm(r[2]+" "+(r[4]||"")),c:cho(s),t:String(r[4]||"").split(" ").map(norm)}});return idx}).catch(function(){idx=[];return idx});return loading}
+var ORD={q:0,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
+// 게임 커뮤니티 줄임말·음역 → 데이터 표기
+var AL={"레덱스":"ledx","레덱":"ledx","아이폭":"ifak","살레와":"salewa","시크":"sicc","씩":"sicc","그카":"그래픽카드","비코":"비트코인","도태":"도그태그","퀘템":"퀘스트아이템","카파템":"카파"};
+function rk(k){return k in ORD?ORD[k]:99}
+function find(q){var nq=norm(q);if(!nq)return[];if(AL[nq])nq=AL[nq];var out=[];
 for(var i=0;i<idx.length;i++){var r=idx[i],sc=-1;
-if(r.s===nq)sc=0;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;
-if(sc>=0)out.push([sc,ORD[r.k]||9,r.n.length,r])}
-out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});return out.slice(0,14).map(function(x){return x[3]})}
+var jamo=/^[ㄱ-ㅎ]+$/.test(nq);
+if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
+if(sc>=0)out.push([sc,rk(r.k),r.n.length,r])}
+if(!out.length&&nq.length>=2&&!jamo)for(i=0;i<idx.length;i++){r=idx[i];if(near(r.s,nq))out.push([4,rk(r.k),r.n.length,r])}
+out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});fuzzy=out.length&&out[0][0]===4;return out.slice(0,14).map(function(x){return x[3]})}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function draw(){if(!inp.value.trim()){ul.hidden=true;return}
 if(!hits.length){ul.innerHTML='<li class="no">'+T.none+'</li>';ul.hidden=false;return}
-ul.innerHTML=hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&r.k==="q"?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
+ul.innerHTML=(fuzzy?'<li class="no">'+T.fz+'</li>':'')+hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&r.k==="q"?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
 var sentT=null,lastSent="";
 function track(){var q=inp.value.trim().slice(0,60);if(q.length<2||norm(q)===lastSent)return;lastSent=norm(q);var n=find(q).length;
 try{if(window.gtag){gtag("event","view_search_results",{search_term:q,results:n});if(!n)gtag("event","search_no_result",{search_term:q})}}catch(e){}}
