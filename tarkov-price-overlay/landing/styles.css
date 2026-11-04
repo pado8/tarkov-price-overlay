@@ -158,10 +158,12 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
 .tabs a{display:flex;align-items:center;gap:7px;padding:0 14px;font-size:14px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
 .tabs a:hover{color:var(--text)}
 .tabs a.on{color:var(--gold);border-bottom-color:var(--gold)}
+/* 좁은 폰: 세 탭이 한 화면에 들어가게(옆으로 밀어야 보이면 잘린 것처럼 보인다 — 러시아어 'Статус сервиса') */
 .sdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6b675c;flex:none}
 .sdot.ok{background:#5fbf6a;box-shadow:0 0 0 3px #5fbf6a26}
 .sdot.warn{background:#e0b341;box-shadow:0 0 0 3px #e0b34126}
 .sdot.bad{background:#e05a4f;box-shadow:0 0 0 3px #e05a4f26}
 @media(max-width:560px){ .tabs a{padding:0 11px;font-size:13px} }
+@media (max-width:420px){.tabs{gap:0}.tabs a{padding:0 8px;font-size:13px;gap:5px}}
 @media(max-width:520px){ .brand-t{display:none} }
 .nav-cta{white-space:nowrap}

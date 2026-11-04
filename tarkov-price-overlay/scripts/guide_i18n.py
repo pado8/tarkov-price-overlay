@@ -58,9 +58,14 @@ def translate_text(text: str, table: dict, missing: set | None = None, edge_befo
         next_txt = text[m.end():] if m.end() < len(text) else edge_after
         closing_before = before == ">" and re.search(r"</\w+>$", prev_txt or "") is not None   # "</b>텍스트" → 띄움, "<span>텍스트"는 그대로
         opening_after = after == "<" and re.match(r"<(?!/)\w", next_txt or "") is not None       # "텍스트<b>" → 띄움, "텍스트</span>"는 그대로
-        if not lead and before and (before == "}" or before.isdigit() or closing_before) and t[:1].isalpha():
+        # 템플릿 자바스크립트의 `n + "종"` / `"총 " + n` — 따옴표 바로 바깥이 + 연결이면 숫자가 붙는 자리로 본다
+        js_before = before in "\"'" and re.search(r"\+\s*[\"']$", prev_txt or "") is not None
+        js_after = after in "\"'" and re.match(r"[\"']\s*\+", next_txt or "") is not None
+        # 번역이 '·'·'—'로 시작해도 숫자 뒤에선 띄운다("26· Data" → "26 · Data")
+        starts = t[:1].isalpha() or t[:1] in "·—|"
+        if not lead and before and (before == "}" or before.isdigit() or closing_before or js_before) and starts:
             lead = " "
-        if not trail and after and (after == "{" or after.isdigit() or opening_after) and t[-1:].isalpha():
+        if not trail and after and (after == "{" or after.isdigit() or opening_after or js_after) and t[-1:].isalpha():
             trail = " "
         return lead + t + trail
     return RUN.sub(rep, text)

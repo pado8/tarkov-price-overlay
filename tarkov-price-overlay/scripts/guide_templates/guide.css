@@ -16,13 +16,18 @@ a:hover{text-decoration:underline}
 /* 그룹 제목(.gt)·드롭다운 항목·'시세 오버레이'(.ov) 모두 같은 상자 모양이어야 글자 높이가 맞는다 */
 .top nav a,.top .ov{display:inline-flex;align-items:center;flex:none;white-space:nowrap;line-height:1.4;color:var(--muted);font-size:14px;padding:6px 10px;border-radius:8px}
 .top nav a.on,.top nav a:hover,.top .ov.on,.top .ov:hover{color:var(--text);background:var(--panel2);text-decoration:none}
+/* 휴대폰: 1줄 = 사이트 이름 … 연동 · 언어 / 2줄 = 검색창(남은 폭) · 내려받기 / 3줄 = 메뉴 */
 @media (max-width:560px){
-  .top .wrap{gap:4px 6px}
-  .top .ov{order:1;margin-left:auto;font-size:13px;padding:5px 8px}
-  .top nav{order:2;width:100%}
-  .top .sync{order:3}
-  .top nav a.gt{padding:6px 8px;font-size:13.5px}
+  .top .wrap{gap:6px}
+  .top .sync{order:1;margin-left:auto}
+  .top .lang{order:2;margin-left:0}
+  .top .wrap .gsearch{order:3;flex:1 1 150px;max-width:none;margin:0}
+  .top .wrap .gsearch:focus-within{max-width:none}
+  .top .ov{order:4;font-size:13px;padding:6px 9px}
+  .top nav{order:5;width:100%}
+  .top nav a.gt{padding:6px 7px;font-size:13.5px}
 }
+@media (max-width:400px){.top nav a.gt{padding:6px 5px;font-size:13px}.top nav .gt .car{margin-left:2px}}
 .top nav{display:flex;gap:2px;flex-wrap:wrap}.top nav .g{position:relative}.top nav .gt .car{font-size:10px;margin-left:3px;opacity:.7}
 .top nav .g.on>.gt{color:var(--text);background:var(--panel2)}
 /* 제목과 드롭다운 사이 4px 틈을 마우스가 지날 때 호버가 끊기지 않게 — 그룹(.g)의 투명한 다리로 틈을 덮는다 */
@@ -40,14 +45,14 @@ h1{font-size:26px;margin:22px 0 4px}
 .controls input[type=search],.controls select{background:var(--panel);border:1px solid var(--line);color:var(--text);
   border-radius:8px;padding:8px 10px;font:inherit;font-size:14px;min-width:0}
 .controls input[type=search]{flex:1 1 220px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{background:var(--panel);color:var(--muted);border:0;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{background:var(--panel);color:var(--muted);border:0;padding:7px 11px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .seg button.on{background:var(--gold);color:#15140f;font-weight:700}
 label.chk{display:inline-flex;gap:6px;align-items:center;font-size:13.5px;color:var(--muted);cursor:pointer}
 .progress{display:flex;align-items:center;gap:10px;font-size:14px}
 .bar{flex:1;height:8px;background:var(--panel2);border-radius:99px;overflow:hidden;min-width:120px}
 .bar i{display:block;height:100%;background:var(--gold);width:0}
-.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;line-height:1.5;vertical-align:1px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;line-height:1.5;vertical-align:1px;white-space:nowrap}
 .b-fir{background:#3b2a12;color:#f0b858;border:1px solid #6b4d1c}
 .b-any{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
 .b-kappa{background:#2b2342;color:#c7a6ff;border:1px solid #4b3a75}
@@ -168,6 +173,9 @@ table.tot tr.done{opacity:.45}
   table.gs tr:first-child td.q{border-top:0}
   table.gs td.w::before,table.gs td.p::before,table.gs td.c::before{display:block;color:var(--muted);font-size:11.5px;margin-bottom:2px}
   table.gs td.w::before{content:"무기"}table.gs td.p::before{content:"반드시 포함할 부품"}table.gs td.c::before{content:"성능 조건"}
+  /* CSS 글자는 번역 표를 안 타므로 언어판마다 덮어쓴다 */
+  html:lang(en) table.gs td.w::before{content:"Weapon"}html:lang(en) table.gs td.p::before{content:"Required parts"}html:lang(en) table.gs td.c::before{content:"Stat requirements"}
+  html:lang(ru) table.gs td.w::before{content:"Оружие"}html:lang(ru) table.gs td.p::before{content:"Обязательные детали"}html:lang(ru) table.gs td.c::before{content:"Требования к характеристикам"}
   table.gs tr{padding-bottom:6px}
   /* 제작 수익표: 폰에선 행마다 카드 — 결과물 / 시설·시간 / 재료 / 재료비·판매가·이익·시간당(2칸) */
   #ctbl,#ctbl tbody{display:block}
@@ -234,6 +242,7 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .top .sync.btn{cursor:pointer;background:none;color:var(--muted);border-color:var(--line);font:inherit;font-size:12px}.top .sync.btn:hover{color:var(--gold);border-color:var(--gold-dim)}.top .sync.btn:disabled{cursor:wait;opacity:.7}
 .synchelp{max-width:1100px;margin:8px auto 0;padding:8px 36px 8px 12px;position:relative;font-size:13px;line-height:1.5;color:var(--text);background:var(--panel2);border:1px solid var(--gold-dim);border-radius:8px}.synchelp a{color:var(--gold)}.synchelp .x{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px}
 #itbl tr.cut td{opacity:.75}#itbl tr.cut td:nth-child(2)::after{content:" 완료분 제외";font-size:11px;color:var(--gold);margin-left:4px}
+html:lang(en) #itbl tr.cut td:nth-child(2)::after{content:" done excluded"}html:lang(ru) #itbl tr.cut td:nth-child(2)::after{content:" без выполненного"}
 .badge.syn{margin-left:6px;background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold);font-size:11px;padding:1px 6px;border-radius:999px}
 /* 사냥 퀘스트 페이지 + ★ 즐겨찾기 */
 .fav{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none;vertical-align:middle}
@@ -244,7 +253,7 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .controls .chk{display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--text);white-space:nowrap}.controls select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px}
 
 /* 이벤트 한정 표식(오염된 맵·감염자) — guide_static.EVENT_TAG */
-.evtag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(255,140,0,.16);color:#ffb366;border:1px solid rgba(255,140,0,.45);vertical-align:2px;margin-left:4px}
+.evtag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(255,140,0,.16);color:#ffb366;border:1px solid rgba(255,140,0,.45);vertical-align:2px;margin-left:4px;white-space:nowrap}
 
 /* 언어 전환(가이드 상단, guide_static.lang_switch_html) */
 .lang{position:relative;display:inline-block;margin-left:6px;vertical-align:middle;font-size:12.5px}

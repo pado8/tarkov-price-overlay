@@ -48,6 +48,10 @@ BUILD_ATTR = {"accuracy": "정확도(MOA)", "durability": "내구도", "effectiv
               "ergonomics": "인체공학", "height": "세로 칸", "width": "가로 칸", "magazineCapacity": "탄창 용량",
               "muzzleVelocity": "총구 속도", "recoil": "반동 합계", "weight": "무게(kg)"}
 STATUS = {"complete": "완료", "active": "진행 중", "failed": "실패", "started": "시작"}
+# 공개 데이터 아이템 목록에 아직 없는데 제작·퀘스트 재료로 id 만 나오는 아이템 — 이름을 위키에서 보충(없으면 칩에 id 가 그대로 보였다)
+MISSING_ITEMS = {
+    "6a5f9becfc12d937d50ae095": {"ko": "알 수 없는 시설의 노트북", "en": "Laptop from an unknown facility", "ru": "Ноутбук с неизвестного объекта"},  # 1.3.0 정보 센터 제작 재료(위키 Data from Fence's laptop)
+}
 # 공식 위키에만 있는 선행·다음 연결 — scripts/wiki_quest_links.py 가 만든다(없으면 빈 표)
 WIKI_LINKS_PATH = Path(__file__).resolve().parent / "guide_data" / "wiki_quest_links.json"
 WIKI_LINKS: dict = json.loads(WIKI_LINKS_PATH.read_text(encoding="utf-8")) if WIKI_LINKS_PATH.exists() else {}
@@ -565,6 +569,9 @@ class Ctx:
                 info = {"id": iid, "n": self.tk(f"{iid} Name", iid), "en": self._loc(self.loc_tasks_en, f"{iid} Name", ""),
                         "s": self.tk(f"{iid} ShortName", ""), "img": qi.get("gridImageLink") or qi.get("iconLink"),
                         "quest": True, "desc": self.tk(f"{iid} Description", "")}
+            elif iid in MISSING_ITEMS:
+                nm = MISSING_ITEMS[iid]
+                info = {"id": iid, "n": nm["ko"] if LANG == "ko" else nm.get(LANG, nm["en"]), "en": nm["en"], "s": "", "img": None}
         self._item_cache[iid] = info
         return info
 
@@ -810,7 +817,14 @@ def write(out: Path, path: str, html_text: str, urls: list):
     dest.parent.mkdir(parents=True, exist_ok=True)
     if LANG != "ko":
         html_text = localize_html(html_text)
-    dest.write_text(html_text, encoding="utf-8")
+    for _i in range(20):  # Windows 가 파일을 잠깐 잡으면(백신 검사 등) OSError 22/13 — 잠시 뒤 다시
+        try:
+            dest.write_text(html_text, encoding="utf-8")
+            break
+        except OSError as ex:
+            if ex.errno not in (13, 22) or _i == 19:
+                raise
+            __import__("time").sleep(0.25)
     urls.append(path)
 
 
@@ -2737,7 +2751,7 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
                    f'data-pco="{num(a, "cost")}" data-pva="{num(a, "value")}" data-ppr="{num(a, "profit")}" data-pph="{num(a, "per_h")}" '
                    f'data-eco="{num(b, "cost")}" data-eva="{num(b, "value")}" data-epr="{num(b, "profit")}" data-eph="{num(b, "per_h")}">'
                    f'<td class="pr">{ctx.chip(pid, p.get("count"))}{lock}</td><td class="small nw" data-l="시설">{ctx.station_link(c.get("station"), c.get("level"))}</td>'
-                   f'<td class="n" data-l="시간">{fmt_dur(c.get("duration"))}</td><td class="mt" data-l="재료"><div class="chips">{"".join(mats)}</div></td>'
+                   f'<td class="n" data-l="제작 시간">{fmt_dur(c.get("duration"))}</td><td class="mt" data-l="재료"><div class="chips">{"".join(mats)}</div></td>'
                    '<td class="m n" data-l="재료비"></td><td class="m n" data-l="판매가"></td><td class="m n" data-l="이익"></td><td class="m n" data-l="시간당"></td></tr>')
     opts = '<option value="">모든 시설</option>' + "".join(f'<option value="{e(s)}">{e(ctx.station_name(s))}</option>' for s in st_opts)
     body = f"""<h1>은신처 제작 수익표 <span class="h1en">Crafting profit</span></h1>
@@ -3245,7 +3259,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
             + table(base_rows, "base", "건스미스", "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
             + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.")
             + f'<h2 class="sec" id="parts">전체 부품 체크리스트 <span class="muted small">{len(trs)}종</span></h2>'
-            '<div class="box"><div class="bar"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
+            '<div class="box"><div class="controls" style="margin:0 0 10px"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
             '<span class="seg" id="scope"><button type="button" data-v="all" class="on">전체</button><button type="button" data-v="req">필수만</button><button type="button" data-v="ex">예시 조립만</button></span>'
             '<label class="small"><input type="checkbox" id="hideHave" /> 보유 숨기기</label>'
             '<span class="small muted">표시 <b id="shown">0</b> · 보유 <b id="havecnt">0</b></span>'
@@ -3257,7 +3271,7 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
             '시세는 24시간 평균이며 "상인"은 플리마켓 거래 불가 품목입니다.</p>')
     extra_head = ('<style>table.gs td{vertical-align:top}table.gs .chips{margin-top:0}'
                   'details.wb{margin-top:6px}details.wb summary{cursor:pointer;font-size:12.5px;color:var(--gold)}details.wb table.wb{margin-top:6px;font-size:12.5px}details.wb table.wb td,details.wb table.wb th{padding:4px 6px}'
-                  '.seg button{padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12.5px}.seg button.on{border-color:var(--gold);color:var(--gold)}'
+                  '.seg button{padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:12.5px}.seg button.on{border-color:var(--gold);color:var(--gold);background:var(--panel2)}'
                   '[data-part].done .chip{opacity:.45;text-decoration:line-through}'
                   '#gtbl tr.done td{opacity:.5}#gtbl tr.done td.n:first-child{opacity:1}'
                   '.bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:8px}.bar input[type=search]{flex:1;min-width:180px;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}'
