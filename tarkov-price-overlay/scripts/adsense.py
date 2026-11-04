@@ -32,6 +32,10 @@ RECOVERY_FILE = ROOT / "scripts" / "adblock_recovery.txt"
 # 우리 안내 바 스위치(2026-11-04 사용자 결정: 끔 — Google '광고 차단 복구' 메시지로 대신한다). "on" 일 때만 넣고,
 # 복구 태그가 켜져 있으면 "on" 이어도 넣지 않는다(같은 요청을 두 번 받지 않게). 파일이 없으면 끔.
 BAR_FILE = ROOT / "scripts" / "adblock_bar.txt"
+# Google '오류 보호'(2026-11-04): 메시지 스크립트(fundingchoices)가 막혔을 때 대체 안내를 띄우는 Google 제공 스크립트.
+# AdSense → 개인정보 보호 및 메시지 → 광고 차단 복구 → 오류 보호에서 받은 원문 그대로(게시자별 설정이 마지막 줄에 인코딩).
+# 복구 태그가 켜졌을 때만 같은 <head> 블록 안에 붙인다. 대체 안내 문구는 Google 고정 영어.
+ERRPROT_FILE = ROOT / "scripts" / "adblock_errorprot.html"
 
 
 def bar_on() -> bool:
@@ -54,7 +58,11 @@ def snippet(cid: str, recovery: bool = False) -> str:
     """<head> 블록. 복구 태그도 마커 안에 넣어 재실행 때 통째로 제자리 치환되게 한다(마커 밖이면 돌릴 때마다 중복)."""
     return (f'{START}<meta name="google-adsense-account" content="{cid}" />'
             f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={cid}" '
-            f'crossorigin="anonymous"></script>' + (recovery_snippet(cid) if recovery else "") + f'{END}\n')
+            f'crossorigin="anonymous"></script>' + (recovery_snippet(cid) + errprot_snippet() if recovery else "") + f'{END}\n')
+
+
+def errprot_snippet() -> str:
+    return ERRPROT_FILE.read_text(encoding="utf-8").strip() if ERRPROT_FILE.exists() else ""
 
 
 def recovery_on() -> bool:
