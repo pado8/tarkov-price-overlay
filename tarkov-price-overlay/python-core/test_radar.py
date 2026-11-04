@@ -119,6 +119,15 @@ eq("트랜짓 이름·목적지·아래 6m", (trn["name"], trn["dest"], trn["dy"
 tg_n = r.build_targets(maps_doc, "night-factory", loc, tasks, loc_t, {"T1"}, pose)
 eq("야간 공장에서도 공장 퀘스트 구역이 보임", sorted(t["objective"] for t in tg_n if t["kind"] == "quest"), ["구역 방문", "상자 찾기"])
 eq("없는 맵이면 빈 목록", r.build_targets(maps_doc, "nowhere", loc, tasks, loc_t, {"T1"}, pose), [])
+# 탈출 목표(구역 좌표 없음) → exitName 이 맞는 탈출구 자리에 퀘스트 점(11-04 그라운드 제로 '불타는 바퀴')
+tasks_x = {**tasks, "T3": {"name": "T3 name", "objectives": [
+    {"description": "o5", "type": "extract", "exitName": " ex_b", "maps": ["M1"]},           # 앞 공백 섞인 데이터
+    {"description": "o6", "type": "extract", "exitName": "ex_a", "maps": ["M2"]},            # 다른 맵 목표
+    {"description": "o7", "type": "extract", "exitName": "no_such_exit", "maps": ["M1"]},
+    {"description": "o8", "type": "extract", "maps": ["M1"]},                                # 아무 탈출구나 = 위치 없음
+]}}
+qx = [t for t in r.build_targets(maps_doc, "factory", loc, tasks_x, loc_t, {"T3"}, pose) if t["kind"] == "quest"]
+eq("탈출 목표 = 지정 탈출구 자리 하나(다른 맵·없는 이름·지정 없음은 빠짐)", [(t["objective"], t["x"], t["z"]) for t in qx], [("", 30.0, 0.0)])
 
 # 6-1) 탈출구 조건 표(extract_conditions) — 가이드와 레이더가 같이 쓴다
 import extract_conditions as xc

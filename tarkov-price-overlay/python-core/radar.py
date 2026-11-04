@@ -487,6 +487,11 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 if alts:
                     keys.append(" / ".join(alts))
             pts = [z.get("position") for z in o.get("zones") or [] if z.get("map") in ids]
+            # 탈출 목표('차량 탈출구 이용하기' 등)는 구역 좌표가 없다 → exitName(탈출구 내부 이름)이 이 맵 탈출구와 맞으면 그 자리에
+            # (11-04 인게임: 그라운드 제로 '불타는 바퀴' = Sandbox_VExit 가 진행 중인데 지도에 안 보였다. 데이터에 앞 공백 섞인 이름도 있음)
+            exit_name = (o.get("exitName") or "").strip() if o.get("type") == "extract" else ""
+            if exit_name and (not o.get("maps") or ids & set(o.get("maps") or [])):
+                pts += [ex.get("position") for ex in m.get("extracts") or [] if (ex.get("name") or "").strip() == exit_name]
             for pl in o.get("possibleLocations") or []:
                 if pl.get("map") in ids:
                     cand = [p for p in pl.get("positions") or [] if isinstance(p, dict)]
