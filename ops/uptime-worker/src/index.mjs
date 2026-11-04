@@ -1,5 +1,6 @@
 // aquapado 외부 감시 Worker — 매분(cron) 공개 사이트를 찔러 보고, 죽거나 살아나면 ntfy 로 휴대폰 푸시.
-//   · 상태는 KV(UPTIME)에 저장해 같은 장애로 반복 알림하지 않는다. 2회 연속 실패해야 '다운'(일시 오류 무시).
+//   · 상태는 KV(UPTIME) 키 하나에 저장해 같은 장애로 반복 알림하지 않는다. 2회 연속 실패해야 '다운'(일시 오류 무시).
+//     KV 쓰기는 상태가 바뀔 때·30분마다만(무료 한도 하루 1,000회 — check() 위 설명).
 //   · GET /  → 현재 상태 JSON (상태 페이지·콘솔에서 읽기용)
 //   · 비밀값: NTFY_TOPIC (wrangler secret). 토픽은 휴대폰 ntfy 앱이 구독 중인 것.
 // 배포: ops/uptime-worker 에서 `npx wrangler@4 deploy`
@@ -39,29 +40,44 @@ async function notify(env, title, body, tags) {
   }).catch(() => {});
 }
 
+// KV 무료 한도 = 하루 쓰기 1,000회(읽기 10만). 예전엔 매분 사이트 7곳 + 요약 = 분당 8회(하루 11,520회) 써서
+// 매일 오전에 한도 경고 메일이 오고 한도가 차면 감시가 멈췄다(2026-11-04). 이제 상태를 키 하나(STATE_KEY)에 모아
+// 분당 1번 읽고, **상태가 바뀔 때(실패 횟수·다운·복구)와 30분 하트비트에만** 쓴다 → 평소 하루 약 48회.
+// 매분 결과(응답 ms 등)는 Cache API(무료, KV 아님)에 두고 GET / 가 먼저 읽는다(다른 지역이면 KV 값으로 대체).
+const STATE_KEY = "state";
+const HEARTBEAT_MS = 30 * 60 * 1000;
+const LATEST_URL = "https://aquapado-uptime.internal/latest";
+
 async function check(env) {
   const now = new Date().toISOString();
+  const saved = (await env.UPTIME.get(STATE_KEY, { type: "json", cacheTtl: 30 })) || { sites: {}, at: null, results: [] };
+  const sites = { ...(saved.sites || {}) };
+  let changed = false;
   const results = [];
   for (const t of TARGETS) {
     const r = await probe(t);
-    const key = `s:${t.url}`;
-    const prev = (await env.UPTIME.get(key, "json")) || { down: false, fails: 0 };
-    let next = { ...prev, last: now, why: r.why, ms: r.ms };
+    const prev = sites[t.url] || { down: false, fails: 0, since: null };
+    const next = { down: prev.down, fails: prev.fails || 0, since: prev.since || null };
     if (r.ok) {
       if (prev.down) await notify(env, `✅ 복구: ${t.name}`, `${t.url}\n${r.why} · ${r.ms}ms · 다운 시작 ${prev.since || "?"}`, "white_check_mark");
-      next = { ...next, down: false, fails: 0, since: null };
+      next.down = false; next.fails = 0; next.since = null;
     } else {
-      next.fails = (prev.fails || 0) + 1;
+      next.fails = Math.min(FAILS_TO_ALERT, next.fails + 1); // 다운 뒤엔 더 세지 않는다 — 장애 중 매분 쓰기 방지
       if (!prev.down && next.fails >= FAILS_TO_ALERT) {
         next.down = true; next.since = now;
         await notify(env, `🔴 다운: ${t.name}`, `${t.url}\n${r.why}\n${FAILS_TO_ALERT}분 연속 실패`, "rotating_light");
       }
     }
-    await env.UPTIME.put(key, JSON.stringify(next));
-    results.push({ name: t.name, url: t.url, ok: r.ok, why: r.why, ms: r.ms, down: next.down, since: next.since || null });
+    if (next.down !== !!prev.down || next.fails !== (prev.fails || 0) || (next.since || null) !== (prev.since || null)) changed = true;
+    sites[t.url] = next;
+    results.push({ name: t.name, url: t.url, ok: r.ok, why: r.why, ms: r.ms, down: next.down, since: next.since });
   }
-  await env.UPTIME.put("summary", JSON.stringify({ at: now, results }));
-  return results;
+  const stale = !saved.at || Date.now() - Date.parse(saved.at) >= HEARTBEAT_MS;
+  if (changed || stale) await env.UPTIME.put(STATE_KEY, JSON.stringify({ sites, at: now, results }));
+  try {
+    await caches.default.put(LATEST_URL, new Response(JSON.stringify({ at: now, results }), { headers: { "Content-Type": "application/json", "Cache-Control": "max-age=600" } }));
+  } catch {}
+  return { at: now, results, wrote: changed || stale };
 }
 
 export default {
@@ -71,7 +87,15 @@ export default {
     if (u.pathname === "/run" && env.RUN_KEY && u.searchParams.get("key") === env.RUN_KEY) {
       return Response.json(await check(env));  // 수동 실행(시험용)
     }
-    const s = (await env.UPTIME.get("summary", "json")) || { at: null, results: [] };
+    let s = null;
+    try {
+      const hit = await caches.default.match(LATEST_URL);
+      if (hit) s = await hit.json();
+    } catch {}
+    if (!s) {
+      const st = (await env.UPTIME.get(STATE_KEY, { type: "json", cacheTtl: 60 })) || { at: null, results: [] };
+      s = { at: st.at, results: st.results || [] };
+    }
     return Response.json(s, { headers: { "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" } });
   },
 };
