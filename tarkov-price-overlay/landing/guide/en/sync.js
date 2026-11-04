@@ -15,12 +15,12 @@ function ev(n,prm,once){try{if(once){var sk="gsev."+n;if(sessionStorage.getItem(
 function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
-function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
-var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"just now":ago<60?ago+"min ago":Math.round(ago/60)+"h ago";
-var base="🔗 Overlay sync · done: "+n+""+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (seasonal)":" (PVP)");
+function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":((location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0]+"quests/");
+var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"just now":ago<60?ago+" min ago":Math.round(ago/60)+" h ago";
+var base="🔗 Overlay sync · done: "+n+" "+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (seasonal)":" (PVP)");
 a.textContent="🔗 ✓"+n+" · "+(sy.mode==="pve"?"PVE":sy.mode==="season"?"S":"PVP")+(stale?" ↻":"");var long=stale?(base+" · "+agoTxt+" ↻"):base;
 var err=L(SE,null);
-a.title=stale?("Using the last received progress ("+agoTxt+"). Could not read the overlay directly right now"+(err&&err.msg?" — "+err.msg:"")+". Click to read again. If Chrome has blocked 'local network access', go to the address bar lock → Site settings → Local network access → Allow"):"Automatically applying quests the Price Overlay confirmed as completed from the game log";a.title=long+" — "+a.title;
+a.title=stale?("Using the last received progress ("+agoTxt+"). Could not read the overlay directly right now "+(err&&err.msg?" — "+err.msg:"")+". Click to read again. If Chrome has blocked 'local network access', go to the address bar lock → Site settings → Local network access → Allow"):"Automatically applying quests the Price Overlay confirmed as completed from the game log";a.title=long+" — "+a.title;
 if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.dataset.busy)return;a.dataset.busy="1";a.textContent="Retrying sync…";pull(true).then(function(ok){delete a.dataset.busy;if(ok)return;chip(sy,true);help()})});
 top.appendChild(a)}
 // Match the site mode to the server (PVE/PVP) the overlay reported — otherwise the next page auto-read pulls progress from the other server and the "n completed"count changes
