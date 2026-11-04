@@ -18,9 +18,9 @@ function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"только что":ago<60?ago+" мин назад":Math.round(ago/60)+" ч назад";
 var base="🔗 Связь с оверлеем · выполнено "+n+""+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (сезон)":" (PVP)");
-a.textContent=stale?(base+" · "+agoTxt+" по данным ↻"):base;
+a.textContent="🔗 ✓"+n+" · "+(sy.mode==="pve"?"PVE":sy.mode==="season"?"S":"PVP")+(stale?" ↻":"");var long=stale?(base+" · "+agoTxt+" по данным ↻"):base;
 var err=L(SE,null);
-a.title=stale?("Используется последний полученный прогресс ("+agoTxt+"). Сейчас прочитать оверлей напрямую не удалось"+(err&&err.msg?" — "+err.msg:"")+". Нажмите, чтобы прочитать снова. Если Chrome блокирует 'доступ к локальной сети': замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить"):"Автоматически учитываются квесты, выполнение которых оверлей цен определил по логам игры";
+a.title=stale?("Используется последний полученный прогресс ("+agoTxt+"). Сейчас прочитать оверлей напрямую не удалось"+(err&&err.msg?" — "+err.msg:"")+". Нажмите, чтобы прочитать снова. Если Chrome блокирует 'доступ к локальной сети': замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить"):"Автоматически учитываются квесты, выполнение которых оверлей цен определил по логам игры";a.title=long+" — "+a.title;
 if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.dataset.busy)return;a.dataset.busy="1";a.textContent="Повторная попытка связи…";pull(true).then(function(ok){delete a.dataset.busy;if(ok)return;chip(sy,true);help()})});
 top.appendChild(a)}
 // Переключаем режим сайта на сервер (PVE/PVP), который сообщил оверлей — иначе автозагрузка на следующей странице возьмёт прогресс другого сервера и "выполнено n"изменится
@@ -43,10 +43,10 @@ return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(funct
 .catch(function(e){clearTimeout(tm);var why=(e&&e.name==="AbortError")?"timeout":(e&&e.name)||"error";ev(manual?"sync_fail_manual":"sync_fail_auto",{reason:why},!manual);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"Нет ответа (тайм-аут)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
-var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Связь с оверлеем";
+var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Связь";
 b.title="Загружает в этот браузер прогресс квестов·уровни убежища из оверлея цен, запущенного на этом же ПК. Данные не покидают браузер.";
 b.addEventListener("click",function(){if(b.disabled)return;ev("sync_click");b.disabled=true;b.textContent="Подключение…";
-pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Связь с оверлеем";help()})});
+pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Связь";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
 h.innerHTML='<b>Оверлей не найден.</b> Запустите на этом же ПК <a href="/">Оверлей цен</a>(последняя версия с функцией связи) должен быть запущен — затем нажмите снова. Если Chrome блокирует "доступ к локальной сети", измените: <b>замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить</b> и обновите страницу. Если не помогло, откройте этот сайт кнопкой <b>Настройки → Связать с сайтом</b> в оверлее — прогресс передастся вместе с переходом. <button type="button" class="x" aria-label="Закрыть">✕</button>';

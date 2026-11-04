@@ -1,13 +1,13 @@
 (function(){
 var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
-var T={ko:{ph:"전체 검색 (퀘스트·아이템·열쇠·맵)",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지"},
-en:{ph:"Search everything (quests, items, keys, maps)",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page"},
-ru:{ph:"Поиск по гайду (квесты, предметы, ключи, карты)",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница"}}[L];
+var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지"},
+en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page"},
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
-var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:1 1 220px;min-width:180px;max-width:380px;margin:0 8px}"
+var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"
 +".gsearch input:focus{outline:none;border-color:var(--gold,#c8aa64)}"
-+".gsearch ul{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:80;list-style:none;margin:0;padding:4px;background:var(--panel,#17170f);border:1px solid var(--line,#3a352b);border-radius:10px;max-height:60vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)}"
++".gsearch ul{position:absolute;left:0;right:auto;min-width:320px;top:calc(100% + 4px);z-index:80;list-style:none;margin:0;padding:4px;background:var(--panel,#17170f);border:1px solid var(--line,#3a352b);border-radius:10px;max-height:60vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,.45)}"
 +".gsearch li a{display:flex;gap:8px;align-items:baseline;padding:6px 8px;border-radius:6px;color:inherit;text-decoration:none}"
 +".gsearch li a.on,.gsearch li a:hover{background:var(--panel2,#262619)}"
 +".gsearch ul{overflow-x:hidden;white-space:normal}.gsearch li a>span:last-child{flex:1 1 auto;min-width:0;white-space:normal;overflow-wrap:anywhere}@media(max-width:640px){.gsearch ul{position:fixed;left:8px;right:8px;top:auto;margin-top:4px}}"

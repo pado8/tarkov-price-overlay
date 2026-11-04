@@ -18,9 +18,9 @@ function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"just now":ago<60?ago+"min ago":Math.round(ago/60)+"h ago";
 var base="🔗 Overlay sync · done: "+n+""+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (seasonal)":" (PVP)");
-a.textContent=stale?(base+" · "+agoTxt+" ↻"):base;
+a.textContent="🔗 ✓"+n+" · "+(sy.mode==="pve"?"PVE":sy.mode==="season"?"S":"PVP")+(stale?" ↻":"");var long=stale?(base+" · "+agoTxt+" ↻"):base;
 var err=L(SE,null);
-a.title=stale?("Using the last received progress ("+agoTxt+"). Could not read the overlay directly right now"+(err&&err.msg?" — "+err.msg:"")+". Click to read again. If Chrome has blocked 'local network access', go to the address bar lock → Site settings → Local network access → Allow"):"Automatically applying quests the Price Overlay confirmed as completed from the game log";
+a.title=stale?("Using the last received progress ("+agoTxt+"). Could not read the overlay directly right now"+(err&&err.msg?" — "+err.msg:"")+". Click to read again. If Chrome has blocked 'local network access', go to the address bar lock → Site settings → Local network access → Allow"):"Automatically applying quests the Price Overlay confirmed as completed from the game log";a.title=long+" — "+a.title;
 if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.dataset.busy)return;a.dataset.busy="1";a.textContent="Retrying sync…";pull(true).then(function(ok){delete a.dataset.busy;if(ok)return;chip(sy,true);help()})});
 top.appendChild(a)}
 // Match the site mode to the server (PVE/PVP) the overlay reported — otherwise the next page auto-read pulls progress from the other server and the "n completed"count changes
@@ -43,10 +43,10 @@ return fetch("http://127.0.0.1:8765/progress?game_mode="+qmode(),opt).then(funct
 .catch(function(e){clearTimeout(tm);var why=(e&&e.name==="AbortError")?"timeout":(e&&e.name)||"error";ev(manual?"sync_fail_manual":"sync_fail_auto",{reason:why},!manual);S(SE,{ts:Date.now(),msg:(e&&e.name==="AbortError")?"No response (timed out)":String(e&&e.message||e)});if(manual)return false;if(window.__guideSync)return false;var old=L(SK,null);if(old&&old.ts){window.__guideSync=old;chip(old,true);document.dispatchEvent(new CustomEvent("guide-sync",{detail:old}))}return false})}
 if(window.__guideSync||L(SK,null)){pull(false);return}
 var top=document.querySelector(".top .wrap");if(!top)return;
-var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Overlay sync";
+var b=document.createElement("button");b.type="button";b.className="sync btn";b.textContent="🔗 Sync";
 b.title="Brings quest progress and Hideout levels from the Price Overlay running on this PC into this browser. Data never leaves your browser.";
 b.addEventListener("click",function(){if(b.disabled)return;ev("sync_click");b.disabled=true;b.textContent="Syncing…";
-pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Overlay sync";help()})});
+pull(true).then(function(ok){if(ok){b.remove();return}b.disabled=false;b.textContent="🔗 Sync";help()})});
 top.appendChild(b);
 function help(){var old=document.querySelector(".synchelp");if(old)old.remove();var h=document.createElement("div");h.className="synchelp";
 h.innerHTML='<b>Could not find the overlay.</b> On the same PC, run <a href="/">Price Overlay</a>(latest version with sync support) must be running — start it and click again. If Chrome has blocked "local network access", change it to <b>address bar lock → Site settings → Local network access → Allow</b> and refresh. If it still fails, open this site with the overlay <b>Settings → Sync with site</b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
