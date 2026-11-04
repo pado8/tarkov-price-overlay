@@ -5,7 +5,9 @@
 #   cloudflare : landing → scripts\cloudflare\.stage (vercel.json·.vercel 제외) + _headers 복사 → npx wrangler pages deploy
 # 배포 전에 adsense.py·hosting.py 를 돌려 광고·분석 조각을 상태에 맞춘다(-SkipPrep 로 생략).
 # 쓰는 곳: promo_refresh.ps1(주간 프로모 갱신), 수동 배포, cutover_cloudflare.ps1
-param([switch]$SkipPrep, [switch]$Maintenance)   # -Maintenance: 전 경로를 '잠시 점검 중' 페이지로(cloudflare 만). 되돌리기 = 스위치 없이 다시 배포
+param([switch]$SkipPrep, [switch]$Maintenance, [switch]$Preview)   # -Maintenance: 전 경로를 '잠시 점검 중' 페이지로(cloudflare 만). 되돌리기 = 스위치 없이 다시 배포
+# -Preview(2026-11-04): 운영(tarkov.aquapado.com)은 그대로 두고 같은 Pages 프로젝트의 'dev' 가지에만 올린다 → https://dev.<프로젝트>.pages.dev
+#   검색 차단(X-Robots-Tag: noindex)을 붙인다. ⚠ 광고·Google 차단 복구 메시지는 aquapado.com 에 묶여 있어 미리보기 주소에선 안 나온다(배치·문구·우리 스크립트 확인용)
 $ErrorActionPreference = "Continue"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $env:PYTHONIOENCODING = "utf-8"
@@ -59,11 +61,14 @@ elseif ($target -eq "cloudflare") {
         if ($LASTEXITCODE -ge 8) { Write-Host "[deploy] 스테이징 복사 실패(robocopy $LASTEXITCODE)"; exit 1 }
         # _headers 는 LF·BOM 없이 — 윈도우 저장소(autocrlf)라 CRLF 로 꺼내질 수 있고, PS5.1 Set-Content utf8 은 BOM 을 붙인다
         $hdr = ([IO.File]::ReadAllText((Join-Path $root "scripts\cloudflare\_headers"))) -replace "`r`n", "`n"
-        [IO.File]::WriteAllText((Join-Path $stage "_headers"), $hdr.TrimStart([char]0xFEFF), $utf8)
+        $hdr = $hdr.TrimStart([char]0xFEFF)
+        if ($Preview) { $hdr = "/*`n  X-Robots-Tag: noindex`n`n" + $hdr }   # 미리보기는 검색에 안 잡히게
+        [IO.File]::WriteAllText((Join-Path $stage "_headers"), $hdr, $utf8)
     }
+    $branch = if ($Preview) { "dev" } else { "main" }
     $n = (Get-ChildItem $stage -Recurse -File).Count
-    Write-Host "[deploy] 스테이징 $n 개 파일 → Cloudflare Pages '$project'"
-    $out = & npx --yes wrangler@4 pages deploy $stage --project-name $project --branch main --commit-dirty=true 2>&1
+    Write-Host ("[deploy] 스테이징 $n 개 파일 → Cloudflare Pages '$project' · " + $(if ($Preview) { "미리보기(dev) — 운영 영향 없음 → https://dev.$project.pages.dev" } else { "운영(main)" }))
+    $out = & npx --yes wrangler@4 pages deploy $stage --project-name $project --branch $branch --commit-dirty=true 2>&1
     $out | Select-Object -Last 6 | ForEach-Object { Write-Host "  $_" }
     $ok = ($out | Select-String 'Deployment complete') -ne $null
     Write-Host ("[deploy] cloudflare " + $(if ($ok) { "완료" } else { "실패" }))
