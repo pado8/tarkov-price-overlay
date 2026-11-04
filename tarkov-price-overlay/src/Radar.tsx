@@ -8,6 +8,9 @@ import type { Layers } from "./RadarMap";
 import { Icon } from "./Icon";
 
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
+// 카드(App.tsx guideUrl)와 같은 규칙: UI 언어별 가이드 + src=app(GA4 앱발 방문 표식)
+const guideQuestUrl = (lang: string, slug: string) =>
+  `${GUIDE_URL}${lang === "en" ? "en/" : lang === "ru" ? "ru/" : ""}quest/${slug}/?src=app`;
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
 type HiddenQuest = { id: string; name: string };
 function loadHidden(): HiddenQuest[] {
@@ -307,7 +310,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               <button
                 type="button"
                 className="radar-hide radar-guide"
-                onClick={() => void openUrl(`${GUIDE_URL}quest/${x.slug}/`).catch(() => {})}
+                onClick={() => void openUrl(guideQuestUrl(lang, x.slug!)).catch(() => {})}
                 title={t.radarOpenGuide}
                 aria-label={t.radarOpenGuide}
               >
