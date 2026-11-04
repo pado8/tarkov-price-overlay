@@ -2983,7 +2983,7 @@ def promo_page(ctx: Ctx) -> tuple[str, str]:
     body = (f'<h1>프로모 코드 <span class="h1en">Promo codes</span></h1>'
             f'<p class="sub">지금 쓸 수 있는 공식 코드 {len(PROMO_CODES)}개 · 사람 확인 {PROMO_CHECKED} · 자동 확인 {e(PROMO_STATUS.get("checked") or "—")} · <span id="pu-sum"></span></p>'
             '<div class="note small">✅ <b>등록함</b>에 체크해 두면 이 브라우저에 저장되고, <b>오버레이 연동</b>이 켜진 PC에서는 앱에도 저장돼 다른 브라우저에서도 같은 체크가 보입니다. '
-            '코드 옆 <b>활성 n곳</b>은 자동 점검(매주)이 정리 사이트에서 그 코드를 "활성"으로 본 수, <span class="warn">만료 의심</span>은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.</div>'
+            '코드 옆 <b>활성 n곳</b>은 자동 점검(매일)이 정리 사이트에서 그 코드를 "활성"으로 본 수, <span class="warn">만료 의심</span>은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.</div>'
             '<div class="note key"><b>넣는 기준</b> — 서로 다른 정리 사이트 3곳 이상이 최근 2주 안에 "활성"으로 확인했고, 디시 타르코프 갤러리에서도 쓴 보고가 있는 코드만 올립니다. '
             '한 곳이라도 만료로 적은 코드는 아래 "제외" 표로 내립니다. BSG는 만료일을 공지하지 않고 하루 만에 닫는 코드도 있어서, <b>보이면 바로 넣는 게 답</b>입니다. '
             '코드는 <b>모드별</b>로 들어오니 PVE 코드를 넣고 PVP 캐릭터로 접속하면 메신저에 아무것도 없습니다.</div>'
