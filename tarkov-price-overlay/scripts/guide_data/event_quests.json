@@ -420,7 +420,7 @@
    "notes": []
   },
   "Halloween: First Results": {
-   "rev": "2026-11-02",
+   "rev": "2026-11-03",
    "trader": "Therapist",
    "maps": [],
    "prev": [
@@ -437,7 +437,7 @@
     }
    ],
    "obj": [
-    "Eliminate 25 infected while they are under the effect of the experimental gas grenade",
+    "Eliminate 15 infected while they are under the effect of the experimental gas grenade",
     "(Optional) Obtain the RDA-68 experimental CS gas grenade"
    ],
    "rewards": [
@@ -977,7 +977,7 @@
    "notes": []
   },
   "Halloween: The Final Push": {
-   "rev": "2026-11-02",
+   "rev": "2026-11-03",
    "trader": "Therapist",
    "maps": [],
    "prev": [
@@ -989,7 +989,7 @@
    "prev_accept": false,
    "next": [],
    "obj": [
-    "Eliminate 30 infected while they are under the effect of the experimental gas grenade",
+    "Eliminate 15 infected while they are under the effect of the experimental gas grenade",
     "(Optional) Obtain the RDA-78 experimental CS gas grenade",
     "Eliminate the infected Tagilla"
    ],

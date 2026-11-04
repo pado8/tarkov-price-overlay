@@ -187,30 +187,29 @@ WIKI_DIFF = {
     "A Difficult Choice": {"rev": "2026-10-27", "exp": 65000},
     "A Helping Hand": {"rev": "2026-10-28", "level": 20},
     "Beneath The Streets": {"rev": "2026-10-27", "exp": 65000},
-    "Booze": {"rev": "2026-10-27", "exp": 20000},
+    "Booze": {"rev": "2026-10-27", "exp": 20000, "v": "data", "why": "평판 +0.75 등급과 다른 정리 사이트(tarkov.help) 모두 28,000"},
     "Cargo X - Part 3": {"rev": "2026-10-27", "level": 12},
     "Charity": {"rev": "2026-10-27", "ll": 2},
     "Collector": {"rev": "2026-10-31", "level": 40, "obj": "위키는 선행 퀘스트를 4개로 적음(Postman Pat - Part 2 제외)"},
     "Create a Distraction - Part 2": {"rev": "2026-10-27", "obj": "위키에는 「카반·콜론타이를 해치지 말 것」 조건이 더 있음"},
-    "Crisis": {"rev": "2026-10-27", "exp": 65000},
+    "Crisis": {"rev": "2026-10-27", "exp": 65000, "v": "wiki", "why": "평판 +1.5 등급 경험치는 65,000이고 다른 정리 사이트(tarkov.help)도 65,000 — 공개 데이터는 1.0 시절 값으로 보임"},
     "Dandies": {"rev": "2026-10-27", "exp": 10000},
     "Debtor": {"rev": "2026-10-27", "exp": 10000},
     "Decisions, Decisions": {"rev": "2026-10-27", "obj": "위키에는 「세관의 옛 챔피언 은신처로 돌아가기」 목표가 더 있음"},
     "Decontamination Service": {"rev": "2026-10-27", "exp": 65000},
-    "Disease History": {"rev": "2026-10-27", "exp": 2800},
     "District Patrol": {"rev": "2026-10-27", "exp": 10000},
-    "Drug Trafficking": {"rev": "2026-10-28", "exp": 28500},
-    "Every Hunter Knows This": {"rev": "2026-10-27", "exp": 5800, "rep": "Jaeger +0.01"},
+    "Drug Trafficking": {"rev": "2026-10-28", "exp": 28500, "v": "data", "why": "평판 +0.75 등급 경험치는 28,000(위키 값은 등급 밖 숫자)"},
+    "Every Hunter Knows This": {"rev": "2026-10-27", "exp": 5800, "rep": "Jaeger +0.01", "v": "data", "why": "위키 해당 줄은 2024-08 이후 수정되지 않음"},
     "Glory to CPSU - Part 1": {"rev": "2026-10-27", "level": 15},
-    "Gunsmith Master - Part 1": {"rev": "2026-10-13", "level": 27},
+    "Gunsmith Master - Part 1": {"rev": "2026-10-13", "level": 27, "v": "data", "why": "위키 레벨 줄은 2025년 값 그대로(경험치만 10-13 갱신)"},
     "Hell on Earth - Part 1": {"rev": "2026-10-27", "exp": 3000},
     "Hell on Earth - Part 2": {"rev": "2026-10-27", "exp": 28000},
     "Job for a Patriot": {"rev": "2026-10-27", "exp": 10000},
     "Make an Impression": {"rev": "2026-11-01", "obj": "위키에는 「볼트액션 소총 스킬 10 달성」 조건이 더 있고 처치 수를 10명으로 적음"},
     "Minibus": {"rev": "2026-10-27", "obj": "위키에는 「도구 분류 아이템 10개 제출」 목표가 더 있음"},
-    "New Beginning": {"rev": "2026-10-27", "rep": "Ragman +0.1"},
+    "New Beginning": {"rev": "2026-10-27", "rep": "Ragman +0.1", "v": "data", "why": "위키 안에서도 단계마다 +0.01·+0.1로 서로 다름"},
     "No Swiping": {"rev": "2026-10-28", "exp": 3000},
-    "Nostalgia": {"rev": "2026-10-27", "level": 28},
+    "Nostalgia": {"rev": "2026-10-27", "level": 28, "v": "data", "why": "위키 레벨 줄은 2021년 값 그대로"},
     "Perfect Mediator": {"rev": "2026-10-27", "exp": 20900},
     "Private Club": {"rev": "2026-10-28", "exp": 3000},
     "Properties All Around": {"rev": "2026-10-27", "exp": 10000},
@@ -220,9 +219,8 @@ WIKI_DIFF = {
     "Shooter Born in Heaven": {"rev": "2026-10-27", "exp": 65000},
     "Slaughterhouse": {"rev": "2026-10-31", "obj": "위키는 삼림·인터체인지·세관까지 9개 맵(공개 데이터는 6개 맵)"},
     "Surveillance": {"rev": "2026-10-27", "exp": 10000},
-    "Tarkov-Style Diplomacy": {"rev": "2026-10-27", "exp": 28200},
+    "Tarkov-Style Diplomacy": {"rev": "2026-10-27", "exp": 28200, "v": "data", "why": "평판 +0.75 퀘스트의 1.1 이후 경험치 등급은 28,000이고, 위키 28,200은 09-20 한 사용자가 넣은 등급 밖 숫자"},
     "The Bunker - Part 2": {"rev": "2026-10-27", "level": 15},
-    "The Cult": {"rev": "2026-10-27", "exp": 1000},
     "The Huntsman Path - Administrator": {"rev": "2026-10-31", "obj": "위키는 등대 기차역에서도 조명탄 발사·6명 처치를 요구(총 4개 목표)하고 처치 수를 6명으로 적음"},
     "The Tarkov Shooter - Part 5": {"rev": "2026-10-31", "exp": 28000},
     "Trophies": {"rev": "2026-10-28", "obj": "위키는 「20레벨 이상 PMC 인식표」와 「PMC 12명 처치」 조건(공개 데이터는 프레스티지 1 이상 인식표)"},
@@ -246,7 +244,7 @@ QUEST_NOTES = {
         "트랜짓 앞문은 Knossos LLC facility key로 열어야 하고, 트랜짓 자체는 미궁 출입 키카드(Labrys access keycard)가 있어야 탈 수 있습니다. 선택 목표인 키카드 획득이 바로 이 카드입니다.",
         "레이드에서 살아 나올 필요는 없습니다. 미궁에 도착한 것으로 목표가 인정됩니다.",
         "받는 조건은 메카닉 LL3, 레벨 26, 선행 퀘스트 「숨겨진 내막」(Hidden Layer) 완료입니다.",
-        "끝내면 메카닉의 미궁 퀘스트 5개(Vacate the Premises, Hypotheses Testing, Confidential Info, Indisputable Authority, This Tape Sucks)가 열립니다.",
+        "끝내면 상인 다섯 명의 미궁 퀘스트가 하나씩, 모두 5개(Vacate the Premises, Hypotheses Testing, Confidential Info, Indisputable Authority, This Tape Sucks) 열립니다.",
     ]},
     "I Need More Power": {"rev": "2026-11-03", "lines": [
         "동관 발전기는 2층 220호에 있고 문은 항상 열려 있습니다.",
@@ -359,6 +357,60 @@ def map_notes_html(slug: str) -> str:
             f'<p class="small muted">공식 위키 공략 절과 대조해 정리 ({e(d["rev"])}). 패치로 바뀌었으면 피드백으로 알려 주세요.</p></section>')
 
 
+# 에디션 전용 퀘스트 — 공개 데이터엔 에디션 조건 필드가 없다. 출처: 공식 위키 각 퀘스트 문서 문구
+# "only available to buyers of the Edge of Darkness edition" / "not available to owners of The Unheard edition"(11-04 전수 검색)
+EDITION_CHECKED = "2026-11-04"
+EDITION_ONLY = {**{n: "eod" for n in ("Airmail", "Camera, Action!", "Hell on Earth - Part 1", "Hell on Earth - Part 2", "Key to the City",
+                                       "Minute of Fame", "Proper Comeback", "Quality Standard", "Serious Allegations",
+                                       "The Good Times - Part 1", "The Good Times - Part 2", "Viewer")},
+                "Old Patterns": "not_unheard"}
+# 공식 위키가 '더 이상 게임에 없음'으로 분류한 퀘스트(scripts/wiki_historical.py → guide_data/wiki_historical.json)
+try:
+    _wh = json.loads((Path(__file__).resolve().parent / "guide_data" / "wiki_historical.json").read_text(encoding="utf-8"))
+    WIKI_HISTORICAL, WIKI_HISTORICAL_CHECKED = set(_wh.get("quests") or []), _wh.get("checked") or ""
+except Exception:  # noqa: BLE001
+    WIKI_HISTORICAL, WIKI_HISTORICAL_CHECKED = set(), ""
+# 보상 수량 보정 — tarkov.dev 집계 버그: 같은 아이템이 여러 묶음이면 첫 묶음 수량에 1씩만 더한다(update-quests.mjs getRewardItems,
+# 11-04 확인: 동호회 .50 BMG 50발 = 15+15+15+5 → 15+1+1+1 = 18). 위키 값이 있는 것만 바꾸고, 나머지는 범위로 안내.
+REWARD_FIX = {"Hobby Club": 50, "Killer Argument": 80, "Arena Business": 250, "To Great Heights! - Part 4": 2500000}
+
+
+def _base_en(en_name: str) -> str:
+    return re.sub(r"\s*\[(?:PVP|PVE) ZONE\]\s*$", "", en_name or "")
+
+
+def edition_html(en_name: str) -> str:
+    k = EDITION_ONLY.get(_base_en(en_name))
+    if k == "eod":
+        return ('<div class="note">💿 <b>Edge of Darkness(EOD) 에디션 전용 퀘스트</b> — 다른 에디션 계정에는 나오지 않습니다. '
+                f'<span class="muted small">(공식 위키 기준, {EDITION_CHECKED} 확인)</span></div>')
+    if k == "not_unheard":
+        return ('<div class="note">💿 <b>The Unheard 에디션 계정에는 나오지 않는 퀘스트</b>입니다. '
+                f'<span class="muted small">(공식 위키 기준, {EDITION_CHECKED} 확인)</span></div>')
+    return ""
+
+
+def historical_html(en_name: str) -> str:
+    if _base_en(en_name) not in WIKI_HISTORICAL:
+        return ""
+    return ('<div class="note warn">⚠ <b>공식 위키는 이 퀘스트를 &quot;더 이상 게임에 없는 퀘스트(Historical)&quot;로 분류합니다</b>'
+            f'({WIKI_HISTORICAL_CHECKED} 확인). 공개 데이터에는 남아 있어 페이지를 두었지만, 지금 게임에서는 받을 수 없을 수 있습니다.</div>')
+
+
+def reward_count(ctx: "Ctx", en_name: str, x: dict) -> tuple[int, str]:
+    """(표시할 수량, 덧붙일 안내 HTML) — 보상 수량 집계 버그 보정."""
+    c = x.get("count") or 1
+    raw = ctx.items.get(x.get("item")) or ctx.items_pve.get(x.get("item")) or {}
+    mx = raw.get("stackMaxSize") or 1
+    if not (mx > 1 and mx < c < 2 * mx and c - mx <= 10):
+        return c, ""
+    fix = REWARD_FIX.get(_base_en(en_name))
+    if fix:
+        return fix, f'<span class="muted small">(공식 위키 기준 — 공개 데이터는 {fmt_int(c)}개로 잘못 집계)</span>'
+    n = c - mx + 1
+    return c, (f'<span class="muted small">(공개 데이터 집계 오류 의심 — 실제로는 약 {fmt_int(mx * (n - 1) + 1)}~{fmt_int(mx * n)}개일 수 있음)</span>')
+
+
 def quest_notes_html(en_name: str) -> str:
     import re as _re
     d = QUEST_NOTES.get(_re.sub(r"\s*\[(?:PVP|PVE) ZONE\]\s*$", "", en_name or ""))
@@ -386,8 +438,12 @@ def wiki_diff_html(en_name: str, stamp: str) -> str:
         parts.append(f"평판 {d['rep']}")
     if "obj" in d:
         parts.append(d["obj"])
-    return (f'<div class="note">⚠ <b>공식 위키 표기와 다름</b>(위키 마지막 수정 {d["rev"]}) — 위키: {" · ".join(parts)}. '
-            f'이 페이지는 공개 데이터(기준 {stamp}) 값을 보여주며, 어느 쪽이 현재 게임과 맞는지는 확인되지 않았습니다.</div>')
+    head = f'<div class="note">⚠ <b>공식 위키 표기와 다름</b>(위키 문서 확인 {d["rev"]}) — 위키: {" · ".join(parts)}. '
+    if d.get("v") == "data":  # 11-04 재검증: 위키 쪽이 오래됐거나 오타일 가능성이 큼
+        return head + f'확인해 보니 위키 쪽이 오래된 값일 가능성이 커서 공개 데이터(기준 {stamp}) 값을 그대로 둡니다. <span class="muted small">근거: {e(d.get("why", ""))}</span></div>'
+    if d.get("v") == "wiki":
+        return head + f'<b>위키 쪽이 맞을 가능성이 큽니다</b> — 이 페이지의 값은 공개 데이터(기준 {stamp})입니다. <span class="muted small">근거: {e(d.get("why", ""))}</span></div>'
+    return head + f'이 페이지는 공개 데이터(기준 {stamp}) 값을 보여주며, 어느 쪽이 현재 게임과 맞는지는 확인되지 않았습니다.</div>'
 
 
 def station_diff_html(slug: str, level) -> str:
@@ -1122,7 +1178,10 @@ def rewards_html(ctx: Ctx, t: dict, side: str = "finishRewards") -> str:
         rows.append(("상인 평판", ", ".join(parts)))
     its = rw.get("items") or []
     if its:
-        rows.append(("아이템", '<div class="chips">' + "".join(ctx.chip(x.get("item"), x.get("count")) for x in its) + "</div>"))
+        en_q = ctx.task_names(t["id"])[1] if t.get("id") in ctx.tasks else ""
+        fixed = [(x, *reward_count(ctx, en_q, x)) for x in its]  # tarkov.dev 묶음 수량 집계 버그 보정(동호회 .50 BMG 18→50 등)
+        rows.append(("아이템", '<div class="chips">' + "".join(ctx.chip(x.get("item"), c) for x, c, _n in fixed) + "</div>"
+                     + "".join(f"<div>{n}</div>" for _x, _c, n in fixed if n)))
     ou = rw.get("offerUnlock") or []
     if ou:
         rows.append(("구매 해금", '<div class="chips">' + "".join(
@@ -1264,10 +1323,14 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         tags.append(f'<span class="badge b-any">{e(t["factionName"])} 전용</span>')
     if t.get("restartable"):
         tags.append('<span class="badge b-any">실패 시 재시작 가능</span>')
-    tags.append(f'<button type="button" class="fav" id="qfav" data-t="{e(tid)}" aria-label="즐겨찾기" title="즐겨찾기 — 사냥 퀘스트 페이지에서 모아 보기">★</button>')
+    if EDITION_ONLY.get(_base_en(en)) == "eod":
+        tags.append('<span class="badge b-any">EOD 전용</span>')
+    if _base_en(en) in WIKI_HISTORICAL:
+        tags.append('<span class="badge b-any">위키: 게임에 없음</span>')
+    tags.append(f'<button type="button" class="fav" id="qfav" data-t="{e(tid)}" aria-label="즐겨찾기" title="즐겨찾기 — 내 즐겨찾기 페이지에서 목표·열쇠를 모아 보기">★</button>')
 
     objs = "".join(objective_html(ctx, o) for o in t.get("objectives") or [])
-    sections_main = [wiki_diff_html(en, ctx.stamp) + f'<section class="box"><h2>목표 {len(t.get("objectives") or [])}개</h2><ol class="objs">{objs}</ol></section>']
+    sections_main = [historical_html(en) + edition_html(en) + wiki_diff_html(en, ctx.stamp) + f'<section class="box"><h2>목표 {len(t.get("objectives") or [])}개</h2><ol class="objs">{objs}</ol></section>']
     tp = ctx.tasks_pve.get(tid)
     if tp and tid in ctx.tasks_reg and _sig(tp) != _sig(ctx.tasks_reg[tid]):
         sections_main.append('<section class="box"><h2>PVE 버전 목표</h2><p class="small muted">PVE에서는 목표가 조금 다릅니다.</p><ol class="objs">'
@@ -1829,6 +1892,15 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
         rows.append(f"<tr><th>이전 퀘스트</th><td>{prev_html}</td></tr>")
         rows.append(f'<tr><th>다음 퀘스트</th><td>{rel(o.get("next") or []) or "없음"}</td></tr>')
         objs = "".join(f"<li>{e(t_(x))}</li>" for x in o.get("obj") or [])
+        # 보상 묶음(길)이 여럿이고 목표가 길마다 숫자만 다른 같은 모양으로 반복되면 길별로 나눠 보인다
+        # (11-04 점검: Tightening the Quarantine 이 스키어 5/2/2·테라피스트 7/3/3 두 길의 목표 6줄을 한데 나열하고 있었다)
+        ob, ns = o.get("obj") or [], len(o.get("rewards") or [])
+        if ns > 1 and len(ob) >= 2 * ns and len(ob) % ns == 0:
+            m = len(ob) // ns
+            grp = [ob[i * m:(i + 1) * m] for i in range(ns)]
+            if len({tuple(re.sub(r"\d+", "#", x) for x in g) for g in grp}) == 1:
+                objs = "".join(f'<li><b>길 {i + 1}</b><ul>' + "".join(f"<li>{e(t_(x))}</li>" for x in g) + "</ul></li>"
+                               for i, g in enumerate(grp))
         warn = "".join(f'<div class="note">⚠ <b>선택 분기</b> — {e(t_(x))}</div>' for x in o.get("choice") or [])
         notes = "".join(f'<p class="muted small">{e(t_(x))}</p>' for x in o.get("notes") or [])
         rws = []
@@ -1846,7 +1918,8 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
             for name, trn, ll in rs.get("barters") or []:
                 iid = by_en.get(name.lower())
                 nm = (ctx.item(iid) or {}).get("n") if iid else name
-                extra.append(f"<li>물물교환 해금: {e(nm)} — {trader(trn)} LL{ll}</li>")
+                ll_txt = f"LL{ll}" if isinstance(ll, int) and 1 <= ll <= 4 else '<span class="muted">LL 미확인(위키 표기 오류)</span>'  # 위키 오타 'LL11'(Prototyping)
+                extra.append(f"<li>물물교환 해금: {e(nm)} — {trader(trn)} {ll_txt}</li>")
             extra += [f"<li>업적: {e(a)}</li>" for a in rs.get("achv") or []]
             extra += [f"<li>{e(t_(x))}</li>" for x in rs.get("other") or []]
             head = '<p class="small muted">보상 묶음 ' + str(k + 1) + " (선택한 길에 따라 다름)</p>" if len(sets) > 1 else ""
@@ -2539,8 +2612,20 @@ def prestige_rewards_html() -> str:
         '<dt>PVE와 PVP 프레스티지는 어떻게 다른가요?</dt>'
         '<dd>조건이 다릅니다. PVE 1단계는 레벨 15와 500만 루블만 있으면 되고, PVP 1단계는 레벨 25, 퀘스트 「New Beginning」, 은신처 3개(정보 센터 1·영양 유닛 2·휴식 공간 2), 1,000만 루블이 필요합니다. 2단계부터는 투어 완료와 스킬 조건이 양쪽에 붙습니다. 보상은 이월 비율이 PVE 쪽이 두 배 가까이 높고, PVE에만 타르코인이 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.</dd>'
         '<dt>조건은 어디서 확인하나요?</dt>'
-        '<dd>위 PVE·PVP 표가 공개 데이터 기준 전체 조건입니다. 레벨·퀘스트·스토리 챕터 목표·스킬·은신처·보유 루블 여섯 가지를 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다.</dd>'
+        '<dd>위 PVE·PVP 표는 공개 데이터의 조건에 공식 위키의 <b>스토리 챕터 조건(📖)</b>을 더한 것입니다(공개 데이터에는 스토리 조건이 빠져 있습니다). 레벨·퀘스트·스토리 챕터·스킬·은신처·보유 루블을 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다. 공식 위키는 PVE 2단계 이상에도 「New Beginning」 퀘스트 조건을 적고 있지만 공개 데이터에는 없어, 어느 쪽이 맞는지는 확인되지 않았습니다.</dd>'
         '</dl></div>')
+
+
+# 프레스티지 단계별 스토리 챕터 조건 — 공개 데이터(tarkov.dev)엔 이 조건 유형이 없다(11-04 점검: FAQ 가 "위 표가 전체 조건"이라 해 틀렸음).
+# 출처: 공식 위키 Prestige 문서 표(2026-10-23 수정본, 11-04 확인). PVE/PVP 구분 없이 같은 조건으로 적혀 있다.
+PRESTIGE_STORY_CHECKED = "2026-11-04"
+PRESTIGE_STORY = {
+    2: ["투어(Tour) 완료"],
+    3: ["투어(Tour) 완료", "추락하는 하늘(Falling Skies) 완료"],
+    4: ["투어(Tour) 완료", "타르코프 탈출 티켓(Ticket from Tarkov — 크루글로프의 RFID 키카드) 획득"],
+    5: ["투어(Tour) 완료", "그들은 이미 여기에(They Are Already Here) 완료", "타르코프 탈출 티켓(Ticket from Tarkov) 획득"],
+    6: ["더 티켓(The Ticket) 완료"],
+}
 
 
 def prestige_page(ctx: Ctx) -> tuple[str, str]:
@@ -2549,6 +2634,8 @@ def prestige_page(ctx: Ctx) -> tuple[str, str]:
         rows = []
         for p in sorted(plist or [], key=lambda x: x.get("prestigeLevel") or 0):
             conds = "".join(f"<li>{prestige_cond(ctx, c)}</li>" for c in p.get("conditions") or [])
+            conds += "".join(f'<li>📖 스토리 챕터: {e(x)} <span class="muted small">(공식 위키 기준 · 공개 데이터엔 없음)</span></li>'
+                             for x in PRESTIGE_STORY.get(p.get("prestigeLevel") or 0, []))
             rw = p.get("rewards") or {}
             rwp = []
             if rw.get("items"):
@@ -2586,6 +2673,17 @@ def prestige_page(ctx: Ctx) -> tuple[str, str]:
 # ─────────────────────────────────────────────────────────────
 # 맵 · 보스
 # ─────────────────────────────────────────────────────────────
+
+def zone_label(ctx: Ctx, z: dict) -> str:
+    """보스 출현 구역 이름 — 로케일 이름이 없고 게임 내부 이름(2ScavPort29·Mash_t1·GateTowerLeft 등)만 있으면 빈 문자열(11-04 점검)."""
+    n = ctx._loc(ctx.loc_maps, z.get("spawnKey"), None)
+    if n:
+        return n
+    raw = (z.get("name") or "").strip()
+    if not raw or (" " not in raw and re.search(r"_|\d|[a-z][A-Z]", raw)):
+        return ""
+    return raw
+
 
 def _escort_txt(ctx: Ctx, esc_list):
     out = []
@@ -2667,7 +2765,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
         g = grouped.setdefault(label, {"chance": 0, "zones": [], "escorts": [], "ev": ev})
         g["chance"] = max(g["chance"], b.get("spawnChance") or 0)
         for z in b.get("spawnLocations") or []:
-            zn = ctx._loc(ctx.loc_maps, z.get("spawnKey"), z.get("name"))
+            zn = zone_label(ctx, z)
             if zn and zn not in g["zones"]:
                 g["zones"].append(zn)
         et = _escort_txt(ctx, b.get("escorts"))
@@ -2796,7 +2894,7 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
             if not mob or not (str(mob).startswith("boss") or mob in BOSS_EXTRA):
                 continue
             a = agg.setdefault(mob, {"maps": [], "escorts": set()})
-            zones = ", ".join(ctx._loc(ctx.loc_maps, z.get("spawnKey"), z.get("name")) for z in b.get("spawnLocations") or [])
+            zones = ", ".join(x for x in (zone_label(ctx, z) for z in b.get("spawnLocations") or []) if x)
             a["maps"].append((mid, b.get("spawnChance") or 0, zones))
             et = _escort_txt(ctx, b.get("escorts"))
             if et:
@@ -3079,6 +3177,8 @@ def ammo_page(ctx: Ctx) -> tuple[str, str]:
 
 PATCHES = [
     ("1.3.0.1", "2026-11-03", [
+        "<b>할로윈 퀘스트 「첫 번째 결과」·「최후의 총력전」의 가스 수류탄 감염자 처치 수 감소</b>(공식 위키 기준 25·30명 → 15명)",
+        "업적 「Triumph of Science」·「Shields Up!」 보상에 할로윈 메인 메뉴 배경 추가",
         "오염된 공장 일부 구역의 조명 오류 수정",
         "오염된 연구소의 과학자 시체 하나를 뒤질 수 없던 문제 수정",
         "할로윈 메인 메뉴 배경: 텍스처 낮음에서 저해상도로 보이던 문제·레이드 후 애니메이션이 사라지던 문제 수정"]),
