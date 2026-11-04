@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $main = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)   # ...\tarkov-price-overlay
 $repo = (git -C $main rev-parse --show-toplevel).Trim()                           # 모노레포 루트
 $sub = "tarkov-price-overlay"
-$base = Join-Path $env:LOCALAPPDATA "TarkovGuidePromo"
+$base = Join-Path $env:USERPROFILE "AppData\Local\TarkovGuidePromo"   # LOCALAPPDATA 는 실행하는 앱(예: 스토어판 앱)에 따라 가상 경로가 될 수 있어 쓰지 않는다
 $wt = Join-Path $base "wt"
 $log = Join-Path $base "promo_daily.log"
 New-Item -ItemType Directory -Force $base | Out-Null
@@ -34,13 +34,15 @@ if (-not (Test-Path $venvWt)) {
 }
 # 3) 점검·재빌드·배포 (promo_refresh.ps1 은 자기 폴더 기준으로 동작)
 $statusRel = "$sub\scripts\guide_data\promo_status.json"
-$before = Get-FileHash (Join-Path $wt $statusRel) -ErrorAction SilentlyContinue
+# 비교는 확인 날짜("checked")를 뺀 내용으로 — 날짜만 바뀐 날은 사이트도 다시 배포하지 않으므로 커밋하지 않는다
+function StatusBody($p) { if (Test-Path $p) { ((Get-Content $p -Raw -Encoding UTF8) -replace '"checked":\s*"[^"]*",?', '') } else { $null } }
+$before = StatusBody (Join-Path $wt $statusRel)
 $args2 = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", (Join-Path $wt "$sub\scripts\promo_refresh.ps1"))
 if ($Force) { $args2 += "-Force" }
 & powershell @args2 2>&1 | ForEach-Object { Log $_ }
-$after = Get-FileHash (Join-Path $wt $statusRel) -ErrorAction SilentlyContinue
+$after = StatusBody (Join-Path $wt $statusRel)
 # 4) 판정이 바뀌었으면 그 파일만 저장소 dev 에 커밋 (저장소가 dev 가 아니면 건너뜀)
-if ($after -and (-not $before -or $before.Hash -ne $after.Hash)) {
+if ($after -and ($before -ne $after)) {
     $branch = (git -C $repo branch --show-current).Trim()
     if ($branch -ne "dev") {
         Log "저장소가 $branch 브랜치라 promo_status.json 커밋을 건너뜀"
