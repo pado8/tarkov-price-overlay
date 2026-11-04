@@ -384,9 +384,8 @@ export const T = {
     donateClose: "닫기",
     statsConsentOpenSource: "이 프로그램은 오픈소스로 투명하게 공개되어있습니다.",
     statsConsentBody:
-      "더 나은 개선을 위해 익명 사용 통계(앱 실행 / F2 사용 횟수)를 수집합니다. 개인 정보나 검색 내용은 절대 수집하지 않으며, 설정에서 언제든 끌 수 있어요.",
+      "더 나은 개선을 위해 익명 사용 통계(실행·조회 횟수, 조회한 아이템 종류)를 보냅니다. 화면·검색어·위치·개인 정보는 보내지 않으며, 설정에서 언제든 끌 수 있어요. 자세한 항목은 README에 있습니다.",
     statsConsentAccept: "확인",
-    statsConsentDecline: "통계 끄기",
     statsToggle: "익명 사용 통계 전송",
     statsToggleHint: "DAU + F2 횟수만, 개인 정보 / 검색 내용 X",
     supportNote: "이 도구가 마음에 드신다면, 아래 후원 버튼으로 개발자에게 커피 한 잔 ☕ 후원해 주세요!",
@@ -775,9 +774,8 @@ export const T = {
     donateClose: "Close",
     statsConsentOpenSource: "This program is open source and fully transparent.",
     statsConsentBody:
-      "To help improve the app, anonymous usage stats (app launches / F2 lookup counts) are collected. No personal info or search content is ever collected — you can turn this off anytime in settings.",
+      "To help improve the app, anonymous usage stats (launch and lookup counts, which items you look up) are sent. Your screen, search text, location and personal info are never sent — you can turn this off anytime in settings. Full details are in the README.",
     statsConsentAccept: "Got it",
-    statsConsentDecline: "Turn off",
     statsToggle: "Send anonymous usage stats",
     statsToggleHint: "DAU + F2 count only, no personal info / search content",
     supportNote: "Enjoying the tool? Buy the dev a coffee ☕ with the donate button below!",
@@ -1166,9 +1164,8 @@ export const T = {
     donateClose: "Закрыть",
     statsConsentOpenSource: "Эта программа с открытым кодом и полностью прозрачна.",
     statsConsentBody:
-      "Чтобы улучшать приложение, собирается анонимная статистика использования (запуски приложения / число запросов F2). Личные данные и содержимое запросов не собираются — это можно отключить в настройках в любой момент.",
+      "Чтобы улучшать приложение, отправляется анонимная статистика использования (число запусков и запросов, какие предметы вы проверяете). Экран, текст запросов, местоположение и личные данные не отправляются — это можно отключить в настройках в любой момент. Подробности — в README.",
     statsConsentAccept: "Понятно",
-    statsConsentDecline: "Отключить",
     statsToggle: "Отправлять анонимную статистику",
     statsToggleHint: "Только DAU + число F2, без личных данных / содержимого запросов",
     supportNote: "Нравится инструмент? Угостите разработчика кофе ☕ кнопкой поддержки ниже!",

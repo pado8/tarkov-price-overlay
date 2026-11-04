@@ -4084,18 +4084,7 @@ function App() {
               >
                 {t.statsConsentAccept}
               </button>
-              <button
-                className="reset-btn"
-                onClick={() => {
-                  // Turn stats off and dismiss the notice in one click.
-                  localStorage.setItem(STATS_CONSENT_KEY, "false");
-                  localStorage.setItem(STATS_NOTICE_KEY, "true");
-                  setStatsEnabled(false);
-                  setStatsNoticeShown(true);
-                }}
-              >
-                {t.statsConsentDecline}
-              </button>
+              {/* 11-04: 안내에서 바로 끄는 버튼은 뺌(사용자 결정) — 끄기는 설정의 스위치로만. 안내 자체는 유지 */}
             </div>
           </div>
         )}
