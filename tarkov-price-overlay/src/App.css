@@ -272,6 +272,37 @@ html, body, #root {
   font-size: var(--card-fs-sm);
   font-style: italic;
 }
+/* 11-04 첫 설정 도움 상자 — 업데이트 배너와 같은 결의 금색 테두리 */
+.capture-help {
+  margin: 6px 0 2px;
+  padding: 7px 9px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: rgba(200, 170, 100, 0.10);
+  font-size: var(--card-fs-sm);
+}
+.capture-help-title {
+  color: var(--gold-light);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.capture-help-body {
+  line-height: 1.45;
+}
+.capture-help-done {
+  margin-top: 4px;
+  color: var(--gold-light);
+}
+.capture-help-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.capture-help-actions .settings-btn {
+  margin-left: auto;
+}
 
 .loading-hint {
   display: flex;

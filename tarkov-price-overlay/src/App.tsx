@@ -19,6 +19,9 @@ const UPDATE_CHECK_KEY = "tarkov.autoCheckUpdate";
 // 11-03 조용한 자동 업데이트(설치판): 새 버전을 뒤에서 받아 두고 앱을 닫을 때 설치.
 // 배너의 '지금 설치'를 안 누르는 사람(1.2.5 공개 8일째 보급 73%에서 정체)을 흡수한다.
 const UPDATE_AUTO_INSTALL_KEY = "tarkov.autoInstallUpdate";
+// 11-04 첫 설정 도움: 한 번이라도 F2 로 아이템을 읽은 적 있음 / 도움 상자를 닫은 시각
+const EVER_OK_KEY = "tarkov.everReadItem";
+const CAPTURE_HELP_DISMISS_KEY = "tarkov.captureHelpDismissedAt";
 // One-shot dismiss for the "run as administrator" diagnostic banner. We
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
@@ -229,6 +232,7 @@ type StatsEvent =
   | "sidecar_fail" // 사이드카가 끝내 안 뜸. detail = probe_refused|probe_timeout|probe_http_<n>|dead:<이유>
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
+  | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
   | "daily"; // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
 // Every event used to be its own POST → its own INSERT → its own wake of the
@@ -1328,6 +1332,45 @@ function App() {
   // an absolute-positioned dialog over the card content and shows the
   // preview rectangles at a stable anchor (see PREVIEW_ANCHOR_KEY).
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
+  // 11-04 첫 설정 도움: F2 가 연달아 못 읽으면 못 찾음 카드 아래에 캡처 영역 맞추기 안내.
+  // 통계상 신규 사용자 실패율 13~27%(기존 4~7%) — 대부분 캡처 영역이 아이템 이름을 못 덮는 경우.
+  const [captureHelp, setCaptureHelp] = useState<{ streak: number; scaled: boolean } | null>(null);
+  const failStreakRef = useRef(0);
+  const recentF2Ref = useRef<boolean[]>([]); // 최근 F2 결과(true = 읽음), 최대 10개
+  const helpShownRef = useRef(false); // 이번 세션에 상자를 띄운 적 있음 → 다음 성공을 'recovered' 로 보고
+  const trackF2Outcome = (ok: boolean) => {
+    const recent = [...recentF2Ref.current, ok].slice(-10);
+    recentF2Ref.current = recent;
+    if (ok) {
+      failStreakRef.current = 0;
+      try {
+        localStorage.setItem(EVER_OK_KEY, "1");
+      } catch {}
+      if (helpShownRef.current) {
+        helpShownRef.current = false;
+        reportEvent("help", "recovered");
+      }
+      setCaptureHelp(null);
+      return;
+    }
+    failStreakRef.current += 1;
+    const streak = failStreakRef.current;
+    if (streak < 3) return;
+    const everOk = localStorage.getItem(EVER_OK_KEY) === "1";
+    const okRate = recent.filter(Boolean).length / recent.length;
+    // 성공해 본 사람은 최근 10번 중 성공이 30% 미만일 때만(인벤토리 밖에서 누른 연타는 무시)
+    if (everOk && (recent.length < 6 || okRate >= 0.3)) return;
+    // 닫은 지 7일 안이면 다시 안 띄운다(한 번도 성공 못 한 사람은 예외)
+    const dismissedAt = Number(localStorage.getItem(CAPTURE_HELP_DISMISS_KEY) || 0);
+    if (everOk && Date.now() - dismissedAt < 7 * 86400000) return;
+    setCaptureHelp((h) => {
+      if (!h) {
+        helpShownRef.current = true;
+        reportEvent("help", `shown:${streak}`);
+      }
+      return { streak, scaled: h?.scaled ?? false };
+    });
+  };
   const [previewAnchorMode, setPreviewAnchorMode] =
     useState<PreviewAnchorMode>(loadPreviewAnchorMode);
   // Click-to-edit toggle for the opacity readout next to the slider.
@@ -3469,12 +3512,16 @@ function App() {
             // 대시보드의 '캡처 영역 빗나감(empty)' 비율에 섞이지 않게 따로 표시
             const pfx = (hotkeyPassthroughRef.current ? "share_" : "") + (data.attempt === "wide" ? "wide_" : "");
             reportEvent("lookup_nomatch", pfx + nomatchCategory(data.raw_text));
+            // 스크린샷 키 공유 중엔 인벤토리 밖 누름이 대부분이라 도움 판단에서 뺀다
+            if (!hotkeyPassthroughRef.current) trackF2Outcome(false);
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
             // catalog id so the dashboard shows WHICH items (e.g. new patch
             // items) are surfacing as priceless.
             reportEvent("lookup_noprice", data.item_id ?? undefined);
+            trackF2Outcome(true); // 아이템은 읽었다(시세만 없음)
           } else {
+            trackF2Outcome(true);
             // Tag wide-rescue successes too: without it the rescue's hit
             // rate (and its false positives) hide inside plain "lookup" and
             // the rescue's precision can never be measured post-release.
@@ -5499,6 +5546,56 @@ function App() {
               result.attempt === "wide" && (
                 <div className="hint">{t.wideCaptureHint}</div>
               )}
+            {/* 11-04 첫 설정 도움 — 연달아 못 읽을 때만(조건은 trackF2Outcome) */}
+            {!result.item_name && captureHelp && (
+              <div className="capture-help" role="status">
+                <div className="capture-help-title"><Icon name="warn" /> {t.captureHelpTitle}</div>
+                <div className="capture-help-body">
+                  {t.captureHelpBody.replace(
+                    "{res}",
+                    `${Math.round((window.screen?.width ?? 0) * (window.devicePixelRatio || 1))}×${Math.round((window.screen?.height ?? 0) * (window.devicePixelRatio || 1))} · ${Math.round((window.devicePixelRatio || 1) * 100)}%`
+                  )}
+                </div>
+                {captureHelp.scaled && <div className="capture-help-done">{t.captureHelpScaled}</div>}
+                <div className="capture-help-actions">
+                  <button
+                    className="reset-btn update-btn"
+                    onClick={() => {
+                      reportEvent("help", "capture");
+                      setShowSettings(true);
+                      setCaptureModalOpen(true);
+                    }}
+                  >
+                    {t.captureHelpOpen}
+                  </button>
+                  <button
+                    className="reset-btn"
+                    onClick={async () => {
+                      reportEvent("help", "autoscale");
+                      const r = await applyMonitorScaling(true);
+                      if (r) setRegion(r);
+                      setCaptureHelp((h) => (h ? { ...h, scaled: true } : h));
+                    }}
+                    title={t.autoScaleHint}
+                  >
+                    {t.autoScaleToMonitor}
+                  </button>
+                  <button
+                    className="settings-btn"
+                    onClick={() => {
+                      reportEvent("help", "dismiss");
+                      try {
+                        localStorage.setItem(CAPTURE_HELP_DISMISS_KEY, String(Date.now()));
+                      } catch {}
+                      setCaptureHelp(null);
+                    }}
+                    title={t.dismiss}
+                  >
+                    <Icon name="x" />
+                  </button>
+                </div>
+              </div>
+            )}
             {/* 조회한 아이템이 열쇠고 지금 맵에서 여는 문이 있으면 — 몇 곳·가장 가까운 거리, 지도에서 금색으로 강조 */}
             {keyLocks && keyLocks.map && (
               <div className="key-locks">

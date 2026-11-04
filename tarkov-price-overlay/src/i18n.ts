@@ -285,6 +285,11 @@ export const T = {
     updatePortableHint:
       "포터블 버전은 자동 설치 시 다른 폴더에 새로 설치돼요. 페이지에서 새 포터블 ZIP을 받아 현재 폴더에 덮어쓰세요.",
     updateDownloaded: "다운로드 완료 — 앱을 닫을 때 자동으로 설치돼요",
+    captureHelpTitle: "아이템 이름을 계속 못 읽고 있어요",
+    captureHelpBody:
+      "F2를 누를 때 아이템 이름이 캡처 영역(빨간 상자) 안에 들어와야 읽을 수 있어요. 해상도·배율이 1920×1080·100%가 아니면 먼저 '해상도 자동 조정'을 눌러 보고, 그래도 안 되면 '캡처 영역 맞추기'에서 빨간 상자를 아이템 이름 위로 옮겨 주세요. (지금 화면 {res})",
+    captureHelpOpen: "캡처 영역 맞추기",
+    captureHelpScaled: "해상도에 맞춰 조정했어요 — 아이템에 마우스를 올리고 다시 F2를 눌러 보세요.",
     updateApplyNow: "지금 적용",
     autoInstallUpdate: "새 버전 자동 설치",
     autoInstallUpdateHint: "뒤에서 받아 두고 앱을 닫을 때 설치",
@@ -665,6 +670,11 @@ export const T = {
     updatePortableHint:
       "Portable builds install elsewhere when auto-updated. Grab the new portable ZIP from the page and overwrite the current folder.",
     updateDownloaded: "downloaded — installs automatically when you close the app",
+    captureHelpTitle: "Item names keep failing to read",
+    captureHelpBody:
+      "When you press F2, the item name has to fall inside the capture region (the red box). If your resolution or scaling is not 1920×1080 at 100%, try Auto-scale to monitor first; if it still fails, open Adjust capture region and move the red box over the item name. (Current screen {res})",
+    captureHelpOpen: "Adjust capture region",
+    captureHelpScaled: "Adjusted to your resolution — hover an item and press F2 again.",
     updateApplyNow: "Apply now",
     autoInstallUpdate: "Install updates automatically",
     autoInstallUpdateHint: "downloads in the background, installs on close",
@@ -1045,6 +1055,11 @@ export const T = {
     updatePortableHint:
       "Портативные сборки при авто-обновлении ставятся в другую папку. Скачайте новый портативный ZIP со страницы и перезапишите текущую папку.",
     updateDownloaded: "скачано — установится автоматически при закрытии приложения",
+    captureHelpTitle: "Названия предметов не распознаются",
+    captureHelpBody:
+      "При нажатии F2 название предмета должно попадать в область захвата (красная рамка). Если разрешение или масштаб не 1920×1080 и 100%, сначала нажмите «Автоподбор разрешения»; если не помогло — откройте «Настроить область захвата» и сдвиньте рамку на название. (Сейчас экран {res})",
+    captureHelpOpen: "Настроить область захвата",
+    captureHelpScaled: "Подобрано под ваше разрешение — наведите на предмет и снова нажмите F2.",
     updateApplyNow: "Применить сейчас",
     autoInstallUpdate: "Устанавливать обновления автоматически",
     autoInstallUpdateHint: "скачивается в фоне, ставится при закрытии",
