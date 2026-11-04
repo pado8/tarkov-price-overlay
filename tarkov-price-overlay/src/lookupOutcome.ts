@@ -25,17 +25,22 @@ export type LookupView =
   | { kind: "keep"; status: LookupStatus } // 화면 그대로(나란히 모드: 지도는 오른쪽에 이미 있음), 상태만 되돌림
   | { kind: "map"; status: LookupStatus }; // 카드 자리에 지도(이미 열려 있으면 그대로), 상태만 되돌림
 
+// 11-04 인게임: 같은 키 + 못 읽음에서 직전 상태(마지막 시세 카드)로 되돌리면 '빈 칸인데 마지막 아이템이 나온다'로 보였다
+//   (나란히 모드 왼쪽 칸에 그대로 남음) → 카드는 대기 문구로. 지도·나란히 화면 결정은 그대로.
 export function viewAfterLookup(o: { passthrough: boolean; matched: boolean; wideMode: boolean; prev: LookupStatus; hasResult: boolean }): LookupView {
   if (o.matched || !o.passthrough) return { kind: "result" };
-  const status = statusAfterKept(o.prev, o.hasResult);
+  const status: LookupStatus = "idle";
   return o.wideMode ? { kind: "keep", status } : { kind: "map", status };
 }
 
 /** 같은 키로 누른 뒤 이 시간 안에 감지된 스크린샷은 그 누름이 만든 것으로 본다(게임 저장 + 1초 폴링 + 폴더 훑기 지연). */
 export const SHARED_SHOT_WINDOW_MS = 6000;
 
-/** 새 스크린샷이 감지됐을 때: 지도를 띄울지(popup), 데이터만 갱신할지(refresh). */
-export function shotAction(o: { wideMode: boolean; passthrough: boolean; lookupInFlight: boolean; msSincePress: number }): "popup" | "refresh" {
+/** 새 스크린샷이 감지됐을 때: 지도를 띄울지(popup), 데이터만 갱신할지(refresh), 화면은 건드리지 않고 데이터만(quiet).
+ *  11-04 인게임: 같은 키면 Shift+F2(숨기기 토글)도 게임에 가서 스크린샷이 찍힌다 → 방금 숨긴 카드·지도가 다시 떴다.
+ *  토글 직후 스크린샷은 quiet — 숨겼으면 숨긴 채, 보였으면 보이던 화면 그대로. */
+export function shotAction(o: { wideMode: boolean; passthrough: boolean; lookupInFlight: boolean; msSincePress: number; msSinceToggle?: number }): "popup" | "refresh" | "quiet" {
+  if (o.passthrough && (o.msSinceToggle ?? Infinity) < SHARED_SHOT_WINDOW_MS) return "quiet";
   if (o.wideMode) return "refresh"; // 지도가 늘 오른쪽에 있음
   if (o.passthrough && (o.lookupInFlight || o.msSincePress < SHARED_SHOT_WINDOW_MS)) return "refresh"; // 같은 누름 — 조회 결과가 화면을 정한다
   return "popup";

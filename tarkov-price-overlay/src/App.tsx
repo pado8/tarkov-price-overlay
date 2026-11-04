@@ -1322,6 +1322,7 @@ function App() {
   hasResultRef.current = result != null;
   // 같은 키(조회 키를 게임에도 전달)로 마지막에 누른 시각 — 그 누름이 만든 스크린샷이 시세 카드를 덮지 않게(lookupOutcome.shotAction)
   const sharedPressAtRef = useRef(-1e12);
+  const toggleAtRef = useRef(-1e12); // 마지막 Shift+F2(숨기기 토글) 시각 — 같은 키면 그 누름도 게임 스크린샷을 만든다
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
@@ -2471,8 +2472,12 @@ function App() {
               passthrough: hotkeyPassthroughRef.current,
               lookupInFlight: lookupInFlightRef.current,
               msSincePress: performance.now() - sharedPressAtRef.current,
+              msSinceToggle: performance.now() - toggleAtRef.current,
             });
-            if (act === "refresh") {
+            if (act === "quiet") {
+              // 방금 Shift+F2 로 숨기거나 띄운 누름이 만든 스크린샷 — 화면은 그대로, 지도 데이터만
+              void loadRadar();
+            } else if (act === "refresh") {
               // 나란히 모드(지도가 오른쪽에 늘 있음) 또는 같은 키로 방금 누른 스크린샷(조회 결과가 화면을 정함) — 데이터만 갱신
               if (wideModeRef.current) showCard();
               reportEvent("radar_shot");
@@ -3699,6 +3704,7 @@ function App() {
   useEffect(() => {
     const unlisten = listen("hotkey-toggle", async () => {
       log("React: hotkey-toggle");
+      toggleAtRef.current = performance.now();
       const win = getCurrentWindow();
       try {
         const visible = await win.isVisible();
