@@ -102,6 +102,9 @@ export const T = {
     timeoutShort: "시간 초과 (30초). 잠시 후 다시 시도해 주세요.",
     noMatch: "검색 결과 없음",
     wikiLink: "위키에서 보기",
+    guideLink: "가이드에서 보기 — 필요한 퀘스트·은신처와 개수",
+    guideQuestLink: "가이드에서 이 퀘스트 보기 (목표·열쇠·보상)",
+    guideHideoutLink: "가이드에서 이 시설 단계 보기",
     emptyCaptureHint:
       "글자를 하나도 못 읽었어요 — 캡처 영역이 툴팁을 벗어났을 수 있어요. 설정 → 캡처 영역에서 빨간 박스가 아이템 이름 위에 오는지 확인해 주세요.",
     wideCaptureHint:
@@ -487,6 +490,9 @@ export const T = {
     timeoutShort: "Timed out (30s). Please try again in a moment.",
     noMatch: "no match",
     wikiLink: "Open wiki page",
+    guideLink: "Open in the guide — quests, hideout and counts that need it",
+    guideQuestLink: "Open this quest in the guide (objectives, keys, rewards)",
+    guideHideoutLink: "Open this hideout level in the guide",
     emptyCaptureHint:
       "Read no text at all — the capture box likely missed the tooltip. Check Settings → capture region: the red box should cover the item name.",
     wideCaptureHint:
@@ -872,6 +878,9 @@ export const T = {
     timeoutShort: "Превышено время (30с). Повторите попытку через мгновение.",
     noMatch: "нет совпадений",
     wikiLink: "Открыть вики",
+    guideLink: "Открыть в гайде — квесты, убежище и количество",
+    guideQuestLink: "Открыть квест в гайде (цели, ключи, награды)",
+    guideHideoutLink: "Открыть уровень модуля в гайде",
     emptyCaptureHint:
       "Не удалось прочитать текст — область захвата, вероятно, не попала на подсказку. Проверьте Настройки → область захвата: красная рамка должна покрывать название предмета.",
     wideCaptureHint:

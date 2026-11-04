@@ -272,6 +272,22 @@ html, body, #root {
   font-size: var(--card-fs-sm);
   font-style: italic;
 }
+/* 11-04 퀘스트·은신처 행의 가이드 버튼 — 행 클릭(달성 토글)과 분리된 작은 아이콘 */
+.guide-link-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0 2px;
+  margin-left: 2px;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  opacity: 0.7;
+}
+.guide-link-btn:hover {
+  color: var(--gold-light);
+  opacity: 1;
+}
 /* 11-04 첫 설정 도움 상자 — 업데이트 배너와 같은 결의 금색 테두리 */
 .capture-help {
   margin: 6px 0 2px;

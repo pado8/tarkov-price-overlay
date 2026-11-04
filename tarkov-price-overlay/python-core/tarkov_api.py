@@ -90,6 +90,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
     usedInTasks {
       id
       name
+      normalizedName
       minPlayerLevel
       kappaRequired
       trader { name }
@@ -144,6 +145,7 @@ query HideoutReqs($lang: LanguageCode) {
   hideoutStations(lang: $lang) {
     id
     name
+    normalizedName
     levels {
       level
       itemRequirements {
@@ -245,6 +247,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
     usedInTasks {
       id
       name
+      normalizedName
       minPlayerLevel
       kappaRequired
       trader { name }
@@ -524,6 +527,7 @@ def _fetch_hideout_index(lang: str) -> tuple[dict[str, list[dict]], list[dict]]:
     for s in stations:
         sid = s.get("id") or ""
         sname = s.get("name") or "?"
+        sslug = s.get("normalizedName") or ""
         levels = s.get("levels") or []
         max_level = max((lv.get("level") or 0 for lv in levels), default=0)
         station_list.append({"id": sid, "name": sname, "maxLevel": max_level})
@@ -549,6 +553,7 @@ def _fetch_hideout_index(lang: str) -> tuple[dict[str, list[dict]], list[dict]]:
                     {
                         "station": sname,
                         "station_id": sid,
+                        "station_slug": sslug,  # 가이드 /guide/hideout/<slug>/
                         "level": level,
                         "count": r.get("count") or 1,
                         "fir": fir,
@@ -713,6 +718,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
             {
                 "id": t.get("id"),
                 "name": t["name"],
+                # 11-04 가이드 연결: tarkov.aquapado.com/guide/quest/<slug>/ (가이드 슬러그 = normalizedName)
+                "slug": t.get("normalizedName"),
                 "trader": trader.get("name") or "",
                 "min_level": t.get("minPlayerLevel") or 0,
                 "count": total,
@@ -898,6 +905,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         # Fandom wiki page for the item — surfaced as a link button on the card
         # (requested twice via in-app feedback). Present in both sources.
         "wiki": item.get("wikiLink"),
+        # 11-04 가이드 연결: 열쇠면 카드 버튼이 가이드 열쇠 페이지로 간다
+        "is_key": "keys" in (item.get("types") or []),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_high_24h": item.get("high24hPrice"),

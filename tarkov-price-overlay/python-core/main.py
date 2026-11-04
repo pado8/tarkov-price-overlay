@@ -47,6 +47,7 @@ from ocr import (
 )
 from quest_tracker import _normalize_request_mode, get_tracker
 import gunsmith
+import guide_index
 from tarkov_api import catalog_age as _catalog_age
 from radar import get_service as get_radar
 from tarkov_api import (
@@ -66,6 +67,7 @@ async def lifespan(_app: FastAPI):
     print("[startup] starting quest log watcher...")
     get_tracker().start()
     gunsmith.start_background_refresh()  # 건스미스 부품 표(가이드 사이트 JSON) — 실패해도 조회엔 영향 없음
+    guide_index.start_background_refresh()  # 11-04 카드 '가이드에서 보기' 대상(가이드 item-pages.json)
     print("[startup] warmup complete")
     yield
 
@@ -216,6 +218,7 @@ class Barter(BaseModel):
 class TaskRef(BaseModel):
     id: str | None = None
     name: str
+    slug: str | None = None  # 11-04 가이드 퀘스트 페이지 슬러그(normalizedName)
     trader: str = ""
     min_level: int = 0
     count: int | None = None  # how many of THIS item this task needs
@@ -263,6 +266,7 @@ class GunsmithRef(BaseModel):
 class HideoutNeed(BaseModel):
     station: str
     station_id: str = ""
+    station_slug: str = ""  # 11-04 가이드 시설 페이지 슬러그(normalizedName). 옛 디스크 스냅샷엔 없을 수 있음
     level: int = 1
     count: int = 1  # how many of this item the upgrade requires
     fir: bool = False  # whether this upgrade requires the item Found-in-Raid
@@ -294,7 +298,9 @@ class LookupResponse(BaseModel):
     height: int | None = None
     weight: float | None = None  # kg
     icon: str | None = None  # gridImageLink (webp URL)
-    wiki: str | None = None  # Fandom wiki page (card link button)
+    wiki: str | None = None  # Fandom wiki page (card link button) — 가이드가 다루지 않는 아이템의 대체 링크
+    is_key: bool = False  # 11-04 열쇠면 카드 버튼이 가이드 열쇠 페이지로
+    guide_page: str | None = None  # 11-04 'keys'|'items' — 가이드 목록 페이지에 이 아이템 행이 있음(없으면 위키)
     flea_price: int | None
     flea_low_24h: int | None = None
     flea_high_24h: int | None = None
@@ -403,6 +409,8 @@ def _build_response(
         weight=price.get("weight"),
         icon=price.get("icon"),
         wiki=price.get("wiki"),
+        is_key=bool(price.get("is_key")),
+        guide_page=guide_index.page_for(price.get("id")),
         flea_price=price.get("flea"),
         flea_low_24h=price.get("flea_low_24h"),
         flea_high_24h=price.get("flea_high_24h"),
@@ -461,6 +469,7 @@ def _build_response(
             TaskRef(
                 id=t.get("id"),
                 name=t["name"],
+                slug=t.get("slug"),
                 trader=t.get("trader", ""),
                 min_level=t.get("min_level", 0),
                 count=t.get("count"),
@@ -514,6 +523,7 @@ def _build_response(
             HideoutNeed(
                 station=n["station"],
                 station_id=n.get("station_id", ""),
+                station_slug=n.get("station_slug", "") or "",
                 level=n.get("level", 1),
                 count=n.get("count", 1),
                 fir=n.get("fir", False),

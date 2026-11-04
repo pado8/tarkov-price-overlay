@@ -387,6 +387,16 @@ def main() -> int:
     print(f"[guide] 정적 페이지 {len(guide_urls) - 3}개 ({lang})")
     if lang == "ko":
         write_sitemap(guide_urls, stamp)
+        # 11-04 오버레이 카드의 '가이드에서 보기' 버튼용 — 어느 아이템이 어느 목록 페이지에 행으로 있는지.
+        # 필요 아이템 페이지는 '그 아이템 하나만 내는 목표'만 모으므로(택일 목표 제외) 퀘스트에 쓰인다고 다 있지 않다.
+        # 오버레이 사이드카(guide_index.py)가 하루 1회 받아 간다. 행 id 는 세 언어판이 같아 ko 빌드 때 한 번만 쓴다.
+        items_html = (out_dir / "items" / "index.html").read_text(encoding="utf-8")
+        page_items = sorted(set(re.findall(r'<tr data-id="([0-9a-f]{24})"', items_html)))
+        page_keys = sorted({k["id"] for mp in key_maps for k in mp["keys"]})
+        (out_dir / "item-pages.json").write_text(
+            json.dumps({"updated": stamp, "items": page_items, "keys": page_keys}, ensure_ascii=False),
+            encoding="utf-8")
+        print(f"[guide] item-pages.json: 필요 아이템 {len(page_items)} · 열쇠 {len(page_keys)}")
     import guide_search  # 전체 검색 색인(search.json)·검색창(search.js) — 만들어진 페이지를 훑어서
     print(f"[guide] 검색 색인: {guide_search.apply(out_dir, lang, pages['keys']['items'])}개")
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")

@@ -25,6 +25,7 @@ Shape reference (verified against live data 2026-07):
 - `{mode}/traders_{lang}` -> {data: {"<key>": "<localized trader name>"}}
 """
 
+import re
 import threading
 import time
 
@@ -34,6 +35,13 @@ _JSON_BASE = "https://json.tarkov.dev"
 # A real User-Agent — the GraphQL API's Cloudflare rate-limits the bare
 # python-requests UA under load; the maintainers' own client sets one too.
 _HEADERS = {"User-Agent": "tarkov-price-overlay-fallback"}
+
+_CTRL = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _clean(s: str) -> str:
+    """번역 문자열의 제어 문자를 빼고 공백을 정리한다(11-04, 'CPU \\x08fan 쿨러' 같은 원본 오류)."""
+    return re.sub(r"\s+", " ", _CTRL.sub("", s)).strip()
 
 # The item catalog (prices + trader ids) is language-AGNOSTIC, so the ko/en ×
 # regular/pve refresher would otherwise pull the ~15 MB items dump four times a
@@ -111,7 +119,7 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
         if key is None:
             return None
         v = item_loc.get(key) or en_loc.get(key) or key
-        return v.strip() if isinstance(v, str) else v
+        return _clean(v) if isinstance(v, str) else v
 
     out = {
         "barters_for": {},    # item_id -> [GraphQL bartersFor entries]
@@ -170,6 +178,7 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
             entry = {
                 "id": tid,
                 "name": nm,
+                "normalizedName": task.get("normalizedName"),  # 가이드 퀘스트 페이지 슬러그
                 "minPlayerLevel": task.get("minPlayerLevel") or 0,
                 "kappaRequired": bool(task.get("kappaRequired")),
                 "trader": {"name": trader_name.get(task.get("trader"), "")},
@@ -257,6 +266,7 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
                     attrs = r.get("attributes") or {}
                     out["hideout_index"].setdefault(iid, []).append({
                         "station": nm, "station_id": sid, "level": level,
+                        "station_slug": st.get("normalizedName") or "",  # 가이드 /guide/hideout/<slug>/
                         "count": r.get("count") or 1,
                         "fir": bool(attrs.get("foundInRaid")),
                     })
@@ -351,7 +361,9 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
         # ("...돌격소총 "); the GraphQL names don't, so strip for exact-match
         # parity with the primary source (canon/fuzzy would otherwise absorb it).
         val = item_loc.get(key) or en_loc.get(key) or key
-        return val.strip() if isinstance(val, str) else val
+        # 11-04: 원본 번역에 제어 문자가 섞인 이름이 있다(예: "CPU \x08fan 쿨러") — 카드에 □로 보이고
+        # 가이드 검색 링크도 깨진다. 가이드 생성기와 같게 걸러 낸다.
+        return _clean(val) if isinstance(val, str) else val
 
     # Trader id -> localized name (for sellFor/buyFor vendor labels).
     traders_doc = _get_cached(f"{mode}/traders")

@@ -132,6 +132,20 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 서비스 상태 페이지(피드백 #49-①) — 헬스 엔드포인트를 사람이 읽는 화면으로.
 const STATUS_PAGE_URL = "https://tarkov.aquapado.com/status/";
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
+// 11-04 앱 → 가이드 연결. UI 언어별 가이드(ko=/guide/, en=/guide/en/, ru=/guide/ru/),
+// src=app 은 GA4 에서 앱발 방문을 세려는 표식(페이지는 무시한다).
+function guideBase(lang: string): string {
+  return GUIDE_URL + (lang === "en" ? "en/" : lang === "ru" ? "ru/" : "");
+}
+function guideUrl(lang: string, path: string): string {
+  const [p, hash] = path.split("#");
+  return `${guideBase(lang)}${p}${p.includes("?") ? "&" : "?"}src=app${hash ? "#" + hash : ""}`;
+}
+function openGuide(lang: string, path: string): void {
+  openUrl(guideUrl(lang, path)).catch((e) => {
+    console.warn("guide: openUrl failed", e);
+  });
+}
 const openStatusPage = (lang: Lang) => {
   openUrl(`${STATUS_PAGE_URL}?lang=${lang}`).catch((e) => {
     log(`status: openUrl failed — ${String(e)}`);
@@ -603,6 +617,7 @@ type Barter = {
 type TaskRef = {
   id: string | null;
   name: string;
+  slug?: string | null; // 11-04 가이드 퀘스트 페이지 슬러그
   trader: string;
   min_level: number;
   count: number | null;
@@ -672,6 +687,7 @@ type HideoutCraftUsing = {
 type HideoutNeed = {
   station: string;
   station_id: string;
+  station_slug?: string; // 11-04 가이드 시설 페이지 슬러그
   level: number;
   count: number;
   fir?: boolean;
@@ -712,8 +728,10 @@ type LookupResult = {
   height: number | null;
   weight: number | null;
   icon: string | null;
-  /** Fandom wiki page. Null for items the catalog has no page for. */
+  /** Fandom wiki page. Null for items the catalog has no page for. 가이드가 다루지 않는 아이템의 대체 링크 */
   wiki: string | null;
+  is_key?: boolean; // 11-04 열쇠 → 가이드 열쇠 페이지
+  guide_page?: "keys" | "items" | null; // 11-04 가이드 목록 페이지에 이 아이템 행이 있음(사이드카 guide_index)
   flea_price: number | null;
   flea_low_24h: number | null;
   flea_high_24h: number | null;
@@ -5514,20 +5532,48 @@ function App() {
                   the default browser — never inside the overlay, which is a
                   transparent always-on-top window. Only rendered when the
                   catalog actually has a page for this item. */}
-              {result.wiki && (
-                <button
-                  className="wiki-btn"
-                  title={t.wikiLink}
-                  aria-label={t.wikiLink}
-                  onClick={() =>
-                    openUrl(result.wiki!).catch((e) =>
-                      log(`wiki: openUrl failed — ${String(e)}`)
-                    )
-                  }
-                >
-                  <Icon name="book" />
-                </button>
-              )}
+              {(() => {
+                // 11-04: 위키 대신 우리 가이드로. 가이드에 아이템별 페이지는 없으므로 아이템을 다루는 목록
+                // 페이지로 보내고 검색칸을 채운다(?q= — 한글·영문 이름 모두 걸림). 가이드가 다루지 않는
+                // 아이템만 위키로 남긴다.
+                if (!result.item_name) return null;
+                // 원본 번역에 제어 문자가 섞인 이름이 있다(예: "CPU \bfan 쿨러") — 가이드 검색이 안 걸리므로 빼고 넘긴다
+                const q = encodeURIComponent(result.item_name.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim());
+                // 가이드가 빌드 때 내보낸 '행이 있는 아이템' 목록(item-pages.json)으로만 판단한다 —
+                // 필요 아이템 페이지는 택일 목표를 빼고 모으므로 퀘스트에 쓰인다고 다 있지 않다(11-04 실측: 이스크라)
+                const guidePath =
+                  result.guide_page === "keys" ? `keys/?q=${q}`
+                  : result.guide_page === "items" ? `items/?q=${q}`
+                  : null;
+                if (guidePath) {
+                  return (
+                    <button
+                      className="wiki-btn"
+                      data-href={guideUrl(region.lang, guidePath)}
+                      title={t.guideLink}
+                      aria-label={t.guideLink}
+                      onClick={() => openGuide(region.lang, guidePath)}
+                    >
+                      <Icon name="book" />
+                    </button>
+                  );
+                }
+                return result.wiki ? (
+                  <button
+                    className="wiki-btn"
+                    data-href={result.wiki!}
+                    title={t.wikiLink}
+                    aria-label={t.wikiLink}
+                    onClick={() =>
+                      openUrl(result.wiki!).catch((e) =>
+                        log(`wiki: openUrl failed — ${String(e)}`)
+                      )
+                    }
+                  >
+                    <Icon name="book" />
+                  </button>
+                ) : null;
+              })()}
             </div>
             {/* Capture-box-missed guidance. Two shapes of the same problem,
                 with DIFFERENT copy so the message never contradicts the line
@@ -6046,6 +6092,20 @@ function App() {
                                 >
                                   <span className="hideout-need-station">{n.station}</span>
                                   <span className="hideout-need-level">Lv{n.level}</span>
+                                  {n.station_slug && (
+                                    <button
+                                      className="guide-link-btn"
+                                      data-href={guideUrl(region.lang, `hideout/${n.station_slug}/#lv${n.level}`)}
+                                      title={t.guideHideoutLink}
+                                      aria-label={t.guideHideoutLink}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openGuide(region.lang, `hideout/${n.station_slug}/#lv${n.level}`);
+                                      }}
+                                    >
+                                      <Icon name="book" />
+                                    </button>
+                                  )}
                                   <span className="hideout-need-count">×{n.count}</span>
                                   {n.fir && (
                                     <span
@@ -6256,6 +6316,20 @@ function App() {
                                 >
                                   <span className="quest-trader">{q.trader}</span>
                                   <span className="quest-name">{q.name}</span>
+                                  {q.slug && (
+                                    <button
+                                      className="guide-link-btn"
+                                      data-href={guideUrl(region.lang, `quest/${q.slug}/`)}
+                                      title={t.guideQuestLink}
+                                      aria-label={t.guideQuestLink}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openGuide(region.lang, `quest/${q.slug}/`);
+                                      }}
+                                    >
+                                      <Icon name="book" />
+                                    </button>
+                                  )}
                                   <span className="quest-count">
                                     {q.task_status === "completed" && (
                                       <span
