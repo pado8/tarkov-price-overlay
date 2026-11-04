@@ -5,7 +5,7 @@
 #   cloudflare : landing → scripts\cloudflare\.stage (vercel.json·.vercel 제외) + _headers 복사 → npx wrangler pages deploy
 # 배포 전에 adsense.py·hosting.py 를 돌려 광고·분석 조각을 상태에 맞춘다(-SkipPrep 로 생략).
 # 쓰는 곳: promo_refresh.ps1(주간 프로모 갱신), 수동 배포, cutover_cloudflare.ps1
-param([switch]$SkipPrep, [switch]$Maintenance, [switch]$Preview)   # -Maintenance: 전 경로를 '잠시 점검 중' 페이지로(cloudflare 만). 되돌리기 = 스위치 없이 다시 배포
+param([switch]$SkipPrep, [switch]$Maintenance, [switch]$Preview, [switch]$SkipQA)   # -Maintenance: 전 경로를 '잠시 점검 중' 페이지로(cloudflare 만). 되돌리기 = 스위치 없이 다시 배포
 # -Preview(2026-11-04): 운영(tarkov.aquapado.com)은 그대로 두고 같은 Pages 프로젝트의 'dev' 가지에만 올린다 → https://dev.<프로젝트>.pages.dev
 #   검색 차단(X-Robots-Tag: noindex)을 붙인다. ⚠ 광고·Google 차단 복구 메시지는 aquapado.com 에 묶여 있어 미리보기 주소에선 안 나온다(배치·문구·우리 스크립트 확인용)
 $ErrorActionPreference = "Continue"
@@ -25,6 +25,11 @@ Write-Host ("[deploy] 대상=" + $target + " · 광고=" + $(if ($adId) { $adId 
 if (-not $SkipPrep) {
     & $py (Join-Path $root "scripts\adsense.py")
     & $py (Join-Path $root "scripts\hosting.py")
+}
+# 배포 전 품질 게이트(11-04) — 검색 0행·hreflang·noindex·en/ru 한글 같은 회귀가 있으면 올리지 않는다. 점검 페이지 배포는 예외
+if (-not $Maintenance -and -not $SkipQA) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root "scripts\qa\guide_qa.ps1")
+    if ($LASTEXITCODE -ne 0) { Write-Host "[deploy] 품질 게이트 실패 — 배포하지 않음(급하면 -SkipQA, 사유를 커밋에 남길 것)"; exit 3 }
 }
 
 if ($target -eq "vercel") {
