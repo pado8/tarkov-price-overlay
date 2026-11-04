@@ -51,7 +51,12 @@
     <label class="chk"><input type="checkbox" id="firOnly" /> 인레이드만</label>
     <label class="chk"><input type="checkbox" id="hideDone" checked /> 완료 퀘스트 제외</label>
     <label class="chk"><input type="checkbox" id="favOnly" /> 즐겨찾기만</label>
+    <label class="chk"><input type="checkbox" id="canOnly" /> 지금 받을 수 있는 것만</label>
   </div>
+  <details class="box llbox" id="llbox"><summary>내 상인 등급 <span class="muted small" id="llsum"></span></summary>
+    <p class="small muted">오버레이와 연동하면 깬 퀘스트와 진행 중인 퀘스트로 상인별 <b>최소 등급</b>을 추정합니다(↑ 표시, 실제보다 낮을 수 있음). 게임 상인 화면과 다르면 직접 고르세요 — 모드(PVP/PVE)별로 이 브라우저에만 저장됩니다. 「지금 받을 수 있는 것만」은 상인 등급과 선행 퀘스트만 따지고, 레벨과 1.1.0 묶음 해금 개수는 따지지 않습니다.</p>
+    <div class="llgrid" id="llsel"></div>
+  </details>
   <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div></div>
   <div id="view" style="margin-top:12px;min-height:100vh"></div>
   <div class="cta"><span>레이드 중 <b>F2 한 번</b>이면 "이 아이템이 어느 퀘스트에 몇 개 필요한지"가 바로 뜹니다</span><a class="btn" href="/">무료 시세 오버레이 받기</a></div>
@@ -83,8 +88,29 @@
   Q.forEach(function (q) { if (traders.indexOf(q.tr) < 0) traders.push(q.tr); });
   document.getElementById("trader").innerHTML = "<option value=\"\">모든 상인</option>" + traders.map(function (t) { return "<option>" + esc(t) + "</option>"; }).join("");
 
+  // 내 상인 등급(11-04): 오버레이 연동으로 추정한 최소 LL(gllE) 또는 직접 고른 값(gllM) — 모드별
+  var LLT = [];
+  Q.forEach(function (x) { if (x.ts && (x.ll || 1) > 1 && !LLT.some(function (k) { return k[0] === x.ts; })) LLT.push([x.ts, x.tr]); });
+  function drawLL() {
+    var e = gllE(), m = gllM(), sum = [];
+    document.getElementById("llsel").innerHTML = LLT.map(function (k) {
+      var est = +e[k[0]] || 0, man = +m[k[0]] || 0;
+      if (man || est) sum.push(esc(k[1]) + " LL" + (man || est) + (man ? "" : "↑"));
+      return "<label class=\"llrow\"><span>" + esc(k[1]) + "</span><select data-ts=\"" + esc(k[0]) + "\"><option value=\"\">" +
+        (est ? "자동 (LL" + est + " 이상 추정)" : "자동 (추정 없음)") + "</option>" +
+        [1, 2, 3, 4].map(function (n) { return "<option value=\"" + n + "\"" + (man === n ? " selected" : "") + ">LL" + n + "</option>"; }).join("") + "</select></label>";
+    }).join("");
+    document.getElementById("llsum").textContent = sum.length ? sum.join(" · ") : "— 연동하거나 직접 고르세요";
+  }
+  document.getElementById("llsel").addEventListener("change", function (ev) {
+    var s = ev.target.closest("select"); if (!s) return;
+    var m = gllM(), k = s.getAttribute("data-ts");
+    if (s.value) m[k] = +s.value; else delete m[k];
+    gS("guide.ll.man." + gsm(), m); drawLL(); render();
+  });
   function filtered() {
     var q = document.getElementById("q").value.trim().toLowerCase();
+    var can = document.getElementById("canOnly").checked;
     var tr = document.getElementById("trader").value;
     var kappa = document.getElementById("kappaOnly").checked;
     var hideDone = document.getElementById("hideDone").checked;
@@ -95,6 +121,11 @@
       if (kappa && !x.kappa) return false;
       if (favOnly && !fav[x.id]) return false;
       if (hideDone && done[x.id] && tab === "sum") return false;
+      if (can) {
+        if (done[x.id]) return false;
+        if ((x.ll || 1) > (gmyll(x.ts) || 1)) return false;
+        if ((x.req || []).some(function (r) { return !done[r]; })) return false;
+      }
       if (q) {
         var hay = (x.n + " " + x.en + " " + x.give.map(function (g) { return g.i.map(function (i) { return (I[i] || {}).n + " " + (I[i] || {}).en; }).join(" "); }).join(" ")).toLowerCase();
         if (hay.indexOf(q) < 0 && hay.replace(/\s+/g, "").indexOf(q.replace(/\s+/g, "")) < 0) return false;  // ignore spaces in the query (11-04)
@@ -126,7 +157,7 @@
       html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
         "<div class=\"qn\"><button type=\"button\" class=\"fav" + (fav[x.id] ? " on" : "") + "\" data-t=\"" + esc(x.id) + "\" aria-label=\"즐겨찾기\" title=\"즐겨찾기 — 내 즐겨찾기 페이지에 모임\">★</button> " + (x.slug ? "<a href=\"" + GB + "quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
         (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
-        "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + " · " + esc(x.map || "아무 지역") +
+        "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + ((x.ll || 1) > 1 ? " · <span class=\"" + (gmyll(x.ts) && x.ll > gmyll(x.ts) ? "warn" : "") + "\">LL" + x.ll + "</span>" : "") + " · " + esc(x.map || "아무 지역") +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
         (give.length ? "<div class=\"chips\">" + give.map(function (g) { return chip(g.i, g.c, g.fir); }).join("") + "</div>" : "") +
         (x.keys.length ? "<div class=\"chips\">" + x.keys.map(function (k) { return "<span class=\"chip\"><span class=\"badge b-power\">열쇠</span> " + esc((I[k] || {}).n || k) + "</span>"; }).join("") + "</div>" : "") +
@@ -187,13 +218,15 @@
     document.querySelectorAll("#tabs button").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); });
     render();
   });
-  ["trader", "kappaOnly", "firOnly", "hideDone", "favOnly"].forEach(function (id) { document.getElementById(id).addEventListener("change", render); });
+  ["trader", "kappaOnly", "firOnly", "hideDone", "favOnly", "canOnly"].forEach(function (id) { document.getElementById(id).addEventListener("change", render); });
   // 오버레이 연동(sync.js)이 완료 퀘스트를 guide.quests 에 합치면 다시 읽어 그린다
-  document.addEventListener("guide-sync", function () { setMode(load(MODEKEY, "pvp")); done = gdone(); render(); });
+  document.addEventListener("guide-sync", function () { setMode(load(MODEKEY, "pvp")); done = gdone(); drawLL(); render(); });
+  document.addEventListener("guide-ll", function () { drawLL(); render(); });
   document.getElementById("mode").addEventListener("click", function (e) {
-    var v = e.target.getAttribute("data-v"); if (!v) return; save(MODEKEY, v); setMode(v); render();
+    var v = e.target.getAttribute("data-v"); if (!v) return; save(MODEKEY, v); setMode(v); done = gdone(); drawLL(); render();
   });
   document.getElementById("q").addEventListener("input", render);
+  drawLL();
   render();
 })();
 </script>

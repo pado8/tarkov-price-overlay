@@ -292,3 +292,6 @@ table.tot td.n .badge,table.tot td.n .cp,table.tot td.n label{font-family:inheri
 /* 11-04 점검: 작은 탭 대상(프로모 체크 13px·복사 40×20) 키우기 */
 input.pu-chk{width:18px;height:18px}
 button.cp{min-height:28px;padding:4px 10px!important}
+
+/* 내 상인 등급(11-04) */
+.llbox{margin-top:10px}.llbox summary{cursor:pointer;font-weight:700}.llgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 14px;margin-top:6px}.llrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px}.llrow select{background:var(--panel2);color:inherit;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;font-size:13px;min-height:30px}.myll.ok{color:#7fbf7f}.myll.warn,.qmeta .warn{color:#e0a060}

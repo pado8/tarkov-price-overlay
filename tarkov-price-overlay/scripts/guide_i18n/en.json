@@ -1372,5 +1372,20 @@
 "할로윈 퀘스트 「첫 번째 결과」·「최후의 총력전」의 가스 수류탄 감염자 처치 수 감소": "Halloween tasks First Results and The Final Push: fewer infected kills needed under the gas grenade effect",
 "(공식 위키 기준 25·30명 → 15명)": "(per the official wiki 25 and 30 → 15)",
 "업적 「Triumph of Science」·「Shields Up!」 보상에 할로윈 메인 메뉴 배경 추가": "Added the Halloween main menu background to the Triumph of Science and Shields Up! achievement rewards",
-"에 제출해야 하는 아이템 전체 목록. 인레이드 여부·시세·보유 체크로 진행률을 관리하세요. 패치·이벤트 때마다 갱신.": ", the Tarkov Kappa container quest. Track progress with FiR status·prices·owned checks. Updated with every patch and event."
+"에 제출해야 하는 아이템 전체 목록. 인레이드 여부·시세·보유 체크로 진행률을 관리하세요. 패치·이벤트 때마다 갱신.": ", the Tarkov Kappa container quest. Track progress with FiR status·prices·owned checks. Updated with every patch and event.",
+"// 내 상인 등급과 비교(11-04): 직접 고른 값이면 확정, 연동 추정(↑)이면 「적어도 그 등급」": "// compare with my trader level (11-04): a picked value is definite, a synced estimate (↑) means at least that level",
+"· 내 등급 LL": "· My level LL",
+"— 아직 부족": "— not yet",
+"— 추정이라 더 높을 수 있음": "— estimate, may be higher",
+"// 상인 LL 하한 추정(11-04) — 깬·진행 중 퀘스트가 요구한 LL 의 최댓값(받았으니 적어도 그 등급). ll.json = 빌드가 만든 퀘스트→[상인, LL]": "// trader LL lower bound (11-04) — highest LL required by completed or started tasks (you got them, so at least that level). ll.json = build-made task → [trader, LL]",
+"지금 받을 수 있는 것만": "Available to take now",
+"내 상인 등급": "My trader levels",
+"오버레이와 연동하면 깬 퀘스트와 진행 중인 퀘스트로 상인별": "With overlay sync, completed and started tasks are used to estimate each trader",
+"최소 등급": "minimum level",
+"을 추정합니다(↑ 표시, 실제보다 낮을 수 있음). 게임 상인 화면과 다르면 직접 고르세요 — 모드(PVP/PVE)별로 이 브라우저에만 저장됩니다. 「지금 받을 수 있는 것만」은 상인 등급과 선행 퀘스트만 따지고, 레벨과 1.1.0 묶음 해금 개수는 따지지 않습니다.": "(↑ mark, may be lower than your real level). If it differs from the in-game trader screen, pick it yourself — saved per mode (PVP/PVE) in this browser only. 「Available to take now」 checks only trader level and prerequisite tasks, not player level or the 1.1.0 batch unlock count.",
+"// 내 상인 등급(11-04): 오버레이 연동으로 추정한 최소 LL(gllE) 또는 직접 고른 값(gllM) — 모드별": "// my trader level (11-04): lower bound from overlay sync (gllE) or a picked value (gllM) — per mode",
+"자동 (LL": "Auto (LL",
+"이상 추정)": "or higher, estimated)",
+"자동 (추정 없음)": "Auto (no estimate)",
+"— 연동하거나 직접 고르세요": "— sync or pick it yourself"
 }

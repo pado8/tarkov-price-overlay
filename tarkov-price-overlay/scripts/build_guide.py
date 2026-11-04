@@ -418,6 +418,17 @@ def main() -> int:
         suf = ctx.display_suffix.get(q["id"])
         if suf:
             q["n"] = f'{q["n"]} ({suf})'
+        # 상인 키·받는 LL(묶음 LL 포함) — 퀘스트 목록의 '내 상인 등급'·'지금 받을 수 있는 것만'(11-04)
+        q["ts"] = ctx.trader_slug(tasks[q["id"]].get("trader"))
+        q["ll"] = ctx.trader_ll(tasks[q["id"]])
+    # ll.json — 오버레이 연동 때 sync.js 가 깬·진행 중 퀘스트로 상인별 최소 LL을 추정하는 표(언어판마다 상인 이름 포함)
+    ll_doc = {"t": {}, "q": {}}
+    for tid, t in tasks.items():
+        ts = ctx.trader_slug(t.get("trader"))
+        ll_doc["q"][tid] = [ts, ctx.trader_ll(t)]
+        ll_doc["t"].setdefault(ts, ctx.trader_name(t.get("trader")))
+    (out_dir / "ll.json").parent.mkdir(parents=True, exist_ok=True)
+    (out_dir / "ll.json").write_text(json.dumps(ll_doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     pages = {
         "kappa": {"items": kappa, "req": col_req},
         "keys": {"maps": key_maps,

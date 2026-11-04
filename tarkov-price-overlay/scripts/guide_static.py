@@ -1236,6 +1236,9 @@ def requirements_html(ctx: Ctx, t: dict) -> str:
         ll_txt = '<span class="muted">확인 필요</span>'
     else:
         ll_txt = "LL1"
+    need = ctx.trader_ll(t)
+    if need > 1:  # 내 등급(연동 추정·직접 입력)과 비교 — QUEST_JS llMark 가 채운다
+        ll_txt += f'<span class="myll" data-ts="{e(ctx.trader_slug(t.get("trader")))}" data-ll="{need}"></span>'
     rows.append(("상인 등급", ll_txt))
     # 상인 평판 조건(펜스 = 스캐브 카르마) — 11-04 전엔 level 만 써서 수집가(카르마 3)·손해 배상(카르마 -1 이하) 등 8개가 빠져 있었다
     for r in t.get("traderRequirements") or []:
@@ -1276,6 +1279,8 @@ DONE_FN = ('function gL(k,d){try{return JSON.parse(localStorage.getItem(k))||d}c
            'function gsm(){var m=gL("guide.mode","pvp")==="pve"?"pve":"regular",l=gL("guide.sync",null);return (m==="regular"&&l&&l.mode==="season")?"season":m}'
            'function gsync(){var w=window.__guideSync;if(w&&w.smode===gsm())return w;return gL("guide.sync.m."+gsm(),null)}'
            'function gdone(){gmig();var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),o={};Object.keys(d).forEach(function(k){o[k]=1});((y&&y.completed)||[]).forEach(function(k){if(!off[k])o[k]=1});return o}'
+           'function gllE(){var x=gL("guide.ll.est."+gsm(),null);return (x&&x.est)||{}}function gllM(){return gL("guide.ll.man."+gsm(),{})}'
+           'function gmyll(t){var m=gllM(),e=gllE();return +(m[t]||e[t]||0)}'
            'function gset(id,on){var d=gL("guide.quests",{}),off=gL("guide.quests.off",{}),y=gsync(),inS=((y&&y.completed)||[]).indexOf(id)>=0;if(on){d[id]=1;delete off[id]}else{delete d[id];if(inS)off[id]=1}gS("guide.quests",d);gS("guide.quests.off",off)}')
 
 QUEST_JS = """<script>
@@ -1284,7 +1289,11 @@ var el=document.querySelector(".quest");if(!el)return;var id=el.getAttribute("da
 function mark(){var sy=gsync();if(!sy)return;var lab=c.parentNode;if(!lab||lab.querySelector(".syn"))return;var st=(sy.completed||[]).indexOf(id)>=0?"완료":(sy.started||[]).indexOf(id)>=0?"진행 중":"";if(!st)return;var b=document.createElement("span");b.className="syn badge";b.textContent="오버레이: "+st;lab.appendChild(b)}
 // '처음부터 순서' 목록: 완료한 선행 퀘스트(직접 체크 + 오버레이 연동)는 흐리게
 function chainMark(){document.querySelectorAll(".chain li[data-t]").forEach(function(li){var t=li.getAttribute("data-t");li.classList.toggle("done",!!d[t])})}
-chainMark();document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark();chainMark()});if(gsync())mark();
+// 내 상인 등급과 비교(11-04): 직접 고른 값이면 확정, 연동 추정(↑)이면 「적어도 그 등급」
+function llMark(){document.querySelectorAll(".myll").forEach(function(s){var k=s.getAttribute("data-ts"),need=+s.getAttribute("data-ll")||1,man=+(gllM()[k]||0),my=gmyll(k);if(!my){s.textContent="";return}
+s.className="myll small "+(my>=need?"ok":"warn");s.textContent=" · 내 등급 LL"+my+(man?"":"↑")+(my>=need?" ✓":man?" — 아직 부족":" — 추정이라 더 높을 수 있음")})}
+llMark();document.addEventListener("guide-ll",llMark);
+chainMark();document.addEventListener("guide-sync",function(){rd();c.checked=!!d[id];mark();chainMark();llMark()});if(gsync())mark();
 c.addEventListener("change",function(){gset(id,c.checked);rd();chainMark()});
 // ★ 즐겨찾기(guide.fav) — 사냥 퀘스트 페이지(/guide/hunt/)에서 모아 본다
 var FK="guide.fav";function fr(){try{return JSON.parse(localStorage.getItem(FK))||{}}catch(e){return {}}}var fb=document.getElementById("qfav");
@@ -3668,13 +3677,15 @@ if(stale)a.addEventListener("click",function(ev){ev.preventDefault();if(a.datase
 top.appendChild(a)}
 // 받은 진행도는 그 서버(PVP/PVE/시즌)의 칸(guide.sync.m.<모드>)에 '교체'로 저장한다 — 직접 체크(guide.quests)와 섞지 않는다(11-04).
 // 사이트 모드도 오버레이 서버로 맞춘다(안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져온다).
+// 상인 LL 하한 추정(11-04) — 깬·진행 중 퀘스트가 요구한 LL 의 최댓값(받았으니 적어도 그 등급). ll.json = 빌드가 만든 퀘스트→[상인, LL]
+function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var e={},q=(d&&d.q)||{};(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(e[x[0]]||0))e[x[0]]=x[1]});S("guide.ll.est."+sm,{ts:Date.now(),est:e});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
 function apply(p,how){var first=!L(SK,null);
 if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length),first:first?1:0,log_ok:p.log_ok===false?0:1},how==="auto");
 if(first)try{if(window.gtag)gtag("set","user_properties",{guide_synced:"1"})}catch(e){}
 if(p.mode==="pve"||p.mode==="regular"||p.mode==="pvp"||p.mode==="season"){var nm=p.mode==="pve"?"pve":"pvp";if(L(MK,"pvp")!==nm)S(MK,nm)}
 gmig();var sm=smodeOf(p.mode);
 var sy={ts:Date.now(),mode:p.mode,smode:sm,completed:p.completed||[],started:p.started||[],hideout:p.hideout||{},quest_count:p.quest_count||0,promo_used:p.promo_used||[],log_ok:p.log_ok};
-S(SK,sy);S("guide.sync.m."+sm,sy);window.__guideSync=sy;chip(sy,false);
+S(SK,sy);S("guide.sync.m."+sm,sy);window.__guideSync=sy;chip(sy,false);llEst(sy,sm);
 // 프로모 코드 '등록함' 체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)
 if(p.promo_used&&p.promo_used.length){var PU="guide.promo.used",pu=L(PU,{}),add=0;p.promo_used.forEach(function(c){if(!pu[c]){pu[c]=Date.now();add++}});if(add)S(PU,pu)}
 document.dispatchEvent(new CustomEvent("guide-sync",{detail:sy}))}
