@@ -62,6 +62,7 @@
 (function () {
   var D = JSON.parse(document.getElementById("data").textContent);
   var I = D.items, Q = D.quests;
+  var GB = (location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0];
   var KEY = "guide.quests", MODEKEY = "guide.mode";
   function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -121,7 +122,7 @@
       if (x.tr !== lastTr) { if (lastTr !== null) html += "</div>"; html += "<h3 class=\"tr-h\">" + esc(x.tr) + "</h3><div class=\"box\" style=\"padding:0\">"; lastTr = x.tr; }
       var isDone = !!done[x.id];
       html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
-        "<div class=\"qn\"><button type=\"button\" class=\"fav" + (fav[x.id] ? " on" : "") + "\" data-t=\"" + esc(x.id) + "\" aria-label=\"즐겨찾기\" title=\"즐겨찾기 — 내 즐겨찾기 페이지에 모임\">★</button> " + (x.slug ? "<a href=\"/guide/quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
+        "<div class=\"qn\"><button type=\"button\" class=\"fav" + (fav[x.id] ? " on" : "") + "\" data-t=\"" + esc(x.id) + "\" aria-label=\"즐겨찾기\" title=\"즐겨찾기 — 내 즐겨찾기 페이지에 모임\">★</button> " + (x.slug ? "<a href=\"" + GB + "quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
         (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
         "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + " · " + esc(x.map || "아무 지역") +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +

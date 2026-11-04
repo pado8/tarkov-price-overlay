@@ -1503,7 +1503,7 @@ def _allq(ctx: Ctx) -> dict:
 
 
 FAV_JS = r"""<script>
-(function(){var FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+(function(){var GB=(location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0],FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={},MP="guide.fav.map";
 var mpSel=document.getElementById("mp");(function(){var ms={};Object.keys(all).forEach(function(t){(all[t][4]||[]).forEach(function(m){ms[m]=1})});Object.keys(ms).sort().forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m;mpSel.appendChild(o)});var sv=L(MP,"all");if(sv!=="all"&&ms[sv])mpSel.value=sv})();
 mpSel.addEventListener("change",function(){S(MP,mpSel.value);render()});
@@ -1512,7 +1512,7 @@ function mgrp(t){var mp=mpSel.value;if(mp==="all")return 0;var ms=all[t][4]||[];
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function card(t,html,done,started,isFav){var x=all[t];return '<article class="box hq'+(done?" done":"")+'" data-t="'+t+'"><div class="hqh"><button type="button" class="fav'+(isFav?" on":"")+'" data-t="'+t+'" aria-label="'+(isFav?"즐겨찾기 해제":"즐겨찾기")+'" title="'+(isFav?"즐겨찾기 해제":"즐겨찾기로 고정")+'">★</button><h2><a href="/guide/quest/'+x[1]+'/">'+esc(x[0])+'</a></h2>'+(done?'<span class="badge b-done">완료</span>':started?'<span class="badge b-run">진행 중</span>':'')+'<span class="muted small">'+esc(x[2])+(x[3]>1?" · 레벨 "+x[3]:"")+' · '+((x[4]&&x[4].length)?esc(x[4].join(", ")):"아무 지역")+'</span></div>'+html+'</article>'}
 // 퀘스트 페이지를 그대로 받아 목표·필요한 열쇠 부분만 잘라 온다(정적 사이트라 즐겨찾기 조합은 브라우저가 만든다)
-function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch("/guide/quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
+function load1(t){if(cache[t])return Promise.resolve(cache[t]);return fetch(GB+"quest/"+all[t][1]+"/").then(function(r){return r.text()}).then(function(h){var d=new DOMParser().parseFromString(h,"text/html"),objs=d.querySelector(".col-main .objs"),out='<ol class="objs">'+(objs?objs.innerHTML:"")+"</ol>";
 [].slice.call(d.querySelectorAll(".col-main .box")).forEach(function(b){var h2=b.querySelector("h2");if(h2&&h2.textContent.indexOf("필요한 열쇠")===0){out+='<div class="sublabel">필요한 열쇠</div>'+b.innerHTML.replace(/<h2>[\s\S]*?<\/h2>/,"")}});cache[t]=out;return out}).catch(function(){return '<p class="muted small">목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요</p>'})}
 var seq=0;
 function render(){var f=L(FK,{}),ids=Object.keys(f).filter(function(t){return !!all[t]}),d=L(K,{}),sy=window.__guideSync||L("guide.sync",null),cp=(sy&&sy.completed)||[],st=(sy&&sy.started)||[];
@@ -1542,7 +1542,7 @@ def favorites_page(ctx: Ctx) -> tuple[str, str]:
 <div class="controls"><select id="mp" aria-label="지역"><option value="all">모든 지역</option></select><span class="muted small">지역을 고르면 그 지역 퀘스트 → 아무 지역 순으로, 다른 지역은 숨김 <span id="hidnote" style="display:none">(숨김 <b id="nhid">0</b>개)</span></span></div>
 <div class="note" id="empty">아직 즐겨찾기가 없어요. <a href="/guide/quests/">퀘스트 목록</a>이나 <a href="/guide/hunt/">사냥 퀘스트</a>에서 ★를 눌러 보세요.</div>
 <div id="fl"></div>
-<section id="runbox" style="display:none"><h2 style="margin-top:22px">진행 중인 퀘스트 <span class="muted small">시세 오버레이가 게임 로그로 확인한 것 · <b id="nrun">0</b>개 · ★를 누르면 즐겨찾기로 고정</span></h2><div id="rl"></div></section>
+<section id="runbox" style="display:none"><h2 style="margin-top:22px">진행 중인 퀘스트 <span class="muted small" style="display:block;font-weight:400;margin-top:4px;line-height:1.5">시세 오버레이가 게임 로그로 확인한 것 · <b id="nrun">0</b>개 · ★를 누르면 즐겨찾기로 고정</span></h2><div id="rl"></div></section>
 <div class="note" id="nosync" style="display:none">같은 PC에서 <a href="/">시세 오버레이</a>를 켜고 상단 <b>오버레이 연동</b>을 누르면, 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.</div>
 <script type="application/json" id="allq">{allq_json}</script>"""
     path = "/guide/favorites/"
@@ -1680,7 +1680,7 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
     path = "/guide/event/"
     title = f"타르코프 {EVENT_NAME} 퀘스트 {n}개 — 목표·보상·선택 분기 한국어 정리 | 탈콥 가이드"
     desc = f"타르코프 {EVENT_NAME}({EVENT_SINCE}~) 퀘스트 {n}개: 스키어·테라피스트 퀘스트 순서, 목표, 보상, 물물교환 해금, 서로 실패시키는 선택 분기."
-    body = (f'<h1>{EVENT_NAME} 퀘스트 <span class="h1en">{n}개</span></h1>'
+    body = (f'<h1>이벤트 퀘스트 <span class="h1en">{EVENT_NAME} · {n}</span></h1>'
             f'<p class="sub">{EVENT_SINCE}부터 진행 중 · 공개 데이터에 아직 없는 퀘스트라 공식 위키 내용을 옮겨 정리 · 위키 수정일은 퀘스트마다 표시</p>'
             '<div class="note">이벤트 퀘스트는 오버레이 연동·완료 체크·지도 표시에 아직 들어가지 않습니다(공개 데이터에 없어서). '
             '<b>선택 분기</b> 표시가 있는 퀘스트는 한쪽을 끝내면 다른 쪽이 실패하니 먼저 읽어 보세요.</div>'
@@ -3325,7 +3325,7 @@ function ev(n,prm,once){try{if(once){var sk="gsev."+n;if(sessionStorage.getItem(
 function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
-function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":"/guide/quests/";
+function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":((location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0]+"quests/");
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"방금":ago<60?ago+"분 전":Math.round(ago/60)+"시간 전";
 var base="🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)");
 a.textContent="🔗 ✓"+n+" · "+(sy.mode==="pve"?"PVE":sy.mode==="season"?"S":"PVP")+(stale?" ↻":"");var long=stale?(base+" · "+agoTxt+" 기준 ↻"):base;
@@ -3384,6 +3384,7 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     items_n = h.count('<tr data-id="')
     p, h = rewards_page(ctx)
     write(out, p, h, urls)
+    rewards_n = h.count('<details class="rw"')  # 바로 여기서 센다 — 아래에서 h 가 다른 페이지로 바뀐다(전엔 즐겨찾기 페이지를 세서 허브에 0개로 나왔다)
     p, h = hunt_page(ctx)
     write(out, p, h, urls)
     evp = event_page(ctx)  # 진행 중 이벤트 퀘스트(위키) — 데이터가 없으면 페이지를 만들지 않는다
@@ -3391,7 +3392,6 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
         write(out, evp[0], evp[1], urls)
     p, h = favorites_page(ctx)
     write(out, p, h, urls)
-    rewards_n = h.count('<details class="rw"')
     p, h = quest_items_page(ctx)
     write(out, p, h, urls)
     qitems_n = h.count('class="card static"')
@@ -3429,7 +3429,7 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
         p, h, feed_json = gsr
         write(out, p, h, urls)
         (out / "gunsmith.json").write_text(feed_json, encoding="utf-8")  # 오버레이가 받아 가는 데이터(사이트맵엔 안 넣음)
-        gs_q = h.count("<td rowspan=")
+        gs_q = h.count('<td class="q"')  # 퀘스트마다 한 칸(예전 rowspan 표 구조로 세면 0 이 나왔다)
         gs_p = h.count('<tr data-id="')
     counts = {"quests": len(ctx.tasks), "items": items_n, "rewards": rewards_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
               "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,

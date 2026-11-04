@@ -27,7 +27,7 @@ a:hover{text-decoration:underline}
   .top nav{order:5;width:100%}
   .top nav a.gt{padding:6px 7px;font-size:13.5px}
 }
-@media (max-width:400px){.top nav a.gt{padding:6px 5px;font-size:13px}.top nav .gt .car{margin-left:2px}}
+@media (max-width:400px){.top nav a.gt{padding:6px 6px;font-size:13px}.top nav .gt .car{display:none}}  /* 폰은 눌러서 펼치니 ▾ 없이도 된다 — 러시아어 메뉴 다섯 개가 한 줄에 */
 .top nav{display:flex;gap:2px;flex-wrap:wrap}.top nav .g{position:relative}.top nav .gt .car{font-size:10px;margin-left:3px;opacity:.7}
 .top nav .g.on>.gt{color:var(--text);background:var(--panel2)}
 /* 제목과 드롭다운 사이 4px 틈을 마우스가 지날 때 호버가 끊기지 않게 — 그룹(.g)의 투명한 다리로 틈을 덮는다 */
@@ -277,3 +277,9 @@ dl.faq dd{margin:0 0 6px;color:var(--muted,#b7bcc6);line-height:1.6}
 
 /* 같은 페이지 안 링크(#id)로 갈 때 상단 고정 메뉴에 제목이 가리지 않게 */
 section.box[id]{scroll-margin-top:84px}
+
+/* 프로모 코드 표(휴대폰): 코드 칸이 숫자 칸(.n)이라 줄바꿈이 막혀 코드·복사·배지가 한 줄로 269px — 보상·비고가 한 글자씩 꺾여 행이 400px 가까이 됐다 */
+@media (max-width:560px){table.tot td.n:has(code.promo){white-space:normal;min-width:120px;text-align:left}table.tot td.n code.promo{display:block;margin-bottom:4px}tr[data-code]>td:nth-child(3),tr[data-code]>td:nth-child(4){min-width:170px}}
+/* 휴대폰 헤더가 3줄(약 114px)이라 같은 페이지 안 링크 여백도 키운다 */
+@media (max-width:560px){section.box[id],h2.sec,.lvl{scroll-margin-top:130px}}
+table.tot td.n .badge,table.tot td.n .cp,table.tot td.n label{font-family:inherit}  /* 숫자 칸 고정폭 글꼴이 배지·버튼 글자까지 벌려 놓지 않게(프로모 표) */
