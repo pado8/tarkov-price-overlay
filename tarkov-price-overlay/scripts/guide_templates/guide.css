@@ -16,6 +16,10 @@ a:hover{text-decoration:underline}
 /* 그룹 제목(.gt)·드롭다운 항목·'시세 오버레이'(.ov) 모두 같은 상자 모양이어야 글자 높이가 맞는다 */
 .top nav a,.top .ov{display:inline-flex;align-items:center;flex:none;white-space:nowrap;line-height:1.4;color:var(--muted);font-size:14px;padding:6px 10px;border-radius:8px}
 .top nav a.on,.top nav a:hover,.top .ov.on,.top .ov:hover{color:var(--text);background:var(--panel2);text-decoration:none}
+/* 상단 검색창 자리(11-04) — search.js 가 같은 규칙을 다시 넣지만, 그 전에도 같은 크기를 차지하게 */
+.gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px}
+.gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}
+@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}
 /* 휴대폰: 1줄 = 사이트 이름 … 연동 · 언어 / 2줄 = 검색창(남은 폭) · 내려받기 / 3줄 = 메뉴 */
 @media (max-width:560px){
   .top .wrap{gap:6px}
@@ -35,6 +39,7 @@ a:hover{text-decoration:underline}
 .top nav .dd{display:none;position:absolute;top:calc(100% + 4px);left:0;flex-direction:column;min-width:170px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:30}
 .top nav .dd a{font-size:13.5px;padding:7px 10px;white-space:nowrap}
 @media (hover:hover) and (min-width:900px){.top nav .g:hover>.dd{display:flex}}
+.top nav .g:focus-within>.dd{display:flex}  /* 키보드(Tab)로도 하위 메뉴가 열리게(11-04 접근성) */
 .top nav .g.open>.dd{display:flex}
 
 h1{font-size:26px;margin:22px 0 4px}
@@ -283,3 +288,7 @@ section.box[id]{scroll-margin-top:84px}
 /* 휴대폰 헤더가 3줄(약 114px)이라 같은 페이지 안 링크 여백도 키운다 */
 @media (max-width:560px){section.box[id],h2.sec,.lvl{scroll-margin-top:130px}}
 table.tot td.n .badge,table.tot td.n .cp,table.tot td.n label{font-family:inherit}  /* 숫자 칸 고정폭 글꼴이 배지·버튼 글자까지 벌려 놓지 않게(프로모 표) */
+
+/* 11-04 점검: 작은 탭 대상(프로모 체크 13px·복사 40×20) 키우기 */
+input.pu-chk{width:18px;height:18px}
+button.cp{min-height:28px;padding:4px 10px!important}

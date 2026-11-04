@@ -99,7 +99,10 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             '#tgab .sp{flex:1;min-width:200px}#tgab button{background:none;border:1px solid #3a352b;color:#e9e7e0;border-radius:8px;padding:5px 10px;'
             'font:inherit;font-size:12.5px;cursor:pointer}#tgab button.y{border-color:#c8aa64;color:#c8aa64}#tgab .how{display:none;width:100%;color:#9d988b;font-size:12.5px}'
             '#tgab.open .how{display:block}#tgab button:disabled{opacity:.45;cursor:default}'
-            '#tgab a.d{border:1px solid #3a352b;color:#e0c98a;border-radius:8px;padding:5px 10px;font-size:12.5px;text-decoration:none}</style>'
+            '#tgab a.d{border:1px solid #3a352b;color:#e0c98a;border-radius:8px;padding:5px 10px;font-size:12.5px;text-decoration:none}'
+            # 11-04 점검: 375px 에서 높이 163px(화면 20%)였다 → 휴대폰은 설명 문장을 숨기고 한 줄 남짓으로(설명은 '허용하는 법'을 누르면 보임)
+            '@media(max-width:560px){#tgab{font-size:12.5px;padding:7px 10px}#tgab .in{gap:6px}#tgab .sp{flex-basis:100%;min-width:0}#tgab #tgab-m{display:none}'
+            '#tgab.open #tgab-m{display:inline}#tgab button,#tgab a.d{padding:4px 8px;font-size:12px}}</style>'
             '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
             # 11-04: 광고를 끈 사람에게 '광고 대신 후원' 선택지 — 앱 후원 패널과 같은 주소(ko 카카오페이 / en·ru PayPal)
             '<button class="y" id="tgab-h"></button><a class="d" id="tgab-d" target="_blank" rel="noopener" href="'
@@ -124,12 +127,13 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             "function filled(){return !!document.querySelector('ins.adsbygoogle[data-ad-status=\"filled\"]');}"
             'function show(){var el=document.getElementById("tgab");if(!el||sg(K))return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
             'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
+            'var pb=function(){document.body.style.paddingBottom=(el.style.display==="none"?0:el.offsetHeight)+"px";};pb();window.addEventListener("resize",pb);'
             'var dl=document.getElementById("tgab-d");dl.textContent=T[5];dl.onclick=function(){try{if(window.gtag)gtag("event","donate_click",{donate_loc:"adblock_bar",page_path:P});}catch(e){}};'
-            'var hw=0;document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");if(!hw++)ev("adblock_how");};'
+            'var hw=0;document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");pb();if(!hw++)ev("adblock_how");};'
             # 닫기는 5초 뒤에 켜진다(남은 초를 버튼에 표시)
             'var x=document.getElementById("tgab-x"),c=5;x.disabled=true;x.textContent=T[3]+" ("+c+")";'
             'var iv=setInterval(function(){if(--c<=0){clearInterval(iv);x.disabled=false;x.textContent=T[3];}else{x.textContent=T[3]+" ("+c+")";}},1000);'
-            'x.onclick=function(){el.style.display="none";ss(K);ev("adblock_close");};'
+            'x.onclick=function(){el.style.display="none";pb();ss(K);ev("adblock_close");};'
             'if(!sg("tg_adblk_seen")){ss("tg_adblk_seen");ev("adblock_on");}}'
             # 2026-11-04 '차단을 껐는데도 안내가 뜬다' 제보: 예전엔 로드 2.5초 뒤 한 번만 봐서 느린 회선에서 스크립트가 늦게 실리면
             # 차단으로 오판할 수 있었다 → 미끼가 숨겨지면 바로, 스크립트는 1초 간격으로 최대 10번 기다린 뒤에만 '차단'.

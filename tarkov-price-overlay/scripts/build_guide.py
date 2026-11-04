@@ -254,7 +254,7 @@ def main() -> int:
             "n": loc(loc_items, it.get("name"), en),
             "en": en,
             "s": loc(loc_items, it.get("shortName"), loc(loc_items_en, it.get("shortName"), "")),
-            "img": it.get("gridImageLink") or it.get("iconLink"),
+            "img": it.get("iconLink") or it.get("gridImageLink"),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
             "w": it.get("width") or 1,
             "h": it.get("height") or 1,
             "pvp": it.get("avg24hPrice"),
@@ -429,7 +429,21 @@ def main() -> int:
     }
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
-        tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)  # 완료 퀘스트 공용 함수(직접 체크 ∪ 지금 모드 연동분)
+        tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)
+        if 'property="og:image"' not in tpl:  # 공유 미리보기 태그(page() 와 같게, 11-04 점검: 템플릿 3쪽만 없었다)
+            _t = re.search(r"<title>(.*?)</title>", tpl, re.S)
+            _d = re.search(r'<meta name="description" content="([^"]*)"', tpl)
+            _og = "".join(x + "\n" for x in (
+                '<meta property="og:type" content="website" />',
+                '<meta property="og:site_name" content="탈콥 가이드 · 타르코프 시세 오버레이" />',
+                f'<meta property="og:title" content="{_t.group(1) if _t else ""}" />',
+                f'<meta property="og:description" content="{_d.group(1) if _d else ""}" />',
+                f'<meta property="og:url" content="https://tarkov.aquapado.com/guide/{name}/" />',
+                f'<meta property="og:image" content="https://tarkov.aquapado.com/{guide_static.OG_IMAGE.get(lang, "og.png")}" />',
+                '<meta property="og:locale" content="ko_KR" />'))
+            tpl = tpl.replace('<meta name="theme-color"', _og + '<meta name="theme-color"', 1)
+        if 'class="gsearch"' not in tpl:  # 검색창 자리 예약(page() 와 같게)
+            tpl = tpl.replace('<a class="brand" href="/guide/">탈콥 가이드</a>', '<a class="brand" href="/guide/">탈콥 가이드</a>' + guide_static.GSEARCH_SLOT, 1)
         tpl = re.sub(r"<nav>.*?</nav>", lambda _m: guide_static.nav_html(name), tpl, count=1, flags=re.S)  # 언어 전환은 localize_template 이 붙인다
         if 'src="/guide/sync.js"' not in tpl:  # 오버레이 연동 스크립트 — page() 로 만드는 페이지와 같게
             tpl = tpl.replace("</body>", '<script src="/guide/sync.js" defer></script>\n</body>', 1)

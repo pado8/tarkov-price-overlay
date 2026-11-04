@@ -2,6 +2,13 @@
 # Vercel 에서는 이 파일이 그대로 공개 파일로 서빙되므로).
 # vercel.json 의 headers 두 개를 옮긴 것 + pages.dev 주소는 검색 색인 금지(같은 내용이 두 주소로 잡히지 않게).
 
+# 기본 보안 헤더 — Vercel(vercel.json)에 있던 4개가 11-03 Cloudflare 이전 때 빠져 있었다(11-04 점검에서 발견, 복원)
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
 /*.png
   Cache-Control: public, max-age=604800, immutable
 /*.jpg

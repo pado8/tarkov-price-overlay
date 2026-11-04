@@ -737,7 +737,7 @@ class Ctx:
                 "n": self._loc(self.loc_items, it.get("name"), en),
                 "en": en,
                 "s": self._loc(self.loc_items, it.get("shortName"), self._loc(self.loc_items_en, it.get("shortName"), "")),
-                "img": it.get("gridImageLink") or it.get("iconLink"),
+                "img": it.get("iconLink") or it.get("gridImageLink"),  # 64px 아이콘 — 표시 최대 56px라 큰 그리드 그림은 낭비(11-04, 페이지당 3~4MB)
                 "pvp": it.get("avg24hPrice"),
                 "pve": pv.get("avg24hPrice"),
                 "wiki": it.get("wikiLink"),
@@ -747,7 +747,7 @@ class Ctx:
             qi = self.quest_items.get(iid)
             if qi:
                 info = {"id": iid, "n": self.tk(f"{iid} Name", iid), "en": self._loc(self.loc_tasks_en, f"{iid} Name", ""),
-                        "s": self.tk(f"{iid} ShortName", ""), "img": qi.get("gridImageLink") or qi.get("iconLink"),
+                        "s": self.tk(f"{iid} ShortName", ""), "img": qi.get("iconLink") or qi.get("gridImageLink"),
                         "quest": True, "desc": self.tk(f"{iid} Description", "")}
             elif iid in MISSING_ITEMS:
                 nm = MISSING_ITEMS[iid]
@@ -947,6 +947,11 @@ class Ctx:
 # 레이아웃
 # ─────────────────────────────────────────────────────────────
 
+# 상단 검색창 자리(search.js 가 채운다) — 미리 두어야 늦게 끼워 넣을 때 휴대폰 헤더가 밀리지 않는다(11-04 점검 CLS)
+OG_IMAGE = {"ko": "og.png", "en": "og-en.png", "ru": "og-ru.png"}  # 언어판 공유 미리보기 그림(11-04: en/ru 도 한국어 그림을 쓰던 것)
+GSEARCH_SLOT = '<div class="gsearch" role="search"><input type="search" autocomplete="off" aria-label="검색" /></div>'
+
+
 def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = "", crumbs=None,
          og_type: str = "article", extra_head: str = "", scripts: str = "") -> str:
     url = SITE + lang_path(path)
@@ -979,7 +984,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 <meta property="og:title" content="{e(title)}" />
 <meta property="og:description" content="{e(desc)}" />
 <meta property="og:url" content="{e(url)}" />
-<meta property="og:image" content="{SITE}/og.png" />
+<meta property="og:image" content="{SITE}/{OG_IMAGE.get(LANG, 'og.png')}" />
 <meta property="og:locale" content="{og_locale}" />
 <meta name="theme-color" content="#c8aa64" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -989,6 +994,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
 <body>
 <div class="top"><div class="wrap">
   <a class="brand" href="/guide/">탈콥 가이드</a>
+  {GSEARCH_SLOT}
   {navhtml}
 </div></div>
 <main class="wrap">
