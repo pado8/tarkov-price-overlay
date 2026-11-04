@@ -33,7 +33,14 @@ def apply() -> tuple[int, str]:
             s = f.read_text(encoding="utf-8")
             n = VERCEL_INSIGHTS_RE.sub("", s)
             if n != s:
-                f.write_text(n, encoding="utf-8")
+                for _i in range(20):  # 방금 쓴 파일을 Windows(백신 검사 등)가 잠깐 잡으면 OSError 22/13 — 잠시 뒤 다시
+                    try:
+                        f.write_text(n, encoding="utf-8")
+                        break
+                    except OSError as ex:
+                        if ex.errno not in (13, 22) or _i == 19:
+                            raise
+                        __import__("time").sleep(0.25)
                 changed += 1
     return changed, t
 

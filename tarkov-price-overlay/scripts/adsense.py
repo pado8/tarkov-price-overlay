@@ -127,7 +127,14 @@ def apply() -> tuple[int, str | None]:
         else:
             t = AB_RE.sub("", BLOCK_RE.sub("", s))
         if t != s:
-            f.write_text(t, encoding="utf-8", newline="\n")  # 빌드(LF)와 같게 — 기본값이면 Windows 에서 CRLF 로 바뀌어 전 파일이 더러워진다
+            for _i in range(20):  # 방금 쓴 파일을 Windows(백신 검사 등)가 잠깐 잡으면 OSError 22/13 — 잠시 뒤 다시
+                try:
+                    f.write_text(t, encoding="utf-8", newline="\n")  # 빌드(LF)와 같게 — 기본값이면 Windows 에서 CRLF 로 바뀌어 전 파일이 더러워진다
+                    break
+                except OSError as ex:
+                    if ex.errno not in (13, 22) or _i == 19:
+                        raise
+                    __import__("time").sleep(0.25)
             changed += 1
     ads = LANDING / "ads.txt"
     if cid:

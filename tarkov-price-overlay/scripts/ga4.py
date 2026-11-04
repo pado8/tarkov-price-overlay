@@ -20,6 +20,19 @@ BLOCK_RE = re.compile(re.escape(START) + r".*?" + re.escape(END) + r"\n?", re.S)
 ID_RE = re.compile(r"^G-[A-Z0-9]{6,12}$")
 
 
+
+def _write_retry(f, text, **kw):
+    """방금 다른 단계가 쓴 파일을 Windows(백신 검사 등)가 잠깐 잡고 있으면 OSError 22/13 이 난다 — 잠시 뒤 다시 쓴다."""
+    import time
+    for i in range(20):
+        try:
+            f.write_text(text, **kw)
+            return
+        except OSError as ex:
+            if ex.errno not in (13, 22) or i == 19:
+                raise
+            time.sleep(0.25)
+
 def measurement_id() -> str | None:
     if not ID_FILE.exists():
         return None
@@ -46,7 +59,7 @@ def apply() -> tuple[int, str | None]:
         if gid and "</head>" in t:
             t = t.replace("</head>", snippet(gid) + "</head>", 1)
         if t != s:
-            f.write_text(t, encoding="utf-8")
+            _write_retry(f, t, encoding="utf-8")
             changed += 1
     return changed, gid
 
