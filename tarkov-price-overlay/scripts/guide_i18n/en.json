@@ -1229,5 +1229,6 @@
 "이벤트 퀘스트는 오버레이 연동·완료 체크·지도 표시에 아직 들어가지 않습니다(공개 데이터에 없어서).": "Event quests are not yet part of overlay sync, completion checks or the map (they are missing from the public data).",
 "출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서. 이벤트가 끝나면 이 페이지도 내립니다.": "Source: official wiki quest pages (CC BY-NC-SA). This page will be removed when the event ends.",
 "표시가 있는 퀘스트는 한쪽을 끝내면 다른 쪽이 실패하니 먼저 읽어 보세요.": "quests fail the other branch when you finish one, so read them first.",
-"은 자동 점검(매일)이 정리 사이트에서 그 코드를": "is how many code-tracking sites the daily auto-check saw listing it as"
+"은 자동 점검(매일)이 정리 사이트에서 그 코드를": "is how many code-tracking sites the daily auto-check saw listing it as",
+"🔗 연동": "🔗 Sync"
 }
