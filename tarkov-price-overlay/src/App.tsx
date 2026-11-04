@@ -6396,7 +6396,8 @@ function App() {
           className={`card wide-pane${cardVisible ? "" : " card-hidden"}`} // 카드를 숨기면(토글·트레이) 패널도 함께
           style={{
             "--card-fs": `${region.fontSize}px`,
-            opacity: Math.max(region.opacity, RADAR_MIN_OPACITY) / 100,
+            // 숨김(.card-hidden = opacity 0)을 인라인 값이 덮지 않게 — 시세 카드와 같은 방식(11-04 'Shift+F2 로 숨기면 지도만 남음')
+            opacity: cardVisible ? Math.max(region.opacity, RADAR_MIN_OPACITY) / 100 : undefined,
             ["--card-bg-alpha" as string]: String(region.bgOpacity / 100),
             ["--side-h" as string]: sideH ? `${sideH}px` : undefined,
           } as React.CSSProperties}
