@@ -80,7 +80,7 @@ type Props = {
   size: number; // 지도 높이(px). 폭은 카드 폭을 따라간다
   fixed: boolean; // true = 지도 고정(↻ 90° 회전만) · false = 바라보는 쪽이 위
   highlightKey?: string | null; // 시세로 조회한 열쇠 아이템 id — 이 열쇠로 여는 문을 금색으로 강조(잠긴 문 레이어와 무관)
-  bigMe?: boolean; // 내 위치 크게(흰 테두리·초록 원) — 다른 표시와 헷갈린다는 요청 대응(11-04)
+  bigMe?: boolean; // 내 위치 크게(1.4배·흰 테두리) — 다른 표시와 헷갈린다는 요청 대응(11-04)
 };
 
 const cache = new Map<string, MapDoc>();
@@ -658,11 +658,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {me && (() => {
               const s = toScreen(me.x, me.z);
               const h = heading == null ? null : heading - eff;
-              const k = bigMe ? 1.5 : 1;
+              const k = bigMe ? 1.4 : 1; // 11-04 인게임: 1.5배 + 초록 원은 너무 커서 주변을 가림 → 면적 2배쯤(1.4배), 원 없음
               const cls = `radar-me${bigMe ? " big" : ""}`;
               return (
                 <g>
-                  {bigMe && <circle cx={s.x} cy={s.y} r={20} className="radar-me-halo" />}
                   {h == null ? (
                     <circle cx={s.x} cy={s.y} r={6 * k} className={cls} />
                   ) : (
