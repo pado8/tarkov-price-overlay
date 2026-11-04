@@ -9,7 +9,7 @@ $ErrorActionPreference = "Continue"
 $main = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)   # ...\tarkov-price-overlay
 $repo = (git -C $main rev-parse --show-toplevel).Trim()                           # 모노레포 루트
 $sub = "tarkov-price-overlay"
-$base = Join-Path $env:USERPROFILE "AppData\Local\TarkovGuidePromo"   # LOCALAPPDATA 는 실행하는 앱(예: 스토어판 앱)에 따라 가상 경로가 될 수 있어 쓰지 않는다
+$base = Join-Path $env:USERPROFILE "TarkovGuidePromo"   # AppData 아래는 스토어판 앱(Claude 등)에서 실행하면 앱 전용 경로로 돌려져 작업 스케줄러와 위치가 갈라진다
 $wt = Join-Path $base "wt"
 $log = Join-Path $base "promo_daily.log"
 New-Item -ItemType Directory -Force $base | Out-Null
