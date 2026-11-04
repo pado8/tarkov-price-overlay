@@ -20,7 +20,7 @@
 
 ## 📸 실사용 화면
 
-게임 인벤토리 위에 마우스를 올리고 F2 한 번 누르면 → 약 1초 만에 카드가 뜹니다.
+인벤토리에서는 아이템에 마우스를 올려 이름 툴팁이 뜨면, 레이드 바닥에서는 아이템을 바라보면 바로 F2 한 번 → 약 1초 만에 카드가 뜹니다.
 
 ![메인 시세 검색 화면](assets/screenshots/01-main-lookup.png)
 
@@ -400,7 +400,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 ## 📸 In Action
 
-Hover an inventory item, press F2 — card appears in about a second.
+In the inventory, hover an item and press F2 once its name tooltip appears; for loose loot in raid, press F2 as soon as you look at it — the card appears in about a second.
 
 ![Main lookup card](assets/screenshots/en/01-main-lookup.png)
 

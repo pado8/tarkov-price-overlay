@@ -4,7 +4,7 @@ export type GameMode = "regular" | "pve" | "pvp-season";
 export const T = {
   ko: {
     title: "타르코프 시세",
-    hintIdle: "아이템 위에 마우스 올리고 F2",
+    hintIdle: "아이템에 마우스를 올려 이름이 뜨면 F2",
     radarTitle: "지도",
     radarOpen: "지도 보기 — 마지막 스크린샷 위치 기준",
     radarClose: "카드로 돌아가기",
@@ -106,7 +106,7 @@ export const T = {
     guideQuestLink: "가이드에서 이 퀘스트 보기 (목표·열쇠·보상)",
     guideHideoutLink: "가이드에서 이 시설 단계 보기",
     emptyCaptureHint:
-      "글자를 하나도 못 읽었어요 — 캡처 영역이 툴팁을 벗어났을 수 있어요. 설정 → 캡처 영역에서 빨간 박스가 아이템 이름 위에 오는지 확인해 주세요.",
+      "글자를 하나도 못 읽었어요 — 인벤토리에선 이름 툴팁이 뜬 걸 보고 F2를 눌러 주세요. 그래도 안 되면 캡처 영역이 툴팁을 벗어났을 수 있어요. 설정 → 캡처 영역에서 빨간 박스가 아이템 이름 위에 오는지 확인해 주세요.",
     wideCaptureHint:
       "캡처 영역을 넓혀 다시 읽었지만 일치하는 아이템을 못 찾았어요. 설정 → 캡처 영역에서 빨간 박스를 아이템 이름에 맞춰 주세요.",
     noMarketPrice: "거래 불가 — 플리·상인 시세 없음 (퀘스트/특수 아이템)",
@@ -392,7 +392,7 @@ export const T = {
   },
   en: {
     title: "Tarkov Price",
-    hintIdle: "Hover an item, press F2",
+    hintIdle: "Hover an item — press F2 when its name shows",
     radarTitle: "Map",
     radarOpen: "Show map — from your last screenshot",
     radarClose: "Back to the card",
@@ -494,7 +494,7 @@ export const T = {
     guideQuestLink: "Open this quest in the guide (objectives, keys, rewards)",
     guideHideoutLink: "Open this hideout level in the guide",
     emptyCaptureHint:
-      "Read no text at all — the capture box likely missed the tooltip. Check Settings → capture region: the red box should cover the item name.",
+      "Read no text at all — in the inventory, wait for the name tooltip to appear before pressing F2. If it still fails, the capture box likely missed the tooltip: check Settings → capture region, the red box should cover the item name.",
     wideCaptureHint:
       "Widened the capture box and retried, but still couldn't match an item. Align the red box to the item name in Settings → capture region.",
     noMarketPrice: "Untradeable — no flea/trader price (quest/special item)",
@@ -780,7 +780,7 @@ export const T = {
   },
   ru: {
     title: "Цены Tarkov",
-    hintIdle: "Наведите на предмет, нажмите F2",
+    hintIdle: "Наведите на предмет — F2, когда появится название",
     radarTitle: "Карта",
     radarOpen: "Показать карту — по последнему скриншоту",
     radarClose: "Назад к карточке",
@@ -882,7 +882,7 @@ export const T = {
     guideQuestLink: "Открыть квест в гайде (цели, ключи, награды)",
     guideHideoutLink: "Открыть уровень модуля в гайде",
     emptyCaptureHint:
-      "Не удалось прочитать текст — область захвата, вероятно, не попала на подсказку. Проверьте Настройки → область захвата: красная рамка должна покрывать название предмета.",
+      "Не удалось прочитать текст — в инвентаре нажимайте F2, когда уже появилась подсказка с названием. Если не помогает, область захвата, вероятно, не попала на подсказку: проверьте Настройки → область захвата, красная рамка должна покрывать название предмета.",
     wideCaptureHint:
       "Область захвата расширена и перечитана, но совпадений не найдено. Выровняйте красную рамку по названию предмета в Настройки → область захвата.",
     noMarketPrice: "Не продаётся — нет цены барахолки/торговца (квестовый/особый предмет)",

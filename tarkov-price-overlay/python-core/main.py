@@ -705,6 +705,50 @@ def _diag_save(label: str, x: int, y: int, w: int, h: int, image, fragments: lis
         print(f"[diag] save failed: {e!r}")
 
 
+# ── 툴팁 대기(11-04) ──────────────────────────────────────────────────────
+# 인벤토리는 아이템에 마우스를 올리고 잠깐 뒤에야 이름 툴팁이 뜬다. 그 전에 F2 를 누르면 캡처 상자에 툴팁 대신
+# 인벤토리 칸 글자(짧은 이름·개수)가 찍혀 엉뚱한 아이템으로 매칭되거나 못 찾는다. 읽기 전에 인벤토리 상자(오른쪽·거울)에
+# 툴팁 패널이 있는지 보고(tooltip_detect: 순검정 바탕 + 87 테두리), 없고 조준점 아래 바닥 이름표도 없으면 0.3초씩 최대
+# 두 번 다시 찍어 툴팁을 기다린다. 툴팁이 이미 떠 있거나 바닥 조회면 기다리지 않는다. 판정이 빗나가도 결과는 예전과 같고
+# 최대 0.6초 늦어질 뿐(11-03 스크린샷: 실제 아이템 툴팁 전부 검출, 툴팁 없는 화면을 '있음'으로 5.7%).
+# TPO_TOOLTIP_WAIT=0 으로 끈다(시험·비교용).
+TOOLTIP_WAIT_STEPS = (0.3, 0.3)
+
+
+def _wait_for_tooltip(attempts: list, client_seq) -> str:
+    """present(이미 있음) · label(바닥 이름표) · waited_ok(기다려서 뜸) · waited_none(끝내 없음) · skip(판정 안 함)"""
+    if os.environ.get("TPO_TOOLTIP_WAIT") == "0":
+        return "skip"
+    try:
+        from tooltip_detect import has_label, has_tooltip
+    except Exception as e:  # noqa: BLE001
+        print(f"[tooltip] detector unavailable: {e!r}")
+        return "skip"
+    boxes = {a[0]: a[1:] for a in attempts}
+    inv = [boxes[k] for k in ("primary", "mirror") if k in boxes]
+    if not inv:
+        return "skip"
+
+    def tooltip_now() -> bool:
+        return any(has_tooltip(capture_region(*b)) for b in inv)
+
+    try:
+        if tooltip_now():
+            return "present"
+        if "ground" in boxes and has_label(capture_region(*boxes["ground"])):
+            return "label"
+        for delay in TOOLTIP_WAIT_STEPS:
+            time.sleep(delay)
+            if _lookup_superseded(client_seq):
+                return "superseded"
+            if tooltip_now():
+                return "waited_ok"
+        return "waited_none"
+    except Exception as e:  # noqa: BLE001 — 판정 실패는 예전처럼 바로 읽는다
+        print(f"[tooltip] check failed: {e!r}")
+        return "skip"
+
+
 def _capture_and_lookup(
     x: int,
     y: int,
@@ -1074,6 +1118,9 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # Every string read across ALL attempts, for the single deferred cold-
     # rescue at the end (in-flow probes are cache-only — see _cold_rescue).
     rescue_pool: list[str] = []
+    tip_t0 = time.perf_counter()
+    tip_state = _wait_for_tooltip(attempts, req.client_seq)
+    print(f"[tooltip] {tip_state} ({(time.perf_counter() - tip_t0) * 1000:.0f}ms)")
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
