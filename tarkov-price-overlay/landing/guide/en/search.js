@@ -13,10 +13,12 @@ var st=document.createElement("style");st.textContent=".gsearch{position:relativ
 +".gsearch ul{overflow-x:hidden;white-space:normal}.gsearch li a>span:last-child{flex:1 1 auto;min-width:0;white-space:normal;overflow-wrap:anywhere}@media(max-width:640px){.gsearch ul{position:fixed;left:8px;right:8px;top:auto;margin-top:4px}}"
 +".gsearch .k{flex:none;font-size:11px;color:var(--gold,#c8aa64);min-width:58px}.gsearch .a{color:var(--muted,#9d988b);font-size:12px}"
 +".gsearch .no{padding:8px;color:var(--muted,#9d988b);font-size:13px}";document.head.appendChild(st);
-var box=document.createElement("div");box.className="gsearch";box.setAttribute("role","search");
-var inp=document.createElement("input");inp.type="search";inp.placeholder=T.ph;inp.setAttribute("aria-label",T.ph);inp.autocomplete="off";
-var ul=document.createElement("ul");ul.hidden=true;box.appendChild(inp);box.appendChild(ul);
-var brand=top.querySelector(".brand");if(brand&&brand.nextSibling)top.insertBefore(box,brand.nextSibling);else top.appendChild(box);
+// 검색창 자리는 페이지 HTML 에 미리 있다(11-04: 나중에 끼워 넣어 휴대폰 헤더가 밀리던 레이아웃 흔들림 CLS 0.45 → 자리 예약)
+var box=top.querySelector(".gsearch"),inp=box&&box.querySelector("input");
+if(!box){box=document.createElement("div");box.className="gsearch";box.setAttribute("role","search");var brand=top.querySelector(".brand");if(brand&&brand.nextSibling)top.insertBefore(box,brand.nextSibling);else top.appendChild(box)}
+if(!inp){inp=document.createElement("input");inp.type="search";box.appendChild(inp)}
+inp.placeholder=T.ph;inp.setAttribute("aria-label",T.ph);inp.autocomplete="off";
+var ul=document.createElement("ul");ul.hidden=true;box.appendChild(ul);
 var idx=null,loading=null,hits=[],sel=0,fuzzy=false;
 function norm(s){return String(s||"").toLowerCase().replace(/[\s\-_.,:;'"’()\[\]·…!?]/g,"")}
 // 초성 검색(ㅋㅍ → 카파) — 한글 음절만 초성으로, 나머지 글자는 그대로
