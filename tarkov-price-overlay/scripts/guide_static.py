@@ -370,6 +370,10 @@ def fmt_dur(sec) -> str:
     return " ".join(out) or f"{sec}초"
 
 
+# '아래 중 아무거나' 후보가 이보다 많으면 접힌 목록도 만들지 않는다(chips_alt) — 페이지 크기 방어
+ALT_LIST_MAX = 120
+
+
 @dataclass
 class Ctx:
     stamp: str
@@ -603,7 +607,11 @@ class Ctx:
             return self.chip(ids[0], count, fir)
         head = "".join(self.chip(i) for i in ids[:limit])
         tail = ""
-        if len(ids) > limit:
+        if len(ids) > ALT_LIST_MAX:
+            # 11-04: '상인에게 아무 아이템 판매 ×50' 같은 목표는 후보가 판매 가능한 아이템 전부(수천 종)라
+            # 접어 둔 칩만으로 한 목표가 80만 자 → building-foundations 쪽이 7.7MB 였다. 목록 대신 한 줄로.
+            tail = f'<p class="muted small">외 {fmt_int(len(ids) - limit)}종 — 거의 모든 아이템이 해당돼 목록은 생략했어요</p>'
+        elif len(ids) > limit:
             tail = (f'<details class="more"><summary>외 {len(ids) - limit}종 더 보기</summary>'
                     + "".join(self.chip(i) for i in ids[limit:]) + "</details>")
         lead = (f'<span class="muted small">아래 중 아무거나'
