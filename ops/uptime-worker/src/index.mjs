@@ -9,8 +9,10 @@ const TARGETS = [
   { name: "타르코프 랜딩", url: "https://tarkov.aquapado.com/", expect: "타르코프" },
   { name: "탈콥 가이드", url: "https://tarkov.aquapado.com/guide/", expect: "탈콥" },
   { name: "뚝딱툴즈", url: "https://tools.aquapado.com/", expect: "뚝딱" },
-  { name: "PoE Tools", url: "https://poe.aquapado.com/", expect: "PoE" },
-  { name: "알파 개미", url: "https://alpha-ants.aquapado.com/", expect: "알파" },
+  // every: 5 = 5분마다만(실패 중이면 매분). 두 곳은 Vercel 서버 렌더링이라 매분 열면 함수 호출·Active CPU(무료 월 4시간)를
+  // 갉아먹는다(11-03 감시 시작 뒤 Vercel 함수 호출 하루 3천→6천, 그중 알파 32%·PoE 15%).
+  { name: "PoE Tools", url: "https://poe.aquapado.com/", expect: "PoE", every: 5 },
+  { name: "알파 개미", url: "https://alpha-ants.aquapado.com/", expect: "알파", every: 5 },
   { name: "아쿠아파도 허브", url: "https://aquapado.com/", expect: "aquapado" },
   { name: "API 헬스", url: "https://api.aquapado.com/priceoverlay/health", expect: "" },
 ];
@@ -48,15 +50,21 @@ const STATE_KEY = "state";
 const HEARTBEAT_MS = 30 * 60 * 1000;
 const LATEST_URL = "https://aquapado-uptime.internal/latest";
 
-async function check(env) {
+async function check(env, force = false) {
   const now = new Date().toISOString();
+  const minute = new Date().getUTCMinutes();
   const saved = (await env.UPTIME.get(STATE_KEY, { type: "json", cacheTtl: 30 })) || { sites: {}, at: null, results: [] };
   const sites = { ...(saved.sites || {}) };
   let changed = false;
   const results = [];
   for (const t of TARGETS) {
-    const r = await probe(t);
     const prev = sites[t.url] || { down: false, fails: 0, since: null };
+    // 주기가 긴 대상은 차례가 아니면 지난 결과를 그대로 싣는다. 실패 중·다운 중이면 매분 다시 본다(감지 최대 약 6분).
+    if (!force && t.every && minute % t.every !== 0 && !(prev.fails > 0) && !prev.down) {
+      const last = (saved.results || []).find((x) => x.url === t.url);
+      if (last) { results.push(last); continue; }
+    }
+    const r = await probe(t);
     const next = { down: prev.down, fails: prev.fails || 0, since: prev.since || null };
     if (r.ok) {
       if (prev.down) await notify(env, `✅ 복구: ${t.name}`, `${t.url}\n${r.why} · ${r.ms}ms · 다운 시작 ${prev.since || "?"}`, "white_check_mark");
@@ -85,7 +93,7 @@ export default {
   async fetch(req, env) {
     const u = new URL(req.url);
     if (u.pathname === "/run" && env.RUN_KEY && u.searchParams.get("key") === env.RUN_KEY) {
-      return Response.json(await check(env));  // 수동 실행(시험용)
+      return Response.json(await check(env, true));  // 수동 실행(시험용) — 전 대상 즉시 검사
     }
     let s = null;
     try {
