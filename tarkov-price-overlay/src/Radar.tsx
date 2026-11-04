@@ -1,6 +1,6 @@
 // 지도 패널(RadarMap + 대상 목록). 데이터는 사이드카 /radar(radar.py)가 계산한다 —
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
 import { RadarMap, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
@@ -346,11 +346,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 대상 목록(탈출구·트랜짓·진행 중 퀘스트 목표 요약) — 카드는 지도 아래, 나란히 패널은 지도 오른쪽 열
   const heading = data.shot.heading;
   const stale = data.shot.age > STALE_SEC;
-  const listMax = fill ? 30 : 8;
-  const targetList = (
-    <div className="radar-list">
-      {visible.length === 0 && <div className="hint">{t.radarNoTargets}</div>}
-      {visible.slice(0, listMax).map((x, i) => (
+  const listMax = fill ? 40 : 8;
+  const rows = visible.slice(0, listMax).map((x, i) => (
         <div className="radar-row" key={`${x.kind}-${x.name}-${i}`}>
           <span className="radar-dot" style={{ background: colorOf(x) }} />
           <span className="radar-name">
@@ -402,8 +399,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             </span>
           )}
         </div>
-      ))}
-      {hiddenQ.length > 0 && (
+      ));
+  const hiddenBlock = hiddenQ.length > 0 && (
         <div className="radar-hidden">
           <button type="button" className="radar-link" onClick={() => setShowHidden((v) => !v)} aria-expanded={showHidden}>
             {t.radarHiddenQuests.replace("{n}", String(hiddenQ.length))} {showHidden ? "▴" : "▾"}
@@ -420,8 +417,64 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             </>
           )}
         </div>
-      )}
+      );
+  const emptyHint = visible.length === 0 && <div className="hint">{t.radarNoTargets}</div>;
+  // 카드: 가까운 8개. 나란히: 목록 열 높이에 들어가는 만큼만(스크롤 없음) — 나머지 먼 대상은 지도에만(11-05 피드백)
+  const targetList = (
+    <div className="radar-list">
+      {emptyHint}
+      {rows}
+      {hiddenBlock}
     </div>
+  );
+  // 맵 선택·스토리·크기·고정·내 위치 크게·지도 불투명도·파티·미니맵·사용법 — 카드는 지도 아래, 나란히는 오른쪽 열 위
+  // (나란히 패널은 지도 높이를 '패널 − 210px'로 잡아서, 아래에 붙이면 파티 패널 등이 잘렸다 — 11-05 피드백)
+  const controls = (
+    <>
+      <div className="radar-foot">
+          {mapPicker}
+          {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
+          {(data.story_chapters?.length ?? 0) > 0 && (
+            <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
+              <option value="">{t.radarStoryOff}</option>
+              <option value="auto">{t.radarStoryAuto}</option>
+              {data.story_chapters!.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {t.radarStory}: {c.name}
+                </option>
+              ))}
+              <option value="all">{t.radarStoryAll}</option>
+            </select>
+          )}
+          {sizeCtl}
+        </div>
+        {fixedCtl}
+        {bigMeCtl}
+        {onMapAlpha && (
+          <label className="radar-size" title={t.radarMapOpacityHint}>
+            <span>{t.radarMapOpacity}</span>
+            <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
+            <span className="radar-size-val">{mapAlpha}%</span>
+          </label>
+        )}
+        {party && (
+          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
+            👥 {t.partyBtn}
+            {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
+          </button>
+        )}
+        {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
+        {onMini && !fill && (
+          <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
+            <Icon name="map" /> {t.radarMini}
+          </button>
+        )}
+        {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
+        <details className="radar-help">
+          <summary>{t.radarHelp}</summary>
+          <div className="radar-note">{t.radarMapNote}</div>
+        </details>
+      </>
   );
   return (
     <div className="radar">
@@ -433,7 +486,14 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {fill ? (
         <div className="radar-maprow">
           <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
-          <div className="radar-side">{targetList}</div>
+          <div className="radar-side">
+            <div className="radar-side-in">
+              <div className="radar-side-ctl">{controls}</div>
+              {emptyHint}
+              <FitList t={t}>{rows}</FitList>
+              {hiddenBlock}
+            </div>
+          </div>
         </div>
       ) : (
         <>
@@ -441,49 +501,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           {targetList}
         </>
       )}
-      <div className="radar-foot">
-        {mapPicker}
-        {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
-        {(data.story_chapters?.length ?? 0) > 0 && (
-          <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
-            <option value="">{t.radarStoryOff}</option>
-            <option value="auto">{t.radarStoryAuto}</option>
-            {data.story_chapters!.map((c) => (
-              <option key={c.id} value={c.id}>
-                {t.radarStory}: {c.name}
-              </option>
-            ))}
-            <option value="all">{t.radarStoryAll}</option>
-          </select>
-        )}
-        {sizeCtl}
-      </div>
-      {fixedCtl}
-      {bigMeCtl}
-      {onMapAlpha && (
-        <label className="radar-size" title={t.radarMapOpacityHint}>
-          <span>{t.radarMapOpacity}</span>
-          <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
-          <span className="radar-size-val">{mapAlpha}%</span>
-        </label>
-      )}
-      {party && (
-        <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
-          👥 {t.partyBtn}
-          {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
-        </button>
-      )}
-      {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
-      {onMini && !fill && (
-        <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
-          <Icon name="map" /> {t.radarMini}
-        </button>
-      )}
-      {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
-      <details className="radar-help">
-        <summary>{t.radarHelp}</summary>
-        <div className="radar-note">{t.radarMapNote}</div>
-      </details>
+      {!fill && controls}
     </div>
   );
 }
@@ -565,6 +583,46 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
         </>
       )}
       <div className="party-note">{t.partyNote}</div>
+    </div>
+  );
+}
+
+/** 들어가는 만큼만 보여 주는 목록(나란히 패널 오른쪽 열) — 스크롤 대신 넘치는 뒤쪽(먼 대상)을 가리고 개수만 알린다.
+ *  가린 행도 자리는 차지하게 두어(visibility) 다시 재도 위치가 안 바뀐다 → 재기·가리기가 서로를 흔들지 않는다. */
+function FitList({ children, t }: { children: ReactNode[]; t: Strings }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [cut, setCut] = useState<number>(children.length);
+  const measure = () => {
+    const el = ref.current;
+    if (!el) return;
+    const kids = Array.from(el.children).filter((c) => (c as HTMLElement).dataset.row === "1") as HTMLElement[];
+    const limit = el.clientHeight - 22; // 아래 '먼 대상 n개' 줄 자리
+    let n = kids.length;
+    for (let i = 0; i < kids.length; i++) {
+      if (kids[i].offsetTop + kids[i].offsetHeight > (i === kids.length - 1 ? el.clientHeight : limit)) {
+        n = i;
+        break;
+      }
+    }
+    setCut((c) => (c === n ? c : n));
+  };
+  useLayoutEffect(measure);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const more = children.length - Math.min(cut, children.length);
+  return (
+    <div className="radar-list radar-fit" ref={ref}>
+      {children.map((c, i) => (
+        <div data-row="1" key={i} style={i >= cut ? { visibility: "hidden" } : undefined}>
+          {c}
+        </div>
+      ))}
+      {more > 0 && <div className="radar-fit-more">{t.radarMoreOnMap.replace("{n}", String(more))}</div>}
     </div>
   );
 }

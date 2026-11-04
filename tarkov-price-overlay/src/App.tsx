@@ -430,7 +430,19 @@ function dailyRollover(): void {
     parts.push(`lat=${s[Math.floor(s.length / 2)]}`, `n=${s.length}`);
   }
   if (parts.length && /^\d{4}-\d{2}-\d{2}$/.test(dailyAcc.d)) {
-    reportEvent("daily", parts.join(";").slice(0, 64), Date.parse(`${dailyAcc.d}T23:59:00+09:00`));
+    // 서버 detail 한도 64자 — 예전엔 64자에서 그냥 잘라 마지막 키가 'pr=12'→'pr=1'처럼 틀린 숫자로 갔다.
+    // 키 단위로 64자까지 담고 넘치면 같은 날짜의 다음 행으로(콘솔은 행마다 키별로 더하므로 합계가 그대로 맞다, 11-05 파티 키 추가 때)
+    const ts = Date.parse(`${dailyAcc.d}T23:59:00+09:00`);
+    let cur = "";
+    for (const p of parts) {
+      if (p.length > 64) continue;
+      if (cur && cur.length + 1 + p.length > 64) {
+        reportEvent("daily", cur, ts);
+        cur = "";
+      }
+      cur = cur ? `${cur};${p}` : p;
+    }
+    if (cur) reportEvent("daily", cur, ts);
   }
   dailyAcc = { d: today, c: {}, lat: [] };
   persistDaily();
@@ -2535,10 +2547,13 @@ function App() {
     if (!wideMode || !el) return;
     const read = () => {
       const p = window.innerHeight > window.innerWidth * 1.05;
-      const side = p ? Math.round(Math.min(window.innerHeight * 0.28, 360)) : 0;
+      // 세로: 오른쪽 열(조작부+목록)이 지도 밑으로 — 11-05 조작부를 이 열로 옮겨 목록 몫이 줄어 0.28·360 → 0.33·520
+      const side = p ? Math.round(Math.min(window.innerHeight * 0.33, 520)) : 0;
       setPortrait(p);
       setSideH(side);
-      setPaneSize(Math.max(200, el.clientHeight - 210 - (p ? side + 12 : 0))); // 세로면 목록 몫(+간격)을 지도 높이에서 뺀다
+      // 210 → 150(11-05): 맵 선택·고정·불투명도·파티 등 조작부를 오른쪽 열로 옮겨 지도 아래엔 칩·층 줄만 남았다.
+      // 실측(2048×1152): 머리글+경고 1줄 65px + 칩·층 34px + 여백 ≈ 110px → 경고 줄 2개가 더 생겨도 넘치지 않게 150
+      setPaneSize(Math.max(200, el.clientHeight - 150 - (p ? side + 12 : 0))); // 세로면 목록 몫(+간격)을 지도 높이에서 뺀다
     };
     const ro = new ResizeObserver(read);
     ro.observe(el);
