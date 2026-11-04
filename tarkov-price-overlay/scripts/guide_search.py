@@ -14,6 +14,29 @@ import re
 from pathlib import Path
 
 KIND = {"quest": "q", "hideout": "h", "maps": "m", "quests": "t"}
+# 보스 별칭(음역 차이·영문·별명) — 키 = 데이터 mob 이름(bosses 페이지 앵커 b-<키>)
+BOSS_ALIAS = {
+    "bossBully": "레샬라 리샬라 르샬라 reshala", "bossKojaniy": "슈트르만 슈투르만 샤투른 shturman", "bossGluhar": "글루하 글루하르 glukhar",
+    "bossTagilla": "태길라 타길라 tagilla", "bossKilla": "킬라 killa", "bossSanitar": "세니타 사니타르 sanitar",
+    "bossBoar": "카반 kaban", "bossKolontay": "콜론타이 kollontay", "bossZryachiy": "즈리야치 즈랴치 zryachiy",
+    "bossKnight": "나이트 knight 군즈 goons", "bossPartisan": "파르티잔 partisan", "bossTagillaAgro": "타길라 tagilla",
+}
+# 메뉴 페이지 별칭 — 키 = /guide/ 뒤 경로
+PAGE_ALIAS = {
+    "kappa/": "kappa 카파템 컬렉터 collector 수집가 카파 컨테이너", "keys/": "열쇠 키 key keys 키카드 keycard",
+    "hideout/": "하이드아웃 hideout 은신처 은신처 재료", "crafts/": "제작 crafts craft 크래프트 제작 수익",
+    "ammo/": "탄약 ammo 총알 관통력 탄 penetration", "bosses/": "보스 boss bosses 스폰 확률",
+    "promo/": "프로모 코드 promo code 쿠폰 리딤", "hunt/": "사냥 킬 퀘스트 처치 hunt", "items/": "필요템 퀘템 퀘스트 아이템 needed items",
+    "quest-items/": "퀘스트 전용 아이템 quest items 퀘템 위치", "rewards/": "보상 reward rewards 보상템",
+    "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 starter beginner", "gunsmith/": "건스미스 gunsmith 개조 모딩",
+    "maps/": "맵 지도 map maps 탈출구 extract extracts exfil", "maps/factory/": "팩토리 factory 공장",
+    "maps/the-lab/": "랩 lab labs 연구소", "maps/streets-of-tarkov/": "스트리트 streets 시내 타르코프 시내",
+    "maps/ground-zero/": "그라운드 제로 그제 ground zero", "maps/customs/": "세관 customs 커스텀",
+    "maps/woods/": "삼림 woods 우즈", "maps/shoreline/": "해안선 shoreline 쇼어라인", "maps/interchange/": "인터체인지 interchange 울트라",
+    "maps/reserve/": "리저브 reserve 군사기지", "maps/lighthouse/": "등대 lighthouse 라이트하우스", "maps/the-labyrinth/": "미궁 labyrinth 라비린스",
+    "maps/terminal/": "터미널 terminal", "maps/icebreaker/": "쇄빙선 icebreaker 아이스브레이커 보레아스",
+    "patch/": "패치 노트 patch 업데이트 와이프", "event/": "이벤트 event 할로윈 halloween",
+}
 
 
 def _text(s: str) -> str:
@@ -48,9 +71,48 @@ def apply(out_dir: Path, lang: str, keys_items: dict) -> int:
         t = items_html.read_text(encoding="utf-8")
         for m in re.finditer(r'<tr data-id="([0-9a-f]{24})" data-s="([^"]*)".*?<span class="itn">.*?<span>(.*?)</span></span>', t, re.S):
             parts = m.group(3).split("<br>")
-            name = _text(parts[0])
+            # 이름 옆 배지(카파 등)는 빼야 ?q= 가 행 data-s 와 맞는다 — 11-04 점검: 카파 아이템 44개가 0행이었음
+            name = _text(re.sub(r'<span class="badge[^"]*">.*?</span>', "", parts[0], flags=re.S))
             alt = _text(parts[1]) if len(parts) > 1 else ""
             rows.append(["i", name, alt, base + "items/?q=" + _q(name), m.group(2)])
+    # ── 11-04 점검: 보스·탄약·탈출구·보상 아이템·퀘스트 아이템·흔한 별칭이 색인에 없어 '태길라'·'M855A1'·'탈출구' 등이 0건이었다 ──
+    def read(rel: str) -> str:
+        f = out_dir / rel / "index.html"
+        return f.read_text(encoding="utf-8") if f.exists() else ""
+
+    t = read("bosses")
+    for m in re.finditer(r'<section class="box boss" id="(b-([^"]+))">.*?<h2>(.*?)</h2>', t, re.S):
+        rows.append(["b", _text(m.group(3)), "", base + "bosses/#" + m.group(1), BOSS_ALIAS.get(m.group(2), m.group(2).replace("boss", ""))])
+    t = read("ammo")
+    for sec in re.split(r'(?=id="c-)', t)[1:]:
+        cal = re.match(r'id="(c-[^"]+)"', sec).group(1)
+        for m in re.finditer(r'<span><b>(.*?)</b><div class="muted small">(.*?)</div></span>', sec, re.S):
+            full, short = _text(m.group(2)), _text(m.group(1))
+            rows.append(["a", full or short, short, base + "ammo/#" + cal])
+    t = read("rewards")
+    for m in re.finditer(r'<details class="rw" data-s="([^"]*)"[^>]*><summary>.*?<span class="itn2"><b>(.*?)</b>(?:<span class="muted small">(.*?)</span>)?', t, re.S):
+        name = _text(m.group(2))
+        rows.append(["r", name, _text(m.group(3) or ""), base + "rewards/?q=" + _q(name), html.unescape(m.group(1))])
+    t = read("quest-items")
+    for sec in re.split(r'(?=id="m-)', t)[1:]:
+        mid = re.match(r'id="(m-[^"]+)"', sec).group(1)
+        for m in re.finditer(r'<div class="nm">(.*?)</div>', sec, re.S):
+            rows.append(["u", _text(m.group(1)), "", base + "quest-items/#" + mid])
+    for f in sorted((out_dir / "maps").glob("*/index.html")) if (out_dir / "maps").exists() else []:
+        t = f.read_text(encoding="utf-8")
+        i = t.find('id="extracts"')
+        if i < 0:
+            continue
+        mname = _text(re.sub(r'<span class="h1en">.*?</span>', "", (re.search(r"<h1>(.*?)</h1>", t, re.S) or ["", ""])[1], flags=re.S))
+        sec = t[i:t.find("</section>", i)]
+        for m in re.finditer(r"<li><b>(.*?)</b>", sec, re.S):
+            rows.append(["x", _text(m.group(1)), mname, base + f"maps/{f.parent.name}/#extracts"])
+    # 페이지 별칭 — 메뉴 이름과 다르게 부르는 말(영문·음역·줄임말)
+    for r in rows:
+        if r[0] in ("p", "m", "t", "h") and len(r) == 4:
+            key = r[3][len(base):]
+            if key in PAGE_ALIAS:
+                r.append(PAGE_ALIAS[key])
     # 열쇠
     for kid, it in (keys_items or {}).items():
         name = (it.get("name") or it.get("n") or "") if isinstance(it, dict) else ""
@@ -70,9 +132,9 @@ def _q(s: str) -> str:
 
 SEARCH_JS = r"""(function(){
 var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
-var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지"},
-en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page"},
-ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница"}}[L];
+var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",fz:"비슷한 결과"},
+en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",fz:"Similar"},
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
 var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"
@@ -87,20 +149,29 @@ var box=document.createElement("div");box.className="gsearch";box.setAttribute("
 var inp=document.createElement("input");inp.type="search";inp.placeholder=T.ph;inp.setAttribute("aria-label",T.ph);inp.autocomplete="off";
 var ul=document.createElement("ul");ul.hidden=true;box.appendChild(inp);box.appendChild(ul);
 var brand=top.querySelector(".brand");if(brand&&brand.nextSibling)top.insertBefore(box,brand.nextSibling);else top.appendChild(box);
-var idx=null,loading=null,hits=[],sel=0;
+var idx=null,loading=null,hits=[],sel=0,fuzzy=false;
 function norm(s){return String(s||"").toLowerCase().replace(/[\s\-_.,:;'"’()\[\]·…!?]/g,"")}
+// 초성 검색(ㅋㅍ → 카파) — 한글 음절만 초성으로, 나머지 글자는 그대로
+var CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";function cho(s){var o="";for(var i=0;i<s.length;i++){var c=s.charCodeAt(i)-44032;o+=(c>=0&&c<11172)?CHO.charAt(Math.floor(c/588)):s.charAt(i)}return o}
+// 한 글자 오타(대뷔 → 데뷔): 같은 길이 구간에서 한 글자만 다르면 비슷한 결과로
+function near(s,q){var n=q.length;if(n<2||s.length<n)return false;for(var i=0;i+n<=(n<3?n:s.length);i++){var d=0;for(var j=0;j<n&&d<2;j++)if(s.charCodeAt(i+j)!==q.charCodeAt(j))d++;if(d<2)return true}return false}
 function load(){if(idx)return Promise.resolve(idx);if(loading)return loading;
-loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){return{k:r[0],n:r[1],a:r[2],u:r[3],s:norm(r[1]),z:norm(r[2]+" "+(r[4]||""))}});return idx}).catch(function(){idx=[];return idx});return loading}
-var ORD={q:0,i:1,k:2,h:3,m:4,t:5,p:6};
-function find(q){var nq=norm(q);if(!nq)return[];var out=[];
+loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){var s=norm(r[1]);return{k:r[0],n:r[1],a:r[2],u:r[3],s:s,z:norm(r[2]+" "+(r[4]||"")),c:cho(s),t:String(r[4]||"").split(" ").map(norm)}});return idx}).catch(function(){idx=[];return idx});return loading}
+var ORD={q:0,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
+// 게임 커뮤니티 줄임말·음역 → 데이터 표기
+var AL={"레덱스":"ledx","레덱":"ledx","아이폭":"ifak","살레와":"salewa","시크":"sicc","씩":"sicc","그카":"그래픽카드","비코":"비트코인","도태":"도그태그","퀘템":"퀘스트아이템","카파템":"카파"};
+function rk(k){return k in ORD?ORD[k]:99}
+function find(q){var nq=norm(q);if(!nq)return[];if(AL[nq])nq=AL[nq];var out=[];
 for(var i=0;i<idx.length;i++){var r=idx[i],sc=-1;
-if(r.s===nq)sc=0;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;
-if(sc>=0)out.push([sc,ORD[r.k]||9,r.n.length,r])}
-out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});return out.slice(0,14).map(function(x){return x[3]})}
+var jamo=/^[ㄱ-ㅎ]+$/.test(nq);
+if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
+if(sc>=0)out.push([sc,rk(r.k),r.n.length,r])}
+if(!out.length&&nq.length>=2&&!jamo)for(i=0;i<idx.length;i++){r=idx[i];if(near(r.s,nq))out.push([4,rk(r.k),r.n.length,r])}
+out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});fuzzy=out.length&&out[0][0]===4;return out.slice(0,14).map(function(x){return x[3]})}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function draw(){if(!inp.value.trim()){ul.hidden=true;return}
 if(!hits.length){ul.innerHTML='<li class="no">'+T.none+'</li>';ul.hidden=false;return}
-ul.innerHTML=hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&r.k==="q"?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
+ul.innerHTML=(fuzzy?'<li class="no">'+T.fz+'</li>':'')+hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&r.k==="q"?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
 var sentT=null,lastSent="";
 function track(){var q=inp.value.trim().slice(0,60);if(q.length<2||norm(q)===lastSent)return;lastSent=norm(q);var n=find(q).length;
 try{if(window.gtag){gtag("event","view_search_results",{search_term:q,results:n});if(!n)gtag("event","search_no_result",{search_term:q})}}catch(e){}}

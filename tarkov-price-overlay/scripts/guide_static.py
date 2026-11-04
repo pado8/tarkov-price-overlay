@@ -145,7 +145,9 @@ def localize_template(html_text: str, path: str) -> str:
     if LANG == "ko":
         return html_text
     html_text = html_text.replace('<html lang="ko">', f'<html lang="{LANG}">', 1)
-    html_text = html_text.replace(f'{SITE}{path}"', f'{SITE}{lang_path(path)}"')  # canonical·og:url
+    # canonical·og:url 만 — 전역으로 바꾸면 hreflang ko·x-default 와 언어 메뉴 KR 링크까지 en/ru 주소가 됐다(11-04 점검)
+    for attr in ('rel="canonical" href=', 'property="og:url" content='):
+        html_text = html_text.replace(f'{attr}"{SITE}{path}"', f'{attr}"{SITE}{lang_path(path)}"')
     html_text = html_text.replace('content="ko_KR"', f'content="{dict((l, loc) for l, _, loc in LANGS)[LANG]}"')
     return localize_html(html_text)
 
@@ -2725,7 +2727,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                 + (event_note("감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.") if (has_event_mob and not is_event_map) else "")
                 + '<div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
                 + "".join(boss_rows) + "</tbody></table></div></section>") if boss_rows else "")
-            + (f'<section class="box"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">목록은 공식 위키 탈출구 표 기준으로 지금 게임에 있는 것만 남겼습니다(공개 데이터에 남아 있던 1.0 개편 전 탈출구는 뺐습니다). 조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
+            + (f'<section class="box" id="extracts"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">목록은 공식 위키 탈출구 표 기준으로 지금 게임에 있는 것만 남겼습니다(공개 데이터에 남아 있던 1.0 개편 전 탈출구는 뺐습니다). 조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
             + (f'<section class="box"><h2>탈출구</h2><p class="small">{HAND_EXTRACTS[slug]}</p></section>' if (not ex_html and slug in HAND_EXTRACTS) else "")
             + (f'<section class="box"><h2>다른 맵으로 이동(트랜짓)</h2><ul class="plain">{"".join(tr_rows)}</ul></section>' if tr_rows else "")
             + (f'<section class="box"><h2>이 맵의 퀘스트 {len(qs)}개</h2><div class="cols3">{q_html}</div></section>' if q_html else ""))
@@ -2802,7 +2804,7 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
                     mm[1].append(zz)
         lis = "".join(f'<li>{ctx.map_link(x)} <b>{fmt_int(c * 100)}%</b> <span class="muted small">{e(", ".join(z))}</span></li>'
                       for x, (c, z) in sorted(merged.items(), key=lambda kv: -kv[1][0]))
-        cards.append(f'<section class="box boss">{img}<div><h2>{e(ctx.mob_name(mob))}</h2>'
+        cards.append(f'<section class="box boss" id="b-{e(mob)}">{img}<div><h2>{e(ctx.mob_name(mob))}</h2>'
                      + (f'<p class="small muted">체력 합계 {hp}</p>' if hp else "")
                      + f'<ul class="plain">{lis}</ul>'
                      + (f'<p class="small">호위: {e(" / ".join(sorted(a["escorts"])))}</p>' if a["escorts"] else "") + "</div></section>")
@@ -2813,7 +2815,7 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
         hp = sum(h.get("max") or 0 for h in mb.get("health") or [])
         img = f'<img class="portrait" src="{e(mb.get("imagePortraitLink"))}" alt="" width="72" height="72" loading="lazy" />' if mb.get("imagePortraitLink") else ""
         maps_txt = " · ".join(f'<a href="/guide/maps/{s}/">{n}</a>' for s, n in (("customs", "세관"), ("woods", "삼림"), ("shoreline", "해안선"), ("lighthouse", "등대")))
-        cards.append(f'<section class="box boss">{img}<div><h2>{e(ctx.mob_name("bossPartisan"))}</h2>'
+        cards.append(f'<section class="box boss" id="b-bossPartisan">{img}<div><h2>{e(ctx.mob_name("bossPartisan"))}</h2>'
                      + (f'<p class="small muted">체력 합계 {hp}</p>' if hp else "")
                      + f'<p class="small">{maps_txt} — 맵 전역에서 나올 수 있음</p>'
                      '<p class="small muted">출현 확률은 공개 데이터에 없음(카르마가 낮은 PMC가 있는 레이드에 더 자주 나타나고, 1.3.0에서 카르마 낮은 플레이어가 없는 레이드의 출현 확률 계산 오류가 수정됨). '

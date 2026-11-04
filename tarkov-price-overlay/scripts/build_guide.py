@@ -58,10 +58,15 @@ SITEMAP_HEAD = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+NOINDEX_PATHS = {"/guide/favorites/"}
+
+
 def write_sitemap(guide_urls: list[str], stamp: str) -> None:
     """랜딩 3개(언어 대체 주소 포함) + 가이드 전 페이지. 랜딩 lastmod는 기존 값을 유지한다."""
     sm = ROOT / "landing" / "sitemap.xml"
     old = sm.read_text(encoding="utf-8") if sm.exists() else ""
+    # noindex 페이지(내 즐겨찾기 등 개인 화면)는 사이트맵에 넣지 않는다 — 서치콘솔 '제출됐지만 noindex' 경고(11-04 점검)
+    guide_urls = [u for u in guide_urls if u not in NOINDEX_PATHS]
 
     def old_lastmod(loc):
         m = re.search(r"<loc>" + re.escape(loc) + r"</loc>.*?<lastmod>([^<]+)</lastmod>", old, re.S)

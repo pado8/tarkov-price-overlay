@@ -145,6 +145,9 @@ def ad_page(f: Path) -> bool:
     # 광고를 달면 비상업 조건과 충돌할 수 있다(2026-11-02 라이선스 확인: api.php siteinfo rightsinfo).
     if re.match(r"guide/(?:(?:en|ru)/)?gunsmith/", rel):
         return False
+    # noindex 개인 화면(내 즐겨찾기)은 제외 — 처음 온 사람에겐 빈 화면이라 '콘텐츠 없는 화면 광고' 정책 소지(11-04 점검)
+    if re.match(r"guide/(?:(?:en|ru)/)?favorites/", rel):
+        return False
     return rel.startswith("guide/")
 
 
