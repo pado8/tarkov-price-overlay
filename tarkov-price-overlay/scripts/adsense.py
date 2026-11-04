@@ -65,9 +65,9 @@ def recovery_snippet(cid: str) -> str:
 
 
 AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫기, 방법 설명] — 페이지 언어 것만 심는다(en/ru 산출물에 한글 0)
-    "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "브라우저 주소창 옆 차단 확장 아이콘 → ‘이 사이트에서 끄기’(또는 ‘허용’) → 새로고침. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않습니다."],
-    "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "Click your ad blocker icon next to the address bar → ‘Disable on this site’ (or Allow) → reload. Ads are kept to a minimum, no pop-ups or sticky ads."],
-    "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "Нажмите значок блокировщика рядом с адресной строкой → ‘Отключить на этом сайте’ → обновите страницу. Рекламы минимум, без всплывающих окон."],
+    "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "브라우저 주소창 옆 차단 확장 아이콘 → ‘이 사이트에서 끄기’(또는 ‘허용’) → 새로고침. 껐는데도 이 안내가 보이면 다른 차단이 남아 있어요: 브라우저 자체 차단(브레이브 실드·오페라 광고 차단·엣지 추적 방지 ‘엄격’), 다른 확장 프로그램, 휴대폰·공유기의 광고 차단 DNS(AdGuard DNS 등). 차단이 없어도 광고 자리가 비어 보일 때는 있어요."],
+    "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "Click your ad blocker icon next to the address bar → ‘Disable on this site’ (or Allow) → reload. Still seeing this after turning it off? Something else is blocking: the browser's own blocker (Brave Shields, Opera ad blocker, Edge tracking prevention ‘Strict’), another extension, or an ad-blocking DNS on your phone or router (AdGuard DNS etc.). Ad slots can also be empty without any blocking."],
+    "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "Нажмите значок блокировщика рядом с адресной строкой → ‘Отключить на этом сайте’ → обновите страницу. Если сообщение осталось, блокирует что-то ещё: встроенный блокировщик браузера (Brave Shields, Opera, «строгая» защита Edge), другое расширение или DNS с блокировкой рекламы на телефоне или роутере (AdGuard DNS и т. п.). Рекламный блок может быть пустым и без блокировки."],
 }
 
 def adblock_snippet(lang: str = "ko") -> str:
@@ -84,14 +84,17 @@ def adblock_snippet(lang: str = "ko") -> str:
             '<script>(function(){var P=location.pathname;'
             'var T=' + json.dumps(AB_TEXT.get(lang) or AB_TEXT["ko"], ensure_ascii=False) + ';'
             'var K="tg_adblk_hide";try{if(+localStorage.getItem(K)>Date.now())return;}catch(e){}'
-            'function blocked(){var b=document.createElement("div");b.className="ad adsbox ad-placement textads banner-ads";b.style.cssText="position:absolute;left:-9999px;top:0;height:10px;width:10px";b.innerHTML="&nbsp;";document.body.appendChild(b);'
-            'var hid=b.offsetHeight===0||getComputedStyle(b).display==="none";b.parentNode.removeChild(b);var noScript=!(window.adsbygoogle&&window.adsbygoogle.loaded);return hid||noScript;}'
+            'function bait(){var b=document.createElement("div");b.className="ad adsbox ad-placement textads banner-ads";b.style.cssText="position:absolute;left:-9999px;top:0;height:10px;width:10px";b.innerHTML="&nbsp;";document.body.appendChild(b);'
+            'var hid=b.offsetHeight===0||getComputedStyle(b).display==="none";b.parentNode.removeChild(b);return hid;}'
+            'function scriptOk(){return !!(window.adsbygoogle&&window.adsbygoogle.loaded);}'
             'function show(){var el=document.getElementById("tgab");if(!el)return;document.getElementById("tgab-t").textContent=T[0];document.getElementById("tgab-m").textContent=T[1];'
             'document.getElementById("tgab-h").textContent=T[2];document.getElementById("tgab-x").textContent=T[3];document.getElementById("tgab-w").textContent=T[4];el.style.display="block";'
             'document.getElementById("tgab-h").onclick=function(){el.classList.toggle("open");};'
             'document.getElementById("tgab-x").onclick=function(){el.style.display="none";try{localStorage.setItem(K,String(Date.now()+7*864e5));}catch(e){}};'
             'try{if(window.gtag)gtag("event","adblock_on",{page_path:P});}catch(e){}}'
-            'window.addEventListener("load",function(){setTimeout(function(){if(blocked())show();},2500);});})();</script>' + AB_END + "\n")
+            # 2026-11-04 '차단을 껐는데도 안내가 뜬다' 제보: 예전엔 로드 2.5초 뒤 한 번만 봐서 느린 회선에서 스크립트가 늦게 실리면
+            # 차단으로 오판할 수 있었다 → 미끼가 숨겨지면 바로, 스크립트는 1초 간격으로 최대 10번 기다린 뒤에만 '차단'.
+            'window.addEventListener("load",function(){var n=0;setTimeout(function tick(){if(n===0&&bait()){show();return;}if(scriptOk())return;if(++n>=10){show();return;}setTimeout(tick,1000);},1500);});})();</script>' + AB_END + "\n")
 
 
 def ad_page(f: Path) -> bool:
