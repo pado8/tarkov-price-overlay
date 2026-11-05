@@ -157,6 +157,32 @@ const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 
 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, pip, onPip, party }: Props) {
   const [showParty, setShowParty] = useState(false);
+  // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
+  // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
+  const radarRef = useRef<HTMLDivElement>(null);
+  const [fitSize, setFitSize] = useState<number | null>(null);
+  const measureFit = () => {
+    const el = radarRef.current;
+    if (!fill || !el) return;
+    const wrap = el.querySelector(".radar-mapwrap") as HTMLElement | null;
+    if (!wrap) return;
+    const top = el.getBoundingClientRect().top;
+    let bottom = top;
+    for (const c of Array.from(el.children)) bottom = Math.max(bottom, (c as HTMLElement).getBoundingClientRect().bottom);
+    const extra = bottom - top - wrap.offsetHeight; // 지도 칸을 뺀 나머지 내용 높이
+    const want = Math.max(160, Math.floor(el.clientHeight - extra - 2));
+    setFitSize((cur) => (cur != null && Math.abs(cur - want) <= 1 ? cur : want));
+  };
+  useLayoutEffect(measureFit);
+  useEffect(() => {
+    const el = radarRef.current;
+    if (!fill || !el) return;
+    const ro = new ResizeObserver(() => measureFit());
+    ro.observe(el);
+    const under = el.querySelector(".radar-under");
+    if (under) ro.observe(under);
+    return () => ro.disconnect();
+  });
   // 이 맵에 있는 친구(위치가 있는 사람만) — 지도에 그린다. 다른 맵 친구는 파티 패널 목록에만
   const mapId = data?.map?.id ?? null;
   const friendsHere: Friend[] = party && mapId ? party.friends.filter((f) => f.map === mapId && f.x != null) : [];
@@ -477,7 +503,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       </>
   );
   return (
-    <div className="radar">
+    <div className="radar" ref={radarRef}>
       {header}
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
@@ -485,10 +511,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
+          <div className="radar-leftcol">
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={fitSize ?? size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
+            <div className="radar-under">{controls}</div>
+          </div>
           <div className="radar-side">
             <div className="radar-side-in">
-              <div className="radar-side-ctl">{controls}</div>
               {emptyHint}
               <FitList t={t}>{rows}</FitList>
               {hiddenBlock}

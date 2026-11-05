@@ -1982,3 +1982,11 @@ html, body, #root {
 .party-note { color: var(--text-muted); }
 .party-warn { color: var(--warning, #e8b84a); }
 .radar-party-btn.on { border-color: var(--gold-bright); color: var(--gold-bright); }
+
+/* 나란히(11-05 2차): 왼쪽 열 = 지도 + 아래 조작부(가로로 나란히), 오른쪽 열 = 목록만(열 높이 전부). 지도 높이는 Radar.tsx 가 실측으로 정한다 */
+.radar-leftcol { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.wide-pane .radar-leftcol .radar-mapblock { flex: none; }
+.radar-under { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.radar-under > .radar-foot { flex: 0 1 auto; }
+.radar-under > .party, .radar-under > .radar-help { flex: 1 1 100%; }
+.overlay.wide.portrait .radar-leftcol { flex: none; }

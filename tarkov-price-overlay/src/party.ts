@@ -16,6 +16,11 @@ export const PARTY_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // 헷갈리는
 const CODE_RE = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/;
 const REJOIN_MS = 6 * 3600 * 1000;
 const PING = '{"t":"ping"}'; // 서버가 글자 그대로 자동 응답(객체를 깨우지 않음)
+// 60초마다 핑, 10초 안에 아무 메시지(퐁 포함)도 없으면 연결이 몰래 죽은 것으로 보고 바로 다시 접속(11-05).
+// 전엔 30초마다 보내기만 하고 답을 안 봐서, 공유기 등이 연결을 조용히 끊으면 위치가 죽은 연결로 사라졌다.
+// 시험용으로만 localStorage tarkov.party.pingMs 로 줄일 수 있다(2~60초).
+const PING_MS = 60000;
+const PONG_WAIT_MS = 10000;
 
 export type PartyStatus = "off" | "connecting" | "on" | "full" | "error";
 export type Friend = {
@@ -74,6 +79,7 @@ export function useParty({ onCount, onHello }: Opts = {}) {
   const retryRef = useRef(0);
   const timerRef = useRef<number>(0);
   const pingRef = useRef<number>(0);
+  const pongRef = useRef<number>(0); // 핑을 보낸 뒤 답을 기다리는 타이머(무엇이든 받으면 지움)
   const cbRef = useRef({ onCount, onHello });
   cbRef.current = { onCount, onHello };
   const nameRef = useRef(name);
@@ -85,6 +91,8 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     pendTimerRef.current = 0;
     pendingRef.current = null;
     window.clearInterval(pingRef.current);
+    window.clearTimeout(pongRef.current);
+    pongRef.current = 0;
     const ws = wsRef.current;
     wsRef.current = null;
     if (ws) {
@@ -112,16 +120,54 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     }
     wsRef.current = ws;
     let full = false;
+    // 연결을 잃었을 때(닫힘·퐁 없음) — 2·4·8…최대 30초 간격으로 다시 접속(방 코드는 그대로)
+    const lost = () => {
+      window.clearInterval(pingRef.current);
+      window.clearTimeout(pongRef.current);
+      pongRef.current = 0;
+      if (wsRef.current !== ws) return;
+      wsRef.current = null;
+      if (full || codeRef.current !== c) {
+        if (full) {
+          codeRef.current = null;
+          setCode(null);
+          set(K.code, null);
+        }
+        return;
+      }
+      setStatus("connecting");
+      const wait = Math.min(30000, 2000 * 2 ** retryRef.current);
+      retryRef.current = Math.min(retryRef.current + 1, 5);
+      timerRef.current = window.setTimeout(() => {
+        if (codeRef.current === c) connect(c);
+      }, wait);
+    };
     ws.onopen = () => {
       retryRef.current = 0;
       window.clearInterval(pingRef.current);
+      const every = Math.max(2000, Math.min(PING_MS, Number(get("tarkov.party.pingMs")) || PING_MS));
       pingRef.current = window.setInterval(() => {
         try {
           ws.send(PING);
         } catch {}
-      }, 30000);
+        if (!pongRef.current)
+          pongRef.current = window.setTimeout(() => {
+            pongRef.current = 0;
+            if (wsRef.current !== ws) return;
+            // 답이 없다 = 몰래 끊긴 연결. 닫기 인사를 기다리지 않고 버린 뒤 다시 접속
+            ws.onclose = null;
+            ws.onmessage = null;
+            try {
+              ws.close(4003, "no pong");
+            } catch {}
+            lost();
+          }, PONG_WAIT_MS);
+      }, every);
     };
     ws.onmessage = (e) => {
+      // 무엇이든 받으면 연결이 살아 있다는 뜻 — 퐁 대기 해제
+      window.clearTimeout(pongRef.current);
+      pongRef.current = 0;
       let d: any;
       try {
         d = JSON.parse(String(e.data));
@@ -160,26 +206,7 @@ export function useParty({ onCount, onHello }: Opts = {}) {
         setStatus("full");
       }
     };
-    ws.onclose = () => {
-      window.clearInterval(pingRef.current);
-      if (wsRef.current !== ws) return;
-      wsRef.current = null;
-      if (full || codeRef.current !== c) {
-        if (full) {
-          codeRef.current = null;
-          setCode(null);
-          set(K.code, null);
-        }
-        return;
-      }
-      // 끊김 → 2·4·8…최대 30초 간격으로 다시 접속(방 코드는 그대로)
-      setStatus("connecting");
-      const wait = Math.min(30000, 2000 * 2 ** retryRef.current);
-      retryRef.current = Math.min(retryRef.current + 1, 5);
-      timerRef.current = window.setTimeout(() => {
-        if (codeRef.current === c) connect(c);
-      }, wait);
-    };
+    ws.onclose = lost;
     ws.onerror = () => {};
   }, []);
 
