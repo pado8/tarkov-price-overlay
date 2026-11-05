@@ -142,7 +142,7 @@ function useMapDoc(slug: string | null, lang: string): { doc: MapDoc | null; err
     }
     let dead = false;
     setErr(false);
-    fetch(`${PYTHON_API}/radar/map?map=${encodeURIComponent(slug)}&lang=${encodeURIComponent(lang)}`)
+    fetch(`${PYTHON_API}/radar/map?map=${encodeURIComponent(slug)}&lang=${encodeURIComponent(lang === "zh" ? "en" : lang)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: MapDoc) => {
         cache.set(key, d);

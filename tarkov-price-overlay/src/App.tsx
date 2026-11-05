@@ -7,7 +7,7 @@ import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-upda
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
 import { QRCodeSVG } from "qrcode.react";
-import { T, type Lang, type GameMode } from "./i18n";
+import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
@@ -133,10 +133,10 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 서비스 상태 페이지(피드백 #49-①) — 헬스 엔드포인트를 사람이 읽는 화면으로.
 const STATUS_PAGE_URL = "https://tarkov.aquapado.com/status/";
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
-// 11-04 앱 → 가이드 연결. UI 언어별 가이드(ko=/guide/, en=/guide/en/, ru=/guide/ru/),
+// 11-04 앱 → 가이드 연결. UI 언어별 가이드(ko=/guide/, en=/guide/en/, ru=/guide/ru/, zh=/guide/en/ — 중국어판 가이드가 생기기 전까지),
 // src=app 은 GA4 에서 앱발 방문을 세려는 표식(페이지는 무시한다).
 function guideBase(lang: string): string {
-  return GUIDE_URL + (lang === "en" ? "en/" : lang === "ru" ? "ru/" : "");
+  return GUIDE_URL + (lang === "en" || lang === "zh" ? "en/" : lang === "ru" ? "ru/" : "");
 }
 function guideUrl(lang: string, path: string): string {
   const [p, hash] = path.split("#");
@@ -146,6 +146,20 @@ function openGuide(lang: string, path: string): void {
   openUrl(guideUrl(lang, path)).catch((e) => {
     console.warn("guide: openUrl failed", e);
   });
+}
+// 원격 공지(api.aquapado.com). 서버는 ko/en/ru 세 칸 — zh 칸이 없으면 영어로 폴백.
+type RemoteAnnouncement = { id: number; ko: string; en: string; ru: string; zh?: string };
+function getRemoteAnnouncementText(lang: Lang, a: RemoteAnnouncement): string {
+  switch (lang) {
+    case "ko":
+      return a.ko || a.en;
+    case "ru":
+      return a.ru || a.en || a.ko;
+    case "zh":
+      return a.zh || a.en || a.ko;
+    case "en":
+      return a.en || a.ko;
+  }
 }
 const openStatusPage = (lang: Lang) => {
   openUrl(`${STATUS_PAGE_URL}?lang=${lang}`).catch((e) => {
@@ -802,7 +816,7 @@ type AmmoRound = {
 type AmmoCaliberData = { display: string; rounds: AmmoRound[] };
 type AmmoData = { calibers: Record<string, AmmoCaliberData> };
 
-async function fetchAmmo(lang: Lang): Promise<AmmoData | null> {
+async function fetchAmmo(lang: GameLang): Promise<AmmoData | null> {
   try {
     const res = await fetch(`${PYTHON_API}/ammo?lang=${lang}`);
     if (!res.ok) return null;
@@ -830,7 +844,8 @@ type Region = {
   // behavior for existing users. Lets a Korean player on the English EFT
   // client run the UI in Korean while still matching OCR against the EN
   // catalog from tarkov.dev.
-  gameLang?: Lang;
+  // zh UI has no zh game client: undefined then means the EN catalog (getGameLang).
+  gameLang?: GameLang;
   gameMode: GameMode;
   hideDelaySec: number;
   // Master auto-hide switch. Off = the card stays up until the user hides it
@@ -1115,7 +1130,7 @@ async function applyMonitorScaling(force: boolean): Promise<Region | null> {
   }
 }
 
-const getGameLang = (r: Region): Lang => r.gameLang ?? r.lang;
+const getGameLang = (r: Region): GameLang => r.gameLang ?? dataLang(r.lang);
 
 function loadRegion(): Region {
   try {
@@ -1140,6 +1155,9 @@ function loadRegion(): Region {
         }
       }
       merged.sectionOrder = order;
+      // 언어 값 검증: 모르는 UI 언어는 기본값, 게임 언어는 OCR 이 읽는 ko/en/ru 만(zh 는 UI 전용).
+      if (!(merged.lang in T)) merged.lang = DEFAULT_REGION.lang;
+      if (merged.gameLang != null && !["ko", "en", "ru"].includes(merged.gameLang)) merged.gameLang = undefined;
       return merged;
     }
   } catch {}
@@ -1448,9 +1466,8 @@ function App() {
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
   );
   // Server-driven announcement to show on launch (null = nothing to show).
-  const [remoteAnnounce, setRemoteAnnounce] = useState<
-    { id: number; ko: string; en: string; ru: string } | null
-  >(null);
+  const [remoteAnnounce, setRemoteAnnounce] =
+    useState<RemoteAnnouncement | null>(null);
   // Anonymous stats are opt-out: enabled by default, with a one-time
   // informational notice (not a blocking consent gate).
   const [statsEnabled, setStatsEnabled] = useState<boolean>(loadStatsEnabled);
@@ -1578,7 +1595,7 @@ function App() {
       return;
     }
     let dead = false;
-    fetch(`${PYTHON_API}/radar/keylocks?item_id=${encodeURIComponent(id)}&lang=${encodeURIComponent(region.lang)}&game_mode=${encodeURIComponent(region.gameMode)}`)
+    fetch(`${PYTHON_API}/radar/keylocks?item_id=${encodeURIComponent(id)}&lang=${encodeURIComponent(dataLang(region.lang))}&game_mode=${encodeURIComponent(region.gameMode)}`)
       .then((r) => (r.ok ? (r.json() as Promise<KeyLocks>) : null))
       .then((d) => {
         if (!dead) setKeyLocks(d && d.map && d.locks.length ? d : null);
@@ -1955,7 +1972,7 @@ function App() {
           ANNOUNCE_SEEN_KEY,
           JSON.stringify({ id: a.id, date: today })
         );
-        setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "", ru: a.ru ?? "" });
+        setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "", ru: a.ru ?? "", zh: a.zh ?? "" });
       })
       .catch(() => {});
   }, []);
@@ -2266,7 +2283,7 @@ function App() {
 
   // ── 지도 ───────────────────────────────────────────────────────────
   const radarUrl = (full: boolean) => {
-    const q = new URLSearchParams({ lang: region.lang, game_mode: region.gameMode });
+    const q = new URLSearchParams({ lang: dataLang(region.lang), game_mode: region.gameMode });
     if (full) q.set("full", "true");
     if (radarMapRef.current) q.set("map", radarMapRef.current);
     if (radarStoryRef.current) q.set("story", radarStoryRef.current);
@@ -2714,6 +2731,9 @@ function App() {
   }, [cardVisible]);
 
   const t = T[region.lang];
+  const announcementText = remoteAnnounce
+    ? getRemoteAnnouncementText(region.lang, remoteAnnounce)
+    : "";
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(region));
@@ -3194,9 +3214,9 @@ function App() {
       return next;
     });
   };
-  const fetchHideoutStations = async (lang: string) => {
+  const fetchHideoutStations = async (lang: Lang) => {
     try {
-      const res = await fetch(`${PYTHON_API}/hideout/stations?lang=${lang}`);
+      const res = await fetch(`${PYTHON_API}/hideout/stations?lang=${dataLang(lang)}`);
       if (res.ok) setHideoutStations(await res.json());
     } catch {
       // non-fatal; stations list shows as empty
@@ -4338,7 +4358,7 @@ function App() {
               ? "update"
               : adminInfo && adminInfo.is_admin === false && !adminDismissed
                 ? "admin"
-                : remoteAnnounce
+                : announcementText
                   ? "announce"
                   : null;
           return (
@@ -4553,19 +4573,10 @@ function App() {
           </div>
         )}
 
-        {banner === "announce" && remoteAnnounce &&
-          (region.lang === "ko"
-            ? remoteAnnounce.ko || remoteAnnounce.en
-            : region.lang === "ru"
-              ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
-              : remoteAnnounce.en || remoteAnnounce.ko) && (
+        {banner === "announce" && announcementText && (
             <div className="announce-banner">
               <span className="announce-text">
-                {region.lang === "ko"
-                  ? remoteAnnounce.ko || remoteAnnounce.en
-                  : region.lang === "ru"
-                    ? remoteAnnounce.ru || remoteAnnounce.en || remoteAnnounce.ko
-                    : remoteAnnounce.en || remoteAnnounce.ko}
+                {announcementText}
               </span>
               <button
                 className="settings-btn"
@@ -4881,13 +4892,14 @@ function App() {
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="zh">简体中文</option>
               </select>
             </div>
             <div className="settings-row" title={t.gameLanguageHint}>
               <label>{t.gameLanguage}</label>
               <select
                 value={getGameLang(region)}
-                onChange={(e) => updateRegion("gameLang", e.target.value as Lang)}
+                onChange={(e) => updateRegion("gameLang", e.target.value as GameLang)}
               >
                 <option value="ko">한국어</option>
                 <option value="en">English</option>
