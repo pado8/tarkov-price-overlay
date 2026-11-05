@@ -34,7 +34,7 @@ function rk(k){return k in ORD?ORD[k]:99}
 function find(q){var nq=norm(q);if(!nq)return[];if(AL[nq])nq=AL[nq];var out=[];
 for(var i=0;i<idx.length;i++){var r=idx[i],sc=-1;
 var jamo=/^[ㄱ-ㅎ]+$/.test(nq);
-if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
+if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.t.some(function(x){return cho(x)===nq}))sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
 if(sc>=0)out.push([sc,rk(r.k),r.n.length,r])}
 if(!out.length&&nq.length>=2&&!jamo)for(i=0;i<idx.length;i++){r=idx[i];if(near(r.s,nq))out.push([4,rk(r.k),r.n.length,r])}
 out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});fuzzy=out.length&&out[0][0]===4;return out.slice(0,14).map(function(x){return x[3]})}
