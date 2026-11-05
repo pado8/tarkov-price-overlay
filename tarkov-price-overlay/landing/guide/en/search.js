@@ -1,9 +1,9 @@
 (function(){
 var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":P.indexOf("/guide/zh/")===0?"zh":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
-var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",fz:"비슷한 결과"},
-en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",fz:"Similar"},
-ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"},
-zh:{ph:"搜索任务、物品",none:"没有结果",q:"任务",i:"所需物品",k:"钥匙",h:"藏身处",m:"地图",t:"商人",p:"页面",b:"Boss",a:"弹药",r:"奖励物品",u:"任务物品",x:"撤离点",fz:"相似结果"}}[L];
+var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",w:"무기 모딩",fz:"비슷한 결과"},
+en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",w:"Weapon build",fz:"Similar"},
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",w:"Сборка оружия",fz:"Похожие"},
+zh:{ph:"搜索任务、物品",none:"没有结果",q:"任务",i:"所需物品",k:"钥匙",h:"藏身处",m:"地图",t:"商人",p:"页面",b:"Boss",a:"弹药",r:"奖励物品",u:"任务物品",x:"撤离点",w:"武器改装",fz:"相似结果"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
 var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"
@@ -28,7 +28,7 @@ var CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";function cho
 function near(s,q){var n=q.length;if(n<2||s.length<n)return false;for(var i=0;i+n<=(n<3?n:s.length);i++){var d=0;for(var j=0;j<n&&d<2;j++)if(s.charCodeAt(i+j)!==q.charCodeAt(j))d++;if(d<2)return true}return false}
 function load(){if(idx)return Promise.resolve(idx);if(loading)return loading;
 loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){var s=norm(r[1]);return{k:r[0],n:r[1],a:r[2],u:r[3],s:s,z:norm(r[2]+" "+(r[4]||"")),c:cho(s),t:String(r[4]||"").split(" ").map(norm)}});return idx}).catch(function(){idx=[];return idx});return loading}
-var ORD={q:0,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
+var ORD={q:0,w:0.5,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
 // 게임 커뮤니티 줄임말·음역 → 데이터 표기
 var AL={"레덱스":"ledx","레덱":"ledx","아이폭":"ifak","살레와":"salewa","시크":"sicc","씩":"sicc","그카":"그래픽카드","비코":"비트코인","도태":"도그태그","퀘템":"퀘스트아이템","카파템":"카파"};
 function rk(k){return k in ORD?ORD[k]:99}
