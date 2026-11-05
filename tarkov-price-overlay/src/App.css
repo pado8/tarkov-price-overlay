@@ -1990,3 +1990,14 @@ html, body, #root {
 .radar-under > .radar-foot { flex: 0 1 auto; }
 .radar-under > .party, .radar-under > .radar-help { flex: 1 1 100%; }
 .overlay.wide.portrait .radar-leftcol { flex: none; }
+/* 나란히(11-05 3차): 파티 패널·사용법 안내는 지도 위에 떠 있는 창으로 — 흐름 안에 두면 열고 닫을 때 지도 높이(실측)와
+   패널 폭(긴 안내문)이 바뀌어 지도·왼쪽 시세 카드가 흔들렸다. 버튼 줄(.radar-under) 바로 위에 뜬다 */
+.wide-pane .radar-under { position: relative; }
+.wide-pane .radar-under > .party,
+.wide-pane .radar-under > .radar-help > .radar-note {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 7;
+  width: min(460px, 100%); max-height: 60vh; overflow-y: auto; box-sizing: border-box;
+  background: rgba(20, 20, 20, 0.97); border: 1px solid var(--border-emphasis); border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55); padding: 8px 10px;
+}
+.wide-pane .radar-under > .radar-help { flex: none; }
