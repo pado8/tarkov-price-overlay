@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-04",
+ "checked": "2026-11-05",
  "fetched": [
   "dexerto",
   "gamesradar",
@@ -29,12 +29,13 @@
   "AUTOMATON": {
    "active": [
     "dexerto",
-    "gamesradar",
     "pcgamesn",
     "tarkov.help",
     "guided.news"
    ],
-   "expired": []
+   "expired": [
+    "gamesradar"
+   ]
   },
   "BACKTORAID": {
    "active": [
@@ -118,6 +119,13 @@
    ],
    "expired": []
   },
+  "FCPC": {
+   "active": [
+    "gamesradar",
+    "guided.news"
+   ],
+   "expired": []
+  },
   "FLUX": {
    "active": [],
    "expired": [
@@ -183,6 +191,7 @@
   },
   "INVEN": {
    "active": [
+    "gamesradar",
     "tarkov.help",
     "guided.news"
    ],
@@ -342,12 +351,13 @@
   "POLYGON": {
    "active": [
     "dexerto",
-    "gamesradar",
     "pcgamesn",
     "tarkov.help",
     "guided.news"
    ],
-   "expired": []
+   "expired": [
+    "gamesradar"
+   ]
   },
   "PROMOCODE": {
    "active": [
@@ -371,7 +381,9 @@
     "tarkov.help",
     "guided.news"
    ],
-   "expired": []
+   "expired": [
+    "gamesradar"
+   ]
   },
   "RBAV": {
    "active": [
@@ -431,10 +443,11 @@
   },
   "SOTR": {
    "active": [
-    "dexerto",
-    "gamesradar"
+    "dexerto"
    ],
-   "expired": []
+   "expired": [
+    "gamesradar"
+   ]
   },
   "SPEAR": {
    "active": [],
@@ -488,6 +501,7 @@
   },
   "UNDEADTARKOV": {
    "active": [
+    "gamesradar",
     "tarkov.help"
    ],
    "expired": []
@@ -532,12 +546,13 @@
   "YYSTV": {
    "active": [
     "dexerto",
-    "gamesradar",
     "pcgamesn",
     "tarkov.help",
     "guided.news"
    ],
-   "expired": []
+   "expired": [
+    "gamesradar"
+   ]
   }
  }
 }
