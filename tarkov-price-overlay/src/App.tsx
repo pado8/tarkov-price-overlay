@@ -1989,7 +1989,7 @@ function App() {
           log(`update: forced — ${APP_VERSION} < min ${a.min_version}`);
           reportEvent("update_apply", `blocked:${a.min_version.slice(0, 16)}`);
         }
-        if (!a.active || (!a.ko && !a.en && !a.ru)) return;
+        if (!a.active || (!a.ko && !a.en && !a.ru && !a.zh)) return;
         const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
         let seen: { id?: number; date?: string } = {};
         try {
