@@ -12,6 +12,8 @@ const CODE_RE = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/;
 const MAX_MEMBERS = 5; // EFT 파티 최대 인원
 const MAX_MSG = 1024; // 이보다 긴 메시지는 무시
 const POS_MIN_MS = 1000; // 멤버당 위치는 초당 1개
+const FLOOD_WINDOW_MS = 10000; // 폭주 판정 창
+const FLOOD_MAX = 40; // 창 안에서 이보다 많이 보내면 끊는다(핑은 자동 응답이라 안 셈)
 const PALETTE = ["#4fc3f7", "#ffb74d", "#ba68c8", "#81c784", "#f06292"]; // 하늘·주황·보라·초록·분홍(내 위치 초록 화살표와 겹치지 않게 초록은 4번째)
 const PING = '{"t":"ping"}';
 const PONG = '{"t":"pong"}';
@@ -126,16 +128,32 @@ export class PartyRoom extends DurableObject {
       return;
     }
     if (!d || typeof d !== "object") return;
-    if (d.t === "ping") return this.send(ws, { t: "pong" }); // 자동 응답과 글자가 조금 다를 때(공백 등)
-    if (d.t !== "pos") return;
     const a = ws.deserializeAttachment();
     if (!a || !a.id) return;
+    // 폭주 차단(11-05): 10초에 40개 넘게 보내면 끊는다. 앱은 위치를 초당 1개 이하로만 보내고 핑은 자동 응답이라
+    // 여기까지 안 오므로 정상 사용으로는 걸리지 않는다. 버리기만 하면 받는 메시지마다 무료 한도(20개=요청 1건)가 계속 깎인다.
+    const now = Date.now();
+    if (!a.mw || now - a.mw > FLOOD_WINDOW_MS) {
+      a.mw = now;
+      a.mc = 0;
+    }
+    a.mc = (a.mc || 0) + 1;
+    if (a.mc > FLOOD_MAX) {
+      try {
+        ws.serializeAttachment(a);
+        ws.send(JSON.stringify({ t: "slow" }));
+        ws.close(4002, "too many messages");
+      } catch {}
+      return;
+    }
+    ws.serializeAttachment(a); // 횟수는 잘못된 메시지로 일찍 빠져도 남아야 한다
+    if (d.t === "ping") return this.send(ws, { t: "pong" }); // 자동 응답과 글자가 조금 다를 때(공백 등)
+    if (d.t !== "pos") return;
     const map = typeof d.map === "string" ? d.map.trim() : "";
     if (!map || map.length > 40 || /[\u0000-\u001f]/.test(map)) return;
     if (![d.x, d.z, d.yaw, d.at].every(finite)) return;
     if (Math.abs(d.x) > 1e5 || Math.abs(d.z) > 1e5 || Math.abs(d.yaw) > 100) return;
-    const now = Date.now();
-    if (a.last && now - a.last.ts < POS_MIN_MS) return; // 초당 1개 넘으면 버림
+    if (a.last && now - a.last.ts < POS_MIN_MS) return; // 초당 1개 넘으면 버림(앱은 1초 안의 새 위치를 모았다가 보낸다)
     a.last = { map, x: d.x, z: d.z, yaw: d.yaw, at: d.at, ts: now };
     ws.serializeAttachment(a);
     this.broadcast({ t: "pos", mid: a.id, name: a.name, color: a.color, map, x: d.x, z: d.z, yaw: d.yaw, at: d.at }, ws);

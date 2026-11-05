@@ -81,6 +81,9 @@ export function useParty({ onCount, onHello }: Opts = {}) {
 
   const stopSocket = () => {
     window.clearTimeout(timerRef.current);
+    window.clearTimeout(pendTimerRef.current); // 모아 둔 위치는 옛 연결 몫 — 버린다
+    pendTimerRef.current = 0;
+    pendingRef.current = null;
     window.clearInterval(pingRef.current);
     const ws = wsRef.current;
     wsRef.current = null;
@@ -208,20 +211,35 @@ export function useParty({ onCount, onHello }: Opts = {}) {
   }, []);
 
   /** 새 스크린샷 위치 — 방에 있고 공유가 켜져 있을 때만. yaw = 라디안 */
+  // 서버는 멤버당 위치를 초당 1개만 받고 1초 안의 두 번째는 버린다 — 그 두 번째가 '더 새 위치'라 그대로 보내면
+  // 친구에게 옛 위치가 남는다(11-05 부하 시험에서 600개 중 52개 버려짐). 1.1초 안이면 모아 두었다가 최신 것만 보낸다.
+  const lastSentRef = useRef(0);
+  const pendingRef = useRef<string | null>(null);
+  const pendTimerRef = useRef(0);
+  const flush = useCallback(() => {
+    pendTimerRef.current = 0;
+    const ws = wsRef.current;
+    const msg = pendingRef.current;
+    pendingRef.current = null;
+    if (!msg || !ws || ws.readyState !== WebSocket.OPEN) return;
+    try {
+      ws.send(msg);
+      lastSentRef.current = Date.now();
+      cbRef.current.onCount?.("ps");
+    } catch {}
+  }, []);
   const sendPos = useCallback(
     (map: string, x: number, z: number, yaw: number, at: number) => {
       const ws = wsRef.current;
       if (!ws || ws.readyState !== WebSocket.OPEN || !share) return false;
       if (![x, z, yaw, at].every(Number.isFinite) || !map) return false;
-      try {
-        ws.send(JSON.stringify({ t: "pos", map: map.slice(0, 40), x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, yaw: Math.round(yaw * 1000) / 1000, at: Math.round(at) }));
-        cbRef.current.onCount?.("ps");
-        return true;
-      } catch {
-        return false;
-      }
+      pendingRef.current = JSON.stringify({ t: "pos", map: map.slice(0, 40), x: Math.round(x * 100) / 100, z: Math.round(z * 100) / 100, yaw: Math.round(yaw * 1000) / 1000, at: Math.round(at) });
+      const wait = lastSentRef.current + 1100 - Date.now();
+      if (wait <= 0) flush();
+      else if (!pendTimerRef.current) pendTimerRef.current = window.setTimeout(flush, wait);
+      return true;
     },
-    [share],
+    [share, flush],
   );
 
   const setName = useCallback((v: string) => {
