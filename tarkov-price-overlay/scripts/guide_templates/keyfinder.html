@@ -152,12 +152,13 @@
     if (sn.length < o.length - 2) best = Math.min(best, lev(o, sn));
     return best;
   }
+  var HANGUL = new RegExp("[" + String.fromCharCode(0xAC00) + "-" + String.fromCharCode(0xD7A3) + "]");  // Hangul syllables (built from codes so no Hangul sits in the page source)
   function matchKey(text) {
     var o = norm(text);
     if (o.length < 2) return { st: "empty", c: [] };
     var sc = K.map(function (k) { return { k: k, d: Math.min.apply(null, k._n.map(function (n) { return dist(o, n); })) }; }).sort(function (a, b) { return a.d - b.d; });
     // 3 chars or fewer: only an exact short-name match counts (2-char OCR noise used to match a name prefix, 11-05)
-    var eff = /[가-힣]/.test(o) ? o.length * 2 : o.length;  // one Hangul syllable carries about two Latin letters
+    var eff = HANGUL.test(o) ? o.length * 2 : o.length;  // one Hangul syllable carries about two Latin letters
     if (eff <= 3) {
       var ex = K.filter(function (k) { return k._n.indexOf(o) >= 0; });
       return ex.length === 1 ? { st: "ok", c: [{ k: ex[0], d: 0 }] } : ex.length ? { st: "amb", c: ex.map(function (k) { return { k: k, d: 0 }; }) } : { st: "none", c: sc.slice(0, 3) };
