@@ -17,7 +17,7 @@ function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
 function smodeOf(m){return m==="pve"?"pve":m==="season"?"season":"regular"}
-var GB=(location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0],HOME=GB==="/guide/"?"/":GB.replace("/guide/","/");
+var GB=(location.pathname.match(/^\/guide\/(?:en|ru|zh)\//)||["/guide/"])[0],HOME=GB==="/guide/"?"/":GB.replace("/guide/","/");
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":(GB+"quests/");
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"только что":ago<60?ago+" мин назад":Math.round(ago/60)+" ч назад";
 var base="🔗 Связь с оверлеем · выполнено "+n+" "+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (сезон)":" (PVP)");

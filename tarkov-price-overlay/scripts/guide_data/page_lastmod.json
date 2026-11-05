@@ -12,7 +12,7 @@
 "d": "2026-11-04"
 },
 "/guide/crafts/": {
-"h": "21f2672abe092e1f",
+"h": "671b779055c0a0fc",
 "d": "2026-11-05"
 },
 "/guide/en/": {
@@ -28,7 +28,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/crafts/": {
-"h": "2d5369cfbe0ccfd0",
+"h": "f5ef6c264aaaef01",
 "d": "2026-11-05"
 },
 "/guide/en/event/": {
@@ -152,7 +152,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/items/": {
-"h": "b1a9a4dad0f556fd",
+"h": "a0b40fa99f42a01e",
 "d": "2026-11-05"
 },
 "/guide/en/kappa/": {
@@ -160,8 +160,8 @@
 "d": "2026-11-05"
 },
 "/guide/en/keyfinder/": {
-"h": "7a728ff7af20a846",
-"d": "2026-11-04"
+"h": "211e67f883aee6b8",
+"d": "2026-11-05"
 },
 "/guide/en/keys/": {
 "h": "e869696c1c1c171b",
@@ -2400,7 +2400,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/rewards/": {
-"h": "cb8e5cb3e826016f",
+"h": "821c46332f940e3c",
 "d": "2026-11-05"
 },
 "/guide/en/start/": {
@@ -2528,7 +2528,7 @@
 "d": "2026-11-04"
 },
 "/guide/items/": {
-"h": "078c382df22efbcc",
+"h": "56c66d5e8fe1a83a",
 "d": "2026-11-05"
 },
 "/guide/kappa/": {
@@ -2536,8 +2536,8 @@
 "d": "2026-11-05"
 },
 "/guide/keyfinder/": {
-"h": "376056cd1a3b6aad",
-"d": "2026-11-04"
+"h": "86a631736184b1eb",
+"d": "2026-11-05"
 },
 "/guide/keys/": {
 "h": "6509e695b654bb9f",
@@ -4776,7 +4776,7 @@
 "d": "2026-11-04"
 },
 "/guide/rewards/": {
-"h": "c50ebc1bc81f4e68",
+"h": "aa341da217cabcf1",
 "d": "2026-11-05"
 },
 "/guide/ru/": {
@@ -4792,7 +4792,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/crafts/": {
-"h": "b3bc9816196b0db5",
+"h": "75c3692fd96da6dd",
 "d": "2026-11-05"
 },
 "/guide/ru/event/": {
@@ -4916,7 +4916,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/items/": {
-"h": "ad7949f954558a55",
+"h": "a0929dfe0dade608",
 "d": "2026-11-05"
 },
 "/guide/ru/kappa/": {
@@ -4924,8 +4924,8 @@
 "d": "2026-11-05"
 },
 "/guide/ru/keyfinder/": {
-"h": "172bc41da3197eb6",
-"d": "2026-11-04"
+"h": "2a198a2cabca9bc4",
+"d": "2026-11-05"
 },
 "/guide/ru/keys/": {
 "h": "074e52e8ecb93a7b",
@@ -7164,7 +7164,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/rewards/": {
-"h": "f6f89367366a89a5",
+"h": "2ff8c33d8427971a",
 "d": "2026-11-05"
 },
 "/guide/ru/start/": {
@@ -7174,5 +7174,2397 @@
 "/guide/start/": {
 "h": "33f534d2d82f645a",
 "d": "2026-11-04"
+},
+"/guide/zh/": {
+"h": "adca5b6172f2986b",
+"d": "2026-11-05"
+},
+"/guide/zh/ammo/": {
+"h": "054aeb8d7b80d369",
+"d": "2026-11-05"
+},
+"/guide/zh/bosses/": {
+"h": "d317bff9ed424c91",
+"d": "2026-11-05"
+},
+"/guide/zh/crafts/": {
+"h": "249b5551583511a0",
+"d": "2026-11-05"
+},
+"/guide/zh/event/": {
+"h": "6d79b2c6d4adbaa1",
+"d": "2026-11-05"
+},
+"/guide/zh/gunsmith/": {
+"h": "8aebbe254d79b2cb",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/": {
+"h": "eece41cfe209db59",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/air-filtering-unit/": {
+"h": "030b55f567e6ddba",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/bitcoin-farm/": {
+"h": "cd3eb2f19a0ed8ae",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/booze-generator/": {
+"h": "42a00f01376e7d50",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/cultist-circle/": {
+"h": "fc3d135ea887abab",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/defective-wall/": {
+"h": "a9f1d5b37df26bbe",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/gear-rack/": {
+"h": "7cd0d79e438ae25f",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/generator/": {
+"h": "f8ed29ca3aaa64d4",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/gym/": {
+"h": "8353e0d4a10814a7",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/hall-of-fame/": {
+"h": "897100b743bdaf8b",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/heating/": {
+"h": "9ce08f53fd377ee9",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/illumination/": {
+"h": "a4ae171b40cbc132",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/intelligence-center/": {
+"h": "07d7a88d472fa154",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/lavatory/": {
+"h": "c7fec485e2305583",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/library/": {
+"h": "8784bb2976dcdf32",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/medstation/": {
+"h": "c45d0394d3dd61a2",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/nutrition-unit/": {
+"h": "6ea55960892f99b1",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/rest-space/": {
+"h": "a50fa538f4f9de42",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/scav-case/": {
+"h": "281f2a16a3804ef0",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/security/": {
+"h": "8f194f69c412d8ff",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/shooting-range/": {
+"h": "4e0a54b7094e8ec6",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/solar-power/": {
+"h": "ae929ffe52ea9460",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/stash/": {
+"h": "5c147adedf88fcb2",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/vents/": {
+"h": "465f753ea2c1ee8b",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/water-collector/": {
+"h": "7200d0f75e84f90f",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/weapon-rack/": {
+"h": "8c4a655640551a48",
+"d": "2026-11-05"
+},
+"/guide/zh/hideout/workbench/": {
+"h": "defdaacb00affd29",
+"d": "2026-11-05"
+},
+"/guide/zh/hunt/": {
+"h": "d567e7fde0dcd081",
+"d": "2026-11-05"
+},
+"/guide/zh/items/": {
+"h": "21330e33fe8cb643",
+"d": "2026-11-05"
+},
+"/guide/zh/kappa/": {
+"h": "c4c574606a9f8ea1",
+"d": "2026-11-05"
+},
+"/guide/zh/keyfinder/": {
+"h": "11ff60d9f1e7b23f",
+"d": "2026-11-05"
+},
+"/guide/zh/keys/": {
+"h": "375e7f7177acdac0",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/": {
+"h": "93d8595deeae93a5",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/customs/": {
+"h": "f3df3a0a60861f15",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/factory/": {
+"h": "1bc06ee1b154f577",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/ground-zero/": {
+"h": "b47c36e9b135e6ce",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/icebreaker/": {
+"h": "8b07100dc759e300",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/infected-factory/": {
+"h": "ed8d1d98775af048",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/infected-lab/": {
+"h": "e9353c56bd8d57ec",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/interchange/": {
+"h": "70e8f52a32ef3f89",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/lighthouse/": {
+"h": "c3bc9ebf6abf9edd",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/reserve/": {
+"h": "139c035b357f20c9",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/shoreline/": {
+"h": "6911aab1846eff9f",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/streets-of-tarkov/": {
+"h": "8593f7d8db50b575",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/terminal/": {
+"h": "215ca3685e7a933e",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/the-lab/": {
+"h": "72fdafd4fc0069ec",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/the-labyrinth/": {
+"h": "a1e1105b956477aa",
+"d": "2026-11-05"
+},
+"/guide/zh/maps/woods/": {
+"h": "26bdb1bef71b09bd",
+"d": "2026-11-05"
+},
+"/guide/zh/patch/": {
+"h": "c516bafdb1782ccd",
+"d": "2026-11-05"
+},
+"/guide/zh/prestige/": {
+"h": "be80365070c414f4",
+"d": "2026-11-05"
+},
+"/guide/zh/promo/": {
+"h": "e1cce5b32ba449dd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest-items/": {
+"h": "becbd66f0c8bc3d9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-big-loss-usec/": {
+"h": "8d59cc780bb3e70e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-bitter-victory/": {
+"h": "5fa98a7f5a470f3c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-difficult-choice/": {
+"h": "66fc2480f0063c60",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-fuel-matter/": {
+"h": "1cbd77dcd5d0d6a2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-healthy-alternative/": {
+"h": "67fca974a54d4f76",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-helping-hand/": {
+"h": "39e40563feb4b460",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-life-lesson/": {
+"h": "7da09abc0b3b95de",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/a-wedge-between-us/": {
+"h": "3b05a61980d7123b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/abandoned-cargo/": {
+"h": "e3be10cafa5662b8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/acquaintance/": {
+"h": "9d89d1b77435d80b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/against-the-conscience-part-1-pve-zone/": {
+"h": "f437a4599bb41427",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/against-the-conscience-part-1-pvp-zone/": {
+"h": "eb6c3cf2fb559c42",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/against-the-conscience-part-2-pve-zone/": {
+"h": "7c99cff234ff44d6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/against-the-conscience-part-2-pvp-zone/": {
+"h": "05facc986668e245",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/aid-stations/": {
+"h": "895a400f28781362",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/airmail/": {
+"h": "5776221703f731d5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/akimbo/": {
+"h": "1ea7089f56754432",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/all-is-revealed/": {
+"h": "7db98f0856ab9518",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/all-this-filth/": {
+"h": "57dbaf598ef54f78",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/an-apple-a-day-keeps-the-doctor-away/": {
+"h": "e3588e5bc80f498c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/anesthesia/": {
+"h": "df1d2e5ee93878fb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/another-shipping-delay/": {
+"h": "c75bd16cab6fa95b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/antique-enthusiast/": {
+"h": "8a319e7379739d0b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/arena-business-pve-zone/": {
+"h": "2b8448c66f8515fb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/arena-business-pvp-zone/": {
+"h": "347b22088f0ed72e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/ask-for-directions/": {
+"h": "93d10de192535b61",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/athlete/": {
+"h": "f2002e6f22843120",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/audiophile/": {
+"h": "d7a48a245889cefe",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/audit/": {
+"h": "4431731781810ac6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/back-door/": {
+"h": "0b926ff031b576fa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/background-check/": {
+"h": "53a8026f79aaf39d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/bad-habit/": {
+"h": "99cdfcc6f1c9cb30",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/bad-rep-evidence/": {
+"h": "bd94ab82260666ff",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/balancing-part-1-pve-zone/": {
+"h": "5aafd589907c5597",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/balancing-part-1-pvp-zone/": {
+"h": "35bd16dd04e6768c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/balancing-part-2-pve-zone/": {
+"h": "522f12c8b019882a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/balancing-part-2-pvp-zone/": {
+"h": "b01cec75ba5bee07",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/ballet-lover/": {
+"h": "c0463eada96745be",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/battery-change-2/": {
+"h": "b7d7e87a0de7495d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/battery-change/": {
+"h": "0d52c1da47af7a02",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/belka-and-strelka/": {
+"h": "75e30c78738c3311",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/beneath-the-streets/": {
+"h": "c5d99095f6d21c89",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/best-job-in-the-world/": {
+"h": "937e929ac1b247d3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/between-two-fires-pve-zone/": {
+"h": "6d17bfd9fead22f6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/between-two-fires-pvp-zone/": {
+"h": "f74feaaf8ebd3140",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/beyond-the-red-meat/": {
+"h": "c212e65977a9da4c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/big-customer/": {
+"h": "5aa9b70abe0f1cf7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/big-sale/": {
+"h": "88f469d0a8800c75",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/biochemistry/": {
+"h": "69058b72107cdba3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/black-swan/": {
+"h": "f141c1e4b73d894b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/blood-in-the-water/": {
+"h": "bbd2bbf98cddd67d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/booze/": {
+"h": "33259bbe9c6c08b0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/break-the-deal/": {
+"h": "123f644d66ca6028",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/broadcast-part-1/": {
+"h": "84d79f25fc0f682b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/broadcast-part-2/": {
+"h": "f8540d12a28e1b01",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/broadcast-part-3/": {
+"h": "7baeb6abed46e7e4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/broadcast-part-4/": {
+"h": "9116abc72f0d44cf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/broadcast-part-5/": {
+"h": "60690867746099b8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/building-foundations/": {
+"h": "1a29731eaaeaf530",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/bullshit/": {
+"h": "b06f0b41cc85e1f5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/burning-rubber/": {
+"h": "8cfda2e0ed1b7c6e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/calibration/": {
+"h": "e045740c7242b54b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/camera-action/": {
+"h": "722965ceb4256b45",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/cant-drink-away-skill/": {
+"h": "ae5761ff5daac260",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/capturing-outposts/": {
+"h": "701ea3c4bd32ab28",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/car-repair/": {
+"h": "ebab1af369695fb9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/cargo-x-part-3/": {
+"h": "db61245432cfab09",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/cargo-x/": {
+"h": "118eae9722bcb6d8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/cease-fire/": {
+"h": "4486fad4cf00cf27",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/charisma-brings-success/": {
+"h": "cc11b8a5c66d1c15",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/charity/": {
+"h": "2ea9e97331cf1146",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemical-experiments/": {
+"h": "8a594d1555faec63",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemical-part-1/": {
+"h": "ade75c47cd8bf79b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemical-part-2/": {
+"h": "2d979d9a0f61da12",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemical-part-3/": {
+"h": "9cb4c59727bc28e5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemical-part-4/": {
+"h": "c5339debfea2ae0e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chemistry-closet/": {
+"h": "b42f6f930249ac80",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/choose-your-friends-wisely/": {
+"h": "e63062de2026d1a8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/chumming/": {
+"h": "f1eccf10f682a22e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/circulate/": {
+"h": "d0711504e2379bbe",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/classified-technologies/": {
+"h": "f53c7681ebdc9234",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/claustrophobia/": {
+"h": "11a144be11e8fd5f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/closer-to-the-people/": {
+"h": "7dcabb340af8b3d6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/colleagues/": {
+"h": "69c792a733a581ab",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/collector/": {
+"h": "80e8ebc73992a865",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/combat-proven/": {
+"h": "99df9b9f34850afc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/compensation-for-damage-barkeep/": {
+"h": "b0dd8b5ed407bad2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/compensation-for-damage-collection/": {
+"h": "6ac6e19f39ab8dc7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/compensation-for-damage-trust/": {
+"h": "c6c2b7c5dc4c91c6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/compensation-for-damage-wager/": {
+"h": "9620663b44878644",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/compensation-for-damage-wergild/": {
+"h": "b4f3814967987ff5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/confidential-info/": {
+"h": "1cb7cafd3e75f245",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/connections-up-north/": {
+"h": "dcd4a0d02483d96c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/consolation-prize/": {
+"h": "22ac5736b03aadb0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/corporate-perks-bear/": {
+"h": "9e6eaf4752c36b63",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/corporate-secrets/": {
+"h": "e560c42efecd7703",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/counteraction-usec/": {
+"h": "48687a957b790c41",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/courtesy-visit/": {
+"h": "fc941c95fe853ffd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/create-a-distraction-part-1-pve-zone/": {
+"h": "18f7a690e8f9291d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/create-a-distraction-part-1-pvp-zone/": {
+"h": "bb79c2adcdb590eb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/create-a-distraction-part-2-pve-zone/": {
+"h": "c9b6fdea2a8f44cc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/create-a-distraction-part-2-pvp-zone/": {
+"h": "439ec0f62835ed40",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/crisis/": {
+"h": "941f0cef0bdb835e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/dandies/": {
+"h": "3844bf69ed49ebd6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/dangerous-props/": {
+"h": "15fd64175022cf2b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/dangerous-road/": {
+"h": "592daa90f14350fe",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/debtor-bear/": {
+"h": "eff840378eeda701",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/debut/": {
+"h": "75be36476481fa4c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/decisions-decisions-pve-zone/": {
+"h": "fbd1c2f15e3f4d56",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/decisions-decisions-pvp-zone/": {
+"h": "100f728c41d20ee5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/decontamination-service/": {
+"h": "8fab4289e41e299a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/delivery-from-the-past/": {
+"h": "0c7132f91f9140f9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/demonstration-model/": {
+"h": "125b5682c035e8af",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/discombobulate/": {
+"h": "d28b2d6069906528",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/disease-history/": {
+"h": "28b5a4b96c1cf4d7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/district-patrol/": {
+"h": "d858c309a43977c6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/documents/": {
+"h": "bf82801a9855b548",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/dragnet/": {
+"h": "5f1a6e94ec2a7840",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/dressed-to-kill/": {
+"h": "b4ef7338ab847915",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/drip-out-part-1-bear/": {
+"h": "45a02c4b31d9a92c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/drip-out-part-1-usec/": {
+"h": "22ae1e36ac6a5663",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/drip-out-part-2-bear/": {
+"h": "a29140f35ac12212",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/drip-out-part-2-usec/": {
+"h": "c38896f5bc89dbf0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/drug-trafficking/": {
+"h": "aed269f6de733d8e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/eagle-eye/": {
+"h": "dc7648135ddc2a04",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-breezy/": {
+"h": "ed3ee5121baa342d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-job-part-2/": {
+"h": "18b576245c25e22e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-job/": {
+"h": "fea8729264f24ed9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-money-part-1-pve-zone/": {
+"h": "e3025a071f374e6b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-money-part-1-pvp-zone/": {
+"h": "b8b7026f991277cc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-money-part-2-pve-zone/": {
+"h": "8448a17ac970583b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/easy-money-part-2-pvp-zone/": {
+"h": "5980b34243695cad",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/energy-crisis/": {
+"h": "37196558ae9c0b04",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/escort/": {
+"h": "0ee2c39c5da3e231",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/establish-contact/": {
+"h": "8f5d757512bb91b4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/every-hunter-knows-this/": {
+"h": "137a7f3944832911",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/exit-here/": {
+"h": "abf769e6b49628af",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fair-price-part-1/": {
+"h": "9e67a0691b99fee0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fair-price-part-2/": {
+"h": "fd3c9f17e2944839",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fall-ailment/": {
+"h": "7c716e04cd118788",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/farming-part-2/": {
+"h": "6bc1fdf229cf4306",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/farming/": {
+"h": "2f37290c7aad1d6d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fertilizers/": {
+"h": "7aac227f5c52a66c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/first-aid/": {
+"h": "75a629fdb0c07612",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/first-in-line/": {
+"h": "66d1c213b952bda4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fishing-gear/": {
+"h": "ea1dc3f548fec923",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fishing-place/": {
+"h": "281cac0514eb6d96",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/flint/": {
+"h": "3733a5a36d5fa22f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/following-the-bread-crumbs/": {
+"h": "e61cb8ecccaf993c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/foresters-duty/": {
+"h": "cdc576aa07e66fce",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/forge-a-friendship/": {
+"h": "108d5390438e001d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fresh-stock/": {
+"h": "535e8d3e1dbe0a27",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/friend-among-strangers/": {
+"h": "9e3fe1d23d4d2f91",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/friend-from-the-west-part-2/": {
+"h": "cf0e9b5114eff62d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/friend-from-the-west/": {
+"h": "a22c2b59976b6e12",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/from-hand-to-hand/": {
+"h": "ce39762ab1541ad9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fuel-crisis/": {
+"h": "b7bcb3dfc7193c60",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/fuel-shortage/": {
+"h": "343ceb511360ea07",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gendarmerie-mall-cop/": {
+"h": "124ef9108a91d43c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gendarmerie-tickets-please/": {
+"h": "e2ee43dcb9a8b678",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/general-wares/": {
+"h": "d9c536ce516df3a0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/get-a-foothold/": {
+"h": "da81f2e7015c4b8f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/getting-some-air/": {
+"h": "b3a56fc42249d1ef",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gifts-from-tarkov/": {
+"h": "861596b0a70becdd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/glory-to-cpsu-part-1/": {
+"h": "7bfac127ba3ae213",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/glory-to-cpsu/": {
+"h": "4864eb81e53221f6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/goals-and-means/": {
+"h": "c4e07400a914086d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/golden-swag/": {
+"h": "dcd4d64f0576dcd5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gratitude/": {
+"h": "957d9cef0c1eae52",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/green-corridor-bear/": {
+"h": "f335edde0c5541a1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/grenadier/": {
+"h": "651d9bf931c55cb4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-ak-105-bear/": {
+"h": "c36726de0f007a16",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-akm-bear/": {
+"h": "07b20082ccb4e338",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-aks-74n-bear/": {
+"h": "4e1ac0fd2b6f86d7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-aks-74u/": {
+"h": "627831b668611100",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-as-val-bear/": {
+"h": "a6a27a621280958d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-hk-mp5/": {
+"h": "53136b1f155b2e9e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-m4a1-usec/": {
+"h": "57bcc2bad42c7183",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-1/": {
+"h": "af90d6e5d4c0954f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-10/": {
+"h": "3074d5abcbf58ea9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-11/": {
+"h": "e8f3890d2e1aa2bc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-12/": {
+"h": "57f0df91e915d963",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-13/": {
+"h": "7181ffb0137b5ae3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-2/": {
+"h": "c18edc4dbae83238",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-3/": {
+"h": "b89231a0903f12cf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-4/": {
+"h": "e15deb2d616ab851",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-5/": {
+"h": "805017a2d58cdbd5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-6/": {
+"h": "fa5d5e97aacefb82",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-7/": {
+"h": "961921c9bc4916e8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-8/": {
+"h": "9f0d130d0518ddfb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-master-part-9/": {
+"h": "4c7c36ce471e4f88",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-model-870/": {
+"h": "a705dc4b38408564",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-mp-133/": {
+"h": "1a5c90c2a790699a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-mpx-usec/": {
+"h": "dcc868494e3a7758",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-op-sks/": {
+"h": "4add775a008b21e6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-p226r-usec/": {
+"h": "2be194f7a509b0af",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/gunsmith-vector-9x19-usec/": {
+"h": "7acd072f88dfe703",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/half-empty/": {
+"h": "540c40e8bfebf87e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hangover/": {
+"h": "7267191d804d4580",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-1/": {
+"h": "730a649928e9033a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-2/": {
+"h": "298550bf70e58430",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-3/": {
+"h": "aae7c8b375da1105",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-4/": {
+"h": "27141079d579df68",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-5/": {
+"h": "e0ed686927ab008d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/health-care-privacy-part-6/": {
+"h": "98f337f3f125b4c0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hell-on-earth-part-1/": {
+"h": "0dc5c723dc8a48c5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hell-on-earth-part-2/": {
+"h": "8ba80f9d063b785f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hidden-layer/": {
+"h": "c90ea527b6900061",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hiking/": {
+"h": "eab0c761b2edaf81",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hindsight-2020/": {
+"h": "267ee7ff11a37813",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hobby-club/": {
+"h": "1935b689464aa8d6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hold-the-lead-pve-zone/": {
+"h": "96a540be77fee182",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hold-the-lead-pvp-zone/": {
+"h": "5feb9c0a65ac5d61",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hot-delivery/": {
+"h": "9cf6c946ee07ce3f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hot-wheels-lets-try-again/": {
+"h": "80c73e8d7cd8196e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hot-wheels/": {
+"h": "489c4a8b5f8ae6c9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/house-arrest-part-2/": {
+"h": "fc3c93ca138bbb9e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/house-arrest-usec/": {
+"h": "4bc493c0f4269134",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/humanitarian-supplies/": {
+"h": "52c8439c4b845432",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hunting-trip/": {
+"h": "1b45344dd6d748ca",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/hypotheses-testing/": {
+"h": "25543911f79d6f33",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/i-need-more-power/": {
+"h": "85d503bf4e87e6c6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/ice-cream-cones/": {
+"h": "00b5569d322af7f2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/ill-wisher/": {
+"h": "0ff53e2b55b2fab6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/immunity/": {
+"h": "57c86fb350fdee65",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/import/": {
+"h": "41fe55ac4c10e706",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/indisputable-authority/": {
+"h": "225c703a2b10902f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/inevitable-response/": {
+"h": "9eb2ea7f1c9f1adc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/information-source/": {
+"h": "93f8013c326a26cf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/informed-means-armed/": {
+"h": "2c54c5cdaad0d8eb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/insider/": {
+"h": "1d846648402c64d1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/insomnia/": {
+"h": "d5df26e1dd78e75d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/intimidator/": {
+"h": "3089ae4fe03f17fd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/introduction/": {
+"h": "5c4ce526812cce05",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/invasive-therapy/": {
+"h": "68ee1c09c796a545",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/inventory-files-bear/": {
+"h": "c87ff9fc676f7faf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/ironclad-proof/": {
+"h": "1a18ae77acbbfd17",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/irresistible/": {
+"h": "1346e21fdd791b49",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/is-this-a-reference/": {
+"h": "6f286e6788da129d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/job-for-a-patriot/": {
+"h": "d07b08fa0c515e68",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/keepers-word/": {
+"h": "fafe5cf7c10c1d4d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/key-partner/": {
+"h": "0b37e1f4557dd7ad",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/key-to-the-city/": {
+"h": "4ea3d0106d2fbcdb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/killer-argument/": {
+"h": "763aef9a70a2a913",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/kind-of-sabotage/": {
+"h": "5e3ad9136e4cbb87",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/kings-of-the-rooftops/": {
+"h": "5f981e10e8292b0d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/know-your-place/": {
+"h": "ba314985427677d0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/living-high-is-not-a-crime/": {
+"h": "44eddecf6d92ccbd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/long-line/": {
+"h": "33c820bc4d78c057",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/long-road/": {
+"h": "61b2416074e785c9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/lost-contact/": {
+"h": "7b7ee1b68c35cbd6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/loyalty-buyout/": {
+"h": "f3b78b503fcafff9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/luxurious-life/": {
+"h": "a6ddff030be33288",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/make-an-impression/": {
+"h": "05eb62442a5a1ef2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/make-ultra-great-again/": {
+"h": "37be9e9ca30d42bf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/master-key/": {
+"h": "e13e6fa63f40c580",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/mentor/": {
+"h": "b2442c115628a8f1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/metal-birds/": {
+"h": "2d71d1187a7ac453",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/minibus/": {
+"h": "0267d44323d8daaa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/minute-of-fame/": {
+"h": "5d52065bb0d47edc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/missing-cargo/": {
+"h": "95f6a085e09de751",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/missing-informant/": {
+"h": "554ad7b2eb126858",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/natural-exchange/": {
+"h": "c4f4a7a3866866aa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/needle-in-a-haystack/": {
+"h": "7bb7b8705e9c2565",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/never-too-late-to-learn/": {
+"h": "3969af87a51fabca",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/new-beginning-2/": {
+"h": "dc2963aea7d2d624",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/new-beginning-3/": {
+"h": "41de07c36561b0f1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/new-beginning-4/": {
+"h": "9cb2c3f313cfa84a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/new-beginning/": {
+"h": "d250b8ea8de165ba",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/new-paths/": {
+"h": "0717fcc556cd465f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/night-sweep/": {
+"h": "e968ee13c4413fc7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/no-fuss-needed/": {
+"h": "11876e9931c9bcd9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/no-place-for-renegades/": {
+"h": "3ab6449e6df12048",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/no-swiping/": {
+"h": "14d6fdb611e80869",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/nostalgia/": {
+"h": "13592670c2b0dfc3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/nothing-fishy-about-this/": {
+"h": "6b903a0d600c41a5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/offensive-reconnaissance/": {
+"h": "e3c787328883319a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/oil-change/": {
+"h": "5734da0c78c826b2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/oil-run-bear/": {
+"h": "032bdbaea47b5910",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/old-patterns/": {
+"h": "d921eb8a121a70e9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/one-less-loose-end/": {
+"h": "972a16ac6af3f12d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/one-way-ticket/": {
+"h": "e23ee867fe322ea6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/only-business/": {
+"h": "0c64c4a50e079b5b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/operation-aquarius/": {
+"h": "58230a493b939f10",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/order-from-outside/": {
+"h": "cfe930889bc7f9af",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/our-own-land-bear/": {
+"h": "2b867eb795dcf9d6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/out-of-curiosity/": {
+"h": "6166d6567f11a41c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/overpopulation/": {
+"h": "7dc850583b81bc4d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/paramedic/": {
+"h": "d3760efc1d8aa4a1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/passion-for-ergonomics/": {
+"h": "c08ad70b96179978",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pathfinder/": {
+"h": "227ccbf0dbdec123",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/payback/": {
+"h": "fb5b93fee82e9fac",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/peaceful-atom/": {
+"h": "5831d97f49a6a630",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/peacekeeping-mission/": {
+"h": "8854cc897403087c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/perfect-mediator/": {
+"h": "3b39ee1e5b9fc333",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pest-control/": {
+"h": "8bb208fca393f5fa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pets-wont-need-it-part-2/": {
+"h": "1f4e39be1a496e2e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pets-wont-need-it/": {
+"h": "01c1385be629d7ff",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pharmacist/": {
+"h": "e57c4fe1e03ebfa9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/playing-the-market/": {
+"h": "4de81cece5eca7ab",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/polikhim-hobo/": {
+"h": "40f0e68d087af792",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/population-census/": {
+"h": "4ad1928c5d840ae2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/possessor/": {
+"h": "8acd31e16ef9db6e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/postman-pat-part-1/": {
+"h": "4310745dab8e3bf7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/postman-pat-part-2/": {
+"h": "fe0f8dba93329718",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/postponed-reward-pve-zone/": {
+"h": "b216ae62f8bed963",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/postponed-reward-pvp-zone/": {
+"h": "e1fcc5adaad549b7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/power-of-persuasion/": {
+"h": "7a1c095866fecebc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/private-clinic/": {
+"h": "a4d1cf5fbebc5305",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/private-club/": {
+"h": "c79ffdf36ea826a0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/professional-fitness-part-1-pve-zone/": {
+"h": "bbe7753d1655ac7c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/professional-fitness-part-1-pvp-zone/": {
+"h": "2bebb61f2d34d90a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/professional-fitness-part-2-pve-zone/": {
+"h": "6f97d9764aea6919",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/professional-fitness-part-2-pvp-zone/": {
+"h": "8c31e5c64067d733",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/profit-retention/": {
+"h": "564e5b418bb86e3a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/profitable-venture/": {
+"h": "74178e9d6d62090d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/proper-comeback/": {
+"h": "b838b42a26d936ea",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/properties-all-around/": {
+"h": "04932e60ef33d558",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/protect-the-sky/": {
+"h": "26637337ae7fc17e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/provide-viewership/": {
+"h": "65c037b358dd4b26",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/provocation/": {
+"h": "131a104fc4abdc26",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/psycho-sniper/": {
+"h": "7548b1d7770c3172",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/pyramid-scheme/": {
+"h": "cde59a708278db7a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/quality-standard/": {
+"h": "afe88f19210fabcd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/rat-hunting/": {
+"h": "bc50932934018ca3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/reconnaissance/": {
+"h": "713d443c395aaa97",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/regulated-materials/": {
+"h": "784e167f53a25871",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/reserve-expert/": {
+"h": "4ee255346ba94ea3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/reserve/": {
+"h": "666d632b02bbd64f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/return-the-favor/": {
+"h": "2a3d656757051b9d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/revision-lighthouse/": {
+"h": "90244f38ef832ea4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/revision-reserve/": {
+"h": "57703cc690890696",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/revision-streets-of-tarkov/": {
+"h": "d195492d9ae9d0cb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/rigged-game/": {
+"h": "336486ddbe18d442",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/rite-of-passage/": {
+"h": "dad045742900a012",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/road-closed-usec/": {
+"h": "2602441d66e1baa4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/rough-tarkov/": {
+"h": "c5e974f070127c7a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/route-deviation/": {
+"h": "3fbc3c168b8b08e3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/safe-corridor/": {
+"h": "8437c4a30ec9860b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/safety-guarantee/": {
+"h": "fa47fde6d58980d2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/samples/": {
+"h": "a6a8b4f999209a85",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sanitary-standards-part-2/": {
+"h": "9dc2ec20fd45e947",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sanitary-standards/": {
+"h": "2148049f184b716d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/saving-private-roman/": {
+"h": "43cf82c94e6d75fd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/saving-the-mole/": {
+"h": "410cc0b93ecdb779",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/scavenger/": {
+"h": "9fdc6a8a34d26afa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/scout/": {
+"h": "edb2e3874ffb6fe0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/scrap-metal/": {
+"h": "391ee34ca4dc3425",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/search-mission/": {
+"h": "5a44726c28878660",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/seaside-vacation/": {
+"h": "314b8fa050263eda",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/secret-message/": {
+"h": "09fdfcbac04ec02c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/secrets-of-polikhim/": {
+"h": "988e6ad59e18255f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/seizing-the-initiative/": {
+"h": "bfb85215ffd89b78",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/semiconductor-crisis/": {
+"h": "c68e9387a9534cfb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sensory-analysis-part-1/": {
+"h": "c39ac80d1e52c8ac",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sensory-analysis-part-2/": {
+"h": "ea78b4952a699f02",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/serious-allegations/": {
+"h": "092f9a29edafc5cc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/setting-priorities/": {
+"h": "544486b5b45d5097",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/setup/": {
+"h": "7b941c53aa861c7e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sew-it-good-part-1/": {
+"h": "14e56eebaeea8b89",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sew-it-good-part-2/": {
+"h": "acac4e8d8376b683",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sew-it-good-part-3/": {
+"h": "fc3ac86921c3f63b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sew-it-good-part-4/": {
+"h": "1b568fd75007dfda",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shady-business/": {
+"h": "5e24db31fe39a229",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shady-contractor/": {
+"h": "ba7610b66a079a29",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shaking-up-the-teller-usec/": {
+"h": "fa93b1169646f3a9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shipment-tracking/": {
+"h": "b9a1fc89b3610828",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shipping-delay-part-1/": {
+"h": "e30db122d4966876",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shipping-delay-part-2/": {
+"h": "e0e0d1ab0a95ae88",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shooter-born-in-heaven/": {
+"h": "00d082fadc0f9bd5",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shooting-cans/": {
+"h": "06b5742b4d37594b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shootout-picnic/": {
+"h": "25cb2dc9026589fa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/shortage/": {
+"h": "0673bcdc0f146733",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/signal-part-3/": {
+"h": "9355147798a706bd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/signal-part-4/": {
+"h": "2b8e36efd7f71dbf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/silent-caliber/": {
+"h": "0936e3377e7e7c8d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/simple-side-job/": {
+"h": "972ae6a0e2ab1945",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/sisyphus/": {
+"h": "6246aa73ea7195a9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/slaughterhouse/": {
+"h": "ae9ec74269c92094",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/small-business-part-1/": {
+"h": "b994223a1bf0c4d8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/small-business-part-2/": {
+"h": "98b3fc9ea911e585",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/small-business-part-3/": {
+"h": "87c1eb6936525804",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/small-things-big-help/": {
+"h": "a508b552adb8a93b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/snatch/": {
+"h": "c45fecadd8e426ec",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/spa-tour-part-2/": {
+"h": "b927f2516e6127ac",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/spa-tour-part-6/": {
+"h": "f2b46ad232669e4e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/special-comms/": {
+"h": "0c588f25da090d2c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/special-equipment/": {
+"h": "22b5447dbd909348",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/special-offer/": {
+"h": "e3418ddc25738e6b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/special-order/": {
+"h": "364a2ac8e2296054",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/spotter/": {
+"h": "1b669400a3604f4d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stabilize-business/": {
+"h": "39e94e06f5efba83",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/steady-signal/": {
+"h": "93adddf50495b43f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stick-in-the-wheel/": {
+"h": "3c55fa382a287b51",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stick-to-it/": {
+"h": "f56c4af2640ec2c0",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stimulating-demand/": {
+"h": "6db063739558b9cc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stirrup/": {
+"h": "cb3601852c0480e1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/stray-dogs/": {
+"h": "55c1e7d28e1788b8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/supervisor/": {
+"h": "b6c6b020864dbaf1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/supplements-usec/": {
+"h": "4d25a3345326f338",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/supplier/": {
+"h": "2f714d85b3ee5eb2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/supply-plans/": {
+"h": "bb2785990919dce1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surplus-goods/": {
+"h": "4a8effe8b804e27e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surprise-gift-pve-zone/": {
+"h": "fd6b2bdaaec6e109",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surprise-gift-pvp-zone/": {
+"h": "fccb5a55be6fd19d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surprise-pve-zone/": {
+"h": "9933eaa58b035699",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surprise-pvp-zone/": {
+"h": "1d4908951251793e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/surveillance/": {
+"h": "f0d620d01677905b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/swift-retribution/": {
+"h": "c2d35f37f50ebf7d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/swift/": {
+"h": "f451d588908c84c4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/tarkov-style-diplomacy/": {
+"h": "3d842f15ba08f1cd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/terragroup-employee/": {
+"h": "041f165e99f6943b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/textile-part-1-bear/": {
+"h": "2a5e8d03c2b3908b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/textile-part-1-usec/": {
+"h": "bf0bb8cc393bc09c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/textile-part-2-bear/": {
+"h": "678032e59145f212",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/textile-part-2-usec/": {
+"h": "0db22431e7559c7d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-art-of-explosion/": {
+"h": "de8d794b12a705ee",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-blood-of-war-part-2/": {
+"h": "935fb5a55b03c535",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-bunker-part-2/": {
+"h": "c7ce3220c8cf8011",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-bunker/": {
+"h": "2fe9c42f8db9295d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-choice/": {
+"h": "0126429ad60f4574",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-cleaner/": {
+"h": "118fbc739bee3ba9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-courier/": {
+"h": "45a6e3b64d7a22fa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-cult/": {
+"h": "086dd55b4b5f3fba",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-delicious-sausage/": {
+"h": "04e3fc59e1b437e7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-door/": {
+"h": "061d73cc031b7aa6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-extortionist/": {
+"h": "ea03bb12098d83f3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-good-times-part-1/": {
+"h": "d152654ac335d918",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-good-times-part-2/": {
+"h": "11c7587121ca09a3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-guide/": {
+"h": "6d92a59c841d021e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-hermit/": {
+"h": "9a6999494063124c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-higher-they-fly/": {
+"h": "83e2589f5f51faec",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-administrator-bear/": {
+"h": "805b3f9abc8513e4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-administrator-usec/": {
+"h": "1a768c1d9d12c780",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-angry-watchman/": {
+"h": "e41cf751b72d14d1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-big-game/": {
+"h": "a691a97e53295ac9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-control/": {
+"h": "54d5ce9fd752ade2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-controller/": {
+"h": "bf580eda55cfa9ce",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-crooked-cop/": {
+"h": "0e87dae1e33fb256",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-eraser/": {
+"h": "118e7c6c40015721",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-factory-chief/": {
+"h": "8b18b7a3cedf55ea",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-forest-cleaning/": {
+"h": "4a3c6fc6e66cd5df",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-justice-bear/": {
+"h": "ff766ac9f4f0663a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-liberation/": {
+"h": "1821253bab5b1665",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-outcasts/": {
+"h": "3ef0ce4f39f1e654",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-relentless/": {
+"h": "3abd0579e040d9d1",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-sadist/": {
+"h": "b12d94fb9664962d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-secured-perimeter/": {
+"h": "ab0346dbef1d42d8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-sellout/": {
+"h": "493bac10d6fd3273",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-trophy-usec/": {
+"h": "d1a5c140908af0e2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-huntsman-path-woods-keeper/": {
+"h": "7b290dc61a6f43c4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-invisible-hand/": {
+"h": "e8294f4546b68ed2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-key-to-success/": {
+"h": "444e5eaa9b311a21",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-price-of-independence-2/": {
+"h": "3be33eceb352dbd9",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-price-of-independence/": {
+"h": "0512a075613f646b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-1/": {
+"h": "9776317a06e3f6cf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-2/": {
+"h": "ccdef9d386f426f3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-3/": {
+"h": "71bc5419c8b6f2e7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-4/": {
+"h": "c7603a3c04a84c7a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-5/": {
+"h": "ebc6342a59b48c3f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-punisher-part-6/": {
+"h": "82e86f1a8e9cab1c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-secret-recipe/": {
+"h": "a8be1addf2fdbbdc",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-secret-to-productivity-usec/": {
+"h": "daec095d400bc487",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-cold-blooded/": {
+"h": "c71edc1653f92e8c",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-combat-medic/": {
+"h": "b8b7f73073635ffb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-eagle-owl/": {
+"h": "145a2e2675ed29e2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-junkie/": {
+"h": "974e8233dbe3f6dd",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-thrifty/": {
+"h": "538709c706140eeb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-tough-guy/": {
+"h": "18fe0c46a768605e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-unprotected-but-dangerous/": {
+"h": "d3633177bb1f3330",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-wounded-beast/": {
+"h": "cd8cc18624f615b2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-survivalist-path-zhivchik/": {
+"h": "4cc780d50be4703a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-butcher/": {
+"h": "6d3b355abd6f5378",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-import/": {
+"h": "e297ed3ebdd4dc28",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-1/": {
+"h": "291f151b1d5cb47a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-2/": {
+"h": "e1a868f387304aa3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-3/": {
+"h": "8248b1bdd0da352e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-4/": {
+"h": "34fad6b67956dc61",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-5-2/": {
+"h": "534de11739ed98de",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-5/": {
+"h": "fe4f6ac013f22458",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-6/": {
+"h": "5a3cad85af78c67a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-tarkov-shooter-part-7/": {
+"h": "ff867151c05aee48",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/the-walls-have-eyes/": {
+"h": "1e3eca4d8265c75f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/thirsty-breadwinner/": {
+"h": "cce8e1e0fd39306a",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/thirsty-delivery/": {
+"h": "12a4b3af5969183e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/thirsty-echo/": {
+"h": "0a1c7239f472ab5f",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/thirsty-hounds/": {
+"h": "72125d6771e5b720",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/thirsty-secrets/": {
+"h": "e80ed4cbfd23cd5e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/this-tape-sucks/": {
+"h": "fcccb2bbbc9205a4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/tigr-safari/": {
+"h": "10257e0c1e085ead",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-1-pve-zone/": {
+"h": "5f7d032f2191e054",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-1-pvp-zone/": {
+"h": "9714288859bcde22",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-2-pve-zone/": {
+"h": "bcd40299fa79d8bf",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-2-pvp-zone/": {
+"h": "607cd4760a9f4c52",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-3-pve-zone/": {
+"h": "e35023755e44fb6d",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-3-pvp-zone/": {
+"h": "a69ab513550ed556",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-4-pve-zone/": {
+"h": "d6ff5060cc93f315",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-4-pvp-zone/": {
+"h": "15a0098e5e1f9043",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-5-pve-zone/": {
+"h": "f8177c99b056a0ac",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-5-pvp-zone/": {
+"h": "75b0aeba0a67b6de",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-6-pve-zone/": {
+"h": "f7bafcdfc1e06ae3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/to-great-heights-part-6-pvp-zone/": {
+"h": "ed452facfc825746",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/top-secret/": {
+"h": "0c042460e4726c18",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/tracker/": {
+"h": "d0beb20516f23be6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/trophies/": {
+"h": "47d112c606ff91ea",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/trouble-in-the-big-city/": {
+"h": "a982bac11335e666",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/unique-experience/": {
+"h": "e906df4fe2dae50e",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/urban-medicine/": {
+"h": "a55f67a00c36b033",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/vacate-the-premises/": {
+"h": "0e0b0775ac7ec3a3",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/viewer/": {
+"h": "332a0101897e87ac",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/vitamins-bear/": {
+"h": "0c426a8df96acca4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/war-never-changes/": {
+"h": "d74838acd99e68ef",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/watching-you/": {
+"h": "99e613317aaa63a6",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/weapons-circulation/": {
+"h": "09fc7c4792f4b5da",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-1/": {
+"h": "c95ba99ce1bf24fa",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-2/": {
+"h": "1e1d8e485cbb9660",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-3/": {
+"h": "f6609e4938375d18",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-4/": {
+"h": "bf16a5a7706e6ab8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-5/": {
+"h": "2f10cf0d44c560bb",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wet-job-part-6/": {
+"h": "80edf6f2924434c8",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/whats-on-the-flash-drive/": {
+"h": "cdf9d80f9ce860d2",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/wiring-the-vessel/": {
+"h": "9435322bedbf50f7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/work-smarter/": {
+"h": "f72b5553eeea14e7",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/worst-job-in-the-world/": {
+"h": "07273e4da1ab61e4",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/your-car-needs-a-service/": {
+"h": "171e635c9cc27d2b",
+"d": "2026-11-05"
+},
+"/guide/zh/quest/youve-got-mail/": {
+"h": "7cec8e650f6d6e1a",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/": {
+"h": "4fa7da0d6b66ac87",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/btr-driver/": {
+"h": "b6661a30e7a4a1a1",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/fence/": {
+"h": "b37549e94a665903",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/jaeger/": {
+"h": "46aa27f1ef040f5b",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/lightkeeper/": {
+"h": "a5546d3afbd50c72",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/mechanic/": {
+"h": "703dd689f373cc28",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/peacekeeper/": {
+"h": "8ff74b5b19f09268",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/prapor/": {
+"h": "5b856ab231173cde",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/ragman/": {
+"h": "c00a46720adba139",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/ref/": {
+"h": "c5b0ebdc50ef339a",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/skier/": {
+"h": "f774120dcbff4ebc",
+"d": "2026-11-05"
+},
+"/guide/zh/quests/therapist/": {
+"h": "2121114d2bc96dc6",
+"d": "2026-11-05"
+},
+"/guide/zh/rewards/": {
+"h": "d8d267802aa11ba7",
+"d": "2026-11-05"
+},
+"/guide/zh/start/": {
+"h": "c682a359a6be81c5",
+"d": "2026-11-05"
 }
 }
