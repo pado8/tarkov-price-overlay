@@ -2483,8 +2483,21 @@ function App() {
       const r = JSON.parse(localStorage.getItem(WIDE_RECT_KEY) || "null");
       if (!r || ![r.x, r.y, r.w, r.h].every(Number.isFinite) || r.w < 200 || r.h < 150) return null;
       const mons = await availableMonitors();
-      const ok = mons.some((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height);
-      return ok ? r : null;
+      const m = mons.find((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height);
+      if (!m) return null;
+      // 그 모니터의 작업 영역(작업표시줄 제외) 안으로 맞춘다 — 창을 모니터 끝 너머로 끌어 저장하면(11-05 실측: 1920 모니터에 폭 1951)
+      // 오른쪽 아래 크기 손잡이가 화면 밖으로 나가 다시 줄일 방법이 없었다
+      const wa = m.workArea ?? { position: m.position, size: m.size };
+      const ax = wa.position.x, ay = wa.position.y, aw = wa.size.width, ah = wa.size.height;
+      const x = Math.max(ax, Math.min(r.x, ax + aw - 200));
+      const y = Math.max(ay, Math.min(r.y, ay + ah - 150));
+      const w = Math.max(200, Math.min(r.w, ax + aw - x));
+      const h = Math.max(150, Math.min(r.h, ay + ah - y));
+      if (x !== r.x || y !== r.y || w !== r.w || h !== r.h) {
+        log(`wide: saved rect ${r.w}x${r.h} @ ${r.x},${r.y} → clamped ${w}x${h} @ ${x},${y}`);
+        localStorage.setItem(WIDE_RECT_KEY, JSON.stringify({ x, y, w, h }));
+      }
+      return { x, y, w, h };
     } catch {
       return null;
     }
@@ -2502,6 +2515,13 @@ function App() {
         try {
           const [pos, size] = await Promise.all([win.outerPosition(), win.outerSize()]);
           localStorage.setItem(WIDE_RECT_KEY, JSON.stringify({ x: pos.x, y: pos.y, w: size.width, h: size.height }));
+          // 모니터 작업 영역 밖으로 늘리거나 옮겼으면 바로 안쪽으로(손잡이가 화면 밖으로 나가지 않게)
+          const c = await savedWideRect();
+          if (c && (c.x !== pos.x || c.y !== pos.y || c.w !== size.width || c.h !== size.height)) {
+            wideSaveArmedAtRef.current = Date.now() + 1500;
+            await win.setPosition(new PhysicalPosition(c.x, c.y));
+            await win.setSize(new PhysicalSize(c.w, c.h));
+          }
         } catch {}
       }, 400);
     };
