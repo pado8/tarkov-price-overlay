@@ -84,7 +84,9 @@ const isOpen = (q: AdviceQuest) =>
 export type AdviceHideout = { station: string; station_id: string; level: number; count: number };
 
 /**
- * keep 우선순위: 진행 중 퀘스트 → 아직 안 한(상태 모름 포함) 퀘스트 중 카파 → 아직 안 지은 은신처 → 그 밖의 안 한 퀘스트.
+ * keep 우선순위: 진행 중 퀘스트 → 아직 안 한(상태 모름 포함) 퀘스트 중 카파 → 그 밖의 안 한 퀘스트.
+ * 11-06 인게임(사용자): 은신처는 필요한 곳이 너무 많아 보관 안내로는 쓸모가 없고 퀘스트만으로 충분 → 은신처는 보관 이유에서 뺐다
+ * (카드의 은신처 목록·stillNeeded 루팅 등급은 그대로).
  * 완료·실패한 퀘스트, 이미 지은 은신처 단계는 빼고 본다(은신처 레벨을 하나도 안 넣었으면 전부 아직 필요로 본다 — 카드 목록과 같은 규칙).
  */
 export function sellAdvice(input: {
@@ -94,7 +96,6 @@ export function sellAdvice(input: {
   rates: [number, number] | null | undefined;
   traders: { name: string; price: number }[];
   quests: AdviceQuest[];
-  hideout: AdviceHideout[];
   hideoutLevels: Record<string, number>;
   hideoutMgmtLevel: number;
 }): SellAdvice {
@@ -109,17 +110,12 @@ export function sellAdvice(input: {
 
   // 같은 순위 안에서는 이 아이템을 콕 집은(택일 후보가 적은) 퀘스트를 이유로 고른다 — 살레와: 「First Aid」(후보 6)보다 「재고 부족」(1)
   const open = input.quests.filter(isOpen).sort((a, b) => (a.alternatives ?? 1) - (b.alternatives ?? 1));
-  const hasLevels = Object.keys(input.hideoutLevels).length > 0;
-  const hideoutOpen = input.hideout.filter((h) => !hasLevels || (input.hideoutLevels[h.station_id] ?? 0) < h.level);
   let keep: KeepReason | null = null;
   const started = open.find((q) => q.status === "started");
   const kappa = open.find((q) => q.kappa);
   if (started) keep = { kind: "quest", name: started.name, count: started.count, fir: started.fir, started: true };
   else if (kappa) keep = { kind: "kappa", name: kappa.name };
-  else if (hideoutOpen.length) {
-    const h = hideoutOpen[0];
-    keep = { kind: "hideout", station: h.station, level: h.level, count: h.count };
-  } else if (open.length) {
+  else if (open.length) {
     const q = open[0];
     keep = { kind: "quest", name: q.name, count: q.count, fir: q.fir, started: false };
   }

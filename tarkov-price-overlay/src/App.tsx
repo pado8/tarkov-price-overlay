@@ -5987,6 +5987,11 @@ function App() {
               result.attempt === "wide" && (
                 <div className="hint">{t.wideCaptureHint}</div>
               )}
+            {/* 11-06 인게임: 글자는 읽었는데 못 찾으면(「183/218」처럼) 안내가 하나도 없거나, 아무 글자에나 '목록 받는 중'만 떴다
+                → 흔한 원인(이름이 뜨기 전·빈 곳)을 먼저 알리고, 목록 재갱신 중이면 '처음·새 아이템이면 목록 받는 중'을 덧붙인다 */}
+            {!result.item_name && result.raw_text.trim() && result.attempt !== "wide" && (
+              <div className="hint">{t.noMatchHint}</div>
+            )}
             {/* 11-04 새 아이템: 못 찾으면 사이드카가 목록을 바로 다시 받는다 · 게임 업데이트 직후면 그 사실을 알린다 */}
             {!result.item_name && result.catalog_refreshing && (
               <div className="hint">{t.catalogRefreshingHint}</div>
@@ -6099,6 +6104,20 @@ function App() {
                 count: n.count,
               }));
               const need = stillNeeded(adviceQuests, adviceHideout, hideoutLevels);
+              // 판매 판단(11-06 인게임): 실수령은 플리 줄 바로 밑(상인 밑이라 헷갈렸다), 판정 한 줄(플리↔상인 비교)은 빼고
+              // 보관 안내는 퀘스트만(은신처는 필요한 곳이 너무 많아 안내가 안 보였다 — sellAdvice.ts)
+              const sellAdv = region.showSellAdvice
+                ? sellAdvice({
+                    basePrice: result.base_price,
+                    fleaPrice: result.flea_price,
+                    noFlea: result.no_flea,
+                    rates: result.flea_fee_rates,
+                    traders: (result.sell_for ?? []).map((s) => ({ name: s.name, price: s.price })),
+                    quests: adviceQuests,
+                    hideoutLevels,
+                    hideoutMgmtLevel,
+                  })
+                : null;
               const hasKappa = need.kappa;
               const hasQuestOrHideout = need.any;
               const lootTier =
@@ -6149,6 +6168,20 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.flea_price)}</span>
                   </div>
+                  {sellAdv?.fleaNet != null && (
+                    <div
+                      className="price sub-price"
+                      title={`${t.fleaFee} ${fmt(sellAdv.fee)}${sellAdv.discount > 0 ? ` (−${Math.round(sellAdv.discount * 100)}%)` : ""}
+${t.fleaFeeHint}`}
+                    >
+                      <span className="label">
+                        {t.fleaNet}
+                        {/* 좁은 카드(ru)에서 두 줄로 꺾여 금액만 — '수수료'·할인율은 마우스를 올리면 */}
+                        <span className="vendor-name"> (−{fmt(sellAdv.fee)})</span>
+                      </span>
+                      <span className="value sub-value">{fmt(sellAdv.fleaNet)}</span>
+                    </div>
+                  )}
                   {region.show24hRange &&
                     (result.flea_low_24h != null ||
                       result.flea_high_24h != null) && (
@@ -6195,59 +6228,15 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.trader_price)}</span>
                   </div>
-                  {region.showSellAdvice && (() => {
-                    const adv = sellAdvice({
-                      basePrice: result.base_price,
-                      fleaPrice: result.flea_price,
-                      noFlea: result.no_flea,
-                      rates: result.flea_fee_rates,
-                      traders: (result.sell_for ?? []).map((s) => ({ name: s.name, price: s.price })),
-                      quests: adviceQuests,
-                      hideout: adviceHideout,
-                      hideoutLevels,
-                      hideoutMgmtLevel,
-                    });
-                    if (adv.verdict === "none" && adv.fleaNet == null) return null;
-                    const k = adv.keep;
-                    const verdictText =
-                      k?.kind === "quest"
-                        ? (k.started ? t.sellKeepQuestStarted : t.sellKeepQuest).replace("{name}", k.name) + (k.fir ? " · " + t.sellFir : "")
-                        : k?.kind === "kappa"
-                          ? t.sellKeepKappa.replace("{name}", k.name)
-                          : k?.kind === "hideout"
-                            ? t.sellKeepHideout.replace("{station}", k.station).replace("{level}", String(k.level))
-                            : adv.verdict === "flea"
-                              ? adv.margin != null
-                                ? t.sellFleaBetter.replace("{n}", fmt(adv.margin))
-                                : t.sellFleaOnly
-                              : adv.verdict === "trader"
-                                ? result.no_flea
-                                  ? t.sellNoFlea.replace("{trader}", adv.traderName ?? "")
-                                  : adv.margin != null
-                                    ? t.sellTraderBetter.replace("{trader}", adv.traderName ?? "").replace("{n}", fmt(adv.margin))
-                                    : t.sellTraderOnly.replace("{trader}", adv.traderName ?? "")
-                                : "";
-                    return (
-                      <>
-                        {adv.fleaNet != null && (
-                          <div
-                            className="price sub-price"
-                            title={`${t.fleaFee} ${fmt(adv.fee)}${adv.discount > 0 ? ` (−${Math.round(adv.discount * 100)}%)` : ""}\n${t.fleaFeeHint}`}
-                          >
-                            <span className="label">
-                              {t.fleaNet}
-                              {/* 좁은 카드(ru)에서 두 줄로 꺾여 금액만 — '수수료'·할인율은 마우스를 올리면 */}
-                              <span className="vendor-name"> (−{fmt(adv.fee)})</span>
-                            </span>
-                            <span className="value sub-value">{fmt(adv.fleaNet)}</span>
-                          </div>
-                        )}
-                        {verdictText && (
-                          <div className={"sell-advice sell-advice-" + adv.verdict}>{verdictText}</div>
-                        )}
-                      </>
-                    );
-                  })()}
+                  {sellAdv?.keep && (
+                    <div className="sell-advice sell-advice-keep">
+                      {sellAdv.keep.kind === "quest"
+                        ? (sellAdv.keep.started ? t.sellKeepQuestStarted : t.sellKeepQuest).replace("{name}", sellAdv.keep.name) + (sellAdv.keep.fir ? " · " + t.sellFir : "")
+                        : sellAdv.keep.kind === "kappa"
+                          ? t.sellKeepKappa.replace("{name}", sellAdv.keep.name)
+                          : ""}
+                    </div>
+                  )}
                     </>
                   )}
                   {region.showBuyFor &&
