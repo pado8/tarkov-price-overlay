@@ -67,7 +67,7 @@
 (function () {
   var D = JSON.parse(document.getElementById("data").textContent);
   var I = D.items, Q = D.quests;
-  var GB = (location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0];
+  var GB = (location.pathname.match(/^\/guide\/(?:en|ru|zh)\//)||["/guide/"])[0];
   /*GDONE*/
   var KEY = "guide.quests", MODEKEY = "guide.mode";
   function load(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }

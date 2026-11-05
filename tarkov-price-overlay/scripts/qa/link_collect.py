@@ -38,7 +38,7 @@ class P(html.parser.HTMLParser):
 
 def walk(o, out):
     if isinstance(o, str):
-        if o.startswith(("http://", "https://", "/guide/", "/donate/", "/en/", "/ru/", "/about/", "/privacy/", "/status/")):
+        if o.startswith(("http://", "https://", "/guide/", "/donate/", "/en/", "/ru/", "/zh/", "/about/", "/privacy/", "/status/")):
             out.append(o)
     elif isinstance(o, dict):
         for v in o.values():

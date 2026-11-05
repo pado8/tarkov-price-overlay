@@ -8,6 +8,8 @@
 html{-webkit-text-size-adjust:100%}
 body{margin:0;word-break:keep-all;overflow-wrap:break-word;background:var(--bg);color:var(--text);line-height:1.55;
   font-family:"Pretendard","Segoe UI","맑은 고딕","Malgun Gothic",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+/* zh 판: keep-all 은 띄어쓰기 없는 중국어 문장을 한 단어로 묶어 좁은 화면에서 넘친다 → 일반 줄바꿈 + 간체 글꼴 */
+html:lang(zh) body{word-break:normal;line-break:strict;font-family:"Pretendard","Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,sans-serif}
 a{color:var(--gold);text-decoration:none}
 a:hover{text-decoration:underline}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
@@ -182,6 +184,7 @@ table.tot tr.done{opacity:.45}
   /* CSS 글자는 번역 표를 안 타므로 언어판마다 덮어쓴다 */
   html:lang(en) table.gs td.w::before{content:"Weapon"}html:lang(en) table.gs td.p::before{content:"Required parts"}html:lang(en) table.gs td.c::before{content:"Stat requirements"}
   html:lang(ru) table.gs td.w::before{content:"Оружие"}html:lang(ru) table.gs td.p::before{content:"Обязательные детали"}html:lang(ru) table.gs td.c::before{content:"Требования к характеристикам"}
+  html:lang(zh) table.gs td.w::before{content:"武器"}html:lang(zh) table.gs td.p::before{content:"必须包含的配件"}html:lang(zh) table.gs td.c::before{content:"性能要求"}
   table.gs tr{padding-bottom:6px}
   /* 제작 수익표: 폰에선 행마다 카드 — 결과물 / 시설·시간 / 재료 / 재료비·판매가·이익·시간당(2칸) */
   #ctbl,#ctbl tbody{display:block}
@@ -258,7 +261,7 @@ td.m.up{color:var(--green)}td.m.down{color:var(--red)}
 .top .sync.btn{cursor:pointer;background:none;color:var(--muted);border-color:var(--line);font:inherit;font-size:12px}.top .sync.btn:hover{color:var(--gold);border-color:var(--gold-dim)}.top .sync.btn:disabled{cursor:wait;opacity:.7}
 .synchelp{max-width:1100px;margin:8px auto 0;padding:8px 36px 8px 12px;position:relative;font-size:13px;line-height:1.5;color:var(--text);background:var(--panel2);border:1px solid var(--gold-dim);border-radius:8px}.synchelp a{color:var(--gold)}.synchelp .x{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px}
 #itbl tr.cut td{opacity:.75}#itbl tr.cut td:nth-child(2)::after{content:" 완료분 제외";font-size:11px;color:var(--gold);margin-left:4px}
-html:lang(en) #itbl tr.cut td:nth-child(2)::after{content:" done excluded"}html:lang(ru) #itbl tr.cut td:nth-child(2)::after{content:" без выполненного"}
+html:lang(en) #itbl tr.cut td:nth-child(2)::after{content:" done excluded"}html:lang(ru) #itbl tr.cut td:nth-child(2)::after{content:" без выполненного"}html:lang(zh) #itbl tr.cut td:nth-child(2)::after{content:" 已扣除完成部分"}
 .badge.syn{margin-left:6px;background:var(--panel2);border:1px solid var(--gold-dim);color:var(--gold);font-size:11px;padding:1px 6px;border-radius:999px}
 /* 사냥 퀘스트 페이지 + ★ 즐겨찾기 */
 .fav{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none;vertical-align:middle}

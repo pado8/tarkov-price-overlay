@@ -1,9 +1,9 @@
 """가이드 빌드 결과 정적 점검(배포 전 품질 게이트 1단계) — 11-04 점검에서 나온 회귀를 막는다.
 
   q-links   search.json 의 items/·keys/·rewards/ ?q= 값이 도착 페이지 행(data-s)과 맞는가(카파 배지 0행 사고)
-  hreflang  모든 페이지의 hreflang ko/en/ru/x-default 가 각 언어판 주소를 가리키는가(en/ru 템플릿 자기 참조 사고)
+  hreflang  모든 페이지의 hreflang ko/en/ru/zh-Hans/x-default 가 각 언어판 주소를 가리키는가(en/ru 템플릿 자기 참조 사고)
   noindex   noindex 페이지가 사이트맵·광고 코드에 들어 있지 않은가
-  hangul    en/ru 판 본문(스크립트·스타일 제외)에 한글이 남지 않았는가
+  hangul    en/ru/zh 판 본문(스크립트·스타일 제외)에 한글이 남지 않았는가
   og        og:image 누락
 사용: python scripts/qa/static_check.py [landing 경로]   종료 코드 1 = 실패
 """
@@ -33,7 +33,7 @@ def page_of(url: str) -> Path:
 
 
 # q-links
-for pre in ("", "en/", "ru/"):
+for pre in ("", "en/", "ru/", "zh/"):
     sj = G / pre / "search.json"
     if not sj.exists():
         continue
@@ -68,13 +68,13 @@ for f in G.rglob("index.html"):
     n += 1
     t = f.read_text(encoding="utf-8")
     rel = "/" + f.parent.relative_to(LAND).as_posix() + "/"
-    lang = "en" if rel.startswith("/guide/en/") else "ru" if rel.startswith("/guide/ru/") else "ko"
-    base = re.sub(r"^/guide/(en|ru)/", "/guide/", rel)
+    lang = next((l for l in ("en", "ru", "zh") if rel.startswith(f"/guide/{l}/")), "ko")
+    base = re.sub(r"^/guide/(en|ru|zh)/", "/guide/", rel)
     want = {"ko": SITE + base, "en": SITE + base.replace("/guide/", "/guide/en/", 1),
-            "ru": SITE + base.replace("/guide/", "/guide/ru/", 1)}
-    hl = dict(re.findall(r'<link rel="alternate" hreflang="([a-z-]+)" href="([^"]+)"', t))
+            "ru": SITE + base.replace("/guide/", "/guide/ru/", 1), "zh-Hans": SITE + base.replace("/guide/", "/guide/zh/", 1)}
+    hl = dict(re.findall(r'<link rel="alternate" hreflang="([A-Za-z-]+)" href="([^"]+)"', t))
     if hl:
-        for k in ("ko", "en", "ru"):
+        for k in ("ko", "en", "ru", "zh-Hans"):
             if k in hl and hl[k] != want[k]:
                 fails.append(f"hreflang  {rel}: {k} → {hl[k]} (기대 {want[k]})")
         if "x-default" in hl and hl["x-default"] != want["ko"]:

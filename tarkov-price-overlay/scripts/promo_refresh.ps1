@@ -1,6 +1,6 @@
 ﻿# 프로모 코드 자동 최신화 — 매주 예약 작업(작업 스케줄러 "TarkovGuidePromoRefresh")이 돌린다.
 #   1) scripts/promo_check.py 로 정리 사이트를 긁어 guide_data/promo_status.json 갱신
-#   2) 바뀐 게 있으면 가이드 세 언어(ko/en/ru) 재빌드 → deploy_landing.ps1(hosting.txt 대로 Vercel/Cloudflare) → IndexNow(프로모 페이지)
+#   2) 바뀐 게 있으면 가이드 네 언어(ko/en/ru/zh) 재빌드 → deploy_landing.ps1(hosting.txt 대로 Vercel/Cloudflare) → IndexNow(프로모 페이지)
 # 수동 실행: powershell -ExecutionPolicy Bypass -File scripts\promo_refresh.ps1 [-Force]
 # 로그: scripts\promo_refresh.log (최근 실행이 맨 아래)
 param([switch]$Force)
@@ -28,7 +28,7 @@ if (Test-Path $hub) {
 }
 if ($code -ne 3 -and -not $Force -and -not $stale) { Log "변경 없음(exit $code) — 재빌드 안 함"; exit 0 }
 
-foreach ($lang in @("ko", "en", "ru")) {
+foreach ($lang in @("ko", "en", "ru", "zh")) {
     $env:GUIDE_LANG = $lang
     & $py (Join-Path $root "scripts\build_guide.py") 2>&1 | Select-String "정적 페이지|한글 남은|Error|Traceback" | ForEach-Object { Log $_.Line }
     if ($LASTEXITCODE -ne 0) { Log "빌드 실패($lang) — 배포 중단"; exit 1 }

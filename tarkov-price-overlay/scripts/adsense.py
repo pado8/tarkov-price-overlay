@@ -88,6 +88,7 @@ AB_TEXT = {  # 안내 바 문구: [제목, 본문, '허용 방법' 버튼, 닫�
     "ko": ["광고가 차단돼 있어요.", "탈콥 가이드는 광고 수익으로 운영됩니다. 광고는 최소한으로만 넣고 전면·고정 광고는 쓰지 않아요. 이 사이트만 허용 목록에 넣어 주시면 큰 힘이 됩니다.", "허용하는 법", "닫기", "uBlock Origin: 주소창 옆 uBlock 아이콘 → 큰 전원 버튼(이 사이트에서 끄기) → 새로고침. 다른 차단 확장도 같은 방식으로 이 사이트만 꺼 주세요. 휴대폰·공유기의 광고 차단 DNS(AdGuard DNS 등)를 쓰면 그쪽에서 이 사이트를 허용해야 합니다.", "💛 광고 대신 후원으로 응원"],
     "en": ["Ads are blocked.", "This guide runs on ad revenue. We keep ads to a minimum and never use pop-ups or sticky ads. Allowing ads on this site only would help a lot.", "How to allow", "Close", "uBlock Origin: click the uBlock icon next to the address bar → the big power button (disable on this site) → reload. Other blockers work the same way — turn them off for this site only. If you use an ad-blocking DNS on your phone or router (AdGuard DNS etc.), allow this site there.", "💛 Support instead of ads"],
     "ru": ["Реклама заблокирована.", "Гайд существует на доходы от рекламы. Рекламы минимум, без всплывающих и закреплённых блоков. Разрешите рекламу только для этого сайта — это очень поможет.", "Как разрешить", "Закрыть", "uBlock Origin: нажмите значок uBlock рядом с адресной строкой → большую кнопку питания (отключить на этом сайте) → обновите страницу. Другие блокировщики отключаются так же — только для этого сайта. Если используете DNS с блокировкой рекламы на телефоне или роутере (AdGuard DNS и т. п.), разрешите этот сайт там.", "💛 Поддержать вместо рекламы"],
+    "zh": ["广告已被拦截。", "本指南靠广告收入运营。广告只放最少的量，不使用弹窗或固定广告。只为本站开放广告就是很大的支持。", "如何允许", "关闭", "uBlock Origin：点击地址栏旁的 uBlock 图标 → 大的电源按钮（在本站停用）→ 刷新页面。其他拦截扩展也一样，只对本站关闭即可。如果手机或路由器使用了拦截广告的 DNS（AdGuard DNS 等），请在那里允许本站。", "💛 不看广告，改为赞助支持"],
 }
 
 def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
@@ -147,14 +148,14 @@ def ad_page(f: Path) -> bool:
     rel = f.relative_to(LANDING).as_posix()
     # 건스미스(ko·en·ru)는 제외 — 위키(escapefromtarkov.fandom.com, CC BY-NC-SA = 비상업) 예시 조립을 옮겨 온 페이지라
     # 광고를 달면 비상업 조건과 충돌할 수 있다(2026-11-02 라이선스 확인: api.php siteinfo rightsinfo).
-    if re.match(r"guide/(?:(?:en|ru)/)?gunsmith/", rel):
+    if re.match(r"guide/(?:(?:en|ru|zh)/)?gunsmith/", rel):
         return False
     # 이벤트 퀘스트도 위키 목표·안내 문장을 번역해 옮긴 페이지 — 건스미스와 같은 이유로 제외(11-05 라이선스 점검).
     # 위키 문장을 화면에 보이지 않는 열쇠 찾기(맵 정보만 사용)·공략 메모(사실을 자체 문장으로)는 해당 없음
-    if re.match(r"guide/(?:(?:en|ru)/)?event/", rel):
+    if re.match(r"guide/(?:(?:en|ru|zh)/)?event/", rel):
         return False
     # noindex 개인 화면(내 즐겨찾기)은 제외 — 처음 온 사람에겐 빈 화면이라 '콘텐츠 없는 화면 광고' 정책 소지(11-04 점검)
-    if re.match(r"guide/(?:(?:en|ru)/)?favorites/", rel):
+    if re.match(r"guide/(?:(?:en|ru|zh)/)?favorites/", rel):
         return False
     return rel.startswith("guide/")
 
@@ -176,7 +177,7 @@ def apply() -> tuple[int, str | None]:
         if cid and ad_page(f) and "</head>" in s:
             t = _place(s, BLOCK_RE, snippet(cid, rec), "</head>")
             rel = f.relative_to(LANDING).as_posix()
-            lang = "en" if rel.startswith("guide/en/") else "ru" if rel.startswith("guide/ru/") else "ko"
+            lang = next((l for l in ("en", "ru", "zh") if rel.startswith(f"guide/{l}/")), "ko")
             t = _place(t, AB_RE, adblock_snippet(lang, bar_fallback()), "</body>") if bar and "</body>" in t else AB_RE.sub("", t)
         else:
             t = AB_RE.sub("", BLOCK_RE.sub("", s))

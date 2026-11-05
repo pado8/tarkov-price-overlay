@@ -3,7 +3,7 @@
 - 페이지: 각 index.html 의 <h1>(퀘스트는 한글명 + 영문명) → 그 페이지로 이동
 - 필요 아이템: items/ 표의 줄(data-id·이름·data-s 검색어) → /guide/items/?q=이름 (그 줄만 걸러 보임)
 - 열쇠: keys/ 템플릿 데이터의 열쇠 → /guide/keys/?q=이름
-- 화면 문구는 search.js 안의 ko/en/ru 표에서 고른다(번역 파이프라인을 타지 않게 index.html 이 아닌 별도 파일).
+- 화면 문구는 search.js 안의 ko/en/ru/zh 표에서 고른다(번역 파이프라인을 타지 않게 index.html 이 아닌 별도 파일).
 build_guide.main() 끝에서 apply(out_dir, lang, keys_items) 로 부른다.
 """
 from __future__ import annotations
@@ -51,7 +51,7 @@ def apply(out_dir: Path, lang: str, keys_items: dict) -> int:
         if rel == ".":
             rel = ""
         top = rel.split("/")[0]
-        if top in ("en", "ru"):
+        if top in ("en", "ru", "zh"):
             continue  # ko 빌드에서 하위 언어 폴더는 건너뜀
         txt = f.read_text(encoding="utf-8")
         m = re.search(r"<h1>(.*?)</h1>", txt, re.S)
@@ -131,10 +131,11 @@ def _q(s: str) -> str:
 
 
 SEARCH_JS = r"""(function(){
-var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
+var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":P.indexOf("/guide/zh/")===0?"zh":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
 var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",fz:"비슷한 결과"},
 en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",fz:"Similar"},
-ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"}}[L];
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"},
+zh:{ph:"搜索任务、物品",none:"没有结果",q:"任务",i:"所需物品",k:"钥匙",h:"藏身处",m:"地图",t:"商人",p:"页面",b:"Boss",a:"弹药",r:"奖励物品",u:"任务物品",x:"撤离点",fz:"相似结果"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
 var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"

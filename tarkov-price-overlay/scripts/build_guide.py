@@ -77,11 +77,12 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
     alts = ['<xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/" />',
             '<xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/en/" />',
             '<xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/ru/" />',
+            '<xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/zh/" />',
             '<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/" />']
     nl = chr(10)
     out = [SITEMAP_HEAD.rstrip(nl)]
     for loc, pri in (("https://tarkov.aquapado.com/", "1.0"), ("https://tarkov.aquapado.com/en/", "0.9"),
-                     ("https://tarkov.aquapado.com/ru/", "0.9")):
+                     ("https://tarkov.aquapado.com/ru/", "0.9"), ("https://tarkov.aquapado.com/zh/", "0.9")):
         out += ["  <url>", f"    <loc>{loc}</loc>"] + [f"    {a}" for a in alts] + [
             f"    <lastmod>{old_lastmod(loc)}</lastmod>", "    <changefreq>weekly</changefreq>",
             f"    <priority>{pri}</priority>", "  </url>"]
@@ -91,9 +92,9 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
             return "0.9"
         return "0.8" if u.count("/") <= 3 else "0.6"
 
-    # 가이드는 ko(/guide/x/)·en(/guide/en/x/)·ru(/guide/ru/x/) 세 판 — 각 항목에 언어 대체 주소를 단다
+    # 가이드는 ko(/guide/x/)·en(/guide/en/x/)·ru(/guide/ru/x/)·zh(/guide/zh/x/) 네 판 — 각 항목에 언어 대체 주소를 단다
     for u in sorted(set(guide_urls), key=lambda u: (u.count("/"), u)):
-        galts = [f'<xhtml:link rel="alternate" hreflang="{l}" href="https://tarkov.aquapado.com{guide_static.lang_path(u, l)}" />'
+        galts = [f'<xhtml:link rel="alternate" hreflang="{guide_static.hl(l)}" href="https://tarkov.aquapado.com{guide_static.lang_path(u, l)}" />'
                  for l, _, _ in guide_static.LANGS] + [f'<xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com{u}" />']
         for l, _, _ in guide_static.LANGS:
             loc = f"https://tarkov.aquapado.com{guide_static.lang_path(u, l)}"
@@ -110,7 +111,7 @@ def write_sitemap(guide_urls: list[str], stamp: str) -> None:
             "    <changefreq>yearly</changefreq>", "    <priority>0.3</priority>", "  </url>"]
     out.append("</urlset>")
     sm.write_text(nl.join(out) + nl, encoding="utf-8")
-    print(f"[guide] sitemap: {len(set(guide_urls)) * 3 + 5} URL (가이드 {len(set(guide_urls))}쪽 × 3개 언어)")
+    print(f"[guide] sitemap: {len(set(guide_urls)) * len(guide_static.LANGS) + 6} URL (가이드 {len(set(guide_urls))}쪽 × {len(guide_static.LANGS)}개 언어)")
 
 
 # 11-04: 사이트맵 lastmod 를 '내용이 실제로 바뀐 날'로. 전엔 빌드마다 1,794쪽 전부 빌드 날짜가 찍혀
@@ -250,10 +251,10 @@ def keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info
 
 def main() -> int:
     t0 = time.time()
-    # 언어판: GUIDE_LANG=ko(기본)·en·ru. ko 외는 tarkov.dev 해당 로케일 표를 쓰고 /guide/<lang>/ 아래에 쓴다.
+    # 언어판: GUIDE_LANG=ko(기본)·en·ru·zh. ko 외는 tarkov.dev 해당 로케일 표를 쓰고 /guide/<lang>/ 아래에 쓴다.
     lang = (os.environ.get("GUIDE_LANG") or "ko").lower()
-    if lang not in ("ko", "en", "ru"):
-        raise SystemExit(f"GUIDE_LANG must be ko/en/ru (got {lang})")
+    if lang not in ("ko", "en", "ru", "zh"):
+        raise SystemExit(f"GUIDE_LANG must be ko/en/ru/zh (got {lang})")
     sfx = f"_{lang}"
     out_dir = OUT if lang == "ko" else OUT / lang
     global guide_static
@@ -274,6 +275,14 @@ def main() -> int:
     items_pve = get("pve/items")["items"]
     loc_items = get(f"regular/items{sfx}") or {}
     loc_items_en = get("regular/items_en") or {}
+
+    def over_en(table: dict, en_table: dict) -> dict:
+        """zh: tarkov.dev 중국어 로케일은 빠진 키가 많다(퀘스트는 러시아어의 약 2/3) → 영어 표 위에 중국어 값을 덮는다."""
+        if lang != "zh":
+            return table
+        return {**en_table, **{k: v for k, v in table.items() if not isinstance(v, str) or v.strip()}}
+
+    loc_items = over_en(loc_items, loc_items_en)
     # 퀘스트는 모드마다 조금 다르다(23개가 [PVP ZONE]/[PVE ZONE] 판으로 갈림, 프레스티지
     # 퀘스트는 일반판에만) → 두 모드의 합집합으로 만들고 퀘스트마다 속한 모드를 단다.
     tasks_doc_reg = get("regular/tasks")
@@ -286,7 +295,8 @@ def main() -> int:
     sys.path.insert(0, str(ROOT / "python-core"))
     # 두 모드 로케일 병합: 같은 키면 '그 언어 글자가 든 쪽' 우선(regular 는 영어로 남아 있고 pve 에만 한글이 있는 키가
     # 83개 있었다 — regular 가 덮어써 공식 한글이 버려지던 것, 2026-11-02 검수에서 발견)
-    script = {"ko": re.compile(r"[가-힣]"), "ru": re.compile(r"[А-Яа-яЁё]"), "en": re.compile(r"[A-Za-z]")}[lang]
+    script = {"ko": re.compile(r"[가-힣]"), "ru": re.compile(r"[А-Яа-яЁё]"), "en": re.compile(r"[A-Za-z]"),
+              "zh": re.compile(r"[一-鿿]")}[lang]
     loc_tasks = dict(get(f"pve/tasks{sfx}") or {})
     for k, v in (get(f"regular/tasks{sfx}") or {}).items():
         cur = loc_tasks.get(k)
@@ -296,11 +306,14 @@ def main() -> int:
         import quest_ko  # 영어로 남은 퀘스트 이름·목표의 한국어 보정 표(python-core/data/quest_ko.json) — 사이드카와 공유
         loc_tasks = quest_ko.overlay(loc_tasks)
     loc_tasks_en = {**(get("pve/tasks_en") or {}), **(get("regular/tasks_en") or {})}
+    loc_tasks = over_en(loc_tasks, loc_tasks_en)
     maps_doc = get("regular/maps")
     maps = maps_doc["maps"]
-    loc_maps = get(f"regular/maps{sfx}") or {}
+    loc_maps_en = get("regular/maps_en") or {}
+    loc_maps = over_en(get(f"regular/maps{sfx}") or {}, loc_maps_en)
     traders = get("regular/traders")
-    loc_traders = get(f"regular/traders{sfx}") or {}
+    loc_traders = over_en(get(f"regular/traders{sfx}") or {}, get("regular/traders_en") or {} if lang == "zh" else {})
+    loc_hideout = over_en(get(f"regular/hideout{sfx}") or {}, get("regular/hideout_en") or {} if lang == "zh" else {})
     print(f"[guide] 데이터 수신 {time.time() - t0:.1f}s — 아이템 {len(items_reg)}, 퀘스트 {len(tasks)}, 지도 {len(maps)}")
 
     def loc(table, key, fallback=None):
@@ -492,9 +505,9 @@ def main() -> int:
         maps=maps, loc_maps=loc_maps, mobs=maps_doc.get("mobs") or {},
         traders=traders, loc_traders=loc_traders,
         hideout_reg=get("regular/hideout") or {}, hideout_pve=get("pve/hideout") or {},
-        loc_hideout=get(f"regular/hideout{sfx}") or {},
+        loc_hideout=loc_hideout,
         crafts_reg=get("regular/crafts") or [], crafts_pve=get("pve/crafts") or [],
-        loc_maps_en=get("regular/maps_en") or {},
+        loc_maps_en=loc_maps_en,
     )
     for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
         suf = ctx.display_suffix.get(q["id"])

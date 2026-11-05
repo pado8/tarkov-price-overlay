@@ -7,6 +7,7 @@ const MUST = {
        "하이드아웃", "팩토리", "랩", "레덱스", "IFAK", "SICC", "탈출구", "프로모", "건스미스", "프레스티지", "쇄빙선", "UN Roadblock 없음?"],
   "en/": ["kappa", "collector", "tagilla", "reshala", "m855a1", "extract", "crafts", "ifak", "sicc", "hideout", "icebreaker"],
   "ru/": ["каппа", "тагилла", "решала", "патроны", "убежище", "крафт"],
+  "zh/": ["kappa", "收藏家", "藏身处", "弹药", "海关", "tagilla", "枪匠", "破冰船", "撤离点", "m855a1", "ifak"],
 };
 const ALLOW_ZERO = new Set(["UN Roadblock 없음?"]);  // 0건이어야 정상인 질의(지워진 탈출구)
 const js = fs.readFileSync(ROOT + "search.js", "utf8");

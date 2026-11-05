@@ -52,7 +52,7 @@ BUILD_ATTR = {"accuracy": "정확도(MOA)", "durability": "내구도", "effectiv
 STATUS = {"complete": "완료", "active": "진행 중", "failed": "실패", "started": "시작"}
 # 공개 데이터 아이템 목록에 아직 없는데 제작·퀘스트 재료로 id 만 나오는 아이템 — 이름을 위키에서 보충(없으면 칩에 id 가 그대로 보였다)
 MISSING_ITEMS = {
-    "6a5f9becfc12d937d50ae095": {"ko": "알 수 없는 시설의 노트북", "en": "Laptop from an unknown facility", "ru": "Ноутбук с неизвестного объекта"},  # 1.3.0 정보 센터 제작 재료(위키 Data from Fence's laptop)
+    "6a5f9becfc12d937d50ae095": {"ko": "알 수 없는 시설의 노트북", "en": "Laptop from an unknown facility", "ru": "Ноутбук с неизвестного объекта", "zh": "来自未知设施的笔记本电脑"},  # 1.3.0 정보 센터 제작 재료(위키 Data from Fence's laptop)
 }
 # 공식 위키에만 있는 선행·다음 연결 — scripts/wiki_quest_links.py 가 만든다(없으면 빈 표)
 WIKI_LINKS_PATH = Path(__file__).resolve().parent / "guide_data" / "wiki_quest_links.json"
@@ -89,7 +89,14 @@ LANG = "ko"
 I18N: dict = {}      # ko 구간 → 번역 (en/ru 빌드에서 템플릿 페이지 번역용)
 I18N_MISSING: set = set()
 # 언어 이름은 언어 메뉴에서 각 언어 그대로 보여야 해서 한글을 이스케이프로 적는다(번역 표가 "Korean" 으로 바꾸지 않게)
-LANGS = [("ko", "\ud55c\uad6d\uc5b4", "ko_KR"), ("en", "English", "en_US"), ("ru", "Русский", "ru_RU")]
+LANGS = [("ko", "\ud55c\uad6d\uc5b4", "ko_KR"), ("en", "English", "en_US"), ("ru", "Русский", "ru_RU"), ("zh", "简体中文", "zh_CN")]
+# 경로·파일 이름은 zh, html lang·hreflang 값은 zh-Hans(간체임을 밝힘 — 랜딩 /zh/ 와 같은 값)
+HTML_LANG = {"zh": "zh-Hans"}
+
+
+def hl(lang: str | None = None) -> str:
+    lang = lang or LANG
+    return HTML_LANG.get(lang, lang)
 
 
 def set_lang(lang: str, table: dict | None = None) -> None:
@@ -105,7 +112,7 @@ def lang_path(path: str, lang: str | None = None) -> str:
 
 
 def hreflang_html(path: str) -> str:
-    links = "".join(f'<link rel="alternate" hreflang="{l}" href="{SITE}{lang_path(path, l)}" />\n' for l, _, _ in LANGS)
+    links = "".join(f'<link rel="alternate" hreflang="{hl(l)}" href="{SITE}{lang_path(path, l)}" />\n' for l, _, _ in LANGS)
     return links + f'<link rel="alternate" hreflang="x-default" href="{SITE}{path}" />\n'
 
 
@@ -121,14 +128,17 @@ FLAG_SVG = {
           '<rect width="16" height="12.9" fill="#3c3b6e"/><g fill="#fff"><circle cx="3" cy="2.6" r=".9"/><circle cx="8" cy="2.6" r=".9"/><circle cx="13" cy="2.6" r=".9"/>'
           '<circle cx="5.5" cy="6.4" r=".9"/><circle cx="10.5" cy="6.4" r=".9"/><circle cx="3" cy="10.2" r=".9"/><circle cx="8" cy="10.2" r=".9"/><circle cx="13" cy="10.2" r=".9"/></g></svg>',
     "ru": '<svg viewBox="0 0 36 24" aria-hidden="true"><rect width="36" height="8" fill="#fff"/><rect y="8" width="36" height="8" fill="#0039a6"/><rect y="16" width="36" height="8" fill="#d52b1e"/></svg>',
+    "zh": '<svg viewBox="0 0 36 24" aria-hidden="true"><rect width="36" height="24" fill="#de2910"/>'
+          '<path d="M6 3.2l1.06 3.25h3.42l-2.77 2.01 1.06 3.25L6 9.7l-2.77 2.01 1.06-3.25L1.52 6.45h3.42z" fill="#ffde00"/>'
+          '<g fill="#ffde00"><circle cx="12" cy="2.4" r=".9"/><circle cx="14.4" cy="4.8" r=".9"/><circle cx="14.4" cy="8.4" r=".9"/><circle cx="12" cy="10.8" r=".9"/></g></svg>',
 }
-FLAG_CODE = {"ko": "KR", "en": "US", "ru": "RU"}
+FLAG_CODE = {"ko": "KR", "en": "US", "ru": "RU", "zh": "CN"}
 
 
 def lang_switch_html(path: str) -> str:
     """상단 언어 전환(국기 + 국가코드 드롭다운) — 절대 주소로 써서 en/ru 판의 링크 접두 처리에 안 걸리게."""
     items = "".join(
-        f'<a{" class=\"on\"" if l == LANG else ""} href="{SITE}{lang_path(path, l)}" hreflang="{l}" lang="{l}">'
+        f'<a{" class=\"on\"" if l == LANG else ""} href="{SITE}{lang_path(path, l)}" hreflang="{hl(l)}" lang="{hl(l)}">'
         f'{FLAG_SVG[l]}<b>{FLAG_CODE[l]}</b><span>{name}</span></a>' for l, name, _ in LANGS)
     return (f'<details class="lang"><summary aria-label="Language">{FLAG_SVG[LANG]}<b>{FLAG_CODE[LANG]}</b></summary>'
             f'<div class="lmenu">{items}</div></details>')
@@ -145,7 +155,7 @@ def localize_template(html_text: str, path: str) -> str:
     html_text = _re.sub(r"(<nav>.*?</nav>)", lambda m: m.group(1) + lang_switch_html(path), html_text, count=1, flags=_re.S)
     if LANG == "ko":
         return html_text
-    html_text = html_text.replace('<html lang="ko">', f'<html lang="{LANG}">', 1)
+    html_text = html_text.replace('<html lang="ko">', f'<html lang="{hl()}">', 1)
     # canonical·og:url 만 — 전역으로 바꾸면 hreflang ko·x-default 와 언어 메뉴 KR 링크까지 en/ru 주소가 됐다(11-04 점검)
     for attr in ('rel="canonical" href=', 'property="og:url" content='):
         html_text = html_text.replace(f'{attr}"{SITE}{path}"', f'{attr}"{SITE}{lang_path(path)}"')
@@ -714,7 +724,7 @@ class Ctx:
             if LANG == "ko":
                 return "감염된 타길라" if mob == "infectedTagilla" else "감염자"
             n = self._loc(self.loc_maps, mob) or mob
-            return n if n != mob else {"en": "Infected", "ru": "Заражённый"}.get(LANG, "Infected")
+            return n if n != mob else {"en": "Infected", "ru": "Заражённый", "zh": "感染者"}.get(LANG, "Infected")
         n = self._loc(self.loc_maps, mob) or self._loc(self.loc_tasks, mob) or TARGETS.get(mob) or mob
         if LANG != "ko":  # en/ru 로케일은 보스 이름이 그 언어로 있다
             return n
@@ -961,7 +971,7 @@ def icon_url(*urls):
     return NOICON
 
 
-OG_IMAGE = {"ko": "og.png", "en": "og-en.png", "ru": "og-ru.png"}  # 언어판 공유 미리보기 그림(11-04: en/ru 도 한국어 그림을 쓰던 것)
+OG_IMAGE = {"ko": "og.png", "en": "og-en.png", "ru": "og-ru.png", "zh": "og-zh.png"}  # 언어판 공유 미리보기 그림(11-04: en/ru 도 한국어 그림을 쓰던 것)
 GSEARCH_SLOT = '<div class="gsearch" role="search"><input type="search" autocomplete="off" aria-label="검색" /></div>'
 
 
@@ -985,7 +995,7 @@ def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = ""
     ads_html = (f'\n<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
                 if ADSENSE_CLIENT else "")
     return f"""<!doctype html>
-<html lang="{LANG}">
+<html lang="{hl()}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1621,7 +1631,7 @@ if(fo&&!(qf||hf))ok=false;if(q&&d.s.indexOf(q)<0&&d.s.indexOf(q.replace(/\\s+/g,
 r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector("input");if(c)c.checked=hv;
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
 document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";
-var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href=(location.pathname.match(/^\\/guide\\/(?:en|ru)\\//)||["/guide/"])[0]+"rewards/"+(q?"?q="+encodeURIComponent(q):"")}try{if(cutn&&gsync()&&window.gtag&&!window.__se){window.__se=1;gtag("event","sync_effect",{page:"items",cut_bucket:cutn<10?"1-9":cutn<50?"10-49":"50+"})}}catch(x){}}
+var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href=(location.pathname.match(/^\\/guide\\/(?:en|ru|zh)\\//)||["/guide/"])[0]+"rewards/"+(q?"?q="+encodeURIComponent(q):"")}try{if(cutn&&gsync()&&window.gtag&&!window.__se){window.__se=1;gtag("event","sync_effect",{page:"items",cut_bucket:cutn<10?"1-9":cutn<50?"10-49":"50+"})}}catch(x){}}
 document.addEventListener("guide-sync",function(){mode=L(MK,"pvp");seg("mode",mode);render()});
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
@@ -1778,7 +1788,7 @@ def _allq(ctx: Ctx) -> dict:
 
 
 FAV_JS = r"""<script>
-(function(){/*GDONE*/var GB=(location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0],FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+(function(){/*GDONE*/var GB=(location.pathname.match(/^\/guide\/(?:en|ru|zh)\//)||["/guide/"])[0],FK="guide.fav",K="guide.quests";function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var all=JSON.parse(document.getElementById("allq").textContent),box=document.getElementById("fl"),cache={},MP="guide.fav.map";
 var mpSel=document.getElementById("mp");(function(){var ms={};Object.keys(all).forEach(function(t){(all[t][4]||[]).forEach(function(m){ms[m]=1})});Object.keys(ms).sort().forEach(function(m){var o=document.createElement("option");o.value=m;o.textContent=m;mpSel.appendChild(o)});var sv=L(MP,"all");if(sv!=="all"&&ms[sv])mpSel.value=sv})();
 mpSel.addEventListener("change",function(){S(MP,mpSel.value);render()});
@@ -3691,7 +3701,7 @@ function bucket(n){return n<1?"0":n<10?"1-9":n<50?"10-49":n<150?"50-149":"150+"}
 function gmode(){return L(MK,"pvp")==="pve"?"pve":"regular"}
 function qmode(){var sy=L(SK,null);if(!sy||!sy.ts)return "auto";var g=gmode();if(sy.mode==="season"&&g==="regular")return "season";return g}
 function smodeOf(m){return m==="pve"?"pve":m==="season"?"season":"regular"}
-var GB=(location.pathname.match(/^\/guide\/(?:en|ru)\//)||["/guide/"])[0],HOME=GB==="/guide/"?"/":GB.replace("/guide/","/");
+var GB=(location.pathname.match(/^\/guide\/(?:en|ru|zh)\//)||["/guide/"])[0],HOME=GB==="/guide/"?"/":GB.replace("/guide/","/");
 function chip(sy,stale){var top=document.querySelector(".top .wrap");if(!top)return;var old=document.querySelector(".sync");if(old)old.remove();var a=document.createElement("a");a.className="sync"+(stale?" stale":"");a.href=stale?"#":(GB+"quests/");
 var n=(sy.completed||[]).length,ago=stale?Math.round((Date.now()-sy.ts)/60000):0,agoTxt=ago<1?"방금":ago<60?ago+"분 전":Math.round(ago/60)+"시간 전";
 var base="🔗 오버레이 연동 · 완료 "+n+"개"+(sy.mode==="pve"?" (PVE)":sy.mode==="season"?" (시즌)":" (PVP)");
