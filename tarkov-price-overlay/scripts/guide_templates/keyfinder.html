@@ -202,8 +202,14 @@
   function worker(lang) {
     if (!workers[lang]) workers[lang] = tess().then(function (T) {
       status("글자 인식 엔진 준비 중… (처음 한 번만)");
-      return T.createWorker(lang === "eng" ? "eng" : [lang, "eng"]);
-    }).then(function (w) { return w.setParameters({ tessedit_pageseg_mode: "7" }).then(function () { return w; }); });
+      // If the engine fails to start (seen on WebKit: worker init rejects inside the worker and createWorker never settles),
+      // give up after 120 s so run() shows the engine error instead of waiting forever (11-05 cross-browser check)
+      return Promise.race([
+        T.createWorker(lang === "eng" ? "eng" : [lang, "eng"], 1, { errorHandler: function () {} }),
+        new Promise(function (_, bad) { setTimeout(function () { bad(new Error("engine timeout")); }, 120000); })
+      ]);
+    }).then(function (w) { return w.setParameters({ tessedit_pageseg_mode: "7" }).then(function () { return w; }); })
+      .catch(function (e) { workers[lang] = null; throw e; });  // allow a retry on the next image
     return workers[lang];
   }
   var drop = $("drop"), last = null;

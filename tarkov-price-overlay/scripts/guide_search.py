@@ -23,7 +23,7 @@ BOSS_ALIAS = {
 }
 # 메뉴 페이지 별칭 — 키 = /guide/ 뒤 경로
 PAGE_ALIAS = {
-    "kappa/": "kappa 카파템 컬렉터 collector 수집가 카파 컨테이너", "keys/": "열쇠 키 key keys 키카드 keycard",
+    "kappa/": "kappa 카파템 컬렉터 collector 수집가 카파 컨테이너 каппа коллекционер", "keys/": "열쇠 키 key keys 키카드 keycard",
     "hideout/": "하이드아웃 hideout 은신처 은신처 재료", "crafts/": "제작 crafts craft 크래프트 제작 수익",
     "ammo/": "탄약 ammo 총알 관통력 탄 penetration", "bosses/": "보스 boss bosses 스폰 확률",
     "promo/": "프로모 코드 promo code 쿠폰 리딤", "hunt/": "사냥 킬 퀘스트 처치 hunt", "items/": "필요템 퀘템 퀘스트 아이템 needed items",
@@ -166,7 +166,7 @@ function rk(k){return k in ORD?ORD[k]:99}
 function find(q){var nq=norm(q);if(!nq)return[];if(AL[nq])nq=AL[nq];var out=[];
 for(var i=0;i<idx.length;i++){var r=idx[i],sc=-1;
 var jamo=/^[ㄱ-ㅎ]+$/.test(nq);
-if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
+if(r.s===nq)sc=0;else if(r.t.indexOf(nq)>=0)sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(r.s.indexOf(nq)===0)sc=1;else if(r.s.indexOf(nq)>=0)sc=2;else if(r.z.indexOf(nq)>=0)sc=3;else if(jamo&&r.t.some(function(x){return cho(x)===nq}))sc=("pmhtb".indexOf(r.k)>=0)?0.5:1;else if(jamo&&r.c.indexOf(nq)>=0)sc=2;
 if(sc>=0)out.push([sc,rk(r.k),r.n.length,r])}
 if(!out.length&&nq.length>=2&&!jamo)for(i=0;i<idx.length;i++){r=idx[i];if(near(r.s,nq))out.push([4,rk(r.k),r.n.length,r])}
 out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});fuzzy=out.length&&out[0][0]===4;return out.slice(0,14).map(function(x){return x[3]})}

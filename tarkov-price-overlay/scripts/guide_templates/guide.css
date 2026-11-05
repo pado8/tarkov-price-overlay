@@ -1,4 +1,5 @@
-:root{
+:root{color-scheme:dark;  /* 11-05: WebKit(사파리)이 선택 상자를 흰 바탕+밝은 글자로 그리던 것 — 기본 입력 요소를 어두운 모양으로 */
+
   --bg:#13130f; --bg2:#1a1a15; --panel:#1f1f19; --panel2:#26261f;
   --gold:#c8aa64; --gold-dim:#9c8550; --line:#3a352b; --line2:#2c2922;
   --text:#e9e7e0; --muted:#9d988b; --green:#6cc070; --red:#e06a5a; --blue:#6fa8dc;
@@ -305,3 +306,6 @@ button.cp{min-height:28px;padding:4px 10px!important}
 
 /* 내 상인 등급(11-04) */
 .llbox{margin-top:10px}.llbox summary{cursor:pointer;font-weight:700}.llgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px 14px;margin-top:6px}.llrow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px}.llrow select{background:var(--panel2);color:inherit;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font:inherit;font-size:13px;min-height:30px}.myll.ok{color:#7fbf7f}.myll.warn,.qmeta .warn{color:#e0a060}
+
+/* 11-05: iOS 사파리는 16px 미만 입력칸에 포커스가 가면 화면을 확대한다 — 휴대폰에서 입력칸·선택 상자를 16px 로 */
+@media (max-width:560px){input[type=search],input[type=text],input:not([type]),select,textarea,.top .gsearch input{font-size:16px!important}}
