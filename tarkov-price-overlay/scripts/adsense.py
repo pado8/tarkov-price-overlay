@@ -106,7 +106,7 @@ def adblock_snippet(lang: str = "ko", fallback: bool = False) -> str:
             '<div id="tgab" role="note"><div class="in"><span class="sp"><b id="tgab-t"></b> <span id="tgab-m"></span></span>'
             # 11-04: 광고를 끈 사람에게 '광고 대신 후원' 선택지 — 앱 후원 패널과 같은 주소(ko 카카오페이 / en·ru PayPal)
             '<button class="y" id="tgab-h"></button><a class="d" id="tgab-d" target="_blank" rel="noopener" href="'
-            + ("https://qr.kakaopay.com/Ej8AkkdEJ" if lang == "ko" else "https://paypal.me/tarkovoverlay")
+            + ("/donate/" if lang == "ko" else "https://paypal.me/tarkovoverlay")
             + '"></a><button id="tgab-x"></button><div class="how" id="tgab-w"></div></div></div>'
             '<script>(function(){var P=location.pathname;'
             'var T=' + json.dumps(AB_TEXT.get(lang) or AB_TEXT["ko"], ensure_ascii=False) + ';'

@@ -541,7 +541,7 @@ def fmt_dur(sec) -> str:
 ALT_LIST_MAX = 120
 
 # 11-04 후원 링크(앱 후원 패널과 같은 주소) — 한국어판은 카카오페이, 영어·러시아어판은 PayPal
-DONATE_KO = "https://qr.kakaopay.com/Ej8AkkdEJ"
+DONATE_KO = "/donate/"  # 카카오페이 송금 링크는 PC 에서 404(휴대폰 전용) → QR·버튼을 고르는 안내 페이지로(11-05)
 DONATE_INTL = "https://paypal.me/tarkovoverlay"
 
 
