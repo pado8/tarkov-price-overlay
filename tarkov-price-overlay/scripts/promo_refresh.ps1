@@ -16,7 +16,17 @@ Set-Location $root
 Log "== promo_refresh 시작"
 & $py (Join-Path $root "scripts\promo_check.py") 2>&1 | ForEach-Object { Log $_ }
 $code = $LASTEXITCODE
-if ($code -ne 3 -and -not $Force) { Log "변경 없음(exit $code) — 재빌드 안 함"; exit 0 }
+# 시세 신선도(11-05): 가이드의 시세(제작 수익·카파템·열쇠)는 빌드 날짜에 굳는다 → 마지막 빌드가 2일 이상 지났으면 프로모 변화가 없어도 재빌드
+$stale = $false
+$hub = Join-Path $root "landing\guide\index.html"
+if (Test-Path $hub) {
+    $m = [regex]::Match((Get-Content $hub -Raw -Encoding UTF8), '데이터 기준 (\d{4}-\d{2}-\d{2})')
+    if ($m.Success) {
+        $age = ((Get-Date).Date - [datetime]::ParseExact($m.Groups[1].Value, "yyyy-MM-dd", $null)).TotalDays
+        if ($age -ge 2) { $stale = $true; Log ("마지막 빌드가 {0}일 지남 — 시세 갱신을 위해 재빌드" -f [int]$age) }
+    }
+}
+if ($code -ne 3 -and -not $Force -and -not $stale) { Log "변경 없음(exit $code) — 재빌드 안 함"; exit 0 }
 
 foreach ($lang in @("ko", "en", "ru")) {
     $env:GUIDE_LANG = $lang

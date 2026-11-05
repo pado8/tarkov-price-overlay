@@ -1972,7 +1972,7 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
             '<b>선택 분기</b> 표시가 있는 퀘스트는 한쪽을 끝내면 다른 쪽이 실패하니 먼저 읽어 보세요.</div>'
             f'<section class="box"><h2>순서</h2><ol>{toc}</ol></section>'
             + "".join(boxes)
-            + '<p class="small muted">출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서. 이벤트가 끝나면 이 페이지도 내립니다.</p>')
+            + '<p class="small muted">출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서의 목표·안내 문장을 번역·정리했습니다(같은 조건으로 공유). 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다. 이벤트가 끝나면 이 페이지도 내립니다.</p>')
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="event", crumbs=[("이벤트 퀘스트", None)])
 
 
@@ -3073,6 +3073,14 @@ seg(mode);document.getElementById("cmode").addEventListener("click",function(e){
 </script>"""
 
 
+# 시세 신선도 경고(11-05) — 가이드는 수동 빌드라 시세가 빌드 날짜에 굳는다. 2일 이상 지나면 표 위에 경고(브라우저가 계산)
+def stale_html(stamp: str) -> str:
+    return (f'<p class="note stale" data-stamp="{e(stamp)}" hidden></p>'
+            '<script>(function(){var el=document.querySelector(".stale[data-stamp]");if(!el)return;var s=el.getAttribute("data-stamp"),'
+            'd=(Date.now()-Date.parse(s+"T00:00:00+09:00"))/864e5;if(!(d>=2))return;el.hidden=false;'
+            'el.textContent="⚠ 이 표의 시세는 "+Math.floor(d)+"일 전("+s+") 기준이라 지금 시세와 다를 수 있어요. 레이드 중 실시간 시세는 오버레이(F2)로 확인하세요."})()</script>')
+
+
 def crafts_page(ctx: Ctx) -> tuple[str, str]:
     unlock = craft_unlocks(ctx)
     rows = []
@@ -3109,7 +3117,7 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
                    '<td class="m n" data-l="재료비"></td><td class="m n" data-l="판매가"></td><td class="m n" data-l="이익"></td><td class="m n" data-l="시간당"></td></tr>')
     opts = '<option value="">모든 시설</option>' + "".join(f'<option value="{e(s)}">{e(ctx.station_name(s))}</option>' for s in st_opts)
     body = f"""<h1>은신처 제작 수익표 <span class="h1en">Crafting profit</span></h1>
-<p class="sub">제작 {len(trs)}개 · 시간당 이익 순 · 시세 기준 {e(ctx.stamp)} (tarkov.dev 24시간 평균)</p>
+<p class="sub">제작 {len(trs)}개 · 시간당 이익 순 · 시세 기준 {e(ctx.stamp)} (tarkov.dev 24시간 평균)</p>{stale_html(ctx.stamp)}
 <div class="note">⚠ <b>공식 위키 Crafts 표와 다른 제작(2026-11-02 전수 대조, 어느 쪽이 현재 게임과 맞는지 미확인)</b> — 재료: 5.56x45 MK 318(SOST) 90발은 위키가 화약 Eagle 2·Kite 4, M855A1 90발은 위키에 Kite 없음, ANA M2 플레이트 캐리어는 위키가 Ox bleach 2·Ripstop 없음, AK-50은 위키에 RPK-16 요구 없음 · 산출: 12/70 플레셰트 위키 60발(데이터 40) · 시설 단계: .300 BLK M62 작업대 3단계(데이터 2), 차량 배터리 작업대 2단계(데이터 1), Wilston 담배 조리 시설 2단계(데이터 1) · 시간: BNTI Zhuk(Press) 위키 2시간 6분(데이터 1시간 6분) 등 8건은 몇 분 차이. 위키에만 있는 제작 5개(스토리 챕터 연계)는 데이터에 없음. 시즌 모드에서는 제작 시간이 절반입니다.</div>
 <div class="note">이익 = 결과물 판매가 − 재료 구입비. 결과물은 플리 24시간 평균가(플리 거래 불가면 상인 최고 매입가), 재료는 플리 평균가와 상인 판매가 중 싼 쪽으로 계산했습니다.
 <b>도구</b> 표시 재료는 돌려받으므로 비용에서 뺐습니다. <b>연료비·플리 수수료(1.1.0부터 인상)·판매 시간은 빠져 있으니</b> 실제 이익은 이보다 작습니다. 시세는 하루에도 크게 움직이니 참고용으로만 보세요.</div>

@@ -497,6 +497,7 @@ def main() -> int:
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
         tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)
+        tpl = tpl.replace("<!--STALE-->", guide_static.stale_html("__STAMP__"))  # 시세 신선도 경고(번역 전에 넣어야 en/ru 도 번역됨)
         if 'property="og:image"' not in tpl:  # 공유 미리보기 태그(page() 와 같게, 11-04 점검: 템플릿 3쪽만 없었다)
             _t = re.search(r"<title>(.*?)</title>", tpl, re.S)
             _d = re.search(r'<meta name="description" content="([^"]*)"', tpl)

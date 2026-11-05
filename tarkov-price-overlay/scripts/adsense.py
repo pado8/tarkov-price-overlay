@@ -149,6 +149,10 @@ def ad_page(f: Path) -> bool:
     # 광고를 달면 비상업 조건과 충돌할 수 있다(2026-11-02 라이선스 확인: api.php siteinfo rightsinfo).
     if re.match(r"guide/(?:(?:en|ru)/)?gunsmith/", rel):
         return False
+    # 이벤트 퀘스트도 위키 목표·안내 문장을 번역해 옮긴 페이지 — 건스미스와 같은 이유로 제외(11-05 라이선스 점검).
+    # 위키 문장을 화면에 보이지 않는 열쇠 찾기(맵 정보만 사용)·공략 메모(사실을 자체 문장으로)는 해당 없음
+    if re.match(r"guide/(?:(?:en|ru)/)?event/", rel):
+        return False
     # noindex 개인 화면(내 즐겨찾기)은 제외 — 처음 온 사람에겐 빈 화면이라 '콘텐츠 없는 화면 광고' 정책 소지(11-04 점검)
     if re.match(r"guide/(?:(?:en|ru)/)?favorites/", rel):
         return False
