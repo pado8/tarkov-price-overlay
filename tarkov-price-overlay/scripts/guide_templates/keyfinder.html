@@ -156,7 +156,13 @@
     var o = norm(text);
     if (o.length < 2) return { st: "empty", c: [] };
     var sc = K.map(function (k) { return { k: k, d: Math.min.apply(null, k._n.map(function (n) { return dist(o, n); })) }; }).sort(function (a, b) { return a.d - b.d; });
-    var tol = o.length <= 4 ? 0 : o.length <= 7 ? 1 : 2;
+    // 3 chars or fewer: only an exact short-name match counts (2-char OCR noise used to match a name prefix, 11-05)
+    var eff = /[가-힣]/.test(o) ? o.length * 2 : o.length;  // one Hangul syllable carries about two Latin letters
+    if (eff <= 3) {
+      var ex = K.filter(function (k) { return k._n.indexOf(o) >= 0; });
+      return ex.length === 1 ? { st: "ok", c: [{ k: ex[0], d: 0 }] } : ex.length ? { st: "amb", c: ex.map(function (k) { return { k: k, d: 0 }; }) } : { st: "none", c: sc.slice(0, 3) };
+    }
+    var tol = eff <= 4 ? 0 : eff <= 7 ? 1 : 2;
     var top = sc.filter(function (x) { return x.d === sc[0].d && x.d <= tol; });
     if (!top.length) return { st: "none", c: sc.slice(0, 3) };
     return { st: top.length === 1 ? "ok" : "amb", c: top };
@@ -213,17 +219,24 @@
   async function readCells(img, cells, lang, label) {
     var w = await worker(lang), done = 0;
     for (var ci = 0; ci < cells.length; ci++) {
-      var cell = cells[ci], first = null, votes = {}, nv = 0, okm = null;
+      var cell = cells[ci], first = null, votes = {}, nv = 0, okm = null, conflict = null;
       status(label + "글자 읽는 중… " + (ci + 1) + "/" + cells.length);
       for (var kind = 0; kind < 3; kind++) {
         var text = ((await w.recognize(variant(img, cell.l, cell.t, cell.cw, cell.sh, kind))).data.text || "").trim();
         var m = matchKey(text);
         if (!first) first = { text: text, m: m };
-        if (m.st === "ok") { okm = { text: text, m: m }; break; }
+        if (m.st === "ok") {
+          // names with digits (room numbers) are read once more with another variant — a one-digit OCR slip (103/108) must agree twice (11-05)
+          if (okm) { if (okm.m.c[0].k.i !== m.c[0].k.i) conflict = [okm.m.c[0].k.i, m.c[0].k.i]; break; }
+          okm = { text: text, m: m };
+          if (!/\d/.test(norm(text)) || kind === 2) break;
+          continue;
+        }
         if (m.st === "amb") m.c.forEach(function (x) { votes[x.k.i] = (votes[x.k.i] || 0) + 1; nv++; });
       }
       cell.text = (okm || first).text; cell.id = null; cell.cands = null;
-      if (okm) { cell.id = okm.m.c[0].k.i; cell.st = "ok"; }
+      if (conflict) { cell.st = "amb"; cell.cands = conflict; }
+      else if (okm) { cell.id = okm.m.c[0].k.i; cell.st = "ok"; }
       else {
         var arr = Object.keys(votes).map(function (k) { return [k, votes[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
         if (arr.length && (arr.length === 1 || arr[0][1] > arr[1][1])) { cell.id = arr[0][0]; cell.st = "ok"; }
@@ -270,6 +283,18 @@
       status("글자 인식 엔진을 받지 못했습니다. 인터넷 연결을 확인하고 다시 넣어 주세요."); return;
     }
     tried.sort(function (a, b) { return b[1] - a[1]; });
+    // Korean-only short names (11 keys) cannot be read by the English engine; auto mode stops after English
+    // when half the cells match, so re-read only the unread cells with the Korean engine (11-05)
+    if (pick === "auto" && PAGE_LANG !== "ru" && tried[0][0] === "eng") {
+      var rest = tried[0][2].filter(function (c) { return c.st === "none"; });
+      if (rest.length) {
+        try {
+          var extra = rest.map(function (x) { return { r: x.r, c: x.c, l: x.l, t: x.t, cw: x.cw, sh: x.sh }; });
+          await readCells(img, extra, "kor", "");
+          extra.forEach(function (x, i) { if (x.st === "ok") { rest[i].text = x.text; rest[i].id = x.id; rest[i].st = "ok"; rest[i].cands = null; tried[0][1]++; } });
+        } catch (e) { /* keep the English result */ }
+      }
+    }
     last = { file: file, img: img, g: g, cells: tried[0][2], lang: tried[0][0], ms: Math.round(performance.now() - t0) };
     ev("keyfinder_result", { kf_cells: bucket(cells.length), kf_ok: bucket(tried[0][1]), kf_lang: tried[0][0],
       kf_sec: last.ms < 10000 ? "<10" : last.ms < 30000 ? "10-30" : "30+", kf_again: again ? "1" : "0" });
@@ -326,7 +351,7 @@
     var other = (k.u || []).filter(function (x) { return !u || x[0] !== u[0]; }).map(function (x) { return MAPN[x[0]]; }).filter(Boolean);
     if (other.length) tags += "<span class=\"small muted\">" + "다른 맵: " + esc(other.filter(function (x, i) { return other.indexOf(x) === i; }).join(" · ")) + "</span>";
     var q = (u && u[1]) || k.wq || [];
-    return "<div class=\"krow\"><img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(k.img) + "\" /><div><div class=\"nm\">" + esc(k.n) + "</div>" +
+    return "<div class=\"krow\"><img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(k.img) + "\" /><div><div class=\"nm\">" + esc(k.n) + (k.h ? " <span class=\"badge b-any\">위키: 게임에 없음</span>" : "") + "</div>" +
       (k.e && k.e !== k.n ? "<div class=\"en\">" + esc(k.e) + "</div>" : "") +
       (tags ? "<div style=\"margin-top:3px\">" + tags + "</div>" : "") +
       (q.length ? "<div class=\"qlist\">퀘스트: " + q.map(esc).join(" · ") + "</div>" : "") + "</div>" +

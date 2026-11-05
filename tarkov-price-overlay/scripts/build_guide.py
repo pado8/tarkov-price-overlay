@@ -27,11 +27,13 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "landing" / "guide"
 COLLECTOR_ID = "5c51aac186f77432ea65c552"
 # 같은 지도의 변형(야간·21+·튜토리얼·암전)은 열쇠 목록이 겹치므로 대표 지도로 합친다.
-MAP_SKIP = {"night-factory", "ground-zero-21", "ground-zero-tutorial", "the-lab-dark"}
+MAP_SKIP = {"night-factory", "ground-zero-21", "ground-zero-tutorial", "the-lab-dark",
+            "infected-factory", "infected-lab"}  # 11-05: 할로윈 변형 맵 — 원래 맵과 같은 열쇠가 따로 한 번 더 나왔다
 # 열쇠 페이지에서 뺄 (맵, 열쇠 id) — tarkov.dev locks 의 trunk 항목이 엉뚱한 열쇠를 가리키는 잔재(2026-11-02 위키 전수 대조):
 # 공장 비상구 열쇠(5448ba0b…)는 위키 기준 공장 전용인데 해안선·등대·시내·그라운드 제로 금고 17개를 여는 것으로 들어 있고,
 # VAZ 차 열쇠(5913651…)는 위키가 "여는 곳 없음"인데 세관 잠금 1개가 붙어 있다.
-KEY_SKIP = {("shoreline", "5448ba0b4bdc2d02308b456c"), ("lighthouse", "5448ba0b4bdc2d02308b456c"),
+KEY_SKIP = {("streets-of-tarkov", "61aa5ba8018e9821b7368da9"),  # 11-05: USEC 별장 두 번째 금고 열쇠 — 시내 trunk 잔재(위키는 등대만)
+            ("shoreline", "5448ba0b4bdc2d02308b456c"), ("lighthouse", "5448ba0b4bdc2d02308b456c"),
             ("streets-of-tarkov", "5448ba0b4bdc2d02308b456c"), ("ground-zero", "5448ba0b4bdc2d02308b456c"),
             ("customs", "5913651986f774432f15d132")}
 MAP_ORDER = ["customs", "factory", "woods", "shoreline", "interchange", "reserve",
@@ -166,6 +168,24 @@ def refresh_lastmod(stamp: str) -> None:
     print(f"[guide] sitemap lastmod: 오늘 바뀐 쪽 {changed}개 / 가이드 {len(new_store)}쪽")
 
 
+# 열쇠 찾기 손보정(11-05 점검, 위키 원문 확인): add=[맵, 입장 여부] 더하기 · none=여는 곳 없음 · hist=위키 '게임에 없음'
+KEYFINDER_FIX = {
+    "67e183377c6c2011970f3149": {"add": [["the-labyrinth", 0]]},   # Ariadne symbol key — 미궁 아리아드네 탈출구
+    "67ab3d4b83869afd170fdd3f": {"add": [["the-labyrinth", 0]]},   # BBQ-S43 gas torch — item_key_labyrinth
+    "678fa929819ddc4c350c0317": {"add": [["the-labyrinth", 0]]},   # Valve handwheel — item_key_labyrinth
+    "5c1d0f4986f7744bb01837fa": {"add": [["streets-of-tarkov", 0]]},  # TerraGroup Labs keycard (Black) — 시내 Cardinal 아파트 금고 패널
+    "679b9819a2f2dd4da9023512": {"add": [["shoreline", 1]]},       # Labrys access keycard — 해안선 요양원 서관 지하에서 미궁 입장
+    "67c04dac9320f644db06f45c": {"add": [["shoreline", 1]]},       # 터미널 입장 RFID 카드 3종 — 해안선 항만 인터콤
+    "67c033fd0610e91bea056998": {"add": [["shoreline", 1]]},
+    "67c04a6f9152fbdfa306cc66": {"add": [["shoreline", 1]]},
+    "5913651986f774432f15d132": {"none": True},                   # VAZ car key — 위키 "does currently not open any lock"
+    "6a33c17933cff6b88c08902e": {"hist": True},                   # Admin's key — 위키 Historical·Event content
+    "6391fcf5744e45201147080f": {"hist": True},                   # Primorsky Ave apartment key
+    "593858c486f774253a24cb52": {"hist": True},                   # Pumping station back door key
+    "57a349b2245977762b199ec7": {"hist": True},                   # Pumping station front door key
+}
+
+
 def keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info, loc, loc_maps, loc_short) -> dict:
     """'내 열쇠들 어느 맵에?'(/guide/keyfinder/) 데이터 — 열쇠 전부(지도 자물쇠에 없는 것 포함) + 세 언어 짧은 이름.
 
@@ -208,6 +228,14 @@ def keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info
         if not u and wk and wk.get("maps"):
             wq = [q_by_en.get(x, x) for x in wk.get("q") or []]
             u = [[m, wq, 0, 1] for m in wk["maps"] if m in names]
+        fx = KEYFINDER_FIX.get(iid) or {}
+        for m, acc in fx.get("add", []):
+            if m in names and not any(x[0] == m for x in (u or [])):
+                u = (u or []) + [[m, [], acc, 1]]
+        if fx.get("hist"):
+            row["h"] = 1
+        if fx.get("none") and not u:
+            wk = {**(wk or {}), "none": True}
         if u:
             row["u"] = u
         elif wk and wk.get("none"):
