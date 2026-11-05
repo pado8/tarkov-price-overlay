@@ -312,3 +312,21 @@ button.cp{min-height:28px;padding:4px 10px!important}
 
 /* 11-05: iOS 사파리는 16px 미만 입력칸에 포커스가 가면 화면을 확대한다 — 휴대폰에서 입력칸·선택 상자를 16px 로 */
 @media (max-width:560px){input[type=search],input[type=text],input:not([type]),select,textarea,.top .gsearch input{font-size:16px!important}}
+
+/* 무기 모딩(11-05) — 추천 조립 표 + 조립기 */
+.btn.sm{display:inline-flex;align-items:center;background:var(--gold);color:#15140f;border:0;border-radius:7px;padding:6px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn.sm.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:600}
+.btn.sm:hover{filter:brightness(1.08)}
+span.up{color:var(--green)}span.dn{color:var(--red)}
+table.mods td:first-child{white-space:nowrap}
+.mb .controls{margin:8px 0}
+.mtot{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin:8px 0;padding:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;z-index:5}
+.mtot div{display:flex;flex-direction:column;gap:2px}.mtot b{font-size:18px}
+@media (min-width:900px){.mtot{position:sticky;top:60px}}
+.mtree{margin:6px 0}
+.ms{display:flex;align-items:center;gap:8px;margin:3px 0;min-width:0}
+.ms label{flex:0 0 150px;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms select{flex:1 1 auto;min-width:0;max-width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:5px 6px;font:inherit;font-size:13px}
+.ms .req{font-size:10.5px;color:var(--gold);border:1px solid var(--gold-dim);border-radius:4px;padding:0 4px;margin-left:2px}
+.mlist{margin-top:8px}.mlist summary{cursor:pointer;font-weight:700}
+@media (max-width:560px){.ms{flex-wrap:wrap}.ms label{flex-basis:100%}}

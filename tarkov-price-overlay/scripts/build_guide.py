@@ -271,7 +271,8 @@ def main() -> int:
         guide_static.set_lang(lang, table)
     else:
         guide_static.set_lang(lang)
-    items_reg = get("regular/items")["items"]
+    items_doc_reg = get("regular/items")
+    items_reg = items_doc_reg["items"]
     items_pve = get("pve/items")["items"]
     loc_items = get(f"regular/items{sfx}") or {}
     loc_items_en = get("regular/items_en") or {}
@@ -509,6 +510,7 @@ def main() -> int:
         crafts_reg=get("regular/crafts") or [], crafts_pve=get("pve/crafts") or [],
         loc_maps_en=loc_maps_en,
     )
+    ctx.handbook = items_doc_reg.get("handbookCategories") or {}  # 무기 모딩 페이지의 무기 분류(11-05)
     for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
         suf = ctx.display_suffix.get(q["id"])
         if suf:

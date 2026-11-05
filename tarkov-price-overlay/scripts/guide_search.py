@@ -13,13 +13,28 @@ import json
 import re
 from pathlib import Path
 
-KIND = {"quest": "q", "hideout": "h", "maps": "m", "quests": "t"}
+KIND = {"quest": "q", "hideout": "h", "maps": "m", "quests": "t", "mods": "w"}
 # 보스 별칭(음역 차이·영문·별명) — 키 = 데이터 mob 이름(bosses 페이지 앵커 b-<키>)
 BOSS_ALIAS = {
     "bossBully": "레샬라 리샬라 르샬라 reshala", "bossKojaniy": "슈트르만 슈투르만 샤투른 shturman", "bossGluhar": "글루하 글루하르 glukhar",
     "bossTagilla": "태길라 타길라 tagilla", "bossKilla": "킬라 killa", "bossSanitar": "세니타 사니타르 sanitar",
     "bossBoar": "카반 kaban", "bossKolontay": "콜론타이 kollontay", "bossZryachiy": "즈리야치 즈랴치 zryachiy",
     "bossKnight": "나이트 knight 군즈 goons", "bossPartisan": "파르티잔 partisan", "bossTagillaAgro": "타길라 tagilla",
+}
+# 무기 모딩 페이지(w) 별칭 — 영문 이름에 든 말 → 한국 커뮤니티 통칭·음역(데이터 이름엔 '모신'·'글록'이 없어 0건이었다, 11-05)
+WEAPON_ALIAS = {
+    "Mosin": "모신 모신나강 모나강", "Glock": "글록", "Kalashnikov": "칼라시니코프 칼라쉬니코프", "AK-": "에이케이",
+    "SVDS": "드라구노프 SVD", "Vector": "벡터", "MP5": "엠피파이브 엠피5", "MP7": "엠피7", "MP9": "엠피9", "Saiga": "사이가",
+    "Remington": "레밍턴", "Benelli": "베넬리", "SIG": "시그", "Desert Eagle": "데글 데저트이글", "HK 416": "416 hk416",
+    "SCAR": "스카", "VAL": "발 아스발", "VSS": "빈토레즈", "Makarov": "마카로프", "Tokarev": "토카레프", "M1A": "엠원에이",
+    "SA-58": "FAL 팔", "RPK": "알피케이", "PKM": "피케이엠", "PKP": "페체네그", "AXMC": "엑스엠씨", "Mk-18": "마크18",
+    "Mk47": "머틴", "MCX": "엠씨엑스", "SR-25": "에스알25", "RSASS": "알사스", "G28": "지28", "UMP": "유엠피", "P90": "피90",
+    "KRISS": "크리스", "Five-seveN": "파이브세븐", "Grach": "그라치", "Yarygin": "야리긴", "Rhino": "라이노", "Mateba": "마테바",
+    "M700": "엠700", "Model 700": "M700", "SV-98": "에스브이98", "T-5000": "오르시스", "DVL": "디브이엘", "M60": "엠60",
+    "M32A1": "유탄 유탄발사기", "FN GL40": "유탄 유탄발사기", "AS VAL": "아스발", "SR-3M": "빅울", "9A-91": "9a91", "TOZ": "토즈",
+    "Toy gun": "장난감", "M4A1": "엠포 m4", "ADAR": "아다르", "TX-15": "론스타", "M590": "모스버그", "Mossberg": "모스버그",
+    "KS-23": "케이에스23", "SKS": "에스케이에스 sks", "VPO": "몰롯", "Uzi": "우지", "Kedr": "케드르", "Bizon": "비존",
+    "PP-91": "케드르", "QBZ": "큐비지", "AUG": "어그", "G36": "지36", "MDR": "엠디알", "AA-12": "에이에이12",
 }
 # 메뉴 페이지 별칭 — 키 = /guide/ 뒤 경로
 PAGE_ALIAS = {
@@ -28,7 +43,8 @@ PAGE_ALIAS = {
     "ammo/": "탄약 ammo 총알 관통력 탄 penetration", "bosses/": "보스 boss bosses 스폰 확률",
     "promo/": "프로모 코드 promo code 쿠폰 리딤", "hunt/": "사냥 킬 퀘스트 처치 hunt", "items/": "필요템 퀘템 퀘스트 아이템 needed items",
     "quest-items/": "퀘스트 전용 아이템 quest items 퀘템 위치", "rewards/": "보상 reward rewards 보상템",
-    "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 starter beginner", "gunsmith/": "건스미스 gunsmith 개조 모딩",
+    "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 starter beginner", "gunsmith/": "건스미스 gunsmith 퀘스트 조립",
+    "mods/": "모딩 무기 모딩 개조 커스텀 빌드 조립 반동 인체공학 메타 사기총 weapon build builds mods модинг сборка 改装",
     "maps/": "맵 지도 map maps 탈출구 extract extracts exfil", "maps/factory/": "팩토리 factory 공장",
     "maps/the-lab/": "랩 lab labs 연구소", "maps/streets-of-tarkov/": "스트리트 streets 시내 타르코프 시내",
     "maps/ground-zero/": "그라운드 제로 그제 ground zero", "maps/customs/": "세관 customs 커스텀",
@@ -60,9 +76,12 @@ def apply(out_dir: Path, lang: str, keys_items: dict) -> int:
         h1 = m.group(1)
         en = re.search(r'<span class="h1en">(.*?)</span>', h1, re.S)
         name = _text(re.sub(r'<span class="h1en">.*?</span>', "", h1, flags=re.S))
+        wn = re.search(r'<span class="wn">(.*?)</span>', h1, re.S)  # 무기 모딩 페이지: 꼬리('모딩 추천') 빼고 무기 이름만 — 종류 라벨이 따로 붙는다
+        if wn:
+            name = _text(wn.group(1))
         alt = _text(en.group(1)) if en else ""
         kind = KIND.get(top, "p") if rel else "p"
-        if top == "quests" and rel == "quests":
+        if top in ("quests", "mods") and rel == top:
             kind = "p"
         rows.append([kind, name, alt, base + (rel + "/" if rel else "")])
     # 필요 아이템 표
@@ -113,6 +132,12 @@ def apply(out_dir: Path, lang: str, keys_items: dict) -> int:
             key = r[3][len(base):]
             if key in PAGE_ALIAS:
                 r.append(PAGE_ALIAS[key])
+    # 무기 모딩 페이지 — 영문 이름 기준 통칭 별칭 + '모딩·빌드' 말
+    for r in rows:
+        if r[0] == "w" and len(r) == 4:
+            al = [v for k, v in WEAPON_ALIAS.items() if k.lower() in (r[2] or r[1]).lower()]
+            words = re.findall(r"[A-Za-z0-9][A-Za-z0-9.\-]*", (r[2] or "") + " " + r[1])  # 'M4A1'·'AK-74' 를 낱말로 — 아이템 행(짧은 이름 별칭)과 같은 점수가 되게
+            r.append(" ".join(al + words + ["모딩 빌드 build"]))
     # 열쇠
     for kid, it in (keys_items or {}).items():
         name = (it.get("name") or it.get("n") or "") if isinstance(it, dict) else ""
@@ -132,10 +157,10 @@ def _q(s: str) -> str:
 
 SEARCH_JS = r"""(function(){
 var P=location.pathname,L=P.indexOf("/guide/en/")===0?"en":P.indexOf("/guide/ru/")===0?"ru":P.indexOf("/guide/zh/")===0?"zh":"ko",B=L==="ko"?"/guide/":"/guide/"+L+"/";
-var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",fz:"비슷한 결과"},
-en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",fz:"Similar"},
-ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",fz:"Похожие"},
-zh:{ph:"搜索任务、物品",none:"没有结果",q:"任务",i:"所需物品",k:"钥匙",h:"藏身处",m:"地图",t:"商人",p:"页面",b:"Boss",a:"弹药",r:"奖励物品",u:"任务物品",x:"撤离点",fz:"相似结果"}}[L];
+var T={ko:{ph:"퀘스트·아이템 검색",none:"결과 없음",q:"퀘스트",i:"필요 아이템",k:"열쇠",h:"은신처",m:"맵",t:"상인",p:"페이지",b:"보스",a:"탄약",r:"보상 아이템",u:"퀘스트 아이템",x:"탈출구",w:"무기 모딩",fz:"비슷한 결과"},
+en:{ph:"Search quests, items",none:"No results",q:"Quest",i:"Needed item",k:"Key",h:"Hideout",m:"Map",t:"Trader",p:"Page",b:"Boss",a:"Ammo",r:"Reward item",u:"Quest item",x:"Extract",w:"Weapon build",fz:"Similar"},
+ru:{ph:"Поиск: квесты, предметы",none:"Ничего не найдено",q:"Квест",i:"Нужный предмет",k:"Ключ",h:"Убежище",m:"Карта",t:"Торговец",p:"Страница",b:"Босс",a:"Патроны",r:"Награда",u:"Квестовый предмет",x:"Выход",w:"Сборка оружия",fz:"Похожие"},
+zh:{ph:"搜索任务、物品",none:"没有结果",q:"任务",i:"所需物品",k:"钥匙",h:"藏身处",m:"地图",t:"商人",p:"页面",b:"Boss",a:"弹药",r:"奖励物品",u:"任务物品",x:"撤离点",w:"武器改装",fz:"相似结果"}}[L];
 var top=document.querySelector(".top .wrap");if(!top)return;
 var st=document.createElement("style");st.textContent=".gsearch{position:relative;flex:0 1 170px;min-width:110px;max-width:170px;margin:0 6px;transition:flex-basis .15s,max-width .15s}.gsearch:focus-within{flex-basis:260px;max-width:260px}@media(max-width:1180px){.gsearch{flex-basis:140px;max-width:140px}}"
 +".gsearch input{width:100%;box-sizing:border-box;background:var(--panel2,#1f1f19);border:1px solid var(--line,#3a352b);color:inherit;border-radius:8px;padding:6px 10px;font:inherit;font-size:13.5px}"
@@ -160,7 +185,7 @@ var CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";function cho
 function near(s,q){var n=q.length;if(n<2||s.length<n)return false;for(var i=0;i+n<=(n<3?n:s.length);i++){var d=0;for(var j=0;j<n&&d<2;j++)if(s.charCodeAt(i+j)!==q.charCodeAt(j))d++;if(d<2)return true}return false}
 function load(){if(idx)return Promise.resolve(idx);if(loading)return loading;
 loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){var s=norm(r[1]);return{k:r[0],n:r[1],a:r[2],u:r[3],s:s,z:norm(r[2]+" "+(r[4]||"")),c:cho(s),t:String(r[4]||"").split(" ").map(norm)}});return idx}).catch(function(){idx=[];return idx});return loading}
-var ORD={q:0,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
+var ORD={q:0,w:0.5,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
 // 게임 커뮤니티 줄임말·음역 → 데이터 표기
 var AL={"레덱스":"ledx","레덱":"ledx","아이폭":"ifak","살레와":"salewa","시크":"sicc","씩":"sicc","그카":"그래픽카드","비코":"비트코인","도태":"도그태그","퀘템":"퀘스트아이템","카파템":"카파"};
 function rk(k){return k in ORD?ORD[k]:99}

@@ -486,7 +486,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
        ("prestige", "/guide/prestige/", "프레스티지"), ("patch", "/guide/patch/", "패치 요약"),
        ("promo", "/guide/promo/", "프로모 코드"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
-       ("overlay", "/", "시세 오버레이")]
+       ("mods", "/guide/mods/", "무기 모딩"), ("overlay", "/", "시세 오버레이")]
 
 
 # 2뎁스 그룹 메뉴(2026-10-27, 탭 16개가 가로 스크롤을 만들어서). 그룹 제목은 대표 페이지 링크,
@@ -499,7 +499,8 @@ NAV_GROUPS = [
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
     ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
                                 ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
-                                ("keys", "/guide/keys/", "열쇠"), ("keyfinder", "/guide/keyfinder/", "내 열쇠들 어느 맵에?"), ("ammo", "/guide/ammo/", "탄약표")]),
+                                ("keys", "/guide/keys/", "열쇠"), ("keyfinder", "/guide/keyfinder/", "내 열쇠들 어느 맵에?"), ("ammo", "/guide/ammo/", "탄약표"),
+                                ("mods", "/guide/mods/", "무기 모딩")]),
     ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
     ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스")]),
 ]
@@ -2986,6 +2987,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
     cards = [
         # 신규 기능은 맨 앞 + NEW 표시(11-05 사용자 요청) — 다섯째 값 True = 금색 강조 카드
         ("/guide/keyfinder/", "내 열쇠들 어느 맵에?", "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리", f'열쇠 {counts.get("keyfinder", 0)}종', True),
+        ("/guide/mods/", "무기 모딩 추천", "반동 최소·균형·인체공학 최대 조립 · 칸별 호환 부품 조립기 · 수치 계산", f'무기 {counts.get("mods", 0)}정', True),
         ("/guide/start/", "초반 가이드", "투어(Tour)로 상인·맵 여는 순서 · 10레벨까지 퀘스트 · 미리 모을 아이템", "처음·프레스티지 직후"),
         ("/guide/quests/", "퀘스트", "상인별 해금 순서 · 퀘스트마다 목표·필요템·열쇠·보상", f'{counts.get("quests", 0)}개'),
         ("/guide/items/", "필요 아이템 총정리", "퀘스트·은신처에 들어가는 아이템 총량 · 버리면 안 되는 템", f'{counts.get("items", 0)}종'),
@@ -3591,8 +3593,10 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
     base_rows = build_rows(base)
     master_rows = build_rows(master)
 
-    def table(rows, hid, title, note):
-        return (f'<h2 class="sec" id="{hid}">{e(title)} <span class="muted small">{len(rows)}개</span></h2><p class="small muted">{note}</p>'
+    def table(rows, hid, title, note, nq):
+        # 11-05: 줄 수(무기 수)를 '개'로만 적어 퀘스트 수로 읽혔다(마스터 13퀘스트인데 '16개') → 퀘스트·무기 따로
+        cnt = f"퀘스트 {nq}개" + (f" · 무기 {len(rows)}정" if len(rows) != nq else "")
+        return (f'<h2 class="sec" id="{hid}">{e(title)} <span class="muted small">{cnt}</span></h2><p class="small muted">{note}</p>'
                 '<div class="box tbl" style="padding:4px 8px"><table class="tot gs"><thead><tr><th>퀘스트</th><th>무기</th><th>반드시 포함할 부품</th><th>성능 조건</th></tr></thead>'
                 f'<tbody>{"".join(rows)}</tbody></table></div>')
 
@@ -3630,8 +3634,8 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
             '각 줄의 <b>"위키 예시 조립 보기"</b>를 펼치면 공식 위키가 올린 조립 예시(부품·파는 상인·등급)가 나오고, 그 부품들도 체크리스트에 "예시" 열로 들어가 있습니다. '
             '조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.</div>'
             '<nav class="toc"><a href="#base">건스미스</a><a href="#master">건스미스 마스터</a><a href="#parts">전체 부품 체크리스트</a></nav>'
-            + table(base_rows, "base", "건스미스", "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.")
-            + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.")
+            + table(base_rows, "base", "건스미스", "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.", len(base))
+            + table(master_rows, "master", "건스미스 마스터", "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.", len(master))
             + f'<h2 class="sec" id="parts">전체 부품 체크리스트 <span class="muted small">{len(trs)}종</span></h2>'
             '<div class="box"><div class="controls" style="margin:0 0 10px"><input id="q" type="search" placeholder="부품 이름 검색 (한글·영문)" />'
             '<span class="seg" id="scope"><button type="button" data-v="all" class="on">전체</button><button type="button" data-v="req">필수만</button><button type="button" data-v="ex">예시 조립만</button></span>'
@@ -3671,6 +3675,336 @@ def gunsmith_page(ctx: Ctx) -> tuple[str, str, str] | None:
             "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.")
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="gunsmith", crumbs=[("건스미스", None)],
                       extra_head=extra_head, scripts=GUNSMITH_JS), feed_json
+
+
+# ─────────────────────────────────────────────────────────────
+# 무기 모딩(11-05) — /guide/mods/(무기 목록) + /guide/mods/<무기>/(추천 조립 3종 표 + 직접 조립기)
+# 계산은 guide_mods.py(언어 무관): 칸 트리·기본 조립 복원·추천 조립(반동 최소·균형·인체공학 최대 × 플리 포함/상인만).
+# 조립기 데이터는 무기마다 data.json(그 무기에 달 수 있는 부품만, 이름은 언어판마다) — 페이지는 가볍게, 표는 정적으로.
+# ─────────────────────────────────────────────────────────────
+import guide_mods  # noqa: E402
+
+MOD_CATS = [("assault-rifles", "돌격소총"), ("assault-carbines", "돌격 카빈"), ("submachine-guns", "기관단총"),
+            ("marksman-rifles", "지정사수소총"), ("bolt-action-rifles", "볼트액션 소총"), ("shotguns", "산탄총"),
+            ("machine-guns", "기관총"), ("pistols", "권총"), ("grenade-launchers", "유탄발사기"), ("special-weapons", "특수 무기")]
+MOD_BUILDS = [("rec", "반동 최소"), ("bal", "균형"), ("erg", "인체공학 최대")]
+MOD_BUILD_NOTE = {"rec": "반동을 가장 많이 줄이는 조합. 인체공학은 같은 반동일 때만 따집니다.",
+                  "bal": "인체공학을 기본 조립 이상(최소 60)으로 지키면서 반동을 가장 많이 줄인 조합.",
+                  "erg": "인체공학을 낼 수 있는 만큼(100까지) 올린 조합 중 반동이 가장 적은 것."}
+# 칸 이름이 로케일 표에 없을 때(데이터 nameId 원문 대신)
+MOD_SLOT_FALLBACK = {"mod_mount": "마운트", "mod_scope": "조준경", "mod_tactical": "전술 장비", "mod_muzzle": "총구",
+                     "mod_magazine": "탄창", "mod_stock": "개머리판", "mod_barrel": "총열", "mod_handguard": "총열 덮개",
+                     "mod_pistol_grip": "권총 손잡이", "mod_reciever": "리시버", "mod_charge": "장전 손잡이", "mod_foregrip": "앞 손잡이",
+                     "mod_gas_block": "가스 블록", "mod_sight_front": "앞 가늠쇠", "mod_sight_rear": "뒤 가늠자", "mod_launcher": "유탄발사기",
+                     "mod_bipod": "양각대", "mod_catch": "노리쇠 멈치", "mod_hammer": "공이치기", "mod_trigger": "방아쇠",
+                     "mod_equipment": "장비", "mod_nvg": "야간 투시경", "mod_flashlight": "손전등"}
+
+
+def mod_slot_name(ctx: Ctx, name_id: str) -> str:
+    base = re.sub(r"_\d+$", "", name_id or "")
+    for k in (name_id.upper(), base.upper()):
+        v = ctx._loc(ctx.loc_items, k) or None
+        if v and not re.fullmatch(r"[A-Z_0-9]+", v):
+            return v
+    for k in (name_id, base):
+        if k in MOD_SLOT_FALLBACK:
+            return MOD_SLOT_FALLBACK[k]
+    return name_id
+
+
+def mod_cat(ctx: Ctx, it: dict) -> str:
+    hb = getattr(ctx, "handbook", None) or {}  # build_guide 가 붙인다(tarkov.dev handbookCategories)
+    for c in it.get("handbookCategories") or []:
+        nn = (hb.get(c) or {}).get("normalizedName")
+        if nn in dict(MOD_CATS):
+            return nn
+    return "special-weapons"
+
+
+def _mod_reach(md: "guide_mods.Modder", wid: str) -> list[str]:
+    seen, stack = [], [wid]
+    have = {wid}
+    while stack:
+        h = stack.pop()
+        for _, _, allowed in md.slots.get(h, []):
+            for c in md.cands(allowed):
+                if c not in have:
+                    have.add(c)
+                    seen.append(c)
+                    stack.append(c)
+    return seen
+
+
+def _mod_tree_json(tree):
+    return {str(k): [v[0], _mod_tree_json(v[1])] for k, v in tree.items()}
+
+
+def mods_weapon_data(ctx: Ctx, md, wid: str, rep: dict) -> dict:
+    """조립기 data.json — 무기·부품(달 수 있는 것만)·칸 이름·상인 이름·추천/기본 조립 트리"""
+    lists: dict[tuple, int] = {}
+    L: list = []
+
+    def li(ids):
+        key = tuple(ids)
+        if key not in lists:
+            lists[key] = len(L)
+            L.append(list(key))
+        return lists[key]
+
+    sn: dict[str, str] = {}
+
+    def slots(iid):
+        out = []
+        for idx, (name, req, allowed) in enumerate(md.slots.get(iid, [])):
+            c = md.cands(allowed)
+            if not c:
+                continue
+            sn.setdefault(name, mod_slot_name(ctx, name))
+            out.append([name, 1 if req else 0, li(c), idx])  # idx = 원래 칸 번호(트리 키와 같다)
+        return out
+
+    traders: dict[str, str] = {}
+    m = {}
+    for c in _mod_reach(md, wid):
+        it = ctx.items.get(c) or {}
+        info = ctx.item(c) or {}
+        t = guide_mods.trader_offer(it)
+        if t:
+            traders.setdefault(t[0], ctx.trader_name(t[0]))
+        pv = ctx.items_pve.get(c) or {}
+        cf = [x for x in (it.get("conflictingItems") or [])]
+        m[c] = [info.get("n") or c, info.get("s") or "", round(guide_mods.mod_e(it), 2), round(guide_mods.mod_r(it), 4),
+                round(float(it.get("weight") or 0), 3), int(guide_mods.flea_price(it) or 0), int(guide_mods.flea_price(pv) or 0) if pv else 0,
+                list(t) if t else 0, slots(c), cf or 0, md.cap(c) or 0, 1 if c in md.free else 0]
+    w = ctx.items[wid]
+    p = w.get("properties") or {}
+    info = ctx.item(wid) or {}
+    return {"v": ctx.stamp, "L": L, "sn": sn, "t": traders, "m": m,
+            "w": {"i": wid, "n": info.get("n"), "s": info.get("s"), "e": p.get("ergonomics") or 0, "rv": p.get("recoilVertical") or 0,
+                  "rh": p.get("recoilHorizontal") or 0, "wt": round(float(w.get("weight") or 0), 3), "sl": slots(wid)},
+            "d": _mod_tree_json(rep["def"]),
+            "b": {k: {"t": _mod_tree_json(b["tree"]), "lam": b.get("lam", 0.3)} for k, b in rep["builds"].items()}}
+
+
+def _mod_where(ctx: Ctx, md, iid: str, src: str) -> tuple[str, int | None]:
+    """구하는 곳 글 + 가격(₽) — 기본 조립 부품은 '기본 포함'"""
+    if iid in md.free:
+        return "기본 포함", 0
+    it = ctx.items.get(iid) or {}
+    t = guide_mods.trader_offer(it)
+    f = guide_mods.flea_price(it) if src == "all" else None
+    if t and (not f or t[2] <= f):
+        return f"{ctx.trader_name(t[0])} LL{t[1]}" + (" · 퀘스트 해금" if t[3] else ""), t[2]
+    if f:
+        return "플리마켓", int(f)
+    return "구매 불가", None
+
+
+def _mod_sign(v, pct=False) -> str:
+    if pct:
+        v = round(v * 100, 1)
+        if v == 0:
+            return "0"
+        return (f"+{v:g}" if v > 0 else f"−{abs(v):g}") + "%"
+    if v == 0:
+        return "0"
+    return f"+{v:g}" if v > 0 else f"−{abs(v):g}"
+
+
+def _mod_rows(ctx: Ctx, md, wid: str, tree: dict):
+    """트리 순회 순서대로 (칸 이름, 부품 id, 깊이)"""
+    out = []
+
+    def go(host, t, depth):
+        sl = md.slots.get(host, [])
+        for idx in sorted(t, key=int):
+            c, sub = t[idx]
+            out.append((mod_slot_name(ctx, sl[int(idx)][0]) if int(idx) < len(sl) else "", c, depth))
+            go(c, sub, depth + 1)
+    go(wid, tree, 0)
+    return out
+
+
+def _mod_build_table(ctx: Ctx, md, wid: str, tree: dict, src: str) -> str:
+    rows = []
+    for label, c, depth in _mod_rows(ctx, md, wid, tree):
+        it = ctx.items.get(c) or {}
+        where, pr = _mod_where(ctx, md, c, src)
+        price = (fmt_int(pr) + "₽") if pr else ("—" if pr is None else "0₽")
+        rows.append(f'<tr><td class="small muted" style="padding-left:{8 + depth * 14}px">{e(label)}</td><td>{ctx.chip(c)}</td>'
+                    f'<td class="n">{_mod_sign(guide_mods.mod_e(it))}</td><td class="n">{_mod_sign(guide_mods.mod_r(it), True)}</td>'
+                    f'<td class="small">{e(where)}</td><td class="n small">{price}</td></tr>')
+    return ('<div class="tbl"><table class="tot mods"><thead><tr><th>칸</th><th>부품</th><th>인체공학</th><th>반동</th><th>구하는 곳</th><th>가격</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>')
+
+
+def _mod_stat_cells(st: dict, base: dict | None = None) -> str:
+    def d(k, better_low):
+        if not base:
+            return ""
+        v = st[k] - base[k]
+        if abs(v) < 0.05:
+            return ""
+        good = (v < 0) if better_low else (v > 0)
+        return f' <span class="{"up" if good else "dn"} small">({_mod_sign(round(v, 1))})</span>'
+    return (f'<td class="n"><b>{st["e"]:g}</b>{d("e", False)}</td><td class="n"><b>{st["rv"]}</b>{d("rv", True)}</td>'
+            f'<td class="n">{st["rh"]}{d("rh", True)}</td><td class="n">{st["wt"]:g}kg</td><td class="n small">{fmt_int(st["cost"])}₽</td>')
+
+
+MODS_JS = r"""<script>
+(function(){var root=document.getElementById("mb");if(!root)return;
+var D=null,cur={},src="all",lam=0.3,ck="def",WK="guide.mods."+root.getAttribute("data-w"),MK="guide.mode";
+function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function ev(n,p){try{if(window.gtag)gtag("event",n,p||{})}catch(e){}}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]})}
+function nf(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,",")}
+function sg(v,p){v=p?Math.round(v*1000)/10:Math.round(v*10)/10;if(!v)return "0";return (v>0?"+":"−")+Math.abs(v)+(p?"%":"")}
+function pve(){return L(MK,"pvp")==="pve"}
+function M(id){return D.m[id]}
+function slotsOf(id){return id===D.w.i?D.w.sl:((M(id)||[])[8]||[])}
+function price(id){var m=M(id);if(!m)return null;if(m[11])return 0;var t=m[7]?m[7][2]:0,f=src==="all"?(pve()?m[6]:m[5]):0,c=[t,f].filter(function(x){return x>0});return c.length?Math.min.apply(null,c):null}
+function where(id){var m=M(id);if(!m)return "";if(m[11])return "기본 포함";var t=m[7],f=pve()?m[6]:m[5],a=[];
+if(t)a.push(esc(D.t[t[0]]||"")+" LL"+t[1]+" "+nf(t[2])+"₽"+(t[3]?" (퀘스트 해금)":""));if(f&&src==="all")a.push("플리 "+nf(f)+"₽");return a.length?a.join(" · "):"구매 불가"}
+function score(id){var m=M(id);return m?(-m[3]*100+lam*m[2]):0}
+function walk(t,fn,dp){Object.keys(t).sort(function(a,b){return a-b}).forEach(function(k){var n=t[k];fn(n[0],dp||0);walk(n[1],fn,(dp||0)+1)})}
+function copy(t){return JSON.parse(JSON.stringify(t||{}))}
+function stats(t){var e=D.w.e,r=0,wt=D.w.wt,c=0,u=0,ids=[];walk(t,function(id){var m=M(id);if(!m)return;e+=m[2];r+=m[3];wt+=m[4];var p=price(id);if(p==null)u++;else c+=p;ids.push(id)});
+return {e:Math.round(e*10)/10,r:r,rv:Math.round(D.w.rv*(1+r)),rh:Math.round(D.w.rh*(1+r)),wt:Math.round(wt*100)/100,c:c,u:u,ids:ids}}
+function clashes(ids){var out=[],seen={};ids.forEach(function(a){var cf=(M(a)||[])[9]||[];cf.forEach(function(b){var k=a<b?a+b:b+a;if(ids.indexOf(b)>=0&&!seen[k]){seen[k]=1;out.push([a,b])}})});return out}
+function okBuy(id){return price(id)!=null}
+function fill(host,t){slotsOf(host).forEach(function(s){if(t[s[3]]||!s[1])return;var c=(D.L[s[2]]||[]).slice().sort(function(a,b){return (okBuy(b)-okBuy(a))||(score(b)-score(a))});if(c.length){t[s[3]]=[c[0],{}];fill(c[0],t[s[3]][1])}})}
+function opts(list,sel){var a=list.slice().sort(function(x,y){return score(y)-score(x)});return a.map(function(id){var m=M(id);if(!m)return "";var p=price(id);
+return '<option value="'+id+'"'+(id===sel?" selected":"")+'>'+esc(m[0])+" ("+"인체 "+sg(m[2])+" · 반동 "+sg(m[3],1)+(p===0&&m[11]?" · 기본 포함":p==null?" · 구매 불가":" · "+nf(p)+"₽")+(m[10]?" · "+m[10]+"발":"")+")</option>"}).join("")}
+function rows(host,t,dp,path){var h="";slotsOf(host).forEach(function(s){var nm=D.sn[s[0]]||s[0],node=t[s[3]],p=path+"."+s[3];
+h+='<div class="ms" style="padding-left:'+(dp*14)+'px"><label>'+(dp?"└ ":"")+esc(nm)+(s[1]?' <span class="req">필수</span>':"")+'</label><select data-p="'+p+'">'+(s[1]?"":'<option value="">— 비움 —</option>')+opts(D.L[s[2]]||[],node&&node[0])+"</select></div>";
+if(node)h+=rows(node[0],node[1],dp+1,p)});return h}
+function at(path){var seg=path.split(".").slice(1),t=cur;for(var i=0;i<seg.length-1;i++){t=t[seg[i]][1]}return [t,seg[seg.length-1]]}
+function base(){return stats(D.d)}
+function dlt(v,b,low){var d=Math.round((v-b)*10)/10;if(!d)return "";return ' <span class="'+((low?d<0:d>0)?"up":"dn")+' small">('+sg(d)+")</span>"}
+function render(){var s=stats(cur),b=base(),cl=clashes(s.ids);
+document.getElementById("mtot").innerHTML='<div><span class="muted small">인체공학</span><b>'+s.e+"</b>"+dlt(s.e,b.e)+'</div><div><span class="muted small">수직 반동</span><b>'+s.rv+"</b>"+dlt(s.rv,b.rv,1)+'</div><div><span class="muted small">수평 반동</span><b>'+s.rh+"</b>"+dlt(s.rh,b.rh,1)+'</div><div><span class="muted small">반동 보정</span><b>'+sg(s.r,1)+'</b></div><div><span class="muted small">무게</span><b>'+s.wt+'kg</b></div><div><span class="muted small">추가 부품값</span><b>'+nf(s.c)+"₽</b>"+(s.u?' <span class="dn small">(구매 불가 '+s.u+"개)</span>":"")+"</div>";
+document.getElementById("mtree").innerHTML=rows(D.w.i,cur,0,"");
+document.getElementById("mwarn").innerHTML=cl.length?'<div class="note warn">⚠ 같이 달 수 없는 부품: '+cl.map(function(p){return esc(M(p[0])[0])+" ↔ "+esc(M(p[1])[0])}).join(", ")+"</div>":"";
+var li=[];walk(cur,function(id,dp){li.push('<tr><td>'+esc(M(id)?M(id)[0]:id)+'</td><td class="small">'+where(id)+"</td></tr>")});
+document.getElementById("mlist").innerHTML='<table class="tot"><thead><tr><th>부품</th><th>구하는 곳 · 가격</th></tr></thead><tbody>'+li.join("")+"</tbody></table>";
+S(WK,{t:cur,s:src,k:ck})}
+function mark(){root.querySelectorAll("[data-k]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-k")===ck)});root.querySelectorAll("[data-src]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-src")===src)})}
+function apply(k){if(k==="def"){cur=copy(D.d);lam=0.3}else{var b=D.b[k+"-"+src];if(!b)return;cur=copy(b.t);lam=b.lam||0.3}ck=k;mark();render()}
+function enc(t){return Object.keys(t).sort(function(a,b){return a-b}).map(function(k){var n=t[k],c=enc(n[1]);return k+"-"+n[0]+(c?"("+c+")":"")}).join(",")}
+function dec(s){var i=0;function lst(){var t={};while(i<s.length&&s[i]!==")"){var m=/^(\d+)-([0-9a-f]{24})/.exec(s.slice(i));if(!m)throw 0;i+=m[0].length;var sub={};if(s[i]==="("){i++;sub=lst();i++}t[m[1]]=[m[2],sub];if(s[i]===",")i++}return t}return lst()}
+root.addEventListener("change",function(e){var p=e.target.getAttribute("data-p");if(!p)return;var a=at(p),v=e.target.value;if(!v)delete a[0][a[1]];else{a[0][a[1]]=[v,{}];fill(v,a[0][a[1]][1])}
+ck="";mark();ev("mods_edit");render()});
+root.addEventListener("click",function(e){var k=e.target.getAttribute("data-k"),s=e.target.getAttribute("data-src");
+if(k){apply(k);ev("mods_apply",{mods_b:k+"-"+src})}
+if(s){src=s;mark();if(ck)apply(ck);else render()}
+if(e.target.id==="mshare"){var u=location.origin+location.pathname+"?b="+enc(cur)+"#mb";try{navigator.clipboard.writeText(u);e.target.textContent="링크 복사됨 ✓"}catch(x){prompt("",u)}ev("mods_share")}});
+document.addEventListener("click",function(e){var k=e.target.getAttribute&&e.target.getAttribute("data-load");if(!k||!D)return;var p=k.split("-");src=p[1];apply(p[0]);root.scrollIntoView({behavior:"smooth"});ev("mods_apply",{mods_b:k})});
+fetch("data.json").then(function(r){return r.json()}).then(function(d){D=d;root.classList.add("ready");var q=new URLSearchParams(location.search).get("b"),st=L(WK,null);
+if(q){try{cur=dec(q);ck="";mark();render();return}catch(x){}}if(st&&st.t){src=st.s||"all";ck=st.k||"";var b=D.b[ck+"-"+src];lam=b?b.lam:0.3;cur=st.t;mark();render();return}apply("def")})
+.catch(function(){document.getElementById("mtree").textContent="조립기 데이터를 불러오지 못했어요. 새로고침해 보세요."})})();
+</script>"""
+
+MODS_INDEX_JS = """<script>
+(function(){var q=document.getElementById("mq");if(!q)return;var rows=[].slice.call(document.querySelectorAll("#mlist2 tr[data-s]"));
+q.addEventListener("input",function(){var v=q.value.trim().toLowerCase().replace(/\\s+/g,"");rows.forEach(function(r){r.style.display=!v||r.getAttribute("data-s").indexOf(v)>=0?"":"none"});
+document.querySelectorAll("#mlist2 section").forEach(function(s){s.style.display=[].some.call(s.querySelectorAll("tr[data-s]"),function(r){return r.style.display!=="none"})?"":"none"})})})();
+</script>"""
+
+
+def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
+    md = guide_mods.Modder(ctx.items)
+    by_cat: dict[str, list] = {}
+    for wid in md.weapons:
+        it = ctx.items[wid]
+        rep = md.weapon_report(wid)
+        slug = it.get("normalizedName") or wid
+        info = ctx.item(wid) or {}
+        name = info.get("n") or slug
+        en = info.get("en") or ""
+        data = mods_weapon_data(ctx, md, wid, rep)
+        n_parts = len(data["m"])
+        ds = rep["def_stats"]
+        b = rep["builds"]
+        path = f"/guide/mods/{slug}/"
+        summary = ['<tr><td>기본 조립</td>' + _mod_stat_cells(ds).rsplit("<td", 1)[0] + '<td class="n small">—</td><td class="n small">—</td></tr>']
+        for k, label in MOD_BUILDS:
+            ba, bt = b[f"{k}-all"]["stats"], b[f"{k}-trader"]["stats"]
+            summary.append(f'<tr><td><a href="#b-{k}">{label}</a></td>' + _mod_stat_cells(ba, ds)
+                           + f'<td class="n small">{bt["e"]:g} / {bt["rv"]} · {fmt_int(bt["cost"])}₽</td></tr>')
+        secs = []
+        for k, label in MOD_BUILDS:
+            ba, bt = b[f"{k}-all"], b[f"{k}-trader"]
+            same = ba["tree"] == bt["tree"]
+            secs.append(
+                f'<section class="box" id="b-{k}"><h2>{label} <span class="muted small">인체공학 {ba["stats"]["e"]:g} · 수직 반동 {ba["stats"]["rv"]} · 반동 {_mod_sign(ba["stats"]["r"] / 100, True)}</span></h2>'
+                f'<p class="small muted">{MOD_BUILD_NOTE[k]} 부품값 {fmt_int(ba["stats"]["cost"])}₽(플리마켓·상인 중 싼 쪽, 기본 포함 부품 0₽).</p>'
+                + _mod_build_table(ctx, md, wid, ba["tree"], "all")
+                + f'<p class="small"><button type="button" class="btn sm" data-load="{k}-all">이 조립을 조립기에 불러오기</button> '
+                + (f'<span class="muted">상인 현금 구매만으로도 같은 조립입니다.</span>' if same else
+                   f'<button type="button" class="btn sm ghost" data-load="{k}-trader">상인만으로 맞춘 조립 보기</button> '
+                   f'<span class="muted">상인만: 인체공학 {bt["stats"]["e"]:g} · 수직 반동 {bt["stats"]["rv"]} · {fmt_int(bt["stats"]["cost"])}₽</span>')
+                + '</p></section>')
+        top_slots = "".join(f'<li>{e(mod_slot_name(ctx, s[0]))} <span class="muted small">{len(data["L"][s[2]])}종{" · 필수" if s[1] else ""}</span></li>'
+                            for s in data["w"]["sl"])
+        body = (f'<h1><span class="wn">{e(name)}</span> 모딩 추천 <span class="h1en">{e(en)}</span></h1>'
+                f'<p class="sub">{e(dict(MOD_CATS).get(mod_cat(ctx, it), ""))} · 기본 인체공학 {data["w"]["e"]:g} · 기본 반동 {data["w"]["rv"]}/{data["w"]["rh"]} · 달 수 있는 부품 {n_parts}종 · 데이터 기준 {e(ctx.stamp)}</p>'
+                + stale_html(ctx.stamp)
+                + '<div class="note key"><b>보는 법</b> — 아래 세 조립은 부품 수치로 계산한 추천입니다. 표의 숫자는 조립을 마친 총의 <b>인체공학·수직 반동·수평 반동·무게·부품값</b>이고, 괄호는 기본 조립과의 차이입니다. '
+                  '맨 아래 <a href="#mb">조립기</a>에서 칸마다 부품을 바꾸면 수치가 바로 다시 계산됩니다. 조준경은 취향이라 추천에 넣지 않았습니다.</div>'
+                + '<section class="box"><h2>한눈에 비교</h2><div class="tbl"><table class="tot"><thead><tr><th>조립</th><th>인체공학</th><th>수직 반동</th><th>수평 반동</th><th>무게</th><th>부품값</th><th>상인만(인체공학 / 수직 반동 · 값)</th></tr></thead><tbody>'
+                + "".join(summary) + '</tbody></table></div></section>'
+                + "".join(secs)
+                + f'<section class="box mb" id="mb" data-w="{e(wid)}"><h2>직접 조립해 보기 <span class="muted small">칸별 호환 부품 · 수치 계산기</span></h2>'
+                  '<div class="controls"><span class="seg"><button type="button" data-k="def" class="on">기본 조립</button>'
+                + "".join(f'<button type="button" data-k="{k}">{label}</button>' for k, label in MOD_BUILDS)
+                + '</span><span class="seg"><button type="button" data-src="all" class="on">플리 포함</button><button type="button" data-src="trader">상인만</button></span>'
+                  '<button type="button" class="btn sm ghost" id="mshare">조립 링크 복사</button></div>'
+                  '<div class="mtot" id="mtot"></div><div id="mwarn"></div><div class="mtree" id="mtree">조립기를 불러오는 중…</div>'
+                  '<details class="mlist"><summary>구매 목록</summary><div class="tbl" id="mlist"></div></details>'
+                  '<p class="small muted">선택 상자의 부품은 지금 기준(마지막으로 누른 조립)의 점수 순입니다. 칸을 바꾸면 그 아래 칸은 비고, 필수 칸만 자동으로 채웁니다. 조립은 이 브라우저에 저장됩니다.</p></section>'
+                + f'<section class="box"><h2>이 총에 바로 다는 칸 <span class="muted small">{len(data["w"]["sl"])}개</span></h2><ul class="cols3">{top_slots}</ul></section>'
+                + '<div class="note"><b>계산 방식</b> — 인체공학 = 총 기본값 + 부품 값의 합, 반동 = 총 기본 반동 × (1 + 부품 반동 보정의 합). '
+                  '이 공식은 tarkov.dev 기본 조립 163정의 수치와 ±1 이내로 맞는 것을 확인했습니다. 탄약의 반동 보정·숙련도·무게 초과 페널티는 넣지 않았습니다(탄약은 <a href="/guide/ammo/">탄약표</a>). '
+                  '인체공학 100을 넘는 값은 추천 계산에서 더 쳐주지 않습니다. 같이 달 수 없는 부품(충돌)은 피해서 고르지만, 칸 위치 충돌 일부는 데이터에 없어 게임에서 막힐 수 있습니다. '
+                  '가격은 플리마켓 24시간 평균(PVP)과 상인 현금 구매가이며 물물교환은 넣지 않았습니다.</div>')
+        title = f"{name} 모딩 추천 — 반동 최소·인체공학 최대 조립과 부품 가격 | 탈콥 가이드"
+        desc = (f"타르코프 {name} 무기 모딩: 기본 조립 인체공학 {ds['e']:g}·수직 반동 {ds['rv']} → 반동 최소 {b['rec-all']['stats']['rv']}, "
+                f"균형 인체공학 {b['bal-all']['stats']['e']:g}, 인체공학 최대 {b['erg-all']['stats']['e']:g}. 부품별 상인·플리 가격, 칸별 호환 부품 {n_parts}종 조립기.")
+        html_text = page(ctx, path=path, title=title, desc=desc, body=body, nav="mods",
+                         crumbs=[("무기 모딩", "/guide/mods/"), (name, None)], scripts=MODS_JS)
+        write(out, path, html_text, urls)
+        dj = out / "mods" / slug / "data.json"
+        dj.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        s = (name + " " + en + " " + (info.get("s") or "")).lower().replace(" ", "")
+        by_cat.setdefault(mod_cat(ctx, it), []).append(
+            f'<tr data-s="{e(s)}"><td><a href="{lang_path(path)}">{ctx.chip(wid)}</a></td><td class="n">{ds["e"]:g} / {ds["rv"]}</td>'
+            f'<td class="n">{b["rec-all"]["stats"]["e"]:g} / <b>{b["rec-all"]["stats"]["rv"]}</b></td>'
+            f'<td class="n">{b["bal-all"]["stats"]["e"]:g} / {b["bal-all"]["stats"]["rv"]}</td>'
+            f'<td class="n"><b>{b["erg-all"]["stats"]["e"]:g}</b> / {b["erg-all"]["stats"]["rv"]}</td></tr>')
+    secs = []
+    for k, label in MOD_CATS:
+        rows = by_cat.get(k)
+        if not rows:
+            continue
+        secs.append(f'<section class="box" id="c-{k}"><h2>{label} <span class="muted small">{len(rows)}정</span></h2><div class="tbl"><table class="tot">'
+                    '<thead><tr><th>무기</th><th>기본 조립</th><th>반동 최소</th><th>균형</th><th>인체공학 최대</th></tr></thead>'
+                    f'<tbody>{"".join(rows)}</tbody></table></div></section>')
+    n = sum(len(v) for v in by_cat.values())
+    body = (f'<h1>무기 모딩 추천 <span class="h1en">Weapon builds</span></h1>'
+            f'<p class="sub">무기 {n}정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 조립기 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note key"><b>쓰는 법</b> — 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 조립기에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다. '
+            '표의 숫자는 <b>인체공학 / 수직 반동</b>입니다(반동은 낮을수록, 인체공학은 높을수록 좋음).</div>'
+            '<div class="controls"><input id="mq" type="search" placeholder="무기 이름 검색 (예: M4A1, AK-74, 모신)" /></div>'
+            '<nav class="toc">' + "".join(f'<a href="#c-{k}">{label}</a>' for k, label in MOD_CATS if by_cat.get(k)) + '</nav>'
+            f'<div id="mlist2">{"".join(secs)}</div>'
+            '<div class="note">추천은 부품 수치(인체공학·반동 보정)로 계산한 것이라 커뮤니티 유행 조립과 다를 수 있습니다. 조준경·전술 장비는 취향이라 넣지 않았습니다. '
+            '건스미스 퀘스트용 조립은 <a href="/guide/gunsmith/">건스미스 부품 총정리</a>에 따로 있습니다.</div>')
+    path = "/guide/mods/"
+    title = f"타르코프 무기 모딩 추천 — {n}정 반동 최소·인체공학 최대 조립 계산기 | 탈콥 가이드"
+    desc = f"타르코프 무기 {n}정의 모딩 추천: 반동 최소·균형·인체공학 최대 조립, 부품별 상인·플리 가격, 칸별 호환 부품을 고르는 조립기와 수치 계산."
+    write(out, path, page(ctx, path=path, title=title, desc=desc, body=body, nav="mods", crumbs=[("무기 모딩", None)], scripts=MODS_INDEX_JS), urls)
+    return n
 
 
 # ─────────────────────────────────────────────────────────────
@@ -3840,9 +4174,10 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
         (out / "gunsmith.json").write_text(feed_json, encoding="utf-8")  # 오버레이가 받아 가는 데이터(사이트맵엔 안 넣음)
         gs_q = h.count('<td class="q"')  # 퀘스트마다 한 칸(예전 rowspan 표 구조로 세면 0 이 나왔다)
         gs_p = h.count('<tr data-id="')
+    mods_n = mods_pages(ctx, out, urls)  # 무기 모딩(11-05)
     counts = {"quests": len(ctx.tasks), "items": items_n, "rewards": rewards_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
               "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,
-              "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, **extra_counts}
+              "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, "mods": mods_n, **extra_counts}
     p, h = hub_page(ctx, counts)
     write(out, p, h, urls)
     return urls

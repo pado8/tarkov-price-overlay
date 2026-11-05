@@ -4,10 +4,10 @@ import fs from "node:fs";
 const ROOT = (process.argv[2] || "landing/guide").replace(/\/?$/, "/");
 const MUST = {
   "": ["카파", "kappa", "컬렉터", "ㅋㅍ", "데뷔", "대뷔", "킬라", "태길라", "레샬라", "글루하", "샤투른", "보스", "M855A1", "7.62x39", "탄약",
-       "하이드아웃", "팩토리", "랩", "레덱스", "IFAK", "SICC", "탈출구", "프로모", "건스미스", "프레스티지", "쇄빙선", "UN Roadblock 없음?"],
-  "en/": ["kappa", "collector", "tagilla", "reshala", "m855a1", "extract", "crafts", "ifak", "sicc", "hideout", "icebreaker"],
-  "ru/": ["каппа", "тагилла", "решала", "патроны", "убежище", "крафт"],
-  "zh/": ["kappa", "收藏家", "藏身处", "弹药", "海关", "tagilla", "枪匠", "破冰船", "撤离点", "m855a1", "ifak"],
+       "하이드아웃", "팩토리", "랩", "레덱스", "IFAK", "SICC", "탈출구", "프로모", "건스미스", "프레스티지", "쇄빙선", "UN Roadblock 없음?", "모딩", "M4A1", "AK-74N", "모신"],
+  "en/": ["kappa", "collector", "tagilla", "reshala", "m855a1", "extract", "crafts", "ifak", "sicc", "hideout", "icebreaker", "weapon build", "m4a1"],
+  "ru/": ["каппа", "тагилла", "решала", "патроны", "убежище", "крафт", "сборка", "m4a1"],
+  "zh/": ["kappa", "收藏家", "藏身处", "弹药", "海关", "tagilla", "枪匠", "破冰船", "撤离点", "m855a1", "ifak", "改装", "m4a1"],
 };
 const ALLOW_ZERO = new Set(["UN Roadblock 없음?"]);  // 0건이어야 정상인 질의(지워진 탈출구)
 const js = fs.readFileSync(ROOT + "search.js", "utf8");
