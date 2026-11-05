@@ -134,10 +134,10 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 서비스 상태 페이지(피드백 #49-①) — 헬스 엔드포인트를 사람이 읽는 화면으로.
 const STATUS_PAGE_URL = "https://tarkov.aquapado.com/status/";
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
-// 11-04 앱 → 가이드 연결. UI 언어별 가이드(ko=/guide/, en=/guide/en/, ru=/guide/ru/, zh=/guide/en/ — 중국어판 가이드가 생기기 전까지),
+// 11-04 앱 → 가이드 연결. UI 언어별 가이드(ko=/guide/, 그 밖은 /guide/<lang>/ — en·ru·zh),
 // src=app 은 GA4 에서 앱발 방문을 세려는 표식(페이지는 무시한다).
 function guideBase(lang: string): string {
-  return GUIDE_URL + (lang === "en" || lang === "zh" ? "en/" : lang === "ru" ? "ru/" : "");
+  return GUIDE_URL + (lang === "ko" ? "" : `${lang}/`);
 }
 function guideUrl(lang: string, path: string): string {
   const [p, hash] = path.split("#");
