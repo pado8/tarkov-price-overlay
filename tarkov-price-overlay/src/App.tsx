@@ -9,6 +9,7 @@ import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialo
 import { QRCodeSVG } from "qrcode.react";
 import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
+import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
@@ -2208,6 +2209,7 @@ function App() {
   // will take over the moment it leaves; scheduling here would only
   // wrongly hide while the user is still hovering.
   const mouseOverCardRef = useRef(false);
+  const holdRef = useRef<HoldState>(HOLD_START); // 카드 위에서 누른 채 끄는 중인가(cursorHold.ts)
   // 커서가 지금 카드(지도 나란히 패널 포함) 위인가 — 물리 px 로 비교. 클릭 투과 폴링과 숨김 직전 확인이 같이 쓴다.
   // CSS→물리 변환은 창의 scaleFactor(카드가 실제로 있는 모니터 배율)로 한다 — devicePixelRatio 는 모니터를 옮기면
   // 늦게 바뀌거나 주 모니터 값을 돌려줘 카드 위 커서를 '밖'으로 읽었다(id20). EDGE_PAD 는 125% 같은 분수 배율에서
@@ -2220,7 +2222,7 @@ function App() {
     const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
     const win = getCurrentWindow();
     const [winPos, winScale] = await Promise.all([win.outerPosition(), win.scaleFactor()]);
-    const cursor = await invoke<{ x: number; y: number }>("get_cursor_position");
+    const cursor = await invoke<{ x: number; y: number; left?: boolean }>("get_cursor_position");
     const dpr = winScale || window.devicePixelRatio || 1;
     const EDGE_PAD = 6;
     const hit = (r: DOMRect) =>
@@ -2228,7 +2230,10 @@ function App() {
       cursor.x < winPos.x + Math.ceil((r.left + r.width) * dpr) + EDGE_PAD &&
       cursor.y >= winPos.y + Math.floor(r.top * dpr) - EDGE_PAD &&
       cursor.y < winPos.y + Math.ceil((r.top + r.height) * dpr) + EDGE_PAD;
-    return hit(rect) || (!!paneRect && paneRect.width > 0 && hit(paneRect));
+    const over = hit(rect) || (!!paneRect && paneRect.width > 0 && hit(paneRect));
+    // 카드 위에서 누른 채 끄는 중이면 판정이 잠깐 '밖'으로 흔들려도 카드 위로 본다(11-05 모니터 넘겨 끌 때 창이 사라지던 것)
+    holdRef.current = holdStep(holdRef.current, over, !!cursor.left);
+    return holdRef.current.over;
   };
   useEffect(() => {
     const wasOpen = settingsOpenRef.current;
@@ -2698,6 +2703,7 @@ function App() {
       // next show even when the cursor is nowhere near the card, leaving
       // the card up forever.
       mouseOverCardRef.current = false;
+      holdRef.current = HOLD_START;
       return;
     }
 

@@ -17,6 +17,8 @@ use tauri_plugin_shell::ShellExt;
 struct CursorPos {
     x: i32,
     y: i32,
+    /// 왼쪽 버튼을 지금 누르고 있는가 — 카드를 끄는 도중 클릭 투과 판정이 흔들려 끌기가 끊기지 않게(src/cursorHold.ts)
+    left: bool,
 }
 
 /// Reveal the main overlay window WITHOUT activating it, so it never steals
@@ -302,6 +304,7 @@ fn get_cursor_position() -> CursorPos {
     CursorPos {
         x: mouse.coords.0,
         y: mouse.coords.1,
+        left: mouse.button_pressed.get(1).copied().unwrap_or(false), // [1] = VK_LBUTTON
     }
 }
 
@@ -499,6 +502,7 @@ fn spawn_mouse_hotkey_thread(
                         let pos = CursorPos {
                             x: mouse.coords.0,
                             y: mouse.coords.1,
+                            left: false,
                         };
                         println!(
                             "[hotkey] {event_name} (mouse {idx}) cursor=({}, {})",
@@ -536,6 +540,7 @@ fn spawn_mouse_hotkey_thread(
                         let pos = CursorPos {
                             x: mouse.coords.0,
                             y: mouse.coords.1,
+                            left: false,
                         };
                         println!("[hotkey] {event_name} (passthrough {:?}) cursor=({}, {})", pk, pos.x, pos.y);
                         let _ = app.emit(event_name, pos);
@@ -1180,6 +1185,7 @@ pub fn run() {
                     let pos = CursorPos {
                         x: mouse.coords.0,
                         y: mouse.coords.1,
+                        left: false,
                     };
                     println!(
                         "[hotkey] {event_name} ({shortcut:?}) cursor=({}, {})",
