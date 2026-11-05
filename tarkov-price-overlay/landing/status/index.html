@@ -54,7 +54,7 @@ footer a:hover{color:var(--gold)}
   <header>
     <a class="home" href="/" id="home">← 타르코프 시세 오버레이</a>
     <nav class="lang" aria-label="language">
-      <a href="?lang=ko" data-l="ko">한국어</a><a href="?lang=en" data-l="en">English</a><a href="?lang=ru" data-l="ru">Русский</a>
+      <a href="?lang=ko" data-l="ko">한국어</a><a href="?lang=en" data-l="en">English</a><a href="?lang=ru" data-l="ru">Русский</a><a href="?lang=zh" data-l="zh">简体中文</a>
     </nav>
   </header>
   <h1 id="title">서비스 상태</h1>
@@ -71,7 +71,7 @@ footer a:hover{color:var(--gold)}
   var ANN = "https://api.aquapado.com/priceoverlay/announcement";
   var qs = new URLSearchParams(location.search);
   var lang = qs.get("lang") || ((navigator.language || "ko").slice(0, 2));
-  if (["ko", "en", "ru"].indexOf(lang) < 0) lang = "en";
+  if (["ko", "en", "ru", "zh"].indexOf(lang) < 0) lang = "en";
 
   var S = {
     ko: {
@@ -107,7 +107,7 @@ footer a:hover{color:var(--gold)}
       rate: "Lookup success rate (last 7 days, all users)", rateSub: "Most failures are misaligned capture areas or untradeable items",
       infra: "Stats & feedback", infraOk: "Operational", infraWarn: "Degraded — some stats may arrive late (no effect on the app)", infraUnknown: "Check delayed — metrics could not be read just now (no effect on the app)",
       checked: "Last checked", notice: "Announcement",
-      fGuide: "Guide (KR)", fAbout: "About", fPrivacy: "Privacy policy",
+      fGuide: "Tarkov Guide", fAbout: "About (KR)", fPrivacy: "Privacy policy (KR)",
       faq: "Common problems",
       q1: "Nothing happens when I press F2",
       a1: "If the game runs as administrator, run the overlay as administrator too so the hotkey reaches it. If another program uses F2, change the hotkey in settings.",
@@ -130,7 +130,7 @@ footer a:hover{color:var(--gold)}
       rate: "Успешных запросов (7 дней, все пользователи)", rateSub: "Большинство неудач — сбитая зона захвата или непродаваемые предметы",
       infra: "Статистика и отзывы", infraOk: "Работает", infraWarn: "Есть задержки — часть статистики может приходить позже (на приложение не влияет)", infraUnknown: "Проверка задерживается — метрики сейчас недоступны (на приложение не влияет)",
       checked: "Проверено", notice: "Объявление",
-      fGuide: "Гайд (KR)", fAbout: "О проекте", fPrivacy: "Конфиденциальность",
+      fGuide: "Гайд по Таркову", fAbout: "О проекте (кор.)", fPrivacy: "Конфиденциальность (кор.)",
       faq: "Частые проблемы",
       q1: "F2 ничего не делает",
       a1: "Если игра запущена от администратора, запустите оверлей тоже от администратора. Если F2 занята другой программой, смените клавишу в настройках.",
@@ -142,6 +142,29 @@ footer a:hover{color:var(--gold)}
       a4: "Оверлей не рисуется поверх эксклюзивного полноэкранного режима. Включите «окно без рамки».",
       q5: "Отметки квестов неверные",
       a5: "Проверьте Настройки → Показ квестов. После вайпа или престижа нажмите «Сброс (вайп)» в синхронизации квестов."
+    },
+    zh: {
+      title: "服务状态", home: "← Tarkov Price Overlay", checking: "检查中…", refresh: "重新检查",
+      allOk: "所有功能运行正常", degraded: "部分功能需要注意", down: "服务出现故障",
+      unreachable: "无法连接状态服务器", unreachableSub: "请检查网络连接，或稍后再试。如果一直这样，可能是整个服务出现了故障。",
+      price: "价格数据", priceOk: "正常", priceFallback: "正常——上游数据源（tarkov.dev）出现故障，正在使用备用数据源提供数据（价格、任务、以物易物均正常）",
+      priceBad: "故障——目前无法获取价格，请稍后再试",
+      updater: "自动更新", updOk: "正常", updBad: "更新服务器无响应——程序仍可正常使用",
+      rate: "查询成功率（最近 7 天，全部用户）", rateSub: "大多数失败是捕获区域没对准或物品无法交易",
+      infra: "统计与反馈收集", infraOk: "正常", infraWarn: "注意——部分统计可能延迟（不影响程序使用）", infraUnknown: "检查延迟——暂时无法读取指标（不影响程序使用）",
+      checked: "最后检查", notice: "公告",
+      fGuide: "塔科夫指南", fAbout: "关于（韩文）", fPrivacy: "隐私政策（韩文）",
+      faq: "常见问题",
+      q1: "按 F2 没有任何反应",
+      a1: "如果游戏以管理员权限运行，覆盖层也必须以管理员身份运行，快捷键才能传过去。如果其他程序占用了 F2，请在设置中更换快捷键。",
+      q2: "价格和游戏里的不一样",
+      a2: "请确认设置 → 游戏模式与你正在玩的服务器（PVP / PVE / 赛季）一致。不同服务器的跳蚤市场价格差别很大。",
+      q3: "只显示“未匹配到”",
+      a3: "请在物品名称提示框出现时按 F2。程序只能读取英文、韩文、俄文的游戏画面——如果游戏语言是中文，请改为 English。QHD / 4K / 带鱼屏请在设置中调整捕获区域。",
+      q4: "卡片不显示",
+      a4: "游戏处于独占全屏时，覆盖层无法绘制在上面。请把游戏改为无边框窗口模式。",
+      q5: "任务完成标记不对",
+      a5: "请确认设置 → 任务显示与当前服务器一致。删档或 Prestige 之后，请在任务同步中点击“删档重置”清除旧记录。"
     }
   };
   var t = S[lang];
@@ -150,9 +173,10 @@ footer a:hover{color:var(--gold)}
   document.getElementById("title").textContent = t.title;
   var home = document.getElementById("home");
   home.textContent = t.home;
-  home.href = lang === "ko" ? "/" : "/" + lang;
+  home.href = lang === "ko" ? "/" : "/" + lang + "/";
   document.getElementById("refresh").textContent = t.refresh;
   ["fGuide", "fAbout", "fPrivacy"].forEach(function (k) { document.getElementById(k).textContent = t[k]; });
+  document.getElementById("fGuide").href = lang === "ko" ? "/guide/" : "/guide/" + lang + "/";
   document.querySelectorAll(".lang a").forEach(function (a) { if (a.getAttribute("data-l") === lang) a.className = "on"; });
 
   var faq = document.getElementById("faq");
@@ -211,7 +235,7 @@ footer a:hover{color:var(--gold)}
     else if (d.status === "ok" || !userFail.length) setBanner("ok", t.allOk);
     else setBanner("warn", t.degraded);
     var when = d.generated ? new Date(d.generated) : new Date();
-    document.getElementById("checked").textContent = t.checked + ": " + when.toLocaleString(lang === "ko" ? "ko-KR" : lang === "ru" ? "ru-RU" : "en-US");
+    document.getElementById("checked").textContent = t.checked + ": " + when.toLocaleString(lang === "ko" ? "ko-KR" : lang === "ru" ? "ru-RU" : lang === "zh" ? "zh-CN" : "en-US");
   }
 
   function load() {
@@ -223,7 +247,7 @@ footer a:hover{color:var(--gold)}
     });
     fetch(ANN).then(function (r) { return r.ok ? r.json() : null; }).then(function (a) {
       if (!a || !a.active) return;
-      var text = a[lang] || a.ko || a.en;
+      var text = a[lang] || (lang === "ko" ? a.en : a.en || a.ko);
       if (!text) return;
       document.getElementById("noticeTitle").textContent = t.notice;
       document.getElementById("noticeText").textContent = text;

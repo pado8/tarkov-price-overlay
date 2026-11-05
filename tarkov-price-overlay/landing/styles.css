@@ -176,3 +176,10 @@ footer{border-top:1px solid var(--line);padding:30px 0 40px;color:var(--muted);f
 @media (max-width:420px){.tabs{gap:0}.tabs a{padding:0 8px;font-size:13px;gap:5px}}
 @media(max-width:520px){ .brand-t{display:none} }
 .nav-cta{white-space:nowrap}
+/* zh 판: keep-all 은 띄어쓰기 없는 중국어를 한 단어로 묶어 휴대폰에서 가로로 넘친다 → 일반 줄바꿈 + 간체 글꼴 */
+html:lang(zh) body{word-break:normal;line-break:strict;font-family:"Pretendard","Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,sans-serif}
+/* zh 판: 게임 클라이언트 언어 안내(OCR 은 ko/en/ru 게임 화면만) */
+.lang-note{font-size:14px;color:#cfcbbf;background:#2a2617;border:1px solid var(--gold-dim);border-radius:10px;padding:10px 13px;margin:-12px 0 22px;max-width:52ch;line-height:1.6}
+.lang-note b{color:var(--gold)}
+/* 언어 링크 3개 + 다운로드 버튼이 휴대폰 폭에 들어가게 */
+@media (max-width:420px){.nav-right{gap:6px}.nav-lang{padding:5px 8px;font-size:12px}.nav-cta{padding:8px 11px;font-size:13px}}

@@ -1,24 +1,25 @@
 # Tarkov Price Overlay (타르코프 시세 오버레이)
 
-> Free, open-source Windows overlay for Escape from Tarkov. Hover an item in-game and press F2 — flea market price, trader prices, barters, hideout crafts, and quest requirements appear as a transparent card in about 1 second. Uses screen capture + OCR only; it never reads game memory or injects code (same category as OBS/Discord overlays, fundamentally different from cheats). UI in Korean, English, and Russian (beta). Price data from the community-run tarkov.dev API. MIT licensed.
+> Free, open-source Windows overlay for Escape from Tarkov. Hover an item in-game and press F2 — flea market price, trader prices, barters, hideout crafts, and quest requirements appear as a transparent card in about 1 second. Uses screen capture + OCR only; it never reads game memory or injects code (same category as OBS/Discord overlays, fundamentally different from cheats). UI in Korean, English, Russian (beta) and Simplified Chinese (from the next release after v1.2.7). The OCR reads only Korean, English and Russian game clients — the Chinese game client is not supported, so Chinese players set the game language to English. Price data from the community-run tarkov.dev API. MIT licensed.
 
 Key facts:
 - Platform: Windows 10/11 desktop app (Tauri + React + Python/EasyOCR)
 - Price: free, no account, no ads walls; MIT open source
 - Safety: screen capture + OCR only — no memory reading, no DLL injection, no game-file modification; no bans reported for this class of overlay, though it is not officially endorsed by BSG
 - Features: flea market price / 24h range / last trade / price-per-slot, best trader to sell, where to buy, barters (both directions), hideout craft & upgrade requirements with FiR flags, quest auto-sync from EFT logs, ammo comparison matrix, weight efficiency (RUB/kg), loot tier rating, one-click wiki link, PVP/PVE price split, auto-update. Every row can be toggled off in Settings.
-- Languages: Korean, English, Russian (beta, incl. Cyrillic item-name OCR)
+- Languages: Korean, English, Russian (beta, incl. Cyrillic item-name OCR); Simplified Chinese UI from the next release (game client must be English, Korean or Russian)
 - Reliability: prices come from the tarkov.dev JSON API (json.tarkov.dev) with a daily mirror and an on-disk snapshot as fallbacks, so lookups keep working during upstream outages
-- Companion site: a free Korean/English/Russian Tarkov guide (590+ pages: every quest with objectives, required items, keys and rewards; items needed for quests and hideout; hideout modules; maps, bosses and extracts; ammo table; prestige; gunsmith parts; promo codes) at https://tarkov.aquapado.com/guide/ — the overlay can sync quest progress into it
+- Companion site: a free Korean/English/Russian/Simplified Chinese Tarkov guide (590+ pages: every quest with objectives, required items, keys and rewards; items needed for quests and hideout; hideout modules; maps, bosses and extracts; ammo table; prestige; gunsmith parts; promo codes) at https://tarkov.aquapado.com/guide/ — the overlay can sync quest progress into it
 
 ## Pages
 - [Korean landing](https://tarkov.aquapado.com/): 타르코프 시세 오버레이 — F2로 플리·상인가 즉시 확인
 - [English landing](https://tarkov.aquapado.com/en): Tarkov Price Overlay — flea & trader prices in-game with F2
 - [Russian landing](https://tarkov.aquapado.com/ru): Оверлей цен Тарков — цены барахолки и торговцев по F2
+- [Simplified Chinese landing](https://tarkov.aquapado.com/zh/): 逃离塔科夫按 F2 查价（跳蚤市场·商人价格）
 - [Download (GitHub Releases)](https://github.com/pado8/tarkov-price-overlay-releases/releases/latest): installer and portable ZIP
 - [Source code](https://github.com/pado8/tarkov-price-overlay): full source, MIT license
 
-## Tarkov guide (Korean; English at /guide/en/, Russian at /guide/ru/)
+## Tarkov guide (Korean; English at /guide/en/, Russian at /guide/ru/, Simplified Chinese at /guide/zh/)
 Generated from public tarkov.dev data and rebuilt after patches and events; each page states its data date and game version.
 - [Guide hub](https://tarkov.aquapado.com/guide/): 타르코프 퀘스트·은신처·필요 아이템·맵·보스·카파템 한국어 정리
 - [All quests](https://tarkov.aquapado.com/guide/quests/): every quest by trader in unlock order (level, map, found-in-raid counts, Kappa requirement). Detail pages at /guide/quest/<quest-slug>/ e.g. https://tarkov.aquapado.com/guide/quest/i-need-more-power/ — objectives, needed keys, rewards, prerequisites, full prerequisite chain, next quests, walkthrough notes
