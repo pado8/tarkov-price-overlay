@@ -11,6 +11,8 @@ from pathlib import Path
 import requests
 
 TARKOV_API_URL = "https://api.tarkov.dev/graphql"
+# 11-05 택일 후보가 이보다 많은 목표(아무 아이템이나 판매 등)는 아이템별 퀘스트 목록에 넣지 않는다
+ANY_ITEM_ALTS = 120
 
 # Background bulk-cache configuration. The whole tarkov.dev item catalog
 # (per language × per game mode) is fetched periodically so that /lookup
@@ -48,6 +50,7 @@ query ItemByName($name: String!, $lang: LanguageCode, $gameMode: GameMode) {
         }
       }
     }
+    basePrice
     avg24hPrice
     low24hPrice
     high24hPrice
@@ -205,6 +208,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
         }
       }
     }
+    basePrice
     avg24hPrice
     low24hPrice
     high24hPrice
@@ -694,10 +698,18 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         max_carry = 0  # findItem / giveItem (paired)
         sum_plant = 0  # plantItem (separate)
         fir = False
+        # 11-05: 이 아이템이 걸린 목표들의 택일 후보 수 중 가장 작은 값(1 = 이 아이템을 콕 집은 목표).
+        # 「Key Partner」「Building Foundations」처럼 '아무 아이템이나 N개 판매'(후보 3,300여 개)는
+        # 모든 카드에 붙어 소음이었다 → 후보 ANY_ITEM_ALTS 초과 목표만 있는 퀘스트는 목록에서 뺀다(가이드도 같은 기준).
+        min_alts = None
         for obj in t.get("objectives", []) or []:
             obj_items = obj.get("items") or []
             if not any(oi.get("id") == item_id for oi in obj_items):
                 continue
+            n_alts = len(obj_items)
+            if n_alts > ANY_ITEM_ALTS:
+                continue
+            min_alts = n_alts if min_alts is None else min(min_alts, n_alts)
             cnt = obj.get("count") or 0
             otype = obj.get("type") or ""
             if obj.get("foundInRaid"):
@@ -707,6 +719,10 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
             else:  # giveItem, findItem, fallback
                 if cnt > max_carry:
                     max_carry = cnt
+        if min_alts is None and any(
+            any(oi.get("id") == item_id for oi in (o.get("items") or [])) for o in (t.get("objectives") or [])
+        ):
+            continue  # 이 아이템이 걸린 목표가 전부 '아무 아이템' 목표
         total = max_carry + sum_plant
         if total <= 0:
             # Item appeared in usedInTasks but no item-objective matched it
@@ -727,6 +743,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
                 # Kappa flag drives the loot-tier badge (B vs A): Kappa-required
                 # tasks boost the item to at least A even at low ₽/slot.
                 "kappa_required": bool(t.get("kappaRequired")),
+                "alternatives": min_alts,
             }
         )
 
@@ -909,6 +926,7 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "is_key": "keys" in (item.get("types") or []),
         # 11-04: 플리 금지 아이템(이벤트·화폐·보관함 등). 시세가 비었을 때 카드가 '거래 불가'와 '아직 시세 없음(새 아이템·거래 적음)'을 가른다
         "no_flea": "noFlea" in (item.get("types") or []),
+        "base_price": item.get("basePrice"),  # 11-05 플리 수수료 계산용
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_high_24h": item.get("high24hPrice"),

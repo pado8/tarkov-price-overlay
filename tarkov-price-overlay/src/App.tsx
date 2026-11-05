@@ -12,6 +12,7 @@ import { useParty } from "./party";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
+import { sellAdvice, stillNeeded, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -656,6 +657,8 @@ type TaskRef = {
   // Whether this task is on the Kappa progression. Used by the loot-tier
   // tier function — Kappa items get boosted to A even at low ₽/slot.
   kappa_required: boolean;
+  // 11-05 택일 후보 수(1 = 이 아이템을 콕 집은 목표). 옛 사이드카는 없음
+  alternatives?: number | null;
   // Filled by the backend quest tracker if it found this quest in the
   // player's EFT logs. null when the tracker is off or the quest is unseen.
   // `task_status` is for the lookup's own game_mode (back-compat); newer
@@ -784,6 +787,9 @@ type LookupResult = {
   price_age_sec?: number | null;
   // 11-04 새 아이템 대응: 플리 금지 여부(시세 없음이 '거래 불가'인지 '아직 시세 없음'인지) · 목록 재갱신 중 · 게임 업데이트 뒤 시간
   no_flea?: boolean | null;
+  // 11-05 플리 수수료 계산용 — 옛 사이드카·옛 스냅샷은 없음
+  base_price?: number | null;
+  flea_fee_rates?: [number, number] | null;
   catalog_refreshing?: boolean;
   game_updated_hours?: number | null;
   price_source?: string | null;
@@ -886,6 +892,8 @@ type Region = {
   // Loot-tier letter badge (D/C/B/A/S) next to ₽/slot. When off, the
   // slot price renders bare. Tier rules live in computeLootTier().
   showLootTier: boolean;
+  // 11-05 플리 실수령(수수료 차감)·보관/판매 판정 줄
+  showSellAdvice: boolean;
   // Ammo Matrix panel: auto-expands on the card when the lookup result is
   // a weapon or a round. Off entirely hides the panel even on ammo/weapon.
   showAmmoMatrix: boolean;
@@ -940,6 +948,7 @@ const DEFAULT_REGION: Region = {
   opacity: 100,
   bgOpacity: 85,
   showLootTier: true,
+  showSellAdvice: true,
   showAmmoMatrix: true,
   sectionOrder: [...SECTION_KEYS],
 };
@@ -966,6 +975,7 @@ const PIN_KEY = "tarkov.pinned";
 const HISTORY_KEY = "tarkov.history";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
+const HIDEOUT_MGMT_LEVEL_KEY = "tarkov.hideoutMgmtLevel";
 // User-overridden card width (px). null = auto (scales with fontSize).
 // Set by dragging the resize handle in the card's bottom-right corner.
 const CARD_WIDTH_KEY = "tarkov.cardWidth";
@@ -1500,6 +1510,24 @@ function App() {
       }
     }
   );
+  // 11-05 은신처 관리 스킬 레벨(0~51) — 정보 센터 3단계의 플리 수수료 할인(-30%)을 레벨당 1%씩 키운다
+  const [hideoutMgmtLevel, setHideoutMgmtLevel] = useState<number>(() => {
+    try {
+      const v = Number(localStorage.getItem(HIDEOUT_MGMT_LEVEL_KEY) ?? "0");
+      return Number.isFinite(v) ? Math.max(0, Math.min(51, Math.floor(v))) : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const updateHideoutMgmtLevel = (v: number) => {
+    const n = Math.max(0, Math.min(51, Math.floor(v)));
+    setHideoutMgmtLevel(n);
+    try {
+      localStorage.setItem(HIDEOUT_MGMT_LEVEL_KEY, String(n));
+    } catch {
+      /* 저장 실패는 이번 실행에만 반영 */
+    }
+  };
   const [manualQuestDone, setManualQuestDone] = useState<Record<string, string[]>>(
     () => {
       try {
@@ -5169,6 +5197,7 @@ function App() {
                 ["showLastTrade", "displayLastTrade"],
                 ["highlightLastTrade", "displayHighlightLastTrade"],
                 ["showLootTier", "displayLootTier"],
+                ["showSellAdvice", "displaySellAdvice"],
                 ["showWeight", "displayWeight"],
               ] as const
             ).map(([key, labelKey]) => (
@@ -5477,6 +5506,28 @@ function App() {
                       );
                     })}
                   </div>
+                  <div className="hideout-level-row" title={t.hideoutMgmtHint}>
+                    <span className="hideout-level-name">{t.hideoutMgmtLevel}</span>
+                    <button
+                      className="hd-step-btn"
+                      disabled={hideoutMgmtLevel <= 0}
+                      onClick={() => updateHideoutMgmtLevel(hideoutMgmtLevel - 1)}
+                    >−</button>
+                    <input
+                      className="hideout-mgmt-input"
+                      type="number"
+                      min={0}
+                      max={51}
+                      value={hideoutMgmtLevel}
+                      onChange={(e) => updateHideoutMgmtLevel(Number(e.target.value) || 0)}
+                    />
+                    <button
+                      className="hd-step-btn"
+                      disabled={hideoutMgmtLevel >= 51}
+                      onClick={() => updateHideoutMgmtLevel(hideoutMgmtLevel + 1)}
+                    >+</button>
+                  </div>
+                  <div className="settings-hint" style={{ color: "var(--text-muted)" }}>{t.hideoutMgmtHint}</div>
                   <div className="settings-row" style={{ marginTop: 4 }}>
                     <label></label>
                     <button className="reset-btn" onClick={resetHideoutLevels}>
@@ -6020,12 +6071,30 @@ function App() {
                 (result.width ?? 0) * (result.height ?? 0);
               const rubPerSlot =
                 rawPrice && slots > 0 ? rawPrice / slots : null;
-              const hasKappa = (result.used_in_tasks ?? []).some(
-                (q) => q.kappa_required
-              );
-              const hasQuestOrHideout =
-                (result.used_in_tasks?.length ?? 0) > 0 ||
-                (result.needed_for_hideout?.length ?? 0) > 0;
+              // 11-05: 고른 서버 기준으로 끝낸(완료·실패, 카드에서 직접 달성 찍은 것 포함) 퀘스트와
+              // 이미 지은 은신처 단계는 등급 가산·보관 판정에서 뺀다 — 전엔 다 쓴 퀘스트템이 계속 C 이상이었다.
+              // 상태를 모르는 퀘스트(연동 꺼짐)·은신처 레벨 미입력은 예전처럼 아직 필요로 본다.
+              const doneManual = new Set(manualQuestDone[questDisplayMode] ?? []);
+              const adviceQuests: AdviceQuest[] = (result.used_in_tasks ?? []).map((q) => {
+                const st = q.task_status_by_mode ? q.task_status_by_mode[questDisplayMode] ?? null : q.task_status;
+                return {
+                  name: q.name,
+                  count: q.count,
+                  fir: q.fir,
+                  kappa: q.kappa_required,
+                  alternatives: q.alternatives ?? null,
+                  status: q.id && doneManual.has(q.id) ? "completed" : st,
+                };
+              });
+              const adviceHideout: AdviceHideout[] = (result.needed_for_hideout ?? []).map((n) => ({
+                station: n.station,
+                station_id: n.station_id,
+                level: n.level,
+                count: n.count,
+              }));
+              const need = stillNeeded(adviceQuests, adviceHideout, hideoutLevels);
+              const hasKappa = need.kappa;
+              const hasQuestOrHideout = need.any;
               const lootTier =
                 rubPerSlot != null
                   ? computeLootTier(rubPerSlot, hasQuestOrHideout, hasKappa, false)
@@ -6120,6 +6189,59 @@ function App() {
                     </span>
                     <span className="value">{fmt(result.trader_price)}</span>
                   </div>
+                  {region.showSellAdvice && (() => {
+                    const adv = sellAdvice({
+                      basePrice: result.base_price,
+                      fleaPrice: result.flea_price,
+                      noFlea: result.no_flea,
+                      rates: result.flea_fee_rates,
+                      traders: (result.sell_for ?? []).map((s) => ({ name: s.name, price: s.price })),
+                      quests: adviceQuests,
+                      hideout: adviceHideout,
+                      hideoutLevels,
+                      hideoutMgmtLevel,
+                    });
+                    if (adv.verdict === "none" && adv.fleaNet == null) return null;
+                    const k = adv.keep;
+                    const verdictText =
+                      k?.kind === "quest"
+                        ? (k.started ? t.sellKeepQuestStarted : t.sellKeepQuest).replace("{name}", k.name) + (k.fir ? " · " + t.sellFir : "")
+                        : k?.kind === "kappa"
+                          ? t.sellKeepKappa.replace("{name}", k.name)
+                          : k?.kind === "hideout"
+                            ? t.sellKeepHideout.replace("{station}", k.station).replace("{level}", String(k.level))
+                            : adv.verdict === "flea"
+                              ? adv.margin != null
+                                ? t.sellFleaBetter.replace("{n}", fmt(adv.margin))
+                                : t.sellFleaOnly
+                              : adv.verdict === "trader"
+                                ? result.no_flea
+                                  ? t.sellNoFlea.replace("{trader}", adv.traderName ?? "")
+                                  : adv.margin != null
+                                    ? t.sellTraderBetter.replace("{trader}", adv.traderName ?? "").replace("{n}", fmt(adv.margin))
+                                    : t.sellTraderOnly.replace("{trader}", adv.traderName ?? "")
+                                : "";
+                    return (
+                      <>
+                        {adv.fleaNet != null && (
+                          <div
+                            className="price sub-price"
+                            title={`${t.fleaFee} ${fmt(adv.fee)}${adv.discount > 0 ? ` (−${Math.round(adv.discount * 100)}%)` : ""}\n${t.fleaFeeHint}`}
+                          >
+                            <span className="label">
+                              {t.fleaNet}
+                              {/* 좁은 카드(ru)에서 두 줄로 꺾여 금액만 — '수수료'·할인율은 마우스를 올리면 */}
+                              <span className="vendor-name"> (−{fmt(adv.fee)})</span>
+                            </span>
+                            <span className="value sub-value">{fmt(adv.fleaNet)}</span>
+                          </div>
+                        )}
+                        {verdictText && (
+                          <div className={"sell-advice sell-advice-" + adv.verdict}>{verdictText}</div>
+                        )}
+                      </>
+                    );
+                  })()}
                     </>
                   )}
                   {region.showBuyFor &&

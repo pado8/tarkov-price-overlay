@@ -50,6 +50,9 @@ def _clean(s: str) -> str:
 _RAW_TTL_SEC = 120
 _raw_lock = threading.Lock()
 _raw_cache: dict[str, tuple[float, dict]] = {}  # key: "<mode>/items" or "<mode>/traders"
+# 11-05 플리 수수료 계수(Ti, Tr) — items 덤프 최상위 fleaMarket. fetch_catalog 가 받을 때 채우고,
+# 카드 조회(/lookup)는 이 값만 읽는다(_get_cached 는 만료되면 네트워크를 타므로 조회 경로에서 부르지 않는다).
+_flea_fee_rates: dict[str, tuple[float, float]] = {}
 
 
 # 2차 출처(2026-11-03): json.tarkov.dev 가 안 될 때만 읽는 우리 미러. 배포 저장소의 data-mirror 사전
@@ -326,6 +329,24 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
     return out
 
 
+def _remember_flea_fee_rates(mode: str, items_doc: dict) -> None:
+    fm = ((items_doc or {}).get("data") or {}).get("fleaMarket") or {}
+    try:
+        ti = float(fm.get("sellOfferFeeRate"))
+        tr = float(fm.get("sellRequirementFeeRate"))
+    except (TypeError, ValueError):
+        return
+    if 0 < ti < 1 and 0 < tr < 1:
+        _flea_fee_rates[mode] = (ti, tr)
+
+
+def flea_fee_rates(game_mode: str) -> tuple[float, float] | None:
+    """판매 수수료 계수 (Ti=sellOfferFeeRate, Tr=sellRequirementFeeRate). 카탈로그를 아직 안 받았으면 None.
+    네트워크를 타지 않는다 — 카드 조회 경로에서 부른다."""
+    mode = game_mode if game_mode in ("pve", "pvp-season") else "regular"
+    return _flea_fee_rates.get(mode)
+
+
 def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dict]]:
     """Fetch the whole catalog from json.tarkov.dev.
 
@@ -345,6 +366,7 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
     items = ((items_doc.get("data") or {}).get("items")) or {}
     if not items:
         raise RuntimeError("json.tarkov.dev returned no items")
+    _remember_flea_fee_rates(mode, items_doc)
 
     # Name/shortName/description are translation KEYS; resolve via the locale
     # file. English is the universal fallback for a missing locale.
@@ -446,6 +468,7 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
             "types": it.get("types") or [],
             "properties": gql_props,
             "containsItems": contains,
+            "basePrice": it.get("basePrice"),  # 11-05 플리 수수료 계산용(게임 내부 기준가)
             "avg24hPrice": it.get("avg24hPrice"),
             "low24hPrice": it.get("low24hPrice"),
             "high24hPrice": it.get("high24hPrice"),

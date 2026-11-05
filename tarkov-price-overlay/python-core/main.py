@@ -226,6 +226,8 @@ class TaskRef(BaseModel):
     # Whether this task is on the Kappa progression. Drives the loot-tier
     # badge — Kappa items get pushed up to at least A even when ₽/slot is low.
     kappa_required: bool = False
+    # 11-05 이 아이템이 걸린 목표의 택일 후보 수(1 = 콕 집은 목표). 크면 '여러 개 중 아무거나' — 판매 판정이 보관 이유로 안 쓴다
+    alternatives: int | None = None
     # Quest progress for this player, derived from EFT log files when
     # the quest tracker is enabled. None means "we don't know" (no log
     # data, tracker disabled, or quest never seen).
@@ -304,6 +306,8 @@ class LookupResponse(BaseModel):
     no_flea: bool | None = None  # 11-04 플리 금지 아이템(시세 없음일 때 '거래 불가' vs '아직 시세 없음'), 옛 스냅샷은 None
     catalog_refreshing: bool = False  # 11-04 못 찾음 뒤 아이템 목록을 새로 받는 중 → '몇 초 뒤 다시 F2'
     game_updated_hours: int | None = None  # 11-04 게임이 새 버전으로 바뀐 지 몇 시간(48시간 안일 때만)
+    base_price: int | None = None  # 11-05 게임 내부 기준가 — 플리 수수료 계산(카드 '플리 실수령')
+    flea_fee_rates: list[float] | None = None  # 11-05 [Ti, Tr] 판매 수수료 계수(json.tarkov.dev fleaMarket), 모르면 None
     flea_price: int | None
     flea_low_24h: int | None = None
     flea_high_24h: int | None = None
@@ -339,6 +343,16 @@ class LookupResponse(BaseModel):
     # The frontend prefixes its nomatch telemetry with "wide_" so the
     # dashboard can separate rescue-path reads from normal ones.
     attempt: str | None = None
+
+
+def _flea_fee_rates_for(game_mode: str) -> list[float] | None:
+    try:
+        import tarkov_json_fallback
+
+        r = tarkov_json_fallback.flea_fee_rates(game_mode)
+        return [r[0], r[1]] if r else None
+    except Exception:  # noqa: BLE001 — 수수료는 덤 정보라 조회를 막지 않는다
+        return None
 
 
 def _build_response(
@@ -417,6 +431,8 @@ def _build_response(
         is_key=bool(price.get("is_key")),
         guide_page=guide_index.page_for(price.get("id")),
         no_flea=price.get("no_flea"),
+        base_price=price.get("base_price"),
+        flea_fee_rates=_flea_fee_rates_for(game_mode),
         catalog_refreshing=catalog_refreshing,
         game_updated_hours=game_updated_hours,
         flea_price=price.get("flea"),
@@ -483,6 +499,7 @@ def _build_response(
                 count=t.get("count"),
                 fir=t.get("fir", False),
                 kappa_required=t.get("kappa_required", False),
+                alternatives=t.get("alternatives"),
                 task_status=current_status.get(t.get("id") or ""),
                 task_status_by_mode={
                     "pvp": pvp_status.get(t.get("id") or ""),
