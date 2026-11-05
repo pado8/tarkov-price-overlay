@@ -2972,6 +2972,8 @@ def bosses_page(ctx: Ctx) -> tuple[str, str]:
 
 def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
     cards = [
+        # 신규 기능은 맨 앞 + NEW 표시(11-05 사용자 요청) — 다섯째 값 True = 금색 강조 카드
+        ("/guide/keyfinder/", "내 열쇠들 어느 맵에?", "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리", f'열쇠 {counts.get("keyfinder", 0)}종', True),
         ("/guide/start/", "초반 가이드", "투어(Tour)로 상인·맵 여는 순서 · 10레벨까지 퀘스트 · 미리 모을 아이템", "처음·프레스티지 직후"),
         ("/guide/quests/", "퀘스트", "상인별 해금 순서 · 퀘스트마다 목표·필요템·열쇠·보상", f'{counts.get("quests", 0)}개'),
         ("/guide/items/", "필요 아이템 총정리", "퀘스트·은신처에 들어가는 아이템 총량 · 버리면 안 되는 템", f'{counts.get("items", 0)}종'),
@@ -2988,9 +2990,11 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         ("/guide/gunsmith/", "건스미스 부품 총정리", "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)", f'{counts.get("gunsmith_q", 0)}개 퀘스트 · 부품 {counts.get("gunsmith_p", 0)}종'),
         ("/guide/kappa/", "카파템", "수집가(Collector) 제출 아이템 · 보유 체크", f'{counts.get("kappa", 0)}개'),
         ("/guide/keys/", "맵별 열쇠", "여는 곳·퀘스트 필요 키·시세", f'{counts.get("keys", 0)}개'),
-        ("/guide/keyfinder/", "내 열쇠들 어느 맵에?", "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리", f'열쇠 {counts.get("keyfinder", 0)}종'),
     ]
-    html_cards = "".join(f'<a class="hub" href="{href}"><div class="t">{e(t)}</div><div class="d">{e(d)}</div><div class="n2">{e(n)}</div></a>' for href, t, d, n in cards)
+    html_cards = "".join(
+        f'<a class="hub{" new" if c[4:] and c[4] else ""}" href="{c[0]}">'
+        + ('<span class="newb">NEW</span>' if c[4:] and c[4] else "")
+        + f'<div class="t">{e(c[1])}</div><div class="d">{e(c[2])}</div><div class="n2">{e(c[3])}</div></a>' for c in cards)
     body = (f'<h1>탈콥 가이드 <span class="h1en">타르코프 한국어 정리</span></h1>'
             f'<p class="sub">공개 게임 데이터로 만드는 한국어 정리 · 패치·이벤트 뒤 다시 생성 · 데이터 기준 {e(ctx.stamp)} · 게임 {GAME_VERSION}</p>'
             f'<div class="cards">{html_cards}</div>'
