@@ -16,6 +16,7 @@ from __future__ import annotations
 import html
 import json
 import re
+import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
 import sys
@@ -1951,7 +1952,8 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
             extra += [f"<li>{e(t_(x))}</li>" for x in rs.get("other") or []]
             head = '<p class="small muted">보상 묶음 ' + str(k + 1) + " (선택한 길에 따라 다름)</p>" if len(sets) > 1 else ""
             rws.append(head + f'<div class="chips">{"".join(parts)}</div>' + (f'<ul class="plain small">{"".join(extra)}</ul>' if extra else ""))
-        wiki = "https://escapefromtarkov.fandom.com/wiki/" + t.replace(" ", "_")
+        # '?'·'#' 이 든 제목(Halloween: Coincidence?)은 인코딩해야 한다 — 안 하면 쿼리로 잘려 위키 '없는 문서'로 갔다(11-05 링크 전수 점검)
+        wiki = "https://escapefromtarkov.fandom.com/wiki/" + urllib.parse.quote(t.replace(" ", "_"), safe=":/'(),!_-.")
         en_h = f' <span class="h1en">{e(t)}</span>' if LANG != "en" else ""
         boxes.append(
             f'<section class="box" id="{slug(t)}"><h2>{e(t_(t))}{en_h}</h2>'
