@@ -75,8 +75,7 @@ export const RADAR_SIZE_DEFAULT = 240;
 export const RADAR_MINI_KEY = "tarkov.radar.mini";
 export const RADAR_MINI_SIZE_KEY = "tarkov.radar.miniSize";
 export const RADAR_MAP_ALPHA_KEY = "tarkov.radar.mapAlpha"; // 0~100, 지도 그림·바탕만(표식은 그대로)
-export const RADAR_PIP_KEY = "tarkov.radar.pip"; // "1" = 미니맵을 창째로 작게 화면 오른쪽에(PiP)
-export const RADAR_PIP_POS_KEY = "tarkov.radar.pipPos"; // PiP 창을 끌어 옮긴 위치(물리 px)
+export const RADAR_PIP_POS_KEY = "tarkov.radar.pipPos"; // 미니맵(작은 지도 창)을 끌어 옮긴 위치(물리 px) — 11-06 PiP 를 미니맵 모드로 합침, 키 이름은 그대로
 export const RADAR_MINI_MIN = 100;
 export const RADAR_MINI_MAX = 600;
 export const RADAR_MINI_DEFAULT = 220;
@@ -147,15 +146,13 @@ type Props = {
   mapAlpha?: number; // 0~100
   onMapAlpha?: (v: number) => void;
   dragRegion?: boolean; // 미니맵 옮기기 손잡이를 창 끌기 영역으로(고정 모드면 false)
-  pip?: boolean; // PiP 중(창 = 지도 크기) — 도구는 옮기기·작게·크게·PiP 끄기만
-  onPip?: (v: boolean) => void;
   party?: PartyApi; // 파티 방(친구 위치 공유) — 없으면 버튼도 없음
 };
 
 const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, pip, onPip, party }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party }: Props) {
   const [showParty, setShowParty] = useState(false);
   // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
   // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
@@ -259,14 +256,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <span className="radar-mini-grip" data-tauri-drag-region={dragRegion ? true : undefined} title={t.radarMiniDrag}>⠿</span>
           <button type="button" onClick={() => step(-20)} disabled={miniSize <= RADAR_MINI_MIN} title={t.radarMiniSmaller} aria-label={t.radarMiniSmaller}>−</button>
           <button type="button" onClick={() => step(20)} disabled={miniSize >= RADAR_MINI_MAX} title={t.radarMiniBigger} aria-label={t.radarMiniBigger}>+</button>
-          {pip ? (
-            <button type="button" onClick={() => onPip?.(false)} title={t.radarPipOff}>{t.radarPipOff}</button>
-          ) : (
-            <>
-              {onPip && <button type="button" onClick={() => onPip(true)} title={t.radarPipHint}>{t.radarPip}</button>}
-              <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
-            </>
-          )}
+          <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
         </div>
       </div>
     );

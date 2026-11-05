@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
 import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
-import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
+import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
 import { sellAdvice, stillNeeded, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
@@ -1651,6 +1651,7 @@ function App() {
   const [miniSize, setMiniSize] = useState<number>(loadMiniSize);
   const [mapAlpha, setMapAlpha] = useState<number>(loadMapAlpha);
   const pickRadarMini = (v: boolean) => {
+    if (!v) miniReturnRef.current = false;
     setRadarMini(v);
     try {
       localStorage.setItem(RADAR_MINI_KEY, v ? "1" : "0");
@@ -1674,18 +1675,20 @@ function App() {
   // PiP(11-05 피드백 '진짜 아무것도 안 뜨고 미니맵만 게임 위에'): 미니맵일 때 창 자체를 지도 크기로 줄여 화면 오른쪽에.
   // 창은 평소 폭 800 고정(높이만 카드에 맞춤)이라 카드만 줄여서는 '창이 안 줄어든다'. F2 조회로 지도가 닫히면 저절로 풀리고
   // 원래 자리에 시세 카드가 뜬다(다음 스크린샷으로 지도가 다시 열리면 다시 PiP).
-  const [pipOn, setPipOn] = useState<boolean>(() => localStorage.getItem(RADAR_PIP_KEY) === "1");
-  const pipActive = pipOn && radarMini && radarActive && !showSettings && !wideMode;
+  // 11-06 사용자 결정: 미니맵 모드와 PiP 를 하나로 — 미니맵 모드를 켜면 늘 이 방식(창 = 지도 크기, 따로 둔 자리, 자동으로 안 숨김).
+  // F2 조회 땐 원래 카드 자리·크기로 시세를 보여 주고, 카드 숨김 시간이 지나면 작은 지도로 돌아온다(miniReturnRef).
+  const pipActive = radarMini && radarActive && !showSettings && !wideMode;
   const pipActiveRef = useRef(pipActive);
   pipActiveRef.current = pipActive;
   const pipPrevRef = useRef<{ x: number; y: number } | null>(null); // PiP 들어가기 전 창 위치(물리 px)
   const pipMoveArmedAtRef = useRef(0); // 이 시각 전의 창 이동은 PiP 가 옮긴 것 — 사용자 위치로 저장하지 않는다
-  const pickPip = (v: boolean) => {
-    setPipOn(v);
-    try {
-      localStorage.setItem(RADAR_PIP_KEY, v ? "1" : "0");
-    } catch {}
-  };
+  const radarMiniRef = useRef(radarMini);
+  radarMiniRef.current = radarMini;
+  // 미니맵(작은 지도)이 떠 있을 때 누른 F2 → 시세 카드를 다 보면(숨김 시간) 작은 지도로 돌아간다
+  const miniReturnRef = useRef(false);
+  useEffect(() => {
+    if (pipActive) miniReturnRef.current = false; // 작은 지도로 돌아옴(또는 스크린샷으로 다시 열림)
+  }, [pipActive]);
   const paneRef = useRef<HTMLDivElement>(null);
   // 세로 모니터(높이 > 폭)에서 나란히 모드 = 카드 위·지도 아래 전체 폭·목록은 지도 밑(11-04 피드백 "세로 서브모니터에서 공간 활용이 아쉽다")
   const [portrait, setPortrait] = useState(false);
@@ -2264,11 +2267,11 @@ function App() {
   }, [region.autoHide]);
   const scheduleHide = () => {
     cancelHideTimer();
-    // Auto-hide disabled: the card stays until hidden explicitly.
-    if (!autoHideRef.current) return;
+    // Auto-hide disabled: the card stays until hidden explicitly. (작은 지도로 돌아가기는 자동 숨김이 꺼져 있어도 같은 시간 뒤에)
+    if (!autoHideRef.current && !miniReturnRef.current) return;
     // 지도 나란히 모드 = 모니터 하나를 통째로 쓰는 상태라 숨기지 않는다
     if (wideModeRef.current) return;
-    if (pipActiveRef.current) return; // PiP 미니맵도 계속 떠 있어야 한다
+    if (pipActiveRef.current) return; // 미니맵(작은 지도)은 계속 떠 있어야 한다
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
     // Cursor parked on the card keeps it alive. Without this, any
@@ -2296,7 +2299,7 @@ function App() {
         on = await cursorOverCard();
       } catch {}
       if (hideTimerRef.current !== handle) return; // 그 사이 취소되거나 새 타이머로 바뀜
-      if (!autoHideRef.current || wideModeRef.current || settingsOpenRef.current || lookupInFlightRef.current) {
+      if ((!autoHideRef.current && !miniReturnRef.current) || wideModeRef.current || settingsOpenRef.current || lookupInFlightRef.current) {
         hideTimerRef.current = null; // 그 사이 숨기면 안 되는 상태가 됨 — 각자 끝날 때 다시 건다
         return;
       }
@@ -2305,6 +2308,13 @@ function App() {
         return;
       }
       hideTimerRef.current = null;
+      if (miniReturnRef.current && radarMiniRef.current) {
+        // 시세 카드를 다 봄 → 숨기는 대신 작은 지도로(원래 자리에서 따로 둔 지도 자리로 창이 옮겨 간다)
+        miniReturnRef.current = false;
+        setRadarActive(true);
+        void loadRadar();
+        return;
+      }
       setCardVisible(false);
     }, ms);
     hideTimerRef.current = handle;
@@ -3752,6 +3762,7 @@ function App() {
         setShowSettings(false);
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
         // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
+        if (pipActiveRef.current) miniReturnRef.current = true; // 작은 지도에서 누른 조회 — 카드를 다 보면 작은 지도로
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
         else sharedPressAtRef.current = performance.now();
         const prevStatus = statusRef.current; // 키 공유로 결과를 숨기게 되면 이 상태로 되돌린다
@@ -5871,8 +5882,6 @@ function App() {
             mapAlpha={mapAlpha}
             onMapAlpha={pickMapAlpha}
             dragRegion={!pinned}
-            pip={pipActive}
-            onPip={pickPip}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={(px) => {
               setRadarSize(px);
