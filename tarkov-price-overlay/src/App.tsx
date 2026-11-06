@@ -4695,7 +4695,22 @@ function App() {
         {banner === "announce" && announcementText && (
             <div className="announce-banner">
               <span className="announce-text">
-                {announcementText}
+                {/* 11-07 공지 안의 우리 사이트 주소(tarkov.aquapado.com)만 누르면 기본 브라우저로 연다 — 패치 날 '바뀐 퀘스트 공략' 링크용.
+                    다른 주소는 글자 그대로(원격 문구로 아무 사이트나 열리지 않게) */}
+                {announcementText.split(/(https:\/\/tarkov\.aquapado\.com\/[^\s]*)/).map((part, i) =>
+                  /^https:\/\/tarkov\.aquapado\.com\//.test(part) ? (
+                    <button
+                      key={i}
+                      className="announce-link"
+                      data-href={part}
+                      onClick={() => openUrl(part).catch((e) => log(`announce: openUrl failed — ${String(e)}`))}
+                    >
+                      {t.announceOpenLink}
+                    </button>
+                  ) : (
+                    <span key={i}>{part}</span>
+                  )
+                )}
               </span>
               <button
                 className="settings-btn"

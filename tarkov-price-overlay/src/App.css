@@ -1393,6 +1393,20 @@ html, body, #root {
   flex: 1;
   line-height: 1.35;
 }
+/* 11-07 공지 안의 가이드 링크(우리 사이트 주소만) */
+.announce-link {
+  background: none;
+  border: 1px solid rgba(200, 170, 100, 0.45);
+  border-radius: var(--radius-sm);
+  color: var(--gold-light);
+  font: inherit;
+  padding: 0 5px;
+  margin: 0 2px;
+  cursor: pointer;
+}
+.announce-link:hover {
+  background: rgba(200, 170, 100, 0.12);
+}
 .settings-hint-inline {
   font-size: var(--card-fs-xxs);
   color: var(--text-disabled);
