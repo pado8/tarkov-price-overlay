@@ -96,6 +96,54 @@ fn apply_click_through(window: &tauri::WebviewWindow, ignore: bool) -> bool {
     true
 }
 
+/// 진단 기록용(11-06): 지금 앞 창이 게임인가·오버레이인가·그 밖인가. 다른 프로그램 이름은 돌려주지 않는다(개인정보).
+#[tauri::command]
+fn get_foreground_kind() -> String {
+    #[cfg(windows)]
+    unsafe {
+        #[link(name = "user32")]
+        extern "system" {
+            fn GetForegroundWindow() -> isize;
+            fn GetWindowThreadProcessId(hwnd: isize, pid: *mut u32) -> u32;
+        }
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn OpenProcess(access: u32, inherit: i32, pid: u32) -> isize;
+            fn QueryFullProcessImageNameW(h: isize, flags: u32, buf: *mut u16, size: *mut u32) -> i32;
+            fn CloseHandle(h: isize) -> i32;
+            fn GetCurrentProcessId() -> u32;
+        }
+        let hwnd = GetForegroundWindow();
+        if hwnd == 0 {
+            return "none".into();
+        }
+        let mut pid: u32 = 0;
+        GetWindowThreadProcessId(hwnd, &mut pid);
+        if pid == GetCurrentProcessId() {
+            return "overlay".into();
+        }
+        let h = OpenProcess(0x1000, 0, pid); // PROCESS_QUERY_LIMITED_INFORMATION
+        if h == 0 {
+            return "other".into();
+        }
+        let mut buf = [0u16; 520];
+        let mut n: u32 = buf.len() as u32;
+        let ok = QueryFullProcessImageNameW(h, 0, buf.as_mut_ptr(), &mut n);
+        CloseHandle(h);
+        if ok != 0 {
+            let path = String::from_utf16_lossy(&buf[..n as usize]).to_ascii_lowercase();
+            if path.ends_with("escapefromtarkov.exe") {
+                return "game".into();
+            }
+        }
+        "other".into()
+    }
+    #[cfg(not(windows))]
+    {
+        "other".into()
+    }
+}
+
 /// 프런트 클릭 투과 폴링이 부른다. 반환 = 실제로 바꿨는가(같으면 아무것도 안 함).
 #[tauri::command]
 fn set_click_through(app: tauri::AppHandle, ignore: bool) -> bool {
@@ -1263,6 +1311,7 @@ pub fn run() {
             prepare_quit,
             get_cursor_position,
             set_click_through,
+            get_foreground_kind,
             log_msg,
             register_lookup_hotkey,
             register_toggle_hotkey,

@@ -11,6 +11,7 @@ import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
 import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
+import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
@@ -1779,6 +1780,33 @@ function App() {
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
+  const [feedbackDiag, setFeedbackDiag] = useState(true); // 11-06 진단 정보 함께 보내기(기본 켬)
+  // 진단 덩어리: 버전·설정·모니터·창·게임 화면 모드 + 최근 사건(diagLog). 남은 글자(room)에 맞춰 자른다
+  const buildDiag = async (room: number): Promise<string> => {
+    const head: string[] = [`앱 ${APP_VERSION} · ${navigator.userAgent.match(/Windows NT [\d.]+/)?.[0] ?? ""}`];
+    try {
+      head.push("설정 " + Object.entries(region).filter(([, v]) => typeof v !== "object").map(([k, v]) => `${k}=${v}`).join(",").slice(0, 700));
+    } catch {}
+    head.push(`단축키=${hotkey} 공유=${hotkeyPassthrough ? 1 : 0} 나란히=${wideMode ? 1 : 0} 미니맵=${radarMini ? 1 : 0} 지도열림=${radarActive ? 1 : 0}`);
+    try {
+      const mons = await availableMonitors();
+      head.push("모니터 " + mons.map((m) => `${m.size.width}x${m.size.height}@${Math.round(m.scaleFactor * 100)}%(${m.position.x},${m.position.y})`).join(" "));
+      const win = getCurrentWindow();
+      const [p, z, sf] = await Promise.all([win.outerPosition(), win.outerSize(), win.scaleFactor()]);
+      head.push(`창 ${z.width}x${z.height}@${Math.round(sf * 100)}%(${p.x},${p.y})`);
+    } catch {}
+    try {
+      const ctl = new AbortController();
+      const tm = window.setTimeout(() => ctl.abort(), 2000);
+      const env = await (await fetch(`${PYTHON_API}/diag/env`, { signal: ctl.signal })).json();
+      window.clearTimeout(tm);
+      const d = env.eft_display;
+      head.push(`OS ${env.os ?? "?"} · 게임 화면 ` + (d ? `mode=${d.fullscreen_mode}(0전체·1테두리없음·2최대화·3창) ${d.resolution?.Width}x${d.resolution?.Height} 모니터#${d.display}` : env.eft_display_error ?? "?"));
+    } catch {
+      head.push("게임 화면 설정: 사이드카 응답 없음");
+    }
+    return diagBlock(head, Math.max(200, room));
+  };
   // "empty" = 내용 없이 보내기를 눌렀을 때(전송 실패와 다른 안내 — t.feedbackEmpty)
   const [feedbackStatus, setFeedbackStatus] = useState<
     "idle" | "sending" | "sent" | "error" | "empty"
@@ -2321,12 +2349,14 @@ function App() {
       }
       hideTimerRef.current = null;
       if (miniReturnRef.current && radarMiniRef.current) {
+        diag("mini:return");
         // 시세 카드를 다 봄 → 숨기는 대신 작은 지도로(원래 자리에서 따로 둔 지도 자리로 창이 옮겨 간다)
         miniReturnRef.current = false;
         setRadarActive(true);
         void loadRadar();
         return;
       }
+      diag("hide:timer");
       setCardVisible(false);
     }, ms);
     hideTimerRef.current = handle;
@@ -2711,6 +2741,29 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radarEnabled, region.lang, region.gameMode]);
 
+  // 11-06 진단 기록(diagLog.ts): 카드 보임/숨김 · 오버레이 포커스 · 앞 창 종류(game/overlay/other) 바뀜
+  useEffect(() => {
+    diag(cardVisible ? "card:show" : "card:hide");
+  }, [cardVisible]);
+  useEffect(() => {
+    const win = getCurrentWindow();
+    const unFocus = win.onFocusChanged(({ payload }) => diag(payload ? "focus:on" : "focus:off"));
+    let lastFg = "";
+    const iv = window.setInterval(() => {
+      invoke<string>("get_foreground_kind")
+        .then((k) => {
+          if (k !== lastFg) {
+            lastFg = k;
+            diag("fg:" + k);
+          }
+        })
+        .catch(() => {});
+    }, 700);
+    return () => {
+      window.clearInterval(iv);
+      unFocus.then((f) => f()).catch(() => {});
+    };
+  }, []);
   // Region-based click-through: while the card is visible, poll cursor
   // position and only capture clicks when the cursor is over the card's
   // screen rect. Outside the card (rest of the 800x600 invisible window)
@@ -2768,6 +2821,7 @@ function App() {
         // Edge-triggered so the timer isn't restarted every 40ms.
         if (inside !== mouseOverCardRef.current) {
           mouseOverCardRef.current = inside;
+          diag(inside ? "cursor:in" : "cursor:out");
           if (inside) {
             cancelHideTimer();
           } else if (!recordingHotkeyRef.current) {
@@ -3777,6 +3831,7 @@ function App() {
         setShowSettings(false);
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
         // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
+        diag("f2");
         if (pipActiveRef.current) miniReturnRef.current = true; // 작은 지도에서 누른 조회 — 카드를 다 보면 작은 지도로
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
         else sharedPressAtRef.current = performance.now();
@@ -3946,6 +4001,7 @@ function App() {
       // Internal card visibility flip. 업데이터 함수 안에서 타이머를 걸지 않는다(React 가 업데이터를 다시 부를 수
       // 있어 부작용이 두 번 날 수 있다) — 거울 ref 로 다음 값을 정하고 ref 도 바로 바꿔 연타도 한 번씩 뒤집힌다.
       const show = !cardVisibleRef.current;
+      diag(show ? "toggle:show" : "toggle:hide");
       cardVisibleRef.current = show;
       cancelHideTimer();
       setCardVisible(show);
@@ -4798,6 +4854,9 @@ function App() {
                       />
                     </label>
                   )}
+                  <label className="feedback-attach-label" title={t.feedbackDiagHint}>
+                    <input type="checkbox" checked={feedbackDiag} onChange={(e) => setFeedbackDiag(e.target.checked)} /> {t.feedbackDiag}
+                  </label>
                 </div>
                 <div className="feedback-actions">
                   <span
@@ -4821,7 +4880,7 @@ function App() {
                       }
                       setFeedbackStatus("sending");
                       try {
-                        await submitFeedback(msg, feedbackImage);
+                        await submitFeedback(feedbackDiag ? msg + "\n\n" + (await buildDiag(3990 - msg.length)) : msg, feedbackImage);
                         setFeedbackStatus("sent");
                         setFeedbackText("");
                         setFeedbackImage(null);

@@ -1592,6 +1592,23 @@ def radar_prune_set(req: RadarPruneRequest) -> dict:
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@app.get("/diag/env")
+def diag_env() -> dict:
+    """진단 정보(11-06, 피드백 '진단 정보 함께 보내기'): 운영체제 + 타르코프 화면 설정(Graphics.ini DisplaySettings).
+    FullScreenMode = Unity 값(0 전체 화면 · 1 테두리 없는 창 · 2 최대화 창 · 3 창 모드). 개인 정보 없음."""
+    import platform
+    from pathlib import Path
+
+    out: dict = {"os": platform.platform()}
+    try:
+        p = Path(os.environ.get("APPDATA", "")) / "Battlestate Games" / "Escape from Tarkov" / "Settings" / "Graphics.ini"
+        d = (json.loads(p.read_text(encoding="utf-8-sig")) or {}).get("DisplaySettings") or {}
+        out["eft_display"] = {"display": d.get("Display"), "fullscreen_mode": d.get("FullScreenMode"), "resolution": d.get("Resolution")}
+    except Exception as e:  # noqa: BLE001
+        out["eft_display_error"] = type(e).__name__
+    return out
+
+
 @app.get("/quests/status")
 def quests_status() -> dict:
     """Current state of the quest log watcher: install path validity,
