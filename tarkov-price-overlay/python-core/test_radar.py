@@ -343,6 +343,13 @@ eq("레이드 기록 전 = 모름", r.raid_side_at(sev, T("2026-11-06 22:50:00")
 eq("레이드가 너무 오래 전 = 모름", r.raid_side_at(sev, T("2026-11-07 03:00:00")), None)
 eq("본 프로필 기록이 없으면 = 모름", r.raid_side_at([e for e in sev if e[1] == "raid"], T("2026-11-06 23:05:00")), None)
 
+# 11-07 피드백 #56: SVG 그림은 svgBounds 사각형에 깐다(리저브만 bounds 와 다름) — 타일 맵·svgBounds 없는 맵은 bounds
+import json as _json
+_td = _json.loads((_P(r.__file__).parent / "data" / "td_maps.json").read_text(encoding="utf-8"))["maps"]
+eq("리저브 그림 = svgBounds", r.map_image_meta("reserve")["bounds"] == _td["reserve"]["svgBounds"], True)
+eq("세관 그림 = bounds(svgBounds 없음)", r.map_image_meta("customs")["bounds"] == _td["customs"]["bounds"], True)
+eq("연구소(타일) 그림 = bounds", r.map_image_meta("the-lab")["bounds"] == _td["the-lab"]["bounds"], True)
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

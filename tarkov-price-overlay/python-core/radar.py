@@ -897,7 +897,11 @@ def map_image_meta(slug: str) -> Optional[dict]:
         return None
     author = x.get("author") or "tarkov.dev"
     credit = "tarkov.dev (CC BY-NC-SA 4.0)" if author.lower() == "tarkov.dev" else f"{author} · tarkov.dev (CC BY-NC-SA 4.0)"
-    return {"url": f"/radar/mapimg?map={slug}", "rot": x.get("rot") or 0, "bounds": x["bounds"], "transform": x["transform"],
+    # 그림을 까는 사각형: SVG 맵은 svgBounds 가 있으면 그것(tarkov.dev src/pages/map/index.jsx 와 같음). 11-07 피드백 #56 '지도 좌표가
+    # 밀려 보임' 조사로 발견 — 리저브만 svgBounds([[289,-274],[-303,272]])가 bounds 와 달라 그림이 남북으로 19~28m 밀려 있었다.
+    # 타일 맵은 bounds 그대로(_tile_plan 도 bounds 로 자른다).
+    img_bounds = (x.get("svgBounds") if x.get("svg") else None) or x["bounds"]
+    return {"url": f"/radar/mapimg?map={slug}", "rot": x.get("rot") or 0, "bounds": img_bounds, "transform": x["transform"],
             "credit": credit, "base": x.get("base"),
             "layers": [{k: v for k, v in l.items() if k != "tiles"} for l in x.get("layers") or []]}
 
