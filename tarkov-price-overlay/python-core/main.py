@@ -422,7 +422,7 @@ def _build_response(
             },
         )
 
-    usage = item_usage.usage_for(price.get("id"))
+    usage = item_usage.usage_for(price.get("id"), poster=bool(price.get("poster")))
     return LookupResponse(
         raw_text=raw_text,
         item_id=price.get("id"),
@@ -437,7 +437,7 @@ def _build_response(
         wiki=price.get("wiki"),
         is_key=bool(price.get("is_key")),
         # 쓰임새 표에 있는 아이템은 가이드 색인(하루 캐시)을 기다리지 않고 /guide/untradeable/ 로 — 같은 표로 만드는 페이지라 행이 늘 있다
-        guide_page=guide_index.page_for(price.get("id")) or ("usage" if usage[0] else None),
+        guide_page=guide_index.page_for(price.get("id")) or ("usage" if item_usage.in_table(price.get("id")) else None),
         usage=usage[0],
         is_event=usage[1],
         no_flea=price.get("no_flea"),

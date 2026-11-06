@@ -929,6 +929,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         # 11-04: 플리 금지 아이템(이벤트·화폐·보관함 등). 시세가 비었을 때 카드가 '거래 불가'와 '아직 시세 없음(새 아이템·거래 적음)'을 가른다
         "no_flea": "noFlea" in (item.get("types") or []),
         "base_price": item.get("basePrice"),  # 11-05 플리 수수료 계산용
+        # 11-06 포스터·돋을새김(은신처 장식, 77종 — 상인 판매가도 없어 늘 시세 없음 카드) → 쓰임새 한 줄(item_usage.POSTER_USE)
+        "poster": "poster" in (item.get("types") or []),
         "flea": item.get("avg24hPrice"),
         "flea_low_24h": item.get("low24hPrice"),
         "flea_high_24h": item.get("high24hPrice"),

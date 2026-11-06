@@ -96,5 +96,15 @@ eq("unknown-item 아이콘 → None", r.icon, None)
 r = main._build_response("x", {"id": "5aafbcd986f7745e590fff23", "name": "의약품 보관함", "icon": "https://assets.tarkov.dev/5aafbcd986f7745e590fff23-grid-image.webp"}, "regular", lang="ko")
 eq("정상 아이콘은 그대로", r.icon, "https://assets.tarkov.dev/5aafbcd986f7745e590fff23-grid-image.webp")
 
+# ⑦ 포스터(11-06): 표에 없으면 은신처 장식 한 줄 + 가이드는 위키로(쓰임새 페이지에 행이 없음), 표에 있으면 표 문구 우선
+r = main._build_response("Survivor poster", {"id": "68df97725d4e135b130392c8", "name": "Survivor poster", "no_flea": True, "poster": True}, "regular", lang="ko")
+eq("표에 없는 포스터 → 장식 한 줄", [u["ko"] for u in r.usage], [item_usage.POSTER_USE["ko"]])
+eq("표에 없는 포스터 → 가이드 쓰임새 페이지로 안 보냄", r.guide_page, None)
+r = main._build_response("Streets poster", {"id": "6a426fbe99757acd420f64b0", "name": "Streets of Tarkov poster", "no_flea": True, "poster": True}, "regular", lang="ko")
+eq("표에 있는 포스터 → 표 문구(프로모 코드)", "프로모" in r.usage[0]["ko"] and len(r.usage) == 1, True)
+eq("표에 있는 포스터 → 가이드 쓰임새 페이지", r.guide_page, "usage")
+r = main._build_response("Docs", {"id": "6a31830dde69ceafd805afa0", "name": "Technical documentation", "no_flea": True}, "regular", lang="ko")
+eq("포스터 아님 · 표에 없음 → 비어 있음", (r.usage, r.guide_page), ([], None))
+
 print("\n실패", fails)
 sys.exit(1 if fails else 0)
