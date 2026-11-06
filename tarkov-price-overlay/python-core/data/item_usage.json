@@ -1,5 +1,5 @@
 {
-  "_doc": "거래 불가(플리·상인 시세 없음) 아이템의 쓰임새 손글 표 (11-06). 시세 없음 조회 상위 6개만 — 퀘스트·교환·제작·은신처 데이터(json.tarkov.dev)에 안 잡히는 용도를 공식 위키에서 확인해 짧게 적었다. 확인 못 한 용도는 적지 않는다. 오버레이 사이드카(item_usage.py)가 카드 응답에 싣고, 가이드 생성기(guide_static.untradeable_page)가 /guide/untradeable/ 페이지를 만든다. 문구는 직접 요약한 것(위키 문장 번역 아님). 번역문에 작은따옴표 금지.",
+  "_doc": "거래 불가(플리·상인 시세 없음) 아이템의 쓰임새 손글 표 (11-06). 시세 없음 조회 상위 6개 + 11-06 추가(배틀 패스 문서 9종 · 스트리머 아이템 보관함 — 분류·허용 목록·보상 퀘스트를 게임 데이터로 대조) — 퀘스트·교환·제작·은신처 데이터(json.tarkov.dev)에 안 잡히는 용도를 공식 위키에서 확인해 짧게 적었다. 확인 못 한 용도는 적지 않는다. 오버레이 사이드카(item_usage.py)가 카드 응답에 싣고, 가이드 생성기(guide_static.untradeable_page)가 /guide/untradeable/ 페이지를 만든다. 문구는 직접 요약한 것(위키 문장 번역 아님). 번역문에 작은따옴표 금지.",
   "items": {
     "634959225289190e5e773b3b": {
       "event": true,
@@ -63,6 +63,110 @@
          "en": "Storage case for meds and medical supplies — 8×8 (64 slots) inside, 3×3 outside",
          "ru": "Кейс для медикаментов и медрасходников — внутри 8×8 (64 ячейки), снаружи 3×3",
          "zh": "药品与医疗物资专用收纳箱 — 外 3×3，内 8×8(64 格)"}
+      ]
+    },
+    "6a317b9692cfdcddcb02a58e": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/PMC_personnel_files",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a31807f17005505b70d5827": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Financial_documents",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a3181f178450ec91c0ea1aa": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Project_documentation",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a31824878450ec91c0ea1ae": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Blueprints_and_technical_documentation",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a31828557705071410ca00e": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Test_documentation",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a3182b72fd891345e047eef": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/User_documentation",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a3182dc6cd8de21cf0a3a7d": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Medical_documents",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a31830dde69ceafd805afa0": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Technical_documentation",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "6a3183258f113efdb7093622": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Classified_documents",
+      "uses": [
+        {"ko": "배틀 패스 문서 · 시즌 배틀 패스 보상을 여는 데 씀",
+         "en": "Battle Pass document · spent to unlock season Battle Pass rewards",
+         "ru": "Документ боевого пропуска · тратится на награды сезонного боевого пропуска",
+         "zh": "战斗通行证文件 · 用于解锁赛季战斗通行证奖励"}
+      ]
+    },
+    "66bc98a01a47be227a5e956e": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Streamer_item_case",
+      "uses": [
+        {"ko": "퀘스트 「수집가」 아이템(스트리머 아이템)만 넣는 보관함 · 겉 3×3, 안 88칸",
+         "en": "Holds only Collector quest items (streamer items) · 3×3 outside, 88 slots inside",
+         "ru": "Вмещает только предметы для квеста «Коллекционер» (стримерские) · снаружи 3×3, внутри 88 ячеек",
+         "zh": "只能放「收藏家」任务物品（主播物品）的箱子 · 外部 3×3，内部 88 格"},
+        {"ko": "퀘스트 「이거 혹시 패러디인가?」 보상으로 받음",
+         "en": "Reward from the quest Is This a Reference?",
+         "ru": "Награда за квест «Что-то мне это напоминает...»",
+         "zh": "任务「这是什么梗？」的奖励"}
       ]
     }
   }

@@ -31,7 +31,9 @@ TOP6 = ["634959225289190e5e773b3b", "6a426fbe99757acd420f64b0", "69dd0de23dfe95d
 
 # ① 표 형식
 doc = json.loads((Path(__file__).parent / "data" / "item_usage.json").read_text(encoding="utf-8"))
-eq("표에 시세 없음 상위 6개", sorted(doc["items"]), sorted(TOP6))
+eq("표에 시세 없음 상위 6개 포함", set(TOP6) <= set(doc["items"]), True)
+# 11-06 추가: 배틀 패스 문서 9종(같은 손글 분류) + 스트리머 아이템 보관함 — 게임 데이터로 대조한 것만
+eq("배틀 패스 문서·스트리머 보관함 추가(총 16)", (len(doc["items"]), "6a31830dde69ceafd805afa0" in doc["items"], "66bc98a01a47be227a5e956e" in doc["items"]), (16, True, True))
 bad = [(i, k) for i, e in doc["items"].items() for u in e["uses"] for k in item_usage.LANGS if not u.get(k)]
 eq("모든 줄에 네 언어", bad, [])
 eq("작은따옴표 없음", [i for i, e in doc["items"].items() if "'" in json.dumps(e["uses"], ensure_ascii=False)], [])
@@ -104,7 +106,9 @@ r = main._build_response("Streets poster", {"id": "6a426fbe99757acd420f64b0", "n
 eq("표에 있는 포스터 → 표 문구(프로모 코드)", "프로모" in r.usage[0]["ko"] and len(r.usage) == 1, True)
 eq("표에 있는 포스터 → 가이드 쓰임새 페이지", r.guide_page, "usage")
 r = main._build_response("Docs", {"id": "6a31830dde69ceafd805afa0", "name": "Technical documentation", "no_flea": True}, "regular", lang="ko")
-eq("포스터 아님 · 표에 없음 → 비어 있음", (r.usage, r.guide_page), ([], None))
+eq("배틀 패스 문서 → 표 한 줄 + 쓰임새 페이지", (len(r.usage), r.usage[0]["ko"].startswith("배틀 패스 문서"), r.guide_page), (1, True, "usage"))
+r = main._build_response("Gear crate", {"id": "6a15b0be081d9789d702287c", "name": "Wooden gear crate", "no_flea": True}, "regular", lang="ko")
+eq("포스터 아님 · 표에 없음(목재 장비 상자) → 비어 있음", (r.usage, r.guide_page), ([], None))
 
 print("\n실패", fails)
 sys.exit(1 if fails else 0)
