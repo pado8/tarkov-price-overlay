@@ -12,7 +12,7 @@
 "d": "2026-11-06"
 },
 "/guide/crafts/": {
-"h": "70f6bd3488c403e7",
+"h": "73067e786e00cbb9",
 "d": "2026-11-06"
 },
 "/guide/en/": {
@@ -28,7 +28,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/crafts/": {
-"h": "5b75c8f51005f617",
+"h": "a9678ee0208dc482",
 "d": "2026-11-06"
 },
 "/guide/en/event/": {
@@ -36,7 +36,7 @@
 "d": "2026-11-05"
 },
 "/guide/en/gunsmith/": {
-"h": "8d6e7a1f8d5d6877",
+"h": "96d25711d6c9b676",
 "d": "2026-11-06"
 },
 "/guide/en/hideout/": {
@@ -152,7 +152,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/items/": {
-"h": "aba8b28bca949be3",
+"h": "b7ba7d8cf71a7349",
 "d": "2026-11-06"
 },
 "/guide/en/kappa/": {
@@ -240,11 +240,11 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "4032229212ef0131",
+"h": "3ef634973e4e78b4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/adar-2-15-556x45-carbine/": {
-"h": "1145877cafbd7916",
+"h": "b04dcefd4b3c58b6",
 "d": "2026-11-06"
 },
 "/guide/en/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
@@ -268,7 +268,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/beretta-m9a3-9x19-pistol/": {
-"h": "8986c42a70c64e85",
+"h": "c23963bad30ab280",
 "d": "2026-11-06"
 },
 "/guide/en/mods/bt-mp9-9x19-submachine-gun/": {
@@ -292,23 +292,23 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "119d6d747140d120",
+"h": "d5aa226a5fd20c4d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "c6faf28a8865ded7",
+"h": "5423575f9e0d1a75",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "cd0847c291b3cce8",
+"h": "d17f038251cfa1d3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m45a1-45-acp-pistol/": {
-"h": "ef03b129ac82d2ee",
+"h": "91f1503c92b80551",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "3d5f6766cd5cf935",
+"h": "1f630f8ec79a9abb",
 "d": "2026-11-06"
 },
 "/guide/en/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
@@ -344,7 +344,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "a15019d7a697cd7c",
+"h": "c07fd516c00695da",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-p90-57x28-submachine-gun-scourge/": {
@@ -392,11 +392,11 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "c977051b2adf123d",
+"h": "8fa603448ce0d1ae",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "6998f87b476325db",
+"h": "96cdd560be3989d0",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-g28-762x51-marksman-rifle/": {
@@ -416,15 +416,15 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "3ac6648b1dd762ca",
+"h": "321dd436b1594dde",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "46e43bfa34144aca",
+"h": "377337f03768efdd",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "274f88d8972eb7b0",
+"h": "0e9965fa368fc60f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-usp-45-acp-pistol/": {
@@ -552,7 +552,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "03154e6399be8844",
+"h": "f14bd3f01679fd2f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
@@ -560,7 +560,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "cbd97401fea73ccb",
+"h": "0f5f5ac3ad45b86d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-l5-357-pistol/": {
@@ -588,7 +588,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "7aae2084d93214ee",
+"h": "cb8252b67cd6585d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/marlin-mxlr-308-me-lever-action-rifle/": {
@@ -604,7 +604,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "71c57b024f50cd25",
+"h": "79bfcf7fbb5b5bce",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
@@ -612,19 +612,19 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "21dc691df2f1338b",
+"h": "e225c317254dc58e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "7e3b0ec8252509c3",
+"h": "9c44e1cd9e3b1e16",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "92c8e8c3271f1160",
+"h": "984af1c89269acec",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "f3aeff55603dcd7c",
+"h": "abea30a576f9e8b8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
@@ -668,7 +668,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "d9e504327a29b652",
+"h": "ea4719aa22b2e28f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
@@ -680,7 +680,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "ca68ec897cf15d0f",
+"h": "c75eacf9f0cf866d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-9-klin-9x18pmm-submachine-gun/": {
@@ -748,15 +748,15 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/saiga-9-9x19-carbine/": {
-"h": "bfbd5691982f1a80",
+"h": "7e2f2a752b0fe0f8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "39426724885910de",
+"h": "376354518fb96918",
 "d": "2026-11-06"
 },
 "/guide/en/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "f78f67298a870a9b",
+"h": "dcb988ed7a90a006",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sig-mcx-300-blackout-assault-rifle/": {
@@ -776,11 +776,11 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "47bd250950300cd4",
+"h": "f80c167e177d32da",
 "d": "2026-11-06"
 },
 "/guide/en/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "b6fcc0e71ddb0068",
+"h": "6e22b527deb7e5ab",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sr-2m-veresk-9x21-submachine-gun/": {
@@ -816,11 +816,11 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/svds-762x54r-sniper-rifle/": {
-"h": "bbf7eee04d9c49a6",
+"h": "3d0dd49ac6988859",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "125488b63c22088c",
+"h": "f12652ec6290a7b4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
@@ -828,7 +828,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "c3ba12abf9777ff3",
+"h": "8e17d3b3bff09b97",
 "d": "2026-11-06"
 },
 "/guide/en/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
@@ -848,11 +848,11 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "e69e2d31705dcbe4",
+"h": "ef0f908b128597e6",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "1e434886af7a4ae8",
+"h": "1089f5a75ee9858a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/toz-106-20ga-bolt-action-shotgun/": {
@@ -904,8 +904,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/a-big-loss-usec/": {
-"h": "3a6732e33dc40177",
-"d": "2026-11-04"
+"h": "eee15fb4af0df467",
+"d": "2026-11-06"
 },
 "/guide/en/quest/a-bitter-victory/": {
 "h": "407b2550be915306",
@@ -944,12 +944,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/against-the-conscience-part-1-pve-zone/": {
-"h": "3a57861ebf4b81d5",
-"d": "2026-11-04"
+"h": "80806ee9f5a1639a",
+"d": "2026-11-06"
 },
 "/guide/en/quest/against-the-conscience-part-1-pvp-zone/": {
-"h": "b98f4df738811a16",
-"d": "2026-11-04"
+"h": "d8eeb7b0a5f3e9e9",
+"d": "2026-11-06"
 },
 "/guide/en/quest/against-the-conscience-part-2-pve-zone/": {
 "h": "6e4ae323be610e18",
@@ -1012,8 +1012,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/audiophile/": {
-"h": "c053a17a86c4dd85",
-"d": "2026-11-04"
+"h": "afcffdc8284ed98b",
+"d": "2026-11-06"
 },
 "/guide/en/quest/audit/": {
 "h": "5fec9777befe01cd",
@@ -1024,16 +1024,16 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/background-check/": {
-"h": "fd3722bb1ce0229a",
-"d": "2026-11-04"
+"h": "39fa18f67f91e386",
+"d": "2026-11-06"
 },
 "/guide/en/quest/bad-habit/": {
 "h": "2b3f7363c2de81ef",
 "d": "2026-11-04"
 },
 "/guide/en/quest/bad-rep-evidence/": {
-"h": "4bb08f11f0ac7327",
-"d": "2026-11-04"
+"h": "a8a04d5ed84a2be7",
+"d": "2026-11-06"
 },
 "/guide/en/quest/balancing-part-1-pve-zone/": {
 "h": "170cbb8684356a7d",
@@ -1052,8 +1052,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/ballet-lover/": {
-"h": "3d3354c412e4bca9",
-"d": "2026-11-04"
+"h": "964d29a031ac8381",
+"d": "2026-11-06"
 },
 "/guide/en/quest/battery-change-2/": {
 "h": "3433e42aaf1800b7",
@@ -1076,16 +1076,16 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/between-two-fires-pve-zone/": {
-"h": "790470ccf38d4646",
-"d": "2026-11-04"
+"h": "7b1e644bc912622e",
+"d": "2026-11-06"
 },
 "/guide/en/quest/between-two-fires-pvp-zone/": {
 "h": "c006b0b480dcc30b",
 "d": "2026-11-04"
 },
 "/guide/en/quest/beyond-the-red-meat/": {
-"h": "f26eda53b8018594",
-"d": "2026-11-04"
+"h": "facc07ff5e453ce9",
+"d": "2026-11-06"
 },
 "/guide/en/quest/big-customer/": {
 "h": "4bf7addd264d6580",
@@ -1116,8 +1116,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/broadcast-part-1/": {
-"h": "d9d0b62b60e72f66",
-"d": "2026-11-04"
+"h": "3cb5c835df957edb",
+"d": "2026-11-06"
 },
 "/guide/en/quest/broadcast-part-2/": {
 "h": "48ebfdae1a9d1ee5",
@@ -1128,12 +1128,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/broadcast-part-4/": {
-"h": "e7ae6f83417fce9b",
-"d": "2026-11-04"
+"h": "a40251cc1e4b3e89",
+"d": "2026-11-06"
 },
 "/guide/en/quest/broadcast-part-5/": {
-"h": "14f4bd3780351b43",
-"d": "2026-11-04"
+"h": "6331c6351c8371dd",
+"d": "2026-11-06"
 },
 "/guide/en/quest/building-foundations/": {
 "h": "8dca129e9cf0ba21",
@@ -1172,8 +1172,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/cargo-x/": {
-"h": "3a5f16f06c12d516",
-"d": "2026-11-04"
+"h": "6c7f790d4e05adf2",
+"d": "2026-11-06"
 },
 "/guide/en/quest/cease-fire/": {
 "h": "778c4702a5fcd04a",
@@ -1192,12 +1192,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/chemical-part-1/": {
-"h": "ba0dc104f2537398",
-"d": "2026-11-04"
+"h": "c1d9783becc44f16",
+"d": "2026-11-06"
 },
 "/guide/en/quest/chemical-part-2/": {
-"h": "8a5b8ef18381cf29",
-"d": "2026-11-04"
+"h": "f74b37429fc2e458",
+"d": "2026-11-06"
 },
 "/guide/en/quest/chemical-part-3/": {
 "h": "079b2f64e4944629",
@@ -1208,8 +1208,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/chemistry-closet/": {
-"h": "f35f9c083715e6cf",
-"d": "2026-11-04"
+"h": "93e3073aa23f420f",
+"d": "2026-11-06"
 },
 "/guide/en/quest/choose-your-friends-wisely/": {
 "h": "a442dafcdd043022",
@@ -1280,8 +1280,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/corporate-perks-bear/": {
-"h": "d96d177dc611b36f",
-"d": "2026-11-04"
+"h": "b62f70d180564cb1",
+"d": "2026-11-06"
 },
 "/guide/en/quest/corporate-secrets/": {
 "h": "1adce4abbc801563",
@@ -1336,20 +1336,20 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/decisions-decisions-pve-zone/": {
-"h": "241f75baac0178b8",
-"d": "2026-11-04"
+"h": "2cf0df4c11557889",
+"d": "2026-11-06"
 },
 "/guide/en/quest/decisions-decisions-pvp-zone/": {
-"h": "f1fa5d7e5c46119f",
-"d": "2026-11-04"
+"h": "155d29b772369c0b",
+"d": "2026-11-06"
 },
 "/guide/en/quest/decontamination-service/": {
 "h": "5f700b0825f0cf74",
 "d": "2026-11-04"
 },
 "/guide/en/quest/delivery-from-the-past/": {
-"h": "eae218926ebf5513",
-"d": "2026-11-04"
+"h": "27789cdf6f8e7411",
+"d": "2026-11-06"
 },
 "/guide/en/quest/demonstration-model/": {
 "h": "e7d2e7b4f50fae2f",
@@ -1360,8 +1360,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/disease-history/": {
-"h": "8e49a441fd604e41",
-"d": "2026-11-04"
+"h": "1b4868d10e5e3b61",
+"d": "2026-11-06"
 },
 "/guide/en/quest/district-patrol/": {
 "h": "fcced186685d652b",
@@ -1372,8 +1372,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/dragnet/": {
-"h": "24195396a41f1e5e",
-"d": "2026-11-04"
+"h": "c7b7d8244d1b563e",
+"d": "2026-11-06"
 },
 "/guide/en/quest/dressed-to-kill/": {
 "h": "33e40e82f1bdeab0",
@@ -1468,8 +1468,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/farming/": {
-"h": "8c83c4bf3decd4b2",
-"d": "2026-11-04"
+"h": "ec6f3f810e61b0df",
+"d": "2026-11-06"
 },
 "/guide/en/quest/fertilizers/": {
 "h": "ebf385748d01ac1a",
@@ -1496,8 +1496,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/following-the-bread-crumbs/": {
-"h": "5d4cd7b890b5b6a7",
-"d": "2026-11-04"
+"h": "a0ebaebe9a8e3b7b",
+"d": "2026-11-06"
 },
 "/guide/en/quest/foresters-duty/": {
 "h": "40ba46e02b63c5cd",
@@ -1572,8 +1572,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/golden-swag/": {
-"h": "7198496455763e1c",
-"d": "2026-11-04"
+"h": "f787b42842d8cef5",
+"d": "2026-11-06"
 },
 "/guide/en/quest/gratitude/": {
 "h": "a1236bc33a319d99",
@@ -1704,8 +1704,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/health-care-privacy-part-2/": {
-"h": "65709a65d9a5c088",
-"d": "2026-11-04"
+"h": "c80570a70c4bdd31",
+"d": "2026-11-06"
 },
 "/guide/en/quest/health-care-privacy-part-3/": {
 "h": "b4d72112e22b29f5",
@@ -1720,8 +1720,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/health-care-privacy-part-6/": {
-"h": "b13bf5a47eff2348",
-"d": "2026-11-04"
+"h": "c975a17c3d55173e",
+"d": "2026-11-06"
 },
 "/guide/en/quest/hell-on-earth-part-1/": {
 "h": "6a090a79e844589a",
@@ -1768,12 +1768,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/house-arrest-part-2/": {
-"h": "df83fa4378d324bb",
-"d": "2026-11-04"
+"h": "cfb2299d6792a647",
+"d": "2026-11-06"
 },
 "/guide/en/quest/house-arrest-usec/": {
-"h": "f3b69c9484226cd7",
-"d": "2026-11-04"
+"h": "0b99c078f50bd5ed",
+"d": "2026-11-06"
 },
 "/guide/en/quest/humanitarian-supplies/": {
 "h": "16f254b5c227512e",
@@ -1788,8 +1788,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/i-need-more-power/": {
-"h": "7c8a106d7fdf02d2",
-"d": "2026-11-04"
+"h": "15f22ddad26c9ea3",
+"d": "2026-11-06"
 },
 "/guide/en/quest/ice-cream-cones/": {
 "h": "46bed7ac0cb24d53",
@@ -1852,20 +1852,20 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/irresistible/": {
-"h": "fac115a50d8e43e8",
-"d": "2026-11-04"
+"h": "fc28eee437fcd8ae",
+"d": "2026-11-06"
 },
 "/guide/en/quest/is-this-a-reference/": {
-"h": "c341fa64738edb9a",
-"d": "2026-11-04"
+"h": "7d25845506a67ab0",
+"d": "2026-11-06"
 },
 "/guide/en/quest/job-for-a-patriot/": {
 "h": "d0c6a1fcb4924f83",
 "d": "2026-11-04"
 },
 "/guide/en/quest/keepers-word/": {
-"h": "446dd9f010579aa9",
-"d": "2026-11-04"
+"h": "aa3a0e31cd98ca38",
+"d": "2026-11-06"
 },
 "/guide/en/quest/key-partner/": {
 "h": "228e309f1ec1cafb",
@@ -1948,8 +1948,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/missing-informant/": {
-"h": "df96c01888d0c5c9",
-"d": "2026-11-04"
+"h": "7afe74d0e52f80fa",
+"d": "2026-11-06"
 },
 "/guide/en/quest/natural-exchange/": {
 "h": "c12a30ea16ad11fe",
@@ -2036,8 +2036,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/operation-aquarius/": {
-"h": "9ea32e435ea6a4c2",
-"d": "2026-11-04"
+"h": "204abe3f0a74dc67",
+"d": "2026-11-06"
 },
 "/guide/en/quest/order-from-outside/": {
 "h": "4585b4c6185438cd",
@@ -2092,12 +2092,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/pets-wont-need-it/": {
-"h": "33a4202b6476c4ff",
-"d": "2026-11-04"
+"h": "59a7326f87f4b9a2",
+"d": "2026-11-06"
 },
 "/guide/en/quest/pharmacist/": {
-"h": "d6dc5e2c15bd6190",
-"d": "2026-11-04"
+"h": "0d89ad916b8e70a0",
+"d": "2026-11-06"
 },
 "/guide/en/quest/playing-the-market/": {
 "h": "9183771cfc94189e",
@@ -2172,8 +2172,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/properties-all-around/": {
-"h": "af21d3aa7fa3f993",
-"d": "2026-11-04"
+"h": "26b758327ac662ce",
+"d": "2026-11-06"
 },
 "/guide/en/quest/protect-the-sky/": {
 "h": "d19f4777d2689574",
@@ -2184,8 +2184,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/provocation/": {
-"h": "ab88a0ec2ee573e3",
-"d": "2026-11-04"
+"h": "a1bd8a71320d348c",
+"d": "2026-11-06"
 },
 "/guide/en/quest/psycho-sniper/": {
 "h": "748dd0f158da5553",
@@ -2212,8 +2212,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/reserve-expert/": {
-"h": "b65e150ba7c4ec76",
-"d": "2026-11-04"
+"h": "9757bd28821a4e97",
+"d": "2026-11-06"
 },
 "/guide/en/quest/reserve/": {
 "h": "72bceff3706417a7",
@@ -2228,8 +2228,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/revision-reserve/": {
-"h": "afe6fdcb832b188b",
-"d": "2026-11-04"
+"h": "2f0912699dec2e2b",
+"d": "2026-11-06"
 },
 "/guide/en/quest/revision-streets-of-tarkov/": {
 "h": "05d6f6f9d59d5aa3",
@@ -2364,12 +2364,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/shaking-up-the-teller-usec/": {
-"h": "a9dc79bcc8004c83",
-"d": "2026-11-04"
+"h": "54c8cecc663f044c",
+"d": "2026-11-06"
 },
 "/guide/en/quest/shipment-tracking/": {
-"h": "778bed99a3736e67",
-"d": "2026-11-04"
+"h": "0dc26d4225a2974f",
+"d": "2026-11-06"
 },
 "/guide/en/quest/shipping-delay-part-1/": {
 "h": "0bef0e2912f47d78",
@@ -2436,8 +2436,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/snatch/": {
-"h": "2a4c29ec79b6d277",
-"d": "2026-11-04"
+"h": "04b2e9116492e96f",
+"d": "2026-11-06"
 },
 "/guide/en/quest/spa-tour-part-2/": {
 "h": "68696838855bdb97",
@@ -2464,8 +2464,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/spotter/": {
-"h": "3dce4689c6b6c1bb",
-"d": "2026-11-04"
+"h": "0cf7530ea56994dd",
+"d": "2026-11-06"
 },
 "/guide/en/quest/stabilize-business/": {
 "h": "e4affd76bbad9c37",
@@ -2512,16 +2512,16 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/surplus-goods/": {
-"h": "05c6ad06faf49dac",
-"d": "2026-11-04"
+"h": "e426ec6c0377f67e",
+"d": "2026-11-06"
 },
 "/guide/en/quest/surprise-gift-pve-zone/": {
-"h": "6e67259fe39d0246",
-"d": "2026-11-04"
+"h": "4fe9b349b060e7b6",
+"d": "2026-11-06"
 },
 "/guide/en/quest/surprise-gift-pvp-zone/": {
-"h": "b3b5689db275135e",
-"d": "2026-11-04"
+"h": "efe390b6543707f8",
+"d": "2026-11-06"
 },
 "/guide/en/quest/surprise-pve-zone/": {
 "h": "c0aa84911034c2bc",
@@ -2532,8 +2532,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/surveillance/": {
-"h": "1885cbf4c25e0184",
-"d": "2026-11-04"
+"h": "3d78a6e9ccae292e",
+"d": "2026-11-06"
 },
 "/guide/en/quest/swift-retribution/": {
 "h": "658135899ac0ce66",
@@ -2544,12 +2544,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/tarkov-style-diplomacy/": {
-"h": "be406ef10c128d8c",
-"d": "2026-11-04"
+"h": "7e2faf89e4fc14ef",
+"d": "2026-11-06"
 },
 "/guide/en/quest/terragroup-employee/": {
-"h": "754ce7d7a93213c2",
-"d": "2026-11-04"
+"h": "155630ce8782cf2a",
+"d": "2026-11-06"
 },
 "/guide/en/quest/textile-part-1-bear/": {
 "h": "68163e90dd5e627d",
@@ -2604,12 +2604,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/the-door/": {
-"h": "6e04461bcafc09a4",
-"d": "2026-11-04"
+"h": "3421e314d4c09ebc",
+"d": "2026-11-06"
 },
 "/guide/en/quest/the-extortionist/": {
-"h": "90c09a2990fe69f7",
-"d": "2026-11-04"
+"h": "b4b054495d17af98",
+"d": "2026-11-06"
 },
 "/guide/en/quest/the-good-times-part-1/": {
 "h": "737a5f6a3a6331d1",
@@ -2748,12 +2748,12 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/the-secret-recipe/": {
-"h": "cfe10b74dacdfa99",
-"d": "2026-11-04"
+"h": "ef9892c7e99d35ca",
+"d": "2026-11-06"
 },
 "/guide/en/quest/the-secret-to-productivity-usec/": {
-"h": "8d90c33de4611896",
-"d": "2026-11-04"
+"h": "b5b2b530fce2d8fc",
+"d": "2026-11-06"
 },
 "/guide/en/quest/the-survivalist-path-cold-blooded/": {
 "h": "1c0d9ea549de3336",
@@ -2912,8 +2912,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/top-secret/": {
-"h": "65f70a8be6331249",
-"d": "2026-11-04"
+"h": "416867e6ac3d4a10",
+"d": "2026-11-06"
 },
 "/guide/en/quest/tracker/": {
 "h": "17ac810082ff76f8",
@@ -2944,16 +2944,16 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/vitamins-bear/": {
-"h": "a0f17bb0c93e3762",
-"d": "2026-11-04"
+"h": "28473280b5effea7",
+"d": "2026-11-06"
 },
 "/guide/en/quest/war-never-changes/": {
 "h": "13f01945923c22a8",
 "d": "2026-11-04"
 },
 "/guide/en/quest/watching-you/": {
-"h": "1fee910335b0f186",
-"d": "2026-11-04"
+"h": "d780701c92cd0b8d",
+"d": "2026-11-06"
 },
 "/guide/en/quest/weapons-circulation/": {
 "h": "ef65d5e599066453",
@@ -2976,8 +2976,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/wet-job-part-5/": {
-"h": "ce763427425b6fe2",
-"d": "2026-11-04"
+"h": "d7c6e992f9574c4a",
+"d": "2026-11-06"
 },
 "/guide/en/quest/wet-job-part-6/": {
 "h": "68d43aac6a2237fa",
@@ -3000,8 +3000,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quest/your-car-needs-a-service/": {
-"h": "247fb5d7e6a39449",
-"d": "2026-11-04"
+"h": "ea59b4ada3360652",
+"d": "2026-11-06"
 },
 "/guide/en/quest/youve-got-mail/": {
 "h": "9c0c8e5d02564951",
@@ -3060,7 +3060,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/rewards/": {
-"h": "691adaafcbde9f63",
+"h": "2a8b395db24d0826",
 "d": "2026-11-06"
 },
 "/guide/en/start/": {
@@ -3076,7 +3076,7 @@
 "d": "2026-11-05"
 },
 "/guide/gunsmith/": {
-"h": "83b8b027996ba093",
+"h": "f10552422c51628e",
 "d": "2026-11-06"
 },
 "/guide/hideout/": {
@@ -3192,7 +3192,7 @@
 "d": "2026-11-06"
 },
 "/guide/items/": {
-"h": "03ba190dd1821322",
+"h": "b5748689d23a6971",
 "d": "2026-11-06"
 },
 "/guide/kappa/": {
@@ -3280,11 +3280,11 @@
 "d": "2026-11-06"
 },
 "/guide/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "0b6e7b725775f2ff",
+"h": "1f92c548325e1b7b",
 "d": "2026-11-06"
 },
 "/guide/mods/adar-2-15-556x45-carbine/": {
-"h": "85197cb480147756",
+"h": "f545babacc5f886c",
 "d": "2026-11-06"
 },
 "/guide/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
@@ -3308,7 +3308,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/beretta-m9a3-9x19-pistol/": {
-"h": "5fb89f03f65fcb9d",
+"h": "ed919f22ed79169c",
 "d": "2026-11-06"
 },
 "/guide/mods/bt-mp9-9x19-submachine-gun/": {
@@ -3332,23 +3332,23 @@
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "3fa6c02c1ef15d25",
+"h": "dfc75e183044dd5d",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "751564105d4b111b",
+"h": "ba1f5b2b561d83ca",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "728e446ae81ac8dd",
+"h": "8f1f39ac00042f2c",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m45a1-45-acp-pistol/": {
-"h": "bf44d03b567a652d",
+"h": "d7b27a416af2b544",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "4cb2adaca2be6532",
+"h": "7d812329d7072751",
 "d": "2026-11-06"
 },
 "/guide/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
@@ -3384,7 +3384,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "497bea1ca551f037",
+"h": "ef0f8a6d56724d91",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-p90-57x28-submachine-gun-scourge/": {
@@ -3432,11 +3432,11 @@
 "d": "2026-11-06"
 },
 "/guide/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "68a3e5d14c5c4180",
+"h": "05e79cf79940c6f0",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "a0af15a41bba6cf6",
+"h": "9bee62b215d12ed7",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-g28-762x51-marksman-rifle/": {
@@ -3456,15 +3456,15 @@
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "245feb25263286a4",
+"h": "b2215e333530830d",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "db152269e698d314",
+"h": "ed68a94f55744fd6",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "0e75055c9a0d60d1",
+"h": "88ac0a08d9e5b554",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-usp-45-acp-pistol/": {
@@ -3592,7 +3592,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "108c4d9aa8e65ba2",
+"h": "cf64a9c4937f5eee",
 "d": "2026-11-06"
 },
 "/guide/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
@@ -3600,7 +3600,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "c3a48f51cc1e965e",
+"h": "bdfd0a330ffff4ee",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-l5-357-pistol/": {
@@ -3628,7 +3628,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "6f9199e68a088d7c",
+"h": "a0dbad8609f31799",
 "d": "2026-11-06"
 },
 "/guide/mods/marlin-mxlr-308-me-lever-action-rifle/": {
@@ -3644,7 +3644,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "d5ecf48ee07b0e65",
+"h": "56a3730f4521eed6",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
@@ -3652,19 +3652,19 @@
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "e6153551b1b6dcf3",
+"h": "18bc8adc5b1c4866",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "aabfc7a9dc340438",
+"h": "2b89b70c272381e1",
 "d": "2026-11-06"
 },
 "/guide/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "94ed8e79ae774941",
+"h": "1114af54de674ae4",
 "d": "2026-11-06"
 },
 "/guide/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "38bb51c5cb7929be",
+"h": "4e8650528bcee888",
 "d": "2026-11-06"
 },
 "/guide/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
@@ -3708,7 +3708,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "a33a0f8ddb11dad6",
+"h": "c29375c6ae85ccb3",
 "d": "2026-11-06"
 },
 "/guide/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
@@ -3720,7 +3720,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "c586278312b6b4cd",
+"h": "227b4bbed1e74c08",
 "d": "2026-11-06"
 },
 "/guide/mods/pp-9-klin-9x18pmm-submachine-gun/": {
@@ -3788,15 +3788,15 @@
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-9-9x19-carbine/": {
-"h": "82889db310502bcf",
+"h": "d7c0aef44e860065",
 "d": "2026-11-06"
 },
 "/guide/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "a36da68593636852",
+"h": "f313e4a026da345e",
 "d": "2026-11-06"
 },
 "/guide/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "3a5d20a82d5534b9",
+"h": "5cf3484ecf0aeb90",
 "d": "2026-11-06"
 },
 "/guide/mods/sig-mcx-300-blackout-assault-rifle/": {
@@ -3816,11 +3816,11 @@
 "d": "2026-11-06"
 },
 "/guide/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "8d744b03defbdf0d",
+"h": "c45b4b50666f0a8b",
 "d": "2026-11-06"
 },
 "/guide/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "2550e62e11de7ab5",
+"h": "fb65b7362ad8af96",
 "d": "2026-11-06"
 },
 "/guide/mods/sr-2m-veresk-9x21-submachine-gun/": {
@@ -3856,11 +3856,11 @@
 "d": "2026-11-06"
 },
 "/guide/mods/svds-762x54r-sniper-rifle/": {
-"h": "2d6c3757fa7f8274",
+"h": "72aba28643b55aea",
 "d": "2026-11-06"
 },
 "/guide/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "87affd11ebac05fb",
+"h": "1d48a9438eb7fa4d",
 "d": "2026-11-06"
 },
 "/guide/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
@@ -3868,7 +3868,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "d96e8eb9a55687ac",
+"h": "56999474f58d0e7d",
 "d": "2026-11-06"
 },
 "/guide/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
@@ -3888,11 +3888,11 @@
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "145b1753fb399f45",
+"h": "f707b55f9133fe50",
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "7324fd58eb15d33d",
+"h": "68a0f6758ccbee75",
 "d": "2026-11-06"
 },
 "/guide/mods/toz-106-20ga-bolt-action-shotgun/": {
@@ -3944,8 +3944,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/a-big-loss-usec/": {
-"h": "6fa32cad2a9b3cea",
-"d": "2026-11-04"
+"h": "c156047b1069d67b",
+"d": "2026-11-06"
 },
 "/guide/quest/a-bitter-victory/": {
 "h": "f8ef7eb3c8404b48",
@@ -3984,12 +3984,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/against-the-conscience-part-1-pve-zone/": {
-"h": "5b492e8ff1ced5c6",
-"d": "2026-11-04"
+"h": "4cea2c91e87cff9c",
+"d": "2026-11-06"
 },
 "/guide/quest/against-the-conscience-part-1-pvp-zone/": {
-"h": "7486d54173864594",
-"d": "2026-11-04"
+"h": "925fefc67fdc179f",
+"d": "2026-11-06"
 },
 "/guide/quest/against-the-conscience-part-2-pve-zone/": {
 "h": "c9f6bc1cc7fa88bc",
@@ -4052,8 +4052,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/audiophile/": {
-"h": "a52bacba611036a9",
-"d": "2026-11-04"
+"h": "d915c21d12696bed",
+"d": "2026-11-06"
 },
 "/guide/quest/audit/": {
 "h": "868ee7d0a482a13e",
@@ -4064,16 +4064,16 @@
 "d": "2026-11-04"
 },
 "/guide/quest/background-check/": {
-"h": "8711484bf6f93493",
-"d": "2026-11-04"
+"h": "3b569e0f7b9b33c1",
+"d": "2026-11-06"
 },
 "/guide/quest/bad-habit/": {
 "h": "865603b00bfe3672",
 "d": "2026-11-04"
 },
 "/guide/quest/bad-rep-evidence/": {
-"h": "f209453c251d5513",
-"d": "2026-11-04"
+"h": "f80d3ae4c3efb948",
+"d": "2026-11-06"
 },
 "/guide/quest/balancing-part-1-pve-zone/": {
 "h": "b7b61fd0c38707a5",
@@ -4092,8 +4092,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/ballet-lover/": {
-"h": "a3105f4cad5a09d0",
-"d": "2026-11-04"
+"h": "acb68dfaf1fe066b",
+"d": "2026-11-06"
 },
 "/guide/quest/battery-change-2/": {
 "h": "533c600fa0980469",
@@ -4116,16 +4116,16 @@
 "d": "2026-11-04"
 },
 "/guide/quest/between-two-fires-pve-zone/": {
-"h": "64492db586a076b2",
-"d": "2026-11-04"
+"h": "8e7a99de2e65998f",
+"d": "2026-11-06"
 },
 "/guide/quest/between-two-fires-pvp-zone/": {
 "h": "65c7e6f722e8d6ad",
 "d": "2026-11-04"
 },
 "/guide/quest/beyond-the-red-meat/": {
-"h": "e99a67c9be941ec0",
-"d": "2026-11-04"
+"h": "cca6c371ae1829df",
+"d": "2026-11-06"
 },
 "/guide/quest/big-customer/": {
 "h": "ec7402354e0fafd2",
@@ -4156,8 +4156,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/broadcast-part-1/": {
-"h": "17c4786f63beb4e2",
-"d": "2026-11-04"
+"h": "2fe693e52364f603",
+"d": "2026-11-06"
 },
 "/guide/quest/broadcast-part-2/": {
 "h": "7beaa689551984e7",
@@ -4168,12 +4168,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/broadcast-part-4/": {
-"h": "7555d5fa31fb510f",
-"d": "2026-11-04"
+"h": "ea33f275717a9022",
+"d": "2026-11-06"
 },
 "/guide/quest/broadcast-part-5/": {
-"h": "19b0617c5bf5a001",
-"d": "2026-11-04"
+"h": "1647974e4b459e5a",
+"d": "2026-11-06"
 },
 "/guide/quest/building-foundations/": {
 "h": "9e83ab7d3fabf80a",
@@ -4212,8 +4212,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/cargo-x/": {
-"h": "87a5ebc41bf5916b",
-"d": "2026-11-04"
+"h": "2ecd7ceb290b78bb",
+"d": "2026-11-06"
 },
 "/guide/quest/cease-fire/": {
 "h": "637a98645ae0615f",
@@ -4232,12 +4232,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/chemical-part-1/": {
-"h": "b9a293f4ab17578a",
-"d": "2026-11-04"
+"h": "8aec9de44615b2b8",
+"d": "2026-11-06"
 },
 "/guide/quest/chemical-part-2/": {
-"h": "62b7e647425e71b0",
-"d": "2026-11-04"
+"h": "43ff41c7e9444dc3",
+"d": "2026-11-06"
 },
 "/guide/quest/chemical-part-3/": {
 "h": "7972b5c537e84880",
@@ -4248,8 +4248,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/chemistry-closet/": {
-"h": "bdbb1a0d77681942",
-"d": "2026-11-04"
+"h": "4fd94af396b983d5",
+"d": "2026-11-06"
 },
 "/guide/quest/choose-your-friends-wisely/": {
 "h": "155af5e0e8c0015f",
@@ -4320,8 +4320,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/corporate-perks-bear/": {
-"h": "c0fc7ef15da91d3e",
-"d": "2026-11-04"
+"h": "a6cc7311af466292",
+"d": "2026-11-06"
 },
 "/guide/quest/corporate-secrets/": {
 "h": "58c40105074dbefd",
@@ -4376,20 +4376,20 @@
 "d": "2026-11-04"
 },
 "/guide/quest/decisions-decisions-pve-zone/": {
-"h": "796df576761ba29c",
-"d": "2026-11-04"
+"h": "84ff8d530e787886",
+"d": "2026-11-06"
 },
 "/guide/quest/decisions-decisions-pvp-zone/": {
-"h": "b37c26f7b9973244",
-"d": "2026-11-04"
+"h": "549674027a1ca4d4",
+"d": "2026-11-06"
 },
 "/guide/quest/decontamination-service/": {
 "h": "3f97bdbcf2967824",
 "d": "2026-11-04"
 },
 "/guide/quest/delivery-from-the-past/": {
-"h": "a18d4c41ac8d66d0",
-"d": "2026-11-04"
+"h": "6a9fc451a5756a89",
+"d": "2026-11-06"
 },
 "/guide/quest/demonstration-model/": {
 "h": "98125cf9f57ed4e7",
@@ -4400,8 +4400,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/disease-history/": {
-"h": "c3b5c1a06bfedb79",
-"d": "2026-11-04"
+"h": "911981a0927f32e7",
+"d": "2026-11-06"
 },
 "/guide/quest/district-patrol/": {
 "h": "84bc127b4a5369e5",
@@ -4412,8 +4412,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/dragnet/": {
-"h": "e1373bd52c7f4c23",
-"d": "2026-11-04"
+"h": "83bc747b71f42841",
+"d": "2026-11-06"
 },
 "/guide/quest/dressed-to-kill/": {
 "h": "70a6444385dc93d8",
@@ -4508,8 +4508,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/farming/": {
-"h": "ff3025c889bc7eeb",
-"d": "2026-11-04"
+"h": "7103d65c21f75afb",
+"d": "2026-11-06"
 },
 "/guide/quest/fertilizers/": {
 "h": "41a700bb47018900",
@@ -4536,8 +4536,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/following-the-bread-crumbs/": {
-"h": "7071a2928cd4d623",
-"d": "2026-11-04"
+"h": "c3494fcc05125df6",
+"d": "2026-11-06"
 },
 "/guide/quest/foresters-duty/": {
 "h": "f61881599c8ff791",
@@ -4612,8 +4612,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/golden-swag/": {
-"h": "fa635959310d5837",
-"d": "2026-11-04"
+"h": "265d7694b31feb07",
+"d": "2026-11-06"
 },
 "/guide/quest/gratitude/": {
 "h": "91eb54f1eb0fb7d7",
@@ -4744,8 +4744,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/health-care-privacy-part-2/": {
-"h": "f0f3be316f0de445",
-"d": "2026-11-04"
+"h": "536c7c2724846d47",
+"d": "2026-11-06"
 },
 "/guide/quest/health-care-privacy-part-3/": {
 "h": "5c5f8427683a23ad",
@@ -4760,8 +4760,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/health-care-privacy-part-6/": {
-"h": "9c9726f91efac32c",
-"d": "2026-11-04"
+"h": "a1670f14de64b6b9",
+"d": "2026-11-06"
 },
 "/guide/quest/hell-on-earth-part-1/": {
 "h": "820a5cae9afbde20",
@@ -4808,12 +4808,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/house-arrest-part-2/": {
-"h": "9fa9d9a79c777978",
-"d": "2026-11-04"
+"h": "b7a7e0e206edfc42",
+"d": "2026-11-06"
 },
 "/guide/quest/house-arrest-usec/": {
-"h": "c7dce9ded70dc61d",
-"d": "2026-11-04"
+"h": "0de427c9d5d62ac8",
+"d": "2026-11-06"
 },
 "/guide/quest/humanitarian-supplies/": {
 "h": "1cb0cdb94e3b6c7a",
@@ -4828,8 +4828,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/i-need-more-power/": {
-"h": "c7c6c5670d5a29f9",
-"d": "2026-11-04"
+"h": "c1350c3c59f9e6fe",
+"d": "2026-11-06"
 },
 "/guide/quest/ice-cream-cones/": {
 "h": "6be63a4f4577546e",
@@ -4892,20 +4892,20 @@
 "d": "2026-11-04"
 },
 "/guide/quest/irresistible/": {
-"h": "6c3dc6c14b3d8570",
-"d": "2026-11-04"
+"h": "c96d8e95993322b4",
+"d": "2026-11-06"
 },
 "/guide/quest/is-this-a-reference/": {
-"h": "aab6eb16804166de",
-"d": "2026-11-04"
+"h": "d4b2bf8b263ca6de",
+"d": "2026-11-06"
 },
 "/guide/quest/job-for-a-patriot/": {
 "h": "7883021d4c20803d",
 "d": "2026-11-04"
 },
 "/guide/quest/keepers-word/": {
-"h": "70d22b6aa3f17255",
-"d": "2026-11-04"
+"h": "8989f948c864258c",
+"d": "2026-11-06"
 },
 "/guide/quest/key-partner/": {
 "h": "82bacdf6429e8b7e",
@@ -4988,8 +4988,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/missing-informant/": {
-"h": "9b64987cebb38823",
-"d": "2026-11-04"
+"h": "c25fe2b05548cdcd",
+"d": "2026-11-06"
 },
 "/guide/quest/natural-exchange/": {
 "h": "b574823ef735fb7b",
@@ -5076,8 +5076,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/operation-aquarius/": {
-"h": "aaf26b2455ed3ce1",
-"d": "2026-11-04"
+"h": "f1f40fb643ba52e5",
+"d": "2026-11-06"
 },
 "/guide/quest/order-from-outside/": {
 "h": "0c72f215dda7f5d1",
@@ -5132,12 +5132,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/pets-wont-need-it/": {
-"h": "a3101c624cad47e9",
-"d": "2026-11-04"
+"h": "6441d0593057fa9b",
+"d": "2026-11-06"
 },
 "/guide/quest/pharmacist/": {
-"h": "485d942dbbe333ba",
-"d": "2026-11-04"
+"h": "7827e9a8f0d41948",
+"d": "2026-11-06"
 },
 "/guide/quest/playing-the-market/": {
 "h": "3cfb287da9593164",
@@ -5212,8 +5212,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/properties-all-around/": {
-"h": "612c1fe7cb84273e",
-"d": "2026-11-04"
+"h": "95dcc3cf28ca9701",
+"d": "2026-11-06"
 },
 "/guide/quest/protect-the-sky/": {
 "h": "fa5a02c7a9453c11",
@@ -5224,8 +5224,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/provocation/": {
-"h": "c03ceab5d64483c4",
-"d": "2026-11-04"
+"h": "a61fa926396662d5",
+"d": "2026-11-06"
 },
 "/guide/quest/psycho-sniper/": {
 "h": "d331e9f8c4f40438",
@@ -5252,8 +5252,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/reserve-expert/": {
-"h": "acced5852b68a496",
-"d": "2026-11-04"
+"h": "bbbaa3edc445bfb1",
+"d": "2026-11-06"
 },
 "/guide/quest/reserve/": {
 "h": "8f68e931e4a0ae00",
@@ -5268,8 +5268,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/revision-reserve/": {
-"h": "5165013a9c3d8f1a",
-"d": "2026-11-04"
+"h": "156d939384f2f61d",
+"d": "2026-11-06"
 },
 "/guide/quest/revision-streets-of-tarkov/": {
 "h": "a8236986308d93f6",
@@ -5404,12 +5404,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/shaking-up-the-teller-usec/": {
-"h": "beea6720f8f6e617",
-"d": "2026-11-04"
+"h": "1e8bc727ebcc5beb",
+"d": "2026-11-06"
 },
 "/guide/quest/shipment-tracking/": {
-"h": "92a27d11e1328e51",
-"d": "2026-11-04"
+"h": "524561e1b70b596b",
+"d": "2026-11-06"
 },
 "/guide/quest/shipping-delay-part-1/": {
 "h": "4fd6e1b974c66db7",
@@ -5476,8 +5476,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/snatch/": {
-"h": "ef18cc7067d6045f",
-"d": "2026-11-04"
+"h": "c02e92c34e8984b7",
+"d": "2026-11-06"
 },
 "/guide/quest/spa-tour-part-2/": {
 "h": "6009ee04e8806b44",
@@ -5504,8 +5504,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/spotter/": {
-"h": "b40397aafad14749",
-"d": "2026-11-04"
+"h": "b713cae570ed4a95",
+"d": "2026-11-06"
 },
 "/guide/quest/stabilize-business/": {
 "h": "4dcc8a0fcdd5a20e",
@@ -5552,16 +5552,16 @@
 "d": "2026-11-04"
 },
 "/guide/quest/surplus-goods/": {
-"h": "d50bd2fda6db1c92",
-"d": "2026-11-04"
+"h": "bf7983e202527b71",
+"d": "2026-11-06"
 },
 "/guide/quest/surprise-gift-pve-zone/": {
-"h": "8cae8bdcbe4a20d4",
-"d": "2026-11-04"
+"h": "ad2ebf1148c2094a",
+"d": "2026-11-06"
 },
 "/guide/quest/surprise-gift-pvp-zone/": {
-"h": "4f8f98fe6011d20a",
-"d": "2026-11-04"
+"h": "d2cf55585db11ba2",
+"d": "2026-11-06"
 },
 "/guide/quest/surprise-pve-zone/": {
 "h": "2e15c2dd9739a762",
@@ -5572,8 +5572,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/surveillance/": {
-"h": "5c84f7c824c332de",
-"d": "2026-11-04"
+"h": "19deeb3342c7c4a7",
+"d": "2026-11-06"
 },
 "/guide/quest/swift-retribution/": {
 "h": "84fa14c880d59c00",
@@ -5584,12 +5584,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/tarkov-style-diplomacy/": {
-"h": "a12dd4b0531423d8",
-"d": "2026-11-04"
+"h": "45575c203bdd5648",
+"d": "2026-11-06"
 },
 "/guide/quest/terragroup-employee/": {
-"h": "65b7c3659df646de",
-"d": "2026-11-04"
+"h": "10392c04eb49b4f3",
+"d": "2026-11-06"
 },
 "/guide/quest/textile-part-1-bear/": {
 "h": "57c583b2389dd9cd",
@@ -5644,12 +5644,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/the-door/": {
-"h": "82d3c2dae8d426d1",
-"d": "2026-11-04"
+"h": "1abdff46016b9c1d",
+"d": "2026-11-06"
 },
 "/guide/quest/the-extortionist/": {
-"h": "374902e1ea0c9071",
-"d": "2026-11-04"
+"h": "997fd8c2e7702b53",
+"d": "2026-11-06"
 },
 "/guide/quest/the-good-times-part-1/": {
 "h": "69892fb9747a50a9",
@@ -5788,12 +5788,12 @@
 "d": "2026-11-04"
 },
 "/guide/quest/the-secret-recipe/": {
-"h": "66f5d16129660d26",
-"d": "2026-11-04"
+"h": "f041a675e1210042",
+"d": "2026-11-06"
 },
 "/guide/quest/the-secret-to-productivity-usec/": {
-"h": "94e96607705c93ad",
-"d": "2026-11-04"
+"h": "698828165e99ac32",
+"d": "2026-11-06"
 },
 "/guide/quest/the-survivalist-path-cold-blooded/": {
 "h": "6db3646cff6e4d9a",
@@ -5952,8 +5952,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/top-secret/": {
-"h": "288e243f56f66336",
-"d": "2026-11-04"
+"h": "39d68b9dc7d540aa",
+"d": "2026-11-06"
 },
 "/guide/quest/tracker/": {
 "h": "4be27a2900aa2322",
@@ -5984,16 +5984,16 @@
 "d": "2026-11-04"
 },
 "/guide/quest/vitamins-bear/": {
-"h": "01a513f92631938f",
-"d": "2026-11-04"
+"h": "25105e437bdaf77b",
+"d": "2026-11-06"
 },
 "/guide/quest/war-never-changes/": {
 "h": "b89ee8d08fd532a6",
 "d": "2026-11-04"
 },
 "/guide/quest/watching-you/": {
-"h": "1ef7067b41f5214c",
-"d": "2026-11-04"
+"h": "ed6b6edb485457b0",
+"d": "2026-11-06"
 },
 "/guide/quest/weapons-circulation/": {
 "h": "97b17edc3e855331",
@@ -6016,8 +6016,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/wet-job-part-5/": {
-"h": "40b7d25d8c472edf",
-"d": "2026-11-04"
+"h": "e3c43988da58f4a9",
+"d": "2026-11-06"
 },
 "/guide/quest/wet-job-part-6/": {
 "h": "e5d2aef54166fa5d",
@@ -6040,8 +6040,8 @@
 "d": "2026-11-04"
 },
 "/guide/quest/your-car-needs-a-service/": {
-"h": "8366bcaf5f6908ee",
-"d": "2026-11-04"
+"h": "70b54616575b0648",
+"d": "2026-11-06"
 },
 "/guide/quest/youve-got-mail/": {
 "h": "e6b9aac647e529c0",
@@ -6100,7 +6100,7 @@
 "d": "2026-11-06"
 },
 "/guide/rewards/": {
-"h": "9df0b8da825b02d1",
+"h": "be87741f2e66b8b3",
 "d": "2026-11-06"
 },
 "/guide/ru/": {
@@ -6116,7 +6116,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/crafts/": {
-"h": "8217ca6a1a4ef352",
+"h": "a4a3acabc4c474cc",
 "d": "2026-11-06"
 },
 "/guide/ru/event/": {
@@ -6124,7 +6124,7 @@
 "d": "2026-11-05"
 },
 "/guide/ru/gunsmith/": {
-"h": "893c8830477fff3d",
+"h": "5be6de584bed6287",
 "d": "2026-11-06"
 },
 "/guide/ru/hideout/": {
@@ -6240,7 +6240,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/items/": {
-"h": "d2ff3043f47e5754",
+"h": "c4f65a32dca18e88",
 "d": "2026-11-06"
 },
 "/guide/ru/kappa/": {
@@ -6328,11 +6328,11 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "45163005f7c9e604",
+"h": "48f225f7783af675",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/adar-2-15-556x45-carbine/": {
-"h": "c8c01095ea933af1",
+"h": "75c37c6540a3b7ec",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
@@ -6356,7 +6356,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/beretta-m9a3-9x19-pistol/": {
-"h": "c98fe39e846b8e02",
+"h": "160f31a9fb918ee4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/bt-mp9-9x19-submachine-gun/": {
@@ -6380,23 +6380,23 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "0d1a1c4da863c0d7",
+"h": "3f675c62196fa29d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "5aeb7bf416f9e694",
+"h": "f9c320a570558f71",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "1db6cb676bba5fd5",
+"h": "f8c0444e5f7d994d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m45a1-45-acp-pistol/": {
-"h": "950adf74513b22e1",
+"h": "914fffd45477cf05",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "67b79a47fc56f5ed",
+"h": "cba00897a3633101",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
@@ -6432,7 +6432,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "f6d7f608903f6837",
+"h": "13d27c981695bc6b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-p90-57x28-submachine-gun-scourge/": {
@@ -6480,11 +6480,11 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "c1b85e7a24dad2cb",
+"h": "3c8e8a5db569e3b3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "a41245e2625c2ae7",
+"h": "6f4ce3e93f7678d3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-g28-762x51-marksman-rifle/": {
@@ -6504,15 +6504,15 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "09710412a81aa0ec",
+"h": "7de286a816ff5a18",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "54e50724320768b3",
+"h": "52c6ce6f06757500",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "b6a3a8ee5967fa3e",
+"h": "ba79cfc8716da2bc",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-usp-45-acp-pistol/": {
@@ -6640,7 +6640,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "85e23f9831c008e1",
+"h": "e52ccb05e6c1f018",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
@@ -6648,7 +6648,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "f84054980ab5be07",
+"h": "04d990695c9fd1ac",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-l5-357-pistol/": {
@@ -6676,7 +6676,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "de5d19eacb52f743",
+"h": "8e6dd3a55ff3c855",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/marlin-mxlr-308-me-lever-action-rifle/": {
@@ -6692,7 +6692,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "22dd65169d53032f",
+"h": "54bbcf4524300aed",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
@@ -6700,19 +6700,19 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "3546cd1345428c7b",
+"h": "bff9cb5f834249b8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "fd42f063e4f996c5",
+"h": "6e81a6a4a50241d7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "36d703e8fab88e25",
+"h": "135386833c7ff4cb",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "8a707c8203939333",
+"h": "f41f815987113b7a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
@@ -6756,7 +6756,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "3c5943eab7ada7a1",
+"h": "e3b9d654a98dcb75",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
@@ -6768,7 +6768,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "61a9c7b206e19fed",
+"h": "c1637770b4d81232",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-9-klin-9x18pmm-submachine-gun/": {
@@ -6836,15 +6836,15 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/saiga-9-9x19-carbine/": {
-"h": "74f350514e7542c8",
+"h": "e215cddfa9cb2b93",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "1dcc17f35548427b",
+"h": "6e7ea756a390922f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "6235943bf20074b1",
+"h": "bca5c10cc42628bd",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sig-mcx-300-blackout-assault-rifle/": {
@@ -6864,11 +6864,11 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "0092421e86cf91b4",
+"h": "f4fd987906d96708",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "1c9bc55057a266eb",
+"h": "0ef2e444104af350",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sr-2m-veresk-9x21-submachine-gun/": {
@@ -6904,11 +6904,11 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/svds-762x54r-sniper-rifle/": {
-"h": "21056f643dd8e488",
+"h": "94b02049d42308ee",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "53f7fb04b08e6cac",
+"h": "019d800bb3281279",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
@@ -6916,7 +6916,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "2f9f9f96557a3579",
+"h": "a7a9985f4c05b71b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
@@ -6936,11 +6936,11 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "4f6e4d32c3803295",
+"h": "6c59eab3024a3170",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "b95aac12a98ed3ef",
+"h": "bc60acf350627d8c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/toz-106-20ga-bolt-action-shotgun/": {
@@ -6992,8 +6992,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/a-big-loss-usec/": {
-"h": "19edbadfc1c36ed1",
-"d": "2026-11-04"
+"h": "f7c23b2071141046",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/a-bitter-victory/": {
 "h": "6c872653ffbf4016",
@@ -7032,12 +7032,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/against-the-conscience-part-1-pve-zone/": {
-"h": "1870b52991954dfe",
-"d": "2026-11-04"
+"h": "186c91d707631813",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/against-the-conscience-part-1-pvp-zone/": {
-"h": "12594249c77e41d0",
-"d": "2026-11-04"
+"h": "6ff888e757383f56",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/against-the-conscience-part-2-pve-zone/": {
 "h": "edd57d130b4cc1bc",
@@ -7100,8 +7100,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/audiophile/": {
-"h": "0d336f4a71d36081",
-"d": "2026-11-04"
+"h": "63541d922d9d0b6d",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/audit/": {
 "h": "2dcb65c6c48041c4",
@@ -7112,16 +7112,16 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/background-check/": {
-"h": "6fda59e29f60809a",
-"d": "2026-11-04"
+"h": "a8a9808cb3fc7338",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/bad-habit/": {
 "h": "ee3cdd513fdfc054",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/bad-rep-evidence/": {
-"h": "2b47067ec4e575ce",
-"d": "2026-11-04"
+"h": "1a4b7f558e7d4f78",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/balancing-part-1-pve-zone/": {
 "h": "b9063338d295f2d7",
@@ -7140,8 +7140,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/ballet-lover/": {
-"h": "49591c0b8dfb2706",
-"d": "2026-11-04"
+"h": "727ca83cb98352ef",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/battery-change-2/": {
 "h": "5c9867c7fa8a0674",
@@ -7164,16 +7164,16 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/between-two-fires-pve-zone/": {
-"h": "706d90d02cc9d593",
-"d": "2026-11-04"
+"h": "ab16b24ce0d832c2",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/between-two-fires-pvp-zone/": {
 "h": "d54fe548365b18b2",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/beyond-the-red-meat/": {
-"h": "c31e9c8b104d77df",
-"d": "2026-11-04"
+"h": "60041eb3acd18eda",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/big-customer/": {
 "h": "926a2654e06a90fd",
@@ -7204,8 +7204,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/broadcast-part-1/": {
-"h": "26d951de3d6b656d",
-"d": "2026-11-04"
+"h": "eb46b9e26c36042c",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/broadcast-part-2/": {
 "h": "63b19372e0ffbe74",
@@ -7216,12 +7216,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/broadcast-part-4/": {
-"h": "4055bfc351d987d0",
-"d": "2026-11-04"
+"h": "cce06f5c35d93f31",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/broadcast-part-5/": {
-"h": "22864ca9889886a4",
-"d": "2026-11-04"
+"h": "4f4e77ab5f50ca5c",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/building-foundations/": {
 "h": "dbd08412b7845ca9",
@@ -7260,8 +7260,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/cargo-x/": {
-"h": "e35bfad177ebaa1c",
-"d": "2026-11-04"
+"h": "1067d757ded7b1e3",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/cease-fire/": {
 "h": "1ce41496dcd0fa64",
@@ -7280,12 +7280,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/chemical-part-1/": {
-"h": "a8fc1d85be0707d9",
-"d": "2026-11-04"
+"h": "76f8f15dbc89c442",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/chemical-part-2/": {
-"h": "e031843d00a5f47b",
-"d": "2026-11-04"
+"h": "d4c08ff5c8900e76",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/chemical-part-3/": {
 "h": "3535b9412a150d06",
@@ -7296,8 +7296,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/chemistry-closet/": {
-"h": "77c059f7493b65a9",
-"d": "2026-11-04"
+"h": "e6c15b2af0d39250",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/choose-your-friends-wisely/": {
 "h": "c4a6a88db0f3dbcf",
@@ -7368,8 +7368,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/corporate-perks-bear/": {
-"h": "6005b097fe5e4319",
-"d": "2026-11-04"
+"h": "d2c956aaab655e43",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/corporate-secrets/": {
 "h": "140730783adee605",
@@ -7424,20 +7424,20 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/decisions-decisions-pve-zone/": {
-"h": "340c0b86aa7794ac",
-"d": "2026-11-04"
+"h": "c613f91fe15a7cb1",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/decisions-decisions-pvp-zone/": {
-"h": "b3cdb6aa6b9507e1",
-"d": "2026-11-04"
+"h": "2ee8b823831811c4",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/decontamination-service/": {
 "h": "e041b94cd4ced94b",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/delivery-from-the-past/": {
-"h": "77d2e5b83b2fabee",
-"d": "2026-11-04"
+"h": "cdcb70234f1e2e98",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/demonstration-model/": {
 "h": "e0069327c37b4b4c",
@@ -7448,8 +7448,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/disease-history/": {
-"h": "ed8f6bdc3d8c4170",
-"d": "2026-11-04"
+"h": "a15aea3f248ededb",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/district-patrol/": {
 "h": "257aa11d34a1a9dd",
@@ -7460,8 +7460,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/dragnet/": {
-"h": "490506ef071ac9e3",
-"d": "2026-11-04"
+"h": "23b0f7ae41bad73d",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/dressed-to-kill/": {
 "h": "a83c85f6c6c42eb8",
@@ -7556,8 +7556,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/farming/": {
-"h": "a3ac1827a55fe183",
-"d": "2026-11-04"
+"h": "2ae57621c4339fb1",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/fertilizers/": {
 "h": "9694dd7c68d09228",
@@ -7584,8 +7584,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/following-the-bread-crumbs/": {
-"h": "0ebc658b0a3524cd",
-"d": "2026-11-04"
+"h": "8b54742c33bf68a8",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/foresters-duty/": {
 "h": "78fd876db36d7615",
@@ -7660,8 +7660,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/golden-swag/": {
-"h": "60f4c71c4abb104b",
-"d": "2026-11-04"
+"h": "2592160895f69a3f",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/gratitude/": {
 "h": "e76d67b77e8e0bcf",
@@ -7792,8 +7792,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/health-care-privacy-part-2/": {
-"h": "e7410f024e95ce27",
-"d": "2026-11-04"
+"h": "80938dc772256b4a",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/health-care-privacy-part-3/": {
 "h": "3930ff4951b9ad3a",
@@ -7808,8 +7808,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/health-care-privacy-part-6/": {
-"h": "00d82f310551d1e6",
-"d": "2026-11-04"
+"h": "393a79dc490c6e43",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/hell-on-earth-part-1/": {
 "h": "3e3955da7f0f1239",
@@ -7856,12 +7856,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/house-arrest-part-2/": {
-"h": "611ccace994c9e2f",
-"d": "2026-11-04"
+"h": "2c4d9d173cafd396",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/house-arrest-usec/": {
-"h": "a6da03b39770ffb1",
-"d": "2026-11-04"
+"h": "12d3a31322aa2af1",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/humanitarian-supplies/": {
 "h": "b1396a9a54b5c829",
@@ -7876,8 +7876,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/i-need-more-power/": {
-"h": "5ef18c5b982e3118",
-"d": "2026-11-04"
+"h": "1c51dbf78237e4ed",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/ice-cream-cones/": {
 "h": "3d45e85e3c21d8bf",
@@ -7940,20 +7940,20 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/irresistible/": {
-"h": "e225dae7fec1a73f",
-"d": "2026-11-04"
+"h": "63a0908c7b355745",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/is-this-a-reference/": {
-"h": "914cb8b2e2e1937f",
-"d": "2026-11-04"
+"h": "0b52f51278935056",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/job-for-a-patriot/": {
 "h": "d17bb9e9b1113851",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/keepers-word/": {
-"h": "4425173193d40fd3",
-"d": "2026-11-04"
+"h": "582b5d684d6a29a1",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/key-partner/": {
 "h": "1785186802128589",
@@ -8036,8 +8036,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/missing-informant/": {
-"h": "f666066e07c8f54a",
-"d": "2026-11-04"
+"h": "443d092f03dad475",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/natural-exchange/": {
 "h": "f7ef977b0aa6b928",
@@ -8124,8 +8124,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/operation-aquarius/": {
-"h": "e4127d47d49ec938",
-"d": "2026-11-04"
+"h": "076f5e08d4a6cdff",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/order-from-outside/": {
 "h": "af5773cd4dbe8554",
@@ -8180,12 +8180,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/pets-wont-need-it/": {
-"h": "5006e4beeb9b84b7",
-"d": "2026-11-04"
+"h": "67b8fe87fdc027ef",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/pharmacist/": {
-"h": "fd24fe226b0771d5",
-"d": "2026-11-04"
+"h": "43bae95e8c7518f1",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/playing-the-market/": {
 "h": "29283a736f267ecf",
@@ -8260,8 +8260,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/properties-all-around/": {
-"h": "4ab92248320d82fd",
-"d": "2026-11-04"
+"h": "7583ffaced1937c0",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/protect-the-sky/": {
 "h": "949b4afd384f219c",
@@ -8272,8 +8272,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/provocation/": {
-"h": "f3d9ffefae57bd2e",
-"d": "2026-11-04"
+"h": "5c70b2e6f8cc2a83",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/psycho-sniper/": {
 "h": "a51f8ee4e0ba2d78",
@@ -8300,8 +8300,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/reserve-expert/": {
-"h": "74dff23cfc79c14e",
-"d": "2026-11-04"
+"h": "88cf62edf132c059",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/reserve/": {
 "h": "11446a6180970eaa",
@@ -8316,8 +8316,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/revision-reserve/": {
-"h": "62448d70d834d5a7",
-"d": "2026-11-04"
+"h": "5b3a023abbab60d3",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/revision-streets-of-tarkov/": {
 "h": "c09844fc290cb320",
@@ -8452,12 +8452,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/shaking-up-the-teller-usec/": {
-"h": "debe3b0cd7908b84",
-"d": "2026-11-04"
+"h": "bd5534bc714ef1bf",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/shipment-tracking/": {
-"h": "2af0d8e7c2078dc9",
-"d": "2026-11-04"
+"h": "ce6f9235c87001b4",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/shipping-delay-part-1/": {
 "h": "2771d6fdac131bcb",
@@ -8524,8 +8524,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/snatch/": {
-"h": "a36c8a82f4b4005f",
-"d": "2026-11-04"
+"h": "7953985267d72925",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/spa-tour-part-2/": {
 "h": "d5af16a9923d87a2",
@@ -8552,8 +8552,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/spotter/": {
-"h": "bf56fe5feac9c1e3",
-"d": "2026-11-04"
+"h": "4cafc0c01c0aa5cd",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/stabilize-business/": {
 "h": "125616838147b294",
@@ -8600,16 +8600,16 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/surplus-goods/": {
-"h": "f439e04819edb913",
-"d": "2026-11-04"
+"h": "59036f12425a8235",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/surprise-gift-pve-zone/": {
-"h": "7f4951eef04b8e0f",
-"d": "2026-11-04"
+"h": "5e0f43221736af60",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/surprise-gift-pvp-zone/": {
-"h": "267e18bb3e988a67",
-"d": "2026-11-04"
+"h": "2895cd462265eaf0",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/surprise-pve-zone/": {
 "h": "58f99b0bab7ece62",
@@ -8620,8 +8620,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/surveillance/": {
-"h": "ea4537acea7261e1",
-"d": "2026-11-04"
+"h": "561ec0eaf9e5e9a9",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/swift-retribution/": {
 "h": "3d0f497764372d48",
@@ -8632,12 +8632,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/tarkov-style-diplomacy/": {
-"h": "a7c171a454308675",
-"d": "2026-11-04"
+"h": "dc5bcd413cb8bddd",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/terragroup-employee/": {
-"h": "84d53f43f8148af0",
-"d": "2026-11-04"
+"h": "8cb358533e054d4b",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/textile-part-1-bear/": {
 "h": "bdfce9184c804133",
@@ -8692,12 +8692,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/the-door/": {
-"h": "78c2cc0c0e3dc6ec",
-"d": "2026-11-04"
+"h": "4dd90a055872ec9f",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/the-extortionist/": {
-"h": "42579dc1d8315077",
-"d": "2026-11-04"
+"h": "ac66c19b59d40101",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/the-good-times-part-1/": {
 "h": "22d5d0a59318ac71",
@@ -8836,12 +8836,12 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/the-secret-recipe/": {
-"h": "d611048dc8c0507d",
-"d": "2026-11-04"
+"h": "f6c433483dabd327",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/the-secret-to-productivity-usec/": {
-"h": "026b1f35af368e9b",
-"d": "2026-11-04"
+"h": "f01cb896a4a553b0",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/the-survivalist-path-cold-blooded/": {
 "h": "06917bfc94ecc08c",
@@ -9000,8 +9000,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/top-secret/": {
-"h": "6cf0b346448f5a3d",
-"d": "2026-11-04"
+"h": "fc4c63289e151c6c",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/tracker/": {
 "h": "80471b6d1a21b6a1",
@@ -9032,16 +9032,16 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/vitamins-bear/": {
-"h": "e56fe201d6bcd437",
-"d": "2026-11-04"
+"h": "671c1ddef3f81d3a",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/war-never-changes/": {
 "h": "4919cc159956dd0c",
 "d": "2026-11-04"
 },
 "/guide/ru/quest/watching-you/": {
-"h": "ea9191ee521c716b",
-"d": "2026-11-04"
+"h": "b835161aac396614",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/weapons-circulation/": {
 "h": "e05a5d429a2e55f5",
@@ -9064,8 +9064,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/wet-job-part-5/": {
-"h": "49af325768ab6ba0",
-"d": "2026-11-04"
+"h": "62b1cc6a7ff66134",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/wet-job-part-6/": {
 "h": "24ab6a571d82fcf3",
@@ -9088,8 +9088,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quest/your-car-needs-a-service/": {
-"h": "02f3940b7a1afd8a",
-"d": "2026-11-04"
+"h": "1c097dd83d629ded",
+"d": "2026-11-06"
 },
 "/guide/ru/quest/youve-got-mail/": {
 "h": "3fec5e244a9b3628",
@@ -9148,7 +9148,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/rewards/": {
-"h": "7b5894e3a3763e4a",
+"h": "dc9968f64ac6ca16",
 "d": "2026-11-06"
 },
 "/guide/ru/start/": {
@@ -9180,7 +9180,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/crafts/": {
-"h": "26d16604d1edafb4",
+"h": "e662057b54778e50",
 "d": "2026-11-06"
 },
 "/guide/zh/event/": {
@@ -9188,7 +9188,7 @@
 "d": "2026-11-05"
 },
 "/guide/zh/gunsmith/": {
-"h": "c82b7de113d0e8ab",
+"h": "02ece60fb37877d4",
 "d": "2026-11-06"
 },
 "/guide/zh/hideout/": {
@@ -9304,7 +9304,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/items/": {
-"h": "95a711f8aecbd454",
+"h": "74c80d68e0c6865b",
 "d": "2026-11-06"
 },
 "/guide/zh/kappa/": {
@@ -9392,11 +9392,11 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "7a9a993d4e27fa18",
+"h": "5111503f0ee5b3da",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/adar-2-15-556x45-carbine/": {
-"h": "1b3be3803c67d31f",
+"h": "31fd5b854be56e29",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
@@ -9420,7 +9420,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/beretta-m9a3-9x19-pistol/": {
-"h": "d24d03f8c2b82a9b",
+"h": "d18f7bc12097a121",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/bt-mp9-9x19-submachine-gun/": {
@@ -9444,23 +9444,23 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "2842253336c6ec6c",
+"h": "35784a616276e262",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "0dfd4b5dee62f567",
+"h": "9268e629bdf8670f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "c29e270f61961441",
+"h": "440c0a153d6602b4",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m45a1-45-acp-pistol/": {
-"h": "6c2fa8bb3756c741",
+"h": "c05885046e8a904d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "ff2502605966bbc0",
+"h": "b99fec6985788067",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
@@ -9496,7 +9496,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "1409b2d75ee62d52",
+"h": "cfc1fed61b2372ae",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-p90-57x28-submachine-gun-scourge/": {
@@ -9544,11 +9544,11 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "c8ec4e067ec53d5f",
+"h": "c4ded8714d1037cf",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "288903db2cf1f3ca",
+"h": "e950e10b3d5fe8b0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-g28-762x51-marksman-rifle/": {
@@ -9568,15 +9568,15 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "e9d55623a16b61fe",
+"h": "727c4fee02664385",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "e1f8aa42ad1de95b",
+"h": "de6c33212d2bc496",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "8f207a45816cf271",
+"h": "2874f2a82851ab44",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-usp-45-acp-pistol/": {
@@ -9704,7 +9704,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "f145d2aac355d619",
+"h": "1e4f4b2d1aa4068c",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
@@ -9712,7 +9712,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "d93c373aebe492a5",
+"h": "c58b97a109f5df8f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-l5-357-pistol/": {
@@ -9740,7 +9740,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "b116dbfd7cdfdb5a",
+"h": "aef567a61621eb78",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/marlin-mxlr-308-me-lever-action-rifle/": {
@@ -9756,7 +9756,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "820bccf396e38109",
+"h": "28bc7ab5aa390bb2",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
@@ -9764,19 +9764,19 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "51637e1f75f636a8",
+"h": "c65c49a7d16b1efc",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "03ce95b0b4c1fe18",
+"h": "03c6a8acb7909f4d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "2610f213f3ed44fe",
+"h": "1df5a02705b4ac21",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "07cd18366436dc3c",
+"h": "abdb585ca17d40c7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
@@ -9820,7 +9820,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "091572cead780de7",
+"h": "023f92f58649b78e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
@@ -9832,7 +9832,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "2a77019f949719a0",
+"h": "d1c51712a293db5e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-9-klin-9x18pmm-submachine-gun/": {
@@ -9900,15 +9900,15 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/saiga-9-9x19-carbine/": {
-"h": "44a4e41eaf6186f7",
+"h": "59f26f1d04e11c10",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "a8d6773057d66307",
+"h": "65fb54385f864d47",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "62a096ca19cc02c1",
+"h": "bee623a73245b57b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sig-mcx-300-blackout-assault-rifle/": {
@@ -9928,11 +9928,11 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "7f95f148d4d5c6fe",
+"h": "641bc0f67a921c13",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "0e58d304ff155fe3",
+"h": "0b0479b1adf2b2f3",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sr-2m-veresk-9x21-submachine-gun/": {
@@ -9968,11 +9968,11 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/svds-762x54r-sniper-rifle/": {
-"h": "34722c68ed556075",
+"h": "c7fc24a097ca3a24",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "f9e88195d54dc522",
+"h": "ea862a03b781455d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
@@ -9980,7 +9980,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "abd7f1024db1efc7",
+"h": "e6c6f575895c036a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
@@ -10000,11 +10000,11 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "eafb2206ade3ad52",
+"h": "f1bbee90539b186b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "b48844075d47239d",
+"h": "1b4da1806cb77d26",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/toz-106-20ga-bolt-action-shotgun/": {
@@ -10056,8 +10056,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/a-big-loss-usec/": {
-"h": "8d59cc780bb3e70e",
-"d": "2026-11-05"
+"h": "e5df8e1f466d391c",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/a-bitter-victory/": {
 "h": "5fa98a7f5a470f3c",
@@ -10096,12 +10096,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/against-the-conscience-part-1-pve-zone/": {
-"h": "f437a4599bb41427",
-"d": "2026-11-05"
+"h": "72e1dbf636db72a2",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/against-the-conscience-part-1-pvp-zone/": {
-"h": "eb6c3cf2fb559c42",
-"d": "2026-11-05"
+"h": "2c0b2544c306ffae",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/against-the-conscience-part-2-pve-zone/": {
 "h": "7c99cff234ff44d6",
@@ -10164,8 +10164,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/audiophile/": {
-"h": "d7a48a245889cefe",
-"d": "2026-11-05"
+"h": "cf7532f9cf75ad3c",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/audit/": {
 "h": "4431731781810ac6",
@@ -10176,16 +10176,16 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/background-check/": {
-"h": "53a8026f79aaf39d",
-"d": "2026-11-05"
+"h": "311ff98986165d76",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/bad-habit/": {
 "h": "99cdfcc6f1c9cb30",
 "d": "2026-11-05"
 },
 "/guide/zh/quest/bad-rep-evidence/": {
-"h": "bd94ab82260666ff",
-"d": "2026-11-05"
+"h": "453845c929b908a0",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/balancing-part-1-pve-zone/": {
 "h": "5aafd589907c5597",
@@ -10204,8 +10204,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/ballet-lover/": {
-"h": "c0463eada96745be",
-"d": "2026-11-05"
+"h": "b3a084babf2cf67a",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/battery-change-2/": {
 "h": "b7d7e87a0de7495d",
@@ -10228,16 +10228,16 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/between-two-fires-pve-zone/": {
-"h": "6d17bfd9fead22f6",
-"d": "2026-11-05"
+"h": "9f05b170eb505b58",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/between-two-fires-pvp-zone/": {
 "h": "f74feaaf8ebd3140",
 "d": "2026-11-05"
 },
 "/guide/zh/quest/beyond-the-red-meat/": {
-"h": "c212e65977a9da4c",
-"d": "2026-11-05"
+"h": "625afb0087df82cc",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/big-customer/": {
 "h": "5aa9b70abe0f1cf7",
@@ -10268,8 +10268,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/broadcast-part-1/": {
-"h": "84d79f25fc0f682b",
-"d": "2026-11-05"
+"h": "0e15fba0f296b9f6",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/broadcast-part-2/": {
 "h": "f8540d12a28e1b01",
@@ -10280,12 +10280,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/broadcast-part-4/": {
-"h": "9116abc72f0d44cf",
-"d": "2026-11-05"
+"h": "bf7d1f2275f165a5",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/broadcast-part-5/": {
-"h": "60690867746099b8",
-"d": "2026-11-05"
+"h": "0150a0525cf8795d",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/building-foundations/": {
 "h": "1a29731eaaeaf530",
@@ -10324,8 +10324,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/cargo-x/": {
-"h": "118eae9722bcb6d8",
-"d": "2026-11-05"
+"h": "9446964110eb0bc6",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/cease-fire/": {
 "h": "4486fad4cf00cf27",
@@ -10344,12 +10344,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/chemical-part-1/": {
-"h": "ade75c47cd8bf79b",
-"d": "2026-11-05"
+"h": "16f20835471ae58b",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/chemical-part-2/": {
-"h": "2d979d9a0f61da12",
-"d": "2026-11-05"
+"h": "5d00b9ccec6517f7",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/chemical-part-3/": {
 "h": "9cb4c59727bc28e5",
@@ -10360,8 +10360,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/chemistry-closet/": {
-"h": "b42f6f930249ac80",
-"d": "2026-11-05"
+"h": "8de9bb8f4bf16ec7",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/choose-your-friends-wisely/": {
 "h": "e63062de2026d1a8",
@@ -10432,8 +10432,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/corporate-perks-bear/": {
-"h": "9e6eaf4752c36b63",
-"d": "2026-11-05"
+"h": "fc30af440f9ea5a2",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/corporate-secrets/": {
 "h": "e560c42efecd7703",
@@ -10488,20 +10488,20 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/decisions-decisions-pve-zone/": {
-"h": "fbd1c2f15e3f4d56",
-"d": "2026-11-05"
+"h": "2f3240ccbd268155",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/decisions-decisions-pvp-zone/": {
-"h": "100f728c41d20ee5",
-"d": "2026-11-05"
+"h": "63f2f7b5716fa370",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/decontamination-service/": {
 "h": "8fab4289e41e299a",
 "d": "2026-11-05"
 },
 "/guide/zh/quest/delivery-from-the-past/": {
-"h": "0c7132f91f9140f9",
-"d": "2026-11-05"
+"h": "a8f9300f76656442",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/demonstration-model/": {
 "h": "125b5682c035e8af",
@@ -10512,8 +10512,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/disease-history/": {
-"h": "28b5a4b96c1cf4d7",
-"d": "2026-11-05"
+"h": "08473d97211ef76d",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/district-patrol/": {
 "h": "d858c309a43977c6",
@@ -10524,8 +10524,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/dragnet/": {
-"h": "5f1a6e94ec2a7840",
-"d": "2026-11-05"
+"h": "3da1695041596d8b",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/dressed-to-kill/": {
 "h": "b4ef7338ab847915",
@@ -10620,8 +10620,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/farming/": {
-"h": "2f37290c7aad1d6d",
-"d": "2026-11-05"
+"h": "1a189ceafc77a397",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/fertilizers/": {
 "h": "7aac227f5c52a66c",
@@ -10648,8 +10648,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/following-the-bread-crumbs/": {
-"h": "e61cb8ecccaf993c",
-"d": "2026-11-05"
+"h": "ab79b2672f992a93",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/foresters-duty/": {
 "h": "cdc576aa07e66fce",
@@ -10724,8 +10724,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/golden-swag/": {
-"h": "dcd4d64f0576dcd5",
-"d": "2026-11-05"
+"h": "10122dae748d4d35",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/gratitude/": {
 "h": "957d9cef0c1eae52",
@@ -10856,8 +10856,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/health-care-privacy-part-2/": {
-"h": "298550bf70e58430",
-"d": "2026-11-05"
+"h": "4773ec0e0f56220c",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/health-care-privacy-part-3/": {
 "h": "aae7c8b375da1105",
@@ -10872,8 +10872,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/health-care-privacy-part-6/": {
-"h": "98f337f3f125b4c0",
-"d": "2026-11-05"
+"h": "26283d0ea6153862",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/hell-on-earth-part-1/": {
 "h": "0dc5c723dc8a48c5",
@@ -10920,12 +10920,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/house-arrest-part-2/": {
-"h": "fc3c93ca138bbb9e",
-"d": "2026-11-05"
+"h": "6359dfb1b1b390a0",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/house-arrest-usec/": {
-"h": "4bc493c0f4269134",
-"d": "2026-11-05"
+"h": "7f1928a2584a1ccb",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/humanitarian-supplies/": {
 "h": "52c8439c4b845432",
@@ -10940,8 +10940,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/i-need-more-power/": {
-"h": "f215be93c0c82374",
-"d": "2026-11-05"
+"h": "d7b543c504553fbf",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/ice-cream-cones/": {
 "h": "00b5569d322af7f2",
@@ -11004,20 +11004,20 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/irresistible/": {
-"h": "1346e21fdd791b49",
-"d": "2026-11-05"
+"h": "e868c9d907f12813",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/is-this-a-reference/": {
-"h": "6f286e6788da129d",
-"d": "2026-11-05"
+"h": "5635cadf75f5a347",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/job-for-a-patriot/": {
 "h": "d07b08fa0c515e68",
 "d": "2026-11-05"
 },
 "/guide/zh/quest/keepers-word/": {
-"h": "fafe5cf7c10c1d4d",
-"d": "2026-11-05"
+"h": "ffd5829ef8b4e38a",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/key-partner/": {
 "h": "0b37e1f4557dd7ad",
@@ -11100,8 +11100,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/missing-informant/": {
-"h": "554ad7b2eb126858",
-"d": "2026-11-05"
+"h": "593d06b7369330fe",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/natural-exchange/": {
 "h": "c4f4a7a3866866aa",
@@ -11188,8 +11188,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/operation-aquarius/": {
-"h": "58230a493b939f10",
-"d": "2026-11-05"
+"h": "274217ee2a1b87f6",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/order-from-outside/": {
 "h": "cfe930889bc7f9af",
@@ -11244,12 +11244,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/pets-wont-need-it/": {
-"h": "01c1385be629d7ff",
-"d": "2026-11-05"
+"h": "357a886bb797e28e",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/pharmacist/": {
-"h": "e57c4fe1e03ebfa9",
-"d": "2026-11-05"
+"h": "df5ba38b135a89ca",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/playing-the-market/": {
 "h": "4de81cece5eca7ab",
@@ -11324,8 +11324,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/properties-all-around/": {
-"h": "04932e60ef33d558",
-"d": "2026-11-05"
+"h": "fd131f914acec692",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/protect-the-sky/": {
 "h": "26637337ae7fc17e",
@@ -11336,8 +11336,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/provocation/": {
-"h": "131a104fc4abdc26",
-"d": "2026-11-05"
+"h": "31c4fd075df7efc8",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/psycho-sniper/": {
 "h": "7548b1d7770c3172",
@@ -11364,8 +11364,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/reserve-expert/": {
-"h": "4ee255346ba94ea3",
-"d": "2026-11-05"
+"h": "df36119491acc6f1",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/reserve/": {
 "h": "666d632b02bbd64f",
@@ -11380,8 +11380,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/revision-reserve/": {
-"h": "57703cc690890696",
-"d": "2026-11-05"
+"h": "7a929a2f777aab4a",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/revision-streets-of-tarkov/": {
 "h": "d195492d9ae9d0cb",
@@ -11516,12 +11516,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/shaking-up-the-teller-usec/": {
-"h": "fa93b1169646f3a9",
-"d": "2026-11-05"
+"h": "5321a649610ba94c",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/shipment-tracking/": {
-"h": "b9a1fc89b3610828",
-"d": "2026-11-05"
+"h": "1bd878f247b9d37b",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/shipping-delay-part-1/": {
 "h": "e30db122d4966876",
@@ -11588,8 +11588,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/snatch/": {
-"h": "c45fecadd8e426ec",
-"d": "2026-11-05"
+"h": "969f6718c58b0e68",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/spa-tour-part-2/": {
 "h": "b927f2516e6127ac",
@@ -11616,8 +11616,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/spotter/": {
-"h": "1b669400a3604f4d",
-"d": "2026-11-05"
+"h": "def9039b1ebb880d",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/stabilize-business/": {
 "h": "39e94e06f5efba83",
@@ -11664,16 +11664,16 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/surplus-goods/": {
-"h": "4a8effe8b804e27e",
-"d": "2026-11-05"
+"h": "9e2a47bccf3dd7e9",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/surprise-gift-pve-zone/": {
-"h": "fd6b2bdaaec6e109",
-"d": "2026-11-05"
+"h": "403458e600eee1e6",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/surprise-gift-pvp-zone/": {
-"h": "fccb5a55be6fd19d",
-"d": "2026-11-05"
+"h": "96eab662f6045c69",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/surprise-pve-zone/": {
 "h": "9933eaa58b035699",
@@ -11684,8 +11684,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/surveillance/": {
-"h": "f0d620d01677905b",
-"d": "2026-11-05"
+"h": "cbb81a2656d9c758",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/swift-retribution/": {
 "h": "c2d35f37f50ebf7d",
@@ -11696,12 +11696,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/tarkov-style-diplomacy/": {
-"h": "3d842f15ba08f1cd",
-"d": "2026-11-05"
+"h": "71937ff8ef5018a3",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/terragroup-employee/": {
-"h": "041f165e99f6943b",
-"d": "2026-11-05"
+"h": "3427ded371e22909",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/textile-part-1-bear/": {
 "h": "2a5e8d03c2b3908b",
@@ -11756,12 +11756,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/the-door/": {
-"h": "061d73cc031b7aa6",
-"d": "2026-11-05"
+"h": "a8b763078db1c854",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/the-extortionist/": {
-"h": "ea03bb12098d83f3",
-"d": "2026-11-05"
+"h": "9dd29d97420081e0",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/the-good-times-part-1/": {
 "h": "d152654ac335d918",
@@ -11900,12 +11900,12 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/the-secret-recipe/": {
-"h": "a8be1addf2fdbbdc",
-"d": "2026-11-05"
+"h": "8c2a33440876d854",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/the-secret-to-productivity-usec/": {
-"h": "daec095d400bc487",
-"d": "2026-11-05"
+"h": "da2ab64b1c662e94",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/the-survivalist-path-cold-blooded/": {
 "h": "c71edc1653f92e8c",
@@ -12064,8 +12064,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/top-secret/": {
-"h": "0c042460e4726c18",
-"d": "2026-11-05"
+"h": "f262102501056bdd",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/tracker/": {
 "h": "d0beb20516f23be6",
@@ -12096,16 +12096,16 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/vitamins-bear/": {
-"h": "0c426a8df96acca4",
-"d": "2026-11-05"
+"h": "9d6e379a6afa7380",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/war-never-changes/": {
 "h": "d74838acd99e68ef",
 "d": "2026-11-05"
 },
 "/guide/zh/quest/watching-you/": {
-"h": "99e613317aaa63a6",
-"d": "2026-11-05"
+"h": "6d68629a6b74ccdc",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/weapons-circulation/": {
 "h": "09fc7c4792f4b5da",
@@ -12128,8 +12128,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/wet-job-part-5/": {
-"h": "2f10cf0d44c560bb",
-"d": "2026-11-05"
+"h": "658a62e10ee7c820",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/wet-job-part-6/": {
 "h": "80edf6f2924434c8",
@@ -12152,8 +12152,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quest/your-car-needs-a-service/": {
-"h": "171e635c9cc27d2b",
-"d": "2026-11-05"
+"h": "e90be1859e5849c4",
+"d": "2026-11-06"
 },
 "/guide/zh/quest/youve-got-mail/": {
 "h": "7cec8e650f6d6e1a",
@@ -12212,7 +12212,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/rewards/": {
-"h": "7dfd7ea40bb69bec",
+"h": "ccea5119e0517eba",
 "d": "2026-11-06"
 },
 "/guide/zh/start/": {
