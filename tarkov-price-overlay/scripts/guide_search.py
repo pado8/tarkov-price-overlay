@@ -44,6 +44,7 @@ PAGE_ALIAS = {
     "promo/": "프로모 코드 promo code 쿠폰 리딤", "hunt/": "사냥 킬 퀘스트 처치 hunt", "items/": "필요템 퀘템 퀘스트 아이템 needed items",
     "quest-items/": "퀘스트 전용 아이템 quest items 퀘템 위치", "rewards/": "보상 reward rewards 보상템",
     "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 starter beginner", "gunsmith/": "건스미스 gunsmith 퀘스트 조립",
+    "raid/": "출정 준비물 레이드 준비 체크리스트 챙길것 챙길 것 준비물 raid checklist prep 사전 준비 подготовка 出发准备",
     "mods/": "모딩 무기 모딩 개조 커스텀 빌드 조립 반동 인체공학 메타 사기총 weapon build builds mods модинг сборка 改装",
     "maps/": "맵 지도 map maps 탈출구 extract extracts exfil", "maps/factory/": "팩토리 factory 공장",
     "maps/the-lab/": "랩 lab labs 연구소", "maps/streets-of-tarkov/": "스트리트 streets 시내 타르코프 시내",

@@ -486,7 +486,7 @@ NAV = [("start", "/guide/start/", "초반 가이드"), ("quests", "/guide/quests
        ("crafts", "/guide/crafts/", "제작 수익"), ("ammo", "/guide/ammo/", "탄약표"),
        ("prestige", "/guide/prestige/", "프레스티지"), ("patch", "/guide/patch/", "패치 요약"),
        ("promo", "/guide/promo/", "프로모 코드"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
-       ("mods", "/guide/mods/", "무기 모딩"), ("overlay", "/", "시세 오버레이")]
+       ("mods", "/guide/mods/", "무기 모딩"), ("raid", "/guide/raid/", "출정 준비물"), ("overlay", "/", "시세 오버레이")]
 
 
 # 2뎁스 그룹 메뉴(2026-10-27, 탭 16개가 가로 스크롤을 만들어서). 그룹 제목은 대표 페이지 링크,
@@ -502,7 +502,7 @@ NAV_GROUPS = [
                                 ("keys", "/guide/keys/", "열쇠"), ("keyfinder", "/guide/keyfinder/", "내 열쇠들 어느 맵에?"), ("ammo", "/guide/ammo/", "탄약표"),
                                 ("mods", "/guide/mods/", "무기 모딩")]),
     ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
-    ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스")]),
+    ("맵", "/guide/maps/", [("maps", "/guide/maps/", "맵 정보"), ("bosses", "/guide/bosses/", "보스"), ("raid", "/guide/raid/", "출정 준비물")]),
 ]
 
 
@@ -2917,6 +2917,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     enemies = ", ".join(dict.fromkeys(e(ctx.mob_name(x)) for x in m.get("enemies") or [] if not str(x).startswith("follower")))
     body = (f'<h1>{e(name)} <span class="h1en">{e(en_name)}</span>{" " + EVENT_TAG if is_event_map else ""}</h1>'
             f'<p class="sub">맵 정보 · 보스 {len(boss_rows)} · 탈출구 {n_ex} · 관련 퀘스트 {len(qs)} · 데이터 기준 {e(ctx.stamp)}</p>'
+            f'<p><a class="btn sm" href="{lang_path("/guide/raid/")}?map={e(slug)}">🎒 이 맵 출정 준비물</a></p>'
             + (event_note("이 맵은 이벤트 기간에만 들어갈 수 있습니다.") if is_event_map else "")
             + (f'<p class="small muted">{e(desc_ko)}</p>' if desc_ko else "")
             + f'<section class="box"><h2>기본 정보</h2><table class="kv">{"".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in rows)}'
@@ -3038,6 +3039,7 @@ def hub_page(ctx: Ctx, counts: dict) -> tuple[str, str]:
         # 신규 기능은 맨 앞 + NEW 표시(11-05 사용자 요청) — 다섯째 값 True = 금색 강조 카드
         ("/guide/keyfinder/", "내 열쇠들 어느 맵에?", "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리", f'열쇠 {counts.get("keyfinder", 0)}종', True),
         ("/guide/mods/", "무기 모딩 추천", "반동 최소·균형·인체공학 최대 조립 · 칸별 호환 부품 조립기 · 수치 계산", f'무기 {counts.get("mods", 0)}정', True),
+        ("/guide/raid/", "출정 준비물", "맵을 고르면 진행 중 퀘스트에 필요한 카메라·마커·열쇠·탈출 준비물을 체크리스트로", f'맵 {counts.get("raid", 0)}개 · 연동하면 자동', True),
         ("/guide/start/", "초반 가이드", "투어(Tour)로 상인·맵 여는 순서 · 10레벨까지 퀘스트 · 미리 모을 아이템", "처음·프레스티지 직후"),
         ("/guide/quests/", "퀘스트", "상인별 해금 순서 · 퀘스트마다 목표·필요템·열쇠·보상", f'{counts.get("quests", 0)}개'),
         ("/guide/items/", "필요 아이템 총정리", "퀘스트·은신처에 들어가는 아이템 총량 · 버리면 안 되는 템", f'{counts.get("items", 0)}종'),
@@ -3888,16 +3890,21 @@ def _mod_build_table(ctx: Ctx, md, wid: str, tree: dict, src: str) -> str:
             f'<tbody>{"".join(rows)}</tbody></table></div>')
 
 
+def _eg(v) -> str:
+    """인체공학 표시값 — 게임 화면처럼 100에서 자른다(계산은 원래 값으로)"""
+    return f"{min(v, 100):g}"
+
+
 def _mod_stat_cells(st: dict, base: dict | None = None) -> str:
     def d(k, better_low):
         if not base:
             return ""
-        v = st[k] - base[k]
+        v = (min(st[k], 100) - min(base[k], 100)) if k == "e" else st[k] - base[k]
         if abs(v) < 0.05:
             return ""
         good = (v < 0) if better_low else (v > 0)
         return f' <span class="{"up" if good else "dn"} small">({_mod_sign(round(v, 1))})</span>'
-    return (f'<td class="n"><b>{st["e"]:g}</b>{d("e", False)}</td><td class="n"><b>{st["rv"]}</b>{d("rv", True)}</td>'
+    return (f'<td class="n"><b>{_eg(st["e"])}</b>{d("e", False)}</td><td class="n"><b>{st["rv"]}</b>{d("rv", True)}</td>'
             f'<td class="n">{st["rh"]}{d("rh", True)}</td><td class="n">{st["wt"]:g}kg</td><td class="n small">{fmt_int(st["cost"])}₽</td>')
 
 
@@ -3933,7 +3940,7 @@ function at(path){var seg=path.split(".").slice(1),t=cur;for(var i=0;i<seg.lengt
 function base(){return stats(D.d)}
 function dlt(v,b,low){var d=Math.round((v-b)*10)/10;if(!d)return "";return ' <span class="'+((low?d<0:d>0)?"up":"dn")+' small">('+sg(d)+")</span>"}
 function render(){var s=stats(cur),b=base(),cl=clashes(s.ids);
-document.getElementById("mtot").innerHTML='<div><span class="muted small">인체공학</span><b>'+s.e+"</b>"+dlt(s.e,b.e)+'</div><div><span class="muted small">수직 반동</span><b>'+s.rv+"</b>"+dlt(s.rv,b.rv,1)+'</div><div><span class="muted small">수평 반동</span><b>'+s.rh+"</b>"+dlt(s.rh,b.rh,1)+'</div><div><span class="muted small">반동 보정</span><b>'+sg(s.r,1)+'</b></div><div><span class="muted small">무게</span><b>'+s.wt+'kg</b></div><div><span class="muted small">추가 부품값</span><b>'+nf(s.c)+"₽</b>"+(s.u?' <span class="dn small">(구매 불가 '+s.u+"개)</span>":"")+"</div>";
+document.getElementById("mtot").innerHTML='<div><span class="muted small">인체공학</span><b>'+Math.min(100,s.e)+"</b>"+dlt(Math.min(100,s.e),Math.min(100,b.e))+(s.e>100?' <span class="muted small">(계산 '+s.e+")</span>":"")+'</div><div><span class="muted small">수직 반동</span><b>'+s.rv+"</b>"+dlt(s.rv,b.rv,1)+'</div><div><span class="muted small">수평 반동</span><b>'+s.rh+"</b>"+dlt(s.rh,b.rh,1)+'</div><div><span class="muted small">반동 보정</span><b>'+sg(s.r,1)+'</b></div><div><span class="muted small">무게</span><b>'+s.wt+'kg</b></div><div><span class="muted small">추가 부품값</span><b>'+nf(s.c)+"₽</b>"+(s.u?' <span class="dn small">(구매 불가 '+s.u+"개)</span>":"")+"</div>";
 document.getElementById("mtree").innerHTML=rows(D.w.i,cur,0,"");
 document.getElementById("mwarn").innerHTML=cl.length?'<div class="note warn">⚠ 같이 달 수 없는 부품: '+cl.map(function(p){return esc(M(p[0])[0])+" ↔ "+esc(M(p[1])[0])}).join(", ")+"</div>":"";
 var li=[];walkS(D.w.i,cur,function(id,dp,s){var m=M(id)||[];li.push('<tr><td><input type="checkbox" aria-label="장착" /></td><td class="small muted" style="padding-left:'+(6+dp*14)+'px">'+esc(D.sn[s[0]]||s[0])+'</td><td>'+esc(m[0]||id)+(m[1]&&m[1]!==m[0]?' <span class="muted small">('+esc(m[1])+")</span>":"")+'</td><td class="small">'+where(id)+"</td></tr>")});
@@ -3946,7 +3953,7 @@ function defName(){var lb={def:"기본 조립",rec:"반동 최소",bal:"균형",
 function savePreset(){var inp=document.getElementById("mpname"),nm=(inp.value||"").trim().slice(0,40)||defName(),all=allP(),l=(all[D.w.i]||[]).filter(function(x){return x.n!==nm}),st=stats(cur);
 l.unshift({n:nm,e:enc(cur),s:src,k:ck,st:[st.e,st.rv,st.rh],at:Date.now(),w:D.w.n,p:location.pathname});if(l.length>30)l.length=30;all[D.w.i]=l;S(PK,all);inp.value="";renderP();ev("mods_save")}
 function renderP(){var el=document.getElementById("mplist");if(!el)return;var l=allP()[D.w.i]||[];
-el.innerHTML=l.length?'<div class="tbl"><table class="tot"><thead><tr><th>내 프리셋</th><th>인체공학 / 수직 반동</th><th></th></tr></thead><tbody>'+l.map(function(x,i){return '<tr><td><b>'+esc(x.n)+'</b> <span class="muted small">'+new Date(x.at).toLocaleDateString()+'</span></td><td class="n">'+x.st[0]+" / "+x.st[1]+'</td><td class="n"><button type="button" class="btn sm" data-pl="'+i+'">불러오기</button> <button type="button" class="btn sm ghost" data-pc="'+i+'">링크</button> <button type="button" class="btn sm ghost" data-pd="'+i+'">삭제</button></td></tr>'}).join("")+"</tbody></table></div>":'<p class="small muted">저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).</p>'}
+el.innerHTML=l.length?'<div class="tbl"><table class="tot"><thead><tr><th>내 프리셋</th><th>인체공학 / 수직 반동</th><th></th></tr></thead><tbody>'+l.map(function(x,i){return '<tr><td><b>'+esc(x.n)+'</b> <span class="muted small">'+new Date(x.at).toLocaleDateString()+'</span></td><td class="n">'+Math.min(100,x.st[0])+" / "+x.st[1]+'</td><td class="n"><button type="button" class="btn sm" data-pl="'+i+'">불러오기</button> <button type="button" class="btn sm ghost" data-pc="'+i+'">링크</button> <button type="button" class="btn sm ghost" data-pd="'+i+'">삭제</button></td></tr>'}).join("")+"</tbody></table></div>":'<p class="small muted">저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).</p>'}
 function copyTxt(t,b,ok){try{navigator.clipboard.writeText(t).then(function(){b.textContent=ok})}catch(x){prompt("",t)}}
 function mark(){root.querySelectorAll("[data-k]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-k")===ck)});root.querySelectorAll("[data-src]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-src")===src)})}
 function apply(k){if(k==="def"){cur=copy(D.d);lam=0.3}else{var b=D.b[k+"-"+src];if(!b)return;cur=copy(b.t);lam=b.lam||0.3}ck=k;mark();render()}
@@ -3975,7 +3982,7 @@ MODS_INDEX_JS = """<script>
 (function(){var box=document.getElementById("myp");if(!box)return;var a;try{a=JSON.parse(localStorage.getItem("guide.mods.presets"))||{}}catch(e){a={}}
 var rows=[];Object.keys(a).forEach(function(w){(a[w]||[]).forEach(function(x){rows.push(x)})});if(!rows.length)return;rows.sort(function(x,y){return y.at-x.at});
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-box.innerHTML='<h2>내 프리셋 <span class="muted small">'+rows.length+'개 · 이 브라우저</span></h2><div class="tbl"><table class="tot"><thead><tr><th>무기</th><th>프리셋</th><th>인체공학 / 수직 반동</th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.w)+'</td><td><a href="'+esc(x.p)+'?b='+esc(x.e)+'#mb">'+esc(x.n)+'</a></td><td class="n">'+x.st[0]+" / "+x.st[1]+"</td></tr>"}).join("")+"</tbody></table></div>";box.hidden=false})();
+box.innerHTML='<h2>내 프리셋 <span class="muted small">'+rows.length+'개 · 이 브라우저</span></h2><div class="tbl"><table class="tot"><thead><tr><th>무기</th><th>프리셋</th><th>인체공학 / 수직 반동</th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.w)+'</td><td><a href="'+esc(x.p)+'?b='+esc(x.e)+'#mb">'+esc(x.n)+'</a></td><td class="n">'+Math.min(100,x.st[0])+" / "+x.st[1]+"</td></tr>"}).join("")+"</tbody></table></div>";box.hidden=false})();
 (function(){var q=document.getElementById("mq");if(!q)return;var rows=[].slice.call(document.querySelectorAll("#mlist2 tr[data-s]"));
 q.addEventListener("input",function(){var v=q.value.trim().toLowerCase().replace(/\\s+/g,"");rows.forEach(function(r){r.style.display=!v||r.getAttribute("data-s").indexOf(v)>=0?"":"none"});
 document.querySelectorAll("#mlist2 section").forEach(function(s){s.style.display=[].some.call(s.querySelectorAll("tr[data-s]"),function(r){return r.style.display!=="none"})?"":"none"})})})();
@@ -4001,24 +4008,24 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
         for k, label in MOD_BUILDS:
             ba, bt = b[f"{k}-all"]["stats"], b[f"{k}-trader"]["stats"]
             summary.append(f'<tr><td><a href="#b-{k}">{label}</a></td>' + _mod_stat_cells(ba, ds)
-                           + f'<td class="n small">{bt["e"]:g} / {bt["rv"]} · {fmt_int(bt["cost"])}₽</td></tr>')
+                           + f'<td class="n small">{_eg(bt["e"])} / {bt["rv"]} · {fmt_int(bt["cost"])}₽</td></tr>')
         secs = []
         for k, label in MOD_BUILDS:
             ba, bt = b[f"{k}-all"], b[f"{k}-trader"]
             same = ba["tree"] == bt["tree"]
             secs.append(
-                f'<section class="box" id="b-{k}"><h2>{label} <span class="muted small">인체공학 {ba["stats"]["e"]:g} · 수직 반동 {ba["stats"]["rv"]} · 반동 {_mod_sign(ba["stats"]["r"] / 100, True)}</span></h2>'
+                f'<section class="box" id="b-{k}"><h2>{label} <span class="muted small">인체공학 {_eg(ba["stats"]["e"])} · 수직 반동 {ba["stats"]["rv"]} · 반동 {_mod_sign(ba["stats"]["r"] / 100, True)}</span></h2>'
                 f'<p class="small muted">{MOD_BUILD_NOTE[k]} 부품값 {fmt_int(ba["stats"]["cost"])}₽(플리마켓·상인 중 싼 쪽, 기본 포함 부품 0₽).</p>'
                 + _mod_build_table(ctx, md, wid, ba["tree"], "all")
                 + f'<p class="small"><button type="button" class="btn sm" data-load="{k}-all">이 조립을 모딩 시뮬레이터에 넣기</button> '
                 + (f'<span class="muted">상인 현금 구매만으로도 같은 조립입니다.</span>' if same else
                    f'<button type="button" class="btn sm ghost" data-load="{k}-trader">상인만 버전을 모딩 시뮬레이터에 넣기</button> '
-                   f'<span class="muted">상인만: 인체공학 {bt["stats"]["e"]:g} · 수직 반동 {bt["stats"]["rv"]} · {fmt_int(bt["stats"]["cost"])}₽</span>')
+                   f'<span class="muted">상인만: 인체공학 {_eg(bt["stats"]["e"])} · 수직 반동 {bt["stats"]["rv"]} · {fmt_int(bt["stats"]["cost"])}₽</span>')
                 + '</p></section>')
         top_slots = "".join(f'<li>{e(mod_slot_name(ctx, s[0]))} <span class="muted small">{len(data["L"][s[2]])}종{" · 필수" if s[1] else ""}</span></li>'
                             for s in data["w"]["sl"])
         body = (f'<h1><span class="wn">{e(name)}</span> 모딩 추천 <span class="h1en">{e(en)}</span></h1>'
-                f'<p class="sub">{e(dict(MOD_CATS).get(mod_cat(ctx, it), ""))} · 기본 인체공학 {data["w"]["e"]:g} · 기본 반동 {data["w"]["rv"]}/{data["w"]["rh"]} · 달 수 있는 부품 {n_parts}종 · 데이터 기준 {e(ctx.stamp)}</p>'
+                f'<p class="sub">{e(dict(MOD_CATS).get(mod_cat(ctx, it), ""))} · 기본 인체공학 {_eg(data["w"]["e"])} · 기본 반동 {data["w"]["rv"]}/{data["w"]["rh"]} · 달 수 있는 부품 {n_parts}종 · 데이터 기준 {e(ctx.stamp)}</p>'
                 + stale_html(ctx.stamp)
                 + '<p class="mjump"><a class="btn sm" href="#mb">🔧 모딩 시뮬레이터 바로가기</a> <span class="muted small">칸마다 부품을 바꿔 보며 수치를 바로 계산 · 프리셋 저장</span></p>'
                 + '<div class="note key"><b>보는 법</b> — 아래 세 조립은 부품 수치로 계산한 추천입니다. 표의 숫자는 조립을 마친 총의 <b>인체공학·수직 반동·수평 반동·무게·부품값</b>이고, 괄호는 기본 조립과의 차이입니다. '
@@ -4040,12 +4047,12 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
                   '<p class="small muted">선택 상자의 부품은 지금 기준(마지막으로 누른 조립)의 점수 순입니다. 칸을 바꾸면 그 아래 칸은 비고, 필수 칸만 자동으로 채웁니다. 조립은 이 브라우저에 저장됩니다.</p></section>'
                 + f'<section class="box"><h2>이 총에 바로 다는 칸 <span class="muted small">{len(data["w"]["sl"])}개</span></h2><ul class="cols3">{top_slots}</ul></section>'
                 + '<div class="note"><b>계산 방식</b> — 인체공학 = 총 기본값 + 부품 값의 합, 반동 = 총 기본 반동 × (1 + 부품 반동 보정의 합). '
-                  '이 공식은 tarkov.dev 기본 조립 163정의 수치와 ±1 이내로 맞는 것을 확인했습니다. 탄약의 반동 보정·숙련도·무게 초과 페널티는 넣지 않았습니다(탄약은 <a href="/guide/ammo/">탄약표</a>). '
-                  '인체공학 100을 넘는 값은 추천 계산에서 더 쳐주지 않습니다. 같이 달 수 없는 부품(충돌)은 피해서 고르지만, 칸 위치 충돌 일부는 데이터에 없어 게임에서 막힐 수 있습니다. '
+                  '게임 무기 화면과 같은 계산이고(공개된 게임 코드 분석 기준, 2025~2026 패치 노트에 계산식 변경 없음), 탄약의 반동 보정·숙련도·무게 초과 페널티는 게임 무기 화면처럼 넣지 않았습니다(탄약은 <a href="/guide/ammo/">탄약표</a>). '
+                  '게임은 인체공학을 0~100으로 잘라 표시하고 조준 효과도 100에서 멈추므로, 100을 넘는 값은 100으로 보여 주고 추천에서도 더 쳐주지 않습니다. 같이 달 수 없는 부품(충돌)은 피해서 고르지만, 칸 위치 충돌 일부는 데이터에 없어 게임에서 막힐 수 있습니다. '
                   '가격은 플리마켓 24시간 평균(PVP)과 상인 현금 구매가이며 물물교환은 넣지 않았습니다.</div>')
         title = f"{name} 모딩 추천 — 반동 최소·인체공학 최대 조립과 부품 가격 | 탈콥 가이드"
-        desc = (f"타르코프 {name} 무기 모딩: 기본 조립 인체공학 {ds['e']:g}·수직 반동 {ds['rv']} → 반동 최소 {b['rec-all']['stats']['rv']}, "
-                f"균형 인체공학 {b['bal-all']['stats']['e']:g}, 인체공학 최대 {b['erg-all']['stats']['e']:g}. 부품별 상인·플리 가격, 칸별 호환 부품 {n_parts}종 모딩 시뮬레이터.")
+        desc = (f"타르코프 {name} 무기 모딩: 기본 조립 인체공학 {_eg(ds['e'])}·수직 반동 {ds['rv']} → 반동 최소 {b['rec-all']['stats']['rv']}, "
+                f"균형 인체공학 {_eg(b['bal-all']['stats']['e'])}, 인체공학 최대 {_eg(b['erg-all']['stats']['e'])}. 부품별 상인·플리 가격, 칸별 호환 부품 {n_parts}종 모딩 시뮬레이터.")
         html_text = page(ctx, path=path, title=title, desc=desc, body=body, nav="mods",
                          crumbs=[("무기 모딩", "/guide/mods/"), (name, None)], scripts=MODS_JS)
         write(out, path, html_text, urls)
@@ -4053,10 +4060,10 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
         dj.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         s = (name + " " + en + " " + (info.get("s") or "")).lower().replace(" ", "")
         by_cat.setdefault(mod_cat(ctx, it), []).append(
-            f'<tr data-s="{e(s)}"><td><a href="{lang_path(path)}">{ctx.chip(wid)}</a></td><td class="n">{ds["e"]:g} / {ds["rv"]}</td>'
-            f'<td class="n">{b["rec-all"]["stats"]["e"]:g} / <b>{b["rec-all"]["stats"]["rv"]}</b></td>'
-            f'<td class="n">{b["bal-all"]["stats"]["e"]:g} / {b["bal-all"]["stats"]["rv"]}</td>'
-            f'<td class="n"><b>{b["erg-all"]["stats"]["e"]:g}</b> / {b["erg-all"]["stats"]["rv"]}</td></tr>')
+            f'<tr data-s="{e(s)}"><td><a href="{lang_path(path)}">{ctx.chip(wid)}</a></td><td class="n">{_eg(ds["e"])} / {ds["rv"]}</td>'
+            f'<td class="n">{_eg(b["rec-all"]["stats"]["e"])} / <b>{b["rec-all"]["stats"]["rv"]}</b></td>'
+            f'<td class="n">{_eg(b["bal-all"]["stats"]["e"])} / {b["bal-all"]["stats"]["rv"]}</td>'
+            f'<td class="n"><b>{_eg(b["erg-all"]["stats"]["e"])}</b> / {b["erg-all"]["stats"]["rv"]}</td></tr>')
     secs = []
     for k, label in MOD_CATS:
         rows = by_cat.get(k)
@@ -4179,7 +4186,230 @@ h.querySelector(".x").addEventListener("click",function(){h.remove()});document.
 })()"""
 
 
-for _n in ("QUEST_JS", "ITEMS_JS", "REWARDS_JS", "HUNT_JS", "FAV_JS", "HIDEOUT_JS", "SYNC_JS"):  # 완료 퀘스트 공용 함수 넣기
+# ─────────────────────────────────────────────────────────────
+# 출정 준비물(11-06) — /guide/raid/: 맵을 고르면 '이번 출정에 넣은 퀘스트'(기본=오버레이 연동의 진행 중)에 필요한
+# 퀘스트 아이템(설치·표시·사용, 합산 개수)·열쇠·장비/무기 조건·레이드에서 주울 퀘스트템·퀘스트 탈출과
+# 탈출구 준비물(초록 조명탄·등반 장비·차량 요금·유료/아이템 탈출)·내 기본 준비물을 한 체크리스트로.
+# 완료·진행 중은 다른 페이지와 같은 저장소(gdone·gsync), 체크는 이 브라우저(guide.raid.*)에만.
+# ─────────────────────────────────────────────────────────────
+RAID_FLARE = "6217726288ed9f0845317459"  # RSP-30 초록 신호탄(탈출용)
+RAID_CLIMB = ["5c0126f40db834002a125382", "5c12688486f77426843c7d32"]  # Red Rebel 아이스 바일 + Paracord
+RAID_ROUBLE = "5449016a4bdc2d6f028b456f"
+
+
+def _obj_maps(ctx: Ctx, o: dict) -> list[str]:
+    """목표 하나가 걸린 대표 지도 id — 빈 목록 = 어느 지도든"""
+    ids = [m.get("id") if isinstance(m, dict) else m for m in o.get("maps") or []]
+    ids += [z.get("map") for z in o.get("zones") or []]
+    ids += [loc.get("map") for loc in o.get("possibleLocations") or []]
+    out = []
+    for m in ids:
+        slug = (ctx.maps.get(m) or {}).get("normalizedName")
+        if not slug:
+            continue
+        b = ctx.map_by_slug.get(MAP_VARIANTS.get(slug, slug), m)
+        if b not in out:
+            out.append(b)
+    return out
+
+
+def _ids(v) -> list[str]:
+    """아이템 목록을 id 로 — 데이터가 id 문자열 또는 {id, name} 꼴로 섞여 온다(wearing·notWearing 은 dict)"""
+    return [x.get("id") if isinstance(x, dict) else x for x in (v or []) if x]
+
+
+def raid_data(ctx: Ctx) -> dict:
+    used: set = set()
+    qs = []
+    for tid, t in ctx.tasks.items():
+        rows = []
+        for o in t.get("objectives") or []:
+            om = _obj_maps(ctx, o)
+            ty = o.get("type")
+            cnt = int(o.get("count") or 1)
+            desc = ctx.tk(o.get("description"), "") or ""
+            if ty == "plantItem" and o.get("items"):
+                rows.append({"k": "i", "ids": _ids(o["items"])[:6], "n": cnt, "w": "p", "m": om})
+            elif ty == "mark" and o.get("markerItem"):
+                mk = o["markerItem"].get("id") if isinstance(o["markerItem"], dict) else o["markerItem"]
+                rows.append({"k": "i", "ids": [mk], "n": 1, "w": "m", "m": om})
+            elif ty == "useItem" and o.get("useAny"):
+                rows.append({"k": "i", "ids": _ids(o["useAny"])[:6], "n": cnt, "w": "u", "m": om})
+            elif ty == "plantQuestItem" and o.get("questItem"):
+                qi = o["questItem"].get("id") if isinstance(o["questItem"], dict) else o["questItem"]
+                rows.append({"k": "q", "id": qi, "n": cnt, "m": om})
+            elif ty == "findQuestItem" and o.get("questItem"):
+                qi = o["questItem"].get("id") if isinstance(o["questItem"], dict) else o["questItem"]
+                rows.append({"k": "f", "id": qi, "n": cnt, "m": om})
+            elif ty == "extract" and o.get("exitName"):
+                rows.append({"k": "x", "x": o["exitName"], "d": desc, "m": om})
+            wear = [_ids(g) for g in (o.get("wearing") or []) if g]
+            nwear = _ids(o.get("notWearing"))
+            gun = _ids(o.get("usingWeapon"))
+            gmods = [_ids(g) for g in (o.get("usingWeaponMods") or []) if g]
+            hrs = (o.get("timeFromHour") or 0, o.get("timeUntilHour") or 0)
+            if wear or gun or gmods or nwear or any(hrs):
+                rows.append({"k": "c", "d": desc, "m": om, "wear": [g[:6] for g in wear[:4]], "nw": nwear[:8], "gun": gun[:40], "gm": [g[:4] for g in gmods[:4]]})
+                used.update(nwear[:8])
+                used.update(i for g in wear[:4] for i in g[:6])
+                used.update(gun[:40])
+                used.update(i for g in gmods[:4] for i in g[:4])
+            for g in o.get("requiredKeys") or []:
+                if g:
+                    rows.append({"k": "key", "ids": _ids(g)[:6], "m": om})
+        for nk in t.get("neededKeys") or []:
+            mp = nk.get("map")
+            mid = mp.get("id") if isinstance(mp, dict) else mp
+            slug = (ctx.maps.get(mid) or {}).get("normalizedName") or ""
+            bm = ctx.map_by_slug.get(MAP_VARIANTS.get(slug, slug), mid)
+            if nk.get("keys"):
+                rows.append({"k": "key", "ids": _ids(nk["keys"])[:6], "m": [bm] if bm else []})
+        if not rows:
+            continue
+        for r in rows:
+            used.update(r.get("ids") or [])
+            if r.get("id"):
+                used.add(r["id"])
+        pre = []
+        for r in t.get("taskRequirements") or []:
+            rid = (r.get("task") or {}).get("id") if isinstance(r.get("task"), dict) else r.get("task")
+            if rid and "complete" in (r.get("status") or ["complete"]):
+                pre.append(rid)
+        name = ctx.task_names(tid)[0] + (f' ({ctx.display_suffix[tid]})' if ctx.display_suffix.get(tid) else "")
+        qs.append({"i": tid, "n": name, "u": lang_path(ctx.task_url(tid)), "tr": ctx.trader_name(t.get("trader")),
+                   "md": ctx.task_modes.get(tid, ["pvp", "pve"]), "m": ctx.task_maps(t), "pre": pre, "r": rows})
+    used.update([RAID_FLARE, RAID_ROUBLE] + RAID_CLIMB)
+    maps, ex = [], {}
+    for mid in main_maps(ctx):
+        m = ctx.maps[mid]
+        slug = m.get("normalizedName")
+        if slug in EVENT_MAPS:  # 이벤트 기간에만 열리는 변형(오염된 연구소·공장) — 준비물 맵 목록에선 뺀다
+            continue
+        maps.append({"i": mid, "s": slug, "n": ctx.map_name(mid)})
+        rows = []
+        for e_, fac in current_extracts(ctx, slug, m)[0]:
+            tags, text, give = extract_conditions.conditions(slug, e_)
+            g = None
+            if give:
+                g = [give["id"], give["count"], 1 if give["money"] else 0]
+                used.add(give["id"])
+            rows.append({"n": ctx._loc(ctx.loc_maps, e_.get("name"), e_.get("name")), "raw": e_.get("name"), "f": fac,
+                         "t": sorted(tags), "d": text or "", "g": g})
+        ex[mid] = rows
+    items = {}
+    for i in used:
+        it = ctx.item(i)
+        if it:
+            items[i] = [it["n"], it.get("img") or ""]
+    return {"q": qs, "maps": maps, "ex": ex, "items": items, "flare": RAID_FLARE, "climb": RAID_CLIMB, "rub": RAID_ROUBLE}
+
+
+RAID_JS = r"""<script>
+(function(){/*GDONE*/var D=JSON.parse(document.getElementById("rdata").textContent),I=D.items,MP="guide.raid.map",SK="guide.raid.sel.",CK="guide.raid.chk.",BK="guide.raid.basic",XK="guide.raid.ex.";
+var qm=new URLSearchParams(location.search).get("map"),cur=gL(MP,D.maps[0].i);D.maps.forEach(function(m){if(qm&&m.s===qm)cur=m.i});if(!D.maps.some(function(m){return m.i===cur}))cur=D.maps[0].i;
+function ev(n,p){try{if(window.gtag)gtag("event",n,p||{})}catch(e){}}
+function mode(){return gL("guide.mode","pvp")==="pve"?"pve":"pvp"}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function chip(id,n){var it=I[id];return '<span class="chip">'+(it&&it[1]?'<img loading="lazy" alt="" src="'+esc(it[1])+'" width="24" height="24" />':"")+esc(it?it[0]:id)+(n>1?' <span class="cnt">×'+n+"</span>":"")+"</span>"}
+function anyOf(ids,n){return ids.map(function(i,k){return (k?'<span class="muted small"> 또는 </span>':"")+chip(i,n)}).join("")}
+function rOn(q,r){return r.m.indexOf(cur)>=0||(!r.m.length&&(!q.m.length||q.m.indexOf(cur)>=0))}
+function qOn(q){return q.md.indexOf(mode())>=0&&q.r.some(function(r){return rOn(q,r)})}
+function sel(){return gL(SK+mode(),{})}
+function chk(){return gL(CK+cur,{})}
+function xs(){return gL(XK+cur,{})}
+function cb(key,on){return '<input type="checkbox" data-c="'+esc(key)+'"'+(on?" checked":"")+" /> "}
+var W={p:"설치",m:"표시(마커)",u:"사용"};
+function render(){var done=gdone(),y=gsync(),st=(y&&y.started)||[],s=sel(),c=chk(),x=xs();
+document.querySelectorAll("#rmap button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-m")===cur)});
+var qs=D.q.filter(function(q){return qOn(q)&&!done[q.i]});
+function stOf(q){return st.indexOf(q.i)>=0?0:q.pre.every(function(p){return done[p]})?1:2}
+qs.sort(function(a,b){return stOf(a)-stOf(b)||(a.n<b.n?-1:1)});
+function inc(q){return (q.i in s)?!!s[q.i]:st.indexOf(q.i)>=0}
+var grp=[[],[],[]];qs.forEach(function(q){grp[stOf(q)].push(q)});
+var GL=["진행 중 (연동)","지금 받을 수 있음","아직 잠김 (선행 퀘스트 남음)"];
+document.getElementById("rq").innerHTML=(y?"":'<p class="note small">오버레이 연동 전이라 진행 중 퀘스트를 몰라요. 아래에서 이번 출정에 할 퀘스트를 직접 고르세요(위 🔗 연동 버튼 또는 앱의 사이트 연동하기를 쓰면 자동으로 담깁니다).</p>')
++grp.map(function(g,k){if(!g.length)return "";var body=g.map(function(q){return '<label class="rq"><input type="checkbox" data-q="'+q.i+'"'+(inc(q)?" checked":"")+' /> <a href="'+q.u+'">'+esc(q.n)+'</a> <span class="muted small">'+esc(q.tr)+"</span></label>"}).join("");
+return k===2?'<details><summary>'+GL[k]+' <span class="muted small">'+g.length+"개</span></summary>"+body+"</details>":'<h3>'+GL[k]+' <span class="muted small">'+g.length+"개</span></h3>"+body}).join("")||'<p class="muted">이 맵에 준비물이 필요한 남은 퀘스트가 없어요.</p>';
+var on=qs.filter(inc),agg={},keys={},cond=[],find=[],qx=[],bring=[];
+on.forEach(function(q){q.r.forEach(function(r){if(!rOn(q,r))return;
+if(r.k==="i"){var k=r.ids.slice().sort().join("|")+":"+r.w;var a=agg[k]||(agg[k]={ids:r.ids,n:0,w:r.w,q:[]});a.n+=r.n;if(a.q.indexOf(q.n)<0)a.q.push(q.n)}
+else if(r.k==="key"){var kk=r.ids.slice().sort().join("|");var b=keys[kk]||(keys[kk]={ids:r.ids,q:[]});if(b.q.indexOf(q.n)<0)b.q.push(q.n)}
+else if(r.k==="c")cond.push([q,r]);else if(r.k==="f")find.push([q,r]);else if(r.k==="q")bring.push([q,r]);else if(r.k==="x")qx.push([q,r])})});
+var L=[],tot=0,got=0;function line(key,html,sub){tot++;if(c[key])got++;L.push('<li class="'+(c[key]?"done":"")+'"><label>'+cb(key,c[key])+html+"</label>"+(sub?'<div class="muted small">'+sub+"</div>":"")+"</li>")}
+var sec=[];function flush(t){if(L.length)sec.push("<h3>"+t+'</h3><ul class="plain rlist">'+L.join("")+"</ul>");L=[]}
+Object.keys(agg).forEach(function(k){var a=agg[k];line("i:"+k,anyOf(a.ids,a.n)+' <span class="badge">'+W[a.w]+"</span>",a.q.join(", "))});
+bring.forEach(function(p){line("q:"+p[1].id,chip(p[1].id,p[1].n),p[0].n)});flush("퀘스트 아이템 챙기기");
+Object.keys(keys).forEach(function(k){var a=keys[k];line("k:"+k,anyOf(a.ids,1),a.q.join(", "))});flush("열쇠");
+cond.forEach(function(p,i){var r=p[1],h=esc(r.d||"");if(r.wear.length)h+='<div class="chips">착용: '+r.wear.map(function(g){return g.map(function(i){return chip(i)}).join("+")}).join('<span class="muted small"> 또는 </span>')+"</div>";
+if(r.nw.length)h+='<div class="chips">착용 금지: '+r.nw.map(function(i){return chip(i)}).join("")+"</div>";
+if(r.gun.length)h+='<div class="chips">무기: '+r.gun.slice(0,6).map(function(i){return chip(i)}).join("")+(r.gun.length>6?' <span class="muted small">외 '+(r.gun.length-6)+"정</span>":"")+"</div>";
+if(r.gm.length)h+='<div class="chips">부품: '+r.gm.map(function(g){return g.map(function(i){return chip(i)}).join("+")}).join('<span class="muted small"> 또는 </span>')+"</div>";
+line("c:"+p[0].i+":"+i,h,p[0].n)});flush("장비·무기 조건");
+var exs=D.ex[cur]||[];
+qx.forEach(function(p){var e=exs.filter(function(z){return z.raw===p[1].x})[0];line("x:"+p[0].i+":"+p[1].x,"탈출: <b>"+esc(e?e.n:p[1].x)+"</b>"+(p[1].d?' <span class="muted small">'+esc(p[1].d)+"</span>":""),p[0].n)});
+exs.forEach(function(e){if(!x[e.raw])return;var t=e.t;
+if(t.indexOf("flare")>=0)line("xf:"+e.raw,chip(D.flare)+' <span class="badge">조명탄 탈출</span>',e.n);
+if(t.indexOf("climb")>=0)line("xc:"+e.raw,D.climb.map(function(i){return chip(i)}).join("+")+' <span class="badge">등반 탈출</span>',e.n+" · "+e.d);
+if(t.indexOf("vex")>=0)line("xv:"+e.raw,chip(D.rub)+' <span class="badge">차량 요금</span>',e.n+" · 인원·스캐브 카르마에 따라 요금이 달라요");
+else if(e.g)line("xg:"+e.raw,chip(e.g[0],e.g[1])+' <span class="badge">'+(e.g[2]?"탈출 요금":"탈출에 낼 아이템")+"</span>",e.n);
+if(t.indexOf("nobag")>=0||t.indexOf("key")>=0||t.indexOf("lever")>=0||t.indexOf("coop")>=0||t.indexOf("time")>=0)line("xn:"+e.raw,"<b>"+esc(e.n)+"</b> — "+esc(e.d),"")});flush("탈출 준비");
+find.forEach(function(p){line("f:"+p[1].id,chip(p[1].id,p[1].n),p[0].n)});flush("레이드에서 주울 퀘스트템");
+var bs=gL(BK,[]);bs.forEach(function(b,i){line("b:"+b,esc(b)+' <button type="button" class="linkish" data-del="'+i+'">빼기</button>',"")});flush("내 기본 준비물");
+document.getElementById("rp").innerHTML=(sec.join("")||'<p class="muted">이번 출정에 넣은 퀘스트가 없어요. 위에서 퀘스트를 고르거나 아래 탈출구·기본 준비물을 추가하세요.</p>');
+document.getElementById("rsum").textContent=tot?("챙길 것 "+tot+"개 중 "+got+"개 챙김"):"";
+document.getElementById("rx").innerHTML=exs.filter(function(e){return e.t.length||e.g}).map(function(e){return '<label class="rq"><input type="checkbox" data-x="'+esc(e.raw)+'"'+(x[e.raw]?" checked":"")+' /> <b>'+esc(e.n)+'</b> <span class="muted small">'+esc(e.d||(e.g?(e.g[2]?"유료":"아이템 필요"):""))+"</span></label>"}).join("")||'<p class="muted small">이 맵엔 준비물이 필요한 탈출구가 없어요.</p>';
+var nm=D.maps.filter(function(m){return m.i===cur})[0];document.getElementById("rmapn").textContent=nm?nm.n:""}
+function plain(){var out=[];document.querySelectorAll("#rp h3").forEach(function(h){out.push("["+h.textContent+"]");var ul=h.nextElementSibling;if(ul)ul.querySelectorAll("li").forEach(function(li){var l=li.querySelector("label");out.push((li.classList.contains("done")?"[x] ":"[ ] ")+l.textContent.replace(/\s+/g," ").replace("빼기","").trim())})});return out.join("\n")}
+document.getElementById("raid").addEventListener("change",function(e){var t=e.target,k;
+if((k=t.getAttribute("data-q"))){var s=sel();s[k]=t.checked?1:0;gS(SK+mode(),s);ev("raid_quest")}
+else if((k=t.getAttribute("data-c"))){var c=chk();if(t.checked)c[k]=1;else delete c[k];gS(CK+cur,c)}
+else if((k=t.getAttribute("data-x"))){var x=xs();if(t.checked)x[k]=1;else delete x[k];gS(XK+cur,x)}else return;render()});
+document.getElementById("raid").addEventListener("click",function(e){var t=e.target,m=t.getAttribute("data-m"),d=t.getAttribute("data-del");
+if(m){cur=m;gS(MP,cur);ev("raid_map",{raid_map:(D.maps.filter(function(z){return z.i===m})[0]||{}).s});render()}
+if(d!=null){var bs=gL(BK,[]);bs.splice(+d,1);gS(BK,bs);render()}
+if(t.id==="radd"){var inp=document.getElementById("rbin"),v=(inp.value||"").trim().slice(0,60);if(v){var bs2=gL(BK,[]);if(bs2.indexOf(v)<0)bs2.push(v);gS(BK,bs2);inp.value="";render()}}
+if(t.id==="rreset"){gS(CK+cur,{});render()}
+if(t.id==="rcopy"){var txt=plain();try{navigator.clipboard.writeText(txt).then(function(){t.textContent="복사됨 ✓"})}catch(x){prompt("",txt)}ev("raid_copy")}});
+document.getElementById("rbin").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();document.getElementById("radd").click()}});
+document.addEventListener("guide-sync",render);render()})();
+</script>"""
+
+
+def raid_page(ctx: Ctx) -> tuple[str, str, int]:
+    data = raid_data(ctx)
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    per_map = []
+    for m in data["maps"]:
+        n = sum(1 for q in data["q"] if m["i"] in q["m"])
+        per_map.append(f'<li><a href="?map={e(m["s"])}">{e(m["n"])}</a> <span class="muted small">퀘스트 {n}개</span></li>')
+    body = (f'<h1>출정 준비물 <span class="h1en">Raid checklist</span></h1>'
+            f'<p class="sub">맵을 고르면 지금 하는 퀘스트에 필요한 아이템·열쇠·탈출 준비물을 한 목록으로 · 퀘스트 {len(data["q"])}개 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note key"><b>쓰는 법</b> — ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담김) '
+            '③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템이 합쳐져 나옵니다. ④ 쓸 탈출구를 고르면 조명탄·등반 장비·차량 요금도 목록에 들어갑니다. '
+            '체크 표시는 이 브라우저에만 저장됩니다.</div>'
+            '<div id="raid">'
+            '<div class="controls"><span class="seg" id="rmap">'
+            + "".join(f'<button type="button" data-m="{e(m["i"])}">{e(m["n"])}</button>' for m in data["maps"])
+            + '</span></div>'
+            '<section class="box"><h2>① 이번 출정에 할 퀘스트 <span class="muted small" id="rmapn"></span></h2><div id="rq"><p class="muted">불러오는 중…</p></div></section>'
+            '<section class="box"><h2>② 쓸 탈출구 <span class="muted small">준비물이 필요한 곳만</span></h2><div id="rx"></div></section>'
+            '<section class="box rprep"><h2>③ 챙길 것 <span class="muted small" id="rsum"></span></h2><div id="rp"></div>'
+            '<div class="controls"><input id="rbin" type="text" maxlength="60" placeholder="내 기본 준비물 추가 (예: 지혈대 2개, 여분 탄창 3개)" />'
+            '<button type="button" class="btn sm" id="radd">추가</button>'
+            '<button type="button" class="btn sm ghost" id="rcopy">목록 복사</button><button type="button" class="btn sm ghost" id="rreset">이 맵 체크 지우기</button></div></section>'
+            '</div>'
+            f'<script id="rdata" type="application/json">{payload}</script>'
+            '<noscript><p class="note">이 페이지는 자바스크립트가 필요합니다.</p></noscript>'
+            f'<section class="box"><h2>맵별 바로가기</h2><ul class="cols3">{"".join(per_map)}</ul></section>'
+            '<div class="note">퀘스트 목표의 설치·표시·사용 아이템, 필요 열쇠, 착용·무기 조건은 tarkov.dev 공개 데이터 기준이고, 탈출구 조건은 공식 위키 표를 옮긴 것입니다. '
+            '차량 탈출 요금은 인원·스캐브 카르마에 따라 달라 금액을 적지 않았습니다. 레이드에서 찾아 제출하는(인레이드) 아이템은 가져갈 수 없어 목록에 넣지 않았습니다.</div>')
+    path = "/guide/raid/"
+    title = "타르코프 출정 준비물 — 맵별 퀘스트 아이템·열쇠·탈출 준비 체크리스트 | 탈콥 가이드"
+    desc = "타르코프 맵을 고르면 진행 중 퀘스트에 필요한 와이파이 카메라·MS2000 마커 개수, 열쇠, 착용·무기 조건, 조명탄·등반 장비·차량 요금 같은 탈출 준비물을 한 체크리스트로."
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="raid", crumbs=[("출정 준비물", None)], scripts=RAID_JS), len(data["maps"])
+
+
+for _n in ("QUEST_JS", "ITEMS_JS", "REWARDS_JS", "HUNT_JS", "FAV_JS", "HIDEOUT_JS", "SYNC_JS", "RAID_JS"):  # 완료 퀘스트 공용 함수 넣기
     assert globals()[_n].count("/*GDONE*/") == 1, _n
     globals()[_n] = globals()[_n].replace("/*GDONE*/", DONE_FN)
 
@@ -4256,9 +4486,11 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
         gs_q = h.count('<td class="q"')  # 퀘스트마다 한 칸(예전 rowspan 표 구조로 세면 0 이 나왔다)
         gs_p = h.count('<tr data-id="')
     mods_n = mods_pages(ctx, out, urls)  # 무기 모딩(11-05)
+    p, h, raid_n = raid_page(ctx)  # 출정 준비물(11-06)
+    write(out, p, h, urls)
     counts = {"quests": len(ctx.tasks), "items": items_n, "rewards": rewards_n, "qitems": qitems_n, "stations": len(ctx.hideout_reg),
               "maps": len(main_maps(ctx)), "bosses": bosses_n, "crafts": crafts_n, "ammo": ammo_n,
-              "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, "mods": mods_n, **extra_counts}
+              "promo": len(PROMO_CODES), "gunsmith_q": gs_q, "gunsmith_p": gs_p, "mods": mods_n, "raid": raid_n, **extra_counts}
     p, h = hub_page(ctx, counts)
     write(out, p, h, urls)
     return urls

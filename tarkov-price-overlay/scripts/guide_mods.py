@@ -147,7 +147,7 @@ class Modder:
             stack = stack | {iid}
             v = self.own(iid, obj)
             for name, req, allowed in self.slots.get(iid, []):
-                vs = [best(c, stack) for c in self.slot_pool(name, allowed, src, min_cap, ban) if c not in stack]
+                vs = [best(c, stack) for c in self.slot_pool(name, allowed, src, min_cap, ban, req) if c not in stack]
                 must = req or is_slot_mag(name)
                 if vs:
                     v += max(vs) if must else max(0.0, max(vs))
@@ -161,7 +161,7 @@ class Modder:
             out = {}
             for idx, (name, req, allowed) in enumerate(self.slots.get(host, [])):
                 must = req or is_slot_mag(name)
-                pool = [c for c in self.slot_pool(name, allowed, src, min_cap, ban) if c not in stack]
+                pool = [c for c in self.slot_pool(name, allowed, src, min_cap, ban, req) if c not in stack]
                 fallback = False
                 if not pool and must:  # 구할 수 있는 게 없으면 아무거나(표시만) — 필수 칸을 비우면 총이 안 된다
                     pool = [c for c in self.cands(allowed) if c not in stack]
@@ -193,14 +193,71 @@ class Modder:
         → 고른 것 중 충돌 목록이 있는 부품을 하나씩 빼고 다시 돌려 가장 좋은 것, 그리고 기본 조립(늘 가능한 조합)과도 비교한다."""
         tree, flags = self.run(wid, lam, src, min_cap)
         cands = [(self.tree_score(tree, lam), tree, flags)]
-        for c in {c for _, c, _ in self.walk(tree) if c in self.conf}:
-            t2, f2 = self.run(wid, lam, src, min_cap, frozenset({c}))
+        bans = set()
+        for c, allowed in self.nodes(wid, tree):
+            if c in self.conf:
+                bans.add(frozenset({c}))
+                # 그 칸의 충돌 후보 전부 — 하나만 빼면 같은 칸의 다른 일체형(손잡이+개머리판)을 또 골라 같은 손해(M4A1 CQR→ADAR, 11-06)
+                bans.add(frozenset(x for x in self.cands(allowed) if x in self.conf))
+        for ban in bans:
+            t2, f2 = self.run(wid, lam, src, min_cap, ban)
             if self.complete(wid, t2):  # 빼고 돌린 결과가 필수 칸을 못 채우면(부품이 빠져 점수만 높음) 버린다 — G36 마운트 사고
                 cands.append((self.tree_score(t2, lam), t2, f2))
         if dtree:
             cands.append((self.tree_score(dtree, lam) - 1e-9, dtree, {"unavail": []}))  # 같으면 계산한 쪽
         best = max(cands, key=lambda x: x[0])
         return best[1], best[2]
+
+    def nodes(self, host, tree):
+        """(부품, 그 부품이 꽂힌 칸의 허용 목록) — 트리 전체"""
+        sl = self.slots.get(host, [])
+        for idx, (c, sub) in tree.items():
+            i = int(idx)
+            yield c, (sl[i][2] if i < len(sl) else [])
+            yield from self.nodes(c, sub)
+
+    def improve(self, wid, tree, src, min_cap, target):
+        """마무리 탐색 — 끝단 부품(하위 칸 없음)을 같은 칸의 다른 부품으로 바꾸거나(필수 아니면) 빼 보며,
+        인체공학 target 이상을 지키면서 반동이 가장 많이 줄어드는 한 수를 반복. λ 사다리가 거칠어 목표를 크게 넘던 것(HK416 109)을 줄인다."""
+        import copy
+        tree = copy.deepcopy(tree)
+        for _ in range(30):
+            st = self.stats(wid, tree, src)
+            e0, r0 = st["e"], st["r"] / 100
+            chosen = {c for _, c, _ in self.walk(tree)}
+            best = None
+
+            def scan(host, t):
+                nonlocal best
+                sl = self.slots.get(host, [])
+                for idx in list(t):
+                    c, sub = t[idx]
+                    i = int(idx)
+                    if sub:
+                        scan(c, sub)
+                        continue
+                    name, req, allowed = sl[i] if i < len(sl) else ("", True, [])
+                    must = req or is_slot_mag(name)
+                    it0 = self.items.get(c) or {}
+                    rest = chosen - {c}
+                    alts = [x for x in self.slot_pool(name, allowed, src, min_cap, req=req) if x != c and self.complete(x, {}) and not self.conflicts(x, rest)]
+                    opts = [(x, mod_e(self.items.get(x) or {}), mod_r(self.items.get(x) or {})) for x in alts]
+                    if not must:
+                        opts.append((None, 0.0, 0.0))
+                    for x, ex, rx in opts:
+                        e1 = e0 - mod_e(it0) + ex
+                        r1 = r0 - mod_r(it0) + rx
+                        if e1 >= target - 0.05 and r1 < r0 - 1e-6 and (best is None or r1 < best[0]):
+                            best = (r1, t, idx, x)
+            scan(wid, tree)
+            if not best:
+                break
+            _, t, idx, x = best
+            if x is None:
+                del t[idx]
+            else:
+                t[idx] = [x, {}]
+        return tree
 
     def complete(self, host, tree) -> bool:
         """필수 칸·탄창 칸(달 수 있는 부품이 있는 것)이 다 찼는지 — 하위 칸까지"""
@@ -214,7 +271,10 @@ class Modder:
             chosen.discard(c)
             self._drop(s, chosen)
 
-    def slot_pool(self, name, allowed, src, min_cap, ban=frozenset()):
+    def slot_pool(self, name, allowed, src, min_cap, ban=frozenset(), req=False):
+        # 조준경·전술 장비 칸(필수 아님)은 비운다 — 취향이고, 조준경 없이 링 마운트만(+인체공학 1) 달리던 것(11-06 비교 점검)
+        if not req and (name.startswith("mod_scope") or name.startswith("mod_tactical")):
+            return []
         pool = [c for c in self.cands(allowed) if c not in ban and (c in self.free or self.avail(c, src))]
         # 조준경은 취향이라 추천에 넣지 않는다(페이지 설명과 같게) — 셰이드(+인체공학)를 달려고 조준경째 고르던 것(11-06)
         # 기본 조립 조준경·필수 칸은 그대로(필수 칸이 조준경뿐이면 choose 의 대체 경로가 채운다)
@@ -310,9 +370,22 @@ class Modder:
             top = min(100.0, max(x[3]["e"] for x in ladder))
 
             def first_with(target):
-                for x in ladder:
+                for k, x in enumerate(ladder):
                     if x[3]["e"] >= target - 0.05:
-                        return x
+                        if k == 0:
+                            return x
+                        lo, hi = ladder[k - 1][0], x[0]
+                        found = x
+                        for _ in range(6):  # 사다리 사이를 이분 탐색 — 목표를 처음 넘는 가장 작은 λ(반동을 가장 덜 포기)
+                            mid = (lo + hi) / 2
+                            t2, f2 = self.best_run(wid, mid, src, min_cap, dtree)
+                            s2 = self.stats(wid, t2, src)
+                            if s2["e"] >= target - 0.05:
+                                hi, found = mid, (mid, t2, f2, s2)
+                            else:
+                                lo = mid
+                        t3 = self.improve(wid, found[1], src, min_cap, target)
+                        return (found[0], t3, found[2], self.stats(wid, t3, src))
                 return ladder[-1]
             picks = {"rec": ladder[0], "erg": first_with(top),
                      "bal": first_with(min(top, max(def_stats["e"], BAL_MIN_ERGO)))}

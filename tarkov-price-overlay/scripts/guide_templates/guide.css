@@ -333,3 +333,10 @@ table.mods td:first-child{white-space:nowrap}
 .mpres input[type=text]{flex:1 1 220px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px}
 #mplist .btn.sm{padding:4px 9px;font-size:12px}
 .mjump{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 4px}.mjump .btn.sm{font-size:14px;padding:8px 14px;text-decoration:none}
+/* 출정 준비물(11-06) */
+#rmap{max-width:100%}
+.rq{display:block;margin:4px 0;font-size:14px}.rq input,.rlist input{width:16px;height:16px;vertical-align:middle;accent-color:var(--gold)}
+.rlist li{margin:6px 0;padding:4px 0;border-bottom:1px dashed var(--line2)}.rlist li.done>label{opacity:.55;text-decoration:line-through}
+.rlist .chips{margin:4px 0 0 22px}.rlist .badge{font-size:11px}
+.rprep h3{margin:14px 0 4px}.rprep .controls input[type=text]{flex:1 1 220px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px}
+button.linkish{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;padding:0 4px}
