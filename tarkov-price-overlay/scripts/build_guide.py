@@ -321,6 +321,8 @@ def main() -> int:
         if key is None:
             return fallback
         v = table.get(key)
+        if isinstance(v, str):
+            v = guide_static.CTRL_RE.sub("", v)  # 11-06: 'CPU \bfan 쿨러' 처럼 원본 번역에 섞인 제어 문자(Ctx._loc 와 같게)
         return (v.strip() if isinstance(v, str) and v.strip() else fallback)
 
     def trader_name(tid):
@@ -426,10 +428,19 @@ def main() -> int:
             elif ty in ("giveQuestItem",):
                 quest_items.append(1)
         keys = []
+        kg = []  # 열쇠 묶음 — 안쪽 = 그중 하나(11-06: 서관 219/220 중 하나를 칩 2개로 보이던 것)
+        for o in t.get("objectives") or []:
+            for g in o.get("requiredKeys") or []:
+                ids = [x.get("id") if isinstance(x, dict) else x for x in g or []]
+                ids = [x for x in ids if item_info(x)]
+                if ids and ids not in kg:
+                    kg.append(ids)
         for nk in t.get("neededKeys") or []:
             for k in nk.get("keys") or []:
                 if item_info(k):
                     keys.append(k)
+                    if not any(k in g for g in kg):
+                        kg.append([k])
         mp = t.get("map")
         mid = mp.get("id") if isinstance(mp, dict) else mp
         qlist.append({
@@ -443,6 +454,7 @@ def main() -> int:
             "wiki": t.get("wikiLink"),
             "give": give,
             "keys": sorted(set(keys)),
+            "kg": kg,
             "req": [r["task"] for r in t.get("taskRequirements") or [] if r.get("task") in tasks],
             "slug": t.get("normalizedName"),
         })
@@ -511,7 +523,10 @@ def main() -> int:
         loc_maps_en=loc_maps_en,
     )
     ctx.handbook = items_doc_reg.get("handbookCategories") or {}  # 무기 모딩 페이지의 무기 분류(11-05)
+    alt = guide_static.alt_groups(ctx, tasks)  # 서로 대신하는 퀘스트(진영판·택일) — 목록 합계에서 한 번만 세게(11-06)
     for q in qlist:  # 같은 이름 퀘스트 구분 (BEAR/USEC·PVP/PVE·레벨별 판)
+        if alt.get(q["id"]):
+            q["alt"] = alt[q["id"]]
         suf = ctx.display_suffix.get(q["id"])
         if suf:
             q["n"] = f'{q["n"]} ({suf})'

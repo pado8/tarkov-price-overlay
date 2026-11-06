@@ -174,7 +174,7 @@
         "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + ((x.ll || 1) > 1 ? " · <span class=\"" + (gmyll(x.ts) && x.ll > gmyll(x.ts) ? "warn" : "") + "\">LL" + x.ll + "</span>" : "") + " · <span title=\"" + esc(x.mapt || "") + "\">" + esc(x.map || "아무 지역") + "</span>" +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
         (give.length ? "<div class=\"chips\">" + give.map(function (g) { return chip(g.i, g.c, g.fir); }).join("") + "</div>" : "") +
-        (x.keys.length ? "<div class=\"chips\">" + x.keys.map(function (k) { return "<span class=\"chip\"><span class=\"badge b-power\">열쇠</span> " + esc((I[k] || {}).n || k) + "</span>"; }).join("") + "</div>" : "") +
+        ((x.kg || x.keys.map(function (k) { return [k]; })).length ? "<div class=\"chips\">" + (x.kg || x.keys.map(function (k) { return [k]; })).map(function (g) { return "<span class=\"chip\"><span class=\"badge b-power\">열쇠</span> " + g.map(function (k) { return esc((I[k] || {}).n || k); }).join(" 또는 ") + "</span>"; }).join("") + "</div>" : "") +
         "</div></label>";
     });
     if (lastTr !== null) html += "</div>";
@@ -182,13 +182,15 @@
   }
   function renderSum(list) {
     var firOnly = document.getElementById("firOnly").checked;
-    var agg = {};
+    var agg = {}, gmx = {};  // gmx: alternative quests (BEAR/USEC, mutually exclusive) count once at their max
     list.forEach(function (x) {
       x.give.forEach(function (g) {
         if (firOnly && !g.fir) return;
         var k = g.i.join("|");
         var a = agg[k] || (agg[k] = { ids: g.i, fir: 0, any: 0, quests: 0, kappa: false });
-        if (g.fir) a.fir += g.c; else a.any += g.c;
+        var add = g.c;
+        if (x.alt) { var gk = k + "#" + x.alt + "#" + (g.fir ? 1 : 0), prev = gmx[gk]; add = prev === undefined ? g.c : Math.max(0, g.c - prev); gmx[gk] = Math.max(prev || 0, g.c); if (prev !== undefined) { if (g.fir) a.fir += add; else a.any += add; return; } }
+        if (g.fir) a.fir += add; else a.any += add;
         a.quests++; a.kappa = a.kappa || x.kappa;
       });
     });

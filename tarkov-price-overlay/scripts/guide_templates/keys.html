@@ -81,10 +81,10 @@
     return "<label class=\"krow" + (done ? " done" : "") + "\" data-id=\"" + esc(k.id) + "\">" +
       "<input type=\"checkbox\" aria-label=\"보유\"" + (done ? " checked" : "") + " />" +
       "<img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" +
-      "<div><div class=\"nm\">" + esc(it.n) + "</div><div class=\"en\">" + esc(it.en) + "</div>" +
+      "<div><div class=\"nm\">" + esc(it.n) + "</div>" + (it.en && it.en !== it.n && it.n.slice(-(it.en.length + 2)) !== "(" + it.en + ")" ? "<div class=\"en\">" + esc(it.en) + "</div>" : "") +
       "<div style=\"margin-top:3px\">" + badges + "<span class=\"small muted\">여는 곳 " + k.locks + "곳" + (it.uses ? " · 사용 " + it.uses + "회" : "") + "</span></div>" +
       (k.q.length ? "<div class=\"qlist\">" + k.q.map(esc).join(" · ") + "</div>" : "") + "</div>" +
-      "<div class=\"right\">" + (p != null ? "<div class=\"price\">플리 " + won(p) + "</div>" : "<div class=\"small muted\">플리 거래 불가</div>") +
+      "<div class=\"right\">" + (p != null ? "<div class=\"price\">플리 " + won(p) + "</div>" : "<div class=\"small muted\">" + (it.noflea ? "플리 거래 불가" : "플리 시세 없음") + "</div>") +
       (it.tr ? "<div class=\"small muted\">상인 " + won(it.tr[1]) + "</div>" : "") +
       (it.wiki ? "<a class=\"small\" href=\"" + esc(it.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div></label>";
   }
@@ -109,7 +109,7 @@
         var it = I[k.id]; if (!it) return false;
         if (onlyQuest && !k.q.length) return false;
         if (hideOwned && have[k.id]) return false;
-        if (q && (it.n + " " + it.en + " " + it.s).toLowerCase().indexOf(q) < 0) return false;
+        if (q) { var hay = (it.n + " " + it.en + " " + it.s).toLowerCase(); if (hay.indexOf(q) < 0 && hay.replace(/\s+/g, "").indexOf(q.replace(/\s+/g, "")) < 0) return false; }
         return true;
       });
       if (!keys.length && !m.access.length) return;

@@ -259,6 +259,49 @@ class Modder:
                 t[idx] = [x, {}]
         return tree
 
+    def cheapen(self, wid, tree, src, min_cap):
+        import copy
+        tree = copy.deepcopy(tree)
+        for _ in range(20):
+            st = self.stats(wid, tree, src)
+            e0, r0 = st["e"], st["r"] / 100
+            chosen = {c for _, c, _ in self.walk(tree)}
+            best = None
+
+            def scan(host, t):
+                nonlocal best
+                sl = self.slots.get(host, [])
+                for idx in list(t):
+                    c, sub = t[idx]
+                    i = int(idx)
+                    if sub:
+                        scan(c, sub)
+                        continue
+                    name, req, allowed = sl[i] if i < len(sl) else ("", True, [])
+                    it0 = self.items.get(c) or {}
+                    c0 = self.cost(c, src) or 0
+                    rest = chosen - {c}
+                    for x in self.slot_pool(name, allowed, src, min_cap, req=req):
+                        if x == c or not self.complete(x, {}) or self.conflicts(x, rest):
+                            continue
+                        itx = self.items.get(x) or {}
+                        if abs(mod_r(itx) - mod_r(it0)) > 1e-9:
+                            continue
+                        e1 = e0 - mod_e(it0) + mod_e(itx)
+                        if not (abs(e1 - e0) < 1e-9 or (e0 >= 100 and e1 >= 100)):
+                            continue
+                        cx = self.cost(x, src)
+                        if cx is None or cx >= c0 - 1:
+                            continue
+                        if best is None or cx - c0 < best[0]:
+                            best = (cx - c0, t, idx, x)
+            scan(wid, tree)
+            if not best:
+                break
+            _, t, idx, x = best
+            t[idx] = [x, {}]
+        return tree
+
     def complete(self, host, tree) -> bool:
         """필수 칸·탄창 칸(달 수 있는 부품이 있는 것)이 다 찼는지 — 하위 칸까지"""
         for idx, (name, req, allowed) in enumerate(self.slots.get(host, [])):
@@ -351,7 +394,7 @@ class Modder:
                 cost += pr
             n += 1
         # e 반올림은 조립기(JS Math.round)와 같게 — round() 는 107.25 → 107.2(은행가 반올림)라 페이지와 조립기가 0.1 어긋났다
-        return {"e": math.floor(e * 10 + 0.5) / 10, "rv": round((p.get("recoilVertical") or 0) * (1 + r)), "rh": round((p.get("recoilHorizontal") or 0) * (1 + r)),
+        return {"e": math.floor(e * 10 + 0.5) / 10, "rv": math.floor((p.get("recoilVertical") or 0) * (1 + r) + 0.5), "rh": math.floor((p.get("recoilHorizontal") or 0) * (1 + r) + 0.5),
                 "r": round(r * 100, 1), "wt": round(wt, 2), "cost": int(cost), "unk": unknown, "n": n}
 
     def weapon_report(self, wid):
@@ -387,10 +430,12 @@ class Modder:
                         t3 = self.improve(wid, found[1], src, min_cap, target)
                         return (found[0], t3, found[2], self.stats(wid, t3, src))
                 return ladder[-1]
-            picks = {"rec": ladder[0], "erg": first_with(top),
-                     "bal": first_with(min(top, max(def_stats["e"], BAL_MIN_ERGO)))}
+            bal_t = min(top, max(def_stats["e"], BAL_MIN_ERGO)) if top >= BAL_MIN_ERGO else \
+                max(min(def_stats["e"], top), (ladder[0][3]["e"] + top) / 2)
+            picks = {"rec": ladder[0], "erg": first_with(top), "bal": first_with(bal_t)}
             for obj, (lam, tree, flags, st) in picks.items():
-                builds[f"{obj}-{src}"] = {"tree": tree, "stats": st, "unavail": flags["unavail"], "lam": lam}
+                tree = self.cheapen(wid, tree, src, min_cap)
+                builds[f"{obj}-{src}"] = {"tree": tree, "stats": self.stats(wid, tree, src), "unavail": flags["unavail"], "lam": lam}
         return {"id": wid, "preset": dp[0] if dp else None, "preset_left": left, "def": dtree,
                 "def_stats": def_stats, "builds": builds, "min_cap": min_cap}
 

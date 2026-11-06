@@ -43,7 +43,7 @@ PAGE_ALIAS = {
     "ammo/": "탄약 ammo 총알 관통력 탄 penetration", "bosses/": "보스 boss bosses 스폰 확률",
     "promo/": "프로모 코드 promo code 쿠폰 리딤", "hunt/": "사냥 킬 퀘스트 처치 hunt", "items/": "필요템 퀘템 퀘스트 아이템 needed items",
     "quest-items/": "퀘스트 전용 아이템 quest items 퀘템 위치", "rewards/": "보상 reward rewards 보상템",
-    "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 starter beginner", "gunsmith/": "건스미스 gunsmith 퀘스트 조립",
+    "prestige/": "프레스티지 prestige 프레", "start/": "초반 입문 뉴비 시작 시작하기 초보 처음 starter beginner", "gunsmith/": "건스미스 gunsmith 퀘스트 조립",
     "raid/": "출정 준비물 레이드 준비 체크리스트 챙길것 챙길 것 준비물 raid checklist prep 사전 준비 подготовка 出发准备",
     "mods/": "모딩 무기 모딩 개조 커스텀 빌드 조립 반동 인체공학 메타 사기총 weapon build builds mods модинг сборка 改装",
     "maps/": "맵 지도 map maps 탈출구 extract extracts exfil", "maps/factory/": "팩토리 factory 공장",
@@ -186,7 +186,7 @@ var CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";function cho
 function near(s,q){var n=q.length;if(n<2||s.length<n)return false;for(var i=0;i+n<=(n<3?n:s.length);i++){var d=0;for(var j=0;j<n&&d<2;j++)if(s.charCodeAt(i+j)!==q.charCodeAt(j))d++;if(d<2)return true}return false}
 function load(){if(idx)return Promise.resolve(idx);if(loading)return loading;
 loading=fetch(B+"search.json",{cache:"force-cache"}).then(function(r){return r.json()}).then(function(a){idx=a.map(function(r){var s=norm(r[1]);return{k:r[0],n:r[1],a:r[2],u:r[3],s:s,z:norm(r[2]+" "+(r[4]||"")),c:cho(s),t:String(r[4]||"").split(" ").map(norm)}});return idx}).catch(function(){idx=[];return idx});return loading}
-var ORD={q:0,w:0.5,i:1,k:2,b:3,x:4,a:5,r:6,u:7,h:8,m:9,t:10,p:11};
+var ORD={q:0,w:0.5,i:1,k:2,b:3,m:3.5,x:4,a:5,r:6,u:7,h:8,t:10,p:11};
 // 게임 커뮤니티 줄임말·음역 → 데이터 표기
 var AL={"레덱스":"ledx","레덱":"ledx","아이폭":"ifak","살레와":"salewa","시크":"sicc","씩":"sicc","그카":"그래픽카드","비코":"비트코인","도태":"도그태그","퀘템":"퀘스트아이템","카파템":"카파"};
 function rk(k){return k in ORD?ORD[k]:99}
@@ -200,7 +200,7 @@ out.sort(function(a,b){return a[0]-b[0]||a[1]-b[1]||a[2]-b[2]});fuzzy=out.length
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function draw(){if(!inp.value.trim()){ul.hidden=true;return}
 if(!hits.length){ul.innerHTML='<li class="no">'+T.none+'</li>';ul.hidden=false;return}
-ul.innerHTML=(fuzzy?'<li class="no">'+T.fz+'</li>':'')+hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&r.k==="q"?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
+ul.innerHTML=(fuzzy?'<li class="no">'+T.fz+'</li>':'')+hits.map(function(r,i){return'<li><a href="'+esc(r.u)+'"'+(i===sel?' class="on"':'')+'><span class="k">'+esc(T[r.k]||"")+'</span><span>'+esc(r.n)+(r.a&&"qxu".indexOf(r.k)>=0?' <span class="a">'+esc(r.a)+'</span>':'')+'</span></a></li>'}).join("");ul.hidden=false}
 var sentT=null,lastSent="";
 function track(){var q=inp.value.trim().slice(0,60);if(q.length<2||norm(q)===lastSent)return;lastSent=norm(q);var n=find(q).length;
 try{if(window.gtag){gtag("event","view_search_results",{search_term:q,results:n});if(!n)gtag("event","search_no_result",{search_term:q})}}catch(e){}}
