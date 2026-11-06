@@ -3968,7 +3968,7 @@ root.addEventListener("keydown",function(e){if(e.target.id==="mpname"&&e.key==="
 document.addEventListener("click",function(e){var k=e.target.getAttribute&&e.target.getAttribute("data-load");if(!k||!D)return;var p=k.split("-");src=p[1];apply(p[0]);root.scrollIntoView({behavior:"smooth"});ev("mods_apply",{mods_b:k})});
 fetch("data.json").then(function(r){return r.json()}).then(function(d){D=d;root.classList.add("ready");var q=new URLSearchParams(location.search).get("b"),st=L(WK,null);
 if(q){try{cur=dec(q);ck="";mark();render();return}catch(x){}}if(st&&st.t){src=st.s||"all";ck=st.k||"";var b=D.b[ck+"-"+src];lam=b?b.lam:0.3;cur=st.t;mark();render();return}apply("def")})
-.catch(function(){document.getElementById("mtree").textContent="조립기 데이터를 불러오지 못했어요. 새로고침해 보세요."})})();
+.catch(function(){document.getElementById("mtree").textContent="모딩 시뮬레이터 데이터를 불러오지 못했어요. 새로고침해 보세요."})})();
 </script>"""
 
 MODS_INDEX_JS = """<script>
@@ -4010,9 +4010,9 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
                 f'<section class="box" id="b-{k}"><h2>{label} <span class="muted small">인체공학 {ba["stats"]["e"]:g} · 수직 반동 {ba["stats"]["rv"]} · 반동 {_mod_sign(ba["stats"]["r"] / 100, True)}</span></h2>'
                 f'<p class="small muted">{MOD_BUILD_NOTE[k]} 부품값 {fmt_int(ba["stats"]["cost"])}₽(플리마켓·상인 중 싼 쪽, 기본 포함 부품 0₽).</p>'
                 + _mod_build_table(ctx, md, wid, ba["tree"], "all")
-                + f'<p class="small"><button type="button" class="btn sm" data-load="{k}-all">이 조립을 조립기에 불러오기</button> '
+                + f'<p class="small"><button type="button" class="btn sm" data-load="{k}-all">이 조립을 모딩 시뮬레이터에 넣기</button> '
                 + (f'<span class="muted">상인 현금 구매만으로도 같은 조립입니다.</span>' if same else
-                   f'<button type="button" class="btn sm ghost" data-load="{k}-trader">상인만으로 맞춘 조립 보기</button> '
+                   f'<button type="button" class="btn sm ghost" data-load="{k}-trader">상인만 버전을 모딩 시뮬레이터에 넣기</button> '
                    f'<span class="muted">상인만: 인체공학 {bt["stats"]["e"]:g} · 수직 반동 {bt["stats"]["rv"]} · {fmt_int(bt["stats"]["cost"])}₽</span>')
                 + '</p></section>')
         top_slots = "".join(f'<li>{e(mod_slot_name(ctx, s[0]))} <span class="muted small">{len(data["L"][s[2]])}종{" · 필수" if s[1] else ""}</span></li>'
@@ -4020,19 +4020,20 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
         body = (f'<h1><span class="wn">{e(name)}</span> 모딩 추천 <span class="h1en">{e(en)}</span></h1>'
                 f'<p class="sub">{e(dict(MOD_CATS).get(mod_cat(ctx, it), ""))} · 기본 인체공학 {data["w"]["e"]:g} · 기본 반동 {data["w"]["rv"]}/{data["w"]["rh"]} · 달 수 있는 부품 {n_parts}종 · 데이터 기준 {e(ctx.stamp)}</p>'
                 + stale_html(ctx.stamp)
+                + '<p class="mjump"><a class="btn sm" href="#mb">🔧 모딩 시뮬레이터 바로가기</a> <span class="muted small">칸마다 부품을 바꿔 보며 수치를 바로 계산 · 프리셋 저장</span></p>'
                 + '<div class="note key"><b>보는 법</b> — 아래 세 조립은 부품 수치로 계산한 추천입니다. 표의 숫자는 조립을 마친 총의 <b>인체공학·수직 반동·수평 반동·무게·부품값</b>이고, 괄호는 기본 조립과의 차이입니다. '
-                  '맨 아래 <a href="#mb">조립기</a>에서 칸마다 부품을 바꾸면 수치가 바로 다시 계산됩니다. 조준경은 취향이라 추천에 넣지 않았습니다.</div>'
+                  '맨 아래 <a href="#mb">모딩 시뮬레이터</a>에서 칸마다 부품을 바꾸면 수치가 바로 다시 계산됩니다. 조준경은 취향이라 추천에 넣지 않았습니다.</div>'
                 + '<section class="box"><h2>한눈에 비교</h2><div class="tbl"><table class="tot"><thead><tr><th>조립</th><th>인체공학</th><th>수직 반동</th><th>수평 반동</th><th>무게</th><th>부품값</th><th>상인만(인체공학 / 수직 반동 · 값)</th></tr></thead><tbody>'
                 + "".join(summary) + '</tbody></table></div></section>'
                 + "".join(secs)
-                + f'<section class="box mb" id="mb" data-w="{e(wid)}"><h2>직접 조립해 보기 <span class="muted small">칸별 호환 부품 · 수치 계산기</span></h2>'
+                + f'<section class="box mb" id="mb" data-w="{e(wid)}"><h2>모딩 시뮬레이터 <span class="muted small">칸별 호환 부품 · 수치 계산 · 프리셋 저장</span></h2>'
                   '<div class="controls"><span class="seg"><button type="button" data-k="def" class="on">기본 조립</button>'
                 + "".join(f'<button type="button" data-k="{k}">{label}</button>' for k, label in MOD_BUILDS)
                 + '</span><span class="seg"><button type="button" data-src="all" class="on">플리 포함</button><button type="button" data-src="trader">상인만</button></span>'
                   '<button type="button" class="btn sm ghost" id="mshare">조립 링크 복사</button></div>'
                   '<div class="controls mpres"><input id="mpname" type="text" maxlength="40" placeholder="프리셋 이름 (예: 레이드용 저반동)" />'
                   '<button type="button" class="btn sm" id="mpsave">지금 조립을 프리셋으로 저장</button></div><div id="mplist"></div>'
-                  '<div class="mtot" id="mtot"></div><div id="mwarn"></div><div class="mtree" id="mtree">조립기를 불러오는 중…</div>'
+                  '<div class="mtot" id="mtot"></div><div id="mwarn"></div><div class="mtree" id="mtree">모딩 시뮬레이터를 불러오는 중…</div>'
                   '<details class="mlist" open><summary>게임에서 맞추기 · 구매 목록</summary>'
                   '<p class="small muted">게임 정비 화면에서 위에서부터 순서대로 끼우면 됩니다(위 칸을 먼저 달아야 아래 칸이 생깁니다). 다 끼운 뒤 게임 안에서 프리셋으로 저장해 두세요 — 사이트 프리셋을 게임으로 바로 보내는 기능은 게임에 없습니다.</p>'
                   '<div class="tbl" id="mlist"></div><p><button type="button" class="btn sm ghost" id="mcopy">부품 목록 복사</button></p></details>'
@@ -4044,7 +4045,7 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
                   '가격은 플리마켓 24시간 평균(PVP)과 상인 현금 구매가이며 물물교환은 넣지 않았습니다.</div>')
         title = f"{name} 모딩 추천 — 반동 최소·인체공학 최대 조립과 부품 가격 | 탈콥 가이드"
         desc = (f"타르코프 {name} 무기 모딩: 기본 조립 인체공학 {ds['e']:g}·수직 반동 {ds['rv']} → 반동 최소 {b['rec-all']['stats']['rv']}, "
-                f"균형 인체공학 {b['bal-all']['stats']['e']:g}, 인체공학 최대 {b['erg-all']['stats']['e']:g}. 부품별 상인·플리 가격, 칸별 호환 부품 {n_parts}종 조립기.")
+                f"균형 인체공학 {b['bal-all']['stats']['e']:g}, 인체공학 최대 {b['erg-all']['stats']['e']:g}. 부품별 상인·플리 가격, 칸별 호환 부품 {n_parts}종 모딩 시뮬레이터.")
         html_text = page(ctx, path=path, title=title, desc=desc, body=body, nav="mods",
                          crumbs=[("무기 모딩", "/guide/mods/"), (name, None)], scripts=MODS_JS)
         write(out, path, html_text, urls)
@@ -4066,8 +4067,8 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
                     f'<tbody>{"".join(rows)}</tbody></table></div></section>')
     n = sum(len(v) for v in by_cat.values())
     body = (f'<h1>무기 모딩 추천 <span class="h1en">Weapon builds</span></h1>'
-            f'<p class="sub">무기 {n}정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 조립기 · 데이터 기준 {e(ctx.stamp)}</p>'
-            '<div class="note key"><b>쓰는 법</b> — 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 조립기에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다. '
+            f'<p class="sub">무기 {n}정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 모딩 시뮬레이터 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note key"><b>쓰는 법</b> — 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 모딩 시뮬레이터에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다. '
             '표의 숫자는 <b>인체공학 / 수직 반동</b>입니다(반동은 낮을수록, 인체공학은 높을수록 좋음).</div>'
             '<section class="box" id="myp" hidden></section>'
             '<div class="controls"><input id="mq" type="search" placeholder="무기 이름 검색 (예: M4A1, AK-74, 모신)" /></div>'
@@ -4077,7 +4078,7 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
             '건스미스 퀘스트용 조립은 <a href="/guide/gunsmith/">건스미스 부품 총정리</a>에 따로 있습니다.</div>')
     path = "/guide/mods/"
     title = f"타르코프 무기 모딩 추천 — {n}정 반동 최소·인체공학 최대 조립 계산기 | 탈콥 가이드"
-    desc = f"타르코프 무기 {n}정의 모딩 추천: 반동 최소·균형·인체공학 최대 조립, 부품별 상인·플리 가격, 칸별 호환 부품을 고르는 조립기와 수치 계산."
+    desc = f"타르코프 무기 {n}정의 모딩 추천: 반동 최소·균형·인체공학 최대 조립, 부품별 상인·플리 가격, 칸별 호환 부품을 고르는 모딩 시뮬레이터와 수치 계산."
     write(out, path, page(ctx, path=path, title=title, desc=desc, body=body, nav="mods", crumbs=[("무기 모딩", None)], scripts=MODS_INDEX_JS), urls)
     return n
 

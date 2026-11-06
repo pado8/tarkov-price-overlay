@@ -1599,5 +1599,17 @@
 "저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).": "No saved presets yet. Enter a name and save — presets stay in this browser (up to 30 per weapon).",
 "지금 조립을 프리셋으로 저장": "Save current build as preset",
 "프리셋": "Preset",
-"프리셋 이름 (예: 레이드용 저반동)": "Preset name (e.g. low recoil for raids)"
+"프리셋 이름 (예: 레이드용 저반동)": "Preset name (e.g. low recoil for raids)",
+"— 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 모딩 시뮬레이터에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다.": "— click a weapon to see three recommended builds with parts, where to buy and prices. The modding simulator at the bottom of that page lets you swap parts slot by slot and recalculates the stats instantly.",
+"모딩 시뮬레이터": "Modding simulator",
+"모딩 시뮬레이터 데이터를 불러오지 못했어요. 새로고침해 보세요.": "Could not load the modding simulator data. Please refresh.",
+"모딩 시뮬레이터를 불러오는 중…": "Loading the modding simulator…",
+"상인만 버전을 모딩 시뮬레이터에 넣기": "Put the traders-only build into the simulator",
+"이 조립을 모딩 시뮬레이터에 넣기": "Put this build into the modding simulator",
+"정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 모딩 시뮬레이터 · 데이터 기준": " · 3 recommended builds (lowest recoil, balanced, max ergonomics) · slot-by-slot modding simulator · data as of",
+"정의 모딩 추천: 반동 최소·균형·인체공학 최대 조립, 부품별 상인·플리 가격, 칸별 호환 부품을 고르는 모딩 시뮬레이터와 수치 계산.": " weapon builds: lowest recoil, balanced and max ergonomics, trader and flea prices per part, a slot-by-slot modding simulator and stat calculator.",
+"종 모딩 시뮬레이터.": " compatible parts in the modding simulator.",
+"칸마다 부품을 바꿔 보며 수치를 바로 계산 · 프리셋 저장": "swap parts slot by slot with live stats · save presets",
+"칸별 호환 부품 · 수치 계산 · 프리셋 저장": "compatible parts per slot · stat calculator · presets",
+"🔧 모딩 시뮬레이터 바로가기": "🔧 Go to the modding simulator"
 }
