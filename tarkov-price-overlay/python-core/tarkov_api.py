@@ -13,6 +13,8 @@ import requests
 TARKOV_API_URL = "https://api.tarkov.dev/graphql"
 # 11-05 택일 후보가 이보다 많은 목표(아무 아이템이나 판매 등)는 아이템별 퀘스트 목록에 넣지 않는다
 ANY_ITEM_ALTS = 120
+# 기본 인식표(BEAR·USEC, 2017~). 같은 이름 변형이 많아 카탈로그 이름 색인에서 이 둘을 우선한다(_install_catalog)
+BASE_DOGTAG_IDS = frozenset({"59f32bb586f774757e1e8442", "59f32c3b86f77472a31742f0"})
 
 # Background bulk-cache configuration. The whole tarkov.dev item catalog
 # (per language × per game mode) is fetched periodically so that /lookup
@@ -1222,6 +1224,11 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
                    for s in it.get("sellFor") or [])
         )
         if name in by_name and priced.get(name) and not has_price:
+            continue
+        # 11-06: 'BEAR/USEC 인식표'는 이름이 같은 변형이 11~12개(에디션·프레스티지·1.3 새 id)라 나중 것이 이기면
+        # 그림도 없는 최신 변형(6aa2d5ee…·6ab60a62…, 상인 612₽)이 잡혔다 → 같은 조건이면 기본 인식표를 지킨다.
+        # 다른 같은 이름 묶음(45개)은 어느 쪽이 맞는지 근거가 없어 예전 규칙 그대로.
+        if name in by_name and by_name[name].get("id") in BASE_DOGTAG_IDS and priced.get(name) == has_price:
             continue
         by_name[name] = _build_cache_entry(it, hideout_idx)
         priced[name] = has_price

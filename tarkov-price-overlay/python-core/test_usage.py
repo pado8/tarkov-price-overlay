@@ -77,6 +77,19 @@ g2 = item("68f8e04eae031982b00e7aaf", "Secure container Gamma", ["noFlea"])
 by = ta._install_catalog("en", "regular", [g1, g2], ({}, []), "json")
 eq("둘 다 시세 없으면 예전대로 나중 것", by["Secure container Gamma"]["id"], "68f8e04eae031982b00e7aaf")
 
+# ⑤-2 인식표 — 같은 이름 변형이 뒤에 와도 기본 인식표
+base = item("59f32bb586f774757e1e8442", "BEAR 인식표", ["barter", "noFlea"], sell=[("Therapist", 459)])
+v1 = item("684180bc51bf8645f7067bc8", "BEAR 인식표", ["barter", "noFlea"], sell=[("Therapist", 586)])
+v2 = item("6aa2d5ee11d6c6361804dd57", "BEAR 인식표", ["barter", "noFlea"], sell=[("Therapist", 612)])
+by = ta._install_catalog("ko", "regular", [base, v1, v2], ({}, []), "json")
+eq("인식표: 변형이 뒤에 와도 기본", by["BEAR 인식표"]["id"], "59f32bb586f774757e1e8442")
+by = ta._install_catalog("ko", "regular", [v2, base, v1], ({}, []), "json")
+eq("인식표: 순서 섞여도 기본", by["BEAR 인식표"]["id"], "59f32bb586f774757e1e8442")
+for it_ in (base, v1, v2):
+    it_["shortName"] = "BEAR"  # 실제 데이터와 같게 — 짧은 이름 별칭('공간 부족 (BEAR)' 등)도 같은 항목으로 가야 한다
+by = ta._install_catalog("ko", "regular", [v2, base, v1], ({}, []), "json")
+eq("인식표: 짧은 이름 별칭 BEAR 도 기본", (by.get("BEAR") or {}).get("id"), "59f32bb586f774757e1e8442")
+
 # ⑥ 그림 없는 새 아이템 — 자리표시 그림(검은 칸)은 보내지 않는다
 r = main._build_response("x", {"id": "6a997c025aec2a3abc08b152", "name": "의약품 보관함", "icon": "https://assets.tarkov.dev/unknown-item-grid-image.jpg"}, "regular", lang="ko")
 eq("unknown-item 아이콘 → None", r.icon, None)
