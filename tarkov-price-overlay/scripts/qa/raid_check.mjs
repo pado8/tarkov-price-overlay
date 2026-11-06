@@ -16,7 +16,7 @@ const ok = (c, msg) => console.log((c ? "OK  " : "FAIL") + " " + msg);
 await t.ev(`localStorage.clear();localStorage.setItem("guide.sync.m.regular",JSON.stringify({ts:Date.now(),mode:"regular",smode:"regular",completed:[],started:["5a27ba1c86f77461ea5a3c56","666314bd920800278d0f6748"],hideout:{}}));localStorage.setItem("guide.sync",JSON.stringify({mode:"regular"}))`);
 await t.nav(U, 1500);
 await t.ev(`window.__clip=[];navigator.clipboard.writeText=function(u){window.__clip.push(u);return Promise.resolve()}`);
-const prep = () => t.ev(`[].map.call(document.querySelectorAll("#rp li"),function(li){return li.querySelector("label").textContent.replace(/\\s+/g," ").trim()})`);
+const prep = () => t.ev(`[].map.call(document.querySelectorAll("#rp ul.rlist li"),function(li){return li.querySelector("label").textContent.replace(/\\s+/g," ").trim()})`);
 const heads = () => t.ev(`[].map.call(document.querySelectorAll("#rp h3"),function(h){return h.textContent})`);
 const map = await t.ev(`document.querySelector("#rmap button.on").textContent`);
 ok(/삼림|Woods/.test(map), "주소 ?map=woods → " + map);
@@ -31,10 +31,9 @@ const avail = await t.ev(`(function(){var h=[].filter.call(document.querySelecto
 await sleep(150);
 ok(avail && (await prep()).length > p.length, "받을 수 있음에서 추가: " + avail.slice(0, 40) + " → 항목 " + (await prep()).length);
 // 탈출구 고르기: 조명탄 · 차량
-for (const re of ["ZB-016", "V-Ex"]) { await t.ev(`[].filter.call(document.querySelectorAll("#rx input"),function(c){return c.parentNode.textContent.indexOf(${JSON.stringify(re)})>=0})[0].click()`); await sleep(120); }
 await sleep(150);
 p = await prep();
-ok(p.some((x) => /신호탄|signal/i.test(x)) && p.some((x) => /루블|Rouble/i.test(x)), "탈출 준비: " + p.filter((x) => /신호탄|루블/.test(x)).join(" / "));
+ok(p.some((x) => /신호탄|signal/i.test(x)) && p.some((x) => /루블|Rouble/i.test(x)), "탈출구 관련 아이템(고르기 없이): " + p.filter((x) => /신호탄|루블/.test(x)).join(" / "));
 // 기본 준비물
 await t.click("#rbin"); await t.type("지혈대 2개"); await t.key("Enter", "Enter", 13); await sleep(150);
 p = await prep();
@@ -52,7 +51,7 @@ const txt = (await t.ev(`window.__clip`)).pop() || "";
 ok(/\[x\]/.test(txt) && /\[ \]/.test(txt), "목록 복사 " + txt.split("\n").length + "줄: " + txt.split("\n").slice(0, 3).join(" | "));
 // 맵 전환(세관)
 await t.ev(`[].filter.call(document.querySelectorAll("#rmap button"),function(b){return /세관|Customs/.test(b.textContent)})[0].click()`); await sleep(200);
-ok(/세관|Customs/.test(await t.ev(`document.getElementById("rmapn").textContent`)), "맵 전환 → 세관, 탈출구 " + (await t.ev(`document.querySelectorAll("#rx input").length`)) + "곳");
+ok(/세관|Customs/.test(await t.ev(`document.getElementById("rmapn").textContent`)), "맵 전환 → 세관 · 묶음: " + (await heads()).join(" · "));
 // 연동 해제 상태
 await t.ev(`localStorage.removeItem("guide.sync.m.regular");localStorage.removeItem("guide.sync")`);
 await t.nav(BASE + "raid/?map=woods", 1500);

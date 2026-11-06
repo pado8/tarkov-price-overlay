@@ -157,7 +157,7 @@
       html += "<label class=\"qrow" + (isDone ? " done" : "") + "\" data-id=\"" + esc(x.id) + "\"><input type=\"checkbox\" aria-label=\"완료\"" + (isDone ? " checked" : "") + " /><div>" +
         "<div class=\"qn\"><button type=\"button\" class=\"fav" + (fav[x.id] ? " on" : "") + "\" data-t=\"" + esc(x.id) + "\" aria-label=\"즐겨찾기\" title=\"즐겨찾기 — 내 즐겨찾기 페이지에 모임\">★</button> " + (x.slug ? "<a href=\"" + GB + "quest/" + esc(x.slug) + "/\">" + esc(x.n) + "</a>" : esc(x.n)) + " " + (x.kappa ? "<span class=\"badge b-kappa\">카파 필수</span> " : "") + (x.lk ? "<span class=\"badge b-lk\">등대지기</span> " : "") +
         (x.modes.length === 1 ? "<span class=\"badge b-any\">" + (x.modes[0] === "pve" ? "PVE 전용" : "PVP 전용") + "</span>" : "") + "</div>" +
-        "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + ((x.ll || 1) > 1 ? " · <span class=\"" + (gmyll(x.ts) && x.ll > gmyll(x.ts) ? "warn" : "") + "\">LL" + x.ll + "</span>" : "") + " · " + esc(x.map || "아무 지역") +
+        "<div class=\"qmeta\">" + esc(x.en) + " · 레벨 " + x.lv + ((x.ll || 1) > 1 ? " · <span class=\"" + (gmyll(x.ts) && x.ll > gmyll(x.ts) ? "warn" : "") + "\">LL" + x.ll + "</span>" : "") + " · <span title=\"" + esc(x.mapt || "") + "\">" + esc(x.map || "아무 지역") + "</span>" +
         (x.wiki ? " · <a href=\"" + esc(x.wiki) + "\" target=\"_blank\" rel=\"noopener\">위키</a>" : "") + "</div>" +
         (give.length ? "<div class=\"chips\">" + give.map(function (g) { return chip(g.i, g.c, g.fir); }).join("") + "</div>" : "") +
         (x.keys.length ? "<div class=\"chips\">" + x.keys.map(function (k) { return "<span class=\"chip\"><span class=\"badge b-power\">열쇠</span> " + esc((I[k] || {}).n || k) + "</span>"; }).join("") + "</div>" : "") +

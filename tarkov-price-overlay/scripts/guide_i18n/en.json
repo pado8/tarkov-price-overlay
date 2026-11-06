@@ -1667,5 +1667,12 @@
 "탈출:": "Extract:",
 "탈출에 낼 아이템": "Item to hand in at extract",
 "표시(마커)": "Mark (marker)",
-"🎒 이 맵 출정 준비물": "🎒 Raid checklist for this map"
+"🎒 이 맵 출정 준비물": "🎒 Raid checklist for this map",
+"· 방탄조끼 착용 불가": "· no body armor",
+"② 챙길 것": "② What to bring",
+"③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템과 이 맵 탈출구에 쓰이는 조명탄·등반 장비·차량 요금이 한 목록으로 나옵니다(탈출구는 레이드에 들어가야 정해지니 쓸 수 있는 것을 모두 보여 줍니다).": "③ cameras and markers to plant, keys, gear and weapon conditions, quest items to pick up, plus the flares, climbing gear and car fare used by this map extracts come as one list (extracts are only decided once you are in the raid, so every option is shown).",
+"쓰는 탈출구:": "Used at:",
+"조건이 있는 탈출구": "Extracts with conditions",
+"탈출구 관련 아이템": "Extract items",
+"개 맵": " maps"
 }

@@ -1525,7 +1525,8 @@ def trader_page(ctx: Ctx, tr_id: str, tids: list[str]) -> tuple[str, str]:
             badges.append('<span class="badge b-lk">등대지기</span>')
         if len(modes) == 1:
             badges.append(f'<span class="badge b-mode">{"PVE" if modes[0] == "pve" else "PVP"}</span>')
-        maps = ", ".join(e(ctx.map_name(m)) for m in ctx.task_maps(t)[:2]) or '<span class="muted">아무 곳</span>'
+        ml, mfull = map_label(ctx, t)
+        maps = f'<span title="{e(mfull)}">{e(ml)}</span>' if mfull else f'<span class="muted">{e(ml)}</span>'
         fir = _fir_need(t)
         trs.append(f'<tr data-q="{e(tid)}"><td><span class="muted small">{e(label)}</span></td>'
                    f'<td>{ctx.task_link(tid)} {" ".join(badges)}<div class="muted small">{e(ctx.task_names(tid)[1])}</div></td>'
@@ -2066,6 +2067,8 @@ def hunt_page(ctx: Ctx) -> tuple[str, str]:
                 mnames.append(mn)
         for mid in mids[:4]:
             tags.append(f'<span class="tag map">{ctx.map_link(mid)}</span>')
+        if len(mnames) > 4:  # 5곳 이상이면 나머지 수(전체는 마우스 올림 글로) — 전엔 4곳만 보이고 나머지가 없는 것처럼 보였다
+            tags.append(f'<span class="tag map" title="{e(", ".join(mnames))}">외 {len(mnames) - 4}개 맵</span>')
         if t.get("kappaRequired"):
             tags.append('<span class="badge b-kappa">카파</span>')
         modes = ctx.task_modes.get(tid, ["pvp", "pve"])
@@ -2939,6 +2942,20 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
         nm = name if (not en_name or en_name == name) else f"{name}({en_name})"  # en 판은 이름이 두 번 나오지 않게
         desc = f"타르코프 {nm} 맵 공략: {_lead_cut(MAP_NOTES[slug]['lines'][0])} 보스 {boss_names or '없음'} · 탈출구 · 퀘스트 {len(qs)}개 정리."
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="maps", crumbs=[("맵", "/guide/maps/"), (name, None)])
+
+
+def map_label(ctx: Ctx, t: dict) -> tuple[str, str]:
+    """퀘스트 지역 표시 — (짧은 글, 전체 목록). 퀘스트에 맵이 없어도 목표에 맵이 있으면 그 맵들(11-06 사용자 지적:
+    맵 값만 보면 목표 맵이 2~10곳인 퀘스트 92개가 '아무 지역'으로 나왔다). 5곳 이상은 '맵 N곳'으로 줄이고 전체는 마우스 올림 글로."""
+    names = []
+    for mid in ctx.task_maps(t):
+        mn = ctx.map_name(mid)
+        if mn and mn not in names:
+            names.append(mn)
+    if not names:
+        return "아무 지역", ""
+    full = ", ".join(names)
+    return (full if len(names) <= 4 else f"{len(names)}개 맵"), full
 
 
 def main_maps(ctx: Ctx) -> list[str]:
@@ -4319,7 +4336,7 @@ function chk(){return gL(CK+cur,{})}
 function xs(){return gL(XK+cur,{})}
 function cb(key,on){return '<input type="checkbox" data-c="'+esc(key)+'"'+(on?" checked":"")+" /> "}
 var W={p:"설치",m:"표시(마커)",u:"사용"};
-function render(){var done=gdone(),y=gsync(),st=(y&&y.started)||[],s=sel(),c=chk(),x=xs();
+function render(){var done=gdone(),y=gsync(),st=(y&&y.started)||[],s=sel(),c=chk();
 document.querySelectorAll("#rmap button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-m")===cur)});
 var qs=D.q.filter(function(q){return qOn(q)&&!done[q.i]});
 function stOf(q){return st.indexOf(q.i)>=0?0:q.pre.every(function(p){return done[p]})?1:2}
@@ -4347,23 +4364,27 @@ if(r.gm.length)h+='<div class="chips">부품: '+r.gm.map(function(g){return g.ma
 line("c:"+p[0].i+":"+i,h,p[0].n)});flush("장비·무기 조건");
 var exs=D.ex[cur]||[];
 qx.forEach(function(p){var e=exs.filter(function(z){return z.raw===p[1].x})[0];line("x:"+p[0].i+":"+p[1].x,"탈출: <b>"+esc(e?e.n:p[1].x)+"</b>"+(p[1].d?' <span class="muted small">'+esc(p[1].d)+"</span>":""),p[0].n)});
-exs.forEach(function(e){if(!x[e.raw])return;var t=e.t;
-if(t.indexOf("flare")>=0)line("xf:"+e.raw,chip(D.flare)+' <span class="badge">조명탄 탈출</span>',e.n);
-if(t.indexOf("climb")>=0)line("xc:"+e.raw,D.climb.map(function(i){return chip(i)}).join("+")+' <span class="badge">등반 탈출</span>',e.n+" · "+e.d);
-if(t.indexOf("vex")>=0)line("xv:"+e.raw,chip(D.rub)+' <span class="badge">차량 요금</span>',e.n+" · 인원·스캐브 카르마에 따라 요금이 달라요");
-else if(e.g)line("xg:"+e.raw,chip(e.g[0],e.g[1])+' <span class="badge">'+(e.g[2]?"탈출 요금":"탈출에 낼 아이템")+"</span>",e.n);
-if(t.indexOf("nobag")>=0||t.indexOf("key")>=0||t.indexOf("lever")>=0||t.indexOf("coop")>=0||t.indexOf("time")>=0)line("xn:"+e.raw,"<b>"+esc(e.n)+"</b> — "+esc(e.d),"")});flush("탈출 준비");
+var fl=[],cl=[],vx=[],gi={},note=[];
+exs.forEach(function(e){var t=e.t;if(t.indexOf("flare")>=0)fl.push(e.n);if(t.indexOf("climb")>=0)cl.push(e.n);
+if(t.indexOf("vex")>=0)vx.push(e.n);else if(e.g){var gk=e.g[0]+":"+e.g[1];(gi[gk]||(gi[gk]={g:e.g,n:[]})).n.push(e.n)}
+if(t.indexOf("nobag")>=0||t.indexOf("key")>=0||t.indexOf("lever")>=0||t.indexOf("coop")>=0||t.indexOf("time")>=0||t.indexOf("climb")>=0)note.push(e)});
+function uses(a){return "쓰는 탈출구: "+esc(a.join(", "))}
+if(fl.length)line("xf",chip(D.flare)+' <span class="badge">조명탄 탈출</span>',uses(fl));
+if(cl.length)line("xc",D.climb.map(function(i){return chip(i)}).join("+")+' <span class="badge">등반 탈출</span>',uses(cl)+" · 방탄조끼 착용 불가");
+if(vx.length)line("xv",chip(D.rub)+' <span class="badge">차량 요금</span>',uses(vx)+" · 인원·스캐브 카르마에 따라 요금이 달라요");
+Object.keys(gi).forEach(function(k){var a=gi[k];line("xg:"+k,chip(a.g[0],a.g[1])+' <span class="badge">'+(a.g[2]?"탈출 요금":"탈출에 낼 아이템")+"</span>",uses(a.n))});
+flush("탈출구 관련 아이템");
+if(note.length)sec.push('<details class="xnote"><summary>조건이 있는 탈출구 <span class="muted small">'+note.length+'곳</span></summary><ul class="plain small">'+note.map(function(e){return "<li><b>"+esc(e.n)+"</b> — "+esc(e.d)+"</li>"}).join("")+"</ul></details>");
 find.forEach(function(p){line("f:"+p[1].id,chip(p[1].id,p[1].n),p[0].n)});flush("레이드에서 주울 퀘스트템");
 var bs=gL(BK,[]);bs.forEach(function(b,i){line("b:"+b,esc(b)+' <button type="button" class="linkish" data-del="'+i+'">빼기</button>',"")});flush("내 기본 준비물");
 document.getElementById("rp").innerHTML=(sec.join("")||'<p class="muted">이번 출정에 넣은 퀘스트가 없어요. 위에서 퀘스트를 고르거나 아래 탈출구·기본 준비물을 추가하세요.</p>');
 document.getElementById("rsum").textContent=tot?("챙길 것 "+tot+"개 중 "+got+"개 챙김"):"";
-document.getElementById("rx").innerHTML=exs.filter(function(e){return e.t.length||e.g}).map(function(e){return '<label class="rq"><input type="checkbox" data-x="'+esc(e.raw)+'"'+(x[e.raw]?" checked":"")+' /> <b>'+esc(e.n)+'</b> <span class="muted small">'+esc(e.d||(e.g?(e.g[2]?"유료":"아이템 필요"):""))+"</span></label>"}).join("")||'<p class="muted small">이 맵엔 준비물이 필요한 탈출구가 없어요.</p>';
 var nm=D.maps.filter(function(m){return m.i===cur})[0];document.getElementById("rmapn").textContent=nm?nm.n:""}
 function plain(){var out=[];document.querySelectorAll("#rp h3").forEach(function(h){out.push("["+h.textContent+"]");var ul=h.nextElementSibling;if(ul)ul.querySelectorAll("li").forEach(function(li){var l=li.querySelector("label");out.push((li.classList.contains("done")?"[x] ":"[ ] ")+l.textContent.replace(/\s+/g," ").replace("빼기","").trim())})});return out.join("\n")}
 document.getElementById("raid").addEventListener("change",function(e){var t=e.target,k;
 if((k=t.getAttribute("data-q"))){var s=sel();s[k]=t.checked?1:0;gS(SK+mode(),s);ev("raid_quest")}
 else if((k=t.getAttribute("data-c"))){var c=chk();if(t.checked)c[k]=1;else delete c[k];gS(CK+cur,c)}
-else if((k=t.getAttribute("data-x"))){var x=xs();if(t.checked)x[k]=1;else delete x[k];gS(XK+cur,x)}else return;render()});
+else return;render()});
 document.getElementById("raid").addEventListener("click",function(e){var t=e.target,m=t.getAttribute("data-m"),d=t.getAttribute("data-del");
 if(m){cur=m;gS(MP,cur);ev("raid_map",{raid_map:(D.maps.filter(function(z){return z.i===m})[0]||{}).s});render()}
 if(d!=null){var bs=gL(BK,[]);bs.splice(+d,1);gS(BK,bs);render()}
@@ -4385,15 +4406,14 @@ def raid_page(ctx: Ctx) -> tuple[str, str, int]:
     body = (f'<h1>출정 준비물 <span class="h1en">Raid checklist</span></h1>'
             f'<p class="sub">맵을 고르면 지금 하는 퀘스트에 필요한 아이템·열쇠·탈출 준비물을 한 목록으로 · 퀘스트 {len(data["q"])}개 · 데이터 기준 {e(ctx.stamp)}</p>'
             '<div class="note key"><b>쓰는 법</b> — ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담김) '
-            '③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템이 합쳐져 나옵니다. ④ 쓸 탈출구를 고르면 조명탄·등반 장비·차량 요금도 목록에 들어갑니다. '
+            '③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템과 이 맵 탈출구에 쓰이는 조명탄·등반 장비·차량 요금이 한 목록으로 나옵니다(탈출구는 레이드에 들어가야 정해지니 쓸 수 있는 것을 모두 보여 줍니다). '
             '체크 표시는 이 브라우저에만 저장됩니다.</div>'
             '<div id="raid">'
             '<div class="controls"><span class="seg" id="rmap">'
             + "".join(f'<button type="button" data-m="{e(m["i"])}">{e(m["n"])}</button>' for m in data["maps"])
             + '</span></div>'
             '<section class="box"><h2>① 이번 출정에 할 퀘스트 <span class="muted small" id="rmapn"></span></h2><div id="rq"><p class="muted">불러오는 중…</p></div></section>'
-            '<section class="box"><h2>② 쓸 탈출구 <span class="muted small">준비물이 필요한 곳만</span></h2><div id="rx"></div></section>'
-            '<section class="box rprep"><h2>③ 챙길 것 <span class="muted small" id="rsum"></span></h2><div id="rp"></div>'
+            '<section class="box rprep"><h2>② 챙길 것 <span class="muted small" id="rsum"></span></h2><div id="rp"></div>'
             '<div class="controls"><input id="rbin" type="text" maxlength="60" placeholder="내 기본 준비물 추가 (예: 지혈대 2개, 여분 탄창 3개)" />'
             '<button type="button" class="btn sm" id="radd">추가</button>'
             '<button type="button" class="btn sm ghost" id="rcopy">목록 복사</button><button type="button" class="btn sm ghost" id="rreset">이 맵 체크 지우기</button></div></section>'

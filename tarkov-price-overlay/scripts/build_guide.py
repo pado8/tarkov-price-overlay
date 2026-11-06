@@ -516,6 +516,7 @@ def main() -> int:
         if suf:
             q["n"] = f'{q["n"]} ({suf})'
         # 상인 키·받는 LL(묶음 LL 포함) — 퀘스트 목록의 '내 상인 등급'·'지금 받을 수 있는 것만'(11-04)
+        q["map"], q["mapt"] = guide_static.map_label(ctx, tasks[q["id"]])  # 목표 맵까지(11-06) — 퀘스트 맵 값만 보면 92개가 '아무 지역'
         q["ts"] = ctx.trader_slug(tasks[q["id"]].get("trader"))
         q["ll"] = ctx.trader_ll(tasks[q["id"]])
     # ll.json — 오버레이 연동 때 sync.js 가 깬·진행 중 퀘스트로 상인별 최소 LL을 추정하는 표(언어판마다 상인 이름 포함)
