@@ -268,7 +268,8 @@ type StatsEvent =
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
   | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
-  | "daily"; // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
+  | "daily" // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
+  | "donate"; // 11-06 후원 창 사용: open:<탭> | tab:<탭> | paypal_open | copy:<탭> (탭 = kakao|paypal). 금액·결제 정보 없음
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
 // Every event used to be its own POST → its own INSERT → its own wake of the
 // (autosuspending) Postgres compute, so a busy raid kept the DB awake all
@@ -4714,7 +4715,11 @@ function App() {
               <button
                 className="reset-btn donate-btn"
                 onClick={() => {
-                  if (!showDonate) dailyAdd("don");
+                  if (!showDonate) {
+                    dailyAdd("don");
+                    // 11-06 후원 창 사용 횟수: 열 때 기본 탭까지(금액·결제 정보는 없음)
+                    reportEvent("donate", `open:${donateTab}`);
+                  }
                   setShowDonate((s) => !s);
                   setDonateCopied(false);
                   setShowFeedback(false);
@@ -4844,6 +4849,7 @@ function App() {
                       aria-selected={donateTab === "kakao"}
                       className={`donate-tab${donateTab === "kakao" ? " active" : ""}`}
                       onClick={() => {
+                        if (donateTab !== "kakao") reportEvent("donate", "tab:kakao");
                         setDonateTab("kakao");
                         setDonateCopied(false);
                       }}
@@ -4855,6 +4861,7 @@ function App() {
                       aria-selected={donateTab === "paypal"}
                       className={`donate-tab${donateTab === "paypal" ? " active" : ""}`}
                       onClick={() => {
+                        if (donateTab !== "paypal") reportEvent("donate", "tab:paypal");
                         setDonateTab("paypal");
                         setDonateCopied(false);
                       }}
@@ -4878,11 +4885,12 @@ function App() {
                     {donateTab === "paypal" && (
                       <button
                         className="reset-btn"
-                        onClick={() =>
+                        onClick={() => {
+                          reportEvent("donate", "paypal_open");
                           openUrl(activeUrl).catch((e) =>
                             log(`donate: openUrl failed — ${String(e)}`)
-                          )
-                        }
+                          );
+                        }}
                       >
                         {t.donateOpen}
                       </button>
@@ -4890,6 +4898,7 @@ function App() {
                     <button
                       className="reset-btn"
                       onClick={() => {
+                        reportEvent("donate", `copy:${donateTab}`);
                         navigator.clipboard
                           .writeText(activeUrl)
                           .then(() => {
