@@ -1144,6 +1144,9 @@ class RadarService:
                         self._my_exits = {"slug": slug, "raid": raid, "names": set(got)}
             except Exception as e:  # noqa: BLE001 — 사진·OCR 문제는 지도 전체를 막지 않는다
                 log.warning(f"[radar] 탈출구 목록 읽기 실패: {e!r}")
+                # 게임이 아직 PNG 를 쓰는 중(잘린 파일)일 수 있다 — 본 목록에서 빼 다음 확인 때 다시 읽는다(앱이 0.4초마다 묻는다)
+                with self._exfil_lock:
+                    self._exfil_seen.discard(path.name)
             finally:
                 with self._exfil_lock:
                     self._exfil_busy = False

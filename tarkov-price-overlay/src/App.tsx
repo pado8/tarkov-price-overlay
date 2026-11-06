@@ -578,6 +578,7 @@ const submitFeedback = async (
 
 
 const PYTHON_API = "http://127.0.0.1:8765";
+const RADAR_POLL_MS = 400; // 새 스크린샷(지도·파티 위치) 확인 주기 — 피드백 #56
 
 // 시세 나이 배지 — 사이드카가 네트워크 대신 디스크 스냅샷을 쓰고 있거나(패치 당일 등) 카탈로그가 3시간 넘게 못 갱신됐을 때만
 const STALE_PRICE_SEC = 3 * 3600;
@@ -2691,7 +2692,9 @@ function App() {
       return !v;
     });
   };
-  // 새 스크린샷 감지: 1초마다 가벼운 확인(사이드카가 폴더 수정 시각이 같으면 다시 훑지 않음)
+  // 새 스크린샷 감지: 0.4초마다 가벼운 확인(사이드카가 폴더 수정 시각이 같으면 다시 훑지 않음).
+  // 11-07 피드백 #56 '스크린샷 → 지도 업데이트가 살짝 느림': 실측 가벼운 확인 0.015초·전체 지도 0.02~0.045초라 지연은 거의
+  // 이 주기(1초 → 평균 0.5초 대기)였다 → 0.4초(평균 0.2초). 나머지는 게임이 PNG 를 쓰는 시간이라 앱이 줄일 수 없다.
   useEffect(() => {
     if (!radarEnabled) return;
     const iv = window.setInterval(async () => {
@@ -2736,7 +2739,7 @@ function App() {
       } finally {
         radarPollBusyRef.current = false;
       }
-    }, 1000);
+    }, RADAR_POLL_MS);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radarEnabled, region.lang, region.gameMode]);
