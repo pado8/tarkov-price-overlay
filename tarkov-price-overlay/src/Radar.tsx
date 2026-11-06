@@ -328,13 +328,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     </label>
   );
 
-  // 목록은 지도와 같은 필터: 탈출구(PMC/공용 = pmc 칩, 스캐브 = showScav)·트랜짓·퀘스트(+개별 숨김)
-  const visible = (data.targets ?? []).filter((x) =>
-    x.kind === "extract" ? (x.faction === "scav" ? showScav : layers.pmc)
-    : x.kind === "transit" ? layers.transits
-    : layers.quests && !hiddenSet.has(questKey(x)),
-  );
-  // 대상 목록(탈출구·트랜짓·진행 중 퀘스트 목표 요약) — 카드는 지도 아래, 나란히 패널은 지도 오른쪽 열
+  // 목록은 퀘스트 목표만(퀘스트 칩·개별 숨김을 따른다). 11-06 사용자: '탈출구까지 나와 목록이 너무 길어 가려지는 게 많다'
+  // → 탈출구·트랜짓은 지도 위 표시로만. 퀘스트가 없을 때 이유는 지도 칩 아래 안내 줄(RadarMap questNote)이 알려 준다.
+  const visible = (data.targets ?? []).filter((x) => x.kind === "quest" && layers.quests && !hiddenSet.has(questKey(x)));
+  // 대상 목록(진행 중 퀘스트 목표 요약 — 탈출구·트랜짓은 지도에만) — 카드는 지도 아래, 나란히 패널은 지도 오른쪽 열
   const heading = data.shot?.heading ?? null;
   const stale = (data.shot?.age ?? 0) > STALE_SEC;
   const listMax = fill ? 40 : 8;
@@ -409,7 +406,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           )}
         </div>
       );
-  const emptyHint = visible.length === 0 && <div className="hint">{t.radarNoTargets}</div>;
+  const emptyHint = null; // 퀘스트가 없을 때 이유는 지도 칩 아래 한 줄(questNote)이 이미 보여 준다 — 같은 말을 두 번 하지 않게
   // 카드: 가까운 8개. 나란히: 목록 열 높이에 들어가는 만큼만(스크롤 없음) — 나머지 먼 대상은 지도에만(11-05 피드백)
   const targetList = (
     <div className="radar-list">
