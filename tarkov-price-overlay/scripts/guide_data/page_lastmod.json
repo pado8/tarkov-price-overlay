@@ -12,7 +12,7 @@
 "d": "2026-11-06"
 },
 "/guide/crafts/": {
-"h": "fccef6ff2612a564",
+"h": "0f6b7128b5ef8b99",
 "d": "2026-11-06"
 },
 "/guide/en/": {
@@ -28,7 +28,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/crafts/": {
-"h": "9cc019b5d360eec0",
+"h": "23447736b2976aa8",
 "d": "2026-11-06"
 },
 "/guide/en/event/": {
@@ -152,7 +152,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/items/": {
-"h": "ed11011e89fec241",
+"h": "6d158819f19ffb52",
 "d": "2026-11-06"
 },
 "/guide/en/kappa/": {
@@ -3008,8 +3008,8 @@
 "d": "2026-11-04"
 },
 "/guide/en/quests/": {
-"h": "781dfd5b7eb33be6",
-"d": "2026-11-04"
+"h": "dee11eb8c3553566",
+"d": "2026-11-06"
 },
 "/guide/en/quests/btr-driver/": {
 "h": "2698686002a65eea",
@@ -3060,7 +3060,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/rewards/": {
-"h": "d32fce0811a01f27",
+"h": "ffab46597479dda8",
 "d": "2026-11-06"
 },
 "/guide/en/start/": {
@@ -3076,7 +3076,7 @@
 "d": "2026-11-05"
 },
 "/guide/gunsmith/": {
-"h": "0cae07fdcd062111",
+"h": "83b8b027996ba093",
 "d": "2026-11-06"
 },
 "/guide/hideout/": {
@@ -3192,7 +3192,7 @@
 "d": "2026-11-06"
 },
 "/guide/items/": {
-"h": "c3cd967b0d841939",
+"h": "887de001a3f437b9",
 "d": "2026-11-06"
 },
 "/guide/kappa/": {
@@ -3340,7 +3340,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "bb6ba9268c128e77",
+"h": "728e446ae81ac8dd",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m45a1-45-acp-pistol/": {
@@ -3420,7 +3420,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/glock-17-9x19-pistol/": {
-"h": "2dcf5557720ec792",
+"h": "11870c081a809f85",
 "d": "2026-11-06"
 },
 "/guide/mods/glock-18c-9x19-machine-pistol/": {
@@ -3588,7 +3588,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/knights-armament-company-sr-25-762x51-marksman-rifle/": {
-"h": "af10255f835e873b",
+"h": "c6e40fbcf15207d4",
 "d": "2026-11-06"
 },
 "/guide/mods/lebedev-pl-15-9x19-pistol/": {
@@ -3708,7 +3708,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "c578e1680ba35a4a",
+"h": "a33a0f8ddb11dad6",
 "d": "2026-11-06"
 },
 "/guide/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
@@ -3784,7 +3784,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-12k-ver10-12ga-semi-automatic-shotgun/": {
-"h": "554222f68af5653f",
+"h": "a2d4fc62585e437c",
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-9-9x19-carbine/": {
@@ -3792,7 +3792,7 @@
 "d": "2026-11-06"
 },
 "/guide/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "8a26cfeb6ed489fc",
+"h": "a36da68593636852",
 "d": "2026-11-06"
 },
 "/guide/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
@@ -6048,8 +6048,8 @@
 "d": "2026-11-04"
 },
 "/guide/quests/": {
-"h": "56a0de742c551735",
-"d": "2026-11-04"
+"h": "c996db0751e276aa",
+"d": "2026-11-06"
 },
 "/guide/quests/btr-driver/": {
 "h": "9dd97bc136e8c406",
@@ -6100,7 +6100,7 @@
 "d": "2026-11-06"
 },
 "/guide/rewards/": {
-"h": "9dda07660ef08ba6",
+"h": "54b59ba4d9d144c8",
 "d": "2026-11-06"
 },
 "/guide/ru/": {
@@ -6116,7 +6116,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/crafts/": {
-"h": "debdf563b2d396a9",
+"h": "3d1a8c387c93be87",
 "d": "2026-11-06"
 },
 "/guide/ru/event/": {
@@ -6240,7 +6240,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/items/": {
-"h": "beda38f7c68e309a",
+"h": "8570932b1bf4022c",
 "d": "2026-11-06"
 },
 "/guide/ru/kappa/": {
@@ -9096,8 +9096,8 @@
 "d": "2026-11-04"
 },
 "/guide/ru/quests/": {
-"h": "2d4c129ecdcef8e1",
-"d": "2026-11-04"
+"h": "fe1a3e6c7b449c8b",
+"d": "2026-11-06"
 },
 "/guide/ru/quests/btr-driver/": {
 "h": "f37422a4cfab1639",
@@ -9148,7 +9148,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/rewards/": {
-"h": "d41df7d979598d0b",
+"h": "77f70f5cddd47b9c",
 "d": "2026-11-06"
 },
 "/guide/ru/start/": {
@@ -9180,7 +9180,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/crafts/": {
-"h": "5490222446e5a73c",
+"h": "8157237e3af17062",
 "d": "2026-11-06"
 },
 "/guide/zh/event/": {
@@ -9304,7 +9304,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/items/": {
-"h": "cb8b76401fe270de",
+"h": "c7da845fe33d7f59",
 "d": "2026-11-06"
 },
 "/guide/zh/kappa/": {
@@ -12160,8 +12160,8 @@
 "d": "2026-11-05"
 },
 "/guide/zh/quests/": {
-"h": "1bb85ac4cd1a46d5",
-"d": "2026-11-05"
+"h": "f71ee1f48740aab4",
+"d": "2026-11-06"
 },
 "/guide/zh/quests/btr-driver/": {
 "h": "6824a77a1ef56ecd",
@@ -12212,7 +12212,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/rewards/": {
-"h": "1ae1448883c3354c",
+"h": "a03c74e6d50a5385",
 "d": "2026-11-06"
 },
 "/guide/zh/start/": {

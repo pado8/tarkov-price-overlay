@@ -31,7 +31,13 @@ top.appendChild(a)}
 // Полученный прогресс хранится в ячейке своего сервера (PVP/PVE/сезон) (guide.sync.m.<Режим>) с 'заменой' — без смешивания с ручными отметками (guide.quests) (11-04).
 // Режим сайта тоже следует серверу оверлея (иначе автозагрузка на следующей странице возьмёт прогресс другого сервера).
 // нижняя граница LL торговца (11-04) — наибольший LL среди выполненных и начатых заданий (вы их получили, значит не ниже). ll.json = задание → [торговец, LL] из сборки
-function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var e={},q=(d&&d.q)||{};(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(e[x[0]]||0))e[x[0]]=x[1]});S("guide.ll.est."+sm,{ts:Date.now(),est:e});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
+function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var lb={},q=(d&&d.q)||{},R=(d&&d.r)||{},LV=(d&&d.lv)||{},rep={},rl={},e={},plv=+L("guide.plv."+sm,0)||0;
+(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(lb[x[0]]||0))lb[x[0]]=x[1]});
+(sy.completed||[]).forEach(function(id){(R[id]||[]).forEach(function(w){rep[w[0]]=(rep[w[0]]||0)+w[1]})});
+Object.keys(LV).forEach(function(k){var v=1,r=rep[k]||0;LV[k].forEach(function(l){if(r+1e-9>=l[2]&&(!plv||plv>=l[1])&&l[0]>v)v=l[0]});if(v>1)rl[k]=v});
+Object.keys(lb).concat(Object.keys(rl)).forEach(function(k){e[k]=Math.max(lb[k]||0,rl[k]||0)});
+S("guide.ll.est."+sm,{ts:Date.now(),est:e,lb:lb,rep:rep,rl:rl,plv:plv});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
+window.__guideLLEst=function(){var y=gsync();if(y)llEst(y,gsm())};
 function apply(p,how){var first=!L(SK,null);
 if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length),first:first?1:0,log_ok:p.log_ok===false?0:1},how==="auto");
 if(first)try{if(window.gtag)gtag("set","user_properties",{guide_synced:"1"})}catch(e){}

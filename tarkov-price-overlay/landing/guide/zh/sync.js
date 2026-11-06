@@ -31,7 +31,13 @@ top.appendChild(a)}
 // 收到的进度存入该服务器(PVP/PVE/赛季)的槽位(guide.sync.m.<模式>)中，以 '替换'方式保存 — 不与手动勾选(guide.quests)混合(11-04)。
 // 网站模式也跟随覆盖层的服务器（否则下一页的自动读取会拿到另一个服务器的进度）。
 // 商人 LL 下限估算(11-04) — 已完成·进行中任务所要求 LL 的最大值（既然接到了，至少是该等级）。ll.json = 构建生成的 任务→[商人, LL]
-function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var e={},q=(d&&d.q)||{};(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(e[x[0]]||0))e[x[0]]=x[1]});S("guide.ll.est."+sm,{ts:Date.now(),est:e});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
+function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var lb={},q=(d&&d.q)||{},R=(d&&d.r)||{},LV=(d&&d.lv)||{},rep={},rl={},e={},plv=+L("guide.plv."+sm,0)||0;
+(sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(lb[x[0]]||0))lb[x[0]]=x[1]});
+(sy.completed||[]).forEach(function(id){(R[id]||[]).forEach(function(w){rep[w[0]]=(rep[w[0]]||0)+w[1]})});
+Object.keys(LV).forEach(function(k){var v=1,r=rep[k]||0;LV[k].forEach(function(l){if(r+1e-9>=l[2]&&(!plv||plv>=l[1])&&l[0]>v)v=l[0]});if(v>1)rl[k]=v});
+Object.keys(lb).concat(Object.keys(rl)).forEach(function(k){e[k]=Math.max(lb[k]||0,rl[k]||0)});
+S("guide.ll.est."+sm,{ts:Date.now(),est:e,lb:lb,rep:rep,rl:rl,plv:plv});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
+window.__guideLLEst=function(){var y=gsync();if(y)llEst(y,gsm())};
 function apply(p,how){var first=!L(SK,null);
 if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length),first:first?1:0,log_ok:p.log_ok===false?0:1},how==="auto");
 if(first)try{if(window.gtag)gtag("set","user_properties",{guide_synced:"1"})}catch(e){}
