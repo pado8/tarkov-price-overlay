@@ -12,7 +12,7 @@
 "d": "2026-11-06"
 },
 "/guide/crafts/": {
-"h": "464e659d742d9716",
+"h": "58358c9041ca1eb2",
 "d": "2026-11-06"
 },
 "/guide/en/": {
@@ -28,7 +28,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/crafts/": {
-"h": "879dc0da6dbd0489",
+"h": "ee39dc8e185766b1",
 "d": "2026-11-06"
 },
 "/guide/en/event/": {
@@ -36,7 +36,7 @@
 "d": "2026-11-05"
 },
 "/guide/en/gunsmith/": {
-"h": "435fcac208829a6a",
+"h": "54ad31e8ccfb8685",
 "d": "2026-11-06"
 },
 "/guide/en/hideout/": {
@@ -232,659 +232,659 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/": {
-"h": "c877b41f3bcbc38e",
+"h": "f7980122497425f3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/20x1mm-toy-gun/": {
-"h": "b959a7f5a199ec0e",
+"h": "a27ca11831a3e6cb",
 "d": "2026-11-06"
 },
 "/guide/en/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "c25fddf3e7181f93",
+"h": "b411f39b49f84553",
 "d": "2026-11-06"
 },
 "/guide/en/mods/adar-2-15-556x45-carbine/": {
-"h": "c1c04479cace0fee",
+"h": "6a55477ea5a1ffb9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
-"h": "7c992718f1102150",
+"h": "758378dddd07fec4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/as-val-9x39-special-assault-rifle/": {
-"h": "a2372193c637b367",
+"h": "f9a8acb328c40a73",
 "d": "2026-11-06"
 },
 "/guide/en/mods/as-val-mod4-9x39-special-assault-rifle/": {
-"h": "a4168b758b49dc02",
+"h": "6300e16ae1c879e3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/ash-12-127x55-assault-rifle/": {
-"h": "d0088618ea54f9f2",
+"h": "c2d696d60f6aec1c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/benelli-m3-super-90-12ga-dual-mode-shotgun/": {
-"h": "f479725688c6da42",
+"h": "43c6a695ccc0ee31",
 "d": "2026-11-06"
 },
 "/guide/en/mods/beretta-m9a3-9x19-pistol/": {
-"h": "d70ef572ffb602ef",
+"h": "5fa33b1f9d8171b2",
 "d": "2026-11-06"
 },
 "/guide/en/mods/bt-mp9-9x19-submachine-gun/": {
-"h": "de14b363f8dd2923",
+"h": "631613ba11eef0d1",
 "d": "2026-11-06"
 },
 "/guide/en/mods/bt-mp9-n-9x19-submachine-gun/": {
-"h": "d9143c2b4b3fe8fb",
+"h": "bbbe488296d39ec3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/chiappa-rhino-200ds-9x19-revolver/": {
-"h": "0d2ca8fbf35f02d5",
+"h": "9076b2c20d483097",
 "d": "2026-11-06"
 },
 "/guide/en/mods/chiappa-rhino-50ds-357-revolver/": {
-"h": "9c0ff945eb90f2a6",
+"h": "ac508c4363ed76e7",
 "d": "2026-11-06"
 },
 "/guide/en/mods/cmmg-mk47-mutant-762x39-assault-rifle/": {
-"h": "ca86d224984918df",
+"h": "cfd993a93853674c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "625ff043efd04951",
+"h": "b9faa62e928551ca",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "549b7c2b92a14f57",
+"h": "60d04e5e7cb80672",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "828c575feb886607",
+"h": "ee2d602a8222f322",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m45a1-45-acp-pistol/": {
-"h": "b7709b084b279813",
+"h": "bb4b1f33543cc179",
 "d": "2026-11-06"
 },
 "/guide/en/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "3102fdd4e77b1fc9",
+"h": "aea6fd9e3303565e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
-"h": "6b552c16aae8b45a",
+"h": "e2c95d590cf4ee5d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/custom-guns-nl545-gp-545x39-assault-rifle/": {
-"h": "cabbfadfc949c155",
+"h": "8f0a1526aa2e97cd",
 "d": "2026-11-06"
 },
 "/guide/en/mods/degtyarev-rpd-762x39-machine-gun/": {
-"h": "16c6780d979e5ca9",
+"h": "a1c3145f1111e189",
 "d": "2026-11-06"
 },
 "/guide/en/mods/degtyarev-rpdn-762x39-machine-gun/": {
-"h": "1ef707676d0f6f36",
+"h": "9b7b9018e9bd903f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/desert-tech-mdr-556x45-assault-rifle/": {
-"h": "6f225f98daee73b3",
+"h": "a74540dd4537ba6d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/desert-tech-mdr-762x51-assault-rifle/": {
-"h": "26ea0d0a69cbd944",
+"h": "484031037b2ececc",
 "d": "2026-11-06"
 },
 "/guide/en/mods/ds-arms-sa58-762x51-assault-rifle/": {
-"h": "05f88221706f1048",
+"h": "a1ef4c49e1ebb1e8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-five-seven-mk2-57x28-pistol-fde/": {
-"h": "1a466c2c2b60045a",
+"h": "4ce7cde20cfba77e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "b42e47766689c88c",
+"h": "fa63a0f0536bfe24",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-p90-57x28-submachine-gun-scourge/": {
-"h": "92676d0d0e28c59f",
+"h": "476a40b960269124",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-p90-57x28-submachine-gun/": {
-"h": "1d6e3e890ad12d88",
+"h": "8d376ffb5c85cc58",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-scar-h-762x51-assault-rifle-fde/": {
-"h": "832cb66db7448d0b",
+"h": "cc198232a00aaa50",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-scar-h-762x51-assault-rifle/": {
-"h": "de67b5a8494cba2d",
+"h": "04c31e68be8273ee",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-scar-h-x-17-762x51-assault-rifle/": {
-"h": "53ac5b47c9eff619",
+"h": "945fc0081f68032a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-scar-l-556x45-assault-rifle-fde/": {
-"h": "3b8b6863883f03cf",
+"h": "59cea0e030509ec2",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn-scar-l-556x45-assault-rifle/": {
-"h": "7fbc724c0239d46d",
+"h": "7d8fe962dcaec8d9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/fn40gl-mk2-40mm-grenade-launcher/": {
-"h": "ccb008a0fb8b9fa8",
+"h": "474556c8c4e40706",
 "d": "2026-11-06"
 },
 "/guide/en/mods/glock-17-9x19-pistol/": {
-"h": "9d8d1a2a09b80c60",
+"h": "3a192d90f940041e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/glock-18c-9x19-machine-pistol/": {
-"h": "e5254cd71001a858",
+"h": "f579dfe31345cbab",
 "d": "2026-11-06"
 },
 "/guide/en/mods/glock-19x-9x19-pistol/": {
-"h": "390f935c24fd22fa",
+"h": "1cb926737285c09e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "25b1d439e3db4fac",
+"h": "dab7a17476834d70",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "89df63ed6543e0ff",
+"h": "e0d70b36874c89ad",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-g28-762x51-marksman-rifle/": {
-"h": "abd08cea43e573f9",
+"h": "a37c73b7df6d262b",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-g36-556x45-assault-rifle/": {
-"h": "200271dd4e2b7611",
+"h": "3d797ca8dfca2393",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp5-9x19-submachine-gun-navy-3-round-burst/": {
-"h": "1a26b778c1840b0c",
+"h": "e63a216ec431e6c0",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp5k-9x19-submachine-gun/": {
-"h": "e6748f12a2b52f8b",
+"h": "d1ba590761c4f856",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "0d95b2c0a270c52c",
+"h": "50762db76ea4ac92",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "dec63b3a08cae2fd",
+"h": "79a7ea52861e135f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "333ebf106e81507c",
+"h": "c05a45be4e73adf9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-usp-45-acp-pistol/": {
-"h": "96310e80b237d835",
+"h": "05be348ec8d58a10",
 "d": "2026-11-06"
 },
 "/guide/en/mods/howa-type-20-556x45-assault-rifle/": {
-"h": "27a4a8f7376542dc",
+"h": "fe0443795c826997",
 "d": "2026-11-06"
 },
 "/guide/en/mods/iwi-uzi-9x19-submachine-gun/": {
-"h": "62811039de69a24a",
+"h": "103405cc2f346034",
 "d": "2026-11-06"
 },
 "/guide/en/mods/iwi-uzi-pro-pistol-9x19-submachine-gun/": {
-"h": "89c9c8c58b09fc73",
+"h": "f2ce016f1c328d94",
 "d": "2026-11-06"
 },
 "/guide/en/mods/iwi-uzi-pro-smg-9x19-submachine-gun/": {
-"h": "3b3e6aabbbf7613b",
+"h": "519540908699c47f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-101-556x45-assault-rifle/": {
-"h": "89ca1a2603325474",
+"h": "b89bb104ff042d50",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-102-556x45-assault-rifle/": {
-"h": "428dd029a4285043",
+"h": "ec5b8210167422a8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-103-762x39-assault-rifle/": {
-"h": "41c9fc62bce1178b",
+"h": "27ef0eb62390753b",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-104-762x39-assault-rifle/": {
-"h": "ef9565b550789adf",
+"h": "fd4e20e085524d1e",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-105-545x39-assault-rifle/": {
-"h": "4d8f4b0c722c7937",
+"h": "5944240c3f500b87",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-12-545x39-assault-rifle/": {
-"h": "471b419d67ba4408",
+"h": "72873ced9f3623b9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-308-762x51-assault-rifle/": {
-"h": "444e6e4a53746d5b",
+"h": "d063916816d9eb12",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-74-545x39-assault-rifle/": {
-"h": "718d92a288b2fe43",
+"h": "1acd61bc14afc739",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-74m-545x39-assault-rifle/": {
-"h": "372309564731d5a9",
+"h": "1195640ae0e0543a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-ak-74n-545x39-assault-rifle/": {
-"h": "0bc08b137c3d0a6a",
+"h": "31113434a7aa6340",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-akm-762x39-assault-rifle/": {
-"h": "1678a6314ef1775a",
+"h": "d92698b8ac5d23fa",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-akmn-762x39-assault-rifle/": {
-"h": "c2aa70b4832acff7",
+"h": "eb387756e93e9c5a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-akms-762x39-assault-rifle/": {
-"h": "b7c3fbf02a684d7d",
+"h": "da4956364b0a81b1",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-akmsn-762x39-assault-rifle/": {
-"h": "e193866ddb8ad20b",
+"h": "13503772c23c563c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-aks-74-545x39-assault-rifle/": {
-"h": "efd688c6c33a1cb4",
+"h": "9a6f99c4676a03fe",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-aks-74n-545x39-assault-rifle/": {
-"h": "daeb6964ba7d7da4",
+"h": "73af7e91225a8050",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-aks-74u-545x39-assault-rifle/": {
-"h": "fdd1854f671d4f5c",
+"h": "7c5ee074dd107e32",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-aks-74ub-545x39-assault-rifle/": {
-"h": "2398f7f2c862479b",
+"h": "9b757ae9a3cb1a9b",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-aks-74un-545x39-assault-rifle/": {
-"h": "1e358adbc44a9919",
+"h": "80e61533e229a6b0",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-pkm-762x54r-machine-gun/": {
-"h": "ffd0549a8ef1b1f5",
+"h": "fc66e91bb3938fa4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kalashnikov-pkp-762x54r-infantry-machine-gun/": {
-"h": "09a8df19e23d8664",
+"h": "d25bd6c12c44eb53",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kbp-9a-91-9x39-compact-assault-rifle/": {
-"h": "d7982a510e174bb8",
+"h": "ee4cbc810ce0b3f9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kbp-vsk-94-9x39-rifle/": {
-"h": "23da665318f591ff",
+"h": "72c3dc846920cba4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/kel-tec-rfb-762x51-rifle/": {
-"h": "0d3d46c9599812f2",
+"h": "7a53326356769bca",
 "d": "2026-11-06"
 },
 "/guide/en/mods/knights-armament-company-sr-25-762x51-marksman-rifle-taupe/": {
-"h": "23127ebfb8815873",
+"h": "4337272c683c2039",
 "d": "2026-11-06"
 },
 "/guide/en/mods/knights-armament-company-sr-25-762x51-marksman-rifle/": {
-"h": "20c42c4cdb4506fe",
+"h": "153ed81e496d3d4a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "36ad61302e0a1130",
+"h": "319de5b34d0bb4af",
 "d": "2026-11-06"
 },
 "/guide/en/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
-"h": "0ee3ef91f4d47ca3",
+"h": "484d4d9ffe8296f6",
 "d": "2026-11-06"
 },
 "/guide/en/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "b2f069d2abca1a68",
+"h": "39643bd38ee2dc78",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-l5-357-pistol/": {
-"h": "4b08a166c8c50290",
+"h": "f0e7d3366ba43be5",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-l5-50-ae-pistol/": {
-"h": "3da3b95cec9a6979",
+"h": "1dbed9cc98efde69",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-l6-50-ae-pistol-wts/": {
-"h": "c0a207001ec5ed8d",
+"h": "e7150599cbcb54ee",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-l6-50-ae-pistol/": {
-"h": "b9781205db58215e",
+"h": "afb38d821f8b73ce",
 "d": "2026-11-06"
 },
 "/guide/en/mods/magnum-research-desert-eagle-mk-xix-50-ae-pistol/": {
-"h": "8766ab8eca8e3102",
+"h": "1b10829863e6d49c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/makarov-pm-9x18pm-pistol/": {
-"h": "4b4a5b09eccf9c9f",
+"h": "6bfb1e936eaa8b0d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "50796bd9e41ff234",
+"h": "d2b9afb1926eec3f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/marlin-mxlr-308-me-lever-action-rifle/": {
-"h": "402674d6eec3fb0f",
+"h": "87d43dc1cb3af026",
 "d": "2026-11-06"
 },
 "/guide/en/mods/milkor-m32a1-msgl-40mm-grenade-launcher/": {
-"h": "ec8899368717589a",
+"h": "a4d527319a9f4d1c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-simonov-op-sks-762x39-carbine/": {
-"h": "dfba0ef67a965c2d",
+"h": "a9888fc270059bde",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "ffbfd7235f7a263e",
+"h": "d6a8bc09351c5885",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
-"h": "da50bf490d2cf4e9",
+"h": "bb34b13dbb2bf66d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "b39549b76fb1dd41",
+"h": "4d77ee1dbfc0aa42",
 "d": "2026-11-06"
 },
 "/guide/en/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "afa9f1b607c2b08c",
+"h": "e883abaa69b16d61",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "3b9abcf95fb55430",
+"h": "a9bd0ffe689e8985",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "d43c67a9d8f8806e",
+"h": "716c7f3ab20a9582",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
-"h": "b94221e57077493b",
+"h": "001af4bbbbf85953",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-133-12ga-pump-action-shotgun/": {
-"h": "44bfc53c83c54705",
+"h": "d4188167c652903b",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-153-12ga-semi-automatic-shotgun/": {
-"h": "f569862f26344c3a",
+"h": "10530c0d397ad30c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-155-12ga-semi-automatic-shotgun/": {
-"h": "fd59f9cb183a75d7",
+"h": "f236f1ce9907f866",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-18-762x54r-single-shot-rifle/": {
-"h": "6e0a2f5ebedb2f2f",
+"h": "23faf6daff2bab53",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-43-12ga-sawed-off-double-barrel-shotgun/": {
-"h": "fedcbbfbfe9c910e",
+"h": "fb88813c90fcf8c8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mp-43-1c-12ga-double-barrel-shotgun/": {
-"h": "d16f74ebfcd4ac90",
+"h": "d8a84109a005974f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mps-auto-assault-12-gen-1-12ga-automatic-shotgun/": {
-"h": "f95aa2c8adc6bdab",
+"h": "1f3aa0f5a87fb6cd",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mps-auto-assault-12-gen-2-12ga-automatic-shotgun/": {
-"h": "6ebf646a9aca5890",
+"h": "2a93de4092a78a2a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/mts-255-12-12ga-shotgun/": {
-"h": "5436df05e1088c05",
+"h": "90d06854cfb437c1",
 "d": "2026-11-06"
 },
 "/guide/en/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "7bd12d63160c2696",
+"h": "985e25083b17cfdb",
 "d": "2026-11-06"
 },
 "/guide/en/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
-"h": "a6b430c3395a7857",
+"h": "093637c3ce70ccd4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pb-9x18pm-silenced-pistol/": {
-"h": "6ca7a5163ef0c36a",
+"h": "a768bc93f9adaeb8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "59face8a822f384f",
+"h": "8c94094f581073cb",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-9-klin-9x18pmm-submachine-gun/": {
-"h": "2384f495022deea9",
+"h": "f17f473941f42274",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-91-01-kedr-b-9x18pm-submachine-gun/": {
-"h": "bf51fc9c3d25a671",
+"h": "63070cb9ddaae3d1",
 "d": "2026-11-06"
 },
 "/guide/en/mods/pp-91-kedr-9x18pm-submachine-gun/": {
-"h": "0203282caf98940b",
+"h": "7dc8bf67a5b7745f",
 "d": "2026-11-06"
 },
 "/guide/en/mods/ppsh-41-762x25-submachine-gun/": {
-"h": "a2da7674c62aae5d",
+"h": "8761e7aaac347b85",
 "d": "2026-11-06"
 },
 "/guide/en/mods/radian-weapons-model-1-fa-556x45-assault-rifle/": {
-"h": "667b7243c942986c",
+"h": "e85042f8dad050f5",
 "d": "2026-11-06"
 },
 "/guide/en/mods/remington-model-700-762x51-bolt-action-sniper-rifle/": {
-"h": "50e7a6f07654c371",
+"h": "692626ff883cdeed",
 "d": "2026-11-06"
 },
 "/guide/en/mods/remington-model-870-12ga-pump-action-shotgun/": {
-"h": "0072f6684a72e6d8",
+"h": "fe535c28712c874d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/remington-r11-rsass-762x51-marksman-rifle/": {
-"h": "0632afba509ca5a2",
+"h": "276ebd022f158621",
 "d": "2026-11-06"
 },
 "/guide/en/mods/rifle-dynamics-rd-704-762x39-assault-rifle/": {
-"h": "7c5ad1ee1ba1eb9c",
+"h": "e8a12b9866f400cd",
 "d": "2026-11-06"
 },
 "/guide/en/mods/rpk-16-545x39-light-machine-gun/": {
-"h": "b220890ac95bc5b3",
+"h": "b76997fffb40d7dd",
 "d": "2026-11-06"
 },
 "/guide/en/mods/rsh-12-127x55-revolver/": {
-"h": "436dddcfbfb6394c",
+"h": "b1bd5638aa62988c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sag-ak-545-545x39-carbine/": {
-"h": "521e5cc22c8b0afa",
+"h": "eda4ac11e8153624",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sag-ak-545-short-545x39-carbine/": {
-"h": "61542848e439981e",
+"h": "ea9abbf7e953b427",
 "d": "2026-11-06"
 },
 "/guide/en/mods/saiga-12k-12ga-automatic-shotgun-redline/": {
-"h": "6082b6b19022aae9",
+"h": "fc9a826685d70614",
 "d": "2026-11-06"
 },
 "/guide/en/mods/saiga-12k-12ga-automatic-shotgun/": {
-"h": "fd76f0ff0be9b57e",
+"h": "f630db2cc8df7dcb",
 "d": "2026-11-06"
 },
 "/guide/en/mods/saiga-12k-ver10-12ga-semi-automatic-shotgun/": {
-"h": "9b79442ed4fd11c0",
+"h": "fc4afd0c600026ef",
 "d": "2026-11-06"
 },
 "/guide/en/mods/saiga-9-9x19-carbine/": {
-"h": "8a1e817ee2d7ce4c",
+"h": "e0e36a1f6c6a673d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "e9b54a2e4d6f58e4",
+"h": "d7a14cae13e7a1ee",
 "d": "2026-11-06"
 },
 "/guide/en/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "e92505d0df31029c",
+"h": "9f1c18f185ac4577",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sig-mcx-300-blackout-assault-rifle/": {
-"h": "fb7044704e2ab1b3",
+"h": "e01eeb8b93e227d4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sig-mcx-spear-68x51-assault-rifle/": {
-"h": "685554333b215ca4",
+"h": "9d881248147f56e6",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sig-mpx-9x19-submachine-gun/": {
-"h": "6431e933abb215d3",
+"h": "6dcd2711456c0979",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sig-p226r-9x19-pistol/": {
-"h": "2f872c14ef72d1e3",
+"h": "b75a0ef9f4bea247",
 "d": "2026-11-06"
 },
 "/guide/en/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "f982098c9abd21df",
+"h": "a44f1178277ef014",
 "d": "2026-11-06"
 },
 "/guide/en/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "52890be0b90528c6",
+"h": "43f58823067665ae",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sr-2m-veresk-9x21-submachine-gun/": {
-"h": "277f526b6e89c4a7",
+"h": "4366c249193c233d",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sr-3m-9x39-compact-assault-rifle/": {
-"h": "3d2c41106849d024",
+"h": "c5f2caa911bd1fc0",
 "d": "2026-11-06"
 },
 "/guide/en/mods/stechkin-apb-9x18pm-silenced-machine-pistol/": {
-"h": "43776e041274889c",
+"h": "f3d3d415293799bc",
 "d": "2026-11-06"
 },
 "/guide/en/mods/stechkin-aps-9x18pm-machine-pistol/": {
-"h": "31352326038be827",
+"h": "a037f6ec752a5b98",
 "d": "2026-11-06"
 },
 "/guide/en/mods/steyr-aug-a1-556x45-assault-rifle/": {
-"h": "70ac00a7182efc7f",
+"h": "2a7f646381ad59fa",
 "d": "2026-11-06"
 },
 "/guide/en/mods/steyr-aug-a3-556x45-assault-rifle-black/": {
-"h": "6b1371ae94651078",
+"h": "7c0b815bfef89a41",
 "d": "2026-11-06"
 },
 "/guide/en/mods/steyr-aug-a3-556x45-assault-rifle/": {
-"h": "6f4db9ebbf8f52d3",
+"h": "da04843b8fd511f2",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sv-98-762x54r-bolt-action-sniper-rifle/": {
-"h": "ec40e8be5dc0f943",
+"h": "78ad21e2485194d9",
 "d": "2026-11-06"
 },
 "/guide/en/mods/svds-762x54r-sniper-rifle/": {
-"h": "53f37fa5c5a0a59f",
+"h": "38fabdabb63785e8",
 "d": "2026-11-06"
 },
 "/guide/en/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "0093e14fb183e6a0",
+"h": "66260aba71ade4f3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
-"h": "45359c859a5b298c",
+"h": "da786cc0003c9625",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "bc17630e0186ac1d",
+"h": "c06003cbf539eb1a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
-"h": "d336d25eaf8a90c4",
+"h": "24a83bf45d301474",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tkpd-93x64-carbine/": {
-"h": "82294225bf452114",
+"h": "9d436a98b55ff577",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-avt-40-762x54r-automatic-rifle/": {
-"h": "666df0ad9603a9ca",
+"h": "c95d4dddc1156c86",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-svt-40-762x54r-rifle/": {
-"h": "e5e0676787c7e85b",
+"h": "66da6ef3c144ea73",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "50e65d049301c3ac",
+"h": "321996ab889a919c",
 "d": "2026-11-06"
 },
 "/guide/en/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "e1f42869889cfc91",
+"h": "7a499d08942e2be4",
 "d": "2026-11-06"
 },
 "/guide/en/mods/toz-106-20ga-bolt-action-shotgun/": {
-"h": "0c5dbe98b3dd0476",
+"h": "f095a02204f37951",
 "d": "2026-11-06"
 },
 "/guide/en/mods/toz-ks-23m-23x75mm-pump-action-shotgun/": {
-"h": "c5bfbef63337eb3e",
+"h": "3789abd25d1cfd27",
 "d": "2026-11-06"
 },
 "/guide/en/mods/toz-simonov-sks-762x39-carbine/": {
-"h": "dd6158f81f10c879",
+"h": "4bca0ec8f48f9f56",
 "d": "2026-11-06"
 },
 "/guide/en/mods/us-ordnance-m60e4-762x51-light-machine-gun/": {
-"h": "4976c5bee4e246cb",
+"h": "add6f25e697518d3",
 "d": "2026-11-06"
 },
 "/guide/en/mods/us-ordnance-m60e6-762x51-light-machine-gun-fde/": {
-"h": "065cb60c834332f6",
+"h": "55bd3fce0643eb9a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/us-ordnance-m60e6-762x51-light-machine-gun/": {
-"h": "894699e4149e4b0d",
+"h": "dabeb8ab66175bf2",
 "d": "2026-11-06"
 },
 "/guide/en/mods/vss-vintorez-9x39-special-sniper-rifle/": {
-"h": "ec38632e4f7af2db",
+"h": "feaa60a09e3d1929",
 "d": "2026-11-06"
 },
 "/guide/en/mods/yarygin-mp-443-grach-9x19-pistol/": {
-"h": "a08718572228e529",
+"h": "c8b5b751555e6743",
 "d": "2026-11-06"
 },
 "/guide/en/patch/": {
@@ -3056,7 +3056,7 @@
 "d": "2026-11-04"
 },
 "/guide/en/rewards/": {
-"h": "f628aa1c4da9cf6e",
+"h": "e412aaf45d80ae8d",
 "d": "2026-11-06"
 },
 "/guide/en/start/": {
@@ -3072,7 +3072,7 @@
 "d": "2026-11-05"
 },
 "/guide/gunsmith/": {
-"h": "e0b4bf2b23f53767",
+"h": "42b559677c4b42c5",
 "d": "2026-11-06"
 },
 "/guide/hideout/": {
@@ -3268,659 +3268,659 @@
 "d": "2026-11-06"
 },
 "/guide/mods/": {
-"h": "8fbf287521453dbc",
+"h": "b55c3aad1b5dcd14",
 "d": "2026-11-06"
 },
 "/guide/mods/20x1mm-toy-gun/": {
-"h": "a0cb400ab96d8a18",
+"h": "6ae6ba90f90bca90",
 "d": "2026-11-06"
 },
 "/guide/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "f8b37ef130eb1a23",
+"h": "a5495b1d2f917d87",
 "d": "2026-11-06"
 },
 "/guide/mods/adar-2-15-556x45-carbine/": {
-"h": "24dbcb83cf0b680d",
+"h": "49b357a406d41f12",
 "d": "2026-11-06"
 },
 "/guide/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
-"h": "1ee7e2cd41ffe6fa",
+"h": "83aecce57658ef96",
 "d": "2026-11-06"
 },
 "/guide/mods/as-val-9x39-special-assault-rifle/": {
-"h": "2788839eb88198de",
+"h": "a925c9106fd51d49",
 "d": "2026-11-06"
 },
 "/guide/mods/as-val-mod4-9x39-special-assault-rifle/": {
-"h": "f323cc2fce0f23da",
+"h": "663bf70d54606d9f",
 "d": "2026-11-06"
 },
 "/guide/mods/ash-12-127x55-assault-rifle/": {
-"h": "ea287738188cab9c",
+"h": "7bf93dc258a46e25",
 "d": "2026-11-06"
 },
 "/guide/mods/benelli-m3-super-90-12ga-dual-mode-shotgun/": {
-"h": "21f8a6213d1c93b5",
+"h": "302366d8997213e3",
 "d": "2026-11-06"
 },
 "/guide/mods/beretta-m9a3-9x19-pistol/": {
-"h": "29075d1eb9bc2fbd",
+"h": "8d28dc8dfc641cdb",
 "d": "2026-11-06"
 },
 "/guide/mods/bt-mp9-9x19-submachine-gun/": {
-"h": "69abffeaf09b6e4d",
+"h": "32e8fc16b367c0d9",
 "d": "2026-11-06"
 },
 "/guide/mods/bt-mp9-n-9x19-submachine-gun/": {
-"h": "02a65394b732414a",
+"h": "010e05c1314c7f69",
 "d": "2026-11-06"
 },
 "/guide/mods/chiappa-rhino-200ds-9x19-revolver/": {
-"h": "8b7f292eb027a863",
+"h": "f00e47b70cce4440",
 "d": "2026-11-06"
 },
 "/guide/mods/chiappa-rhino-50ds-357-revolver/": {
-"h": "65a13377c9fce1d4",
+"h": "e67ae7d0d830e9d2",
 "d": "2026-11-06"
 },
 "/guide/mods/cmmg-mk47-mutant-762x39-assault-rifle/": {
-"h": "9022996a7cd916a4",
+"h": "c7cedf647068e3bb",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "63bc53bc1dc4fa4f",
+"h": "23a621838a86f1af",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "a2f96cad28a60209",
+"h": "1981551fdf547d64",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "40f05d416084b857",
+"h": "018b123db3c12a85",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m45a1-45-acp-pistol/": {
-"h": "8882e71cd092758d",
+"h": "af5bda203042eb44",
 "d": "2026-11-06"
 },
 "/guide/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "af17205dadba4d33",
+"h": "0510eafcfb2c4bc3",
 "d": "2026-11-06"
 },
 "/guide/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
-"h": "9f4a6177d9cb09af",
+"h": "9f380931a8ab1fed",
 "d": "2026-11-06"
 },
 "/guide/mods/custom-guns-nl545-gp-545x39-assault-rifle/": {
-"h": "9b70278c4475e44c",
+"h": "e46921978f8f3bbd",
 "d": "2026-11-06"
 },
 "/guide/mods/degtyarev-rpd-762x39-machine-gun/": {
-"h": "6c7d68260a6bf1b9",
+"h": "18590d07a50dca02",
 "d": "2026-11-06"
 },
 "/guide/mods/degtyarev-rpdn-762x39-machine-gun/": {
-"h": "51d4697d9a2e3281",
+"h": "01f796cd0a342f8d",
 "d": "2026-11-06"
 },
 "/guide/mods/desert-tech-mdr-556x45-assault-rifle/": {
-"h": "0bdbff328b3e98ed",
+"h": "68d638ed284858d8",
 "d": "2026-11-06"
 },
 "/guide/mods/desert-tech-mdr-762x51-assault-rifle/": {
-"h": "778868846af09f1f",
+"h": "67269a4e4fe0557e",
 "d": "2026-11-06"
 },
 "/guide/mods/ds-arms-sa58-762x51-assault-rifle/": {
-"h": "fabe383a42afb521",
+"h": "6d26fb960b7939e7",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-five-seven-mk2-57x28-pistol-fde/": {
-"h": "fc0df2a42dd12103",
+"h": "ec4c76baccd1958f",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "d935d2131d8f01cf",
+"h": "1f923e1cc58ea9f1",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-p90-57x28-submachine-gun-scourge/": {
-"h": "89a7cbc3e9db37ad",
+"h": "7c75263088c893a8",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-p90-57x28-submachine-gun/": {
-"h": "c39df7100b64007b",
+"h": "ade61b3f93cb725b",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-scar-h-762x51-assault-rifle-fde/": {
-"h": "82f106b127104170",
+"h": "1b635251cbc35bf9",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-scar-h-762x51-assault-rifle/": {
-"h": "79b7497a4e3524d2",
+"h": "bea500842de1f72d",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-scar-h-x-17-762x51-assault-rifle/": {
-"h": "2c2c5ca5ac538d08",
+"h": "a105ada6adc0e058",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-scar-l-556x45-assault-rifle-fde/": {
-"h": "fbc246c6bf0c270b",
+"h": "d1db9c91e21605b5",
 "d": "2026-11-06"
 },
 "/guide/mods/fn-scar-l-556x45-assault-rifle/": {
-"h": "db426f2420839618",
+"h": "b6958e94ac7877d2",
 "d": "2026-11-06"
 },
 "/guide/mods/fn40gl-mk2-40mm-grenade-launcher/": {
-"h": "d1d0e442a26e7782",
+"h": "018d14c6f801b029",
 "d": "2026-11-06"
 },
 "/guide/mods/glock-17-9x19-pistol/": {
-"h": "1acd8e5937033370",
+"h": "b00e2820ac3b3e74",
 "d": "2026-11-06"
 },
 "/guide/mods/glock-18c-9x19-machine-pistol/": {
-"h": "ff6cb785606a5cb7",
+"h": "4f0bb6c030b0cf61",
 "d": "2026-11-06"
 },
 "/guide/mods/glock-19x-9x19-pistol/": {
-"h": "cbddb7e540d5b58b",
+"h": "7d6abd481d3c9a2f",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "bb7bc7becd8fdd85",
+"h": "dfbb61e72c722fd6",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "4bf90ae03e64968c",
+"h": "05b0108f2812489d",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-g28-762x51-marksman-rifle/": {
-"h": "294699d6b07c87d4",
+"h": "501ba30432432747",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-g36-556x45-assault-rifle/": {
-"h": "4e9533e3c9f9bbf3",
+"h": "ab7609e729029fa4",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp5-9x19-submachine-gun-navy-3-round-burst/": {
-"h": "b65646b1ae641577",
+"h": "fa3cee2c78ecdb2d",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp5k-9x19-submachine-gun/": {
-"h": "6681e2db02d03a5f",
+"h": "a84ea6ff82433991",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "71cbd921de780055",
+"h": "3088d3cb52ece3b5",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "e894360d0dd80995",
+"h": "8b333e497a08ed8b",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "87be3116206b9fd2",
+"h": "73d27704c6682fdf",
 "d": "2026-11-06"
 },
 "/guide/mods/hk-usp-45-acp-pistol/": {
-"h": "d77b9b8571518bd6",
+"h": "16f7c148b2f6f32d",
 "d": "2026-11-06"
 },
 "/guide/mods/howa-type-20-556x45-assault-rifle/": {
-"h": "ca27b177c0e598ba",
+"h": "07cefe43f3974838",
 "d": "2026-11-06"
 },
 "/guide/mods/iwi-uzi-9x19-submachine-gun/": {
-"h": "c9072b79747a9bbc",
+"h": "725b8b0923779ab8",
 "d": "2026-11-06"
 },
 "/guide/mods/iwi-uzi-pro-pistol-9x19-submachine-gun/": {
-"h": "291bdb4c3bc430b5",
+"h": "1025f97c771b0c9d",
 "d": "2026-11-06"
 },
 "/guide/mods/iwi-uzi-pro-smg-9x19-submachine-gun/": {
-"h": "1f0b607d2c1e67ca",
+"h": "a98b089755d1e064",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-101-556x45-assault-rifle/": {
-"h": "bd01a12350826f91",
+"h": "c037e2448707c488",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-102-556x45-assault-rifle/": {
-"h": "f734093b7d13b477",
+"h": "13e59c1e5a5470e9",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-103-762x39-assault-rifle/": {
-"h": "621d85da37dc65de",
+"h": "4327054006d36292",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-104-762x39-assault-rifle/": {
-"h": "a4e714c95721fcbc",
+"h": "b65d42c9b6d900bb",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-105-545x39-assault-rifle/": {
-"h": "7649301cac6d3f93",
+"h": "00ad28e559a41437",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-12-545x39-assault-rifle/": {
-"h": "aaecda5f4e319826",
+"h": "6331149e2dfdee68",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-308-762x51-assault-rifle/": {
-"h": "d52a4d2352a19657",
+"h": "284bf276d0171df4",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-74-545x39-assault-rifle/": {
-"h": "048cd084b2a33650",
+"h": "460822cddfc5f17d",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-74m-545x39-assault-rifle/": {
-"h": "014fbb3ed76065bc",
+"h": "781d12ff3c5d3d77",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-ak-74n-545x39-assault-rifle/": {
-"h": "577b7e6aa0f4157e",
+"h": "175bf9be55f797ee",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-akm-762x39-assault-rifle/": {
-"h": "845e0af80237f106",
+"h": "5b89f870b0db27f4",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-akmn-762x39-assault-rifle/": {
-"h": "a1607bc9eacc8550",
+"h": "d80b91e4e533e998",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-akms-762x39-assault-rifle/": {
-"h": "46d58f8d63ed63eb",
+"h": "80fa598bce01fd86",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-akmsn-762x39-assault-rifle/": {
-"h": "f62fab3085cbbbf7",
+"h": "34daac9cf0fd7527",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-aks-74-545x39-assault-rifle/": {
-"h": "bb0c27c75de53562",
+"h": "146a383cff420b1d",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-aks-74n-545x39-assault-rifle/": {
-"h": "1f4fe5ee36c84be9",
+"h": "c885cb7db5be4af5",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-aks-74u-545x39-assault-rifle/": {
-"h": "6ffb01604c855248",
+"h": "80ed3ef76acd6b43",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-aks-74ub-545x39-assault-rifle/": {
-"h": "c84a8a0abd92c30a",
+"h": "04577997125e68e4",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-aks-74un-545x39-assault-rifle/": {
-"h": "c42832461b6ad89c",
+"h": "1480f20eacc401ea",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-pkm-762x54r-machine-gun/": {
-"h": "95ce8b3f683bf3a4",
+"h": "36e35b24b4144068",
 "d": "2026-11-06"
 },
 "/guide/mods/kalashnikov-pkp-762x54r-infantry-machine-gun/": {
-"h": "695bec5f9886a22e",
+"h": "e8c710eda5aa7a49",
 "d": "2026-11-06"
 },
 "/guide/mods/kbp-9a-91-9x39-compact-assault-rifle/": {
-"h": "46478a0cb63b9901",
+"h": "d0223383a3c0a20a",
 "d": "2026-11-06"
 },
 "/guide/mods/kbp-vsk-94-9x39-rifle/": {
-"h": "a821fce0fa7e02b9",
+"h": "87eb0530ad54d010",
 "d": "2026-11-06"
 },
 "/guide/mods/kel-tec-rfb-762x51-rifle/": {
-"h": "fa5e57a40d37a32a",
+"h": "62fc7df1939d25ad",
 "d": "2026-11-06"
 },
 "/guide/mods/knights-armament-company-sr-25-762x51-marksman-rifle-taupe/": {
-"h": "c89f35a8a06c529b",
+"h": "cd2bbeb9ee24e3bd",
 "d": "2026-11-06"
 },
 "/guide/mods/knights-armament-company-sr-25-762x51-marksman-rifle/": {
-"h": "5fc82a0ed23a4902",
+"h": "bb2a03e34e927445",
 "d": "2026-11-06"
 },
 "/guide/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "3f0506cd041f1216",
+"h": "737327140bbecf99",
 "d": "2026-11-06"
 },
 "/guide/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
-"h": "5ddf021544dd09f6",
+"h": "2fac741b1e6d2509",
 "d": "2026-11-06"
 },
 "/guide/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "7816dc78218caadf",
+"h": "85d410dc1a870a1e",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-l5-357-pistol/": {
-"h": "1d64507f21ce5761",
+"h": "f66addeef654e6c3",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-l5-50-ae-pistol/": {
-"h": "89af6a5c66dd98a1",
+"h": "cffd3ea6e10f6745",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-l6-50-ae-pistol-wts/": {
-"h": "2b2f58e8f4f9264e",
+"h": "a5402280863d1d37",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-l6-50-ae-pistol/": {
-"h": "fe7b1a0a698def29",
+"h": "2f1deb5e18819e9a",
 "d": "2026-11-06"
 },
 "/guide/mods/magnum-research-desert-eagle-mk-xix-50-ae-pistol/": {
-"h": "3420f639df3959f0",
+"h": "87f147fd6a5bd00f",
 "d": "2026-11-06"
 },
 "/guide/mods/makarov-pm-9x18pm-pistol/": {
-"h": "faf8afcbe6404cd7",
+"h": "7398d4982163a19a",
 "d": "2026-11-06"
 },
 "/guide/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "24a5cb4182ca064d",
+"h": "ad0f258bc91c4b8a",
 "d": "2026-11-06"
 },
 "/guide/mods/marlin-mxlr-308-me-lever-action-rifle/": {
-"h": "cdb4ce2a8019f468",
+"h": "cb51e2bc05ca5269",
 "d": "2026-11-06"
 },
 "/guide/mods/milkor-m32a1-msgl-40mm-grenade-launcher/": {
-"h": "3292bc5b23f7fe16",
+"h": "2409b838d7d6a40e",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-simonov-op-sks-762x39-carbine/": {
-"h": "1b7fc0f691be21e2",
+"h": "c72b7cd74f424e56",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "1ae2c2063f5160dc",
+"h": "f2ed193d87c58648",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
-"h": "8029c7656e4f23f8",
+"h": "8b4bae6ccea6f37c",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "ba445538554fcf1e",
+"h": "ad8fbdacbb58485a",
 "d": "2026-11-06"
 },
 "/guide/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "2e57c3bc65b00394",
+"h": "1e913e96f7707fe6",
 "d": "2026-11-06"
 },
 "/guide/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "eaa7b3d80871fa3c",
+"h": "cb22c61a0cb35e45",
 "d": "2026-11-06"
 },
 "/guide/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "9f553654be64890e",
+"h": "3c6564c06d6d71ce",
 "d": "2026-11-06"
 },
 "/guide/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
-"h": "1cddde171f703917",
+"h": "7a9a9776cb328705",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-133-12ga-pump-action-shotgun/": {
-"h": "7d30a27d7bf943b1",
+"h": "174e2f02494ca11f",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-153-12ga-semi-automatic-shotgun/": {
-"h": "2e9e3ef252a48ff8",
+"h": "ed57d035a49b7f2d",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-155-12ga-semi-automatic-shotgun/": {
-"h": "7b79e5994f3c1047",
+"h": "c20f356e7bdea042",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-18-762x54r-single-shot-rifle/": {
-"h": "696c1e3b7d5f1dfb",
+"h": "8449d8c623464f14",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-43-12ga-sawed-off-double-barrel-shotgun/": {
-"h": "f250ef27fef86405",
+"h": "40c7cd340fc0ee24",
 "d": "2026-11-06"
 },
 "/guide/mods/mp-43-1c-12ga-double-barrel-shotgun/": {
-"h": "58764831991a8e2f",
+"h": "98a7d0371fe978fc",
 "d": "2026-11-06"
 },
 "/guide/mods/mps-auto-assault-12-gen-1-12ga-automatic-shotgun/": {
-"h": "b5d07795c7847bd3",
+"h": "0e63bc29b16a4608",
 "d": "2026-11-06"
 },
 "/guide/mods/mps-auto-assault-12-gen-2-12ga-automatic-shotgun/": {
-"h": "6c119491a6e05074",
+"h": "dc7e8acdab1080ee",
 "d": "2026-11-06"
 },
 "/guide/mods/mts-255-12-12ga-shotgun/": {
-"h": "17605153e942269c",
+"h": "c65402ac42c6e2af",
 "d": "2026-11-06"
 },
 "/guide/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "37b2baa6ce19e4d9",
+"h": "367765506a42b818",
 "d": "2026-11-06"
 },
 "/guide/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
-"h": "1af811fd31011910",
+"h": "b041cfe82e2a3fdd",
 "d": "2026-11-06"
 },
 "/guide/mods/pb-9x18pm-silenced-pistol/": {
-"h": "58549c76f3585a09",
+"h": "09c8f85b4307efef",
 "d": "2026-11-06"
 },
 "/guide/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "0784b6d75aed9e58",
+"h": "b48dd20ac38ffee2",
 "d": "2026-11-06"
 },
 "/guide/mods/pp-9-klin-9x18pmm-submachine-gun/": {
-"h": "76cc91ac4ad72e27",
+"h": "d48a1b6eb0c43dc3",
 "d": "2026-11-06"
 },
 "/guide/mods/pp-91-01-kedr-b-9x18pm-submachine-gun/": {
-"h": "a6c5b1683c181e58",
+"h": "6f6916c10e935827",
 "d": "2026-11-06"
 },
 "/guide/mods/pp-91-kedr-9x18pm-submachine-gun/": {
-"h": "5339c29a3fcc9089",
+"h": "6cab0f1c27f6329e",
 "d": "2026-11-06"
 },
 "/guide/mods/ppsh-41-762x25-submachine-gun/": {
-"h": "998ba0bf770ab9a6",
+"h": "85066338341610ba",
 "d": "2026-11-06"
 },
 "/guide/mods/radian-weapons-model-1-fa-556x45-assault-rifle/": {
-"h": "412f7e68fae49238",
+"h": "7d8ad65919c3e046",
 "d": "2026-11-06"
 },
 "/guide/mods/remington-model-700-762x51-bolt-action-sniper-rifle/": {
-"h": "bb436759ebd52ec7",
+"h": "f3522add20d11935",
 "d": "2026-11-06"
 },
 "/guide/mods/remington-model-870-12ga-pump-action-shotgun/": {
-"h": "39f91000404be719",
+"h": "3f416f216fec68d9",
 "d": "2026-11-06"
 },
 "/guide/mods/remington-r11-rsass-762x51-marksman-rifle/": {
-"h": "5f1d421a4302295c",
+"h": "e06302164a67bdd1",
 "d": "2026-11-06"
 },
 "/guide/mods/rifle-dynamics-rd-704-762x39-assault-rifle/": {
-"h": "110b9dda446b6b3c",
+"h": "a06cd06437a66273",
 "d": "2026-11-06"
 },
 "/guide/mods/rpk-16-545x39-light-machine-gun/": {
-"h": "a12a5fa837bbf3a4",
+"h": "a86628a98c236b51",
 "d": "2026-11-06"
 },
 "/guide/mods/rsh-12-127x55-revolver/": {
-"h": "b1a2c5964bfd471d",
+"h": "0a400df2d3d18ea6",
 "d": "2026-11-06"
 },
 "/guide/mods/sag-ak-545-545x39-carbine/": {
-"h": "0ab871abfec35370",
+"h": "a715cd53143d3dce",
 "d": "2026-11-06"
 },
 "/guide/mods/sag-ak-545-short-545x39-carbine/": {
-"h": "e8def13faa0d58f2",
+"h": "65909c3c9af7eb71",
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-12k-12ga-automatic-shotgun-redline/": {
-"h": "34d42a1c233113ed",
+"h": "f7d9fc24e100827c",
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-12k-12ga-automatic-shotgun/": {
-"h": "7c89277a695cf8e6",
+"h": "101d68a0d17a8a97",
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-12k-ver10-12ga-semi-automatic-shotgun/": {
-"h": "b240f34d909ec7e7",
+"h": "847dca4a85469d91",
 "d": "2026-11-06"
 },
 "/guide/mods/saiga-9-9x19-carbine/": {
-"h": "10030f589cc0b672",
+"h": "8dd5f059b8b3409b",
 "d": "2026-11-06"
 },
 "/guide/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "1015841089826c06",
+"h": "2168626a5415de78",
 "d": "2026-11-06"
 },
 "/guide/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "494445c42284a621",
+"h": "7aa1fc43ea484f26",
 "d": "2026-11-06"
 },
 "/guide/mods/sig-mcx-300-blackout-assault-rifle/": {
-"h": "1a6d055bcb5f1cb3",
+"h": "d6dafe981ece1e78",
 "d": "2026-11-06"
 },
 "/guide/mods/sig-mcx-spear-68x51-assault-rifle/": {
-"h": "a430f67cb9a37bf7",
+"h": "db9e693db583e265",
 "d": "2026-11-06"
 },
 "/guide/mods/sig-mpx-9x19-submachine-gun/": {
-"h": "90129a7e1d06291a",
+"h": "dc12a7d2ec907b55",
 "d": "2026-11-06"
 },
 "/guide/mods/sig-p226r-9x19-pistol/": {
-"h": "f89f94e5dcd08106",
+"h": "52fb92244887f362",
 "d": "2026-11-06"
 },
 "/guide/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "b40459ac498550ea",
+"h": "68b6b10e86912504",
 "d": "2026-11-06"
 },
 "/guide/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "8b415f3eaea4e85d",
+"h": "1b7ed5aa71ef2796",
 "d": "2026-11-06"
 },
 "/guide/mods/sr-2m-veresk-9x21-submachine-gun/": {
-"h": "d4ba6520164d561a",
+"h": "9b39b28e9d4f5439",
 "d": "2026-11-06"
 },
 "/guide/mods/sr-3m-9x39-compact-assault-rifle/": {
-"h": "8324569004d67332",
+"h": "8af4e56ca0296ee4",
 "d": "2026-11-06"
 },
 "/guide/mods/stechkin-apb-9x18pm-silenced-machine-pistol/": {
-"h": "8641c220c05a5542",
+"h": "30076cb9b969262c",
 "d": "2026-11-06"
 },
 "/guide/mods/stechkin-aps-9x18pm-machine-pistol/": {
-"h": "fa73d515085a1e68",
+"h": "0071fa17d4fc07bb",
 "d": "2026-11-06"
 },
 "/guide/mods/steyr-aug-a1-556x45-assault-rifle/": {
-"h": "11282e3f26208c56",
+"h": "fe2f76abfc867f25",
 "d": "2026-11-06"
 },
 "/guide/mods/steyr-aug-a3-556x45-assault-rifle-black/": {
-"h": "b874759d150eb7e8",
+"h": "f75c9ac75c1ab03c",
 "d": "2026-11-06"
 },
 "/guide/mods/steyr-aug-a3-556x45-assault-rifle/": {
-"h": "dd9d31f6ac27b912",
+"h": "6744391b2bc8e0aa",
 "d": "2026-11-06"
 },
 "/guide/mods/sv-98-762x54r-bolt-action-sniper-rifle/": {
-"h": "d9b67c6ae4581ccc",
+"h": "cc9518d96ae9b69a",
 "d": "2026-11-06"
 },
 "/guide/mods/svds-762x54r-sniper-rifle/": {
-"h": "d5b51b3feeb8e406",
+"h": "bf56181a2323a5cb",
 "d": "2026-11-06"
 },
 "/guide/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "53028a68c0bb5331",
+"h": "ded20e9d9606d050",
 "d": "2026-11-06"
 },
 "/guide/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
-"h": "3f753ca7638e759f",
+"h": "7a47307b80089e48",
 "d": "2026-11-06"
 },
 "/guide/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "c1d16b9d29b79f76",
+"h": "74cdca0a8458a428",
 "d": "2026-11-06"
 },
 "/guide/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
-"h": "55642f47da2ee4cf",
+"h": "dd5b7abfdf75dd0c",
 "d": "2026-11-06"
 },
 "/guide/mods/tkpd-93x64-carbine/": {
-"h": "a4f220296aa6a399",
+"h": "513a9d0fa40d16c3",
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-avt-40-762x54r-automatic-rifle/": {
-"h": "57acc5559518c8d1",
+"h": "2c8437b578057e4d",
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-svt-40-762x54r-rifle/": {
-"h": "23a3cc9b3f0b714d",
+"h": "72cec08e3f7233ab",
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "68e29a3fb45b2b6e",
+"h": "05f5c46edeab9609",
 "d": "2026-11-06"
 },
 "/guide/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "bc06834d44b20594",
+"h": "77669c3522ee2e5c",
 "d": "2026-11-06"
 },
 "/guide/mods/toz-106-20ga-bolt-action-shotgun/": {
-"h": "a3df071794dd27a2",
+"h": "4ad8b046e35fee8a",
 "d": "2026-11-06"
 },
 "/guide/mods/toz-ks-23m-23x75mm-pump-action-shotgun/": {
-"h": "de923e06460d519f",
+"h": "2ca15f746a5ae6ff",
 "d": "2026-11-06"
 },
 "/guide/mods/toz-simonov-sks-762x39-carbine/": {
-"h": "b41895c4209062cc",
+"h": "4a11cd132188fae9",
 "d": "2026-11-06"
 },
 "/guide/mods/us-ordnance-m60e4-762x51-light-machine-gun/": {
-"h": "ef17d43937b7c2d5",
+"h": "283bde0d4c7f478e",
 "d": "2026-11-06"
 },
 "/guide/mods/us-ordnance-m60e6-762x51-light-machine-gun-fde/": {
-"h": "8d3b261632fde031",
+"h": "a15f02eb672690f0",
 "d": "2026-11-06"
 },
 "/guide/mods/us-ordnance-m60e6-762x51-light-machine-gun/": {
-"h": "ab30993508212b1b",
+"h": "e83acf1bfb9e1812",
 "d": "2026-11-06"
 },
 "/guide/mods/vss-vintorez-9x39-special-sniper-rifle/": {
-"h": "26b480f3ec3230d1",
+"h": "0225b20ed4919a89",
 "d": "2026-11-06"
 },
 "/guide/mods/yarygin-mp-443-grach-9x19-pistol/": {
-"h": "f82d4bc718df8673",
+"h": "1b353d66939acb47",
 "d": "2026-11-06"
 },
 "/guide/patch/": {
@@ -6092,7 +6092,7 @@
 "d": "2026-11-04"
 },
 "/guide/rewards/": {
-"h": "e30eef41a36e1440",
+"h": "b92a7ca8d7c4b07a",
 "d": "2026-11-06"
 },
 "/guide/ru/": {
@@ -6100,15 +6100,15 @@
 "d": "2026-11-06"
 },
 "/guide/ru/ammo/": {
-"h": "ea0d26d7b99ce166",
-"d": "2026-11-04"
+"h": "02291ca3a049306c",
+"d": "2026-11-06"
 },
 "/guide/ru/bosses/": {
 "h": "78f6721077f88425",
 "d": "2026-11-06"
 },
 "/guide/ru/crafts/": {
-"h": "417615566219e5a3",
+"h": "2cbff5e5564dc30b",
 "d": "2026-11-06"
 },
 "/guide/ru/event/": {
@@ -6116,7 +6116,7 @@
 "d": "2026-11-05"
 },
 "/guide/ru/gunsmith/": {
-"h": "4962617b1dd6a386",
+"h": "c474e138616d13f9",
 "d": "2026-11-06"
 },
 "/guide/ru/hideout/": {
@@ -6312,659 +6312,659 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/": {
-"h": "ae8594cf8cf35b24",
+"h": "b7265787927a485e",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/20x1mm-toy-gun/": {
-"h": "9514e962d1ee9617",
+"h": "764aa95e4dac6796",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "6a63043a80c4b003",
+"h": "5c6d02b6d4b20cf5",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/adar-2-15-556x45-carbine/": {
-"h": "acdda2a9de16ad2a",
+"h": "dc9e8af6310eb6a0",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
-"h": "b6d388e744968314",
+"h": "3d5bb986912f36a9",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/as-val-9x39-special-assault-rifle/": {
-"h": "8d99e89a88295df4",
+"h": "843c187c9c9ea686",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/as-val-mod4-9x39-special-assault-rifle/": {
-"h": "417cdd8ccba2cc25",
+"h": "822e3b31602bf6d9",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/ash-12-127x55-assault-rifle/": {
-"h": "f755b646a97a47c2",
+"h": "7715358d179d7f1c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/benelli-m3-super-90-12ga-dual-mode-shotgun/": {
-"h": "5d3cb7deea03f5c1",
+"h": "ca985121a92447e9",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/beretta-m9a3-9x19-pistol/": {
-"h": "4d5faf4fba2fcf5d",
+"h": "6f345a7464ed0ed5",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/bt-mp9-9x19-submachine-gun/": {
-"h": "9a38257ebb98568e",
+"h": "291707d4fedc2786",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/bt-mp9-n-9x19-submachine-gun/": {
-"h": "b6a6886af4b9ad96",
+"h": "1cb51becdbdcb070",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/chiappa-rhino-200ds-9x19-revolver/": {
-"h": "66b5317fc411dcdc",
+"h": "98f53b9467a2c33f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/chiappa-rhino-50ds-357-revolver/": {
-"h": "2a5ee9f8e5e839c2",
+"h": "dcfec0c77381587f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/cmmg-mk47-mutant-762x39-assault-rifle/": {
-"h": "989e038c1ca068b1",
+"h": "34581577a7bfdeb4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "0d660758187a3c99",
+"h": "ee5ebc228dae8481",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "f4bea55a9062cd81",
+"h": "28a7a0ff298dde3c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "743cc75108b0233f",
+"h": "df827f3a7d0ff20f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m45a1-45-acp-pistol/": {
-"h": "a1774b7ee15cae75",
+"h": "53c84e0ddd5c1a05",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "5bc77bf9bc035eb7",
+"h": "3ce21ef8c41c679f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
-"h": "8dfbfbd0e17dc17a",
+"h": "8de7f1e5dfc827a7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/custom-guns-nl545-gp-545x39-assault-rifle/": {
-"h": "f8913f5017ddf1a1",
+"h": "fcf7917055725733",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/degtyarev-rpd-762x39-machine-gun/": {
-"h": "1a16994101eeb857",
+"h": "65398e5484435144",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/degtyarev-rpdn-762x39-machine-gun/": {
-"h": "b1cd3dae20e43913",
+"h": "0e2ace60df4c88d8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/desert-tech-mdr-556x45-assault-rifle/": {
-"h": "0f67bef56f334876",
+"h": "8563e0a6f59f26d4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/desert-tech-mdr-762x51-assault-rifle/": {
-"h": "1e6f009e25527ae1",
+"h": "de8e091303b653ac",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/ds-arms-sa58-762x51-assault-rifle/": {
-"h": "83009bbc806f624f",
+"h": "bd9a0798b54ad82d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-five-seven-mk2-57x28-pistol-fde/": {
-"h": "9fde6c998cb8375b",
+"h": "f35baadd7b98ed8d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "68be7acaced1f8f7",
+"h": "08e25afc9253ec92",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-p90-57x28-submachine-gun-scourge/": {
-"h": "35f2c098eb5966c6",
+"h": "abe63bc441fca3f8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-p90-57x28-submachine-gun/": {
-"h": "f7ab4731d7910211",
+"h": "28695da7aa9dac93",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-scar-h-762x51-assault-rifle-fde/": {
-"h": "1fd2082598b64c98",
+"h": "305fa1079245db34",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-scar-h-762x51-assault-rifle/": {
-"h": "cf1894bc7aad5f3c",
+"h": "cc17a035755aad69",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-scar-h-x-17-762x51-assault-rifle/": {
-"h": "e1049c914d87f8a8",
+"h": "793c06f8baa54d4f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-scar-l-556x45-assault-rifle-fde/": {
-"h": "5e9e3721ca4b9e79",
+"h": "4e4b2f7e3b759f9a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn-scar-l-556x45-assault-rifle/": {
-"h": "57b312b17dca06ad",
+"h": "1fffacf9ebe7bfb7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/fn40gl-mk2-40mm-grenade-launcher/": {
-"h": "56a373977c61d52a",
+"h": "c5442594735493ed",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/glock-17-9x19-pistol/": {
-"h": "0bcf2fdbe2979033",
+"h": "85096ef41390c6a8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/glock-18c-9x19-machine-pistol/": {
-"h": "5d425190338792c0",
+"h": "f8ab80756a91f2ce",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/glock-19x-9x19-pistol/": {
-"h": "93ac456658303f14",
+"h": "eeb77e0c303d09a8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "9722863b99aa919d",
+"h": "5b22fc1c2d1fd647",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "84ca8ed72d084d87",
+"h": "06a1e5ec5785aa30",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-g28-762x51-marksman-rifle/": {
-"h": "886dad8564e9faab",
+"h": "eb82c7cfea8ec50e",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-g36-556x45-assault-rifle/": {
-"h": "0ed0c5c0a2e1838a",
+"h": "314faa988a2a3c97",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp5-9x19-submachine-gun-navy-3-round-burst/": {
-"h": "dd277c453ca2cd10",
+"h": "81b166b02929fed7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp5k-9x19-submachine-gun/": {
-"h": "94829744b51b2aec",
+"h": "57835a44ddf57548",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "b1d1d0c5e5836a3e",
+"h": "fb988eba3df40332",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "0fd27817fa9ebf5a",
+"h": "23e21c32bbf484c6",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "caa8e55d502b4aef",
+"h": "f2789ce6b9ba6ae0",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-usp-45-acp-pistol/": {
-"h": "7e84f317495fc107",
+"h": "216e7facaab48898",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/howa-type-20-556x45-assault-rifle/": {
-"h": "185c1086417a8891",
+"h": "a152910a4127a1f2",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/iwi-uzi-9x19-submachine-gun/": {
-"h": "8c947d0e75ab96e0",
+"h": "c206ce1ef6a4166b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/iwi-uzi-pro-pistol-9x19-submachine-gun/": {
-"h": "cb7f7d1e9876eb29",
+"h": "e178ecaa07abe0fc",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/iwi-uzi-pro-smg-9x19-submachine-gun/": {
-"h": "359ff3da212b6b21",
+"h": "bbc6301859ee76c8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-101-556x45-assault-rifle/": {
-"h": "b299ec3d3a252661",
+"h": "c9e988171f66f08f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-102-556x45-assault-rifle/": {
-"h": "a2428ca21046d663",
+"h": "574a84f2c2356bd6",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-103-762x39-assault-rifle/": {
-"h": "b85203eb804e46af",
+"h": "bdbbc47156a125db",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-104-762x39-assault-rifle/": {
-"h": "943896cb5d79b22a",
+"h": "7ba4fe4d1e2bf1fa",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-105-545x39-assault-rifle/": {
-"h": "46f4bfb72814d84b",
+"h": "4739de41fab12ac5",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-12-545x39-assault-rifle/": {
-"h": "52b74f2abfce831e",
+"h": "bba229633f37c018",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-308-762x51-assault-rifle/": {
-"h": "e46c1bde877a0990",
+"h": "302ef603c30472df",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-74-545x39-assault-rifle/": {
-"h": "f55313d966d3da2a",
+"h": "555bde196805d843",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-74m-545x39-assault-rifle/": {
-"h": "3c905583d0b8a83c",
+"h": "b49961a9c952fe6a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-ak-74n-545x39-assault-rifle/": {
-"h": "9e45f367b0643bc9",
+"h": "e7b0ca4fbb6230e3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-akm-762x39-assault-rifle/": {
-"h": "9e3406a2317cef98",
+"h": "3a47370b46b9c0f8",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-akmn-762x39-assault-rifle/": {
-"h": "fb93ea8637a55c04",
+"h": "6c64a6fca9c5be50",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-akms-762x39-assault-rifle/": {
-"h": "8725417d1a1906e7",
+"h": "c1c5d58faae361da",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-akmsn-762x39-assault-rifle/": {
-"h": "1c1eed9190b0e032",
+"h": "15d5a903316870a3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-aks-74-545x39-assault-rifle/": {
-"h": "c732ea9db31355ed",
+"h": "9981a85981b9ebcb",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-aks-74n-545x39-assault-rifle/": {
-"h": "158f3756c3cf8620",
+"h": "d2bdeda3afc3ac0a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-aks-74u-545x39-assault-rifle/": {
-"h": "1fb381ef2d5cde81",
+"h": "6735bcccaad39ce1",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-aks-74ub-545x39-assault-rifle/": {
-"h": "36547df35eb1ffbc",
+"h": "a72401c377445e84",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-aks-74un-545x39-assault-rifle/": {
-"h": "1da189491692f106",
+"h": "c420cfa9cc4c994f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-pkm-762x54r-machine-gun/": {
-"h": "02fa03d3428cabed",
+"h": "005aea7e21c27427",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kalashnikov-pkp-762x54r-infantry-machine-gun/": {
-"h": "2a494992a13a80e7",
+"h": "8eb22752b8492dc2",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kbp-9a-91-9x39-compact-assault-rifle/": {
-"h": "84860208b0908789",
+"h": "5c299e48bd5ba3bf",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kbp-vsk-94-9x39-rifle/": {
-"h": "ab2db2ce892d976b",
+"h": "2992a83af1fd1716",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/kel-tec-rfb-762x51-rifle/": {
-"h": "8b66c5724026506c",
+"h": "03a979aa1db69974",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/knights-armament-company-sr-25-762x51-marksman-rifle-taupe/": {
-"h": "18f164a6dbe67a7b",
+"h": "38cfc8bbc9dd412b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/knights-armament-company-sr-25-762x51-marksman-rifle/": {
-"h": "e957344bfddc069b",
+"h": "1b5c1a2934e6f829",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "f42f58b3c6bc4080",
+"h": "044ec7cb4b485c35",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
-"h": "121c4433c6dd93ad",
+"h": "13a808da04c0ab95",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "9528a09af3bca132",
+"h": "eed28425d971b096",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-l5-357-pistol/": {
-"h": "f6063e16802c395e",
+"h": "931ff257510cd250",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-l5-50-ae-pistol/": {
-"h": "7586f557aa206a1b",
+"h": "aba726068d525c8c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-l6-50-ae-pistol-wts/": {
-"h": "eeab23f357fe1c68",
+"h": "ddf54c85e9f1c476",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-l6-50-ae-pistol/": {
-"h": "be32730eb619d651",
+"h": "af56cedf960d5ea7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/magnum-research-desert-eagle-mk-xix-50-ae-pistol/": {
-"h": "1e71101de74e8604",
+"h": "055c70b591e018c1",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/makarov-pm-9x18pm-pistol/": {
-"h": "b9c08a6fb8bad897",
+"h": "7956737d35dd91cf",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "0dec0c05187d27cf",
+"h": "a8c7f4d23de478ea",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/marlin-mxlr-308-me-lever-action-rifle/": {
-"h": "ba4403a7f244e3b8",
+"h": "f453cdd8b2f3190b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/milkor-m32a1-msgl-40mm-grenade-launcher/": {
-"h": "1c255842f674b249",
+"h": "a1b21cf24f46ff6f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-simonov-op-sks-762x39-carbine/": {
-"h": "b2227574a3208670",
+"h": "fc839c2ceb0a1f83",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "3f39568a06994303",
+"h": "d1ea43142dcbc842",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
-"h": "085368fa60a12bed",
+"h": "7713dd5ea80f2186",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "e28f0418c298fbbf",
+"h": "9ed58ef3e640d6fd",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "1c188859d2da1720",
+"h": "b642f0165544d192",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "049a0b558d8a1a7d",
+"h": "b9685b5a722d61a5",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "9e8e05514653a587",
+"h": "9859a84544c9058b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
-"h": "97869a4dd94c03de",
+"h": "ed1878a67f73dd18",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-133-12ga-pump-action-shotgun/": {
-"h": "fc07938079f48ea4",
+"h": "3889814b626e100b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-153-12ga-semi-automatic-shotgun/": {
-"h": "c705385107242a05",
+"h": "d890d78f6f8c499b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-155-12ga-semi-automatic-shotgun/": {
-"h": "15557cb8f13acc36",
+"h": "6f6112bb903b7e6c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-18-762x54r-single-shot-rifle/": {
-"h": "c9267a650716612b",
+"h": "0f6caf950349ccac",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-43-12ga-sawed-off-double-barrel-shotgun/": {
-"h": "13109ff3a8da5725",
+"h": "0df6f170d4bfd055",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mp-43-1c-12ga-double-barrel-shotgun/": {
-"h": "3ba4457375d8d7b5",
+"h": "141da68f228be39a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mps-auto-assault-12-gen-1-12ga-automatic-shotgun/": {
-"h": "dfd716bb86ad2833",
+"h": "638ece0633a6dfed",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mps-auto-assault-12-gen-2-12ga-automatic-shotgun/": {
-"h": "97b6f7c99aa0d7b1",
+"h": "bf6b98d254a9fb1c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/mts-255-12-12ga-shotgun/": {
-"h": "9ebafa4ff7d81cc3",
+"h": "d0493c79459a2756",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "695809da0b09196e",
+"h": "19a34d96644866df",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
-"h": "ffbac5a9fffd858f",
+"h": "fad1b3c0c8eeb7cf",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pb-9x18pm-silenced-pistol/": {
-"h": "f65c72929c3dac3d",
+"h": "434d2a7ef9cc8b6f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "7d5d75a425aaddf6",
+"h": "91b07c75cd7ada0b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-9-klin-9x18pmm-submachine-gun/": {
-"h": "a8c79d83ee21665b",
+"h": "22c2ef397d99720d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-91-01-kedr-b-9x18pm-submachine-gun/": {
-"h": "11907a2628b23c9c",
+"h": "f630b8e54b8e6b37",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/pp-91-kedr-9x18pm-submachine-gun/": {
-"h": "90ddff073939b116",
+"h": "d0c39bd20bcdfd61",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/ppsh-41-762x25-submachine-gun/": {
-"h": "86c2f39d52d7eee2",
+"h": "05ea2f31f03308ce",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/radian-weapons-model-1-fa-556x45-assault-rifle/": {
-"h": "60fb55606d277d37",
+"h": "e61f309dad30fd5a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/remington-model-700-762x51-bolt-action-sniper-rifle/": {
-"h": "e23aa31ddc48a00c",
+"h": "f69b2f65d1965ef3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/remington-model-870-12ga-pump-action-shotgun/": {
-"h": "7ac275f13bcefbc0",
+"h": "5494efe71b5e4f6b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/remington-r11-rsass-762x51-marksman-rifle/": {
-"h": "9c240ad94262abbe",
+"h": "b72f7fe38e1abecd",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/rifle-dynamics-rd-704-762x39-assault-rifle/": {
-"h": "dd55c97e80f31646",
+"h": "a48930d18879f6cd",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/rpk-16-545x39-light-machine-gun/": {
-"h": "e145e72d19087166",
+"h": "bc7225147bc661c4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/rsh-12-127x55-revolver/": {
-"h": "3057e31c0b279cdc",
+"h": "ebe9a1ecc0d86164",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sag-ak-545-545x39-carbine/": {
-"h": "cfa07e3449aeacc5",
+"h": "defc0fcc3fd52942",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sag-ak-545-short-545x39-carbine/": {
-"h": "4c43923405869192",
+"h": "d58c034b1194e7f4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/saiga-12k-12ga-automatic-shotgun-redline/": {
-"h": "ceabac59f04a2952",
+"h": "789654296350a87e",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/saiga-12k-12ga-automatic-shotgun/": {
-"h": "4576daf45ea170a4",
+"h": "b3e0d8c33e14e463",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/saiga-12k-ver10-12ga-semi-automatic-shotgun/": {
-"h": "853c33d3a70fc375",
+"h": "7e3415167e034863",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/saiga-9-9x19-carbine/": {
-"h": "8b1b05aa415cdbb1",
+"h": "684046991cce6592",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "cc10c261240d7944",
+"h": "441fd7d4b91fec33",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "217e72f4ed479c92",
+"h": "8d993d738a7ed710",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sig-mcx-300-blackout-assault-rifle/": {
-"h": "3380155bd2e7e95c",
+"h": "e45a0eb7d42d135b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sig-mcx-spear-68x51-assault-rifle/": {
-"h": "9b6b0bb745a3a494",
+"h": "3778726bcb6460f4",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sig-mpx-9x19-submachine-gun/": {
-"h": "8ec351e41f4050a1",
+"h": "c9bc931960a6963c",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sig-p226r-9x19-pistol/": {
-"h": "f49d8da342d794f3",
+"h": "0b7f47a82e1059ea",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "95cc4f8e77762090",
+"h": "0447ec7f65bfeb01",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "2e132f9a73e58d57",
+"h": "d61db8191630c57b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sr-2m-veresk-9x21-submachine-gun/": {
-"h": "6d98820d86e6da36",
+"h": "c21f06e3dd32abeb",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sr-3m-9x39-compact-assault-rifle/": {
-"h": "10caa5a3ac44548e",
+"h": "5f4b2d54703260a7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/stechkin-apb-9x18pm-silenced-machine-pistol/": {
-"h": "e4fb4f12e3131bae",
+"h": "8c9459bd32ba461b",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/stechkin-aps-9x18pm-machine-pistol/": {
-"h": "3ea1d9ebc602fe7f",
+"h": "9ffb36afcefe38d1",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/steyr-aug-a1-556x45-assault-rifle/": {
-"h": "991ce2698d859b78",
+"h": "6b4091606480a8d1",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/steyr-aug-a3-556x45-assault-rifle-black/": {
-"h": "866c296a5f5ee2e9",
+"h": "4e996a8e8689cbd1",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/steyr-aug-a3-556x45-assault-rifle/": {
-"h": "16768185380dc094",
+"h": "46d97b6d2e0e1b13",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sv-98-762x54r-bolt-action-sniper-rifle/": {
-"h": "8c052706a9db5729",
+"h": "ae014bb8c7eadb6f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/svds-762x54r-sniper-rifle/": {
-"h": "c0b6e9045bec40df",
+"h": "549b5590224d8eeb",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "5c20f532b289c80c",
+"h": "3cd46da6ce829411",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
-"h": "8264e3f5ae42bcbf",
+"h": "0ce2dde48573d81a",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "89634a07ee14e39e",
+"h": "841f9594ea95ac5d",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
-"h": "40d087fd7aab20bd",
+"h": "ac0de89bba6e9288",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tkpd-93x64-carbine/": {
-"h": "f439ae5916056c39",
+"h": "222afdb7f8268182",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-avt-40-762x54r-automatic-rifle/": {
-"h": "95b1499b53272bdf",
+"h": "afeb39e4c5d262ad",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-svt-40-762x54r-rifle/": {
-"h": "7ed6bc9303a68a5a",
+"h": "4eb4b7bcec7ad303",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "60f8a210112e70ee",
+"h": "217d24cc8970eb4f",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "2542af2f7bbbc7d7",
+"h": "81a230317eec3979",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/toz-106-20ga-bolt-action-shotgun/": {
-"h": "e29f9af75418a2d0",
+"h": "503551ce7035b1ae",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/toz-ks-23m-23x75mm-pump-action-shotgun/": {
-"h": "a12ac45b224480e7",
+"h": "b0a0ad04ff1c905e",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/toz-simonov-sks-762x39-carbine/": {
-"h": "f41ffa3adc869cb4",
+"h": "7d69a0eea769ce28",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/us-ordnance-m60e4-762x51-light-machine-gun/": {
-"h": "5fef01282864f046",
+"h": "86e0e39f4353e1c7",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/us-ordnance-m60e6-762x51-light-machine-gun-fde/": {
-"h": "460d5e5e49559eb5",
+"h": "369edbae86a173d5",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/us-ordnance-m60e6-762x51-light-machine-gun/": {
-"h": "7a8ca29f0e67f1e7",
+"h": "6b84bd570bc513b3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/vss-vintorez-9x39-special-sniper-rifle/": {
-"h": "ce296c1e44e8e761",
+"h": "e6ba3bf9b53ccfc6",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/yarygin-mp-443-grach-9x19-pistol/": {
-"h": "7e27c2862af1fffc",
+"h": "5ab7b16d451640aa",
 "d": "2026-11-06"
 },
 "/guide/ru/patch/": {
@@ -9136,7 +9136,7 @@
 "d": "2026-11-04"
 },
 "/guide/ru/rewards/": {
-"h": "0f13a72a62df8391",
+"h": "0968bd0f32c72f9e",
 "d": "2026-11-06"
 },
 "/guide/ru/start/": {
@@ -9160,15 +9160,15 @@
 "d": "2026-11-06"
 },
 "/guide/zh/ammo/": {
-"h": "054aeb8d7b80d369",
-"d": "2026-11-05"
+"h": "902eab25d935cbe9",
+"d": "2026-11-06"
 },
 "/guide/zh/bosses/": {
 "h": "28270d97dcebd12f",
 "d": "2026-11-06"
 },
 "/guide/zh/crafts/": {
-"h": "dac9f6d5c5cfa015",
+"h": "d96ddfc9e896538f",
 "d": "2026-11-06"
 },
 "/guide/zh/event/": {
@@ -9176,7 +9176,7 @@
 "d": "2026-11-05"
 },
 "/guide/zh/gunsmith/": {
-"h": "7d1236dd808e5e3f",
+"h": "4b6d842c46afc193",
 "d": "2026-11-06"
 },
 "/guide/zh/hideout/": {
@@ -9372,659 +9372,659 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/": {
-"h": "0ae4899e37aa5b79",
+"h": "8310455691cee2d6",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/20x1mm-toy-gun/": {
-"h": "624953a52ab08202",
+"h": "8854ab943a0112f9",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/accuracy-international-axmc-338-lm-bolt-action-sniper-rifle/": {
-"h": "0fee43ea59769545",
+"h": "7a45b3b1ae8b05f1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/adar-2-15-556x45-carbine/": {
-"h": "9d12b2281723621a",
+"h": "d7036f6506e6ef6a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/aklys-defense-velociraptor-300-blackout-assault-rifle/": {
-"h": "d0d5445413d8b9a4",
+"h": "11cd63afb949f6f0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/as-val-9x39-special-assault-rifle/": {
-"h": "23e9066d385c3941",
+"h": "5a8d3b8106b70435",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/as-val-mod4-9x39-special-assault-rifle/": {
-"h": "41499e135a7caacb",
+"h": "859f8eda24b6366a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/ash-12-127x55-assault-rifle/": {
-"h": "eb9b24cf2bdcc791",
+"h": "fe67f800ae4ecf17",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/benelli-m3-super-90-12ga-dual-mode-shotgun/": {
-"h": "14c97c4ce7441eb7",
+"h": "c1f466b1b6ccaebe",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/beretta-m9a3-9x19-pistol/": {
-"h": "4d63a31e59063eab",
+"h": "0f4d85e2d24dc8d0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/bt-mp9-9x19-submachine-gun/": {
-"h": "9c21522b9e999498",
+"h": "20e7f849455e1624",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/bt-mp9-n-9x19-submachine-gun/": {
-"h": "a18dbf7fb7d07d3f",
+"h": "d6099640a35f1fff",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/chiappa-rhino-200ds-9x19-revolver/": {
-"h": "705e3f593201dbcd",
+"h": "3168a1056fa6d341",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/chiappa-rhino-50ds-357-revolver/": {
-"h": "622398f3a47ac660",
+"h": "d74df263490d2060",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/cmmg-mk47-mutant-762x39-assault-rifle/": {
-"h": "1b5e8a0073b0850b",
+"h": "308fe445423ad311",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m16a1-556x45-assault-rifle/": {
-"h": "4c8dfd964fa68168",
+"h": "feb28e51ac71048e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m16a2-556x45-assault-rifle/": {
-"h": "db2da8aa1ef18b39",
+"h": "3138706b5d806d01",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m1911a1-45-acp-pistol/": {
-"h": "59409b1790696a53",
+"h": "76101be7d3f897ef",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m45a1-45-acp-pistol/": {
-"h": "95b05b50bc8a3975",
+"h": "5d8cbe67a67067cb",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/colt-m4a1-556x45-assault-rifle/": {
-"h": "3629efb090b7d0a6",
+"h": "f3d824b33cf3ba9d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/custom-guns-nl545-di-545x39-assault-rifle/": {
-"h": "b22ce7b7bbcc90da",
+"h": "d40913c563975ae8",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/custom-guns-nl545-gp-545x39-assault-rifle/": {
-"h": "419401a7b29be2bd",
+"h": "e8bbb5a91d2586e1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/degtyarev-rpd-762x39-machine-gun/": {
-"h": "acc98449dd772941",
+"h": "d9ae2b691b68a9eb",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/degtyarev-rpdn-762x39-machine-gun/": {
-"h": "1f630ae98c5ae754",
+"h": "4f240045177a5c60",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/desert-tech-mdr-556x45-assault-rifle/": {
-"h": "def73455c8b0e04b",
+"h": "63bf2dc206d8ef1f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/desert-tech-mdr-762x51-assault-rifle/": {
-"h": "227c0ecf040ef87c",
+"h": "bc808d4404a6c5fb",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/ds-arms-sa58-762x51-assault-rifle/": {
-"h": "4b82150c2d8de79a",
+"h": "8c80a18c997a047c",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-five-seven-mk2-57x28-pistol-fde/": {
-"h": "84dd47e879a1910b",
+"h": "56ba95b322bfc9bd",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-five-seven-mk2-57x28-pistol/": {
-"h": "c00cc63b2bfa2051",
+"h": "306f5d7ee98dbce2",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-p90-57x28-submachine-gun-scourge/": {
-"h": "3e6455e2dd0b6fcb",
+"h": "594f96e0836fdd99",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-p90-57x28-submachine-gun/": {
-"h": "fb3fd2bbef9fccc3",
+"h": "41f6a0e375720d6a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-scar-h-762x51-assault-rifle-fde/": {
-"h": "f86ca05fd5edb70e",
+"h": "c56eacc2b4d482bf",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-scar-h-762x51-assault-rifle/": {
-"h": "6ed6d44ace6c9cf7",
+"h": "0e2f75dda6d32e4b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-scar-h-x-17-762x51-assault-rifle/": {
-"h": "9715b75015a17135",
+"h": "d1fa28b4d307739c",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-scar-l-556x45-assault-rifle-fde/": {
-"h": "34dbfc9f8309b57a",
+"h": "c1fc2223773d6473",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn-scar-l-556x45-assault-rifle/": {
-"h": "d9e0bb3ec3367912",
+"h": "b65154385c84a315",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/fn40gl-mk2-40mm-grenade-launcher/": {
-"h": "b802c92f72a520fd",
+"h": "839beee615a59ebd",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/glock-17-9x19-pistol/": {
-"h": "721475c83b52e36a",
+"h": "4e645f8a862c360e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/glock-18c-9x19-machine-pistol/": {
-"h": "a73381e49d742766",
+"h": "57851861bfee29bb",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/glock-19x-9x19-pistol/": {
-"h": "312cbef25037051e",
+"h": "3786505662bdc001",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-416a5-556x45-assault-rifle-ral-8000/": {
-"h": "edcccd41f898bf48",
+"h": "382fe85ceb165870",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-416a5-556x45-assault-rifle/": {
-"h": "273b37f33d3200a2",
+"h": "c604ffab2158923d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-g28-762x51-marksman-rifle/": {
-"h": "7323b3e044c57c5f",
+"h": "946ec6c870790714",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-g36-556x45-assault-rifle/": {
-"h": "a9ef2aaefa5819ee",
+"h": "11e624ebf3136dd1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp5-9x19-submachine-gun-navy-3-round-burst/": {
-"h": "fc1db3120b8ba4d5",
+"h": "ebec45238c78910b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp5k-9x19-submachine-gun/": {
-"h": "8bae0812638b8689",
+"h": "3ad561bcbfa0a3e6",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "b7e74958048846e8",
+"h": "afdb8641e22657eb",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "722f77c6b0ba7bd4",
+"h": "5100aa44059dff10",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "99d121607161e517",
+"h": "343ff80c34e38cbc",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-usp-45-acp-pistol/": {
-"h": "f57c32fa513883e0",
+"h": "e8381b68c2d427d9",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/howa-type-20-556x45-assault-rifle/": {
-"h": "e1ae8f1e5a55fc9b",
+"h": "cf4e786e231d8718",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/iwi-uzi-9x19-submachine-gun/": {
-"h": "e6178c7c6864649e",
+"h": "6e0900e601a2f55f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/iwi-uzi-pro-pistol-9x19-submachine-gun/": {
-"h": "639dd05b3238fe4c",
+"h": "4133d02521b07477",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/iwi-uzi-pro-smg-9x19-submachine-gun/": {
-"h": "348b19c7abc42759",
+"h": "57fb672b7fb094c7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-101-556x45-assault-rifle/": {
-"h": "5d130ef00950f168",
+"h": "00bb1e094557298e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-102-556x45-assault-rifle/": {
-"h": "fd25ae3dd7e97201",
+"h": "37b47e203cfdd0b7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-103-762x39-assault-rifle/": {
-"h": "a4727300600f60b6",
+"h": "f9e77355034cf241",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-104-762x39-assault-rifle/": {
-"h": "abb519b952687cb6",
+"h": "ceab4c3e633decb8",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-105-545x39-assault-rifle/": {
-"h": "def8832d70072e0b",
+"h": "f8def03bf88f7ece",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-12-545x39-assault-rifle/": {
-"h": "56c7595f654c48fc",
+"h": "fd62505946d24c3d",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-308-762x51-assault-rifle/": {
-"h": "983df3d8e1f20f44",
+"h": "1a414b16bbba9c0b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-74-545x39-assault-rifle/": {
-"h": "8dd415780b3ff4d4",
+"h": "e23fc6c7e0e7cfec",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-74m-545x39-assault-rifle/": {
-"h": "184ceeff7da6fbce",
+"h": "13702d274607080e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-ak-74n-545x39-assault-rifle/": {
-"h": "4bcb0fd3793b317f",
+"h": "13c363c472890e66",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-akm-762x39-assault-rifle/": {
-"h": "73fbda677e3dc272",
+"h": "5d0567f85a907101",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-akmn-762x39-assault-rifle/": {
-"h": "ffe0d82466f2cc38",
+"h": "33da8a964d39f0d9",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-akms-762x39-assault-rifle/": {
-"h": "506edc56f1490f6a",
+"h": "3b9d1f69ae64f921",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-akmsn-762x39-assault-rifle/": {
-"h": "f62d1542c95ada22",
+"h": "511666bb4575176f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-aks-74-545x39-assault-rifle/": {
-"h": "f34688bde5ac7265",
+"h": "359baba66ec07fc3",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-aks-74n-545x39-assault-rifle/": {
-"h": "62a5062a7cc07988",
+"h": "4a3c76e0c30f15f9",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-aks-74u-545x39-assault-rifle/": {
-"h": "df631235eb74333b",
+"h": "19b88edc58e7fdd1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-aks-74ub-545x39-assault-rifle/": {
-"h": "a002cf4cd4c843d5",
+"h": "ca3091fbd904ed5c",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-aks-74un-545x39-assault-rifle/": {
-"h": "ab609b761020606a",
+"h": "bba2039d39da4041",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-pkm-762x54r-machine-gun/": {
-"h": "9aa624d0e85da512",
+"h": "ba3750ec8c9e1792",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kalashnikov-pkp-762x54r-infantry-machine-gun/": {
-"h": "5a323bfdb1e4bd14",
+"h": "7440b7e36f6692ad",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kbp-9a-91-9x39-compact-assault-rifle/": {
-"h": "40c9d66f41f95bd8",
+"h": "b304ca6a4eb7e148",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kbp-vsk-94-9x39-rifle/": {
-"h": "4f3e8a4e3ef9ab7f",
+"h": "9c3f1e8da6636cea",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/kel-tec-rfb-762x51-rifle/": {
-"h": "ff897c5daf35d7ff",
+"h": "b357c9b464e95303",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/knights-armament-company-sr-25-762x51-marksman-rifle-taupe/": {
-"h": "5ef836de41e17879",
+"h": "642b406a4b623ef0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/knights-armament-company-sr-25-762x51-marksman-rifle/": {
-"h": "2013cb31628463e4",
+"h": "274a77474828aa9b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lebedev-pl-15-9x19-pistol/": {
-"h": "dee142d71d6ff485",
+"h": "597618d00cd14c0a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lobaev-arms-dvl-10-762x51-bolt-action-sniper-rifle/": {
-"h": "1647d834fc7fa506",
+"h": "9340374ab272ffb3",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/lone-star-tx-15-dml-556x45-carbine/": {
-"h": "e16467780e9d4af3",
+"h": "9cac1ef56fcadfc7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-l5-357-pistol/": {
-"h": "ab092e674e764efd",
+"h": "23367085a1822f74",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-l5-50-ae-pistol/": {
-"h": "8dd8f997544033ec",
+"h": "0d194223f304b9ec",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-l6-50-ae-pistol-wts/": {
-"h": "6709cc8ff45e1cfe",
+"h": "52542dd94c05dc87",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-l6-50-ae-pistol/": {
-"h": "022225ab5dbe508f",
+"h": "bfdff85975fbc057",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/magnum-research-desert-eagle-mk-xix-50-ae-pistol/": {
-"h": "e0f2ea90b2e6832f",
+"h": "d8ed0d7fe7de4b96",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/makarov-pm-9x18pm-pistol/": {
-"h": "bc4382be1ecdd03b",
+"h": "3d09a57ae6087af8",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/makarov-pm-t-9x18pm-pistol/": {
-"h": "e40f7f648d9abcc3",
+"h": "51b12073211da23e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/marlin-mxlr-308-me-lever-action-rifle/": {
-"h": "139148277b167169",
+"h": "28e2322ce82bb18f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/milkor-m32a1-msgl-40mm-grenade-launcher/": {
-"h": "eecb40f6f428939b",
+"h": "789e6c1c82e4adfe",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-simonov-op-sks-762x39-carbine/": {
-"h": "d1e57d56201bd7f0",
+"h": "e227226bbf240d50",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-101-vepr-hunter-762x51-carbine/": {
-"h": "97b275778076297e",
+"h": "6c7419a28f8f56f2",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-136-vepr-km-762x39-carbine/": {
-"h": "937ccf91b44f816e",
+"h": "b975c7f0aa1a4307",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-209-366-tkm-carbine/": {
-"h": "61c1308bf82f8274",
+"h": "7f44f2bcc812acd5",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/molot-arms-vpo-215-gornostay-366-tkm-bolt-action-rifle/": {
-"h": "6f056d06867e8de4",
+"h": "eb42dfdca6175507",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mosin-762x54r-bolt-action-rifle-infantry/": {
-"h": "2d5d30c20313897d",
+"h": "702f584ed4c7eae7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mosin-762x54r-bolt-action-rifle-sniper/": {
-"h": "ddbf01f49bc78058",
+"h": "dd51f181e4c4642f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mossberg-590a1-12ga-pump-action-shotgun/": {
-"h": "f354863b6ce7e02f",
+"h": "b05130612c17b5ab",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-133-12ga-pump-action-shotgun/": {
-"h": "301ddc1cc91ebdb2",
+"h": "0a3c0e9013b9c528",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-153-12ga-semi-automatic-shotgun/": {
-"h": "6e444f2656fd78fe",
+"h": "e0cdf757c1aa21d0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-155-12ga-semi-automatic-shotgun/": {
-"h": "dababad492ff7ebb",
+"h": "c1cdb4a947183f97",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-18-762x54r-single-shot-rifle/": {
-"h": "45063893e2b87079",
+"h": "5dfc2f3bbc398521",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-43-12ga-sawed-off-double-barrel-shotgun/": {
-"h": "52e01f0095bf956b",
+"h": "01973271c474f982",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mp-43-1c-12ga-double-barrel-shotgun/": {
-"h": "5367d68e6c5ad3da",
+"h": "b0aad944cee740b0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mps-auto-assault-12-gen-1-12ga-automatic-shotgun/": {
-"h": "9c5d9d4ed05a6b0e",
+"h": "18edaf0cd48545de",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mps-auto-assault-12-gen-2-12ga-automatic-shotgun/": {
-"h": "edbc601ed7038b0c",
+"h": "e2ab4112ada17817",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/mts-255-12-12ga-shotgun/": {
-"h": "0759bc4ac935560a",
+"h": "97f9e42fa6d776e6",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/norinco-qbz-191-58x42-assault-rifle/": {
-"h": "63b37f2841705cd5",
+"h": "0b6a3fa142db4b08",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/orsis-t-5000m-762x51-bolt-action-sniper-rifle/": {
-"h": "b5518a148fecbccc",
+"h": "2a21bb61703cf165",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pb-9x18pm-silenced-pistol/": {
-"h": "f6fa331d97b12451",
+"h": "7400f0fbbe5c35a8",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-19-01-vityaz-9x19-submachine-gun/": {
-"h": "3cee8229455a02c6",
+"h": "54f5e9b836ba7eff",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-9-klin-9x18pmm-submachine-gun/": {
-"h": "60c13ee014d9650f",
+"h": "971adbd946eb8a47",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-91-01-kedr-b-9x18pm-submachine-gun/": {
-"h": "fff015e69c9fa861",
+"h": "14f3455f711c8385",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/pp-91-kedr-9x18pm-submachine-gun/": {
-"h": "c94a8350e7d36554",
+"h": "3053feca6faf6e29",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/ppsh-41-762x25-submachine-gun/": {
-"h": "82a7695c9c53c6a2",
+"h": "812ff4d07195cf6e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/radian-weapons-model-1-fa-556x45-assault-rifle/": {
-"h": "cb7424b2e0bd5461",
+"h": "d3f980a0eef44cd1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/remington-model-700-762x51-bolt-action-sniper-rifle/": {
-"h": "3c07ba30599c2706",
+"h": "eb40f3026c668307",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/remington-model-870-12ga-pump-action-shotgun/": {
-"h": "8ccc245d128b4483",
+"h": "f234f7f8109e66e6",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/remington-r11-rsass-762x51-marksman-rifle/": {
-"h": "59009e04864696e8",
+"h": "a4675d5d73c6067b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/rifle-dynamics-rd-704-762x39-assault-rifle/": {
-"h": "97a463e4da210bc7",
+"h": "d37cff1d4df343cd",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/rpk-16-545x39-light-machine-gun/": {
-"h": "000b3fba2f3b445d",
+"h": "cafe34b338a77d66",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/rsh-12-127x55-revolver/": {
-"h": "ecf913542cbdaa77",
+"h": "8f96dbf4f7312560",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sag-ak-545-545x39-carbine/": {
-"h": "b32131dee6f7693d",
+"h": "51ef83e247e9a8d1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sag-ak-545-short-545x39-carbine/": {
-"h": "6f9905763e83b42a",
+"h": "d76f2a6859d27b4f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/saiga-12k-12ga-automatic-shotgun-redline/": {
-"h": "2a6315bf95162c3f",
+"h": "493eedfc5b66e5f1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/saiga-12k-12ga-automatic-shotgun/": {
-"h": "b58c0b79111ed78c",
+"h": "29f3a854dde86809",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/saiga-12k-ver10-12ga-semi-automatic-shotgun/": {
-"h": "0385a931edc04d55",
+"h": "8388c71fa53b049e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/saiga-9-9x19-carbine/": {
-"h": "23d8aabc0206a040",
+"h": "c8eae522694f7f8e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sako-trg-m10-338-lm-bolt-action-sniper-rifle/": {
-"h": "a01ac97952353611",
+"h": "aecf01a38aeb32c6",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/serdyukov-sr-1mp-gyurza-9x21-pistol/": {
-"h": "32b171b92a6337d0",
+"h": "c3d6c69f4a911543",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sig-mcx-300-blackout-assault-rifle/": {
-"h": "1dbb972c0df2ed5f",
+"h": "ae13495e6f821913",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sig-mcx-spear-68x51-assault-rifle/": {
-"h": "2c2a49b8c0e445c5",
+"h": "af2df5d8440c8da1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sig-mpx-9x19-submachine-gun/": {
-"h": "f7908236e002763d",
+"h": "e24eff55f809fb22",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sig-p226r-9x19-pistol/": {
-"h": "05046f3df654694e",
+"h": "d50ef8d4fba2f904",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/soyuz-tm-stm-9-gen2-9x19-carbine/": {
-"h": "23a1d43036848b16",
+"h": "d7b53ddf9515ae12",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/springfield-armory-m1a-762x51-rifle/": {
-"h": "244425aa07ecb05c",
+"h": "6b1806a17c681dfa",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sr-2m-veresk-9x21-submachine-gun/": {
-"h": "b6de304f48a4f599",
+"h": "f6a5b65f04816555",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sr-3m-9x39-compact-assault-rifle/": {
-"h": "5412be2065cf1e56",
+"h": "41ccf9c539a7e6bc",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/stechkin-apb-9x18pm-silenced-machine-pistol/": {
-"h": "75559cc0d8b06d61",
+"h": "eb1fe735717052e5",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/stechkin-aps-9x18pm-machine-pistol/": {
-"h": "9154360160168976",
+"h": "244662e66a24c0ac",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/steyr-aug-a1-556x45-assault-rifle/": {
-"h": "c99646304827d434",
+"h": "77196af9cedc08d3",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/steyr-aug-a3-556x45-assault-rifle-black/": {
-"h": "59e38e87372154c2",
+"h": "adb1031ab019c4be",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/steyr-aug-a3-556x45-assault-rifle/": {
-"h": "0bf0035d1d21ed19",
+"h": "18416ba776afe483",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sv-98-762x54r-bolt-action-sniper-rifle/": {
-"h": "e01fe6aa22c07114",
+"h": "137f37255ca8fd35",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/svds-762x54r-sniper-rifle/": {
-"h": "783e0b191e1d9eba",
+"h": "731a00ed586c0958",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/sword-international-mk-18-338-lm-marksman-rifle/": {
-"h": "dfe21d14a9fd999a",
+"h": "97bb229c219217ce",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tdi-kriss-vector-gen2-45-acp-submachine-gun/": {
-"h": "22142aaabb21e8c1",
+"h": "09458bc1a587e6e5",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tdi-kriss-vector-gen2-9x19-submachine-gun/": {
-"h": "0eeaecf6fa117050",
+"h": "59b92b26c586ecd4",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/theakguy-ak-50-50-bmg-anti-materiel-rifle/": {
-"h": "6eb79ce850b1b47b",
+"h": "1fe4bc246fe77ca9",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tkpd-93x64-carbine/": {
-"h": "3f4c90f698efdd18",
+"h": "699e71d7d1f79d1b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-avt-40-762x54r-automatic-rifle/": {
-"h": "6d233451e91c8417",
+"h": "dd46f0caba953737",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-svt-40-762x54r-rifle/": {
-"h": "fb411b7b6fd1f287",
+"h": "0d3f74982a2a2fa8",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-tt-33-762x25-tt-pistol-golden/": {
-"h": "e096b09b719241ec",
+"h": "a0ffe2de0a946c0e",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/tokarev-tt-33-762x25-tt-pistol/": {
-"h": "9555ffcede9fdd07",
+"h": "7bb6698d3ac2da7f",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/toz-106-20ga-bolt-action-shotgun/": {
-"h": "270890d5f0c0f8a7",
+"h": "1de810ef041f10f1",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/toz-ks-23m-23x75mm-pump-action-shotgun/": {
-"h": "4096a7eba9e7e5fe",
+"h": "4d4925ca3cbba100",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/toz-simonov-sks-762x39-carbine/": {
-"h": "0205129b920bc2eb",
+"h": "f6df8077fba07375",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/us-ordnance-m60e4-762x51-light-machine-gun/": {
-"h": "e367d232ef99cd00",
+"h": "54c7d76d623abbc0",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/us-ordnance-m60e6-762x51-light-machine-gun-fde/": {
-"h": "2cf4cb88cd4f3778",
+"h": "de1b9dc020ea5c86",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/us-ordnance-m60e6-762x51-light-machine-gun/": {
-"h": "f3d578b62855b684",
+"h": "6f545d388a6e573a",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/vss-vintorez-9x39-special-sniper-rifle/": {
-"h": "367f669e59d489ac",
+"h": "8344bd2de22911ef",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/yarygin-mp-443-grach-9x19-pistol/": {
-"h": "e50db4088b27f6ee",
+"h": "598cbcfbee42b501",
 "d": "2026-11-06"
 },
 "/guide/zh/patch/": {
@@ -12196,7 +12196,7 @@
 "d": "2026-11-05"
 },
 "/guide/zh/rewards/": {
-"h": "f5419d42c5a00eb9",
+"h": "df525f7a9c8fbf08",
 "d": "2026-11-06"
 },
 "/guide/zh/start/": {
