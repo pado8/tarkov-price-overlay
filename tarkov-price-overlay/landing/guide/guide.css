@@ -195,6 +195,16 @@ table.tot tr.done{opacity:.45}
   #ctbl td.pr,#ctbl td.mt{grid-column:1/-1}
   #ctbl td[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:11.5px;font-family:inherit}
   .tbl:has(#ctbl){overflow-x:visible;background:var(--panel)}
+  /* 11-06: 시설 페이지 제작표·맵 보스 표도 폰에선 행마다 카드(td.full = 한 줄 전체, data-l = 칸 이름) */
+  table.mcard,table.mcard tbody{display:block}
+  table.mcard thead{display:none}
+  table.mcard tr{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;padding:10px 2px;border-top:1px solid var(--line)}
+  table.mcard tr:first-child{border-top:0}
+  table.mcard td{display:block;border:0;padding:0;text-align:left;font-size:13.5px}
+  table.mcard td.full{grid-column:1/-1}
+  table.tot.mcard td.n{text-align:left}
+  table.mcard td[data-l]::before{content:attr(data-l);display:block;color:var(--muted);font-size:11.5px;font-family:inherit}
+  .tbl:has(table.mcard){overflow-x:visible}
 }
 .itn{display:inline-flex;gap:8px;align-items:center}
 /* 보상 아이템 페이지: 아이템 한 줄(접힘) → 주는 퀘스트 + 처음부터의 선행 사슬 */
