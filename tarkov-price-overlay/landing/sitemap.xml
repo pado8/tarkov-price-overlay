@@ -970,6 +970,50 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://tarkov.aquapado.com/guide/untradeable/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/en/untradeable/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/ru/untradeable/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/zh/untradeable/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/untradeable/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/untradeable/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://tarkov.aquapado.com/guide/hideout/air-filtering-unit/</loc>
     <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/hideout/air-filtering-unit/" />
     <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/hideout/air-filtering-unit/" />

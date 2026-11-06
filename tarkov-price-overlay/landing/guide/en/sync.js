@@ -79,6 +79,7 @@ function help(reason){var old=document.querySelector(".synchelp");if(old)old.rem
 var msg=reason==="perm_denied"?'<b>Your browser is blocking local network access for this site.</b> Chrome/Edge: <b>address bar lock → Site settings → Local network access → Allow</b> then reload. Brave: <b>brave://settings/content/localhostAccess</b> and allow this site.'
 :reason==="app_old"?'<b>The overlay is running, but it is an old version without sync.</b> Update the overlay to the <a href="'+HOME+'">latest version</a> and try again (the installer version updates itself on the next launch).'
 :'<b>Could not find the overlay.</b> On the same PC, run <a href="'+HOME+'">Price Overlay</a>(1.2.6 or later) on this PC and try again. If Chrome "local network access", change it to <b>address bar lock → Site settings → Local network access → Allow</b>, in Brave <b>brave://settings/content/localhostAccess</b>.';
-h.innerHTML=msg+' If it still fails, use the overlay <b>Settings → Sync with site</b> button and your progress comes along. <button type="button" class="x" aria-label="Close">✕</button>';
+// 11-06: app-initiated sync (#hash) had 0 failures in 7 days, the site button failed for over half -> lead with the app path
+h.innerHTML='<b>Most reliable way:</b> in the overlay, open <b>Settings → Sync with site</b>. This site opens and your progress comes over right away (no browser permission needed).<br><span class="why">Why this button failed: '+msg+'</span> <button type="button" class="x" aria-label="Close">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })()

@@ -79,6 +79,7 @@ function help(reason){var old=document.querySelector(".synchelp");if(old)old.rem
 var msg=reason==="perm_denied"?'<b>浏览器阻止了本站访问本地网络。</b> Chrome·Edge： <b>地址栏锁图标 → 网站设置 → 本地网络访问 → 允许</b> ，然后刷新。Brave：打开 <b>brave://settings/content/localhostAccess</b> 并允许此网站。'
 :reason==="app_old"?'<b>覆盖层正在运行，但这是没有同步功能的旧版本。</b> 请将覆盖层更新到 <a href="'+HOME+'">最新版本</a> 后再点一次（安装版会在下次启动时自动更新）。'
 :'<b>找不到覆盖层。</b> 在同一台电脑上 <a href="'+HOME+'">Tarkov Price Overlay（查价工具）</a>（1.2.6 或更高版本）保持运行后再点一次。如果 Chrome 已将 "本地网络访问"设为阻止，请改为 <b>地址栏锁图标 → 网站设置 → 本地网络访问 → 允许</b>；Brave 则打开 <b>brave://settings/content/localhostAccess</b>.';
-h.innerHTML=msg+' 仍然不行的话，用覆盖层的 <b>设置 → 与网站同步</b> 按钮打开本站，进度会一起带过来。 <button type="button" class="x" aria-label="关闭">✕</button>';
+// 11-06: app-initiated sync (#hash) had 0 failures in 7 days, the site button failed for over half -> lead with the app path
+h.innerHTML='<b>最可靠的方法：</b> 在覆盖层中打开 <b>设置 → 与网站同步</b>。网站会自动打开并立即同步进度（无需浏览器权限）。<br><span class="why">此按钮失败的原因： '+msg+'</span> <button type="button" class="x" aria-label="关闭">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })()

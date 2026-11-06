@@ -79,6 +79,7 @@ function help(reason){var old=document.querySelector(".synchelp");if(old)old.rem
 var msg=reason==="perm_denied"?'<b>Браузер блокирует этому сайту доступ к локальной сети.</b> Chrome/Edge: <b>замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить</b> затем обновите страницу. Brave: <b>brave://settings/content/localhostAccess</b> и разрешите этот сайт.'
 :reason==="app_old"?'<b>Оверлей запущен, но это старая версия без синхронизации.</b> Обновите оверлей до <a href="'+HOME+'">последней версии</a> и нажмите снова (установленная версия обновится сама при следующем запуске).'
 :'<b>Оверлей не найден.</b> Запустите на этом же ПК <a href="'+HOME+'">Оверлей цен</a>(1.2.6 или новее) на этом ПК и нажмите снова. Если Chrome "доступ к локальной сети", измените: <b>замок в адресной строке → Настройки сайта → Доступ к локальной сети → Разрешить</b>, в Brave <b>brave://settings/content/localhostAccess</b>.';
-h.innerHTML=msg+' Если не получилось, откройте сайт кнопкой оверлея <b>Настройки → Связать с сайтом</b> в оверлее — прогресс передастся вместе с переходом. <button type="button" class="x" aria-label="Закрыть">✕</button>';
+// 11-06: app-initiated sync (#hash) had 0 failures in 7 days, the site button failed for over half -> lead with the app path
+h.innerHTML='<b>Самый надёжный способ:</b> в оверлее откройте <b>Настройки → Связать с сайтом</b>. Сайт откроется, и прогресс перенесётся сразу (разрешения браузера не нужны).<br><span class="why">Почему эта кнопка не сработала: '+msg+'</span> <button type="button" class="x" aria-label="Закрыть">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })()
