@@ -77,5 +77,11 @@ g2 = item("68f8e04eae031982b00e7aaf", "Secure container Gamma", ["noFlea"])
 by = ta._install_catalog("en", "regular", [g1, g2], ({}, []), "json")
 eq("둘 다 시세 없으면 예전대로 나중 것", by["Secure container Gamma"]["id"], "68f8e04eae031982b00e7aaf")
 
+# ⑥ 그림 없는 새 아이템 — 자리표시 그림(검은 칸)은 보내지 않는다
+r = main._build_response("x", {"id": "6a997c025aec2a3abc08b152", "name": "의약품 보관함", "icon": "https://assets.tarkov.dev/unknown-item-grid-image.jpg"}, "regular", lang="ko")
+eq("unknown-item 아이콘 → None", r.icon, None)
+r = main._build_response("x", {"id": "5aafbcd986f7745e590fff23", "name": "의약품 보관함", "icon": "https://assets.tarkov.dev/5aafbcd986f7745e590fff23-grid-image.webp"}, "regular", lang="ko")
+eq("정상 아이콘은 그대로", r.icon, "https://assets.tarkov.dev/5aafbcd986f7745e590fff23-grid-image.webp")
+
 print("\n실패", fails)
 sys.exit(1 if fails else 0)

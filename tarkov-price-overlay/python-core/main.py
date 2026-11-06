@@ -431,7 +431,9 @@ def _build_response(
         width=price.get("width"),
         height=price.get("height"),
         weight=price.get("weight"),
-        icon=price.get("icon"),
+        # 11-06 tarkov.dev 가 아직 그림을 안 만든 새 아이템(139개)은 unknown-item-*.jpg(거의 검은 칸)로 온다 → 보내지 않는다
+        # (카드는 아이콘이 없으면 그림 칸을 안 그림 · 가이드 icon_url 과 같은 기준). 디스크 스냅샷 값도 여기서 걸러진다.
+        icon=None if "unknown-item" in (price.get("icon") or "") else price.get("icon"),
         wiki=price.get("wiki"),
         is_key=bool(price.get("is_key")),
         # 쓰임새 표에 있는 아이템은 가이드 색인(하루 캐시)을 기다리지 않고 /guide/untradeable/ 로 — 같은 표로 만드는 페이지라 행이 늘 있다
