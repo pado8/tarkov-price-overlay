@@ -136,7 +136,7 @@ class Modder:
         return [c for c in allowed if c in self.slots and is_mod(self.items.get(c))]
 
     # ── 트리 DP ──
-    def run(self, wid, obj, src, min_cap=0):
+    def run(self, wid, obj, src, min_cap=0, ban=frozenset()):
         memo: dict[str, float] = {}
 
         def best(iid, stack):
@@ -147,7 +147,7 @@ class Modder:
             stack = stack | {iid}
             v = self.own(iid, obj)
             for name, req, allowed in self.slots.get(iid, []):
-                vs = [best(c, stack) for c in self.slot_pool(name, allowed, src, min_cap) if c not in stack]
+                vs = [best(c, stack) for c in self.slot_pool(name, allowed, src, min_cap, ban) if c not in stack]
                 must = req or is_slot_mag(name)
                 if vs:
                     v += max(vs) if must else max(0.0, max(vs))
@@ -161,7 +161,7 @@ class Modder:
             out = {}
             for idx, (name, req, allowed) in enumerate(self.slots.get(host, [])):
                 must = req or is_slot_mag(name)
-                pool = [c for c in self.slot_pool(name, allowed, src, min_cap) if c not in stack]
+                pool = [c for c in self.slot_pool(name, allowed, src, min_cap, ban) if c not in stack]
                 fallback = False
                 if not pool and must:  # 구할 수 있는 게 없으면 아무거나(표시만) — 필수 칸을 비우면 총이 안 된다
                     pool = [c for c in self.cands(allowed) if c not in stack]
@@ -187,13 +187,38 @@ class Modder:
         tree = choose(wid, frozenset({wid}), 0)
         return tree, flags
 
+    def best_run(self, wid, lam, src, min_cap, dtree):
+        """run() 은 칸 순서대로 고르는 근사라 충돌 부품이 뒤 칸을 막으면 손해를 본다(11-06: Velociraptor — 권총 손잡이 칸의
+        CQR47(손잡이+개머리판, −23%)이 개머리판 칸 Zhukov-S(−23%)를 막아 기본 조립보다 반동이 컸다).
+        → 고른 것 중 충돌 목록이 있는 부품을 하나씩 빼고 다시 돌려 가장 좋은 것, 그리고 기본 조립(늘 가능한 조합)과도 비교한다."""
+        tree, flags = self.run(wid, lam, src, min_cap)
+        cands = [(self.tree_score(tree, lam), tree, flags)]
+        for c in {c for _, c, _ in self.walk(tree) if c in self.conf}:
+            t2, f2 = self.run(wid, lam, src, min_cap, frozenset({c}))
+            if self.complete(wid, t2):  # 빼고 돌린 결과가 필수 칸을 못 채우면(부품이 빠져 점수만 높음) 버린다 — G36 마운트 사고
+                cands.append((self.tree_score(t2, lam), t2, f2))
+        if dtree:
+            cands.append((self.tree_score(dtree, lam) - 1e-9, dtree, {"unavail": []}))  # 같으면 계산한 쪽
+        best = max(cands, key=lambda x: x[0])
+        return best[1], best[2]
+
+    def complete(self, host, tree) -> bool:
+        """필수 칸·탄창 칸(달 수 있는 부품이 있는 것)이 다 찼는지 — 하위 칸까지"""
+        for idx, (name, req, allowed) in enumerate(self.slots.get(host, [])):
+            if (req or is_slot_mag(name)) and self.cands(allowed) and idx not in tree and str(idx) not in tree:
+                return False
+        return all(self.complete(c, sub) for c, sub in tree.values())
+
     def _drop(self, sub, chosen):
         for c, s in sub.values():
             chosen.discard(c)
             self._drop(s, chosen)
 
-    def slot_pool(self, name, allowed, src, min_cap):
-        pool = [c for c in self.cands(allowed) if c in self.free or self.avail(c, src)]
+    def slot_pool(self, name, allowed, src, min_cap, ban=frozenset()):
+        pool = [c for c in self.cands(allowed) if c not in ban and (c in self.free or self.avail(c, src))]
+        # 조준경은 취향이라 추천에 넣지 않는다(페이지 설명과 같게) — 셰이드(+인체공학)를 달려고 조준경째 고르던 것(11-06)
+        # 기본 조립 조준경·필수 칸은 그대로(필수 칸이 조준경뿐이면 choose 의 대체 경로가 채운다)
+        pool = [c for c in pool if c in self.free or _props(self.items.get(c)).get("propertiesType") != "ItemPropertiesScope"]
         if is_slot_mag(name) and min_cap:
             big = [c for c in pool if self.cap(c) >= min_cap]
             pool = big or pool
@@ -280,7 +305,7 @@ class Modder:
         for src in SRCS:
             ladder = []
             for lam in LAMS:
-                tree, flags = self.run(wid, lam, src, min_cap)
+                tree, flags = self.best_run(wid, lam, src, min_cap, dtree)
                 ladder.append((lam, tree, flags, self.stats(wid, tree, src)))
             top = min(100.0, max(x[3]["e"] for x in ladder))
 

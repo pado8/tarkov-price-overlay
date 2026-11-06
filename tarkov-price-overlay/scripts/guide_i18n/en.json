@@ -1582,5 +1582,22 @@
 "타르코프에서 플리마켓·상인에 팔 수 없는 아이템": "Uses of",
 "페이지를 보세요. 여기에는 그런 데이터에 안 잡히는 용도를 공식 위키에서 확인해 적었습니다.": "page. This page lists uses that the game data does not cover, checked against the official wiki.",
 "플리마켓·상인 시세가 없는 아이템 중 오버레이에서 많이 조회된 것 · 데이터 기준": "Items with no flea or trader price that overlay users look up most · Data as of",
-"🎃 이벤트": "🎃 Event"
+"🎃 이벤트": "🎃 Event",
+"」 프리셋을 지울까요?": "」 — delete this preset?",
+"개 · 이 브라우저": " saved in this browser",
+"게임 정비 화면에서 위에서부터 순서대로 끼우면 됩니다(위 칸을 먼저 달아야 아래 칸이 생깁니다). 다 끼운 뒤 게임 안에서 프리셋으로 저장해 두세요 — 사이트 프리셋을 게임으로 바로 보내는 기능은 게임에 없습니다.": "Fit the parts from top to bottom in the in-game modding screen (a slot only appears after the part above it is mounted). Then save it as a preset inside the game — the game has no way to import presets from a website.",
+"게임에서 맞추기 · 구매 목록": "Build it in game · shopping list",
+"내 조립": "My build",
+"내 프리셋": "My presets",
+"링크": "Link",
+"복사됨 ✓": "Copied ✓",
+"부품 (게임 짧은 이름)": "Part (in-game short name)",
+"부품 목록 복사": "Copy parts list",
+"불러오기": "Load",
+"삭제": "Delete",
+"장착": "Mounted",
+"저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).": "No saved presets yet. Enter a name and save — presets stay in this browser (up to 30 per weapon).",
+"지금 조립을 프리셋으로 저장": "Save current build as preset",
+"프리셋": "Preset",
+"프리셋 이름 (예: 레이드용 저반동)": "Preset name (e.g. low recoil for raids)"
 }

@@ -3903,7 +3903,7 @@ def _mod_stat_cells(st: dict, base: dict | None = None) -> str:
 
 MODS_JS = r"""<script>
 (function(){var root=document.getElementById("mb");if(!root)return;
-var D=null,cur={},src="all",lam=0.3,ck="def",WK="guide.mods."+root.getAttribute("data-w"),MK="guide.mode";
+var D=null,cur={},src="all",lam=0.3,ck="def",WK="guide.mods."+root.getAttribute("data-w"),MK="guide.mode",PK="guide.mods.presets";
 function L(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
 function S(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function ev(n,p){try{if(window.gtag)gtag("event",n,p||{})}catch(e){}}
@@ -3936,9 +3936,18 @@ function render(){var s=stats(cur),b=base(),cl=clashes(s.ids);
 document.getElementById("mtot").innerHTML='<div><span class="muted small">인체공학</span><b>'+s.e+"</b>"+dlt(s.e,b.e)+'</div><div><span class="muted small">수직 반동</span><b>'+s.rv+"</b>"+dlt(s.rv,b.rv,1)+'</div><div><span class="muted small">수평 반동</span><b>'+s.rh+"</b>"+dlt(s.rh,b.rh,1)+'</div><div><span class="muted small">반동 보정</span><b>'+sg(s.r,1)+'</b></div><div><span class="muted small">무게</span><b>'+s.wt+'kg</b></div><div><span class="muted small">추가 부품값</span><b>'+nf(s.c)+"₽</b>"+(s.u?' <span class="dn small">(구매 불가 '+s.u+"개)</span>":"")+"</div>";
 document.getElementById("mtree").innerHTML=rows(D.w.i,cur,0,"");
 document.getElementById("mwarn").innerHTML=cl.length?'<div class="note warn">⚠ 같이 달 수 없는 부품: '+cl.map(function(p){return esc(M(p[0])[0])+" ↔ "+esc(M(p[1])[0])}).join(", ")+"</div>":"";
-var li=[];walk(cur,function(id,dp){li.push('<tr><td>'+esc(M(id)?M(id)[0]:id)+'</td><td class="small">'+where(id)+"</td></tr>")});
-document.getElementById("mlist").innerHTML='<table class="tot"><thead><tr><th>부품</th><th>구하는 곳 · 가격</th></tr></thead><tbody>'+li.join("")+"</tbody></table>";
-S(WK,{t:cur,s:src,k:ck})}
+var li=[];walkS(D.w.i,cur,function(id,dp,s){var m=M(id)||[];li.push('<tr><td><input type="checkbox" aria-label="장착" /></td><td class="small muted" style="padding-left:'+(6+dp*14)+'px">'+esc(D.sn[s[0]]||s[0])+'</td><td>'+esc(m[0]||id)+(m[1]&&m[1]!==m[0]?' <span class="muted small">('+esc(m[1])+")</span>":"")+'</td><td class="small">'+where(id)+"</td></tr>")});
+document.getElementById("mlist").innerHTML='<table class="tot"><thead><tr><th></th><th>칸</th><th>부품 (게임 짧은 이름)</th><th>구하는 곳 · 가격</th></tr></thead><tbody>'+li.join("")+"</tbody></table>";
+S(WK,{t:cur,s:src,k:ck});renderP()}
+function walkS(host,t,fn,dp){dp=dp||0;slotsOf(host).forEach(function(s){var n=t[s[3]];if(n){fn(n[0],dp,s);walkS(n[0],n[1],fn,dp+1)}})}
+function plain(){var a=[D.w.n];walkS(D.w.i,cur,function(id,dp,s){var m=M(id)||[];a.push(new Array(dp+1).join("  ")+"- "+(D.sn[s[0]]||s[0])+": "+(m[0]||id))});return a.join("\n")}
+function allP(){var a=L(PK,{});return a&&typeof a==="object"?a:{}}
+function defName(){var lb={def:"기본 조립",rec:"반동 최소",bal:"균형",erg:"인체공학 최대"}[ck]||"내 조립",d=new Date();return lb+" "+(d.getMonth()+1)+"/"+d.getDate()}
+function savePreset(){var inp=document.getElementById("mpname"),nm=(inp.value||"").trim().slice(0,40)||defName(),all=allP(),l=(all[D.w.i]||[]).filter(function(x){return x.n!==nm}),st=stats(cur);
+l.unshift({n:nm,e:enc(cur),s:src,k:ck,st:[st.e,st.rv,st.rh],at:Date.now(),w:D.w.n,p:location.pathname});if(l.length>30)l.length=30;all[D.w.i]=l;S(PK,all);inp.value="";renderP();ev("mods_save")}
+function renderP(){var el=document.getElementById("mplist");if(!el)return;var l=allP()[D.w.i]||[];
+el.innerHTML=l.length?'<div class="tbl"><table class="tot"><thead><tr><th>내 프리셋</th><th>인체공학 / 수직 반동</th><th></th></tr></thead><tbody>'+l.map(function(x,i){return '<tr><td><b>'+esc(x.n)+'</b> <span class="muted small">'+new Date(x.at).toLocaleDateString()+'</span></td><td class="n">'+x.st[0]+" / "+x.st[1]+'</td><td class="n"><button type="button" class="btn sm" data-pl="'+i+'">불러오기</button> <button type="button" class="btn sm ghost" data-pc="'+i+'">링크</button> <button type="button" class="btn sm ghost" data-pd="'+i+'">삭제</button></td></tr>'}).join("")+"</tbody></table></div>":'<p class="small muted">저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).</p>'}
+function copyTxt(t,b,ok){try{navigator.clipboard.writeText(t).then(function(){b.textContent=ok})}catch(x){prompt("",t)}}
 function mark(){root.querySelectorAll("[data-k]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-k")===ck)});root.querySelectorAll("[data-src]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-src")===src)})}
 function apply(k){if(k==="def"){cur=copy(D.d);lam=0.3}else{var b=D.b[k+"-"+src];if(!b)return;cur=copy(b.t);lam=b.lam||0.3}ck=k;mark();render()}
 function enc(t){return Object.keys(t).sort(function(a,b){return a-b}).map(function(k){var n=t[k],c=enc(n[1]);return k+"-"+n[0]+(c?"("+c+")":"")}).join(",")}
@@ -3948,7 +3957,14 @@ ck="";mark();ev("mods_edit");render()});
 root.addEventListener("click",function(e){var k=e.target.getAttribute("data-k"),s=e.target.getAttribute("data-src");
 if(k){apply(k);ev("mods_apply",{mods_b:k+"-"+src})}
 if(s){src=s;mark();if(ck)apply(ck);else render()}
-if(e.target.id==="mshare"){var u=location.origin+location.pathname+"?b="+enc(cur)+"#mb";try{navigator.clipboard.writeText(u);e.target.textContent="링크 복사됨 ✓"}catch(x){prompt("",u)}ev("mods_share")}});
+if(e.target.id==="mshare"){copyTxt(location.origin+location.pathname+"?b="+enc(cur)+"#mb",e.target,"링크 복사됨 ✓");ev("mods_share")}
+if(e.target.id==="mpsave")savePreset();
+if(e.target.id==="mcopy"){copyTxt(plain(),e.target,"복사됨 ✓");ev("mods_copy_list")}
+var pl=e.target.getAttribute("data-pl"),pc=e.target.getAttribute("data-pc"),pd=e.target.getAttribute("data-pd"),l=allP()[D.w.i]||[];
+if(pl!=null&&l[pl]){try{cur=dec(l[pl].e);src=l[pl].s||"all";ck=l[pl].k||"";var b=D.b[ck+"-"+src];lam=b?b.lam:0.3;mark();render();ev("mods_preset_load")}catch(x){}}
+if(pc!=null&&l[pc])copyTxt(location.origin+l[pc].p+"?b="+l[pc].e+"#mb",e.target,"✓");
+if(pd!=null&&l[pd]&&confirm("「"+l[pd].n+"」 프리셋을 지울까요?")){var all=allP();l.splice(pd,1);all[D.w.i]=l;if(!l.length)delete all[D.w.i];S(PK,all);renderP()}});
+root.addEventListener("keydown",function(e){if(e.target.id==="mpname"&&e.key==="Enter"){e.preventDefault();savePreset()}});
 document.addEventListener("click",function(e){var k=e.target.getAttribute&&e.target.getAttribute("data-load");if(!k||!D)return;var p=k.split("-");src=p[1];apply(p[0]);root.scrollIntoView({behavior:"smooth"});ev("mods_apply",{mods_b:k})});
 fetch("data.json").then(function(r){return r.json()}).then(function(d){D=d;root.classList.add("ready");var q=new URLSearchParams(location.search).get("b"),st=L(WK,null);
 if(q){try{cur=dec(q);ck="";mark();render();return}catch(x){}}if(st&&st.t){src=st.s||"all";ck=st.k||"";var b=D.b[ck+"-"+src];lam=b?b.lam:0.3;cur=st.t;mark();render();return}apply("def")})
@@ -3956,6 +3972,10 @@ if(q){try{cur=dec(q);ck="";mark();render();return}catch(x){}}if(st&&st.t){src=st
 </script>"""
 
 MODS_INDEX_JS = """<script>
+(function(){var box=document.getElementById("myp");if(!box)return;var a;try{a=JSON.parse(localStorage.getItem("guide.mods.presets"))||{}}catch(e){a={}}
+var rows=[];Object.keys(a).forEach(function(w){(a[w]||[]).forEach(function(x){rows.push(x)})});if(!rows.length)return;rows.sort(function(x,y){return y.at-x.at});
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+box.innerHTML='<h2>내 프리셋 <span class="muted small">'+rows.length+'개 · 이 브라우저</span></h2><div class="tbl"><table class="tot"><thead><tr><th>무기</th><th>프리셋</th><th>인체공학 / 수직 반동</th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td>'+esc(x.w)+'</td><td><a href="'+esc(x.p)+'?b='+esc(x.e)+'#mb">'+esc(x.n)+'</a></td><td class="n">'+x.st[0]+" / "+x.st[1]+"</td></tr>"}).join("")+"</tbody></table></div>";box.hidden=false})();
 (function(){var q=document.getElementById("mq");if(!q)return;var rows=[].slice.call(document.querySelectorAll("#mlist2 tr[data-s]"));
 q.addEventListener("input",function(){var v=q.value.trim().toLowerCase().replace(/\\s+/g,"");rows.forEach(function(r){r.style.display=!v||r.getAttribute("data-s").indexOf(v)>=0?"":"none"});
 document.querySelectorAll("#mlist2 section").forEach(function(s){s.style.display=[].some.call(s.querySelectorAll("tr[data-s]"),function(r){return r.style.display!=="none"})?"":"none"})})})();
@@ -4010,8 +4030,12 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
                 + "".join(f'<button type="button" data-k="{k}">{label}</button>' for k, label in MOD_BUILDS)
                 + '</span><span class="seg"><button type="button" data-src="all" class="on">플리 포함</button><button type="button" data-src="trader">상인만</button></span>'
                   '<button type="button" class="btn sm ghost" id="mshare">조립 링크 복사</button></div>'
+                  '<div class="controls mpres"><input id="mpname" type="text" maxlength="40" placeholder="프리셋 이름 (예: 레이드용 저반동)" />'
+                  '<button type="button" class="btn sm" id="mpsave">지금 조립을 프리셋으로 저장</button></div><div id="mplist"></div>'
                   '<div class="mtot" id="mtot"></div><div id="mwarn"></div><div class="mtree" id="mtree">조립기를 불러오는 중…</div>'
-                  '<details class="mlist"><summary>구매 목록</summary><div class="tbl" id="mlist"></div></details>'
+                  '<details class="mlist" open><summary>게임에서 맞추기 · 구매 목록</summary>'
+                  '<p class="small muted">게임 정비 화면에서 위에서부터 순서대로 끼우면 됩니다(위 칸을 먼저 달아야 아래 칸이 생깁니다). 다 끼운 뒤 게임 안에서 프리셋으로 저장해 두세요 — 사이트 프리셋을 게임으로 바로 보내는 기능은 게임에 없습니다.</p>'
+                  '<div class="tbl" id="mlist"></div><p><button type="button" class="btn sm ghost" id="mcopy">부품 목록 복사</button></p></details>'
                   '<p class="small muted">선택 상자의 부품은 지금 기준(마지막으로 누른 조립)의 점수 순입니다. 칸을 바꾸면 그 아래 칸은 비고, 필수 칸만 자동으로 채웁니다. 조립은 이 브라우저에 저장됩니다.</p></section>'
                 + f'<section class="box"><h2>이 총에 바로 다는 칸 <span class="muted small">{len(data["w"]["sl"])}개</span></h2><ul class="cols3">{top_slots}</ul></section>'
                 + '<div class="note"><b>계산 방식</b> — 인체공학 = 총 기본값 + 부품 값의 합, 반동 = 총 기본 반동 × (1 + 부품 반동 보정의 합). '
@@ -4045,6 +4069,7 @@ def mods_pages(ctx: Ctx, out: Path, urls: list) -> int:
             f'<p class="sub">무기 {n}정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 조립기 · 데이터 기준 {e(ctx.stamp)}</p>'
             '<div class="note key"><b>쓰는 법</b> — 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 조립기에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다. '
             '표의 숫자는 <b>인체공학 / 수직 반동</b>입니다(반동은 낮을수록, 인체공학은 높을수록 좋음).</div>'
+            '<section class="box" id="myp" hidden></section>'
             '<div class="controls"><input id="mq" type="search" placeholder="무기 이름 검색 (예: M4A1, AK-74, 모신)" /></div>'
             '<nav class="toc">' + "".join(f'<a href="#c-{k}">{label}</a>' for k, label in MOD_CATS if by_cat.get(k)) + '</nav>'
             f'<div id="mlist2">{"".join(secs)}</div>'
