@@ -544,6 +544,8 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
   const [codeIn, setCodeIn] = useState("");
   const [copied, setCopied] = useState(false);
   const [bad, setBad] = useState(false);
+  const [editMid, setEditMid] = useState<string | null>(null); // 11-07 별명 고치는 중인 파티원
+  const [editVal, setEditVal] = useState("");
   const [, tick] = useState(0);
   // 목록의 '12초 전'을 갱신
   useEffect(() => {
@@ -573,7 +575,22 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
     <div className="party">
       <div className="party-row">
         <b>{t.partyTitle}</b>
-        <input type="text" value={party.name} placeholder={defaultPartyName()} maxLength={16} onChange={(e) => party.setName(e.target.value)} aria-label={t.partyNamePh} title={t.partyNamePh} />
+        <input
+          type="text"
+          value={party.name}
+          placeholder={defaultPartyName()}
+          maxLength={16}
+          onChange={(e) => party.setName(e.target.value)}
+          onBlur={() => party.applyName()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              party.applyName();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          aria-label={t.partyNamePh}
+          title={party.code ? t.partyNameLiveHint : t.partyNamePh}
+        />
       </div>
       {!party.code ? (
         <div className="party-row">
@@ -604,7 +621,43 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
           {party.friends.length === 0 && party.status === "on" && <div className="party-note">{t.partyNoMembers}</div>}
           {party.friends.map((f) => (
             <div className="party-mem" key={f.mid}>
-              <span className="party-dot" style={{ background: f.color, opacity: f.online ? 1 : 0.4 }} /> {f.name}
+              <span className="party-dot" style={{ background: f.color, opacity: f.online ? 1 : 0.4 }} />{" "}
+              {editMid === f.mid ? (
+                <input
+                  type="text"
+                  className="party-alias"
+                  autoFocus
+                  value={editVal}
+                  maxLength={16}
+                  placeholder={f.orig ?? f.name}
+                  onChange={(e) => setEditVal(e.target.value)}
+                  onBlur={() => {
+                    party.setAlias(f.mid, editVal);
+                    setEditMid(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") setEditMid(null);
+                  }}
+                  aria-label={t.partyAlias}
+                />
+              ) : (
+                <>
+                  <span title={f.orig ? `${t.partyAliasOrig}: ${f.orig}` : undefined}>{f.name}</span>
+                  <button
+                    type="button"
+                    className="party-alias-btn"
+                    title={t.partyAliasHint}
+                    aria-label={t.partyAlias}
+                    onClick={() => {
+                      setEditMid(f.mid);
+                      setEditVal(f.orig ? f.name : "");
+                    }}
+                  >
+                    ✎
+                  </button>
+                </>
+              )}
               <span className="st">
                 {!f.online ? t.partyOffline : f.at == null ? t.partyNoPos : f.map !== mapId ? t.partyOtherMap.replace("{map}", mapName(f.map)) : friendAgo(now - f.at, t)}
               </span>

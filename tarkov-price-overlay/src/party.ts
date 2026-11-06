@@ -11,6 +11,7 @@ const K = {
   mid: "tarkov.party.mid",
   at: "tarkov.party.joinedAt", // 마지막으로 방에 있었던 시각 — 6시간 안이면 앱을 다시 켤 때 자동 재참가
   share: "tarkov.party.share",
+  alias: "tarkov.party.alias", // 11-07 파티원 별명 {mid: 별명} — 내 화면에서만
 };
 export const PARTY_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // 헷갈리는 0/O/1/I/L 제외(서버와 같은 집합)
 const CODE_RE = /^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/;
@@ -25,7 +26,8 @@ const PONG_WAIT_MS = 10000;
 export type PartyStatus = "off" | "connecting" | "on" | "full" | "error";
 export type Friend = {
   mid: string;
-  name: string;
+  name: string; // 별명이 있으면 별명(11-07)
+  orig?: string; // 별명을 붙였을 때 서버가 준 원래 이름
   color: string;
   online: boolean;
   map?: string;
@@ -84,6 +86,16 @@ export function useParty({ onCount, onHello }: Opts = {}) {
   cbRef.current = { onCount, onHello };
   const nameRef = useRef(name);
   nameRef.current = name;
+  const connectedNameRef = useRef(""); // 지금 연결에 실어 보낸 이름 — 바뀌면 applyName 이 다시 접속
+  // 11-07 파티원 별명(내 화면에서만): {mid: 별명}
+  const [aliases, setAliases] = useState<Record<string, string>>(() => {
+    try {
+      const o = JSON.parse(get(K.alias) || "{}");
+      return o && typeof o === "object" ? o : {};
+    } catch {
+      return {};
+    }
+  });
 
   const stopSocket = () => {
     window.clearTimeout(timerRef.current);
@@ -111,6 +123,7 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     setStatus("connecting");
     const base = (get(K.url) || PARTY_URL).replace(/\/$/, "");
     const nm = (nameRef.current || "").trim() || defaultPartyName();
+    connectedNameRef.current = nm;
     let ws: WebSocket;
     try {
       ws = new WebSocket(`${base}/room/${c}?name=${encodeURIComponent(nm)}&mid=${encodeURIComponent(memberId())}`);
@@ -274,6 +287,26 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     setNameState(t);
     set(K.name, t);
   }, []);
+  // 11-07 방에 있는 동안 내 이름을 바꾸면 — 이름은 접속할 때만 서버로 가므로 같은 방에 다시 접속한다. 서버가 같은 mid 로
+  // 'join' 을 다시 알리고 친구 앱은 그 mid 의 이름만 바꾼다(위치는 pickPos 로 유지). 이름 칸 Enter·칸을 벗어날 때 부른다.
+  const applyName = useCallback(() => {
+    const c = codeRef.current;
+    const nm = (nameRef.current || "").trim() || defaultPartyName();
+    if (c && nm !== connectedNameRef.current) {
+      retryRef.current = 0;
+      connect(c);
+    }
+  }, [connect]);
+  const setAlias = useCallback((mid: string, v: string) => {
+    const t = [...v.replace(/[\u0000-\u001f\u007f]/g, "")].slice(0, 16).join("").trim();
+    setAliases((A) => {
+      const n = { ...A };
+      if (t) n[mid] = t;
+      else delete n[mid];
+      set(K.alias, JSON.stringify(n));
+      return n;
+    });
+  }, []);
   const setShare = useCallback((v: boolean) => {
     setShareState(v);
     set(K.share, v ? "1" : "0");
@@ -295,7 +328,8 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     };
   }, [connect]);
 
-  return { code, name, setName, share, setShare, status, me, friends, create, join, leave, sendPos };
+  const shown = friends.map((f) => (aliases[f.mid] ? { ...f, name: aliases[f.mid], orig: f.name } : f));
+  return { code, name, setName, applyName, share, setShare, status, me, friends: shown, setAlias, create, join, leave, sendPos };
 }
 
 function pickPos(f: Friend): Partial<Friend> {
