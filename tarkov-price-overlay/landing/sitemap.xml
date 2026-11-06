@@ -96,7 +96,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/ammo/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/ammo/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/ammo/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -107,7 +107,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/ammo/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/ammo/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/ammo/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -878,6 +878,50 @@
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/quests/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/quests/" />
     <lastmod>2026-11-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/raid/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/raid/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/raid/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/raid/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/raid/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/raid/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/en/raid/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/raid/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/raid/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/raid/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/raid/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/raid/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/ru/raid/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/raid/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/raid/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/raid/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/raid/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/raid/" />
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tarkov.aquapado.com/guide/zh/raid/</loc>
+    <xhtml:link rel="alternate" hreflang="ko" href="https://tarkov.aquapado.com/guide/raid/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tarkov.aquapado.com/guide/en/raid/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/raid/" />
+    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/raid/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/raid/" />
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2208,7 +2252,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2219,7 +2263,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2230,7 +2274,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2241,7 +2285,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/factory/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2252,7 +2296,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/ground-zero/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2263,7 +2307,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/ground-zero/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2274,7 +2318,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/ground-zero/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2285,7 +2329,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/ground-zero/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/ground-zero/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2296,7 +2340,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/icebreaker/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2307,7 +2351,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/icebreaker/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2318,7 +2362,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/icebreaker/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2329,7 +2373,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/icebreaker/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/icebreaker/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2340,7 +2384,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2351,7 +2395,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2362,7 +2406,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-factory/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2373,7 +2417,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-factory/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-factory/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2384,7 +2428,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2395,7 +2439,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2406,7 +2450,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2417,7 +2461,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/infected-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/infected-lab/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2428,7 +2472,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/interchange/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2439,7 +2483,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/interchange/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2450,7 +2494,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/interchange/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2461,7 +2505,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/interchange/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/interchange/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2516,7 +2560,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/reserve/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2527,7 +2571,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/reserve/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2538,7 +2582,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/reserve/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2549,7 +2593,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/reserve/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/reserve/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2604,7 +2648,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/streets-of-tarkov/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2615,7 +2659,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/streets-of-tarkov/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2626,7 +2670,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/streets-of-tarkov/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2637,7 +2681,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/streets-of-tarkov/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/streets-of-tarkov/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2648,7 +2692,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/terminal/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2659,7 +2703,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/terminal/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2670,7 +2714,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/terminal/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2681,7 +2725,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/terminal/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/terminal/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2692,7 +2736,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2703,7 +2747,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2714,7 +2758,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-lab/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2725,7 +2769,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-lab/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-lab/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2736,7 +2780,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-labyrinth/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -2747,7 +2791,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-labyrinth/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2758,7 +2802,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-labyrinth/" />
-    <lastmod>2026-11-04</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -2769,7 +2813,7 @@
     <xhtml:link rel="alternate" hreflang="ru" href="https://tarkov.aquapado.com/guide/ru/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://tarkov.aquapado.com/guide/zh/maps/the-labyrinth/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tarkov.aquapado.com/guide/maps/the-labyrinth/" />
-    <lastmod>2026-11-05</lastmod>
+    <lastmod>2026-11-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
