@@ -517,10 +517,17 @@ def _is_flea(vendor_name: str) -> bool:
 
 
 def _fetch_hideout_index(lang: str) -> tuple[dict[str, list[dict]], list[dict]]:
-    """One GraphQL call → (item_index, station_list).
+    """(item_index, station_list) — json.tarkov.dev first, GraphQL only as a last resort.
     item_index: {item_id: [{station, station_id, level, count}]}
     station_list: [{id, name, maxLevel}] sorted by name.
-    Returns ({}, []) on failure so callers keep serving stale data."""
+    Raises when every source fails so callers keep serving stale data."""
+    # 11-06: 카탈로그와 같은 순서. 전엔 GraphQL 단독이라 07-21 장애 이후 캐시가 빈 상태
+    # (카탈로그 갱신 전)의 은신처 패널·시설 목록 요청이 늘 빈 값이었다.
+    try:
+        import tarkov_json_fallback
+        return tarkov_json_fallback.fetch_hideout_index(lang)
+    except Exception as e:
+        print(f"[hideout] json index failed for lang={lang}: {e!r} — trying GraphQL")
     response = requests.post(
         TARKOV_API_URL,
         json={"query": _QUERY_HIDEOUT_STATIONS, "variables": {"lang": lang}},
@@ -1583,6 +1590,34 @@ def has_price_cache(lang: str, game_mode: str) -> bool:
     return bool(_price_cache.get((lang, game_mode)))
 
 
+# 11-06: 차가운 경로(이 언어·모드 카탈로그가 아직 없음)에서 GraphQL 단건 조회 대신 json 카탈로그를
+# 그 자리에서 한 번 채운다. 잠금으로 한 번에 하나만, 실패하면 60초는 다시 안 함(조회마다 다운로드 방지).
+_cold_warm_lock = threading.Lock()
+_cold_warm_failed_at: dict[tuple[str, str], float] = {}
+COLD_WARM_RETRY_SEC = 60
+
+
+def _cold_warm(lang: str, game_mode: str) -> bool:
+    """Make sure the (lang, mode) catalog is loaded; True when it is afterwards."""
+    if has_price_cache(lang, game_mode):
+        return True
+    key = (lang, game_mode)
+    with _cold_warm_lock:
+        if has_price_cache(lang, game_mode):  # another lookup warmed it while we waited
+            return True
+        if time.time() - _cold_warm_failed_at.get(key, 0.0) < COLD_WARM_RETRY_SEC:
+            return False
+        try:
+            n = _refresh_one(lang, game_mode)
+            print(f"[tarkov_api] cold warm {lang}/{game_mode}: {n} items")
+        except Exception as e:
+            print(f"[tarkov_api] cold warm failed {lang}/{game_mode}: {e!r}")
+        if has_price_cache(lang, game_mode):
+            return True
+        _cold_warm_failed_at[key] = time.time()
+        return False
+
+
 def get_item_price(
     item_name: str,
     lang: str = "ko",
@@ -1635,8 +1670,15 @@ def get_item_price(
     if not allow_cold and has_price_cache(lang, game_mode):
         return _empty_result(matched_from)
 
-    # Cold path (cache not yet populated for this lang/mode): fall back to
-    # individual GraphQL queries. Same flow as pre-v0.4.0.
+    # 11-06: GraphQL 은 07-21부터 죽어 있어 아래 단건 조회는 10초 기다린 뒤 실패만 했다.
+    # 카탈로그가 이미 있으면 그 결과가 답(새 아이템은 '못 찾음 → json 즉시 재갱신'이 맡음),
+    # 없으면 json 카탈로그를 지금 채워서 다시 찾는다. 둘 다 안 될 때만 GraphQL 로 내려간다.
+    if _cold_warm(lang, game_mode):
+        cached = _cache_lookup(item_name, lang, game_mode, matched_from)
+        return cached if cached is not None else _empty_result(matched_from)
+
+    # Last resort (json catalog unreachable too): individual GraphQL queries,
+    # the pre-v0.4.0 flow.
     # Network errors degrade to "no match" instead of raising: an unhandled
     # exception here 500s the request, and during a tarkov.dev outage the
     # zoom-out rescue feeds MORE unmatched text into this path — the stale

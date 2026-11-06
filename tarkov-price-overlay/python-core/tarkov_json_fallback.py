@@ -105,6 +105,60 @@ def _get_locale(path: str) -> dict:
         return {}
 
 
+def _hideout_parts(mode: str, lang: str) -> tuple[dict[str, list[dict]], list[dict], dict[str, str]]:
+    """(item_index, station_list, station_name) from `{mode}/hideout` — the shape
+    `_fetch_hideout_index` returns, plus id→name for craft station labels.
+    Raises when the hideout dump itself is unreachable."""
+    h_data = (_get_cached(f"{mode}/hideout").get("data")) or {}
+    h_loc = _get_locale(f"{mode}/hideout_{lang}")
+    h_en = h_loc if lang == "en" else _get_locale(f"{mode}/hideout_en")
+
+    def s_name(key):
+        v = h_loc.get(key) or h_en.get(key) or key
+        return v.strip() if isinstance(v, str) else v
+
+    index: dict[str, list[dict]] = {}
+    stations: list[dict] = []
+    station_name: dict[str, str] = {}
+    for sid, st in h_data.items():
+        if not isinstance(st, dict):
+            continue
+        nm = s_name(st.get("name")) or "?"
+        station_name[sid] = nm
+        levels = st.get("levels") or []
+        stations.append({
+            "id": sid, "name": nm,
+            "maxLevel": max((lv.get("level") or 0 for lv in levels), default=0),
+        })
+        for lv in levels:
+            level = lv.get("level") or 1
+            for r in lv.get("itemRequirements") or []:
+                iid = r.get("item")
+                if not iid:
+                    continue
+                attrs = r.get("attributes") or {}
+                index.setdefault(iid, []).append({
+                    "station": nm, "station_id": sid, "level": level,
+                    "station_slug": st.get("normalizedName") or "",  # 가이드 /guide/hideout/<slug>/
+                    "count": r.get("count") or 1,
+                    "fir": bool(attrs.get("foundInRaid")),
+                })
+    for needs in index.values():
+        needs.sort(key=lambda n: (n["station"], n["level"]))
+    stations.sort(key=lambda s: s["name"])
+    return index, stations, station_name
+
+
+def fetch_hideout_index(lang: str, game_mode: str = "regular") -> tuple[dict[str, list[dict]], list[dict]]:
+    """11-06: 은신처 색인만 json 으로 — 카탈로그 갱신 전(캐시 빔)에 은신처 패널·시설 목록이
+    죽은 GraphQL 로만 가던 경로를 대신한다. 빈 결과면 예외(호출 쪽이 다음 출처로 넘어가게)."""
+    mode = game_mode if game_mode in ("pve", "pvp-season") else "regular"
+    index, stations, _ = _hideout_parts(mode, lang)
+    if not stations:
+        raise RuntimeError(f"json hideout empty ({lang},{mode})")
+    return index, stations
+
+
 def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
                        trader_name: dict) -> dict:
     """Reverse indexes so a lookup can answer "what else does this item do?".
@@ -242,40 +296,7 @@ def _build_enrichments(mode: str, lang: str, en_loc: dict, item_loc: dict,
     # ── hideout: station names are translated; also feeds craft station names ──
     station_name: dict[str, str] = {}
     try:
-        h_data = (_get_cached(f"{mode}/hideout").get("data")) or {}
-        h_loc = _get_locale(f"{mode}/hideout_{lang}")
-        h_en = h_loc if lang == "en" else _get_locale(f"{mode}/hideout_en")
-
-        def s_name(key):
-            v = h_loc.get(key) or h_en.get(key) or key
-            return v.strip() if isinstance(v, str) else v
-
-        for sid, st in h_data.items():
-            if not isinstance(st, dict):
-                continue
-            nm = s_name(st.get("name")) or "?"
-            station_name[sid] = nm
-            levels = st.get("levels") or []
-            out["stations"].append({
-                "id": sid, "name": nm,
-                "maxLevel": max((lv.get("level") or 0 for lv in levels), default=0),
-            })
-            for lv in levels:
-                level = lv.get("level") or 1
-                for r in lv.get("itemRequirements") or []:
-                    iid = r.get("item")
-                    if not iid:
-                        continue
-                    attrs = r.get("attributes") or {}
-                    out["hideout_index"].setdefault(iid, []).append({
-                        "station": nm, "station_id": sid, "level": level,
-                        "station_slug": st.get("normalizedName") or "",  # 가이드 /guide/hideout/<slug>/
-                        "count": r.get("count") or 1,
-                        "fir": bool(attrs.get("foundInRaid")),
-                    })
-        for needs in out["hideout_index"].values():
-            needs.sort(key=lambda n: (n["station"], n["level"]))
-        out["stations"].sort(key=lambda s: s["name"])
+        out["hideout_index"], out["stations"], station_name = _hideout_parts(mode, lang)
     except Exception as e:
         print(f"[fallback] hideout enrichment skipped ({lang},{mode}): {e!r}")
 
