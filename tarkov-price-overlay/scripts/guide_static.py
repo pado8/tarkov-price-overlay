@@ -4097,7 +4097,8 @@ function help(reason){var old=document.querySelector(".synchelp");if(old)old.rem
 var msg=reason==="perm_denied"?'<b>브라우저가 이 사이트의 로컬 네트워크 접근을 막아 두었어요.</b> 크롬·엣지: <b>주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용</b> 후 새로고침. 브레이브: <b>brave://settings/content/localhostAccess</b> 에서 이 사이트 허용.'
 :reason==="app_old"?'<b>오버레이는 켜져 있지만 연동 기능이 없는 예전 버전이에요.</b> 오버레이를 <a href="'+HOME+'">최신 버전</a>으로 업데이트한 뒤 다시 눌러 주세요(설치판은 다음 실행 때 자동 업데이트).'
 :'<b>오버레이를 찾지 못했어요.</b> 같은 PC에서 <a href="'+HOME+'">시세 오버레이</a>(1.2.6 이상)를 켜 두고 다시 눌러 주세요. 크롬이 "로컬 네트워크 접근"을 차단해 두었다면 <b>주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용</b>, 브레이브는 <b>brave://settings/content/localhostAccess</b>.';
-h.innerHTML=msg+' 그래도 안 되면 오버레이 <b>설정 → 사이트 연동하기</b> 버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다. <button type="button" class="x" aria-label="닫기">✕</button>';
+// 11-06: app-initiated sync (#hash) had 0 failures in 7 days, the site button failed for over half -> lead with the app path
+h.innerHTML='<b>가장 확실한 방법:</b> 오버레이 <b>설정 → 사이트 연동하기</b>를 누르세요. 이 사이트가 열리면서 진행도가 바로 넘어와요(브라우저 권한 설정이 필요 없어요).<br><span class="why">이 버튼이 안 된 이유: '+msg+'</span> <button type="button" class="x" aria-label="닫기">✕</button>';
 h.querySelector(".x").addEventListener("click",function(){h.remove()});document.querySelector(".top").insertAdjacentElement("afterend",h)}
 })()"""
 
