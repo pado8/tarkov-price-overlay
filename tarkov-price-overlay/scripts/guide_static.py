@@ -498,7 +498,7 @@ NAV_GROUPS = [
     ("퀘스트", "/guide/quests/", [("quests", "/guide/quests/", "퀘스트 목록"), ("hunt", "/guide/hunt/", "사냥 퀘스트"), ("favorites", "/guide/favorites/", "내 즐겨찾기"), ("event", "/guide/event/", "이벤트 퀘스트"), ("gunsmith", "/guide/gunsmith/", "건스미스"),
                                  ("kappa", "/guide/kappa/", "카파템"), ("prestige", "/guide/prestige/", "프레스티지")]),
     ("아이템", "/guide/items/", [("items", "/guide/items/", "필요 아이템"), ("rewards", "/guide/rewards/", "보상으로 받는 아이템"),
-                                ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"),
+                                ("quest-items", "/guide/quest-items/", "퀘스트 전용 아이템"), ("untradeable", "/guide/untradeable/", "거래 불가 아이템"),
                                 ("keys", "/guide/keys/", "열쇠"), ("keyfinder", "/guide/keyfinder/", "내 열쇠들 어느 맵에?"), ("ammo", "/guide/ammo/", "탄약표"),
                                 ("mods", "/guide/mods/", "무기 모딩")]),
     ("은신처", "/guide/hideout/", [("hideout", "/guide/hideout/", "은신처"), ("crafts", "/guide/crafts/", "제작 수익")]),
@@ -1985,6 +1985,56 @@ def event_page(ctx: Ctx) -> tuple[str, str] | None:
             + "".join(boxes)
             + '<p class="small muted">출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서의 목표·안내 문장을 번역·정리했습니다(같은 조건으로 공유). 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다. 이벤트가 끝나면 이 페이지도 내립니다.</p>')
     return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="event", crumbs=[("이벤트 퀘스트", None)])
+
+
+ITEM_USAGE_PATH = Path(__file__).resolve().parent.parent / "python-core" / "data" / "item_usage.json"
+USAGE_IDS: list[str] = []  # build_all 이 채운다 → build_guide 가 item-pages.json 의 usage 로 내보낸다
+
+
+def untradeable_page(ctx: Ctx) -> tuple[str, str, list[str]] | None:
+    """거래 불가 아이템의 쓰임새(11-06) — 오버레이 카드에서 '시세 없음'으로 끝난 조회 상위 아이템.
+
+    쓰임새 문구는 앱과 같은 표(python-core/data/item_usage.json, 네 언어)를 LANG 으로 골라 쓴다 — 번역표를 거치지 않는다.
+    제작에 쓰이면 공개 데이터 제작표를 같이 붙인다. 카드 책 버튼은 #u-<id> 로 바로 그 행에 온다. (경로, html, 행 id 목록)"""
+    if not ITEM_USAGE_PATH.exists():
+        return None
+    U = (json.loads(ITEM_USAGE_PATH.read_text(encoding="utf-8")).get("items")) or {}
+    rows, ids = [], []
+    for iid, ent in U.items():
+        it = ctx.item(iid)
+        if not it or not ent.get("uses"):
+            continue
+        ids.append(iid)
+        uses = "".join(f"<li>{e(u.get(LANG) or u.get('en') or '')}</li>" for u in ent["uses"])
+        crafts = [c for c in ctx.crafts_reg
+                  if (c.get("productItem") or {}).get("item") == iid or any(r.get("item") == iid for r in c.get("requiredItems") or [])]
+        craft_h = ""
+        if crafts:
+            by_st: dict[tuple, list] = {}
+            for c in crafts:
+                by_st.setdefault((c.get("station"), c.get("level")), []).append(c)
+            craft_h = "".join(f'<p class="small" style="margin:6px 0 2px">제작: {ctx.station_link(sid, lv)}</p>' + crafts_html(ctx, cs, {})
+                              for (sid, lv), cs in by_st.items())
+        img = f'<img class="icon" loading="lazy" alt="" src="{e(it.get("img"))}" />' if it.get("img") else ""
+        en_h = f' <span class="muted small">{e(it.get("en"))}</span>' if LANG != "en" and it.get("en") and it.get("en") != it.get("n") else ""
+        evt = ' <span class="evtag">🎃 이벤트</span>' if ent.get("event") else ""
+        src = f'<a href="{e(ent.get("src"))}" target="_blank" rel="noopener">공식 위키(영문)</a>' if ent.get("src") else ""
+        rows.append(f'<section class="box" id="u-{e(iid)}"><div class="card static">{img}<div><div class="nm">{e(it["n"])}{en_h}{evt}</div>'
+                    f'<ul class="plain small">{uses}</ul><p class="small muted">출처: {src}</p></div></div>{craft_h}</section>')
+    if not rows:
+        return None
+    n = len(rows)
+    path = "/guide/untradeable/"
+    title = f"타르코프 거래 불가 아이템 {n}종 — 어디에 쓰나요? (플리·상인 시세 없음) | 탈콥 가이드"
+    desc = f"타르코프에서 플리마켓·상인에 팔 수 없는 아이템 {n}종의 쓰임새: 이벤트 호박, 타르코인, 허리 주머니, 감마 등. 데이터 기준 {ctx.stamp}."
+    body = (f'<h1>거래 불가 아이템 <span class="h1en">Untradeable items · {n}</span></h1>'
+            f'<p class="sub">플리마켓·상인 시세가 없는 아이템 중 오버레이에서 많이 조회된 것 · 데이터 기준 {e(ctx.stamp)}</p>'
+            '<div class="note">시세가 없어도 쓸 데가 있습니다. 퀘스트·은신처·교환에 쓰이는 아이템은 '
+            '<a href="/guide/items/">필요 아이템</a> 페이지를 보세요. 여기에는 그런 데이터에 안 잡히는 용도를 공식 위키에서 확인해 적었습니다.</div>'
+            + "".join(rows)
+            + '<p class="small muted">쓰임새 문구는 공식 위키(CC BY-NC-SA) 문서를 보고 직접 요약했습니다. 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다.</p>')
+    return path, page(ctx, path=path, title=title, desc=desc, body=body, nav="untradeable",
+                      crumbs=[("거래 불가 아이템", None)]), ids
 
 
 def hunt_page(ctx: Ctx) -> tuple[str, str]:
@@ -4139,6 +4189,10 @@ def build_all(ctx: Ctx, out: Path, collector_ids: set, extra_counts: dict) -> li
     p, h = quest_items_page(ctx)
     write(out, p, h, urls)
     qitems_n = h.count('class="card static"')
+    utp = untradeable_page(ctx)  # 11-06 거래 불가 아이템 쓰임새 — 오버레이 카드 책 버튼이 #u-<id> 로 온다
+    if utp:
+        write(out, utp[0], utp[1], urls)
+        USAGE_IDS[:] = utp[2]
     unlock_map = craft_unlocks(ctx)
     for sid in ctx.hideout_reg:
         p, h = station_page(ctx, sid, unlock_map)

@@ -13,7 +13,7 @@ import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
-import { sellAdvice, stillNeeded, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
+import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -766,7 +766,10 @@ type LookupResult = {
   /** Fandom wiki page. Null for items the catalog has no page for. 가이드가 다루지 않는 아이템의 대체 링크 */
   wiki: string | null;
   is_key?: boolean; // 11-04 열쇠 → 가이드 열쇠 페이지
-  guide_page?: "keys" | "items" | null; // 11-04 가이드 목록 페이지에 이 아이템 행이 있음(사이드카 guide_index)
+  guide_page?: "keys" | "items" | "usage" | null; // 11-04 가이드 목록 페이지에 이 아이템 행이 있음(사이드카 guide_index) · 11-06 usage=/guide/untradeable/
+  // 11-06 거래 불가 아이템 쓰임새(사이드카 data/item_usage.json) — 한 줄마다 네 언어, 화면 언어로 고른다
+  usage?: { ko: string; en: string; ru: string; zh: string }[];
+  is_event?: boolean;
   flea_price: number | null;
   flea_low_24h: number | null;
   flea_high_24h: number | null;
@@ -5948,6 +5951,7 @@ function App() {
                 const guidePath =
                   result.guide_page === "keys" ? `keys/?q=${q}`
                   : result.guide_page === "items" ? `items/?q=${q}`
+                  : result.guide_page === "usage" && result.item_id ? `untradeable/#u-${result.item_id}`
                   : null;
                 if (guidePath) {
                   return (
@@ -6149,9 +6153,50 @@ function App() {
                     <div className="no-market-note">
                       {/* 플리 금지가 아닌데 시세가 비었으면 새 아이템이거나 거래가 적은 것 — '거래 불가'로 단정하지 않는다 */}
                       {result.no_flea === false ? t.noPriceYet : t.noMarketPrice}
+                      {result.is_event && <span className="usage-event">{t.usageEvent}</span>}
                       {result.no_flea === false && result.game_updated_hours != null && (
                         <div>{t.recentPatchHint.replace("{h}", String(result.game_updated_hours))}</div>
                       )}
+                      {(() => {
+                        // 11-06 시세 없음 카드에도 '어디에 쓰는지' 한두 줄. 순서 = 진행 중 퀘스트 제출 > 아직 안 한 퀘스트 >
+                        // 은신처 필요 > 상인 교환 재료 > 제작 재료 > 손글 쓰임새 표(위키 확인, 사이드카 item_usage).
+                        // 시세 없음이면 상인 판매가는 원래 없다. 자세한 목록은 아래 각 섹션이 그대로 보여 준다.
+                        const lines: string[] = [];
+                        const open = adviceQuests
+                          .map((q, i) => ({ q, i }))
+                          .filter(({ q }) => q.status !== "completed" && q.status !== "failed" && !((q.alternatives ?? 1) > WEAK_ALTERNATIVES));
+                        open.sort((a, b) => (a.q.status === "started" ? 0 : 1) - (b.q.status === "started" ? 0 : 1) || a.i - b.i);
+                        if (open[0]) {
+                          const q = open[0].q;
+                          lines.push(t.usageQuest.replace("{name}", q.name) + (q.count ? ` ×${q.count}` : "") + (q.fir ? " · FiR" : "") +
+                            (open.length > 1 ? ` (+${open.length - 1})` : ""));
+                        }
+                        const hasLv = Object.keys(hideoutLevels).length > 0;
+                        const hOpen = adviceHideout.filter((h) => !hasLv || (hideoutLevels[h.station_id] ?? 0) < h.level);
+                        if (hOpen[0]) {
+                          lines.push(t.usageHideout.replace("{station}", hOpen[0].station).replace("{level}", String(hOpen[0].level)) +
+                            ` ×${hOpen[0].count}` + (hOpen.length > 1 ? ` (+${hOpen.length - 1})` : ""));
+                        }
+                        const bu = result.barters_using?.[0];
+                        if (bu) {
+                          lines.push(t.usageBarter.replace("{trader}", `${bu.trader} LL${bu.level}`)
+                            .replace("{reward}", bu.rewards.map((r) => r.short_name ?? r.name).join(", ")));
+                        }
+                        const cu = result.crafts_using?.[0];
+                        if (cu) {
+                          lines.push(t.usageCraft.replace("{station}", `${cu.station} ${cu.level}`)
+                            .replace("{reward}", cu.rewards.map((r) => r.short_name ?? r.name).join(", ")));
+                        }
+                        for (const u of result.usage ?? []) {
+                          lines.push((u as Record<string, string>)[region.lang] || u.en);
+                        }
+                        if (lines.length === 0) return null;
+                        return (
+                          <ul className="usage-lines">
+                            {lines.slice(0, 2).map((l, i) => <li key={i}>{l}</li>)}
+                          </ul>
+                        );
+                      })()}
                     </div>
                   ) : (
                     <>

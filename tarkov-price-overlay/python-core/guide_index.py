@@ -7,7 +7,8 @@
 하루 한 번 받아 %LOCALAPPDATA%\\TarkovPriceOverlay\\item-pages.json 에 캐시하고, 행이 있는 경우만 가이드로 보낸다.
 가이드에 없는 아이템은 기존처럼 위키 링크를 쓴다. 받는 것만 하고 아무 사용자 데이터도 보내지 않는다.
 
-JSON 형식(scripts/build_guide.py 가 만든다): {"updated": "2026-11-04", "items": ["<id>", ...], "keys": ["<id>", ...]}
+JSON 형식(scripts/build_guide.py 가 만든다): {"updated": "2026-11-04", "items": ["<id>", ...], "keys": ["<id>", ...],
+"usage": ["<id>", ...]}  ← 11-06 거래 불가 아이템 쓰임새 페이지(/guide/untradeable/)
 """
 from __future__ import annotations
 
@@ -26,6 +27,7 @@ _HEADERS = {"User-Agent": "tarkov-price-overlay/guide-index"}
 _lock = threading.Lock()
 _items: set[str] = set()
 _keys: set[str] = set()
+_usage: set[str] = set()  # 11-06 /guide/untradeable/ 행
 _updated: str = ""
 
 
@@ -37,16 +39,17 @@ def _cache_path() -> Path:
 
 def load_from_dict(doc: dict) -> int:
     """테스트·수동 주입용. 들어온 항목 수(필요 아이템 + 열쇠)를 돌려준다."""
-    global _items, _keys, _updated
+    global _items, _keys, _usage, _updated
     if not isinstance(doc, dict):
         return 0
     items = {str(x) for x in doc.get("items") or [] if isinstance(x, str)}
     keys = {str(x) for x in doc.get("keys") or [] if isinstance(x, str)}
-    if not items and not keys:
+    usage = {str(x) for x in doc.get("usage") or [] if isinstance(x, str)}
+    if not items and not keys and not usage:
         return 0
     with _lock:
-        _items, _keys, _updated = items, keys, str(doc.get("updated") or "")
-    return len(items) + len(keys)
+        _items, _keys, _usage, _updated = items, keys, usage, str(doc.get("updated") or "")
+    return len(items) + len(keys) + len(usage)
 
 
 def _read_disk() -> dict | None:
@@ -84,7 +87,8 @@ def start_background_refresh() -> None:
 
 
 def page_for(item_id: str | None) -> str | None:
-    """'keys' | 'items' | None. 열쇠 페이지를 우선한다(열쇠는 필요 아이템에도 있을 수 있음)."""
+    """'keys' | 'items' | 'usage' | None. 열쇠 페이지를 우선한다(열쇠는 필요 아이템에도 있을 수 있음).
+    usage(거래 불가 쓰임새 페이지)는 필요 아이템 페이지에 없을 때만 — 퀘스트에 쓰이면 그쪽이 더 쓸모 있다."""
     if not item_id:
         return None
     with _lock:
@@ -92,9 +96,11 @@ def page_for(item_id: str | None) -> str | None:
             return "keys"
         if item_id in _items:
             return "items"
+        if item_id in _usage:
+            return "usage"
     return None
 
 
 def status() -> dict:
     with _lock:
-        return {"items": len(_items), "keys": len(_keys), "updated": _updated}
+        return {"items": len(_items), "keys": len(_keys), "usage": len(_usage), "updated": _updated}

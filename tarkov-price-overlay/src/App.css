@@ -1329,6 +1329,30 @@ html, body, #root {
   font-style: italic;
   padding: 2px 0;
 }
+/* 11-06 시세 없음 카드의 쓰임새 한두 줄 — 안내문(기울임)과 달리 바로 읽히게 바로 세우고 밝게 */
+.no-market-note .usage-lines {
+  list-style: none;
+  margin: 3px 0 0;
+  padding: 0;
+  font-style: normal;
+  color: var(--text-secondary, var(--text-muted));
+  line-height: 1.35;
+}
+.no-market-note .usage-lines li::before {
+  content: "· ";
+  color: var(--text-disabled);
+}
+.no-market-note .usage-event {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: var(--card-fs-xs);
+  font-style: normal;
+  border-radius: var(--radius-sm);
+  color: var(--gold-light);
+  border: 1px solid rgba(200, 170, 100, 0.35);
+  vertical-align: 1px;
+}
 
 .support-note {
   font-size: var(--card-fs-xs);

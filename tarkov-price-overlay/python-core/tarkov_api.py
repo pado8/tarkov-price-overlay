@@ -1214,7 +1214,13 @@ def _install_catalog(lang: str, game_mode: str, items: list[dict], hideout_pair:
         name = it.get("name")
         if not name:
             continue
-        has_price = bool(it.get("avg24hPrice") or it.get("lastLowPrice") or it.get("low24hPrice"))
+        # 11-06: 상인 판매가만 있는 원본도 '시세 있음'으로 — 의약품 보관함(Medicine case, 플리 금지·상인 24만₽)이
+        # 같은 이름의 거래 불가 변형(6a997c0…)에 가려 진짜 케이스를 조회해도 '시세 없음'이 떴다(통계 시세 없음 14건).
+        has_price = bool(
+            it.get("avg24hPrice") or it.get("lastLowPrice") or it.get("low24hPrice")
+            or any((s.get("priceRUB") or 0) > 0 and not _is_flea(((s.get("vendor") or {}).get("name")) or "")
+                   for s in it.get("sellFor") or [])
+        )
         if name in by_name and priced.get(name) and not has_price:
             continue
         by_name[name] = _build_cache_entry(it, hideout_idx)

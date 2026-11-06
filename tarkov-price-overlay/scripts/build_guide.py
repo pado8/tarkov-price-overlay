@@ -588,9 +588,11 @@ def main() -> int:
         page_items = sorted(set(re.findall(r'<tr data-id="([0-9a-f]{24})"', items_html)))
         page_keys = sorted({k["id"] for mp in key_maps for k in mp["keys"]})
         (out_dir / "item-pages.json").write_text(
-            json.dumps({"updated": stamp, "items": page_items, "keys": page_keys}, ensure_ascii=False),
+            # 11-06 usage = 거래 불가 아이템 쓰임새 페이지(/guide/untradeable/#u-<id>)의 행
+            json.dumps({"updated": stamp, "items": page_items, "keys": page_keys, "usage": list(guide_static.USAGE_IDS)},
+                       ensure_ascii=False),
             encoding="utf-8")
-        print(f"[guide] item-pages.json: 필요 아이템 {len(page_items)} · 열쇠 {len(page_keys)}")
+        print(f"[guide] item-pages.json: 필요 아이템 {len(page_items)} · 열쇠 {len(page_keys)} · 쓰임새 {len(guide_static.USAGE_IDS)}")
     import guide_search  # 전체 검색 색인(search.json)·검색창(search.js) — 만들어진 페이지를 훑어서
     print(f"[guide] 검색 색인: {guide_search.apply(out_dir, lang, pages['keys']['items'])}개")
     css = (ROOT / "scripts" / "guide_templates" / "guide.css").read_text(encoding="utf-8")

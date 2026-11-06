@@ -48,6 +48,7 @@ from ocr import (
 from quest_tracker import _normalize_request_mode, get_tracker
 import gunsmith
 import guide_index
+import item_usage  # 11-06 거래 불가 아이템 쓰임새 표
 from tarkov_api import catalog_age as _catalog_age
 from radar import get_service as get_radar
 from tarkov_api import (
@@ -302,7 +303,10 @@ class LookupResponse(BaseModel):
     icon: str | None = None  # gridImageLink (webp URL)
     wiki: str | None = None  # Fandom wiki page (card link button) — 가이드가 다루지 않는 아이템의 대체 링크
     is_key: bool = False  # 11-04 열쇠면 카드 버튼이 가이드 열쇠 페이지로
-    guide_page: str | None = None  # 11-04 'keys'|'items' — 가이드 목록 페이지에 이 아이템 행이 있음(없으면 위키)
+    guide_page: str | None = None  # 11-04 'keys'|'items'|'usage'(11-06) — 가이드 목록 페이지에 이 아이템 행이 있음(없으면 위키)
+    # 11-06 거래 불가 아이템 쓰임새(data/item_usage.json 손글 표) — [{ko,en,ru,zh}], 앱이 화면 언어로 고른다
+    usage: list[dict[str, str]] = []
+    is_event: bool = False  # 이벤트 아이템(카드에 작은 '이벤트' 표시)
     no_flea: bool | None = None  # 11-04 플리 금지 아이템(시세 없음일 때 '거래 불가' vs '아직 시세 없음'), 옛 스냅샷은 None
     catalog_refreshing: bool = False  # 11-04 못 찾음 뒤 아이템 목록을 새로 받는 중 → '몇 초 뒤 다시 F2'
     game_updated_hours: int | None = None  # 11-04 게임이 새 버전으로 바뀐 지 몇 시간(48시간 안일 때만)
@@ -418,6 +422,7 @@ def _build_response(
             },
         )
 
+    usage = item_usage.usage_for(price.get("id"))
     return LookupResponse(
         raw_text=raw_text,
         item_id=price.get("id"),
@@ -429,7 +434,10 @@ def _build_response(
         icon=price.get("icon"),
         wiki=price.get("wiki"),
         is_key=bool(price.get("is_key")),
-        guide_page=guide_index.page_for(price.get("id")),
+        # 쓰임새 표에 있는 아이템은 가이드 색인(하루 캐시)을 기다리지 않고 /guide/untradeable/ 로 — 같은 표로 만드는 페이지라 행이 늘 있다
+        guide_page=guide_index.page_for(price.get("id")) or ("usage" if usage[0] else None),
+        usage=usage[0],
+        is_event=usage[1],
         no_flea=price.get("no_flea"),
         base_price=price.get("base_price"),
         flea_fee_rates=_flea_fee_rates_for(game_mode),

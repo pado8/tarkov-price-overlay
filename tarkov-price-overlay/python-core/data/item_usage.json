@@ -1,0 +1,69 @@
+{
+  "_doc": "거래 불가(플리·상인 시세 없음) 아이템의 쓰임새 손글 표 (11-06). 시세 없음 조회 상위 6개만 — 퀘스트·교환·제작·은신처 데이터(json.tarkov.dev)에 안 잡히는 용도를 공식 위키에서 확인해 짧게 적었다. 확인 못 한 용도는 적지 않는다. 오버레이 사이드카(item_usage.py)가 카드 응답에 싣고, 가이드 생성기(guide_static.untradeable_page)가 /guide/untradeable/ 페이지를 만든다. 문구는 직접 요약한 것(위키 문장 번역 아님). 번역문에 작은따옴표 금지.",
+  "items": {
+    "634959225289190e5e773b3b": {
+      "event": true,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Pumpkin_with_sweets",
+      "uses": [
+        {"ko": "레이드 밖에서 풀기(Unpack)로 열면 무작위 보상 · 안전 컨테이너엔 못 넣음",
+         "en": "Unpack it outside a raid for random loot · cannot go in a secure container",
+         "ru": "Распакуйте вне рейда — случайная награда · нельзя положить в защищённый контейнер",
+         "zh": "在战局外“解包”可开出随机奖励 · 不能放入安全箱"},
+        {"ko": "컬티스트 서클에 바치면 호박 헬멧(Jack-o-lantern)이 나옴",
+         "en": "Sacrifice it in the Cultist Circle for the Jack-o-lantern pumpkin helmet",
+         "ru": "Жертва в Круге культистов даёт тыквенный шлем (Jack-o-lantern)",
+         "zh": "在邪教徒法阵献祭可得南瓜头盔(Jack-o-lantern)"}
+      ]
+    },
+    "6a426fbe99757acd420f64b0": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Streets_of_Tarkov_poster",
+      "uses": [
+        {"ko": "은신처에 걸어 꾸미는 포스터 · 프로모 코드로만 얻음",
+         "en": "A poster to hang in your Hideout · only from promo codes",
+         "ru": "Плакат для украшения убежища · только по промокодам",
+         "zh": "可挂在藏身处装饰的海报 · 仅能通过兑换码获得"}
+      ]
+    },
+    "69dd0de23dfe95d9e70b5ebb": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/TarCoin",
+      "uses": [
+        {"ko": "확장팩 허브(Expansions Hub)에서 쓰는 화폐 · 들고 탈출하면 허브 잔액으로 바뀜 · PVE엔 없음",
+         "en": "Currency for the in-game Expansions Hub · turns into Hub balance when you extract · not in PvE",
+         "ru": "Валюта для Expansions Hub · при выходе из рейда зачисляется на баланс · нет в PvE",
+         "zh": "游戏内扩展中心(Expansions Hub)的货币 · 撤离后转为中心余额 · PvE 没有"}
+      ]
+    },
+    "5732ee6a24597719ae0c0281": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Waist_pouch",
+      "uses": [
+        {"ko": "안전 컨테이너 칸에 끼우는 3×2(6칸) 주머니 · 다른 안전 컨테이너와 달리 레이드 중 버릴 수 있음",
+         "en": "A 3×2 (6-slot) pouch for the secure container slot · unlike others it can be dropped in raid",
+         "ru": "Подсумок 3×2 (6 ячеек) в слот защищённого контейнера · в отличие от других, можно выбросить в рейде",
+         "zh": "装在安全箱槽位的 3×2(6 格)腰包 · 与其他安全箱不同，战局中可丢弃"}
+      ]
+    },
+    "68f8e04eae031982b00e7aaf": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Secure_container_Gamma",
+      "uses": [
+        {"ko": "3×3 안전 컨테이너 · 낡은 외형(Battle-worn)과 일반 감마는 작업대 1단계에서 서로 바꿀 수 있음",
+         "en": "3×3 secure container · the Battle-worn look and the normal Gamma swap at Workbench level 1",
+         "ru": "Защищённый контейнер 3×3 · потёртую (Battle-worn) и обычную Гамму можно менять друг на друга на верстаке 1 ур.",
+         "zh": "3×3 安全箱 · 旧外观(Battle-worn)与普通 Gamma 可在工作台 1 级互相转换"}
+      ]
+    },
+    "6a997c025aec2a3abc08b152": {
+      "event": false,
+      "src": "https://escapefromtarkov.fandom.com/wiki/Medicine_case",
+      "uses": [
+        {"ko": "약품·의료 물자 전용 수납 케이스 — 3×3 자리에 8×8(64칸)",
+         "en": "Storage case for meds and medical supplies — 8×8 (64 slots) inside, 3×3 outside",
+         "ru": "Кейс для медикаментов и медрасходников — внутри 8×8 (64 ячейки), снаружи 3×3",
+         "zh": "药品与医疗物资专用收纳箱 — 外 3×3，内 8×8(64 格)"}
+      ]
+    }
+  }
+}

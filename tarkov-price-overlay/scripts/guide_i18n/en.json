@@ -1571,5 +1571,16 @@
 "가장 확실한 방법:": "Most reliable way:",
 "오버레이": "in the overlay, open",
 "를 누르세요. 이 사이트가 열리면서 진행도가 바로 넘어와요(브라우저 권한 설정이 필요 없어요).": ". This site opens and your progress comes over right away (no browser permission needed).",
-"이 버튼이 안 된 이유:": "Why this button failed:"
+"이 버튼이 안 된 이유:": "Why this button failed:",
+"거래 불가 아이템": "Untradeable items",
+"시세가 없어도 쓸 데가 있습니다. 퀘스트·은신처·교환에 쓰이는 아이템은": "No price does not mean no use. For items used in quests, the Hideout or barters, see the",
+"쓰임새 문구는 공식 위키(CC BY-NC-SA) 문서를 보고 직접 요약했습니다. 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다.": "The use notes are our own summaries of the official wiki (CC BY-NC-SA). To respect its non-commercial terms, this page carries no ads.",
+"제작:": "Craft:",
+"종 — 어디에 쓰나요? (플리·상인 시세 없음) | 탈콥 가이드": "— What Are They For? (No Flea or Trader Price) | Tarkov Guide",
+"종의 쓰임새: 이벤트 호박, 타르코인, 허리 주머니, 감마 등. 데이터 기준": "items you cannot sell on the flea market or to traders: the event pumpkin, TarCoin, Waist pouch, Gamma and more. Data as of",
+"타르코프 거래 불가 아이템": "Tarkov Untradeable Items",
+"타르코프에서 플리마켓·상인에 팔 수 없는 아이템": "Uses of",
+"페이지를 보세요. 여기에는 그런 데이터에 안 잡히는 용도를 공식 위키에서 확인해 적었습니다.": "page. This page lists uses that the game data does not cover, checked against the official wiki.",
+"플리마켓·상인 시세가 없는 아이템 중 오버레이에서 많이 조회된 것 · 데이터 기준": "Items with no flea or trader price that overlay users look up most · Data as of",
+"🎃 이벤트": "🎃 Event"
 }
