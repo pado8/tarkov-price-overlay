@@ -4339,14 +4339,14 @@ var W={p:"설치",m:"표시(마커)",u:"사용"};
 function render(){var done=gdone(),y=gsync(),st=(y&&y.started)||[],s=sel(),c=chk();
 document.querySelectorAll("#rmap button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-m")===cur)});
 var qs=D.q.filter(function(q){return qOn(q)&&!done[q.i]});
-function stOf(q){return st.indexOf(q.i)>=0?0:q.pre.every(function(p){return done[p]})?1:2}
+function stOf(q){return st.indexOf(q.i)>=0?0:1}
 qs.sort(function(a,b){return stOf(a)-stOf(b)||(a.n<b.n?-1:1)});
 function inc(q){return (q.i in s)?!!s[q.i]:st.indexOf(q.i)>=0}
-var grp=[[],[],[]];qs.forEach(function(q){grp[stOf(q)].push(q)});
-var GL=["진행 중 (연동)","지금 받을 수 있음","아직 잠김 (선행 퀘스트 남음)"];
+var grp=[[],[]];qs.forEach(function(q){grp[stOf(q)].push(q)});
+var GL=["진행 중 (연동)","직접 추가 — 이 맵의 남은 퀘스트"];
 document.getElementById("rq").innerHTML=(y?"":'<p class="note small">오버레이 연동 전이라 진행 중 퀘스트를 몰라요. 아래에서 이번 출정에 할 퀘스트를 직접 고르세요(위 🔗 연동 버튼 또는 앱의 사이트 연동하기를 쓰면 자동으로 담깁니다).</p>')
 +grp.map(function(g,k){if(!g.length)return "";var body=g.map(function(q){return '<label class="rq"><input type="checkbox" data-q="'+q.i+'"'+(inc(q)?" checked":"")+' /> <a href="'+q.u+'">'+esc(q.n)+'</a> <span class="muted small">'+esc(q.tr)+"</span></label>"}).join("");
-return k===2?'<details><summary>'+GL[k]+' <span class="muted small">'+g.length+"개</span></summary>"+body+"</details>":'<h3>'+GL[k]+' <span class="muted small">'+g.length+"개</span></h3>"+body}).join("")||'<p class="muted">이 맵에 준비물이 필요한 남은 퀘스트가 없어요.</p>';
+return k===1?'<details'+(y?"":" open")+'><summary>'+GL[k]+' <span class="muted small">'+g.length+"개</span></summary>"+body+"</details>":'<h3>'+GL[k]+' <span class="muted small">'+g.length+"개</span></h3>"+body}).join("")||'<p class="muted">이 맵에 준비물이 필요한 남은 퀘스트가 없어요.</p>';
 var on=qs.filter(inc),agg={},keys={},cond=[],find=[],qx=[],bring=[];
 on.forEach(function(q){q.r.forEach(function(r){if(!rOn(q,r))return;
 if(r.k==="i"){var k=r.ids.slice().sort().join("|")+":"+r.w;var a=agg[k]||(agg[k]={ids:r.ids,n:0,w:r.w,q:[]});a.n+=r.n;if(a.q.indexOf(q.n)<0)a.q.push(q.n)}
@@ -4405,7 +4405,7 @@ def raid_page(ctx: Ctx) -> tuple[str, str, int]:
         per_map.append(f'<li><a href="?map={e(m["s"])}">{e(m["n"])}</a> <span class="muted small">퀘스트 {n}개</span></li>')
     body = (f'<h1>출정 준비물 <span class="h1en">Raid checklist</span></h1>'
             f'<p class="sub">맵을 고르면 지금 하는 퀘스트에 필요한 아이템·열쇠·탈출 준비물을 한 목록으로 · 퀘스트 {len(data["q"])}개 · 데이터 기준 {e(ctx.stamp)}</p>'
-            '<div class="note key"><b>쓰는 법</b> — ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담김) '
+            '<div class="note key"><b>쓰는 법</b> — ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담기고, 연동 전이면 이 맵의 남은 퀘스트에서 직접 고름) '
             '③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템과 이 맵 탈출구에 쓰이는 조명탄·등반 장비·차량 요금이 한 목록으로 나옵니다(탈출구는 레이드에 들어가야 정해지니 쓸 수 있는 것을 모두 보여 줍니다). '
             '체크 표시는 이 브라우저에만 저장됩니다.</div>'
             '<div id="raid">'

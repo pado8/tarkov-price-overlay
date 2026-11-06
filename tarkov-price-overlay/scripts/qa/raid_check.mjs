@@ -26,10 +26,10 @@ let p = await prep();
 ok(p.some((x) => /MS2000/.test(x) && /×2/.test(x)), "MS2000 ×2 합산: " + p.filter((x) => /MS2000/.test(x)).join(" / "));
 ok(p.some((x) => /WI-FI|카메라/.test(x)), "와이파이 카메라: " + p.filter((x) => /WI-FI|카메라/.test(x)).join(" / "));
 console.log("   섹션:", (await heads()).join(" · "));
-// 받을 수 있는 퀘스트 하나 더 담기
-const avail = await t.ev(`(function(){var h=[].filter.call(document.querySelectorAll("#rq h3"),function(x){return /받을/.test(x.textContent)})[0];if(!h)return "";var i=h.nextElementSibling;while(i&&!i.querySelector)i=i.nextElementSibling;var c=i&&i.querySelector("input:not(:checked)");if(!c)return "";c.click();return c.parentNode.textContent.trim()})()`);
+// 직접 추가 목록(연동하면 접혀 있음)에서 하나 더 담기 — '받을 수 있음' 판정은 11-06에 없앰
+const avail = await t.ev(`(function(){var d=[].filter.call(document.querySelectorAll("#rq details"),function(x){return /직접 추가/.test(x.textContent)})[0];if(!d)return "";var closed=!d.open;d.open=true;var c=d.querySelector("input:not(:checked)");if(!c)return "";c.click();return (closed?"(접혀 있었음) ":"")+c.parentNode.textContent.trim()})()`);
 await sleep(150);
-ok(avail && (await prep()).length > p.length, "받을 수 있음에서 추가: " + avail.slice(0, 40) + " → 항목 " + (await prep()).length);
+ok(avail && (await prep()).length > p.length, "직접 추가에서 담기: " + avail.slice(0, 40) + " → 항목 " + (await prep()).length);
 // 탈출구 고르기: 조명탄 · 차량
 await sleep(150);
 p = await prep();

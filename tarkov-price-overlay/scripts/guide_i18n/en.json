@@ -1674,5 +1674,7 @@
 "쓰는 탈출구:": "Used at:",
 "조건이 있는 탈출구": "Extracts with conditions",
 "탈출구 관련 아이템": "Extract items",
-"개 맵": " maps"
+"개 맵": " maps",
+"— ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담기고, 연동 전이면 이 맵의 남은 퀘스트에서 직접 고름)": "— ① pick a map and ② tick the quests for this raid (with the overlay sync your active quests are added automatically; without it, pick from the remaining quests on this map);",
+"직접 추가 — 이 맵의 남은 퀘스트": "Add manually — remaining quests on this map"
 }
