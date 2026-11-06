@@ -2046,3 +2046,5 @@ html, body, #root {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55); padding: 8px 10px;
 }
 .wide-pane .radar-under > .radar-help { flex: none; }
+/* 11-06 진영 전용 퀘스트 표시(진영을 모를 때만) */
+.quest-faction { flex: none; white-space: nowrap; margin-left: 4px; font-size: 0.78em; padding: 0 4px; border: 1px solid var(--border, #3a3f4a); border-radius: 3px; color: var(--text-disabled); vertical-align: 1px; }

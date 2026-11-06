@@ -49,6 +49,7 @@ from quest_tracker import _normalize_request_mode, get_tracker
 import gunsmith
 import guide_index
 import item_usage  # 11-06 거래 불가 아이템 쓰임새 표
+import faction  # 11-06 PMC 진영(BEAR/USEC) — 진영 전용 퀘스트 표·추정
 from tarkov_api import catalog_age as _catalog_age
 from radar import get_service as get_radar
 from tarkov_api import (
@@ -237,6 +238,8 @@ class TaskRef(BaseModel):
     # the new frontend can switch the display without re-capturing.
     task_status: str | None = None  # "started" | "completed" | "failed" | None
     task_status_by_mode: dict[str, str | None] = Field(default_factory=dict)
+    # 11-06 진영 전용 퀘스트면 'BEAR'|'USEC'(같은 이름 두 판이 카드에 두 줄 나오던 것 — 앱이 내 진영으로 거른다)
+    faction: str | None = None
 
 
 class HideoutCraft(BaseModel):
@@ -307,6 +310,8 @@ class LookupResponse(BaseModel):
     # 11-06 거래 불가 아이템 쓰임새(data/item_usage.json 손글 표) — [{ko,en,ru,zh}], 앱이 화면 언어로 고른다
     usage: list[dict[str, str]] = []
     is_event: bool = False  # 이벤트 아이템(카드에 작은 '이벤트' 표시)
+    # 11-06 모드별 추정 진영 {pvp, pve, season: 'BEAR'|'USEC'|None} — 진영 전용 퀘스트 기록으로(faction.detect)
+    faction_by_mode: dict[str, str | None] = Field(default_factory=dict)
     no_flea: bool | None = None  # 11-04 플리 금지 아이템(시세 없음일 때 '거래 불가' vs '아직 시세 없음'), 옛 스냅샷은 None
     catalog_refreshing: bool = False  # 11-04 못 찾음 뒤 아이템 목록을 새로 받는 중 → '몇 초 뒤 다시 F2'
     game_updated_hours: int | None = None  # 11-04 게임이 새 버전으로 바뀐 지 몇 시간(48시간 안일 때만)
@@ -396,6 +401,8 @@ def _build_response(
         pvp_status = {}
         pve_status = {}
         season_status = {}
+    qf = faction.quest_factions()
+    faction_by_mode = {"pvp": faction.detect(pvp_status, qf), "pve": faction.detect(pve_status, qf), "season": faction.detect(season_status, qf)}
     if game_mode == "pve":
         current_status = pve_status
     elif game_mode == "pvp-season":
@@ -440,6 +447,7 @@ def _build_response(
         guide_page=guide_index.page_for(price.get("id")) or ("usage" if item_usage.in_table(price.get("id")) else None),
         usage=usage[0],
         is_event=usage[1],
+        faction_by_mode=faction_by_mode,
         no_flea=price.get("no_flea"),
         base_price=price.get("base_price"),
         flea_fee_rates=_flea_fee_rates_for(game_mode),
@@ -516,6 +524,7 @@ def _build_response(
                     "pve": pve_status.get(t.get("id") or ""),
                     "season": season_status.get(t.get("id") or ""),
                 },
+                faction=qf.get(t.get("id") or ""),
             )
             for t in price.get("used_in_tasks", [])
         ],
@@ -1348,6 +1357,8 @@ class HideoutSyncRequest(BaseModel):
     levels: dict[str, int] = {}
     # 앱이 지금 쓰는 퀘스트 서버(pvp/pve/season). 가이드 사이트가 처음 연동할 때 사이트 기본값(PVP) 대신 이걸 따른다(1.2.6~).
     mode: str | None = None
+    # 11-06 앱 설정의 진영('auto'|'BEAR'|'USEC'). 수동으로 고른 진영을 가이드 사이트(/progress faction)도 따르게 한다.
+    faction: str | None = None
 
 
 _hideout_levels_cache: dict[str, int] | None = None
@@ -1390,9 +1401,30 @@ def _load_app_mode() -> str | None:
     return _app_mode_cache or None
 
 
+_app_faction_cache: str | None = None
+
+
+def _app_faction_path():
+    from quest_tracker import _state_dir
+
+    return _state_dir() / "app_faction.json"
+
+
+def _load_app_faction() -> str | None:
+    """앱 설정에서 직접 고른 진영('BEAR'|'USEC'). '자동'이거나 없으면 None."""
+    global _app_faction_cache
+    if _app_faction_cache is None:
+        try:
+            v = json.loads(_app_faction_path().read_text(encoding="utf-8")).get("faction")
+            _app_faction_cache = v if v in faction.FACTIONS else ""
+        except Exception:  # noqa: BLE001 — 없거나 깨졌으면 자동
+            _app_faction_cache = ""
+    return _app_faction_cache or None
+
+
 @app.post("/sync/hideout", dependencies=[Depends(_reject_foreign_origin)])
 def sync_hideout(req: HideoutSyncRequest) -> dict:
-    global _hideout_levels_cache, _app_mode_cache
+    global _hideout_levels_cache, _app_mode_cache, _app_faction_cache
     levels = {str(k): int(v) for k, v in (req.levels or {}).items() if int(v) > 0}
     _hideout_levels_cache = levels
     try:
@@ -1409,7 +1441,15 @@ def sync_hideout(req: HideoutSyncRequest) -> dict:
                 _app_mode_path().write_text(json.dumps({"mode": m}), encoding="utf-8")
             except Exception as ex:  # noqa: BLE001
                 print(f"[sync] app mode save failed: {ex}")
-    return {"ok": True, "count": len(levels), "mode": _load_app_mode()}
+    if req.faction is not None:
+        f = req.faction if req.faction in faction.FACTIONS else ""
+        if (f or None) != _load_app_faction():
+            _app_faction_cache = f
+            try:
+                _app_faction_path().write_text(json.dumps({"faction": f or "auto"}), encoding="utf-8")
+            except Exception as ex:  # noqa: BLE001
+                print(f"[sync] app faction save failed: {ex}")
+    return {"ok": True, "count": len(levels), "mode": _load_app_mode(), "faction": _load_app_faction()}
 
 
 @app.get("/progress")
@@ -1440,6 +1480,10 @@ def progress(game_mode: str | None = None) -> dict:
         "mode": mode,
         "mode_source": mode_source,
         "app_mode": _load_app_mode(),
+        # 11-06 PMC 진영('BEAR'|'USEC'|None) — 가이드가 반대 진영 전용 퀘스트를 거르는 데 쓴다. 앱 설정에서 직접 고른 진영이
+        # 있으면 그것(manual), 없으면 이 모드의 진영 전용 퀘스트(34개) 기록으로 추정(auto), 근거 없으면 None.
+        "faction": _load_app_faction() or faction.detect(st),
+        "faction_source": "manual" if _load_app_faction() else ("auto" if faction.detect(st) else None),
         "enabled": tracker.is_enabled(),
         "quest_count": len(st),
         **by,
@@ -1553,7 +1597,15 @@ def quests_status() -> dict:
     """Current state of the quest log watcher: install path validity,
     how many quests we've seen, etc. The frontend polls this so it can
     surface "X quests synced" or warn that the install path is wrong."""
-    return get_tracker().get_status()
+    st = get_tracker().get_status()
+    # 11-06 모드별 추정 진영 — 설정의 '진영: 자동 (USEC)' 표시용
+    try:
+        tr = get_tracker()
+        qf = faction.quest_factions()
+        st["faction_by_mode"] = {m: faction.detect(tr.all_status(k), qf) for m, k in (("pvp", "regular"), ("pve", "pve"), ("season", "season"))}
+    except Exception:  # noqa: BLE001
+        st["faction_by_mode"] = {}
+    return st
 
 
 @app.post("/quests/path", dependencies=[Depends(_reject_foreign_origin)])

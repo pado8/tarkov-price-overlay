@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
 import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
+import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
@@ -661,6 +662,8 @@ type TaskRef = {
   kappa_required: boolean;
   // 11-05 택일 후보 수(1 = 이 아이템을 콕 집은 목표). 옛 사이드카는 없음
   alternatives?: number | null;
+  // 11-06 진영 전용 퀘스트면 'BEAR'|'USEC'(factionQuests.ts 가 내 진영으로 거른다). 옛 사이드카는 없음
+  faction?: string | null;
   // Filled by the backend quest tracker if it found this quest in the
   // player's EFT logs. null when the tracker is off or the quest is unseen.
   // `task_status` is for the lookup's own game_mode (back-compat); newer
@@ -682,6 +685,7 @@ type QuestModeCounts = {
 
 type QuestStatus = {
   enabled: boolean;
+  faction_by_mode?: Record<string, string | null>; // 11-06 설정 '진영: 자동 (USEC)' 표시용
   install_path: string | null;
   auto_detected_path: string | null;
   effective_path: string | null;
@@ -783,6 +787,7 @@ type LookupResult = {
   barters_using: BarterUsing[];
   buy_for: BuyOffer[];
   used_in_tasks: TaskRef[];
+  faction_by_mode?: Record<string, string | null>; // 11-06 모드별 추정 진영(진영 전용 퀘스트 기록)
   crafts_for: HideoutCraft[];
   crafts_using?: HideoutCraftUsing[];
   needed_for_hideout: HideoutNeed[];
@@ -882,6 +887,8 @@ type Region = {
   // EFT log watcher). "dim" greys them out so they're still visible but
   // de-emphasized; "hide" filters them out entirely.
   completedQuestDisplay: "dim" | "hide";
+  // 11-06 PMC 진영 — "auto" = 진영 전용 퀘스트 기록으로 추정(사이드카), 직접 고르면 그 값. 반대 진영 전용 퀘스트를 카드에서 뺀다
+  faction: FactionSetting;
   // Whether the optional <details> panels start expanded.
   detailsOpenDefault: boolean;
   fontSize: number;
@@ -948,6 +955,7 @@ const DEFAULT_REGION: Region = {
   showHideoutNeeds: true,
   showQuests: true,
   completedQuestDisplay: "dim",
+  faction: "auto",
   detailsOpenDefault: true,
   fontSize: 13,
   opacity: 100,
@@ -3206,7 +3214,8 @@ function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // mode = 앱이 지금 쓰는 퀘스트 서버 → 가이드 사이트 첫 연동이 사이트 기본값(PVP) 대신 이걸 따른다
-        body: JSON.stringify({ levels: hideoutLevels, mode: questDisplayMode }),
+        // faction = 설정에서 직접 고른 진영 → 가이드 /progress faction 도 따른다('auto' 면 기록 추정)
+        body: JSON.stringify({ levels: hideoutLevels, mode: questDisplayMode, faction: region.faction }),
       }).catch(() => {
         if (++tries < 4) timer = window.setTimeout(push, 15000);
       });
@@ -3215,7 +3224,7 @@ function App() {
     return () => {
       if (timer !== null) clearTimeout(timer);
     };
-  }, [hideoutLevels, questDisplayMode]);
+  }, [hideoutLevels, questDisplayMode, region.faction]);
 
   // Hideout levels helpers
   const updateHideoutLevel = (stationId: string, level: number) => {
@@ -5334,6 +5343,23 @@ function App() {
                 onChange={(e) => setQuestEnabled(e.target.checked)}
               />
             </div>
+            {/* 11-06 진영은 퀘스트 로그 연동을 꺼도 직접 고를 수 있어야 해서 연동 상태(questStatus)와 상관없이 보인다 */}
+            <div className="settings-row">
+              <label title={t.factionHint}>{t.factionLabel}</label>
+              <select
+                value={region.faction}
+                onChange={(e) => updateRegion("faction", e.target.value as FactionSetting)}
+              >
+                <option value="auto">
+                  {(() => {
+                    const d = questStatus?.faction_by_mode?.[questDisplayMode];
+                    return d ? t.factionAutoDetected.replace("{f}", d) : t.factionAutoUnknown;
+                  })()}
+                </option>
+                <option value="BEAR">BEAR</option>
+                <option value="USEC">USEC</option>
+              </select>
+            </div>
             {questStatus == null && (
               <div className="settings-row">
                 <label>{t.questSyncStatus}</label>
@@ -6108,7 +6134,12 @@ function App() {
               // 이미 지은 은신처 단계는 등급 가산·보관 판정에서 뺀다 — 전엔 다 쓴 퀘스트템이 계속 C 이상이었다.
               // 상태를 모르는 퀘스트(연동 꺼짐)·은신처 레벨 미입력은 예전처럼 아직 필요로 본다.
               const doneManual = new Set(manualQuestDone[questDisplayMode] ?? []);
-              const adviceQuests: AdviceQuest[] = (result.used_in_tasks ?? []).map((q) => {
+              // 11-06 진영: 내 진영이 아닌 진영 전용 퀘스트는 빼고, 진영을 모르면 같은 두 판을 한 줄로(factionQuests.ts)
+              const factionRows = filterFactionQuests(
+                result.used_in_tasks ?? [],
+                effectiveFaction(region.faction, result.faction_by_mode?.[questDisplayMode])
+              );
+              const adviceQuests: AdviceQuest[] = factionRows.map((q) => {
                 const st = q.task_status_by_mode ? q.task_status_by_mode[questDisplayMode] ?? null : q.task_status;
                 return {
                   name: q.name,
@@ -6739,8 +6770,7 @@ ${t.fleaFeeHint}`}
                       );
                     })()}
                   {region.showQuests &&
-                    result.used_in_tasks &&
-                    result.used_in_tasks.length > 0 && (() => {
+                    factionRows.length > 0 && (() => {
                       // Reproject each task's status to the user's chosen
                       // quest-display mode. The backend sends
                       // task_status_by_mode so we don't need a re-capture
@@ -6753,7 +6783,7 @@ ${t.fleaFeeHint}`}
                       const manualSet = new Set(
                         manualQuestDone[questDisplayMode] ?? []
                       );
-                      const projected = result.used_in_tasks.map((q) => {
+                      const projected = factionRows.map((q) => {
                         const base = q.task_status_by_mode
                           ? {
                               ...q,
@@ -6847,6 +6877,13 @@ ${t.fleaFeeHint}`}
                                 >
                                   <span className="quest-trader">{q.trader}</span>
                                   <span className="quest-name">{q.name}</span>
+                                  {/* 진영을 모를 때, 두 진영 요구량이 달라 따로 남은 줄에만 진영 표시(같아서 합친 줄은 어느 진영이든 맞으니 표시 안 함).
+                                      이름 칸 밖이라 긴 이름에 잘리지 않는다 */}
+                                  {(q.factionTag === "BEAR" || q.factionTag === "USEC") && (
+                                    <span className="quest-faction" title={t.factionTagHint}>
+                                      {q.factionTag}
+                                    </span>
+                                  )}
                                   {q.slug && (
                                     <button
                                       className="guide-link-btn"
