@@ -2048,3 +2048,5 @@ html, body, #root {
 .wide-pane .radar-under > .radar-help { flex: none; }
 /* 11-06 진영 전용 퀘스트 표시(진영을 모를 때만) */
 .quest-faction { flex: none; white-space: nowrap; margin-left: 4px; font-size: 0.78em; padding: 0 4px; border: 1px solid var(--border, #3a3f4a); border-radius: 3px; color: var(--text-disabled); vertical-align: 1px; }
+/* 11-06 다른 층 퀘스트 점 옆 층 이름(지하·2층…) — 점이 흐려도 글씨는 읽히게 진하게 */
+.radar-qfloor { font-size: 10px; font-weight: 700; fill: #ffd27a; stroke: #000; stroke-width: 2.5px; paint-order: stroke; pointer-events: none; }

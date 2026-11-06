@@ -40,6 +40,7 @@ const SPAN_MIN = 30;
 const SPAN_MAX = 4000;
 const FLOOR_M = 5; // 층 구역이 다르고 높이 차도 이보다 크면 다른 층으로 보고 흐리게
 const DIM = 0.45;
+const Q_OTHER_FLOOR = 0.3; // 11-06 보고 있는 층이 아닌 퀘스트 — 많이 흐리게 + 층 이름
 export const SCAV_COLOR = "#f0f0f0"; // 스캐브 탈출구 — 회색(#9a9a9a)은 어두운 지도 그림 위에서 묻혀 밝은 흰색으로
 
 type Pt = [number, number, number]; // x, y, z
@@ -461,6 +462,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const myFloor = me && floorLayers.length ? autoFloor(floorLayers, me.x, me.y, me.z) : null;
   const op = (x: number, y: number, z: number) =>
     floorLayers.length && me && autoFloor(floorLayers, x, y, z) !== myFloor && Math.abs(y - myY) > FLOOR_M ? DIM : 1;
+  // 11-06 사용자: '퀘스트가 몇 층이든 같은 자리에 똑같이 보여 헷갈린다' → 퀘스트는 **보고 있는 층**(자동 = 내 층, 칩으로 고르면 그 층)
+  // 기준: 그 층 것은 또렷이, 다른 층 것은 많이 흐리게 + 층 이름 표시, 누르면 그 층으로 바꾼다. 층 구역이 없는 맵은 그대로.
+  const viewFloor = floor === "auto" ? myFloor : floor === "base" ? null : floor;
+  const qFloorOf = (q: RadarTarget) => (floorLayers.length ? autoFloor(floorLayers, q.x!, q.y ?? myY, q.z!) : null);
+  const qOtherFloor = (q: RadarTarget) => floorLayers.length > 0 && qFloorOf(q) !== viewFloor;
   const questTargets: RadarTarget[] = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null && !hiddenQuests.has(x.task ?? x.name));
   // 퀘스트가 하나도 안 찍힐 때 이유 한 줄(11-04 댓글 "연동해도 지도에 퀘스트가 안 뜬다") — 지도 퀘스트는 게임 로그 추적기의
   // '진행 중'만 쓰고, 사이트 연동과는 별개라 0개면 왜인지 알 길이 없었다. active_quests 는 좌표 스크린샷 + 맵 감지 때만 온다.
@@ -681,11 +687,27 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {layers.quests &&
               questTargets.map((q, i) => {
                 const s = toScreen(q.x!, q.z!);
+                const other = qOtherFloor(q);
+                const qf = other ? qFloorOf(q) : null;
                 return (
-                  <g key={`q${i}`} onClick={() => pick({ name: `${q.name}${q.objective ? " · " + q.objective : ""}${q.keys?.length ? " · 🔑 " + q.keys.join(", ") : ""}`, p: [q.x!, q.y ?? myY, q.z!] })} opacity={op(q.x!, q.y ?? myY, q.z!)}>
-                    <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
-                    <circle cx={s.x} cy={s.y} r={5} fill={q.story ? "#d6a6ff" : "#f0c040"} stroke="#000" strokeWidth={0.8} />
-                    {label(`q${i}`)}
+                  <g
+                    key={`q${i}`}
+                    onClick={() => {
+                      if (other) setFloor(qf ?? "base"); // 다른 층 퀘스트를 누르면 그 층 지도로
+                      pick({ name: `${q.name}${other ? " · " + floorName(qf) : ""}${q.objective ? " · " + q.objective : ""}${q.keys?.length ? " · 🔑 " + q.keys.join(", ") : ""}`, p: [q.x!, q.y ?? myY, q.z!] });
+                    }}
+                  >
+                    <g opacity={other ? Q_OTHER_FLOOR : 1}>
+                      <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
+                      <circle cx={s.x} cy={s.y} r={5} fill={q.story ? "#d6a6ff" : "#f0c040"} stroke="#000" strokeWidth={0.8} />
+                      {label(`q${i}`)}
+                    </g>
+                    {/* 층 이름은 흐리지 않는다 — 점은 흐려도 '어느 층인지'는 읽혀야 한다 */}
+                    {other && (
+                      <text x={s.x + 7} y={s.y - 5} className="radar-qfloor">
+                        {floorName(qf)}
+                      </text>
+                    )}
                   </g>
                 );
               })}
