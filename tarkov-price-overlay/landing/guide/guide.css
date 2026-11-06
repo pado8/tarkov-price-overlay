@@ -330,3 +330,5 @@ table.mods td:first-child{white-space:nowrap}
 .ms .req{font-size:10.5px;color:var(--gold);border:1px solid var(--gold-dim);border-radius:4px;padding:0 4px;margin-left:2px}
 .mlist{margin-top:8px}.mlist summary{cursor:pointer;font-weight:700}
 @media (max-width:560px){.ms{flex-wrap:wrap}.ms label{flex-basis:100%}}
+.mpres input[type=text]{flex:1 1 220px;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px}
+#mplist .btn.sm{padding:4px 9px;font-size:12px}
