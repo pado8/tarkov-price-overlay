@@ -77,12 +77,13 @@
     var badges = (k.q.length ? "<span class=\"badge b-quest\">퀘스트 " + k.q.length + "</span> " : "") +
       (k.power ? "<span class=\"badge b-power\">전원 필요</span> " : "") +
       (k.lt.indexOf("container") >= 0 ? "<span class=\"badge b-any\">보관함</span> " : "") +
-      (k.lt.indexOf("car") >= 0 ? "<span class=\"badge b-any\">차량</span> " : "");
+      (k.lt.indexOf("car") >= 0 ? "<span class=\"badge b-any\">차량</span> " : "") +
+      (k.w ? "<span class=\"badge b-any\" title=\"지도 데이터에 자물쇠 위치가 없어 공식 위키 설명 기준으로 넣은 열쇠\">위키 기준</span> " : "");
     return "<label class=\"krow" + (done ? " done" : "") + "\" data-id=\"" + esc(k.id) + "\">" +
       "<input type=\"checkbox\" aria-label=\"보유\"" + (done ? " checked" : "") + " />" +
       "<img class=\"icon\" loading=\"lazy\" alt=\"\" src=\"" + esc(it.img) + "\" />" +
       "<div><div class=\"nm\">" + esc(it.n) + "</div>" + (it.en && it.en !== it.n && it.n.slice(-(it.en.length + 2)) !== "(" + it.en + ")" ? "<div class=\"en\">" + esc(it.en) + "</div>" : "") +
-      "<div style=\"margin-top:3px\">" + badges + "<span class=\"small muted\">여는 곳 " + k.locks + "곳" + (it.uses ? " · 사용 " + it.uses + "회" : "") + "</span></div>" +
+      "<div style=\"margin-top:3px\">" + badges + "<span class=\"small muted\">" + (k.w ? "위치는 위키 참고" : "여는 곳 " + k.locks + "곳") + (it.uses ? " · 사용 " + it.uses + "회" : "") + "</span></div>" +
       (k.q.length ? "<div class=\"qlist\">" + k.q.map(esc).join(" · ") + "</div>" : "") + "</div>" +
       "<div class=\"right\">" + (p != null ? "<div class=\"price\">플리 " + won(p) + "</div>" : "<div class=\"small muted\">" + (it.noflea ? "플리 거래 불가" : "플리 시세 없음") + "</div>") +
       (it.tr ? "<div class=\"small muted\">상인 " + won(it.tr[1]) + "</div>" : "") +

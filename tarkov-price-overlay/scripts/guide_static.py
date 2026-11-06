@@ -92,7 +92,9 @@ MOB_KO = {"Kaban Guard (Sniper)": "카반 경호원(저격)", "Kaban Guard": "�
           "Birdeye": "버드아이", "Shadow of Tagilla": "타길라의 그림자", "Vengeful Killa": "분노한 킬라", "Scourge": "스커지",
           "The Wedge": "웨지", "Basmach": "바스마치", "Gus": "구스", "Reshala Guard": "르샬라 경호원",
           "Shturman Guard": "슈트르만 경호원", "Sanitar Guard": "세니타 경호원",
-          "Infected Tagilla": "감염된 타길라", "infectedScreamer": "감염자"}
+          "Infected Tagilla": "감염된 타길라", "infectedScreamer": "감염자",
+          "Labyrinth Guard": "미궁 경비병", "Harbinger": "하빈저"}
+MOB_SFX_KO = {"Scout": "정찰", "Security": "경비", "Assault": "돌격", "Sniper": "저격", "Snipe": "저격", "Labs": "연구소"}
 # 현재 게임 버전 — 허브·초반·패치 페이지 문구에 쓴다. 패치 때 올릴 것(공식 위키 Changelog 기준).
 GAME_VERSION = "1.3.0.1"
 # 진행 중 이벤트 — tarkov.dev 데이터에 이벤트 기간 값이 그대로 들어오므로(오염된 맵·감염자·보스 확률 변화)
@@ -483,6 +485,8 @@ def station_diff_html(slug: str, level) -> str:
 # 데이터에 잘못 섞인 탈출구 — (맵, 탈출구 내부 이름). 2026-11-02: 그라운드 제로 데이터에 시내의 Pinewood Basement (Co-Op)가 들어 있음(위키 표에 없음).
 EXTRACT_SKIP = {("ground-zero", "Exit_E10_coop")}
 # 데이터에 탈출구가 비어 있는 맵 — 공식 위키 표를 손으로 옮김(2026-11-02).
+GPU_ID = "57347ca924597744596b4e71"  # 그래픽 카드
+HAND_EXTRACTS_N = {"terminal": 1, "infected-lab": 2, "infected-factory": 2}  # 아래 손글 탈출구 개수 — 맵 목록·설명문 숫자용(11-06: 터미널 '탈출구 0')
 HAND_EXTRACTS = {
     "terminal": '공개 데이터에 탈출구 정보가 없어 공식 위키 기준: <b>Zubr Boat</b>(PMC, 항상 열림, 1회용) — 입장 인원 1~3명이면 3석, 4명 3~4석, 5명 4~5석. Alpha-1 증거 컨테이너를 가져온 사람은 소지하고 있어야 하며, 부두 도착 뒤 3분 타이머. '
                 '출처: <a href="https://escapefromtarkov.fandom.com/wiki/Terminal" rel="noopener" target="_blank">공식 위키 Terminal</a>',
@@ -668,6 +672,26 @@ class Ctx:
                         parts.append(f"레벨 {max(1, t.get('minPlayerLevel') or 1)}")
                 return " · ".join(parts)
             keys = {tid: key_of(tid) for tid in ids}
+
+            def branch(tids, depth=0):
+                """이름이 같은 퀘스트들이 서로 다른 선행에서 갈라지면 그 선행 이름 — 11-06: 배터리 교체·독립의 대가 '(1번째·2번째)' 대신"""
+                if depth > 4:
+                    return {}
+                reqs = {x: [r["task"] for r in self.tasks[x].get("taskRequirements") or [] if r.get("task") in self.tasks] for x in tids}
+                diff = {x: [r for r in reqs[x] if not all(r in reqs[y] for y in tids)] for x in tids}
+                if not all(len(v) == 1 for v in diff.values()):
+                    return {}
+                names = {x: self.task_names(diff[x][0])[0] for x in tids}
+                if len(set(names.values())) == len(tids):
+                    return names
+                sub = branch([diff[x][0] for x in tids], depth + 1)
+                return {x: sub[diff[x][0]] for x in tids} if len(sub) == len(tids) else {}
+            for k in set(keys.values()):
+                same = [x for x in ids if keys[x] == k]
+                if len(same) > 1:
+                    for x, nm in branch(same).items():
+                        lb = f"ветка «{nm}»" if LANG == "ru" else (f"{nm}支线" if LANG == "zh" else f"{nm} 갈래")  # 언어별 어순
+                        keys[x] = (k + " · " if k else "") + lb
             counts: dict[str, int] = {}
             for tid in sorted(ids, key=lambda x: self.tasks[x].get("normalizedName") or x):
                 k = keys[tid]
@@ -768,8 +792,16 @@ class Ctx:
             n = self._loc(self.loc_maps, mob) or mob
             return n if n != mob else {"en": "Infected", "ru": "Заражённый", "zh": "感染者"}.get(LANG, "Infected")
         n = self._loc(self.loc_maps, mob) or self._loc(self.loc_tasks, mob) or TARGETS.get(mob) or mob
+        if n == mob and str(mob).startswith("boss") and mob not in TARGETS:  # 11-06: 어느 언어에도 이름이 없는 내부 ID(bossStormtrooper)
+            return "이름 미공개 보스" + f" ({mob})"
         if LANG != "ko":  # en/ru 로케일은 보스 이름이 그 언어로 있다
             return n
+        # 경호원 종류 꼬리표 '(Scout)'·'(Snipe)'·'(Labs)' — 한국어 로케일에도 영어로 붙어 있다(11-06)
+        sfx = re.match(r"^(.+?) \((Scout|Security|Assault|Sniper|Snipe|Labs)\)$", n)
+        if sfx:
+            base = sfx.group(1)
+            base = next((ko for en, ko in MOB_KO.items() if base == en), base)
+            return base + "(" + MOB_SFX_KO[sfx.group(2)] + ")"
         # 한국어판도 영어로 두는 보스 이름 — 검색은 한글로 하니 음역을 앞에 붙인다
         for en, ko in MOB_KO.items():
             if n == en or n.startswith(en + " "):
@@ -1837,7 +1869,10 @@ if(fo&&!(qf||hf))ok=false;if(q&&d.s.indexOf(q)<0&&d.s.indexOf(q.replace(/\\s+/g,
 r.style.display=ok?"":"none";r.classList.toggle("done",hv);var c=r.querySelector("input");if(c)c.checked=hv;
 var cells=r.querySelectorAll("td.n");cells[0].textContent=qf||"";cells[1].textContent=qa||"";cells[2].textContent=hf||"";cells[3].textContent=ha||"";cells[4].textContent=(qq+hc)||"";if(ok)shown++;});
 document.getElementById("shown").textContent=shown;var cn=document.getElementById("cutn");if(cn)cn.textContent=cutn?("· 완료분 제외 "+cutn+"종"):"";
-var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q)?"none":"";var a=nr.querySelector("a");if(a)a.href=(location.pathname.match(/^\\/guide\\/(?:en|ru|zh)\\//)||["/guide/"])[0]+"rewards/"+(q?"?q="+encodeURIComponent(q):"")}try{if(cutn&&gsync()&&window.gtag&&!window.__se){window.__se=1;gtag("event","sync_effect",{page:"items",cut_bucket:cutn<10?"1-9":cutn<50?"10-49":"50+"})}}catch(x){}}
+var an=0,dn=gdone();[].slice.call(document.querySelectorAll("#anytbl tbody tr")).forEach(function(r){var s=r.dataset.s,ok=(r.dataset.m||"").indexOf(mode)>=0||!r.dataset.m;
+if(q&&s.indexOf(q)<0&&s.indexOf(q.replace(/\\s+/g,""))<0)ok=false;r.style.display=ok?"":"none";r.classList.toggle("done",!!dn[r.dataset.t]);if(ok&&q)an++});
+var ah=document.getElementById("anyhit"),as=document.getElementById("anysec");if(ah)ah.style.display=(q&&an)?"":"none";if(as&&q&&an)as.open=true;
+var nr=document.getElementById("norow");if(nr){nr.style.display=(shown||!q||an)?"none":"";var a=nr.querySelector("a");if(a)a.href=(location.pathname.match(/^\\/guide\\/(?:en|ru|zh)\\//)||["/guide/"])[0]+"rewards/"+(q?"?q="+encodeURIComponent(q):"")}try{if(cutn&&gsync()&&window.gtag&&!window.__se){window.__se=1;gtag("event","sync_effect",{page:"items",cut_bucket:cutn<10?"1-9":cutn<50?"10-49":"50+"})}}catch(x){}}
 document.addEventListener("guide-sync",function(){mode=L(MK,"pvp");seg("mode",mode);render()});
 seg("mode",mode);document.getElementById("mode").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;mode=v;S(MK,v);seg("mode",v);render()});
 document.getElementById("scope").addEventListener("click",function(e){var v=e.target.getAttribute("data-v");if(!v)return;scope=v;seg("scope",v);render()});
@@ -1895,6 +1930,33 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
             f'<td class="n">{a_q.get("fir") or ""}</td><td class="n">{a_q.get("any") or ""}</td><td class="n">{a_h.get("fir") or ""}</td><td class="n">{a_h.get("any") or ""}</td>'
             f'<td class="n"><b>{(tot(qp, iid) + tot(hp, iid)) or ""}</b></td><td>{price_html}</td><td class="small">{" · ".join(where)}</td></tr>')
 
+    # 11-06: '아무거나 N개'(후보 여러 개 중 골라 내는) 제출 — 위 표에 후보마다 더하면 부풀어서 따로 모은다(담배 15개 등 58개 목표)
+    any_rows, seen_any = [], set()
+    for tasks in (ctx.tasks_reg, ctx.tasks_pve):
+        for tid, t in tasks.items():
+            for o in t.get("objectives") or []:
+                ids_ = [i for i in o.get("items") or [] if i and ctx.item(i)]
+                if o.get("type") != "giveItem" or o.get("optional") or len(ids_) < 2:
+                    continue
+                k = (ctx.task_names(tid)[0], o.get("count"), bool(o.get("foundInRaid")), tuple(sorted(ids_)))
+                if k in seen_any:
+                    continue
+                seen_any.add(k)
+                its = [ctx.item(i) for i in ids_]
+                s_ = " ".join((x.get("n") or "") + " " + (x.get("en") or "") for x in its).lower()
+                s_ = s_ + " " + s_.replace(" ", "")
+                chips = "".join(ctx.chip(i) for i in ids_[:8]) + (f'<span class="muted small">외 {len(ids_) - 8}종</span>' if len(ids_) > 8 else "")
+                fb = ' <span class="badge b-fir">인레이드</span>' if o.get("foundInRaid") else ""
+                md = " ".join(ctx.task_modes.get(tid, []))
+                any_rows.append((ctx.depth(tid), f'<tr data-t="{e(tid)}" data-m="{e(md)}" data-s="{e(s_)}"><td class="full">{ctx.task_link(tid)}</td>'
+                                 f'<td class="n" data-l="수량"><b>{fmt_int(o.get("count") or 1)}</b>{fb}</td>'
+                                 f'<td class="full" data-l="후보 중 아무거나"><div class="chips">{chips}</div></td></tr>'))
+    any_rows.sort(key=lambda x: x[0])
+    any_html = (f'<div class="note" id="anyhit" style="display:none">이 아이템은 아래 <b>후보 중 골라 내는 제출</b>에도 들어갑니다 — 후보 중 아무거나 개수만 채우면 되는 목표라 위 표 수량에는 넣지 않았습니다.</div>'
+                f'<details class="box" id="anysec"><summary><b>후보 중 골라 내는 제출 {len(any_rows)}개</b> <span class="muted small">— "아무거나 N개" 목표 · 위 표 수량에는 안 들어감 · 펼쳐 보기</span></summary>'
+                '<div class="tbl"><table class="tot mcard" id="anytbl"><thead><tr><th>퀘스트</th><th class="n">수량</th><th>후보 중 아무거나</th></tr></thead><tbody>'
+                + "".join(r for _d, r in any_rows) + "</tbody></table></div></details>") if any_rows else ""
+
     def money_line(m):
         parts = [ctx.money(k, m[k]) for k in MONEY if k in m]
         return " + ".join(p for p in parts if p) or "없음"
@@ -1903,7 +1965,7 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
     body = f"""<h1>퀘스트·은신처 필요 아이템 총정리 <span class="h1en">버리면 안 되는 템</span></h1>
 <p class="sub">퀘스트 제출 + 은신처 건설에 들어가는 아이템 {len(trs)}종 · PVP 기준 인레이드 필요: 퀘스트 {fir_q:,}개, 은신처 {fir_h:,}개 · 데이터 기준 {e(ctx.stamp)}</p>
 <div class="note">숫자는 <b>모든 퀘스트·모든 은신처 단계</b>에 들어가는 총량입니다. <b>인레이드</b> 칸은 레이드에서 직접 주운 상태(Found in Raid)여야 하는 수량, <b>일반</b> 칸은 플리·상인에서 사도 되는 수량입니다.
-"아무거나 N개"처럼 여러 아이템 중 고르는 제출은 각 퀘스트 페이지에서 확인하세요. 체크하면 '보유'로 표시되고 이 브라우저에만 저장됩니다.</div>
+"아무거나 N개"처럼 여러 후보 중 골라 내는 제출은 표 아래 <b>후보 중 골라 내는 제출</b>에 따로 모았습니다. 체크하면 '보유'로 표시되고 이 브라우저에만 저장됩니다.</div>
 <section class="box"><h2>필요한 돈</h2><table class="kv"><tr><th>퀘스트 제출</th><td>PVP {e(money_line(mp_["quest"]))} · PVE {e(money_line(me["quest"]))}</td></tr><tr><th>은신처 건설</th><td>PVP {e(money_line(mp_["hideout"]))} · PVE {e(money_line(me["hideout"]))}</td></tr></table></section>
 <div class="controls"><input type="search" id="q" placeholder="아이템 이름 검색 (한글·영문)" aria-label="검색" />
 <div class="seg" id="scope"><button data-v="all" class="on">전체</button><button data-v="quest">퀘스트</button><button data-v="hideout">은신처</button></div>
@@ -1913,6 +1975,7 @@ def items_page(ctx: Ctx, collector_ids: set) -> tuple[str, str]:
 <div class="box tbl" style="padding:4px 8px"><table class="tot" id="itbl"><thead><tr><th></th><th>아이템</th><th class="n">퀘스트<br>인레이드</th><th class="n">퀘스트<br>일반</th><th class="n">은신처<br>인레이드</th><th class="n">은신처<br>일반</th><th class="n">합계</th><th>플리 시세</th><th>쓰이는 곳</th></tr></thead><tbody>
 {"".join(trs)}
 </tbody></table></div>
+{any_html}
 <div class="note" id="norow" style="display:none">이 표에 없는 아이템이에요. 여기는 <b>퀘스트에 내거나 은신처에 넣는</b> 아이템만 모았습니다 — <b>퀘스트 보상으로 받는</b> 아이템(상자·파우치·열쇠 등)은 <a href="/guide/rewards/">보상으로 받는 아이템</a>에서 찾아보세요. 어떤 퀘스트가 주는지, 처음부터 어떤 순서로 깨야 하는지 나옵니다.</div>"""
     path = "/guide/items/"
     title = f"타르코프 퀘스트 아이템 목록 {ctx.stamp[:4]} — 퀘스트·은신처 필요 아이템 총정리, 버리면 안 되는 템·인레이드 수량 | 탈콥 가이드"
@@ -2549,6 +2612,14 @@ def craft_unlocks(ctx: Ctx):
     return out
 
 
+def btc_note(ctx: Ctx, c: dict, mats: list) -> str:
+    """현물 비트코인 — 재료 목록이 비어 있다(그래픽 카드를 시설 칸에 꽂아 두는 방식, 11-06 재료 칸이 비던 것)"""
+    if mats or (ctx.hideout_reg.get(c.get("station")) or {}).get("normalizedName") != "bitcoin-farm":
+        return ""
+    return ('<span class="small">재료 없음 — 시설 칸에 꽂아 둔 ' + ctx.chip(GPU_ID) + ' 으로 계속 만들어집니다(카드는 소모되지 않음, 시설 단계에 따라 최대 10·25·50장). '
+            '카드가 많을수록 빨라지며 표의 시간은 데이터 기본값입니다. 이익에는 그래픽 카드 구입비가 빠져 있습니다.</span>')
+
+
 def crafts_html(ctx: Ctx, crafts: list, unlock_map: dict) -> str:
     if not crafts:
         return ""
@@ -2565,10 +2636,11 @@ def crafts_html(ctx: Ctx, crafts: list, unlock_map: dict) -> str:
             qid = qid.get("id") if isinstance(qid, dict) else qid
             if qid:
                 mats.append(ctx.chip(qid, (r.get("count") if isinstance(r, dict) else None) or 1, extra=' <span class="badge b-any">퀘스트 아이템</span>'))
+        mats = mats or [btc_note(ctx, c, mats)]
         q = unlock_map.get((c.get("station"), c.get("level"), pid))
         lock = (' <span class="muted small">해금: ' + ", ".join(ctx.task_link(x) for x in q) + "</span>") if q else ""
-        trs.append(f'<tr><td>{ctx.chip(pid, p.get("count"))}{lock}</td><td><div class="chips">{"".join(mats)}</div></td><td class="n">{fmt_dur(c.get("duration"))}</td></tr>')
-    return ('<div class="tbl"><table class="tot"><thead><tr><th>만드는 것</th><th>재료</th><th class="n">시간</th></tr></thead><tbody>'
+        trs.append(f'<tr><td class="full">{ctx.chip(pid, p.get("count"))}{lock}</td><td class="full" data-l="재료"><div class="chips">{"".join(mats)}</div></td><td class="n" data-l="제작 시간">{fmt_dur(c.get("duration"))}</td></tr>')
+    return ('<div class="tbl"><table class="tot mcard"><thead><tr><th>만드는 것</th><th>재료</th><th class="n">시간</th></tr></thead><tbody>'
             + "".join(trs) + "</tbody></table></div>")
 
 
@@ -3084,10 +3156,23 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     has_event_mob = False
     # 데이터는 스폰 지점마다 줄이 따로 있다(쇄빙선 웨지 12줄, 감염자 3줄 등) → 같은 적은 한 줄로: 확률 최대, 위치·호위 합집합
     grouped: dict[str, dict] = {}
-    for b in m.get("bosses") or []:
+    srcs = [(b, None) for b in m.get("bosses") or []]
+    for vx, vm in ctx.maps.items():  # 11-06: 변형 맵 보스가 본 맵 표에 없어 보스 총정리 링크로 오면 안 보이던 것
+        if MAP_VARIANTS.get(vm.get("normalizedName")) == slug and vm.get("normalizedName") != "ground-zero-tutorial" and vx != mid:
+            srcs += [(b, ctx.map_name(vx)) for b in vm.get("bosses") or []]
+    base_ch: dict[str, float] = {}
+    for b, vn in srcs:
+        if vn is None:
+            lb = ctx.mob_name(b.get("mob"))
+            base_ch[lb] = max(base_ch.get(lb, 0), b.get("spawnChance") or 0)
+    for b, vn in srcs:
         ev = is_event_mob(b.get("mob"))
-        has_event_mob = has_event_mob or ev
         label = ctx.mob_name(b.get("mob"))
+        if vn is not None:
+            if base_ch.get(label) is not None and abs(base_ch[label] - max((x.get("spawnChance") or 0) for x, v2 in srcs if v2 == vn and ctx.mob_name(x.get("mob")) == label)) < 1e-9:
+                continue
+            label = f"{label} ({vn})"
+        has_event_mob = has_event_mob or ev
         g = grouped.setdefault(label, {"chance": 0, "zones": [], "escorts": [], "ev": ev})
         g["chance"] = max(g["chance"], b.get("spawnChance") or 0)
         for z in b.get("spawnLocations") or []:
@@ -3098,8 +3183,8 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
         if et and et not in g["escorts"]:
             g["escorts"].append(et)
     for label, g in grouped.items():
-        boss_rows.append(f'<tr><td><b>{e(label)}</b>{" " + EVENT_TAG if g["ev"] else ""}</td><td class="n">{(fmt_int(g["chance"] * 100) + "%") if g["chance"] else "확률 비공개"}</td>'
-                         f'<td class="small">{e(", ".join(g["zones"]))}</td><td class="small">{e(" / ".join(g["escorts"]))}</td></tr>')
+        boss_rows.append(f'<tr><td class="full"><b>{e(label)}</b>{" " + EVENT_TAG if g["ev"] else ""}</td><td class="n" data-l="출현 확률">{(fmt_int(g["chance"] * 100) + "%") if g["chance"] else "확률 비공개"}</td>'
+                         f'<td class="small full" data-l="출현 위치">{e(", ".join(g["zones"])) or "—"}</td><td class="small full" data-l="호위">{e(" / ".join(g["escorts"])) or "—"}</td></tr>')
     is_event_map = slug in EVENT_MAPS
     ex_groups: dict[str, list] = {}
     cur_ex, wiki_only = current_extracts(ctx, slug, m)
@@ -3120,7 +3205,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
                                              + (f'<div class="xcond small">{" · ".join(cond)}</div>' if cond else "") + "</li>")
     for wn, fac in wiki_only:  # 위키 표엔 있는데 공개 데이터엔 없는 탈출구 — 이름만(영문 원문)
         ex_groups.setdefault(fac, []).append(f'<li><b>{e(wn)}</b><div class="xcond small">공식 위키 표 기준 · 위치·조건은 공식 위키에서 확인</div></li>')
-    n_ex = len(cur_ex) + len(wiki_only)
+    n_ex = len(cur_ex) + len(wiki_only) or HAND_EXTRACTS_N.get(slug, 0)
     fac_label = {"pmc": "PMC", "scav": "스캐브", "shared": "공용(PMC·스캐브)"}
     ex_html = "".join(f'<div><h3>{fac_label.get(f, f)} <span class="muted small">{len(v)}개</span></h3><ul class="plain">{"".join(v)}</ul></div>'
                       for f, v in sorted(ex_groups.items(), key=lambda kv: ["pmc", "shared", "scav"].index(kv[0]) if kv[0] in ("pmc", "shared", "scav") else 9))
@@ -3161,7 +3246,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
             + map_notes_html(slug)
             + (('<section class="box"><h2>보스</h2>'
                 + (event_note("감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.") if (has_event_mob and not is_event_map) else "")
-                + '<div class="tbl"><table class="tot"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
+                + '<div class="tbl"><table class="tot mcard"><thead><tr><th>보스</th><th class="n">출현 확률</th><th>출현 위치</th><th>호위</th></tr></thead><tbody>'
                 + "".join(boss_rows) + "</tbody></table></div></section>") if boss_rows else "")
             + (f'<section class="box" id="extracts"><h2>탈출구</h2><div class="cols3">{ex_html}</div><p class="small muted">목록은 공식 위키 탈출구 표 기준으로 지금 게임에 있는 것만 남겼습니다(공개 데이터에 남아 있던 1.0 개편 전 탈출구는 뺐습니다). 조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.</p></section>' if ex_html else "")
             + (f'<section class="box"><h2>탈출구</h2><p class="small">{HAND_EXTRACTS[slug]}</p></section>' if (not ex_html and slug in HAND_EXTRACTS) else "")
@@ -3170,7 +3255,7 @@ def map_page(ctx: Ctx, mid: str) -> tuple[str, str]:
     path = f"/guide/maps/{slug}/"
     boss_names = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or []))
     title = f"타르코프 {name} 공략 정보 — 탈출구·보스·퀘스트 {len(qs)}개 | 탈콥 가이드"
-    desc = f"타르코프 {name}({en_name}) 맵 정보: 레이드 {m.get('raidDuration')}분, {m.get('players')}명, 보스 {boss_names or '없음'}, 탈출구 {n_ex}개, 트랜짓, 이 맵 퀘스트 {len(qs)}개. 데이터 기준 {ctx.stamp}."
+    desc = f"타르코프 {name}({en_name}) 맵 정보: 레이드 {m.get('raidDuration')}분, {fix.get('players') or m.get('players')}명, 보스 {boss_names or '없음'}, 탈출구 {n_ex}개, 트랜짓, 이 맵 퀘스트 {len(qs)}개. 데이터 기준 {ctx.stamp}."
     if slug in MAP_NOTES:  # 11-04: 메모가 있는 맵은 공략 첫 줄로 시작(퀘스트 쪽과 같은 이유)
         nm = name if (not en_name or en_name == name) else f"{name}({en_name})"  # en 판은 이름이 두 번 나오지 않게
         desc = f"타르코프 {nm} 맵 공략: {_lead_cut(MAP_NOTES[slug]['lines'][0])} 보스 {boss_names or '없음'} · 탈출구 · 퀘스트 {len(qs)}개 정리."
@@ -3211,7 +3296,7 @@ def maps_index(ctx: Ctx) -> tuple[str, str]:
         bosses = ", ".join(dict.fromkeys(ctx.mob_name(b.get("mob")) for b in m.get("bosses") or [] if str(b.get("mob", "")).startswith("boss")))
         nq = len(map_quests(ctx, mid))
         cards.append(f'<a class="hub" href="/guide/maps/{e(m.get("normalizedName"))}/"><div class="t">{e(ctx.map_name(mid))}{" " + EVENT_TAG if m.get("normalizedName") in EVENT_MAPS else ""}</div>'
-                     f'<div class="d">레이드 {m.get("raidDuration") or "—"}분 · {e(m.get("players") or "—")}명 · 탈출구 {sum(map(len, current_extracts(ctx, m.get("normalizedName") or "", m)))}</div>'
+                     f'<div class="d">레이드 {m.get("raidDuration") or "—"}분 · {e(MAP_FIX.get(m.get("normalizedName"), {}).get("players") or m.get("players") or "—")}명 · 탈출구 {sum(map(len, current_extracts(ctx, m.get("normalizedName") or "", m))) or HAND_EXTRACTS_N.get(m.get("normalizedName"), 0)}</div>'
                      f'<div class="d">보스: {e(bosses) or "없음"}</div><div class="d">퀘스트 {nq}개</div></a>')
     body = (f'<h1>맵 정보 <span class="h1en">Maps</span></h1><p class="sub">맵 {len(cards)}개 · 보스·탈출구·트랜짓·퀘스트 · 데이터 기준 {e(ctx.stamp)}</p>'
             f'<div class="cards">{"".join(cards)}</div>'
@@ -3433,6 +3518,7 @@ def crafts_page(ctx: Ctx) -> tuple[str, str]:
             qid = qid.get("id") if isinstance(qid, dict) else qid
             if qid:
                 mats.append(ctx.chip(qid, (r.get("count") if isinstance(r, dict) else None) or 1, extra=' <span class="badge b-any">퀘스트 아이템</span>'))
+        mats = mats or [btc_note(ctx, c, mats)]
         q = unlock.get((c.get("station"), c.get("level"), pid))
         lock = ('<div class="osub">해금: ' + ", ".join(ctx.task_link(x) for x in q) + "</div>") if q else ""
 

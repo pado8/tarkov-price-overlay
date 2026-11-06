@@ -575,6 +575,24 @@ def main() -> int:
     }
     pages["keyfinder"] = keyfinder_data(items_reg, maps, key_maps, key_tasks, qlist, tasks, item_info, loc, loc_maps,
                                         {l: (loc_items if l == lang else get(f"regular/items_{l}") or {}) for l in ("ko", "en", "ru")})
+    # 11-06: 열쇠 페이지는 지도 자물쇠 데이터만 써서 요양원 방 열쇠 등이 빠져 있었다 → 열쇠 찾기의 위키 보충 사용처(입장 키 제외)도 '위키 기준'으로
+    by_map = {mp["id"]: mp for mp in key_maps}
+    kf_names = {x["id"]: x["n"] for x in pages["keyfinder"]["maps"]}
+    n_wiki = 0
+    for r in pages["keyfinder"]["keys"]:
+        for m, wq, acc, sup in r.get("u") or []:
+            if not sup or acc or m not in kf_names:
+                continue
+            mp = by_map.get(m)
+            if mp is None:
+                mp = by_map[m] = {"id": m, "n": kf_names[m], "access": [], "keys": []}
+                key_maps.append(mp)
+            if not any(k["id"] == r["i"] for k in mp["keys"]):
+                mp["keys"].append({"id": r["i"], "locks": 0, "power": False, "lt": [], "q": key_tasks.get(r["i"]) or wq or [], "w": 1})
+                n_wiki += 1
+    key_maps.sort(key=lambda x: MAP_ORDER.index(x["id"]) if x["id"] in MAP_ORDER else 99)
+    pages["keys"]["items"] = items_for({k["id"] for mp in key_maps for k in mp["keys"]} | {a for mp in key_maps for a in mp["access"]})
+    print(f"[guide] keys: 위키 보충 {n_wiki}개 · 열쇠 {len({k['id'] for mp in key_maps for k in mp['keys']})}종")
     for name, data in pages.items():
         tpl = (ROOT / "scripts" / "guide_templates" / f"{name}.html").read_text(encoding="utf-8")
         tpl = tpl.replace("/*GDONE*/", guide_static.DONE_FN)
