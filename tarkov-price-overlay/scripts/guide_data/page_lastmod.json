@@ -12,7 +12,7 @@
 "d": "2026-11-06"
 },
 "/guide/crafts/": {
-"h": "222b1f03e27ee5e0",
+"h": "448e96d989f40415",
 "d": "2026-11-06"
 },
 "/guide/en/": {
@@ -28,7 +28,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/crafts/": {
-"h": "f4241d90b3987265",
+"h": "09a5a3d057b0e483",
 "d": "2026-11-06"
 },
 "/guide/en/event/": {
@@ -36,7 +36,7 @@
 "d": "2026-11-05"
 },
 "/guide/en/gunsmith/": {
-"h": "e99b38bd551d1a38",
+"h": "62e478857d01a2a7",
 "d": "2026-11-06"
 },
 "/guide/en/hideout/": {
@@ -152,7 +152,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/items/": {
-"h": "36c69724febbfaea",
+"h": "beccd0719758dd03",
 "d": "2026-11-06"
 },
 "/guide/en/kappa/": {
@@ -416,15 +416,15 @@
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "aee0459f8b6d6c0b",
+"h": "5a1d3ddcc46d1b75",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "fc2e715620d4f594",
+"h": "369b740b0e7b2b7a",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "054f9c91eda79674",
+"h": "85a571c0847078f7",
 "d": "2026-11-06"
 },
 "/guide/en/mods/hk-usp-45-acp-pistol/": {
@@ -3060,7 +3060,7 @@
 "d": "2026-11-06"
 },
 "/guide/en/rewards/": {
-"h": "1ad8b5cbffe282a1",
+"h": "b540ab9f8c044e10",
 "d": "2026-11-06"
 },
 "/guide/en/start/": {
@@ -3076,7 +3076,7 @@
 "d": "2026-11-05"
 },
 "/guide/gunsmith/": {
-"h": "8b3f9815de96399d",
+"h": "098e5eb67c4521f4",
 "d": "2026-11-06"
 },
 "/guide/hideout/": {
@@ -3192,7 +3192,7 @@
 "d": "2026-11-06"
 },
 "/guide/items/": {
-"h": "e35ee08021a8c667",
+"h": "17e0069d270c3a5a",
 "d": "2026-11-06"
 },
 "/guide/kappa/": {
@@ -6100,7 +6100,7 @@
 "d": "2026-11-06"
 },
 "/guide/rewards/": {
-"h": "ead2135888f000eb",
+"h": "e78bbc2e070c6395",
 "d": "2026-11-06"
 },
 "/guide/ru/": {
@@ -6124,7 +6124,7 @@
 "d": "2026-11-05"
 },
 "/guide/ru/gunsmith/": {
-"h": "9f5f6f5d168b75e6",
+"h": "587f5911fb7eca90",
 "d": "2026-11-06"
 },
 "/guide/ru/hideout/": {
@@ -6504,15 +6504,15 @@
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "ad4342044f49a634",
+"h": "8839f3988b0af347",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "31f2671bd167a1b4",
+"h": "e41ffa332c0503a3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "0ed62d0009a17932",
+"h": "4c56a38aee2855a3",
 "d": "2026-11-06"
 },
 "/guide/ru/mods/hk-usp-45-acp-pistol/": {
@@ -9148,7 +9148,7 @@
 "d": "2026-11-06"
 },
 "/guide/ru/rewards/": {
-"h": "b8aa6e6d32f8b523",
+"h": "68cc51d4dc58b3cb",
 "d": "2026-11-06"
 },
 "/guide/ru/start/": {
@@ -9188,7 +9188,7 @@
 "d": "2026-11-05"
 },
 "/guide/zh/gunsmith/": {
-"h": "e3d3d4ee97dbd3f0",
+"h": "5e983c24244af1b0",
 "d": "2026-11-06"
 },
 "/guide/zh/hideout/": {
@@ -9568,15 +9568,15 @@
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a1-46x30-submachine-gun/": {
-"h": "008447aca5d04753",
+"h": "a0b35c101da669f7",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-mp7a2-46x30-submachine-gun/": {
-"h": "27841dc0dd9dde9f",
+"h": "3fb41ae2299d990b",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-ump-45-acp-submachine-gun/": {
-"h": "ae6f790637c658f8",
+"h": "4588039ba24b2f19",
 "d": "2026-11-06"
 },
 "/guide/zh/mods/hk-usp-45-acp-pistol/": {
@@ -12212,7 +12212,7 @@
 "d": "2026-11-06"
 },
 "/guide/zh/rewards/": {
-"h": "c492b531ab1ef73e",
+"h": "0bea1d3938f9fb93",
 "d": "2026-11-06"
 },
 "/guide/zh/start/": {

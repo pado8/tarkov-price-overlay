@@ -92,7 +92,8 @@ def apply(out_dir: Path, lang: str, keys_items: dict) -> int:
         for m in re.finditer(r'<tr data-id="([0-9a-f]{24})" data-s="([^"]*)".*?<span class="itn">.*?<span>(.*?)</span></span>', t, re.S):
             parts = m.group(3).split("<br>")
             # 이름 옆 배지(카파 등)는 빼야 ?q= 가 행 data-s 와 맞는다 — 11-04 점검: 카파 아이템 44개가 0행이었음
-            name = _text(re.sub(r'<span class="badge[^"]*">.*?</span>', "", parts[0], flags=re.S))
+            # 11-06: 영어판은 이름 아랫줄(en_line)이 빠져 배지가 끝에 오면 닫는 태그가 정규식 밖에 남는다 → 끝까지 지움
+            name = _text(re.sub(r'<span class="badge[^"]*">.*?(?:</span>|$)', "", parts[0], flags=re.S))
             alt = _text(parts[1]) if len(parts) > 1 else ""
             rows.append(["i", name, alt, base + "items/?q=" + _q(name), m.group(2)])
     # ── 11-04 점검: 보스·탄약·탈출구·보상 아이템·퀘스트 아이템·흔한 별칭이 색인에 없어 '태길라'·'M855A1'·'탈출구' 등이 0건이었다 ──
