@@ -63,6 +63,8 @@ export type RadarState = {
   error?: string;
   active_quests?: number;
   my_exits?: string[]; // 11-06 이번 레이드 내 탈출구(탈출구 목록 사진 OCR, 영어 원문)
+  raid_side?: "pmc" | "scav"; // 11-07 이번 레이드 진영(로그의 레이드 프로필 = 본 프로필이면 PMC)
+  raid_ts?: number; // 이번 레이드 맵 로딩 시각 — 레이드가 바뀌었는지 알 때
   story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
   story_auto?: string[]; // '자동' 일 때 로그로 추정한 진행 중 챕터 id 들(없으면 빈 배열)
 };
@@ -153,6 +155,9 @@ type Props = {
 const BIGME_KEY = "tarkov.radar.bigMe"; // "1" = 내 위치 크게(11-04)
 const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 돈다) · "0" = 바라보는 쪽이 위. 기본 고정
 
+// 11-07 레이드 진영 자동: 이 레이드(raid_ts)에 칩을 이미 맞췄는가 — 지도를 다시 열면 패널이 새로 만들어지므로 모듈에 둔다
+let sideAppliedFor: string | null = null;
+
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party }: Props) {
   const [showParty, setShowParty] = useState(false);
   // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
@@ -197,6 +202,25 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       } catch {}
       return n;
     });
+  // 11-07 레이드 진영 자동(PMC/스캐브): 레이드가 바뀔 때 한 번만 PMC 탈출구·스캐브 탈출구 칩을 그 진영에 맞춘다.
+  // 그 뒤 직접 바꾼 칩은 그 레이드 동안 그대로(지도를 다시 열어도).
+  useEffect(() => {
+    const side = data?.raid_side;
+    const key = data?.raid_ts != null ? String(data.raid_ts) : null;
+    if (!side || !key || sideAppliedFor === key) return;
+    sideAppliedFor = key;
+    const scav = side === "scav";
+    setLayers((L) => {
+      if (L.pmc === !scav) return L;
+      const n = { ...L, pmc: !scav };
+      try {
+        localStorage.setItem(LAYER_KEY, JSON.stringify(n));
+      } catch {}
+      return n;
+    });
+    if (showScav !== scav) onToggleScav(scav);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.raid_side, data?.raid_ts]);
   // 퀘스트 개별 숨김: 목록의 ✕ 로 숨기고, '숨긴 퀘스트 n개' 줄에서 하나씩·전부 복원
   const [hiddenQ, setHiddenQ] = useState<HiddenQuest[]>(loadHidden);
   const [showHidden, setShowHidden] = useState(false);

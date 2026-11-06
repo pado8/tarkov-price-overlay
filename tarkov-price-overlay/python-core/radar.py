@@ -129,6 +129,52 @@ def parse_preset_lines(text: str) -> list[tuple[float, str, str]]:
 # 맵을 불러온 뒤 이보다 오래 지난 스크린샷은 다른 레이드일 수 있어 맵을 '모름'으로 둔다
 MAX_RAID_AGE_SEC = 2 * 3600
 
+# ── 레이드 진영(PMC/스캐브, 11-07) ────────────────────────────────
+# 로그인 때 고른 본 캐릭터(PMC) 프로필이 'PrepareSelectedProfileLocally/CompleteSelectedProfile ProfileId:<id>'(옛 버전 'SelectProfile') 로,
+# 레이드 시작이 'NetworkGameCreate profileStatus: 'Profileid: <id>' 로 남는다. 스캐브 레이드는 스캐브 프로필(다른 id)로
+# 들어간다 → 같으면 PMC, 다르면 스캐브. 11-07 이 PC 로그로 확인: 사용자가 스캐브만 뛴 최근 레이드 4번 = 본 프로필과 다른 id,
+# 2~7월 PVE 레이드 376번이 두 id(본 203·다른 173)로 갈림. 프로필 id 는 판정에만 쓰고 어디에도 내보내지 않는다.
+SIDE_SEL_RE = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)[^|]*\|.*?(?:PrepareSelectedProfileLocally|CompleteSelectedProfile|SelectProfile) ProfileId:([0-9a-f]{24})")
+SIDE_RAID_RE = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)[^|]*\|.*?NetworkGameCreate profileStatus: 'Profileid: ([0-9a-f]{24})")
+
+
+def parse_side_lines(text: str) -> list[tuple[float, str, str]]:
+    """application 로그 본문 → [(epoch 초, 'sel'|'raid', 프로필 id)]"""
+    out = []
+    for line in text.splitlines():
+        if "ProfileId:" not in line and "profileStatus" not in line:
+            continue
+        m = SIDE_SEL_RE.match(line)
+        kind = "sel"
+        if not m:
+            m = SIDE_RAID_RE.match(line)
+            kind = "raid"
+        if not m:
+            continue
+        try:
+            ts = time.mktime(time.strptime(m.group(1), "%Y-%m-%d %H:%M:%S"))
+        except ValueError:
+            continue
+        out.append((ts, kind, m.group(2)))
+    return out
+
+
+def raid_side_at(evs: list[tuple[float, str, str]], shot_ts: float) -> Optional[str]:
+    """스크린샷 시각의 레이드가 'pmc'|'scav'. 레이드 시작 기록·그 전 본 프로필 기록이 없거나 너무 오래됐으면 None."""
+    raid = None
+    for ev in evs:
+        if ev[1] == "raid" and ev[0] <= shot_ts + 5 and (raid is None or ev[0] >= raid[0]):
+            raid = ev
+    if not raid or shot_ts - raid[0] > MAX_RAID_AGE_SEC:
+        return None
+    sel = None
+    for ev in evs:
+        if ev[1] == "sel" and ev[0] <= raid[0] and (sel is None or ev[0] >= sel[0]):
+            sel = ev
+    if not sel:
+        return None
+    return "pmc" if sel[2] == raid[2] else "scav"
+
 
 def map_event_at(events: list[tuple[float, str, str]], shot_ts: float) -> Optional[tuple[float, str, str]]:
     """스크린샷 시각에 열려 있던 맵의 로딩 사건 (시각, preset, slug) — 시각 = 이번 레이드를 가르는 열쇠(내 탈출구 기억용)."""
@@ -278,10 +324,10 @@ class _LogMaps:
     """최근 로그 폴더들의 맵 로딩 기록. 파일 크기가 그대로면 다시 읽지 않는다."""
 
     def __init__(self) -> None:
-        self._files: dict[str, tuple[int, list]] = {}
+        self._files: dict[str, tuple[int, list, list]] = {}
 
-    def events(self, folders: list[Path]) -> list[tuple[float, str, str]]:
-        out: list[tuple[float, str, str]] = []
+    def _read(self, folders: list[Path]) -> list[tuple[list, list]]:
+        out = []
         for f in folders:
             for lf in f.glob("*application*.log"):
                 try:
@@ -290,16 +336,22 @@ class _LogMaps:
                     continue
                 key = str(lf)
                 hit = self._files.get(key)
-                if hit and hit[0] == size:
-                    out.extend(hit[1])
-                    continue
-                try:
-                    evs = parse_preset_lines(lf.read_text(encoding="utf-8", errors="ignore"))
-                except OSError:
-                    evs = []
-                self._files[key] = (size, evs)
-                out.extend(evs)
-        return sorted(out)
+                if not (hit and hit[0] == size):
+                    try:
+                        text = lf.read_text(encoding="utf-8", errors="ignore")
+                        hit = (size, parse_preset_lines(text), parse_side_lines(text))
+                    except OSError:
+                        hit = (size, [], [])
+                    self._files[key] = hit
+                out.append((hit[1], hit[2]))
+        return out
+
+    def events(self, folders: list[Path]) -> list[tuple[float, str, str]]:
+        return sorted(e for evs, _ in self._read(folders) for e in evs)
+
+    def sides(self, folders: list[Path]) -> list[tuple[float, str, str]]:
+        """[(시각, 'sel'|'raid', 프로필 id)] — 레이드 진영 판정용(raid_side_at)"""
+        return sorted(e for _, sd in self._read(folders) for e in sd)
 
 
 # ── tarkov.dev 데이터 ─────────────────────────────────────────────
@@ -1247,6 +1299,11 @@ class RadarService:
                     ev = map_event_at(self._logs.events(folders), shot["ts"])
                     slug, preset = ((ev[2] or None), ev[1]) if ev else (None, None)
                     raid_ts = ev[0] if ev else None
+                    side = raid_side_at(self._logs.sides(folders), shot["ts"])
+                    if side:
+                        res["raid_side"] = side  # 11-07 이번 레이드 PMC/스캐브 — 앱이 탈출구 칩을 자동으로 맞춘다
+                    if raid_ts is not None:
+                        res["raid_ts"] = raid_ts
                     res["preset"] = preset
                     source = "log" if slug else None
                 except Exception as e:  # 로그를 못 읽어도 레이더는 수동 선택으로 쓸 수 있다

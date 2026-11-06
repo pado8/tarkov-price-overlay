@@ -326,6 +326,23 @@ evs = [(100.0, "p1", "woods"), (5000.0, "p2", "customs"), (9000.0, "p3", "woods"
 eq("레이드 로딩 사건(시각=레이드 열쇠)", r.map_event_at(evs, 5600.0), (5000.0, "p2", "customs"))
 eq("map_at 은 그대로", r.map_at(evs, 9100.0), ("woods", "p3"))
 
+# 레이드 진영(11-07): 본 프로필(로그인) = 레이드 프로필이면 PMC, 다르면 스캐브 — 실제 로그 줄 모양(id 는 가짜)
+PMC, SCAV = "a" * 24, "b" * 24
+SL = (f"2026-11-06 22:46:50.100|1.3.0.1|Info|application|PrepareSelectedProfileLocally ProfileId:{PMC} AccountId:123\n"
+      f"2026-11-06 22:56:11.020|1.3.0.1|Debug|application|TRACE-NetworkGameCreate profileStatus: 'Profileid: {SCAV}, Status: Busy, RaidMode: Online, Location: TarkovStreets'\n"
+      f"2026-11-06 23:40:00.000|1.3.0.1|Info|application|CompleteSelectedProfile ProfileId:{PMC} AccountId:123\n"
+      f"2026-11-06 23:52:49.831|1.3.0.1|Debug|application|TRACE-NetworkGameCreate profileStatus: 'Profileid: {PMC}, Status: Busy, RaidMode: Online, Location: Woods'\n"
+      f"2026-02-11 20:00:00.000|0.16|Info|application|SelectProfile ProfileId:{PMC} AccountId:123\n")
+sev = r.parse_side_lines(SL)
+eq("진영 줄 5개 읽음(옛 SelectProfile 포함)", [k for _, k, _ in sev], ["sel", "raid", "sel", "raid", "sel"])
+import time as _t
+T = lambda s: _t.mktime(_t.strptime(s, "%Y-%m-%d %H:%M:%S"))
+eq("다른 프로필로 들어간 레이드 = 스캐브", r.raid_side_at(sev, T("2026-11-06 23:05:00")), "scav")
+eq("본 프로필로 들어간 레이드 = PMC", r.raid_side_at(sev, T("2026-11-06 23:58:00")), "pmc")
+eq("레이드 기록 전 = 모름", r.raid_side_at(sev, T("2026-11-06 22:50:00")), None)
+eq("레이드가 너무 오래 전 = 모름", r.raid_side_at(sev, T("2026-11-07 03:00:00")), None)
+eq("본 프로필 기록이 없으면 = 모름", r.raid_side_at([e for e in sev if e[1] == "raid"], T("2026-11-06 23:05:00")), None)
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

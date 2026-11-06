@@ -780,6 +780,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
       {!mini && <div className="radar-layers">
+        {data.raid_side && <span className="radar-kind" title={t.radarSideHint}>{data.raid_side === "scav" ? t.radarSideScav : t.radarSidePmc}</span>}
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => onToggleLayer("pmc"))}
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
         {mine && chip(myExitsOnly, "mine", t.radarMyExits.replace("{n}", String(mine.size)), toggleMyExits)}
