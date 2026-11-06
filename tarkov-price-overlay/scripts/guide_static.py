@@ -4149,12 +4149,17 @@ top.appendChild(a)}
 // 받은 진행도는 그 서버(PVP/PVE/시즌)의 칸(guide.sync.m.<모드>)에 '교체'로 저장한다 — 직접 체크(guide.quests)와 섞지 않는다(11-04).
 // 사이트 모드도 오버레이 서버로 맞춘다(안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져온다).
 // 상인 LL 하한 추정(11-04) — 깬·진행 중 퀘스트가 요구한 LL 의 최댓값(받았으니 적어도 그 등급). ll.json = 빌드가 만든 퀘스트→[상인, LL]
-function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var lb={},q=(d&&d.q)||{},R=(d&&d.r)||{},LV=(d&&d.lv)||{},rep={},rl={},e={},plv=+L("guide.plv."+sm,0)||0;
+function llEst(sy,sm){fetch(GB+"ll.json").then(function(r){return r.json()}).then(function(d){var lb={},q=(d&&d.q)||{},R=(d&&d.r)||{},LV=(d&&d.lv)||{},rep={},rl={},e={},
+ML=(d&&d.ml)||{},XP=(d&&d.xp)||{},PL=(d&&d.pl)||[],plvQ=1,xp=0,plvX=1,acc=0;
+(sy.completed||[]).concat(sy.started||[]).forEach(function(id){if((ML[id]||0)>plvQ)plvQ=ML[id]});
+(sy.completed||[]).forEach(function(id){xp+=XP[id]||0});
+for(var i=0;i<PL.length;i++){acc+=PL[i];if(xp>=acc)plvX=i+2;else break}
+var plvA=Math.max(plvQ,plvX),plv=+L("guide.plv."+sm,0)||plvA;
 (sy.completed||[]).concat(sy.started||[]).forEach(function(id){var x=q[id];if(x&&x[1]>(lb[x[0]]||0))lb[x[0]]=x[1]});
 (sy.completed||[]).forEach(function(id){(R[id]||[]).forEach(function(w){rep[w[0]]=(rep[w[0]]||0)+w[1]})});
 Object.keys(LV).forEach(function(k){var v=1,r=rep[k]||0;LV[k].forEach(function(l){if(r+1e-9>=l[2]&&(!plv||plv>=l[1])&&l[0]>v)v=l[0]});if(v>1)rl[k]=v});
 Object.keys(lb).concat(Object.keys(rl)).forEach(function(k){e[k]=Math.max(lb[k]||0,rl[k]||0)});
-S("guide.ll.est."+sm,{ts:Date.now(),est:e,lb:lb,rep:rep,rl:rl,plv:plv});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
+S("guide.ll.est."+sm,{ts:Date.now(),est:e,lb:lb,rep:rep,rl:rl,plv:plv,plvA:plvA,plvQ:plvQ,plvX:plvX,xp:xp});document.dispatchEvent(new CustomEvent("guide-ll"))}).catch(function(){})}
 window.__guideLLEst=function(){var y=gsync();if(y)llEst(y,gsm())};
 function apply(p,how){var first=!L(SK,null);
 if(how)ev("sync_ok_"+how,{sync_mode:p.mode||"",done_bucket:bucket((p.completed||[]).length),first:first?1:0,log_ok:p.log_ok===false?0:1},how==="auto");

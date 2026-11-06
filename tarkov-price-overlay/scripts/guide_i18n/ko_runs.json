@@ -1455,7 +1455,7 @@
 "guide_static.py:489",
 "guide_static.py:505",
 "guide_static.py:3059",
-"guide_static.py:4412"
+"guide_static.py:4417"
 ],
 "n": 5
 },
@@ -1651,7 +1651,7 @@
 "guide_static.py:801",
 "guide_static.py:803",
 "guide_static.py:2071",
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 5
 },
@@ -2029,8 +2029,8 @@
 "where": [
 "guide_static.py:1142",
 "guide_static.py:2502",
-"guide_static.py:4330",
-"guide_static.py:4330"
+"guide_static.py:4335",
+"guide_static.py:4335"
 ],
 "n": 8
 },
@@ -2824,7 +2824,7 @@
 "where": [
 "guide_static.py:1550",
 "guide_static.py:1703",
-"guide_static.py:4413"
+"guide_static.py:4418"
 ],
 "n": 3
 },
@@ -3342,7 +3342,7 @@
 "where": [
 "guide_static.py:1792",
 "guide_static.py:1792",
-"guide_static.py:4421"
+"guide_static.py:4426"
 ],
 "n": 3
 },
@@ -6010,7 +6010,7 @@
 "where": [
 "guide_static.py:2907",
 "guide_static.py:2909",
-"guide_static.py:4330",
+"guide_static.py:4335",
 "keys.html:85"
 ],
 "n": 4
@@ -6452,7 +6452,7 @@
 "guide_static.py:3058",
 "guide_static.py:3667",
 "guide_static.py:4089",
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 4
 },
@@ -8564,7 +8564,7 @@
 "where": [
 "guide_static.py:3701",
 "guide_static.py:4095",
-"guide_static.py:4414"
+"guide_static.py:4419"
 ],
 "n": 3
 },
@@ -9365,7 +9365,7 @@
 "ko": "복사됨 ✓",
 "where": [
 "guide_static.py:3928",
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 2
 },
@@ -10252,330 +10252,330 @@
 {
 "ko": "설치",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "표시(마커)",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "사용",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "진행 중 (연동)",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "직접 추가 — 이 맵의 남은 퀘스트",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "오버레이 연동 전이라 진행 중 퀘스트를 몰라요. 아래에서 이번 출정에 할 퀘스트를 직접 고르세요(위 🔗 연동 버튼 또는 앱의 사이트 연동하기를 쓰면 자동으로 담깁니다).",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "이 맵에 준비물이 필요한 남은 퀘스트가 없어요.",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 아이템 챙기기",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "착용:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "착용 금지:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "무기:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "부품:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "장비·무기 조건",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "탈출:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "쓰는 탈출구:",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "조명탄 탈출",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "등반 탈출",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "· 방탄조끼 착용 불가",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "차량 요금",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "· 인원·스캐브 카르마에 따라 요금이 달라요",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "탈출 요금",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "탈출에 낼 아이템",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "탈출구 관련 아이템",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "조건이 있는 탈출구",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "레이드에서 주울 퀘스트템",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "빼기",
 "where": [
-"guide_static.py:4330",
-"guide_static.py:4330"
+"guide_static.py:4335",
+"guide_static.py:4335"
 ],
 "n": 2
 },
 {
 "ko": "내 기본 준비물",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "이번 출정에 넣은 퀘스트가 없어요. 위에서 퀘스트를 고르거나 아래 탈출구·기본 준비물을 추가하세요.",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "챙길 것",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "개 중",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "개 챙김",
 "where": [
-"guide_static.py:4330"
+"guide_static.py:4335"
 ],
 "n": 1
 },
 {
 "ko": "맵을 고르면 지금 하는 퀘스트에 필요한 아이템·열쇠·탈출 준비물을 한 목록으로 · 퀘스트",
 "where": [
-"guide_static.py:4413"
+"guide_static.py:4418"
 ],
 "n": 1
 },
 {
 "ko": "— ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담기고, 연동 전이면 이 맵의 남은 퀘스트에서 직접 고름)",
 "where": [
-"guide_static.py:4414"
+"guide_static.py:4419"
 ],
 "n": 1
 },
 {
 "ko": "③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템과 이 맵 탈출구에 쓰이는 조명탄·등반 장비·차량 요금이 한 목록으로 나옵니다(탈출구는 레이드에 들어가야 정해지니 쓸 수 있는 것을 모두 보여 줍니다).",
 "where": [
-"guide_static.py:4415"
+"guide_static.py:4420"
 ],
 "n": 1
 },
 {
 "ko": "체크 표시는 이 브라우저에만 저장됩니다.",
 "where": [
-"guide_static.py:4416"
+"guide_static.py:4421"
 ],
 "n": 1
 },
 {
 "ko": "① 이번 출정에 할 퀘스트",
 "where": [
-"guide_static.py:4421"
+"guide_static.py:4426"
 ],
 "n": 1
 },
 {
 "ko": "② 챙길 것",
 "where": [
-"guide_static.py:4422"
+"guide_static.py:4427"
 ],
 "n": 1
 },
 {
 "ko": "내 기본 준비물 추가 (예: 지혈대 2개, 여분 탄창 3개)",
 "where": [
-"guide_static.py:4423"
+"guide_static.py:4428"
 ],
 "n": 1
 },
 {
 "ko": "추가",
 "where": [
-"guide_static.py:4424"
+"guide_static.py:4429"
 ],
 "n": 1
 },
 {
 "ko": "목록 복사",
 "where": [
-"guide_static.py:4425"
+"guide_static.py:4430"
 ],
 "n": 1
 },
 {
 "ko": "이 맵 체크 지우기",
 "where": [
-"guide_static.py:4425"
+"guide_static.py:4430"
 ],
 "n": 1
 },
 {
 "ko": "이 페이지는 자바스크립트가 필요합니다.",
 "where": [
-"guide_static.py:4428"
+"guide_static.py:4433"
 ],
 "n": 1
 },
 {
 "ko": "맵별 바로가기",
 "where": [
-"guide_static.py:4429"
+"guide_static.py:4434"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 목표의 설치·표시·사용 아이템, 필요 열쇠, 착용·무기 조건은 tarkov.dev 공개 데이터 기준이고, 탈출구 조건은 공식 위키 표를 옮긴 것입니다.",
 "where": [
-"guide_static.py:4430"
+"guide_static.py:4435"
 ],
 "n": 1
 },
 {
 "ko": "차량 탈출 요금은 인원·스캐브 카르마에 따라 달라 금액을 적지 않았습니다. 레이드에서 찾아 제출하는(인레이드) 아이템은 가져갈 수 없어 목록에 넣지 않았습니다.",
 "where": [
-"guide_static.py:4431"
+"guide_static.py:4436"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 출정 준비물 — 맵별 퀘스트 아이템·열쇠·탈출 준비 체크리스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:4433"
+"guide_static.py:4438"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 맵을 고르면 진행 중 퀘스트에 필요한 와이파이 카메라·MS2000 마커 개수, 열쇠, 착용·무기 조건, 조명탄·등반 장비·차량 요금 같은 탈출 준비물을 한 체크리스트로.",
 "where": [
-"guide_static.py:4434"
+"guide_static.py:4439"
 ],
 "n": 1
 },
@@ -11118,6 +11118,42 @@
 "n": 1
 },
 {
+"ko": "자동",
+"where": [
+"quests.html:244",
+"keyfinder.html:58"
+],
+"n": 2
+},
+{
+"ko": "자동 최소치",
+"where": [
+"quests.html:245"
+],
+"n": 1
+},
+{
+"ko": "(받은 퀘스트 최소 레벨",
+"where": [
+"quests.html:245"
+],
+"n": 1
+},
+{
+"ko": "· 깬 퀘스트 경험치",
+"where": [
+"quests.html:245"
+],
+"n": 1
+},
+{
+"ko": ") — 비워 두면 이 값을 씁니다",
+"where": [
+"quests.html:245"
+],
+"n": 1
+},
+{
 "ko": "타르코프 카파템 정리 — 컬렉터(수집가) 제출 아이템 전체 목록 | 탈콥 가이드",
 "where": [
 "kappa.html:6"
@@ -11532,13 +11568,6 @@
 "ko": "게임 언어",
 "where": [
 "keyfinder.html:56"
-],
-"n": 1
-},
-{
-"ko": "자동",
-"where": [
-"keyfinder.html:58"
 ],
 "n": 1
 },

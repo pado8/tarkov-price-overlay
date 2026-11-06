@@ -1685,5 +1685,9 @@
 "까지 우호도": "needs standing",
 "더, 레벨": "more, level",
 "받은 퀘스트 LL": "Taken quests LL",
-"· 우호도": "· standing"
+"· 우호도": "· standing",
+"자동 최소치": "Auto minimum",
+"(받은 퀘스트 최소 레벨": "(taken quests min level",
+"· 깬 퀘스트 경험치": "· completed quest XP",
+") — 비워 두면 이 값을 씁니다": ") — used when left empty"
 }

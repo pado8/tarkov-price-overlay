@@ -534,7 +534,16 @@ def main() -> int:
                 rw.append([ctx.trader_slug(tr_id), round(float(s_["standing"]), 3)])
         if rw:
             ll_doc.setdefault("r", {})[tid] = rw
+        # 플레이어 레벨 자동 최소치(11-06): 받은 퀘스트의 최소 레벨 · 깬 퀘스트 경험치 합
+        if (t.get("minPlayerLevel") or 0) > 1:
+            ll_doc.setdefault("ml", {})[tid] = t["minPlayerLevel"]
+        if t.get("experience"):
+            ll_doc.setdefault("xp", {})[tid] = int(t["experience"])
     # 상인 등급 조건 [등급, 플레이어 레벨, 우호도] — 1.0 데이터는 거래액 조건이 전부 0(11-06 확인)
+    # 레벨표 — tarkov.dev playerLevels.exp 를 '그 레벨까지 더 필요한 경험치'로 읽는다(누적으로 읽으면 레벨이 더 높게 나옴 →
+    # 증가분으로 읽는 쪽이 늘 낮거나 같아 최소치로 안전하다. 공식 문서로 어느 쪽인지는 확인 못 함, 11-06)
+    ll_doc["pl"] = [int(p.get("exp") or 0) for p in sorted(items_doc_reg.get("playerLevels") or [], key=lambda p: p.get("level") or 0)
+                    if (p.get("level") or 0) > 1]
     ll_doc["lv"] = {tr.get("normalizedName"): [[l.get("level"), l.get("requiredPlayerLevel") or 0, l.get("requiredReputation") or 0]
                                                for l in tr.get("levels") or [] if (l.get("level") or 1) > 1]
                     for tr in traders.values() if tr.get("normalizedName")}

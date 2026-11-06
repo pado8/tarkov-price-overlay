@@ -19,6 +19,7 @@ await t.ev(`window.__guideLLEst&&window.__guideLLEst()`); await sleep(1200);
 const rows = () => t.ev(`[].map.call(document.querySelectorAll("#llsel .llrow"),function(r){return r.querySelector("span").textContent+" | "+r.querySelector("select option").textContent+" | "+((r.querySelector(".llwhy")||{}).textContent||"")})`);
 console.log("레벨 미입력:"); (await rows()).forEach((r) => console.log("  " + r));
 console.log("요약:", await t.ev(`document.getElementById("llsum").textContent`));
+console.log("레벨 자동:", await t.ev(`document.getElementById("plvwhy").textContent+" | 칸 안내="+document.getElementById("plv").placeholder`));
 await t.ev(`document.querySelector("details#llbox").open=true`);
 await t.click("#plv"); await t.type("20"); await t.ev(`document.getElementById("plv").dispatchEvent(new Event("change"))`); await sleep(1200);
 console.log("레벨 20 입력:"); (await rows()).slice(0, 4).forEach((r) => console.log("  " + r));

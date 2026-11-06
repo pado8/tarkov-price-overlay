@@ -55,7 +55,7 @@
   </div>
   <details class="box llbox" id="llbox"><summary>내 상인 등급 <span class="muted small" id="llsum"></span></summary>
     <p class="small muted">오버레이와 연동하면 깬 퀘스트와 진행 중인 퀘스트로 상인별 <b>최소 등급</b>을 추정합니다(↑ 표시, 실제보다 낮을 수 있음). 게임 상인 화면과 다르면 직접 고르세요 — 모드(PVP/PVE)별로 이 브라우저에만 저장됩니다. 「지금 받을 수 있는 것만」은 상인 등급과 선행 퀘스트만 따지고, 레벨과 1.1.0 묶음 해금 개수는 따지지 않습니다.</p>
-    <p class="small"><label>내 레벨 <input type="number" id="plv" min="1" max="79" inputmode="numeric" style="width:70px" /></label> <span class="muted">넣으면 등급의 레벨 조건과 '지금 받을 수 있는 것만'에 씁니다</span></p>
+    <p class="small"><label>내 레벨 <input type="number" id="plv" min="1" max="79" inputmode="numeric" style="width:70px" /></label> <span class="muted">넣으면 등급의 레벨 조건과 '지금 받을 수 있는 것만'에 씁니다</span> <span class="muted small" id="plvwhy"></span></p>
     <div class="llgrid" id="llsel"></div>
     <p class="small muted">우호도는 깬 퀘스트 보상의 합이라 일일·주간 퀘스트 보상, 에디션 시작 보너스, 실패 감점은 빠져 있습니다 — 실제 우호도는 보통 이보다 조금 높습니다.</p>
   </details>
@@ -136,7 +136,7 @@
       if (can) {
         if (done[x.id]) return false;
         if ((x.ll || 1) > (gmyll(x.ts) || 1)) return false;
-        var plv = +gL("guide.plv." + gsm(), 0) || 0;
+        var plv = +gL("guide.plv." + gsm(), 0) || +((gL("guide.ll.est." + gsm(), {}) || {}).plvA || 0);
         if (plv && (x.lv || 1) > plv) return false;
         if ((x.req || []).some(function (r) { return !done[r]; })) return false;
       }
@@ -239,6 +239,13 @@
   fetch(location.pathname.replace(/quests\/.*$/, "") + "ll.json").then(function (r) { return r.json(); }).then(function (d) { window.__llLV = (d && d.lv) || {}; drawLL(); }).catch(function () {});
   var plvEl = document.getElementById("plv");
   plvEl.value = gL("guide.plv." + gsm(), "") || "";
+  function plvAuto() {
+    var X = gL("guide.ll.est." + gsm(), null) || {}, a = +X.plvA || 0, el = document.getElementById("plvwhy");
+    plvEl.placeholder = a ? "자동 " + a : "";
+    if (el) el.textContent = a ? "자동 최소치 " + a + " (받은 퀘스트 최소 레벨 " + (X.plvQ || 1) + " · 깬 퀘스트 경험치 " + String(X.xp || 0).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " → " + (X.plvX || 1) + ") — 비워 두면 이 값을 씁니다" : "";
+  }
+  plvAuto();
+  document.addEventListener("guide-ll", plvAuto);
   plvEl.addEventListener("change", function () { var v = Math.max(0, Math.min(79, parseInt(plvEl.value, 10) || 0)); if (v) gS("guide.plv." + gsm(), v); else localStorage.removeItem("guide.plv." + gsm()); if (window.__guideLLEst) window.__guideLLEst(); drawLL(); render(); });
   document.getElementById("mode").addEventListener("click", function (e) {
     var v = e.target.getAttribute("data-v"); if (!v) return; save(MODEKEY, v); setMode(v); done = gdone(); drawLL(); render();
