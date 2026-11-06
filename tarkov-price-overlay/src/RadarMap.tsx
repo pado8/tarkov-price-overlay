@@ -55,7 +55,7 @@ export type MapDoc = {
     base: string | null; // SVG 바탕 그룹 id(지상)
     layers: { name: string; g: string; ext: { h: [number, number]; b: number[][] }[] }[]; // 층: 그룹 id + 높이·구역(x1,z1,x2,z2)
   } | null;
-  extracts: { name: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[];
+  extracts: { name: string; en?: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[]; // en = 영어 원문(내 탈출구 맞춤, 11-06)
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
   locks: { p: Pt; type: string; key?: string | null }[]; // key = 여는 열쇠 아이템 id
@@ -257,6 +257,20 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
+  const [myExitsOnly, setMyExitsOnly] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("tarkov.radar.myExitsOnly") !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const toggleMyExits = () =>
+    setMyExitsOnly((v) => {
+      try {
+        localStorage.setItem("tarkov.radar.myExitsOnly", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
   // "auto" | "base" | 층 그룹 id. 조회(F2) 뒤 지도를 다시 열면 패널이 새로 만들어지므로 맵별 선택을 모듈 메모리에 둔다(앱 켜 있는 동안)
   const [floor, setFloorState] = useState<string>(() => (slug && floorMemo[slug]) || "auto");
   const setFloor = (f: string) => {
@@ -482,6 +496,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
 
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
   const showExtract = (faction: string) => (faction === "scav" ? showScav : layers.pmc);
+  // 11-06 내 탈출구: 탈출구 목록(O)을 연 채 찍은 스크린샷에서 사이드카가 읽은 이번 레이드 탈출구(영어 원문). '내 탈출구만' 칩이
+  // 켜져 있으면(기본) 그것만 그린다. 아직 못 읽었으면 예전처럼 전부.
+  const mine = data.my_exits && data.my_exits.length ? new Set(data.my_exits) : null;
+  const mineOn = !!mine && myExitsOnly;
+  const showEx = (x: { faction: string; en?: string }) => showExtract(x.faction) && (!mineOn || (!!x.en && mine!.has(x.en)));
 
   // 이름표 자리 잡기: 가까운 것부터 놓고, 먼저 놓인 이름표·내 마커와 겹치거나 화면 밖이면 생략
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
@@ -502,7 +521,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
     if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
-      if (showExtract(x.faction)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
+      if (showEx(x)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
     // 퀘스트는 이름만(목표 문장은 길어서 다른 이름표를 다 밀어낸다 — 점을 누르면 전문)
     if (layers.quests) questTargets.forEach((q, i) => cands.push({ key: `q${i}`, text: q.name, p: [q.x!, q.y ?? myY, q.z!], off: 6, pr: 0 }));
@@ -625,7 +644,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 );
               })}
             {doc.extracts.map((x, i) => {
-                  if (!showExtract(x.faction)) return null; // 이름표 키(ex{i})가 원본 인덱스라 filter 로 줄이면 안 됨
+                  if (!showEx(x)) return null; // 이름표 키(ex{i})가 원본 인덱스라 filter 로 줄이면 안 됨
                   const s = toScreen(x.p[0], x.p[2]);
                   const c = x.faction === "scav" ? SCAV_COLOR : "#6fbf73";
                   return (
@@ -763,6 +782,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       {!mini && <div className="radar-layers">
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => onToggleLayer("pmc"))}
         {chip(showScav, "scav", t.radarLayerScav, () => onToggleScav(!showScav))}
+        {mine && chip(myExitsOnly, "mine", t.radarMyExits.replace("{n}", String(mine.size)), toggleMyExits)}
         {chip(layers.transits, "transit", t.radarLayerTransits, () => onToggleLayer("transits"))}
         {chip(layers.quests, "quest", t.radarLayerQuests, () => onToggleLayer("quests"))}
         {chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}

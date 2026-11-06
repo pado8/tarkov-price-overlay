@@ -130,15 +130,88 @@ def parse_preset_lines(text: str) -> list[tuple[float, str, str]]:
 MAX_RAID_AGE_SEC = 2 * 3600
 
 
-def map_at(events: list[tuple[float, str, str]], shot_ts: float) -> tuple[Optional[str], Optional[str]]:
-    """스크린샷 시각에 열려 있던 맵 (slug, preset). 스크린샷보다 늦은 로딩은 무시(5초 여유)."""
+def map_event_at(events: list[tuple[float, str, str]], shot_ts: float) -> Optional[tuple[float, str, str]]:
+    """스크린샷 시각에 열려 있던 맵의 로딩 사건 (시각, preset, slug) — 시각 = 이번 레이드를 가르는 열쇠(내 탈출구 기억용)."""
     best = None
     for ev in events:
         if ev[0] <= shot_ts + 5 and (best is None or ev[0] >= best[0]):
             best = ev
     if not best or shot_ts - best[0] > MAX_RAID_AGE_SEC:
+        return None
+    return best
+
+
+def map_at(events: list[tuple[float, str, str]], shot_ts: float) -> tuple[Optional[str], Optional[str]]:
+    """스크린샷 시각에 열려 있던 맵 (slug, preset). 스크린샷보다 늦은 로딩은 무시(5초 여유)."""
+    best = map_event_at(events, shot_ts)
+    if not best:
         return None, None
     return (best[2] or None), best[1]
+
+
+# ── 내 탈출구(11-06) ─────────────────────────────────────────────
+# 사용자: '탈출구 목록(O)을 연 채 스크린샷을 찍으면 거기 있는 탈출구만 지도에'. 게임은 레이드마다 쓸 수 있는 탈출구가
+# 정해져 있고 목록 창 오른쪽 위에 이름이 찍힌다(한국어 클라이언트도 탈출구 이름은 영어 원문 — 11-06 실사진 확인).
+# 오른쪽 위의 라임 초록 띠(목록 머리·'탈출구에 머무르십시오')를 픽셀로 먼저 가려(실사진: 띠 있음 0.09+, 없음 ≤0.0013)
+# 그 사진만 영어 OCR → 이 맵 탈출구 영어 이름과 맞춘다. 탈출구 안에 서 있을 때 띠는 탈출구 하나만 보이므로 2개 이상
+# 맞았을 때만 목록으로 인정하고, 같은 레이드 안에서 여러 번 읽으면 합친다.
+EXFIL_GREEN_MIN = 0.02
+
+
+def exfil_banner(path: Path) -> bool:
+    import numpy as np
+    from PIL import Image
+
+    im = np.asarray(Image.open(path).convert("RGB"), dtype=np.int16)
+    h, w, _ = im.shape
+    c = im[: int(h * 0.25), int(w * 0.55):]
+    r, g, b = c[..., 0], c[..., 1], c[..., 2]
+    m = (g > 150) & (g - r > 25) & (g - b > 70) & (r > 90)
+    return float(m.mean()) >= EXFIL_GREEN_MIN
+
+
+def read_exfil_lines(path: Path) -> list[str]:
+    import numpy as np
+    from PIL import Image
+
+    import ocr
+
+    im = Image.open(path).convert("RGB")
+    w, h = im.size
+    crop = np.asarray(im.crop((int(w * 0.55), 0, w, int(h * 0.5))))
+    res = ocr._get_reader(("en",)).readtext(crop, detail=1, paragraph=False)
+    return [t for _, t, conf in res if conf > 0.2]
+
+
+def match_exfils(lines: list[str], names: list[str]) -> set[str]:
+    """OCR 줄 → 맞는 탈출구 영어 이름들. 줄 앞의 번호('게임종료01' → 숫자 찌꺼기)는 무시하고 이름이 들어 있으면 맞춤,
+    아니면 비슷한 이름(0.8 이상)."""
+    import difflib
+
+    def norm(s: str) -> str:
+        return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
+
+    keys = {norm(n): n for n in names if n and len(norm(n)) >= 4}
+    out: set[str] = set()
+    for ln in lines:
+        l = norm(ln)
+        hit = [n for k, n in keys.items() if k in l]
+        if not hit:
+            tail = re.sub(r"^[0-9 ]+", "", l)
+            m = difflib.get_close_matches(tail, list(keys), n=1, cutoff=0.8)
+            hit = [keys[m[0]]] if m else []
+        out.update(hit)
+    return out
+
+
+def exfil_names(slug: str) -> list[str]:
+    """이 맵 탈출구의 영어 원문 이름(지도 문서 extracts[].en 과 같은 값)."""
+    maps_doc = (_doc("regular/maps") or {}).get("maps") or {}
+    loc_en = _doc("regular/maps_en") or {}
+    for m in maps_doc.values():
+        if m.get("normalizedName") == slug:
+            return [_loc(loc_en, ex.get("name"), ex.get("name")) for ex in m.get("extracts") or []]
+    return []
 
 
 # ── 스크린샷 폴더 ─────────────────────────────────────────────────
@@ -692,7 +765,8 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
             continue  # 개편 때 없어진 탈출구 · PMC/스캐브 중복
         if wkey:
             seen_ex.add(wkey)
-        extracts.append({"name": _disp_name(loc_maps, loc_en, e.get("name")), "p": note(pt(e["position"])),
+        extracts.append({"name": _disp_name(loc_maps, loc_en, e.get("name")), "en": _loc(loc_en or {}, e.get("name"), e.get("name")),
+                         "p": note(pt(e["position"])),
                          "faction": wfac or e.get("faction") or "shared",
                          "switch": "lever" in extract_conditions.conditions(m.get("normalizedName") or "", e)[0],
                          "outline": outline(e.get("outline"))})
@@ -988,7 +1062,48 @@ class RadarService:
         self._folder_override: Optional[Path] = None
         self._prune_keep: Optional[int] = None   # None=자동 정리 끔
         self._last_pruned_for: Optional[str] = None
+        # 내 탈출구 — OCR 은 백그라운드 스레드(한 장 1.5~2초)라 상태 응답을 막지 않는다
+        self._exfil_lock = threading.Lock()
+        self._exfil_seen: set[str] = set()
+        self._exfil_busy = False
+        self._my_exits: Optional[dict] = None  # {"slug", "raid", "names": set[str]}
         self._load_settings()
+
+    def _start_exfil_check(self, path: Path, slug: str, raid: Optional[float]) -> None:
+        with self._exfil_lock:
+            if self._exfil_busy or path.name in self._exfil_seen:
+                return
+            self._exfil_seen.add(path.name)
+            self._exfil_busy = True
+
+        def run() -> None:
+            try:
+                if not exfil_banner(path):
+                    return
+                got = match_exfils(read_exfil_lines(path), exfil_names(slug))
+                log.info(f"[radar] 탈출구 목록 사진 {path.name}: {slug} 맞춤 {sorted(got)}")
+                if len(got) < 2:
+                    return  # 탈출구 안 '머무르십시오' 띠(하나만 보임) 등 — 목록으로 안 봄
+                with self._exfil_lock:
+                    cur = self._my_exits
+                    if cur and cur["slug"] == slug and cur["raid"] == raid:
+                        cur["names"] |= got
+                    else:
+                        self._my_exits = {"slug": slug, "raid": raid, "names": set(got)}
+            except Exception as e:  # noqa: BLE001 — 사진·OCR 문제는 지도 전체를 막지 않는다
+                log.warning(f"[radar] 탈출구 목록 읽기 실패: {e!r}")
+            finally:
+                with self._exfil_lock:
+                    self._exfil_busy = False
+
+        threading.Thread(target=run, daemon=True, name="exfil-ocr").start()
+
+    def my_exits(self, slug: Optional[str], raid: Optional[float]) -> Optional[list[str]]:
+        with self._exfil_lock:
+            me = self._my_exits
+            if not me or not slug or me["slug"] != slug or (raid is not None and me["raid"] != raid):
+                return None
+            return sorted(me["names"])
 
     # ── 설정(스크린샷 폴더 직접 지정) ──
     def _load_settings(self) -> None:
@@ -1122,19 +1237,24 @@ class RadarService:
             # 맵: 수동 선택 > 로그
             slug = map_override or None
             source = "manual" if slug else None
+            raid_ts: Optional[float] = None  # 이번 레이드 로딩 시각(로그) — 내 탈출구 기억 열쇠
             if not slug and shot:
                 try:
                     import quest_tracker as qt
                     tr = qt.get_tracker()
                     inst = tr._effective_install_path()
                     folders = qt._list_log_folders(inst)[-3:] if inst else []
-                    slug, preset = map_at(self._logs.events(folders), shot["ts"])
+                    ev = map_event_at(self._logs.events(folders), shot["ts"])
+                    slug, preset = ((ev[2] or None), ev[1]) if ev else (None, None)
+                    raid_ts = ev[0] if ev else None
                     res["preset"] = preset
                     source = "log" if slug else None
                 except Exception as e:  # 로그를 못 읽어도 레이더는 수동 선택으로 쓸 수 있다
                     log.warning(f"[radar] 로그 맵 판정 실패: {e}")
             if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
                 slug = EVENT_MAPS[slug]
+            if shot and slug and folder:
+                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts)  # 탈출구 목록 사진이면 백그라운드 OCR
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC
             if not (full or fresh or map_override):
@@ -1164,6 +1284,9 @@ class RadarService:
                 res["map"] = {"id": slug, "name": _loc(loc_maps, (mm or {}).get("name"), slug),
                               "rot": (map_image_meta(slug) or {}).get("rot", 0)}
                 res["map_source"] = source
+                mine = self.my_exits(slug, raid_ts)
+                if mine:
+                    res["my_exits"] = mine  # 이번 레이드 내 탈출구(영어 원문 이름) — 앱이 지도에서 이것만 보인다
             if shot and slug:
                 active: set[str] = set()
                 try:

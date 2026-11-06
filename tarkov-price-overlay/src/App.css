@@ -1901,6 +1901,7 @@ html, body, #root {
 .radar-sw { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
 .radar-sw.pmc { background: #6fbf73; }
 .radar-sw.scav { background: #f0f0f0; }
+.radar-sw.mine { background: #6fbf73; box-shadow: 0 0 0 2px #fff inset; } /* 11-06 내 탈출구만 */
 .radar-sw.transit { background: #6fa8dc; }
 .radar-sw.quest { background: #f0c040; }
 .radar-sw.hazard { background: #ff9f1c; }

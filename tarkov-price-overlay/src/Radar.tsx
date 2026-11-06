@@ -62,6 +62,7 @@ export type RadarState = {
   light?: boolean;
   error?: string;
   active_quests?: number;
+  my_exits?: string[]; // 11-06 이번 레이드 내 탈출구(탈출구 목록 사진 OCR, 영어 원문)
   story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
   story_auto?: string[]; // '자동' 일 때 로그로 추정한 진행 중 챕터 id 들(없으면 빈 배열)
 };
@@ -461,6 +462,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         <details className="radar-help">
           <summary>{t.radarHelp}</summary>
           <div className="radar-note">{t.radarMapNote}</div>
+          <div className="radar-note">{t.radarMyExitsNote}</div>
         </details>
       </>
   );

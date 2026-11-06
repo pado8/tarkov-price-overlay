@@ -313,6 +313,19 @@ eq("로그 조준점 = 무리마다 하나", [(h["type"], h["p"]) for h in rs], 
 eq("로그 이름·확률(최대) — 번역표 없으면 Rogue", rs[0]["name"], "Rogue · Chalet 87%")
 eq("지도 문서 위험 구역에 로그 포함", sum(1 for h in r.compact_map_features({**rg, "extracts": [], "transits": [], "hazards": []}, {}, {})["hazards"] if h["type"] == "rogue"), 2)
 
+# 내 탈출구(11-06): 탈출구 목록 사진 OCR 줄 → 이 맵 탈출구 영어 이름(실사진 OCR 그대로)
+names = ["Entrance to Catacombs", "Ventilation Shaft", "Sewer Manhole", "Klimov Shopping Mall Exfil",
+         "Pinewood Basement (Co-Op)", "Damaged House", "Crash Site", "Primorsky Ave Taxi V-Ex"]
+ocr_lines = ["0.38.56", "7183201 Entrance to Catacombs", "7183202 Ventilation Shaft", "7183203 Sewer Manhole",
+             "7183304 Klimov Shopping Mall Exfil", "7183205 Pinewood Basement (Co-Op)"]
+eq("목록 사진 → 다섯 개", sorted(r.match_exfils(ocr_lines, names)), sorted(names[:5]))
+eq("탈출구 안 '머무르십시오' 띠 → 하나(앱은 2개 미만이면 목록으로 안 봄)", sorted(r.match_exfils(["4270 422442", "0.23.37", "AT", "7183203 Sewer Manhole"], names)), ["Sewer Manhole"])
+eq("오독 한 글자는 비슷한 이름으로", sorted(r.match_exfils(["Ventllation Shaft"], names)), ["Ventilation Shaft"])
+eq("상관없는 글자는 안 맞춤", sorted(r.match_exfils(["0.12.00", "AT"], names)), [])
+evs = [(100.0, "p1", "woods"), (5000.0, "p2", "customs"), (9000.0, "p3", "woods")]
+eq("레이드 로딩 사건(시각=레이드 열쇠)", r.map_event_at(evs, 5600.0), (5000.0, "p2", "customs"))
+eq("map_at 은 그대로", r.map_at(evs, 9100.0), ("woods", "p3"))
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)
