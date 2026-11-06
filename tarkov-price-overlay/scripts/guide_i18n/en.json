@@ -1676,5 +1676,14 @@
 "탈출구 관련 아이템": "Extract items",
 "개 맵": " maps",
 "— ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담기고, 연동 전이면 이 맵의 남은 퀘스트에서 직접 고름)": "— ① pick a map and ② tick the quests for this raid (with the overlay sync your active quests are added automatically; without it, pick from the remaining quests on this map);",
-"직접 추가 — 이 맵의 남은 퀘스트": "Add manually — remaining quests on this map"
+"직접 추가 — 이 맵의 남은 퀘스트": "Add manually — remaining quests on this map",
+"내 레벨": "My level",
+"넣으면 등급의 레벨 조건과": "Used for the level requirement of loyalty levels and for",
+"에 씁니다": "",
+"우호도는 깬 퀘스트 보상의 합이라 일일·주간 퀘스트 보상, 에디션 시작 보너스, 실패 감점은 빠져 있습니다 — 실제 우호도는 보통 이보다 조금 높습니다.": "Standing is the sum of rewards from completed quests, so daily/weekly quest rewards, edition starting bonuses and failure penalties are not included — your real standing is usually a little higher.",
+"펜스는 스캐브 카르마로 올라 추정하지 않아요": "Fence rises with Scav karma, so it is not estimated",
+"까지 우호도": "needs standing",
+"더, 레벨": "more, level",
+"받은 퀘스트 LL": "Taken quests LL",
+"· 우호도": "· standing"
 }

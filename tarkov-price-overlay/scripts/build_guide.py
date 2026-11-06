@@ -525,6 +525,19 @@ def main() -> int:
         ts = ctx.trader_slug(t.get("trader"))
         ll_doc["q"][tid] = [ts, ctx.trader_ll(t)]
         ll_doc["t"].setdefault(ts, ctx.trader_name(t.get("trader")))
+        # 완료 보상 우호도(11-06) — 깬 퀘스트 보상의 합으로 상인별 우호도를 추정해 등급 조건과 비교한다
+        rw = []
+        for s_ in (t.get("finishRewards") or {}).get("traderStanding") or []:
+            tr_ = s_.get("trader")
+            tr_id = tr_.get("id") if isinstance(tr_, dict) else tr_
+            if s_.get("standing"):
+                rw.append([ctx.trader_slug(tr_id), round(float(s_["standing"]), 3)])
+        if rw:
+            ll_doc.setdefault("r", {})[tid] = rw
+    # 상인 등급 조건 [등급, 플레이어 레벨, 우호도] — 1.0 데이터는 거래액 조건이 전부 0(11-06 확인)
+    ll_doc["lv"] = {tr.get("normalizedName"): [[l.get("level"), l.get("requiredPlayerLevel") or 0, l.get("requiredReputation") or 0]
+                                               for l in tr.get("levels") or [] if (l.get("level") or 1) > 1]
+                    for tr in traders.values() if tr.get("normalizedName")}
     (out_dir / "ll.json").parent.mkdir(parents=True, exist_ok=True)
     (out_dir / "ll.json").write_text(json.dumps(ll_doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     pages = {

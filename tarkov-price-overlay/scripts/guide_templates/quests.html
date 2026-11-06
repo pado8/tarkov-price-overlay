@@ -55,7 +55,9 @@
   </div>
   <details class="box llbox" id="llbox"><summary>내 상인 등급 <span class="muted small" id="llsum"></span></summary>
     <p class="small muted">오버레이와 연동하면 깬 퀘스트와 진행 중인 퀘스트로 상인별 <b>최소 등급</b>을 추정합니다(↑ 표시, 실제보다 낮을 수 있음). 게임 상인 화면과 다르면 직접 고르세요 — 모드(PVP/PVE)별로 이 브라우저에만 저장됩니다. 「지금 받을 수 있는 것만」은 상인 등급과 선행 퀘스트만 따지고, 레벨과 1.1.0 묶음 해금 개수는 따지지 않습니다.</p>
+    <p class="small"><label>내 레벨 <input type="number" id="plv" min="1" max="79" inputmode="numeric" style="width:70px" /></label> <span class="muted">넣으면 등급의 레벨 조건과 '지금 받을 수 있는 것만'에 씁니다</span></p>
     <div class="llgrid" id="llsel"></div>
+    <p class="small muted">우호도는 깬 퀘스트 보상의 합이라 일일·주간 퀘스트 보상, 에디션 시작 보너스, 실패 감점은 빠져 있습니다 — 실제 우호도는 보통 이보다 조금 높습니다.</p>
   </details>
   <div class="progress"><span id="prog"></span><div class="bar"><i id="bar"></i></div></div>
   <div id="view" style="margin-top:12px;min-height:100vh"></div>
@@ -91,6 +93,16 @@
   // 내 상인 등급(11-04): 오버레이 연동으로 추정한 최소 LL(gllE) 또는 직접 고른 값(gllM) — 모드별
   var LLT = [];
   Q.forEach(function (x) { if (x.ts && (x.ll || 1) > 1 && !LLT.some(function (k) { return k[0] === x.ts; })) LLT.push([x.ts, x.tr]); });
+  // LL basis (11-06): LL required by taken quests (sure lower bound) + LL reachable by summed standing rewards of completed quests
+  function llWhy(ts) {
+    if (ts === "fence") return "<span class=\"llwhy muted small\">펜스는 스캐브 카르마로 올라 추정하지 않아요</span>";
+    var X = gL("guide.ll.est." + gsm(), null);
+    if (!X || !X.rep) return "";
+    var r = +(X.rep[ts] || 0), lb = +((X.lb || {})[ts] || 0), rl = +((X.rl || {})[ts] || 0), nxt = "";
+    var LVt = (window.__llLV || {})[ts] || [];
+    for (var i = 0; i < LVt.length; i++) { var l = LVt[i]; if (l[0] > Math.max(lb, rl, 1)) { nxt = " · LL" + l[0] + "까지 우호도 " + Math.max(0, l[2] - r).toFixed(2) + " 더, 레벨 " + l[1]; break; } }
+    return "<span class=\"llwhy muted small\">받은 퀘스트 LL" + (lb || 1) + " · 우호도 " + r.toFixed(2) + " → LL" + (rl || 1) + nxt + "</span>";
+  }
   function drawLL() {
     var e = gllE(), m = gllM(), sum = [];
     document.getElementById("llsel").innerHTML = LLT.map(function (k) {
@@ -98,7 +110,7 @@
       if (man || est) sum.push(esc(k[1]) + " LL" + (man || est) + (man ? "" : "↑"));
       return "<label class=\"llrow\"><span>" + esc(k[1]) + "</span><select data-ts=\"" + esc(k[0]) + "\"><option value=\"\">" +
         (est ? "자동 (LL" + est + " 이상 추정)" : "자동 (추정 없음)") + "</option>" +
-        [1, 2, 3, 4].map(function (n) { return "<option value=\"" + n + "\"" + (man === n ? " selected" : "") + ">LL" + n + "</option>"; }).join("") + "</select></label>";
+        [1, 2, 3, 4].map(function (n) { return "<option value=\"" + n + "\"" + (man === n ? " selected" : "") + ">LL" + n + "</option>"; }).join("") + "</select>" + llWhy(k[0]) + "</label>";
     }).join("");
     document.getElementById("llsum").textContent = sum.length ? sum.join(" · ") : "— 연동하거나 직접 고르세요";
   }
@@ -124,6 +136,8 @@
       if (can) {
         if (done[x.id]) return false;
         if ((x.ll || 1) > (gmyll(x.ts) || 1)) return false;
+        var plv = +gL("guide.plv." + gsm(), 0) || 0;
+        if (plv && (x.lv || 1) > plv) return false;
         if ((x.req || []).some(function (r) { return !done[r]; })) return false;
       }
       if (q) {
@@ -222,6 +236,10 @@
   // 오버레이 연동(sync.js)이 완료 퀘스트를 guide.quests 에 합치면 다시 읽어 그린다
   document.addEventListener("guide-sync", function () { setMode(load(MODEKEY, "pvp")); done = gdone(); drawLL(); render(); });
   document.addEventListener("guide-ll", function () { drawLL(); render(); });
+  fetch(location.pathname.replace(/quests\/.*$/, "") + "ll.json").then(function (r) { return r.json(); }).then(function (d) { window.__llLV = (d && d.lv) || {}; drawLL(); }).catch(function () {});
+  var plvEl = document.getElementById("plv");
+  plvEl.value = gL("guide.plv." + gsm(), "") || "";
+  plvEl.addEventListener("change", function () { var v = Math.max(0, Math.min(79, parseInt(plvEl.value, 10) || 0)); if (v) gS("guide.plv." + gsm(), v); else localStorage.removeItem("guide.plv." + gsm()); if (window.__guideLLEst) window.__guideLLEst(); drawLL(); render(); });
   document.getElementById("mode").addEventListener("click", function (e) {
     var v = e.target.getAttribute("data-v"); if (!v) return; save(MODEKEY, v); setMode(v); done = gdone(); drawLL(); render();
   });

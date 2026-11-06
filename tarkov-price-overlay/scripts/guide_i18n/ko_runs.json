@@ -3,7 +3,7 @@
 "ko": "아무 대상",
 "where": [
 "guide_static.py:45",
-"guide_static.py:1115"
+"guide_static.py:1116"
 ],
 "n": 2
 },
@@ -11,8 +11,8 @@
 "ko": "스캐브",
 "where": [
 "guide_static.py:45",
-"guide_static.py:2046",
-"guide_static.py:2837"
+"guide_static.py:2100",
+"guide_static.py:2891"
 ],
 "n": 3
 },
@@ -111,7 +111,7 @@
 "ko": "내구도",
 "where": [
 "guide_static.py:49",
-"guide_static.py:1103"
+"guide_static.py:1104"
 ],
 "n": 2
 },
@@ -125,9 +125,12 @@
 {
 "ko": "인체공학",
 "where": [
-"guide_static.py:50"
+"guide_static.py:50",
+"guide_static.py:3906",
+"guide_static.py:3928",
+"guide_static.py:4034"
 ],
-"n": 1
+"n": 5
 },
 {
 "ko": "세로 칸",
@@ -175,9 +178,9 @@
 "ko": "완료",
 "where": [
 "guide_static.py:52",
-"guide_static.py:1309",
-"guide_static.py:1752",
-"guide_static.py:1790"
+"guide_static.py:1310",
+"guide_static.py:1754",
+"guide_static.py:1792"
 ],
 "n": 6
 },
@@ -185,9 +188,9 @@
 "ko": "진행 중",
 "where": [
 "guide_static.py:52",
-"guide_static.py:1309",
-"guide_static.py:1752",
-"guide_static.py:1790"
+"guide_static.py:1310",
+"guide_static.py:1754",
+"guide_static.py:1792"
 ],
 "n": 4
 },
@@ -195,7 +198,7 @@
 "ko": "실패",
 "where": [
 "guide_static.py:52",
-"guide_static.py:1394"
+"guide_static.py:1395"
 ],
 "n": 2
 },
@@ -343,7 +346,7 @@
 "ko": "감염된 타길라",
 "where": [
 "guide_static.py:76",
-"guide_static.py:725"
+"guide_static.py:726"
 ],
 "n": 2
 },
@@ -351,7 +354,7 @@
 "ko": "감염자",
 "where": [
 "guide_static.py:76",
-"guide_static.py:725"
+"guide_static.py:726"
 ],
 "n": 2
 },
@@ -359,7 +362,7 @@
 "ko": "할로윈 이벤트",
 "where": [
 "guide_static.py:81",
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 2
 },
@@ -1005,7 +1008,7 @@
 "ko": "입니다.",
 "where": [
 "guide_static.py:399",
-"guide_static.py:3398"
+"guide_static.py:3469"
 ],
 "n": 2
 },
@@ -1055,9 +1058,9 @@
 "ko": "레벨",
 "where": [
 "guide_static.py:443",
-"guide_static.py:626",
-"guide_static.py:1163",
-"guide_static.py:1250"
+"guide_static.py:627",
+"guide_static.py:1164",
+"guide_static.py:1251"
 ],
 "n": 14
 },
@@ -1072,7 +1075,7 @@
 "ko": "경험치",
 "where": [
 "guide_static.py:447",
-"guide_static.py:1199"
+"guide_static.py:1200"
 ],
 "n": 2
 },
@@ -1080,9 +1083,9 @@
 "ko": "평판",
 "where": [
 "guide_static.py:449",
-"guide_static.py:1167",
-"guide_static.py:1271",
-"guide_static.py:1539"
+"guide_static.py:1168",
+"guide_static.py:1272",
+"guide_static.py:1541"
 ],
 "n": 4
 },
@@ -1203,7 +1206,7 @@
 "guide_static.py:473",
 "guide_static.py:479"
 ],
-"n": 5
+"n": 6
 },
 {
 "ko": "공식 위키 Terminal",
@@ -1286,7 +1289,7 @@
 "ko": "위험 지역",
 "where": [
 "guide_static.py:480",
-"guide_static.py:2851"
+"guide_static.py:2905"
 ],
 "n": 2
 },
@@ -1295,8 +1298,8 @@
 "where": [
 "guide_static.py:482",
 "guide_static.py:496",
-"guide_static.py:2590",
-"guide_static.py:2989"
+"guide_static.py:2644",
+"guide_static.py:3060"
 ],
 "n": 7
 },
@@ -1305,20 +1308,20 @@
 "where": [
 "guide_static.py:482",
 "guide_static.py:498",
-"guide_static.py:1484",
-"guide_static.py:1517"
+"guide_static.py:1485",
+"guide_static.py:1518"
 ],
-"n": 23
+"n": 25
 },
 {
 "ko": "필요 아이템",
 "where": [
 "guide_static.py:483",
 "guide_static.py:500",
-"guide_static.py:1718",
-"guide_static.py:2831"
+"guide_static.py:1720",
+"guide_static.py:2034"
 ],
-"n": 7
+"n": 8
 },
 {
 "ko": "보상 아이템",
@@ -1331,9 +1334,9 @@
 "ko": "은신처",
 "where": [
 "guide_static.py:483",
-"guide_static.py:503",
-"guide_static.py:503",
-"guide_static.py:1704"
+"guide_static.py:504",
+"guide_static.py:504",
+"guide_static.py:1706"
 ],
 "n": 15
 },
@@ -1341,19 +1344,19 @@
 "ko": "맵",
 "where": [
 "guide_static.py:484",
-"guide_static.py:504",
-"guide_static.py:1928",
-"guide_static.py:2046"
+"guide_static.py:505",
+"guide_static.py:1930",
+"guide_static.py:2100"
 ],
-"n": 11
+"n": 12
 },
 {
 "ko": "보스",
 "where": [
 "guide_static.py:484",
-"guide_static.py:504",
-"guide_static.py:2874",
-"guide_static.py:2876"
+"guide_static.py:505",
+"guide_static.py:2929",
+"guide_static.py:2931"
 ],
 "n": 9
 },
@@ -1362,7 +1365,7 @@
 "where": [
 "guide_static.py:485",
 "guide_static.py:499",
-"guide_static.py:3003",
+"guide_static.py:3074",
 "quests.html:40"
 ],
 "n": 6
@@ -1372,17 +1375,17 @@
 "where": [
 "guide_static.py:485",
 "guide_static.py:502",
-"guide_static.py:1175",
-"guide_static.py:2988"
+"guide_static.py:1176",
+"guide_static.py:3057"
 ],
-"n": 10
+"n": 11
 },
 {
 "ko": "제작 수익",
 "where": [
 "guide_static.py:486",
-"guide_static.py:503",
-"guide_static.py:3144"
+"guide_static.py:504",
+"guide_static.py:3215"
 ],
 "n": 3
 },
@@ -1391,18 +1394,18 @@
 "where": [
 "guide_static.py:486",
 "guide_static.py:502",
-"guide_static.py:2998",
-"guide_static.py:3217"
+"guide_static.py:3069",
+"guide_static.py:3288"
 ],
-"n": 5
+"n": 6
 },
 {
 "ko": "프레스티지",
 "where": [
 "guide_static.py:487",
 "guide_static.py:499",
-"guide_static.py:2694",
-"guide_static.py:2709"
+"guide_static.py:2748",
+"guide_static.py:2763"
 ],
 "n": 9
 },
@@ -1411,8 +1414,8 @@
 "where": [
 "guide_static.py:487",
 "guide_static.py:496",
-"guide_static.py:3000",
-"guide_static.py:3278"
+"guide_static.py:3071",
+"guide_static.py:3349"
 ],
 "n": 5
 },
@@ -1421,8 +1424,8 @@
 "where": [
 "guide_static.py:488",
 "guide_static.py:497",
-"guide_static.py:3001",
-"guide_static.py:3393"
+"guide_static.py:3072",
+"guide_static.py:3464"
 ],
 "n": 5
 },
@@ -1431,8 +1434,28 @@
 "where": [
 "guide_static.py:488",
 "guide_static.py:498",
-"guide_static.py:3632",
-"guide_static.py:3633"
+"guide_static.py:3705",
+"guide_static.py:3706"
+],
+"n": 5
+},
+{
+"ko": "무기 모딩",
+"where": [
+"guide_static.py:489",
+"guide_static.py:503",
+"guide_static.py:4074",
+"guide_static.py:4106"
+],
+"n": 4
+},
+{
+"ko": "출정 준비물",
+"where": [
+"guide_static.py:489",
+"guide_static.py:505",
+"guide_static.py:3059",
+"guide_static.py:4412"
 ],
 "n": 5
 },
@@ -1440,9 +1463,9 @@
 "ko": "시세 오버레이",
 "where": [
 "guide_static.py:489",
-"guide_static.py:1825",
-"guide_static.py:2576",
-"guide_static.py:3685"
+"guide_static.py:1827",
+"guide_static.py:2630",
+"guide_static.py:4119"
 ],
 "n": 7
 },
@@ -1457,8 +1480,8 @@
 "ko": "퀘스트 목록",
 "where": [
 "guide_static.py:498",
-"guide_static.py:1825",
-"guide_static.py:1825"
+"guide_static.py:1827",
+"guide_static.py:1827"
 ],
 "n": 3
 },
@@ -1466,9 +1489,9 @@
 "ko": "사냥 퀘스트",
 "where": [
 "guide_static.py:498",
-"guide_static.py:1825",
-"guide_static.py:1825",
-"guide_static.py:2045"
+"guide_static.py:1827",
+"guide_static.py:1827",
+"guide_static.py:2099"
 ],
 "n": 5
 },
@@ -1476,9 +1499,9 @@
 "ko": "내 즐겨찾기",
 "where": [
 "guide_static.py:498",
-"guide_static.py:1825",
-"guide_static.py:1837",
-"guide_static.py:2046"
+"guide_static.py:1827",
+"guide_static.py:1839",
+"guide_static.py:2100"
 ],
 "n": 4
 },
@@ -1486,8 +1509,8 @@
 "ko": "이벤트 퀘스트",
 "where": [
 "guide_static.py:498",
-"guide_static.py:1979",
-"guide_static.py:1986"
+"guide_static.py:1981",
+"guide_static.py:1988"
 ],
 "n": 3
 },
@@ -1495,9 +1518,9 @@
 "ko": "아이템",
 "where": [
 "guide_static.py:500",
-"guide_static.py:1212",
-"guide_static.py:1709",
-"quests.html:186"
+"guide_static.py:1213",
+"guide_static.py:1711",
+"quests.html:200"
 ],
 "n": 4
 },
@@ -1505,9 +1528,9 @@
 "ko": "보상으로 받는 아이템",
 "where": [
 "guide_static.py:500",
-"guide_static.py:1711",
-"guide_static.py:2148",
-"guide_static.py:2992"
+"guide_static.py:1713",
+"guide_static.py:2202",
+"guide_static.py:3063"
 ],
 "n": 4
 },
@@ -1515,17 +1538,26 @@
 "ko": "퀘스트 전용 아이템",
 "where": [
 "guide_static.py:501",
-"guide_static.py:2203",
-"guide_static.py:2212",
-"guide_static.py:2993"
+"guide_static.py:2257",
+"guide_static.py:2266",
+"guide_static.py:3064"
 ],
 "n": 4
+},
+{
+"ko": "거래 불가 아이템",
+"where": [
+"guide_static.py:501",
+"guide_static.py:2031",
+"guide_static.py:2038"
+],
+"n": 3
 },
 {
 "ko": "내 열쇠들 어느 맵에?",
 "where": [
 "guide_static.py:502",
-"guide_static.py:2988",
+"guide_static.py:3057",
 "keys.html:40",
 "keyfinder.html:49"
 ],
@@ -1534,54 +1566,54 @@
 {
 "ko": "맵 정보",
 "where": [
-"guide_static.py:504",
-"guide_static.py:2914",
-"guide_static.py:2995"
+"guide_static.py:505",
+"guide_static.py:2983",
+"guide_static.py:3066"
 ],
 "n": 3
 },
 {
 "ko": "무료 시세 오버레이",
 "where": [
-"guide_static.py:518"
+"guide_static.py:519"
 ],
 "n": 1
 },
 {
 "ko": "즉시",
 "where": [
-"guide_static.py:537"
+"guide_static.py:538"
 ],
 "n": 1
 },
 {
 "ko": "일",
 "where": [
-"guide_static.py:543"
+"guide_static.py:544"
 ],
 "n": 1
 },
 {
 "ko": "시간",
 "where": [
-"guide_static.py:545",
-"guide_static.py:2302",
-"guide_static.py:3134"
+"guide_static.py:546",
+"guide_static.py:2356",
+"guide_static.py:3205"
 ],
 "n": 3
 },
 {
 "ko": "분",
 "where": [
-"guide_static.py:547",
-"guide_static.py:2784"
+"guide_static.py:548",
+"guide_static.py:2838"
 ],
 "n": 2
 },
 {
 "ko": "초",
 "where": [
-"guide_static.py:548",
+"guide_static.py:549",
 "keyfinder.html:331"
 ],
 "n": 2
@@ -1589,90 +1621,91 @@
 {
 "ko": "번째",
 "where": [
-"guide_static.py:634"
+"guide_static.py:635"
 ],
 "n": 1
 },
 {
 "ko": "단계",
 "where": [
-"guide_static.py:712",
-"guide_static.py:1222",
-"guide_static.py:2113",
-"guide_static.py:2321"
+"guide_static.py:713",
+"guide_static.py:1223",
+"guide_static.py:2167",
+"guide_static.py:2375"
 ],
 "n": 10
 },
 {
 "ko": "인레이드",
 "where": [
-"guide_static.py:784",
-"guide_static.py:806",
-"guide_static.py:1532",
-"guide_static.py:1701"
+"guide_static.py:785",
+"guide_static.py:807",
+"guide_static.py:1534",
+"guide_static.py:1703"
 ],
 "n": 11
 },
 {
 "ko": "외",
 "where": [
-"guide_static.py:800",
-"guide_static.py:802",
-"quests.html:140"
+"guide_static.py:801",
+"guide_static.py:803",
+"guide_static.py:2071",
+"guide_static.py:4330"
 ],
-"n": 3
+"n": 5
 },
 {
 "ko": "종 — 거의 모든 아이템이 해당돼 목록은 생략했어요",
 "where": [
-"guide_static.py:800"
+"guide_static.py:801"
 ],
 "n": 1
 },
 {
 "ko": "종 더 보기",
 "where": [
-"guide_static.py:802"
+"guide_static.py:803"
 ],
 "n": 1
 },
 {
 "ko": "아래 중 아무거나",
 "where": [
-"guide_static.py:804"
+"guide_static.py:805"
 ],
 "n": 1
 },
 {
 "ko": "· 묶음",
 "where": [
-"guide_static.py:896"
+"guide_static.py:897"
 ],
 "n": 1
 },
 {
 "ko": "· 연쇄",
 "where": [
-"guide_static.py:898"
+"guide_static.py:899"
 ],
 "n": 1
 },
 {
 "ko": "검색",
 "where": [
-"guide_static.py:975",
-"guide_static.py:1704",
-"guide_static.py:2046",
-"guide_static.py:2135"
+"guide_static.py:976",
+"guide_static.py:1706",
+"guide_static.py:2100",
+"guide_static.py:2189"
 ],
 "n": 8
 },
 {
 "ko": "탈콥 가이드",
 "where": [
-"guide_static.py:986",
-"guide_static.py:1015",
-"guide_static.py:3010",
+"guide_static.py:987",
+"guide_static.py:1016",
+"guide_static.py:3081",
 "quests.html:39"
 ],
 "n": 7
@@ -1680,30 +1713,30 @@
 {
 "ko": "경로",
 "where": [
-"guide_static.py:987"
+"guide_static.py:988"
 ],
 "n": 1
 },
 {
 "ko": "탈콥 가이드 · 타르코프 시세 오버레이",
 "where": [
-"guide_static.py:1005"
+"guide_static.py:1006"
 ],
 "n": 1
 },
 {
 "ko": "레이드 중 아이템에 마우스 올리고",
 "where": [
-"guide_static.py:1025",
-"guide_static.py:1380"
+"guide_static.py:1026",
+"guide_static.py:1381"
 ],
 "n": 2
 },
 {
 "ko": "F2 한 번",
 "where": [
-"guide_static.py:1025",
-"quests.html:62",
+"guide_static.py:1026",
+"quests.html:64",
 "kappa.html:33",
 "keys.html:50"
 ],
@@ -1712,16 +1745,16 @@
 {
 "ko": "— 시세·퀘스트·은신처에 필요한지 바로 확인",
 "where": [
-"guide_static.py:1025"
+"guide_static.py:1026"
 ],
 "n": 1
 },
 {
 "ko": "무료 시세 오버레이 받기",
 "where": [
-"guide_static.py:1025",
-"guide_static.py:1380",
-"quests.html:62",
+"guide_static.py:1026",
+"guide_static.py:1381",
+"quests.html:64",
 "kappa.html:33"
 ],
 "n": 6
@@ -1729,44 +1762,44 @@
 {
 "ko": "게임 데이터:",
 "where": [
-"guide_static.py:1025"
+"guide_static.py:1026"
 ],
 "n": 1
 },
 {
 "ko": "공개 데이터(기준",
 "where": [
-"guide_static.py:1025"
+"guide_static.py:1026"
 ],
 "n": 1
 },
 {
 "ko": ") · 설명 문구는",
 "where": [
-"guide_static.py:1028"
+"guide_static.py:1029"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키",
 "where": [
-"guide_static.py:1028",
-"guide_static.py:3644"
+"guide_static.py:1029",
+"guide_static.py:3717"
 ],
 "n": 2
 },
 {
 "ko": "와 패치 노트를 참고해 직접 정리 · 체크 표시는 이 브라우저에만 저장 ·",
 "where": [
-"guide_static.py:1028"
+"guide_static.py:1029"
 ],
 "n": 1
 },
 {
 "ko": "가이드 홈",
 "where": [
-"guide_static.py:1028",
-"quests.html:64",
+"guide_static.py:1029",
+"quests.html:66",
 "kappa.html:35",
 "keys.html:52"
 ],
@@ -1775,37 +1808,37 @@
 {
 "ko": "서비스 상태",
 "where": [
-"guide_static.py:1028"
+"guide_static.py:1029"
 ],
 "n": 1
 },
 {
 "ko": "소개",
 "where": [
-"guide_static.py:1028",
-"guide_static.py:2561"
+"guide_static.py:1029",
+"guide_static.py:2615"
 ],
 "n": 2
 },
 {
 "ko": "개인정보처리방침",
 "where": [
-"guide_static.py:1028"
+"guide_static.py:1029"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 시세 오버레이",
 "where": [
-"guide_static.py:1028"
+"guide_static.py:1029"
 ],
 "n": 1
 },
 {
 "ko": "💛 개발자 응원하기",
 "where": [
-"guide_static.py:1028",
-"quests.html:64",
+"guide_static.py:1029",
+"quests.html:66",
 "kappa.html:35",
 "keys.html:52"
 ],
@@ -1814,315 +1847,315 @@
 {
 "ko": "아이템 제출",
 "where": [
-"guide_static.py:1089"
+"guide_static.py:1090"
 ],
 "n": 1
 },
 {
 "ko": "레이드에서 아이템 찾기",
 "where": [
-"guide_static.py:1089"
+"guide_static.py:1090"
 ],
 "n": 1
 },
 {
 "ko": "적 처치",
 "where": [
-"guide_static.py:1089"
+"guide_static.py:1090"
 ],
 "n": 1
 },
 {
 "ko": "지역 방문",
 "where": [
-"guide_static.py:1090"
+"guide_static.py:1091"
 ],
 "n": 1
 },
 {
 "ko": "탈출",
 "where": [
-"guide_static.py:1090"
+"guide_static.py:1091"
 ],
 "n": 1
 },
 {
 "ko": "마커 설치",
 "where": [
-"guide_static.py:1090"
+"guide_static.py:1091"
 ],
 "n": 1
 },
 {
 "ko": "아이템 숨기기",
 "where": [
-"guide_static.py:1090"
+"guide_static.py:1091"
 ],
 "n": 1
 },
 {
 "ko": "선택",
 "where": [
-"guide_static.py:1096"
+"guide_static.py:1097"
 ],
 "n": 1
 },
 {
 "ko": "인식표 레벨",
 "where": [
-"guide_static.py:1101"
+"guide_static.py:1102"
 ],
 "n": 1
 },
 {
 "ko": "이상",
 "where": [
-"guide_static.py:1101",
-"guide_static.py:1250",
-"guide_static.py:1254",
-"guide_static.py:1256"
+"guide_static.py:1102",
+"guide_static.py:1251",
+"guide_static.py:1255",
+"guide_static.py:1257"
 ],
 "n": 5
 },
 {
 "ko": "대상:",
 "where": [
-"guide_static.py:1116"
+"guide_static.py:1117"
 ],
 "n": 1
 },
 {
 "ko": "명중만 해도 인정",
 "where": [
-"guide_static.py:1118"
+"guide_static.py:1119"
 ],
 "n": 1
 },
 {
 "ko": "부위:",
 "where": [
-"guide_static.py:1121"
+"guide_static.py:1122"
 ],
 "n": 1
 },
 {
 "ko": "거리",
 "where": [
-"guide_static.py:1124"
+"guide_static.py:1125"
 ],
 "n": 1
 },
 {
 "ko": "게임 시간",
 "where": [
-"guide_static.py:1126"
+"guide_static.py:1127"
 ],
 "n": 1
 },
 {
 "ko": "시~",
 "where": [
-"guide_static.py:1126"
+"guide_static.py:1127"
 ],
 "n": 1
 },
 {
 "ko": "시",
 "where": [
-"guide_static.py:1126"
+"guide_static.py:1127"
 ],
 "n": 1
 },
 {
 "ko": "사용 무기",
 "where": [
-"guide_static.py:1129"
+"guide_static.py:1130"
 ],
 "n": 1
 },
 {
 "ko": "필요 부착물",
 "where": [
-"guide_static.py:1129"
+"guide_static.py:1130"
 ],
 "n": 1
 },
 {
 "ko": "착용 필요",
 "where": [
-"guide_static.py:1130"
+"guide_static.py:1131"
 ],
 "n": 1
 },
 {
 "ko": "착용 금지",
 "where": [
-"guide_static.py:1130"
+"guide_static.py:1131"
 ],
 "n": 1
 },
 {
 "ko": "생존",
 "where": [
-"guide_static.py:1138",
-"guide_static.py:2448"
+"guide_static.py:1139",
+"guide_static.py:2502"
 ],
 "n": 2
 },
 {
 "ko": "런스루",
 "where": [
-"guide_static.py:1138",
-"guide_static.py:2448"
+"guide_static.py:1139",
+"guide_static.py:2502"
 ],
 "n": 2
 },
 {
 "ko": "이동(트랜짓)",
 "where": [
-"guide_static.py:1138"
+"guide_static.py:1139"
 ],
 "n": 1
 },
 {
 "ko": "상태:",
 "where": [
-"guide_static.py:1141"
+"guide_static.py:1142"
 ],
 "n": 1
 },
 {
 "ko": "또는",
 "where": [
-"guide_static.py:1141",
-"guide_static.py:2448",
-"quests.html:140",
-"quests.html:144"
+"guide_static.py:1142",
+"guide_static.py:2502",
+"guide_static.py:4330",
+"guide_static.py:4330"
 ],
-"n": 5
+"n": 8
 },
 {
 "ko": "탈출구:",
 "where": [
-"guide_static.py:1143"
+"guide_static.py:1144"
 ],
 "n": 1
 },
 {
 "ko": "조건:",
 "where": [
-"guide_static.py:1156"
+"guide_static.py:1157"
 ],
 "n": 1
 },
 {
 "ko": "반드시 포함할 부품",
 "where": [
-"guide_static.py:1159",
-"guide_static.py:3596",
-"guide_static.py:3629"
+"guide_static.py:1160",
+"guide_static.py:3669",
+"guide_static.py:3702"
 ],
 "n": 3
 },
 {
 "ko": "지도:",
 "where": [
-"guide_static.py:1189",
-"guide_static.py:2201"
+"guide_static.py:1190",
+"guide_static.py:2255"
 ],
 "n": 2
 },
 {
 "ko": "상인 평판",
 "where": [
-"guide_static.py:1207",
-"guide_static.py:1271"
+"guide_static.py:1208",
+"guide_static.py:1272"
 ],
 "n": 2
 },
 {
 "ko": "구매 해금",
 "where": [
-"guide_static.py:1216",
-"guide_static.py:2106",
-"guide_static.py:2135"
+"guide_static.py:1217",
+"guide_static.py:2160",
+"guide_static.py:2189"
 ],
 "n": 3
 },
 {
 "ko": "제작 해금",
 "where": [
-"guide_static.py:1221",
-"guide_static.py:2111",
-"guide_static.py:2135"
+"guide_static.py:1222",
+"guide_static.py:2165",
+"guide_static.py:2189"
 ],
 "n": 3
 },
 {
 "ko": "스킬",
 "where": [
-"guide_static.py:1226",
-"guide_static.py:2265",
-"guide_static.py:2612"
+"guide_static.py:1227",
+"guide_static.py:2319",
+"guide_static.py:2666"
 ],
 "n": 3
 },
 {
 "ko": "상인 해금",
 "where": [
-"guide_static.py:1229"
+"guide_static.py:1230"
 ],
 "n": 1
 },
 {
 "ko": "업적",
 "where": [
-"guide_static.py:1238",
-"guide_static.py:2645"
+"guide_static.py:1239",
+"guide_static.py:2699"
 ],
 "n": 2
 },
 {
 "ko": "꾸미기",
 "where": [
-"guide_static.py:1241",
-"guide_static.py:2685"
+"guide_static.py:1242",
+"guide_static.py:2739"
 ],
 "n": 2
 },
 {
 "ko": "개 (은신처·제스처·인식표 등)",
 "where": [
-"guide_static.py:1241"
+"guide_static.py:1242"
 ],
 "n": 1
 },
 {
 "ko": "제한 없음",
 "where": [
-"guide_static.py:1250"
+"guide_static.py:1251"
 ],
 "n": 1
 },
 {
 "ko": "(묶음 기준 · 공식 위키)",
 "where": [
-"guide_static.py:1257"
+"guide_static.py:1258"
 ],
 "n": 1
 },
 {
 "ko": "(공식 위키 기준 · 공개 데이터엔 없음)",
 "where": [
-"guide_static.py:1257",
-"guide_static.py:2676"
+"guide_static.py:1258",
+"guide_static.py:2730"
 ],
 "n": 2
 },
 {
 "ko": "확인 필요",
 "where": [
-"guide_static.py:1259",
+"guide_static.py:1260",
 "keyfinder.html:76",
 "keyfinder.html:331",
 "keyfinder.html:334"
@@ -2132,253 +2165,253 @@
 {
 "ko": "상인 등급",
 "where": [
-"guide_static.py:1265",
-"guide_static.py:2262"
+"guide_static.py:1266",
+"guide_static.py:2316"
 ],
 "n": 2
 },
 {
 "ko": "초과",
 "where": [
-"guide_static.py:1269"
+"guide_static.py:1270"
 ],
 "n": 1
 },
 {
 "ko": "이하",
 "where": [
-"guide_static.py:1269"
+"guide_static.py:1270"
 ],
 "n": 1
 },
 {
 "ko": "미만",
 "where": [
-"guide_static.py:1269"
+"guide_static.py:1270"
 ],
 "n": 1
 },
 {
 "ko": "(펜스 평판 = 스캐브 카르마)",
 "where": [
-"guide_static.py:1272"
+"guide_static.py:1273"
 ],
 "n": 1
 },
 {
 "ko": "선행 퀘스트",
 "where": [
-"guide_static.py:1279"
+"guide_static.py:1280"
 ],
 "n": 1
 },
 {
 "ko": "묶음 해금",
 "where": [
-"guide_static.py:1282"
+"guide_static.py:1283"
 ],
 "n": 1
 },
 {
 "ko": "묶음 퀘스트",
 "where": [
-"guide_static.py:1282"
+"guide_static.py:1283"
 ],
 "n": 1
 },
 {
 "ko": "개",
 "where": [
-"guide_static.py:1282",
 "guide_static.py:1283",
-"guide_static.py:1371",
-"guide_static.py:1420"
+"guide_static.py:1284",
+"guide_static.py:1372",
+"guide_static.py:1421"
 ],
-"n": 21
+"n": 25
 },
 {
 "ko": "완료 후",
 "where": [
-"guide_static.py:1282",
-"guide_static.py:1283"
+"guide_static.py:1283",
+"guide_static.py:1284"
 ],
 "n": 2
 },
 {
 "ko": "의 앞 묶음 퀘스트",
 "where": [
-"guide_static.py:1283"
+"guide_static.py:1284"
 ],
 "n": 1
 },
 {
 "ko": "(1.1.0 묶음 방식)",
 "where": [
-"guide_static.py:1284"
+"guide_static.py:1285"
 ],
 "n": 1
 },
 {
 "ko": "대화",
 "where": [
-"guide_static.py:1287"
+"guide_static.py:1288"
 ],
 "n": 1
 },
 {
 "ko": "와 대화",
 "where": [
-"guide_static.py:1287"
+"guide_static.py:1288"
 ],
 "n": 1
 },
 {
 "ko": "진영",
 "where": [
-"guide_static.py:1289"
+"guide_static.py:1290"
 ],
 "n": 1
 },
 {
 "ko": "전용",
 "where": [
-"guide_static.py:1289",
-"guide_static.py:1361",
-"guide_static.py:1725"
+"guide_static.py:1290",
+"guide_static.py:1362",
+"guide_static.py:1727"
 ],
 "n": 3
 },
 {
 "ko": "대기",
 "where": [
-"guide_static.py:1292"
+"guide_static.py:1293"
 ],
 "n": 1
 },
 {
 "ko": "앞 퀘스트 완료 후",
 "where": [
-"guide_static.py:1292"
+"guide_static.py:1293"
 ],
 "n": 1
 },
 {
 "ko": "뒤",
 "where": [
-"guide_static.py:1292"
+"guide_static.py:1293"
 ],
 "n": 1
 },
 {
 "ko": "오버레이:",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "처음부터 순서",
 "where": [
-"guide_static.py:1309",
-"guide_static.py:1420"
+"guide_static.py:1310",
+"guide_static.py:1421"
 ],
 "n": 2
 },
 {
 "ko": "목록: 완료한 선행 퀘스트(직접 체크 + 오버레이 연동)는 흐리게",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "// 내 상인 등급과 비교(11-04): 직접 고른 값이면 확정, 연동 추정(↑)이면 「적어도 그 등급」",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "· 내 등급 LL",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "— 아직 부족",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "— 추정이라 더 높을 수 있음",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "// ★ 즐겨찾기(guide.fav) — 사냥 퀘스트 페이지(/guide/hunt/)에서 모아 본다",
 "where": [
-"guide_static.py:1309"
+"guide_static.py:1310"
 ],
 "n": 1
 },
 {
 "ko": "PVE 전용",
 "where": [
-"guide_static.py:1355",
-"guide_static.py:2022",
-"guide_static.py:2088",
-"quests.html:159"
+"guide_static.py:1356",
+"guide_static.py:2076",
+"guide_static.py:2142",
+"quests.html:173"
 ],
 "n": 4
 },
 {
 "ko": "PVP 전용",
 "where": [
-"guide_static.py:1355",
-"guide_static.py:2022",
-"guide_static.py:2088",
-"quests.html:159"
+"guide_static.py:1356",
+"guide_static.py:2076",
+"guide_static.py:2142",
+"quests.html:173"
 ],
 "n": 4
 },
 {
 "ko": "카파 필수",
 "where": [
-"guide_static.py:1357",
-"quests.html:158"
+"guide_static.py:1358",
+"quests.html:172"
 ],
 "n": 2
 },
 {
 "ko": "등대지기 필수",
 "where": [
-"guide_static.py:1359"
+"guide_static.py:1360"
 ],
 "n": 1
 },
 {
 "ko": "실패 시 재시작 가능",
 "where": [
-"guide_static.py:1363"
+"guide_static.py:1364"
 ],
 "n": 1
 },
 {
 "ko": "EOD 전용",
 "where": [
-"guide_static.py:1365"
+"guide_static.py:1366"
 ],
 "n": 1
 },
 {
 "ko": "위키: 게임에 없음",
 "where": [
-"guide_static.py:1367",
+"guide_static.py:1368",
 "keyfinder.html:361"
 ],
 "n": 2
@@ -2386,711 +2419,706 @@
 {
 "ko": "즐겨찾기",
 "where": [
-"guide_static.py:1368",
-"guide_static.py:1790",
-"guide_static.py:2036",
-"guide_static.py:2036"
+"guide_static.py:1369",
+"guide_static.py:1792",
+"guide_static.py:2090",
+"guide_static.py:2090"
 ],
 "n": 6
 },
 {
 "ko": "즐겨찾기 — 내 즐겨찾기 페이지에서 목표·열쇠를 모아 보기",
 "where": [
-"guide_static.py:1368"
+"guide_static.py:1369"
 ],
 "n": 1
 },
 {
 "ko": "목표",
 "where": [
-"guide_static.py:1371",
-"guide_static.py:1971"
+"guide_static.py:1372",
+"guide_static.py:1973"
 ],
 "n": 2
 },
 {
 "ko": "PVE 버전 목표",
 "where": [
-"guide_static.py:1374"
+"guide_static.py:1375"
 ],
 "n": 1
 },
 {
 "ko": "PVE에서는 목표가 조금 다릅니다.",
 "where": [
-"guide_static.py:1374"
+"guide_static.py:1375"
 ],
 "n": 1
 },
 {
 "ko": "— 이 퀘스트에 필요한지·시세가 바로 떠요",
 "where": [
-"guide_static.py:1380"
+"guide_static.py:1381"
 ],
 "n": 1
 },
 {
 "ko": "지도",
 "where": [
-"guide_static.py:1387"
+"guide_static.py:1388"
 ],
 "n": 1
 },
 {
 "ko": "필요한 열쇠",
 "where": [
-"guide_static.py:1389",
-"guide_static.py:1790",
-"guide_static.py:1790"
+"guide_static.py:1390",
+"guide_static.py:1792",
+"guide_static.py:1792"
 ],
 "n": 3
 },
 {
 "ko": "을(를)",
 "where": [
-"guide_static.py:1394"
+"guide_static.py:1395"
 ],
 "n": 1
 },
 {
 "ko": "하면 이 퀘스트는",
 "where": [
-"guide_static.py:1394"
+"guide_static.py:1395"
 ],
 "n": 1
 },
 {
 "ko": "합니다 (둘 중 하나만 가능).",
 "where": [
-"guide_static.py:1394"
+"guide_static.py:1395"
 ],
 "n": 1
 },
 {
 "ko": "실패 조건",
 "where": [
-"guide_static.py:1400"
+"guide_static.py:1401"
 ],
 "n": 1
 },
 {
 "ko": "보상",
 "where": [
-"guide_static.py:1402",
-"guide_static.py:1972",
-"guide_static.py:2695",
-"guide_static.py:3380"
+"guide_static.py:1403",
+"guide_static.py:1974",
+"guide_static.py:2749",
+"guide_static.py:3451"
 ],
 "n": 4
 },
 {
 "ko": "데이터에 보상 정보가 없습니다.",
 "where": [
-"guide_static.py:1402"
+"guide_static.py:1403"
 ],
 "n": 1
 },
 {
 "ko": "시작할 때 받는 것",
 "where": [
-"guide_static.py:1405"
+"guide_static.py:1406"
 ],
 "n": 1
 },
 {
 "ko": "받는 조건",
 "where": [
-"guide_static.py:1407"
+"guide_static.py:1408"
 ],
 "n": 1
 },
 {
 "ko": "미리 챙길 아이템",
 "where": [
-"guide_static.py:1411"
+"guide_static.py:1412"
 ],
 "n": 1
 },
 {
 "ko": "· 레벨",
 "where": [
-"guide_static.py:1418",
-"guide_static.py:1725",
-"guide_static.py:1790",
-"guide_static.py:2090"
+"guide_static.py:1419",
+"guide_static.py:1727",
+"guide_static.py:1792",
+"guide_static.py:2144"
 ],
 "n": 5
 },
 {
 "ko": "· 시작만 하면 됨",
 "where": [
-"guide_static.py:1419",
-"guide_static.py:1725"
+"guide_static.py:1420",
+"guide_static.py:1727"
 ],
 "n": 2
 },
 {
 "ko": "먼저 깰 퀘스트",
 "where": [
-"guide_static.py:1420",
-"guide_static.py:1725"
+"guide_static.py:1421",
+"guide_static.py:1727"
 ],
 "n": 2
 },
 {
 "ko": "이 퀘스트",
 "where": [
-"guide_static.py:1421"
+"guide_static.py:1422"
 ],
 "n": 1
 },
 {
 "ko": "선행 조건을 끝까지 거슬러 올라가 먼저 하는 순서로 늘어놓았습니다. 완료로 표시한 퀘스트는 흐리게 보입니다.",
 "where": [
-"guide_static.py:1422"
+"guide_static.py:1423"
 ],
 "n": 1
 },
 {
 "ko": "위키",
 "where": [
-"guide_static.py:1427",
-"guide_static.py:1432",
-"guide_static.py:1446",
-"quests.html:161"
+"guide_static.py:1428",
+"guide_static.py:1433",
+"guide_static.py:1447",
+"quests.html:175"
 ],
 "n": 9
 },
 {
 "ko": "공개 데이터엔 없고 공식 위키 정보 상자에만 있는 연결입니다.",
 "where": [
-"guide_static.py:1427"
+"guide_static.py:1428"
 ],
 "n": 1
 },
 {
 "ko": "이전 퀘스트",
 "where": [
-"guide_static.py:1433",
-"guide_static.py:1436",
-"guide_static.py:1439",
-"guide_static.py:1930"
+"guide_static.py:1434",
+"guide_static.py:1437",
+"guide_static.py:1440",
+"guide_static.py:1932"
 ],
 "n": 4
 },
 {
 "ko": "데이터에는 받는 조건이 하나도 없습니다.",
 "where": [
-"guide_static.py:1436"
+"guide_static.py:1437"
 ],
 "n": 1
 },
 {
 "ko": "게임에서 이 퀘스트가 안 보이면 데이터에 빠진 조건이 있을 수 있으니 공식 위키를 확인하세요.",
 "where": [
-"guide_static.py:1437"
+"guide_static.py:1438"
 ],
 "n": 1
 },
 {
 "ko": "먼저 깨야 하는 퀘스트는 없습니다.",
 "where": [
-"guide_static.py:1439"
+"guide_static.py:1440"
 ],
 "n": 1
 },
 {
 "ko": "앞 묶음 퀘스트를 끝내면 열립니다(받는 조건 참고).",
 "where": [
-"guide_static.py:1440"
+"guide_static.py:1441"
 ],
 "n": 1
 },
 {
 "ko": "레벨·상인 등급만 맞으면 받을 수 있습니다.",
 "where": [
-"guide_static.py:1440"
+"guide_static.py:1441"
 ],
 "n": 1
 },
 {
 "ko": "다음 퀘스트",
 "where": [
-"guide_static.py:1447",
-"guide_static.py:1449",
-"guide_static.py:1931"
+"guide_static.py:1448",
+"guide_static.py:1450",
+"guide_static.py:1933"
 ],
 "n": 3
 },
 {
 "ko": "이 퀘스트를 선행 조건으로 삼는 퀘스트는 없습니다.",
 "where": [
-"guide_static.py:1449"
+"guide_static.py:1450"
 ],
 "n": 1
 },
 {
 "ko": "1.1.0 이후 대부분은 상인 등급·묶음으로 열립니다.",
 "where": [
-"guide_static.py:1450"
+"guide_static.py:1451"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키(영문)",
 "where": [
-"guide_static.py:1453",
-"guide_static.py:1973"
+"guide_static.py:1454",
+"guide_static.py:1975",
+"guide_static.py:2022"
 ],
-"n": 2
+"n": 3
 },
 {
 "ko": "더 보기",
 "where": [
-"guide_static.py:1455"
+"guide_static.py:1456"
 ],
 "n": 1
 },
 {
 "ko": "완료로 표시",
 "where": [
-"guide_static.py:1460"
+"guide_static.py:1461"
 ],
 "n": 1
 },
 {
 "ko": "(퀘스트 목록과 같이 저장)",
 "where": [
-"guide_static.py:1460"
+"guide_static.py:1461"
 ],
 "n": 1
 },
 {
 "ko": "모든 지역",
 "where": [
-"guide_static.py:1463",
-"guide_static.py:1825"
+"guide_static.py:1464",
+"guide_static.py:1827"
 ],
 "n": 2
 },
 {
 "ko": "퀘스트 공략 —",
 "where": [
-"guide_static.py:1464"
+"guide_static.py:1465"
 ],
 "n": 1
 },
 {
 "ko": "· 목표·필요템·보상 | 타르코프(탈콥) 가이드",
 "where": [
-"guide_static.py:1464"
+"guide_static.py:1465"
 ],
 "n": 1
 },
 {
 "ko": "타르코프",
 "where": [
-"guide_static.py:1481",
-"guide_static.py:1558",
-"guide_static.py:1559",
-"guide_static.py:1977"
+"guide_static.py:1482",
+"guide_static.py:1560",
+"guide_static.py:1561",
+"guide_static.py:1979"
 ],
-"n": 8
+"n": 9
 },
 {
 "ko": "퀘스트 「",
-"where": [
-"guide_static.py:1481"
-],
-"n": 1
-},
-{
-"ko": "」 공략:",
-"where": [
-"guide_static.py:1481"
-],
-"n": 1
-},
-{
-"ko": "지역",
-"where": [
-"guide_static.py:1482",
-"guide_static.py:1556",
-"guide_static.py:1825"
-],
-"n": 3
-},
-{
-"ko": "· 필요템·열쇠·보상·다음 퀘스트 정리.",
 "where": [
 "guide_static.py:1482"
 ],
 "n": 1
 },
 {
+"ko": "」 공략:",
+"where": [
+"guide_static.py:1482"
+],
+"n": 1
+},
+{
+"ko": "지역",
+"where": [
+"guide_static.py:1483",
+"guide_static.py:1558",
+"guide_static.py:1827"
+],
+"n": 3
+},
+{
+"ko": "· 필요템·열쇠·보상·다음 퀘스트 정리.",
+"where": [
+"guide_static.py:1483"
+],
+"n": 1
+},
+{
 "ko": "카파",
 "where": [
-"guide_static.py:1522",
-"guide_static.py:1681",
-"guide_static.py:2019",
-"guide_static.py:2494"
+"guide_static.py:1523",
+"guide_static.py:1683",
+"guide_static.py:2073",
+"guide_static.py:2548"
 ],
 "n": 5
 },
 {
 "ko": "등대지기",
 "where": [
-"guide_static.py:1524",
-"guide_static.py:2562",
-"guide_static.py:3454",
-"quests.html:158"
+"guide_static.py:1525",
+"guide_static.py:2616",
+"guide_static.py:3525",
+"quests.html:172"
 ],
 "n": 4
 },
 {
-"ko": "아무 곳",
-"where": [
-"guide_static.py:1527"
-],
-"n": 1
-},
-{
 "ko": "거래액",
 "where": [
-"guide_static.py:1541"
+"guide_static.py:1543"
 ],
 "n": 1
 },
 {
 "ko": "처음부터",
 "where": [
-"guide_static.py:1542"
+"guide_static.py:1544"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 순서",
 "where": [
-"guide_static.py:1547"
+"guide_static.py:1549"
 ],
 "n": 1
 },
 {
 "ko": "전체",
 "where": [
-"guide_static.py:1548",
-"guide_static.py:1704",
-"guide_static.py:2046",
-"guide_static.py:2135"
+"guide_static.py:1550",
+"guide_static.py:1706",
+"guide_static.py:2100",
+"guide_static.py:2189"
 ],
 "n": 7
 },
 {
 "ko": "개 · 카파 필수",
 "where": [
-"guide_static.py:1548"
+"guide_static.py:1550"
 ],
 "n": 1
 },
 {
 "ko": "개 · 데이터 기준",
 "where": [
-"guide_static.py:1548",
-"guide_static.py:1701"
+"guide_static.py:1550",
+"guide_static.py:1703",
+"guide_static.py:4413"
 ],
-"n": 2
+"n": 3
 },
 {
 "ko": "1.1.0 이후 사이드 퀘스트는 대부분",
 "where": [
-"guide_static.py:1550"
+"guide_static.py:1552"
 ],
 "n": 1
 },
 {
 "ko": "상인 등급(LL)별 2~4개 묶음",
 "where": [
-"guide_static.py:1550"
+"guide_static.py:1552"
 ],
 "n": 1
 },
 {
 "ko": "으로 열립니다.",
 "where": [
-"guide_static.py:1550"
+"guide_static.py:1552"
 ],
 "n": 1
 },
 {
 "ko": "같은 묶음의 퀘스트를 몇 개 깨거나 상인 등급을 올리면 다음 묶음이 열리고, 일부만 예전처럼 연쇄로 이어집니다.",
 "where": [
-"guide_static.py:1551"
+"guide_static.py:1553"
 ],
 "n": 1
 },
 {
 "ko": "아래 표는",
 "where": [
-"guide_static.py:1552"
+"guide_static.py:1554"
 ],
 "n": 1
 },
 {
 "ko": "LL → 묶음 → 연쇄 깊이 → 레벨",
 "where": [
-"guide_static.py:1552"
+"guide_static.py:1554"
 ],
 "n": 1
 },
 {
 "ko": "순으로 정렬해",
 "where": [
-"guide_static.py:1552"
+"guide_static.py:1554"
 ],
 "n": 1
 },
 {
 "ko": "먼저 받게 되는 순서",
 "where": [
-"guide_static.py:1552"
+"guide_static.py:1554"
 ],
 "n": 1
 },
 {
 "ko": "에 가깝게 맞췄습니다.",
 "where": [
-"guide_static.py:1552"
+"guide_static.py:1554"
 ],
 "n": 1
 },
 {
 "ko": "상인 등급 조건",
 "where": [
-"guide_static.py:1554"
+"guide_static.py:1556"
 ],
 "n": 1
 },
 {
 "ko": "해금",
 "where": [
-"guide_static.py:1555"
+"guide_static.py:1557"
 ],
 "n": 1
 },
 {
 "ko": "제출",
 "where": [
-"guide_static.py:1556"
+"guide_static.py:1558"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 순서 — 전체",
 "where": [
-"guide_static.py:1558"
+"guide_static.py:1560"
 ],
 "n": 1
 },
 {
 "ko": "개 해금 조건·필요템 | 탈콥 가이드",
 "where": [
-"guide_static.py:1558"
+"guide_static.py:1560"
 ],
 "n": 1
 },
 {
 "ko": "개를 해금 순서(상인 등급·묶음·연쇄)대로 정리. 레벨, 지역, 인레이드 제출 개수, 카파 필수 여부까지. 데이터 기준",
 "where": [
-"guide_static.py:1559"
+"guide_static.py:1561"
 ],
 "n": 1
 },
 {
 "ko": "// 연동/체크 반영: 완료 퀘스트(guide.quests — 직접 체크 + 오버레이 연동)와 지은 은신처 단계(연동) 분을 뺀 필요량",
 "where": [
-"guide_static.py:1617"
+"guide_static.py:1619"
 ],
 "n": 1
 },
 {
 "ko": "· 완료분 제외",
 "where": [
-"guide_static.py:1617"
+"guide_static.py:1619"
 ],
 "n": 1
 },
 {
 "ko": "종",
 "where": [
-"guide_static.py:1617",
-"guide_static.py:2428",
-"guide_static.py:2988",
-"guide_static.py:2991"
+"guide_static.py:1619",
+"guide_static.py:2482",
+"guide_static.py:3057",
+"guide_static.py:3062"
 ],
-"n": 12
+"n": 13
 },
 {
 "ko": "퀘스트 외",
 "where": [
-"guide_static.py:1672"
+"guide_static.py:1674"
 ],
 "n": 1
 },
 {
 "ko": "거래 불가",
 "where": [
-"guide_static.py:1683",
-"guide_static.py:2115"
+"guide_static.py:1685",
+"guide_static.py:2169"
 ],
 "n": 2
 },
 {
 "ko": "보유",
 "where": [
-"guide_static.py:1691",
-"guide_static.py:1701",
-"guide_static.py:2615",
-"guide_static.py:3622"
+"guide_static.py:1693",
+"guide_static.py:1703",
+"guide_static.py:2669",
+"guide_static.py:3695"
 ],
 "n": 9
 },
 {
 "ko": "없음",
 "where": [
-"guide_static.py:1697",
-"guide_static.py:1931",
-"guide_static.py:2411",
-"guide_static.py:2446"
+"guide_static.py:1699",
+"guide_static.py:1933",
+"guide_static.py:2465",
+"guide_static.py:2500"
 ],
 "n": 13
 },
 {
 "ko": "퀘스트·은신처 필요 아이템 총정리",
 "where": [
-"guide_static.py:1700"
+"guide_static.py:1702"
 ],
 "n": 1
 },
 {
 "ko": "버리면 안 되는 템",
 "where": [
-"guide_static.py:1700"
+"guide_static.py:1702"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 제출 + 은신처 건설에 들어가는 아이템",
 "where": [
-"guide_static.py:1700"
+"guide_static.py:1702"
 ],
 "n": 1
 },
 {
 "ko": "종 · PVP 기준 인레이드 필요: 퀘스트",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "개, 은신처",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "숫자는",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "모든 퀘스트·모든 은신처 단계",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "에 들어가는 총량입니다.",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "칸은 레이드에서 직접 주운 상태(Found in Raid)여야 하는 수량,",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "일반",
 "where": [
-"guide_static.py:1701",
-"guide_static.py:1709",
-"guide_static.py:1709",
-"quests.html:186"
+"guide_static.py:1703",
+"guide_static.py:1711",
+"guide_static.py:1711",
+"quests.html:200"
 ],
 "n": 5
 },
 {
 "ko": "칸은 플리·상인에서 사도 되는 수량입니다.",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "아무거나 N개",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "처럼 여러 아이템 중 고르는 제출은 각 퀘스트 페이지에서 확인하세요. 체크하면",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "로 표시되고 이 브라우저에만 저장됩니다.",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "필요한 돈",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 제출",
 "where": [
-"guide_static.py:1701"
+"guide_static.py:1703"
 ],
 "n": 1
 },
 {
 "ko": "은신처 건설",
 "where": [
-"guide_static.py:1704"
+"guide_static.py:1706"
 ],
 "n": 1
 },
 {
 "ko": "아이템 이름 검색 (한글·영문)",
 "where": [
-"guide_static.py:1704",
-"guide_static.py:2135",
+"guide_static.py:1706",
+"guide_static.py:2189",
 "kappa.html:25"
 ],
 "n": 3
@@ -3098,603 +3126,683 @@
 {
 "ko": "인레이드 필요만",
 "where": [
-"guide_static.py:1704"
+"guide_static.py:1706"
 ],
 "n": 1
 },
 {
 "ko": "보유 체크 숨기기",
 "where": [
-"guide_static.py:1704"
+"guide_static.py:1706"
 ],
 "n": 1
 },
 {
 "ko": "종 표시",
 "where": [
-"guide_static.py:1709",
-"guide_static.py:2139"
+"guide_static.py:1711",
+"guide_static.py:2193"
 ],
 "n": 2
 },
 {
 "ko": "합계",
 "where": [
-"guide_static.py:1709"
+"guide_static.py:1711"
 ],
 "n": 1
 },
 {
 "ko": "플리 시세",
 "where": [
-"guide_static.py:1709"
+"guide_static.py:1711"
 ],
 "n": 1
 },
 {
 "ko": "쓰이는 곳",
 "where": [
-"guide_static.py:1709"
+"guide_static.py:1711"
 ],
 "n": 1
 },
 {
 "ko": "이 표에 없는 아이템이에요. 여기는",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트에 내거나 은신처에 넣는",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "아이템만 모았습니다 —",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 보상으로 받는",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "아이템(상자·파우치·열쇠 등)은",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "에서 찾아보세요. 어떤 퀘스트가 주는지, 처음부터 어떤 순서로 깨야 하는지 나옵니다.",
 "where": [
-"guide_static.py:1711"
+"guide_static.py:1713"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 퀘스트 아이템 목록",
 "where": [
-"guide_static.py:1715"
+"guide_static.py:1717"
 ],
 "n": 1
 },
 {
 "ko": "— 퀘스트·은신처 필요 아이템 총정리, 버리면 안 되는 템·인레이드 수량 | 탈콥 가이드",
 "where": [
-"guide_static.py:1715"
+"guide_static.py:1717"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 전체 퀘스트 제출 아이템과 은신처 건설 재료",
 "where": [
-"guide_static.py:1716"
+"guide_static.py:1718"
 ],
 "n": 1
 },
 {
 "ko": "종을 한 표로. 인레이드(FiR) 필요 수량, 일반 수량, 플리 시세, 쓰이는 퀘스트·은신처 단계. PVP·PVE 전환. 데이터 기준",
 "where": [
-"guide_static.py:1716"
+"guide_static.py:1718"
 ],
 "n": 1
 },
 {
 "ko": "// 선행 사슬: 끝까지 거슬러 올라가 모은 뒤 깊이(먼저 하는 것) → 레벨 → 이름 순",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "· 이 퀘스트를 깨면 받음",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "이미 완료한 퀘스트예요",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "개 남음 / 전체",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "개 · 시작점:",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "선행 퀘스트를 다 끝냈어요 — 조건(레벨·상인 등급)만 맞으면 바로 받습니다",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "선행 퀘스트 없음 — 레벨·상인 등급 조건만 맞으면 바로 받습니다",
 "where": [
-"guide_static.py:1725"
+"guide_static.py:1727"
 ],
 "n": 1
 },
 {
 "ko": "// 지역 그룹: 0 = 고른 지역, 1 = 아무 지역(지역 제한 없음), 2 = 다른 지역(숨김). 전체면 모두 0",
 "where": [
-"guide_static.py:1790"
+"guide_static.py:1792"
 ],
 "n": 1
 },
 {
 "ko": "즐겨찾기 해제",
 "where": [
-"guide_static.py:1790",
-"guide_static.py:1790"
+"guide_static.py:1792",
+"guide_static.py:1792"
 ],
 "n": 2
 },
 {
 "ko": "즐겨찾기로 고정",
 "where": [
-"guide_static.py:1790"
+"guide_static.py:1792"
 ],
 "n": 1
 },
 {
 "ko": "아무 지역",
 "where": [
-"guide_static.py:1790",
-"quests.html:160"
+"guide_static.py:1792",
+"guide_static.py:2956",
+"quests.html:174"
 ],
-"n": 2
+"n": 3
 },
 {
 "ko": "// 퀘스트 페이지를 그대로 받아 목표·필요한 열쇠 부분만 잘라 온다(정적 사이트라 즐겨찾기 조합은 브라우저가 만든다)",
 "where": [
-"guide_static.py:1790"
+"guide_static.py:1792"
 ],
 "n": 1
 },
 {
 "ko": "목표를 불러오지 못했어요 — 퀘스트 페이지에서 확인하세요",
 "where": [
-"guide_static.py:1790"
+"guide_static.py:1792"
 ],
 "n": 1
 },
 {
 "ko": "// 오버레이 연동이 알려 준 진행 중 퀘스트 — 즐겨찾기·완료는 빼고 아래 구역에(★ 누르면 즐겨찾기로 고정)",
 "where": [
-"guide_static.py:1790"
+"guide_static.py:1792"
 ],
 "n": 1
 },
 {
 "ko": "불러오는 중…",
 "where": [
-"guide_static.py:1790",
-"guide_static.py:1790"
+"guide_static.py:1792",
+"guide_static.py:1792",
+"guide_static.py:4421"
 ],
-"n": 2
+"n": 3
 },
 {
 "ko": "★로 표시한 퀘스트",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 페이지·",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "의 ★를 누르면 여기 모입니다(이 브라우저에 저장) · 즐겨찾기",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "개 · 오버레이를 연동하면",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "진행 중인 퀘스트",
 "where": [
-"guide_static.py:1825",
-"guide_static.py:1825"
+"guide_static.py:1827",
+"guide_static.py:1827"
 ],
 "n": 2
 },
 {
 "ko": "도 자동으로 아래에 · 완료한 퀘스트는 뒤로·흐리게",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "지역을 고르면 그 지역 퀘스트 → 아무 지역 순으로, 다른 지역은 숨김",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "(숨김",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "개)",
 "where": [
-"guide_static.py:1825",
-"guide_static.py:2566",
-"guide_static.py:2848",
-"kappa.html:88"
+"guide_static.py:1827",
+"guide_static.py:2620",
+"guide_static.py:2902",
+"guide_static.py:3928"
 ],
-"n": 4
+"n": 5
 },
 {
 "ko": "아직 즐겨찾기가 없어요.",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "이나",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "에서 ★를 눌러 보세요.",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "시세 오버레이가 게임 로그로 확인한 것 ·",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "개 · ★를 누르면 즐겨찾기로 고정",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "같은 PC에서",
 "where": [
-"guide_static.py:1825",
-"guide_static.py:3685"
+"guide_static.py:1827",
+"guide_static.py:4119"
 ],
 "n": 2
 },
 {
 "ko": "를 켜고 상단",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "오버레이 연동",
 "where": [
-"guide_static.py:1825",
-"guide_static.py:3395"
+"guide_static.py:1827",
+"guide_static.py:3466"
 ],
 "n": 2
 },
 {
 "ko": "을 누르면, 지금 진행 중인 퀘스트가 여기에 자동으로 들어옵니다.",
 "where": [
-"guide_static.py:1825"
+"guide_static.py:1827"
 ],
 "n": 1
 },
 {
 "ko": "내 즐겨찾기 퀘스트 — 목표·필요 아이템·열쇠 한눈에 | 탈콥 가이드",
 "where": [
-"guide_static.py:1834"
+"guide_static.py:1836"
 ],
 "n": 1
 },
 {
 "ko": "★로 표시한 타르코프 퀘스트를 목표·필요 아이템·열쇠까지 한 페이지에 모아 게임 옆에 띄워 두세요. 브라우저에 저장되며 오버레이 연동 시 완료 퀘스트는 자동으로 흐려집니다.",
 "where": [
-"guide_static.py:1835"
+"guide_static.py:1837"
 ],
 "n": 1
 },
 {
 "ko": "상인",
 "where": [
-"guide_static.py:1926",
-"guide_static.py:2533",
-"guide_static.py:2533",
-"guide_static.py:3616"
+"guide_static.py:1928",
+"guide_static.py:2587",
+"guide_static.py:2587",
+"guide_static.py:3689"
 ],
 "n": 8
 },
 {
 "ko": "없음 — 이벤트 첫 퀘스트",
 "where": [
-"guide_static.py:1929"
+"guide_static.py:1931"
 ],
 "n": 1
 },
 {
 "ko": "길",
 "where": [
-"guide_static.py:1940"
+"guide_static.py:1942"
 ],
 "n": 1
 },
 {
 "ko": "선택 분기",
 "where": [
-"guide_static.py:1942",
-"guide_static.py:1982"
+"guide_static.py:1944",
+"guide_static.py:1984"
 ],
 "n": 2
 },
 {
 "ko": "경험치 +",
 "where": [
-"guide_static.py:1949"
+"guide_static.py:1951"
 ],
 "n": 1
 },
 {
 "ko": "LL 미확인(위키 표기 오류)",
 "where": [
-"guide_static.py:1959"
+"guide_static.py:1961"
 ],
 "n": 1
 },
 {
 "ko": "물물교환 해금:",
 "where": [
-"guide_static.py:1960"
+"guide_static.py:1962"
 ],
 "n": 1
 },
 {
 "ko": "업적:",
 "where": [
-"guide_static.py:1961"
+"guide_static.py:1963"
 ],
 "n": 1
 },
 {
 "ko": "보상 묶음",
 "where": [
-"guide_static.py:1963"
+"guide_static.py:1965"
 ],
 "n": 1
 },
 {
 "ko": "(선택한 길에 따라 다름)",
 "where": [
-"guide_static.py:1963"
+"guide_static.py:1965"
 ],
 "n": 1
 },
 {
 "ko": "· 위키 수정",
 "where": [
-"guide_static.py:1973"
+"guide_static.py:1975"
 ],
 "n": 1
 },
 {
 "ko": "개 — 목표·보상·선택 분기 한국어 정리 | 탈콥 가이드",
 "where": [
-"guide_static.py:1977"
+"guide_static.py:1979"
 ],
 "n": 1
 },
 {
 "ko": "~) 퀘스트",
 "where": [
-"guide_static.py:1978"
+"guide_static.py:1980"
 ],
 "n": 1
 },
 {
 "ko": "개: 스키어·테라피스트 퀘스트 순서, 목표, 보상, 물물교환 해금, 서로 실패시키는 선택 분기.",
 "where": [
-"guide_static.py:1978"
+"guide_static.py:1980"
 ],
 "n": 1
 },
 {
 "ko": "부터 진행 중 · 공개 데이터에 아직 없는 퀘스트라 공식 위키 내용을 옮겨 정리 · 위키 수정일은 퀘스트마다 표시",
 "where": [
-"guide_static.py:1980"
+"guide_static.py:1982"
 ],
 "n": 1
 },
 {
 "ko": "이벤트 퀘스트는 오버레이 연동·완료 체크·지도 표시에 아직 들어가지 않습니다(공개 데이터에 없어서).",
 "where": [
-"guide_static.py:1981"
+"guide_static.py:1983"
 ],
 "n": 1
 },
 {
 "ko": "표시가 있는 퀘스트는 한쪽을 끝내면 다른 쪽이 실패하니 먼저 읽어 보세요.",
 "where": [
-"guide_static.py:1982"
+"guide_static.py:1984"
 ],
 "n": 1
 },
 {
 "ko": "순서",
 "where": [
-"guide_static.py:1983"
+"guide_static.py:1985"
 ],
 "n": 1
 },
 {
 "ko": "출처: 공식 위키(CC BY-NC-SA) 퀘스트 문서의 목표·안내 문장을 번역·정리했습니다(같은 조건으로 공유). 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다. 이벤트가 끝나면 이 페이지도 내립니다.",
 "where": [
-"guide_static.py:1985"
+"guide_static.py:1987"
 ],
 "n": 1
 },
 {
+"ko": "제작:",
+"where": [
+"guide_static.py:2017"
+],
+"n": 1
+},
+{
+"ko": "🎃 이벤트",
+"where": [
+"guide_static.py:2021"
+],
+"n": 1
+},
+{
+"ko": "타르코프 거래 불가 아이템",
+"where": [
+"guide_static.py:2029"
+],
+"n": 1
+},
+{
+"ko": "종 — 어디에 쓰나요? (플리·상인 시세 없음) | 탈콥 가이드",
+"where": [
+"guide_static.py:2029"
+],
+"n": 1
+},
+{
+"ko": "타르코프에서 플리마켓·상인에 팔 수 없는 아이템",
+"where": [
+"guide_static.py:2030"
+],
+"n": 1
+},
+{
+"ko": "종의 쓰임새: 이벤트 호박, 타르코인, 허리 주머니, 감마 등. 데이터 기준",
+"where": [
+"guide_static.py:2030"
+],
+"n": 1
+},
+{
+"ko": "플리마켓·상인 시세가 없는 아이템 중 오버레이에서 많이 조회된 것 · 데이터 기준",
+"where": [
+"guide_static.py:2032"
+],
+"n": 1
+},
+{
+"ko": "시세가 없어도 쓸 데가 있습니다. 퀘스트·은신처·교환에 쓰이는 아이템은",
+"where": [
+"guide_static.py:2033"
+],
+"n": 1
+},
+{
+"ko": "페이지를 보세요. 여기에는 그런 데이터에 안 잡히는 용도를 공식 위키에서 확인해 적었습니다.",
+"where": [
+"guide_static.py:2034"
+],
+"n": 1
+},
+{
+"ko": "쓰임새 문구는 공식 위키(CC BY-NC-SA) 문서를 보고 직접 요약했습니다. 비상업 조건에 맞춰 이 페이지에는 광고를 싣지 않습니다.",
+"where": [
+"guide_static.py:2036"
+],
+"n": 1
+},
+{
+"ko": "개 맵",
+"where": [
+"guide_static.py:2071",
+"guide_static.py:2958"
+],
+"n": 2
+},
+{
 "ko": "이 밖에 다른 목표",
 "where": [
-"guide_static.py:2039"
+"guide_static.py:2093"
 ],
 "n": 1
 },
 {
 "ko": "개 — 퀘스트 페이지에서 확인",
 "where": [
-"guide_static.py:2039"
+"guide_static.py:2093"
 ],
 "n": 1
 },
 {
 "ko": "누구를 · 어떤 총으로 · 어디서",
 "where": [
-"guide_static.py:2045"
+"guide_static.py:2099"
 ],
 "n": 1
 },
 {
 "ko": "적 처치 목표가 있는 퀘스트",
 "where": [
-"guide_static.py:2045"
+"guide_static.py:2099"
 ],
 "n": 1
 },
 {
 "ko": "개 ·",
 "where": [
-"guide_static.py:2046",
-"guide_static.py:3001"
+"guide_static.py:2100",
+"guide_static.py:3072"
 ],
 "n": 2
 },
 {
 "ko": "를 누르면 즐겨찾기 — 맨 위로 모이고 이 브라우저에 저장됩니다 · 데이터 기준",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "게임하면서 옆에 띄워 두는 용도입니다. 대상·사용 무기·부착물·착용 장비·거리·부위·시간대 조건이 바로 보이고, 완료로 표시한 퀘스트(퀘스트 페이지 체크 또는 오버레이 연동)는 흐려집니다. 사냥이 아닌 퀘스트의 ★는",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "에서 목표까지 볼 수 있습니다.",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트·대상·상인·맵 검색",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "보스·경호",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "아무나",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "모든 맵",
 "where": [
-"guide_static.py:2046"
+"guide_static.py:2100"
 ],
 "n": 1
 },
 {
 "ko": "고른 맵 → 아무 지역 순, 다른 맵은 숨김",
 "where": [
-"guide_static.py:2050"
+"guide_static.py:2104"
 ],
 "n": 1
 },
 {
 "ko": "즐겨찾기만",
 "where": [
-"guide_static.py:2050",
+"guide_static.py:2104",
 "quests.html:53"
 ],
 "n": 2
@@ -3702,277 +3810,277 @@
 {
 "ko": "완료 숨기기",
 "where": [
-"guide_static.py:2050"
+"guide_static.py:2104"
 ],
 "n": 1
 },
 {
 "ko": "· 표시",
 "where": [
-"guide_static.py:2050"
+"guide_static.py:2104"
 ],
 "n": 1
 },
 {
 "ko": "다른 즐겨찾기",
 "where": [
-"guide_static.py:2053"
+"guide_static.py:2107"
 ],
 "n": 1
 },
 {
 "ko": "사냥 퀘스트가 아닌 것",
 "where": [
-"guide_static.py:2053"
+"guide_static.py:2107"
 ],
 "n": 1
 },
 {
 "ko": "조건에 맞는 퀘스트가 없어요.",
 "where": [
-"guide_static.py:2055"
+"guide_static.py:2109"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 사냥 퀘스트 총정리 — 누구를 어떤 총으로 어디서 잡나 + 즐겨찾기 | 탈콥 가이드",
 "where": [
-"guide_static.py:2059"
+"guide_static.py:2113"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 적 처치 퀘스트",
 "where": [
-"guide_static.py:2060"
+"guide_static.py:2114"
 ],
 "n": 1
 },
 {
 "ko": "개: 대상(PMC·스캐브·보스), 사용 무기·부착물·착용 장비·거리·부위·시간대 조건을 한 페이지에.",
 "where": [
-"guide_static.py:2060"
+"guide_static.py:2114"
 ],
 "n": 1
 },
 {
 "ko": "★ 즐겨찾기로 지금 할 사냥 퀘스트만 모아 게임 옆에 띄워 두세요. 완료 퀘스트는 흐리게. 데이터 기준",
 "where": [
-"guide_static.py:2061"
+"guide_static.py:2115"
 ],
 "n": 1
 },
 {
 "ko": "완료 보상",
 "where": [
-"guide_static.py:2102",
-"guide_static.py:2134",
-"guide_static.py:2135"
+"guide_static.py:2156",
+"guide_static.py:2188",
+"guide_static.py:2189"
 ],
 "n": 3
 },
 {
 "ko": "퀘스트를 깨면 받음",
 "where": [
-"guide_static.py:2103"
+"guide_static.py:2157"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트를 깨면 상인이 팔기 시작",
 "where": [
-"guide_static.py:2107"
+"guide_static.py:2161"
 ],
 "n": 1
 },
 {
 "ko": "에서 구매",
 "where": [
-"guide_static.py:2108"
+"guide_static.py:2162"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트를 깨면 은신처에서 제작 가능",
 "where": [
-"guide_static.py:2112"
+"guide_static.py:2166"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 보상으로 받는 아이템",
 "where": [
-"guide_static.py:2134"
+"guide_static.py:2188"
 ],
 "n": 1
 },
 {
 "ko": "어떤 퀘스트를 깨야 받나",
 "where": [
-"guide_static.py:2134"
+"guide_static.py:2188"
 ],
 "n": 1
 },
 {
 "ko": "종 · 구매 해금",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "종 · 제작 해금",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "종 · 아이템을 누르면 주는 퀘스트와",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "처음부터 깨야 하는 순서",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "가 나옵니다 · 데이터 기준",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "예:",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "럭키 스캐브의 고물상자",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "를 검색하면 그 상자를 주는 퀘스트와, 그 퀘스트를 받기까지 먼저 깨야 하는 선행 퀘스트가 시작점부터 순서대로 보입니다. 완료로 표시한 퀘스트(퀘스트 페이지 체크 또는 오버레이 연동)는 흐리게 지워져",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "지금 어디서 시작하면 되는지",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "만 남습니다. 돈 보상은 뺐습니다.",
 "where": [
-"guide_static.py:2135"
+"guide_static.py:2189"
 ],
 "n": 1
 },
 {
 "ko": "보상·해금 아이템 중엔 없어요. 퀘스트에",
 "where": [
-"guide_static.py:2140"
+"guide_static.py:2194"
 ],
 "n": 1
 },
 {
 "ko": "내는",
 "where": [
-"guide_static.py:2140"
+"guide_static.py:2194"
 ],
 "n": 1
 },
 {
 "ko": "아이템이라면",
 "where": [
-"guide_static.py:2140"
+"guide_static.py:2194"
 ],
 "n": 1
 },
 {
 "ko": "필요 아이템 총정리",
 "where": [
-"guide_static.py:2140",
-"guide_static.py:2576",
-"guide_static.py:2991"
+"guide_static.py:2194",
+"guide_static.py:2630",
+"guide_static.py:3062"
 ],
 "n": 3
 },
 {
 "ko": "에서 찾아보세요.",
 "where": [
-"guide_static.py:2140"
+"guide_static.py:2194"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 퀘스트 보상 아이템 — 어떤 퀘스트가 주는지·선행 퀘스트 순서 | 탈콥 가이드",
 "where": [
-"guide_static.py:2144"
+"guide_static.py:2198"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 퀘스트 완료 보상 아이템",
 "where": [
-"guide_static.py:2145"
+"guide_static.py:2199"
 ],
 "n": 1
 },
 {
 "ko": "종, 구매 해금",
 "where": [
-"guide_static.py:2145"
+"guide_static.py:2199"
 ],
 "n": 1
 },
 {
 "ko": "종, 제작 해금",
 "where": [
-"guide_static.py:2145"
+"guide_static.py:2199"
 ],
 "n": 1
 },
 {
 "ko": "종. 아이템을 검색하면 주는 퀘스트와 처음부터 깨야 하는 선행 퀘스트 순서,",
 "where": [
-"guide_static.py:2145"
+"guide_static.py:2199"
 ],
 "n": 1
 },
 {
 "ko": "남은 선행 퀘스트 수를 보여줍니다. PVP·PVE. 데이터 기준",
 "where": [
-"guide_static.py:2146"
+"guide_static.py:2200"
 ],
 "n": 1
 },
 {
 "ko": "지역 무관",
 "where": [
-"guide_static.py:2189"
+"guide_static.py:2243"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트:",
 "where": [
-"guide_static.py:2200",
+"guide_static.py:2254",
 "keyfinder.html:364"
 ],
 "n": 2
@@ -3980,1957 +4088,1960 @@
 {
 "ko": "레이드에서 찾아 제출·설치하는 퀘스트 전용 아이템",
 "where": [
-"guide_static.py:2204"
+"guide_static.py:2258"
 ],
 "n": 1
 },
 {
 "ko": "종 · 지도별 · 데이터 기준",
 "where": [
-"guide_static.py:2204"
+"guide_static.py:2258"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 전용 아이템은 해당 퀘스트를",
 "where": [
-"guide_static.py:2205"
+"guide_static.py:2259"
 ],
 "n": 1
 },
 {
 "ko": "받은 상태",
 "where": [
-"guide_static.py:2205"
+"guide_static.py:2259"
 ],
 "n": 1
 },
 {
 "ko": "에서만 보이고, 죽으면 잃습니다(일부는 다시 생성).",
 "where": [
-"guide_static.py:2205"
+"guide_static.py:2259"
 ],
 "n": 1
 },
 {
 "ko": "1.0.5부터 근처에 가면 화면에 방향 표시가 뜹니다. 정확한 위치는 각 퀘스트 페이지의 위키·tarkov.dev 지도 링크를 참고하세요.",
 "where": [
-"guide_static.py:2206"
+"guide_static.py:2260"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 퀘스트 전용 아이템",
 "where": [
-"guide_static.py:2209"
+"guide_static.py:2263"
 ],
 "n": 1
 },
 {
 "ko": "종 — 지도별 위치·관련 퀘스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:2209"
+"guide_static.py:2263"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 퀘스트에서 찾아야 하는 전용 아이템(문서·USB·케이스 등)",
 "where": [
-"guide_static.py:2210"
+"guide_static.py:2264"
 ],
 "n": 1
 },
 {
 "ko": "종을 지도별로 정리. 아이템 설명과 관련 퀘스트 링크. 데이터 기준",
 "where": [
-"guide_static.py:2210"
+"guide_static.py:2264"
 ],
 "n": 1
 },
 {
 "ko": "재료",
 "where": [
-"guide_static.py:2254",
-"guide_static.py:2302",
-"guide_static.py:3126",
-"guide_static.py:3134"
+"guide_static.py:2308",
+"guide_static.py:2356",
+"guide_static.py:3197",
+"guide_static.py:3205"
 ],
 "n": 4
 },
 {
 "ko": "돈",
 "where": [
-"guide_static.py:2256",
-"guide_static.py:2569"
+"guide_static.py:2310",
+"guide_static.py:2623"
 ],
 "n": 2
 },
 {
 "ko": "선행 시설",
 "where": [
-"guide_static.py:2259"
+"guide_static.py:2313"
 ],
 "n": 1
 },
 {
 "ko": "건설 시간",
 "where": [
-"guide_static.py:2266"
+"guide_static.py:2320"
 ],
 "n": 1
 },
 {
 "ko": "도구·반환",
 "where": [
-"guide_static.py:2293"
+"guide_static.py:2347"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 아이템",
 "where": [
-"guide_static.py:2298",
-"guide_static.py:3115"
+"guide_static.py:2352",
+"guide_static.py:3186"
 ],
 "n": 2
 },
 {
 "ko": "해금:",
 "where": [
-"guide_static.py:2300",
-"guide_static.py:3117"
+"guide_static.py:2354",
+"guide_static.py:3188"
 ],
 "n": 2
 },
 {
 "ko": "만드는 것",
 "where": [
-"guide_static.py:2302"
+"guide_static.py:2356"
 ],
 "n": 1
 },
 {
 "ko": "표시할 효과 없음",
 "where": [
-"guide_static.py:2324"
+"guide_static.py:2378"
 ],
 "n": 1
 },
 {
 "ko": "PVE 재료 (다름)",
 "where": [
-"guide_static.py:2328"
+"guide_static.py:2382"
 ],
 "n": 1
 },
 {
 "ko": "필요 조건",
 "where": [
-"guide_static.py:2332"
+"guide_static.py:2386"
 ],
 "n": 1
 },
 {
 "ko": "효과",
 "where": [
-"guide_static.py:2333"
+"guide_static.py:2387"
 ],
 "n": 1
 },
 {
 "ko": "이 단계에서 할 수 있는 제작",
 "where": [
-"guide_static.py:2334"
+"guide_static.py:2388"
 ],
 "n": 1
 },
 {
 "ko": "은신처 시설 ·",
 "where": [
-"guide_static.py:2340"
+"guide_static.py:2394"
 ],
 "n": 1
 },
 {
 "ko": "단계 · 총 건설 시간",
 "where": [
-"guide_static.py:2340"
+"guide_static.py:2394"
 ],
 "n": 1
 },
 {
 "ko": "· 데이터 기준",
 "where": [
-"guide_static.py:2340",
-"guide_static.py:2533",
-"guide_static.py:2868"
+"guide_static.py:2394",
+"guide_static.py:2587",
+"guide_static.py:2922"
 ],
 "n": 3
 },
 {
 "ko": "다른 시설",
 "where": [
-"guide_static.py:2342"
+"guide_static.py:2396"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 은신처",
 "where": [
-"guide_static.py:2344",
-"guide_static.py:2345"
+"guide_static.py:2398",
+"guide_static.py:2399"
 ],
 "n": 2
 },
 {
 "ko": "— 단계별 재료·조건·효과·제작 레시피 | 탈콥 가이드",
 "where": [
-"guide_static.py:2344"
+"guide_static.py:2398"
 ],
 "n": 1
 },
 {
 "ko": "단계 업그레이드에 필요한 재료(인레이드 여부), 돈, 선행 시설·상인 등급·스킬, 건설 시간, 효과와 제작 레시피. 데이터 기준",
 "where": [
-"guide_static.py:2345"
+"guide_static.py:2399"
 ],
 "n": 1
 },
 {
 "ko": "모든 시설을 끝까지 올렸습니다 🎉",
 "where": [
-"guide_static.py:2350"
+"guide_static.py:2404"
 ],
 "n": 1
 },
 {
 "ko": "돈:",
 "where": [
-"guide_static.py:2350"
+"guide_static.py:2404"
 ],
 "n": 1
 },
 {
 "ko": "현재 단계 입력을 모두 지울까요?",
 "where": [
-"guide_static.py:2350"
+"guide_static.py:2404"
 ],
 "n": 1
 },
 {
 "ko": "미건설",
 "where": [
-"guide_static.py:2416"
+"guide_static.py:2470"
 ],
 "n": 1
 },
 {
 "ko": "현재 단계",
 "where": [
-"guide_static.py:2417"
+"guide_static.py:2471"
 ],
 "n": 1
 },
 {
 "ko": "곳)",
 "where": [
-"guide_static.py:2420"
+"guide_static.py:2474"
 ],
 "n": 1
 },
 {
 "ko": "은신처 업그레이드 총정리",
 "where": [
-"guide_static.py:2421"
+"guide_static.py:2475"
 ],
 "n": 1
 },
 {
 "ko": "시설",
 "where": [
-"guide_static.py:2421",
-"guide_static.py:2428",
-"guide_static.py:3125",
-"guide_static.py:3130"
+"guide_static.py:2475",
+"guide_static.py:2482",
+"guide_static.py:3196",
+"guide_static.py:3201"
 ],
 "n": 5
 },
 {
 "ko": "개 · 단계별 재료·조건·효과·제작 · 데이터 기준",
 "where": [
-"guide_static.py:2422"
+"guide_static.py:2476"
 ],
 "n": 1
 },
 {
 "ko": "1.1.0에서 1~3단계 일부 재료의 인레이드 조건이 빠지고 돈 요구가 추가됐습니다. 아래 숫자는 현재 데이터 기준입니다.",
 "where": [
-"guide_static.py:2422"
+"guide_static.py:2476"
 ],
 "n": 1
 },
 {
 "ko": "다른 시설의 선행 조건으로 가장 많이 쓰이는 시설:",
 "where": [
-"guide_static.py:2422"
+"guide_static.py:2476"
 ],
 "n": 1
 },
 {
 "ko": "— 이 시설들을 먼저 올리면 막히는 곳이 줄어듭니다.",
 "where": [
-"guide_static.py:2424"
+"guide_static.py:2478"
 ],
 "n": 1
 },
 {
 "ko": "남은 재료 계산기",
 "where": [
-"guide_static.py:2424"
+"guide_static.py:2478"
 ],
 "n": 1
 },
 {
 "ko": "시설마다 지금 단계를 고르면 끝까지 올리는 데 남은 재료를 합쳐 보여 줍니다(이 브라우저에 저장).",
 "where": [
-"guide_static.py:2424"
+"guide_static.py:2478"
 ],
 "n": 1
 },
 {
 "ko": "입력 초기화",
 "where": [
-"guide_static.py:2424"
+"guide_static.py:2478"
 ],
 "n": 1
 },
 {
 "ko": "🔗 오버레이 연동으로 받은 은신처 단계를 채웠어요. 직접 고른 단계가 더 높으면 그대로 둡니다.",
 "where": [
-"guide_static.py:2424"
+"guide_static.py:2478"
 ],
 "n": 1
 },
 {
 "ko": "남은 재료",
 "where": [
-"guide_static.py:2428"
+"guide_static.py:2482"
 ],
 "n": 1
 },
 {
 "ko": "1단계 선행 조건",
 "where": [
-"guide_static.py:2428"
+"guide_static.py:2482"
 ],
 "n": 1
 },
 {
 "ko": "다른 시설 해금",
 "where": [
-"guide_static.py:2428"
+"guide_static.py:2482"
 ],
 "n": 1
 },
 {
 "ko": "최종 단계 효과",
 "where": [
-"guide_static.py:2428"
+"guide_static.py:2482"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 은신처 업그레이드 총정리 — 시설별 재료·조건·효과, 남은 재료 계산기 | 탈콥 가이드",
 "where": [
-"guide_static.py:2433"
+"guide_static.py:2487"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 은신처 시설",
 "where": [
-"guide_static.py:2434"
+"guide_static.py:2488"
 ],
 "n": 1
 },
 {
 "ko": "개의 단계별 업그레이드 재료·돈·선행 조건·효과를 정리하고, 현재 단계를 입력하면 남은 재료를 계산해 줍니다. PVP·PVE. 데이터 기준",
 "where": [
-"guide_static.py:2434"
+"guide_static.py:2488"
 ],
 "n": 1
 },
 {
 "ko": "그라운드 제로 튜토리얼을",
 "where": [
-"guide_static.py:2445"
+"guide_static.py:2499"
 ],
 "n": 1
 },
 {
 "ko": "탈출구(Skyside 건물 뒤)로 탈출합니다. 화면 안내는 따라 하지 않아도 됩니다.",
 "where": [
-"guide_static.py:2445"
+"guide_static.py:2499"
 ],
 "n": 1
 },
 {
 "ko": "상인 대화 시작",
 "where": [
-"guide_static.py:2446"
+"guide_static.py:2500"
 ],
 "n": 1
 },
 {
 "ko": "테라피스트",
 "where": [
-"guide_static.py:2447",
-"guide_static.py:2533",
-"guide_static.py:3453"
+"guide_static.py:2501",
+"guide_static.py:2587",
+"guide_static.py:3524"
 ],
 "n": 3
 },
 {
 "ko": "대화한 뒤",
 "where": [
-"guide_static.py:2447"
+"guide_static.py:2501"
 ],
 "n": 1
 },
 {
 "ko": "를 건넵니다. 돈은 인레이드가 아니어도 됩니다.",
 "where": [
-"guide_static.py:2447"
+"guide_static.py:2501"
 ],
 "n": 1
 },
 {
 "ko": "맵: 타르코프 시내",
 "where": [
-"guide_static.py:2447"
+"guide_static.py:2501"
 ],
 "n": 1
 },
 {
 "ko": "래그맨",
 "where": [
-"guide_static.py:2448",
-"guide_static.py:2533",
-"guide_static.py:3454"
+"guide_static.py:2502",
+"guide_static.py:2587",
+"guide_static.py:3525"
 ],
 "n": 3
 },
 {
 "ko": "인터체인지",
 "where": [
-"guide_static.py:2448"
+"guide_static.py:2502"
 ],
 "n": 1
 },
 {
 "ko": "에서",
 "where": [
-"guide_static.py:2448"
+"guide_static.py:2502"
 ],
 "n": 1
 },
 {
 "ko": "로 탈출하고 래그맨에게 보고합니다. 탈출이 어려우면",
 "where": [
-"guide_static.py:2448"
+"guide_static.py:2502"
 ],
 "n": 1
 },
 {
 "ko": "3번 들어가기만",
 "where": [
-"guide_static.py:2448"
+"guide_static.py:2502"
 ],
 "n": 1
 },
 {
 "ko": "해도 됩니다.",
 "where": [
-"guide_static.py:2448"
+"guide_static.py:2502"
 ],
 "n": 1
 },
 {
 "ko": "상인: 스키어 · 맵: 세관",
 "where": [
-"guide_static.py:2449"
+"guide_static.py:2503"
 ],
 "n": 1
 },
 {
 "ko": "스키어",
 "where": [
-"guide_static.py:2450",
-"guide_static.py:2454",
-"guide_static.py:3453"
+"guide_static.py:2504",
+"guide_static.py:2508",
+"guide_static.py:3524"
 ],
 "n": 3
 },
 {
 "ko": "세관",
 "where": [
-"guide_static.py:2450",
-"guide_static.py:2965"
+"guide_static.py:2504",
+"guide_static.py:3034"
 ],
 "n": 2
 },
 {
 "ko": "생존·런스루 탈출(또는 3회 방문) + 인레이드",
 "where": [
-"guide_static.py:2450",
-"guide_static.py:2452"
+"guide_static.py:2504",
+"guide_static.py:2506"
 ],
 "n": 2
 },
 {
 "ko": "건축 자재·공구 아무거나 5개",
 "where": [
-"guide_static.py:2450"
+"guide_static.py:2504"
 ],
 "n": 1
 },
 {
 "ko": "를 한 번에 제출합니다(나눠 내기 불가).",
 "where": [
-"guide_static.py:2450"
+"guide_static.py:2504"
 ],
 "n": 1
 },
 {
 "ko": "인레이드 건축 자재·공구 5개",
 "where": [
-"guide_static.py:2451"
+"guide_static.py:2505"
 ],
 "n": 1
 },
 {
 "ko": "상인: 메카닉 · 맵: 공장",
 "where": [
-"guide_static.py:2451"
+"guide_static.py:2505"
 ],
 "n": 1
 },
 {
 "ko": "메카닉",
 "where": [
-"guide_static.py:2452",
-"guide_static.py:2460",
-"guide_static.py:3453"
+"guide_static.py:2506",
+"guide_static.py:2514",
+"guide_static.py:3524"
 ],
 "n": 3
 },
 {
 "ko": "공장",
 "where": [
-"guide_static.py:2452"
+"guide_static.py:2506"
 ],
 "n": 1
 },
 {
 "ko": "무기 아무거나 2정",
 "where": [
-"guide_static.py:2452"
+"guide_static.py:2506"
 ],
 "n": 1
 },
 {
 "ko": "을 제출합니다.",
 "where": [
-"guide_static.py:2452"
+"guide_static.py:2506"
 ],
 "n": 1
 },
 {
 "ko": "인레이드 무기 2정",
 "where": [
-"guide_static.py:2453"
+"guide_static.py:2507"
 ],
 "n": 1
 },
 {
 "ko": "상인: 프라퍼 · 맵: 삼림",
 "where": [
-"guide_static.py:2453"
+"guide_static.py:2507"
 ],
 "n": 1
 },
 {
 "ko": "삼림",
 "where": [
-"guide_static.py:2454",
-"guide_static.py:2965"
+"guide_static.py:2508",
+"guide_static.py:3034"
 ],
 "n": 2
 },
 {
 "ko": "에서 아무 적 3명 처치 + 삼림 생존·런스루 탈출(또는 3회 방문). 처치와 탈출은 다른 레이드여도 됩니다.",
 "where": [
-"guide_static.py:2454"
+"guide_static.py:2508"
 ],
 "n": 1
 },
 {
 "ko": "상인: 피스키퍼 · 맵: 해안선",
 "where": [
-"guide_static.py:2455"
+"guide_static.py:2509"
 ],
 "n": 1
 },
 {
 "ko": "해안선",
 "where": [
-"guide_static.py:2456",
-"guide_static.py:2965"
+"guide_static.py:2510",
+"guide_static.py:3034"
 ],
 "n": 2
 },
 {
 "ko": "남동쪽 끝, 터미널 앞 감시탑의",
 "where": [
-"guide_static.py:2456"
+"guide_static.py:2510"
 ],
 "n": 1
 },
 {
 "ko": "인터콤",
 "where": [
-"guide_static.py:2456"
+"guide_static.py:2510"
 ],
 "n": 1
 },
 {
 "ko": "을 씁니다. 터미널 담장에 붙지 말고, 경비병을 쏘지 말고,",
 "where": [
-"guide_static.py:2456"
+"guide_static.py:2510"
 ],
 "n": 1
 },
 {
 "ko": "떠나라는 말을 들은 뒤 인터콤을 연타하지 마세요(사살됩니다).",
 "where": [
-"guide_static.py:2457"
+"guide_static.py:2511"
 ],
 "n": 1
 },
 {
 "ko": "다음 단계",
 "where": [
-"guide_static.py:2457"
+"guide_static.py:2511"
 ],
 "n": 1
 },
 {
 "ko": "프라퍼",
 "where": [
-"guide_static.py:2458",
-"guide_static.py:3453"
+"guide_static.py:2512",
+"guide_static.py:3524"
 ],
 "n": 2
 },
 {
 "ko": "해안선 생존·런스루 탈출(또는 3회 방문) 후",
 "where": [
-"guide_static.py:2458"
+"guide_static.py:2512"
 ],
 "n": 1
 },
 {
 "ko": "PMC 인식표 5개",
 "where": [
-"guide_static.py:2458",
-"guide_static.py:2459"
+"guide_static.py:2512",
+"guide_static.py:2513"
 ],
 "n": 2
 },
 {
 "ko": "를 건넵니다. 인식표는 인레이드가 아니어도 되고 직접 처치하지 않아도 됩니다.",
 "where": [
-"guide_static.py:2458"
+"guide_static.py:2512"
 ],
 "n": 1
 },
 {
 "ko": "맵: 리저브",
 "where": [
-"guide_static.py:2459"
+"guide_static.py:2513"
 ],
 "n": 1
 },
 {
 "ko": "8,000달러",
 "where": [
-"guide_static.py:2460"
+"guide_static.py:2514"
 ],
 "n": 1
 },
 {
 "ko": "를 건넵니다. 달러는 피스키퍼에게 루블로 살 수 있습니다.",
 "where": [
-"guide_static.py:2460"
+"guide_static.py:2514"
 ],
 "n": 1
 },
 {
 "ko": "맵: 등대",
 "where": [
-"guide_static.py:2460"
+"guide_static.py:2514"
 ],
 "n": 1
 },
 {
 "ko": "연구소 출입 카드",
 "where": [
-"guide_static.py:2461",
-"guide_static.py:2464"
+"guide_static.py:2515",
+"guide_static.py:2518"
 ],
 "n": 2
 },
 {
 "ko": "를 들고 타르코프 시내(클리모바 16A 앞 지하 입구) 또는 공장(침수된 지하와 이어진 하수 터널)의",
 "where": [
-"guide_static.py:2461"
+"guide_static.py:2515"
 ],
 "n": 1
 },
 {
 "ko": "트랜짓으로 연구소에 들어갑니다(레이드 시작 1분 뒤부터 이용 가능). 2층 연구소장실(O21) · 1층 격납고 옆 서버실 ·",
 "where": [
-"guide_static.py:2462"
+"guide_static.py:2516"
 ],
 "n": 1
 },
 {
 "ko": "지하",
 "where": [
-"guide_static.py:2463"
+"guide_static.py:2517"
 ],
 "n": 1
 },
 {
 "ko": "탈출구의 하수 탈출로를 차례로 확인하면 끝(탈출구 작동·생존 불필요).",
 "where": [
-"guide_static.py:2463"
+"guide_static.py:2517"
 ],
 "n": 1
 },
 {
 "ko": "맵: 연구소 · 업적 Pathfinder",
 "where": [
-"guide_static.py:2464"
+"guide_static.py:2518"
 ],
 "n": 1
 },
 {
 "ko": "레벨+",
 "where": [
-"guide_static.py:2497"
+"guide_static.py:2551"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 초반 가이드",
 "where": [
-"guide_static.py:2532"
+"guide_static.py:2586"
 ],
 "n": 1
 },
 {
 "ko": "투어(Tour)부터 10레벨까지",
 "where": [
-"guide_static.py:2532"
+"guide_static.py:2586"
 ],
 "n": 1
 },
 {
 "ko": "새 캐릭터·프레스티지 직후 기준 · 게임",
 "where": [
-"guide_static.py:2532"
+"guide_static.py:2586"
 ],
 "n": 1
 },
 {
 "ko": "먼저 이 세 가지만",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "시작하면 스토리",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "투어(Tour)",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "가 자동으로 붙습니다. 이걸 순서대로 밀어야",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "스키어 → 메카닉 → 프라퍼 → 피스키퍼",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "와 맵이 하나씩 열립니다.",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "사이드 퀘스트는 상인이 열린 뒤 그 상인의",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "등급(LL)별로 2~4개씩 묶음",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "으로 열립니다. 몇 개 깨거나 등급이 오르면 다음 묶음이 나옵니다.",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "투어 제출용",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "인레이드 건축 자재·공구 5개, 인레이드 무기 2정",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "과 돈(",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": ")을 미리 챙겨 두면 막히지 않습니다.",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "처음 열려 있는 것",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "투어 순서",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "사이드 퀘스트 여는 법",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "특별한 상인 해금",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "10레벨까지 퀘스트",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "미리 모을 아이템",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "초반 팁",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "1. 처음 열려 있는 것",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "(펜스는 스캐브 평판으로 거래)",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "그라운드 제로 — 나머지 맵은 투어를 진행하며 열립니다",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "나중에 열리는 상인",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "스키어·메카닉·프라퍼·피스키퍼(투어), 예거·레프·등대지기(사이드 퀘스트, 아래 4번)",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "2. 투어(Tour) 진행 순서",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "할 일",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "준비물",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "열리는 것",
 "where": [
-"guide_static.py:2533"
+"guide_static.py:2587"
 ],
 "n": 1
 },
 {
 "ko": "등대 해금 금액은 공식 위키 기준 8,000달러입니다(2만·2만5천 달러로 적힌 글은 옛 정보이거나 잘못된 정보).",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "3회 방문",
 "where": [
-"guide_static.py:2548",
-"guide_static.py:2576"
+"guide_static.py:2602",
+"guide_static.py:2630"
 ],
 "n": 2
 },
 {
 "ko": "은 생존 탈출 대신 쓸 수 있는 조건이라, 탈출이 어렵다면 들어갔다 나오기를 반복해도 됩니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "3. 사이드 퀘스트가 열리는 방식 (1.1.0 이후)",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "상인마다",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "LL1 기본 퀘스트",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "가 먼저 열리고, 그중 몇 개를 깨거나 상인 등급이 오르면 다음 묶음(2~4개)이 열립니다. 퀘스트 페이지의",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "묶음 해금 N개",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "가 이 조건입니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "일부는 예전처럼",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "연쇄",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "로 이어지고, 끝에 희귀 구매·제작 해금 같은 큰 보상이 있습니다(첫 퀘스트를 받을 때 보상이 미리 보입니다).",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "스캐브 처치 목표에는 일반·저격 스캐브와 플레이어 스캐브만 인정됩니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "보스·레이더·로그는 안 셉니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "파티원이 대신 채워 줄 수 있는 목표가 생겼습니다(퀘스트 화면에 아이콘). 일부 퀘스트는 여전히 솔로 전용입니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "상인 등급 조건에서",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "판매액 조건이 없어지고",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "레벨·평판만 남았습니다.",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "4. 특별한 상인 해금",
 "where": [
-"guide_static.py:2548"
+"guide_static.py:2602"
 ],
 "n": 1
 },
 {
 "ko": "예거",
 "where": [
-"guide_static.py:2548",
-"guide_static.py:3454"
+"guide_static.py:2602",
+"guide_static.py:3525"
 ],
 "n": 2
 },
 {
 "ko": "(메카닉) — 메카닉과 대화하면 받습니다. 삼림의 예거 캠프에서 암호 메시지를 찾아 건네면 예거가 열립니다. 예거는 식량·의료 퀘스트와 은신처에 중요하니 메카닉이 열리면 바로 진행하세요.",
 "where": [
-"guide_static.py:2561"
+"guide_static.py:2615"
 ],
 "n": 1
 },
 {
 "ko": "레프",
 "where": [
-"guide_static.py:2561",
-"guide_static.py:3454"
+"guide_static.py:2615",
+"guide_static.py:3525"
 ],
 "n": 2
 },
 {
 "ko": "손쉬운 돈벌이 - 파트 1",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "(스키어) —",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "10레벨 + 스키어 LL2",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": ". 세관 스캐브 요새 거실에 포스터를 붙이면 레프가 열립니다.",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "1.1.5에서 개편된",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "빛을 향해",
 "where": [
-"guide_static.py:2562",
-"guide_static.py:3255"
+"guide_static.py:2616",
+"guide_static.py:3326"
 ],
 "n": 2
 },
 {
 "ko": "체인 — 투어로",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "등대",
 "where": [
-"guide_static.py:2562",
-"guide_static.py:2965"
+"guide_static.py:2616",
+"guide_static.py:3034"
 ],
 "n": 2
 },
 {
 "ko": "를 연 상태 + 펜스·레프를 뺀",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "모든 상인 LL3",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "+ 펜스 평판",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "+ 메카닉에게 등대지기 이야기를 물어보면 시작합니다. (옛 가이드의",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "33레벨·네트워크 공급자",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "조건은 지금 맞지 않습니다)",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "5. 초반에 받는 퀘스트 — 10레벨 무렵까지 (",
 "where": [
-"guide_static.py:2562"
+"guide_static.py:2616"
 ],
 "n": 1
 },
 {
 "ko": "상인 등급 LL1·레벨 조건 10 이하이고, 첫 묶음까지 열리며, 앞 퀘스트도 모두 초반인 것만 골랐습니다(다른 퀘스트와 택일인 스토리성 퀘스트는 제외). 해당 상인이 투어로 열려 있어야 받을 수 있습니다.",
 "where": [
-"guide_static.py:2566"
+"guide_static.py:2620"
 ],
 "n": 1
 },
 {
 "ko": "라벨: LL1 = 바로 · 묶음 1 = 같은 상인의 앞 묶음 1개 완료 후 · 연쇄 = 앞 퀘스트 완료 후. 전체 목록은",
 "where": [
-"guide_static.py:2566"
+"guide_static.py:2620"
 ],
 "n": 1
 },
 {
 "ko": "에서 상인별로 볼 수 있습니다.",
 "where": [
-"guide_static.py:2566"
+"guide_static.py:2620"
 ],
 "n": 1
 },
 {
 "ko": "6. 미리 모아 둘 아이템",
 "where": [
-"guide_static.py:2569"
+"guide_static.py:2623"
 ],
 "n": 1
 },
 {
 "ko": "(투어 250,000₽·8,000$ + 위 퀘스트들의 현금 제출)",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "투어 제출용 (인레이드)",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "건축 자재·공구 카테고리 아무거나",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "5개",
 "where": [
-"guide_static.py:2572",
-"guide_static.py:2572"
+"guide_static.py:2626",
+"guide_static.py:2626"
 ],
 "n": 2
 },
 {
 "ko": "(볼트·너트·전선·테이프 등) · 아무 무기",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "2정",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "· PMC 인식표",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "(인레이드 불필요)",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "10레벨까지 퀘스트 제출용 — 인레이드 필요",
 "where": [
-"guide_static.py:2572"
+"guide_static.py:2626"
 ],
 "n": 1
 },
 {
 "ko": "10레벨까지 퀘스트 제출용 — 사서 내도 되는 것",
 "where": [
-"guide_static.py:2574"
+"guide_static.py:2628"
 ],
 "n": 1
 },
 {
 "ko": "은신처 1단계 — 인레이드 필요 (PVP)",
 "where": [
-"guide_static.py:2575"
+"guide_static.py:2629"
 ],
 "n": 1
 },
 {
 "ko": "전체 퀘스트·은신처 기준 총량은",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": ", 은신처 단계별 재료는",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "에서 볼 수 있습니다.",
 "where": [
-"guide_static.py:2576",
-"guide_static.py:3138",
-"guide_static.py:3281"
+"guide_static.py:2630",
+"guide_static.py:3209",
+"guide_static.py:3352"
 ],
 "n": 3
 },
 {
 "ko": "7. 초반 팁",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "인레이드(FiR) 표시",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "는 레이드에서 직접 주워 살아서 나온 아이템에만 붙습니다. 보험으로 돌아온 장비, 상인·플리에서 산 물건에는 없습니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "1.1.0부터 상인 판매가는 평균 25% 오르고, 상인 매입가는 20% 내렸으며, 플리마켓 수수료는 3%에서 5%로 올랐습니다. 파는 곳을 고를 때 차이가 커졌습니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "투어의",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "인식표는 인레이드 불필요",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "조건을 활용하면 장비가 부족한 초반에도 막힘 없이 맵을 열 수 있습니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지를 했다면",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지 조건·보상",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "도 확인하세요. PVE 1단계는 PVP보다 조건이 가볍습니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "레이드 중에는 아이템에 마우스를 올리고 F2 —",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "가 이 아이템이 퀘스트·은신처에 필요한지, 얼마에 팔리는지 바로 보여 줍니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "출처: 공식 위키",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "문서, 패치 노트 1.1.0(2026-08-03)·1.1.5(2026-09-08)·1.2.0(2026-10-06)·1.3.0(2026-10-29, 투어·상인 해금 변경 없음 확인), tarkov.dev 퀘스트 데이터. 문장은 직접 정리했습니다.",
 "where": [
-"guide_static.py:2576"
+"guide_static.py:2630"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 초반 가이드 — 투어(Tour) 순서·상인/맵 해금·10레벨까지 퀘스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:2588"
+"guide_static.py:2642"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 새 캐릭터·프레스티지 직후 진행 순서: 투어로 스키어·메카닉·프라퍼·피스키퍼와 맵 여는 법, 사이드 퀘스트 묶음 해금, 예거·레프·등대지기 해금, 10레벨까지 퀘스트와 미리 모을 인레이드 아이템.",
 "where": [
-"guide_static.py:2589"
+"guide_static.py:2643"
 ],
 "n": 1
 },
 {
 "ko": "달성",
 "where": [
-"guide_static.py:2600"
+"guide_static.py:2654"
 ],
 "n": 1
 },
 {
 "ko": "특정 퀘스트 완료",
 "where": [
-"guide_static.py:2604"
+"guide_static.py:2658"
 ],
 "n": 1
 },
 {
 "ko": "창고에",
 "where": [
-"guide_static.py:2615"
+"guide_static.py:2669"
 ],
 "n": 1
 },
 {
 "ko": "바닥 꾸미기 Luxury flooring · 가위·바위·보 제스처 · 장비대 마네킹 포즈 Feel My Gains",
 "where": [
-"guide_static.py:2623"
+"guide_static.py:2677"
 ],
 "n": 1
 },
 {
 "ko": "벽 꾸미기 Quiet Luxury · OK 제스처 · 일일·주간 작전 과제 +1개 · 푸시 대거(PVP Akula, PVE Kasatka) · 메인 메뉴 배경 CyberTark",
 "where": [
-"guide_static.py:2625"
+"guide_static.py:2679"
 ],
 "n": 1
 },
 {
 "ko": "천장 꾸미기 Dropped ceiling · 사격장 표적(PVP 까마귀, PVE 모기) · 마네킹 포즈 Honor · PMC Origins 피규어 · BEAR 목소리 Vitaly·USEC 목소리 Rob",
 "where": [
-"guide_static.py:2627"
+"guide_static.py:2681"
 ],
 "n": 1
 },
 {
 "ko": "바닥 꾸미기 Gray wood · 사격장 표적(PVP 다트, PVE 개미) · 마네킹 포즈 Jomoon · 하와이안 셔츠(BEAR 초록, USEC 파랑)",
 "where": [
-"guide_static.py:2629"
+"guide_static.py:2683"
 ],
 "n": 1
 },
 {
 "ko": "벽 꾸미기 White walls · 사격장 표적(PVP 쥐, PVE 호박벌) · 마네킹 포즈 T-pose · NKVD Finka 칼 · 외형 BEAR Basilevs·USEC Shawn",
 "where": [
-"guide_static.py:2631"
+"guide_static.py:2685"
 ],
 "n": 1
 },
 {
 "ko": "천장 꾸미기 Gilded ceiling · 사격장 표적(PVP 수탉, PVE 왕지네) · 마네킹 포즈 Praise! · 강화 PMC 피규어 · 특별판 감마 컨테이너 · 메인 메뉴 배경 Hotline Tarkov",
 "where": [
-"guide_static.py:2633"
+"guide_static.py:2687"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지 보상 단계별 (PVP·PVE 공통 + 차이)",
 "where": [
-"guide_static.py:2642"
+"guide_static.py:2696"
 ],
 "n": 1
 },
 {
 "ko": "모든 단계 공통: 그 단계 전용 도그태그·완장·업적·프로필 아이콘(닉네임 옆 표시)과 카리스마 스킬 +1.",
 "where": [
-"guide_static.py:2643"
+"guide_static.py:2697"
 ],
 "n": 1
 },
 {
 "ko": "스킬·무기 숙련도 이월 비율과 이월 칸은 단계가 오를수록 커지고, PVE는 타르코인을 추가로 받습니다. 프레스티지 단계와 보상은 프로필을 초기화해도 영구히 남습니다.",
 "where": [
-"guide_static.py:2644"
+"guide_static.py:2698"
 ],
 "n": 1
 },
 {
 "ko": "스킬 이월 PVP / PVE",
 "where": [
-"guide_static.py:2645"
+"guide_static.py:2699"
 ],
 "n": 1
 },
 {
 "ko": "이월 칸",
 "where": [
-"guide_static.py:2645",
-"guide_static.py:2695",
-"guide_static.py:2701"
+"guide_static.py:2699",
+"guide_static.py:2749",
+"guide_static.py:2755"
 ],
 "n": 3
 },
 {
 "ko": "타르코인(PVE)",
 "where": [
-"guide_static.py:2645"
+"guide_static.py:2699"
 ],
 "n": 1
 },
 {
 "ko": "포스터 PVP / PVE",
 "where": [
-"guide_static.py:2645"
+"guide_static.py:2699"
 ],
 "n": 1
 },
 {
 "ko": "그 외 보상",
 "where": [
-"guide_static.py:2645"
+"guide_static.py:2699"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지 자주 묻는 질문",
 "where": [
-"guide_static.py:2647"
+"guide_static.py:2701"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지를 하면 무엇이 남고 무엇이 사라지나요?",
 "where": [
-"guide_static.py:2649"
+"guide_static.py:2703"
 ],
 "n": 1
 },
 {
 "ko": "남는 것은 프로필 통계, 업적, 아레나 ARP 등급과 무기고 진행도, 그리고 위 표의 비율만큼의 스킬·무기 숙련도와 이월 칸에 넣은 아이템입니다. 레벨, 퀘스트 진행, 상인 평판, 은신처, 보관함의 나머지 아이템은 초기화됩니다.",
 "where": [
-"guide_static.py:2650"
+"guide_static.py:2704"
 ],
 "n": 1
 },
 {
 "ko": "PVE와 PVP 프레스티지는 어떻게 다른가요?",
 "where": [
-"guide_static.py:2651"
+"guide_static.py:2705"
 ],
 "n": 1
 },
 {
 "ko": "조건이 다릅니다. PVE 1단계는 레벨 15와 500만 루블만 있으면 되고, PVP 1단계는 레벨 25, 퀘스트 「New Beginning」, 은신처 3개(정보 센터 1·영양 유닛 2·휴식 공간 2), 1,000만 루블이 필요합니다. 2단계부터는 투어 완료와 스킬 조건이 양쪽에 붙습니다. 보상은 이월 비율이 PVE 쪽이 두 배 가까이 높고, PVE에만 타르코인이 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.",
 "where": [
-"guide_static.py:2652"
+"guide_static.py:2706"
 ],
 "n": 1
 },
 {
 "ko": "조건은 어디서 확인하나요?",
 "where": [
-"guide_static.py:2653"
+"guide_static.py:2707"
 ],
 "n": 1
 },
 {
 "ko": "위 PVE·PVP 표는 공개 데이터의 조건에 공식 위키의",
 "where": [
-"guide_static.py:2654"
+"guide_static.py:2708"
 ],
 "n": 1
 },
 {
 "ko": "스토리 챕터 조건(📖)",
 "where": [
-"guide_static.py:2654"
+"guide_static.py:2708"
 ],
 "n": 1
 },
 {
 "ko": "을 더한 것입니다(공개 데이터에는 스토리 조건이 빠져 있습니다). 레벨·퀘스트·스토리 챕터·스킬·은신처·보유 루블을 모두 채워야 합니다. 5단계부터는 「Collector」(카파) 완료도 들어갑니다. 공식 위키는 PVE 2단계 이상에도 「New Beginning」 퀘스트 조건을 적고 있지만 공개 데이터에는 없어, 어느 쪽이 맞는지는 확인되지 않았습니다.",
 "where": [
-"guide_static.py:2654"
+"guide_static.py:2708"
 ],
 "n": 1
 },
 {
 "ko": "투어(Tour) 완료",
 "where": [
-"guide_static.py:2662",
-"guide_static.py:2663",
-"guide_static.py:2664",
-"guide_static.py:2665"
+"guide_static.py:2716",
+"guide_static.py:2717",
+"guide_static.py:2718",
+"guide_static.py:2719"
 ],
 "n": 4
 },
 {
 "ko": "추락하는 하늘(Falling Skies) 완료",
 "where": [
-"guide_static.py:2663"
+"guide_static.py:2717"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 탈출 티켓(Ticket from Tarkov — 크루글로프의 RFID 키카드) 획득",
 "where": [
-"guide_static.py:2664"
+"guide_static.py:2718"
 ],
 "n": 1
 },
 {
 "ko": "그들은 이미 여기에(They Are Already Here) 완료",
 "where": [
-"guide_static.py:2665"
+"guide_static.py:2719"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 탈출 티켓(Ticket from Tarkov) 획득",
 "where": [
-"guide_static.py:2665"
+"guide_static.py:2719"
 ],
 "n": 1
 },
 {
 "ko": "더 티켓(The Ticket) 완료",
 "where": [
-"guide_static.py:2666"
+"guide_static.py:2720"
 ],
 "n": 1
 },
 {
 "ko": "📖 스토리 챕터:",
 "where": [
-"guide_static.py:2676"
+"guide_static.py:2730"
 ],
 "n": 1
 },
 {
 "ko": "평판 +",
 "where": [
-"guide_static.py:2687"
+"guide_static.py:2741"
 ],
 "n": 1
 },
 {
 "ko": "칸",
 "where": [
-"guide_static.py:2689"
+"guide_static.py:2743",
+"guide_static.py:3906",
+"guide_static.py:3928"
 ],
-"n": 1
+"n": 3
 },
 {
 "ko": "조건",
 "where": [
-"guide_static.py:2695"
+"guide_static.py:2749"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지 조건 총정리",
 "where": [
-"guide_static.py:2697"
+"guide_static.py:2751"
 ],
 "n": 1
 },
 {
 "ko": "PVE·PVP 단계별 조건과 보상 · 데이터 기준",
 "where": [
-"guide_static.py:2698"
+"guide_static.py:2752"
 ],
 "n": 1
 },
 {
 "ko": "프레스티지는 조건을 채운 고레벨 캐릭터가 진행도를 초기화하고 다시 시작하는 대신 고유 보상을 받는 시스템입니다.",
 "where": [
-"guide_static.py:2699"
+"guide_static.py:2753"
 ],
 "n": 1
 },
 {
 "ko": "1.2.0(2026-10-06)부터",
 "where": [
-"guide_static.py:2700"
+"guide_static.py:2754"
 ],
 "n": 1
 },
 {
 "ko": "PVE에도 6단계",
 "where": [
-"guide_static.py:2700"
+"guide_static.py:2754"
 ],
 "n": 1
 },
 {
 "ko": "가 생겼고, PVE 1단계는 PVP보다 조건이 가볍습니다. 초기화할 때 장비 일부와 스킬·무기 숙련도 일부(이월 비율은 단계별로 PVE 10~50%, PVP 5~30% — 공식 위키 Prestige 문서 기준)를 가져갈 수 있고,",
 "where": [
-"guide_static.py:2700"
+"guide_static.py:2754"
 ],
 "n": 1
 },
 {
 "ko": "크기만큼 허용된 종류의 아이템을 옮길 수 있습니다. PVE 프레스티지는 PVE 캐릭터만 초기화합니다.",
 "where": [
-"guide_static.py:2701"
+"guide_static.py:2755"
 ],
 "n": 1
 },
 {
 "ko": "초기화 뒤 초반 가이드 →",
 "where": [
-"guide_static.py:2702"
+"guide_static.py:2756"
 ],
 "n": 1
 },
 {
 "ko": "출처: tarkov.dev 프레스티지 데이터, 패치 노트 1.2.0. 시세 오버레이 v1.2.5는 PVE 프레스티지를 게임 로그로 자동 감지해 퀘스트 진행을 새로 시작합니다.",
 "where": [
-"guide_static.py:2705"
+"guide_static.py:2759"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 프레스티지 조건 총정리 — PVE·PVP 단계별 요구사항과 보상 | 탈콥 가이드",
 "where": [
-"guide_static.py:2707"
+"guide_static.py:2761"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 프레스티지 PVE 6단계·PVP 단계별 조건(레벨·퀘스트·은신처·스킬·보유 금액)과 보상, 초기화 때 가져가는 보관함 크기. 1.2.0 PVE 프레스티지 반영.",
 "where": [
-"guide_static.py:2708"
+"guide_static.py:2762"
 ],
 "n": 1
 },
 {
 "ko": "명",
 "where": [
-"guide_static.py:2731",
-"guide_static.py:2731"
+"guide_static.py:2785",
+"guide_static.py:2785"
 ],
 "n": 2
 },
 {
 "ko": "레이드 시간",
 "where": [
-"guide_static.py:2784"
+"guide_static.py:2838"
 ],
 "n": 1
 },
 {
 "ko": "인원",
 "where": [
-"guide_static.py:2785"
+"guide_static.py:2839"
 ],
 "n": 1
 },
 {
 "ko": "입장 레벨",
 "where": [
-"guide_static.py:2788"
+"guide_static.py:2842"
 ],
 "n": 1
 },
 {
 "ko": "레벨 이상",
 "where": [
-"guide_static.py:2788",
-"guide_static.py:2792"
+"guide_static.py:2842",
+"guide_static.py:2846"
 ],
 "n": 2
 },
 {
 "ko": "입장 아이템",
 "where": [
-"guide_static.py:2791"
+"guide_static.py:2845"
 ],
 "n": 1
 },
 {
 "ko": "변형",
 "where": [
-"guide_static.py:2795"
+"guide_static.py:2849"
 ],
 "n": 1
 },
 {
 "ko": "(같은 지역의 다른 판 — 보스·탈출구가 다를 수 있음)",
 "where": [
-"guide_static.py:2795"
+"guide_static.py:2849"
 ],
 "n": 1
 },
 {
 "ko": "유료",
 "where": [
-"guide_static.py:2829"
+"guide_static.py:2883"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키 표 기준 · 위치·조건은 공식 위키에서 확인",
 "where": [
-"guide_static.py:2835"
+"guide_static.py:2889"
 ],
 "n": 1
 },
 {
 "ko": "공용(PMC·스캐브)",
 "where": [
-"guide_static.py:2837"
+"guide_static.py:2891"
 ],
 "n": 1
 },
 {
 "ko": "이동",
 "where": [
-"guide_static.py:2844"
+"guide_static.py:2898"
 ],
 "n": 1
 },
 {
 "ko": "(표시 구역",
 "where": [
-"guide_static.py:2848"
+"guide_static.py:2902"
 ],
 "n": 1
 },
 {
 "ko": "거치 화기",
 "where": [
-"guide_static.py:2853"
+"guide_static.py:2907"
 ],
 "n": 1
 },
 {
 "ko": "곳",
 "where": [
-"guide_static.py:2853",
-"guide_static.py:2855",
+"guide_static.py:2907",
+"guide_static.py:2909",
+"guide_static.py:4330",
 "keys.html:85"
 ],
-"n": 3
+"n": 4
 },
 {
 "ko": "BTR 정류장",
 "where": [
-"guide_static.py:2855"
+"guide_static.py:2909"
 ],
 "n": 1
 },
 {
 "ko": "잠긴 곳",
 "where": [
-"guide_static.py:2857"
+"guide_static.py:2911"
 ],
 "n": 1
 },
 {
 "ko": "곳 —",
 "where": [
-"guide_static.py:2857"
+"guide_static.py:2911"
 ],
 "n": 1
 },
 {
 "ko": "맵별 열쇠",
 "where": [
-"guide_static.py:2857",
-"guide_static.py:2916",
-"guide_static.py:3004",
+"guide_static.py:2911",
+"guide_static.py:2985",
+"guide_static.py:3075",
 "keyfinder.html:78"
 ],
 "n": 4
@@ -5938,745 +6049,802 @@
 {
 "ko": "에서 열쇠 목록 보기",
 "where": [
-"guide_static.py:2857"
+"guide_static.py:2911"
 ],
 "n": 1
 },
 {
 "ko": "맵 정보 · 보스",
 "where": [
-"guide_static.py:2868"
+"guide_static.py:2922"
 ],
 "n": 1
 },
 {
 "ko": "· 탈출구",
 "where": [
-"guide_static.py:2868"
+"guide_static.py:2922"
 ],
 "n": 1
 },
 {
 "ko": "· 관련 퀘스트",
 "where": [
-"guide_static.py:2868"
+"guide_static.py:2922"
+],
+"n": 1
+},
+{
+"ko": "🎒 이 맵 출정 준비물",
+"where": [
+"guide_static.py:2923"
 ],
 "n": 1
 },
 {
 "ko": "이 맵은 이벤트 기간에만 들어갈 수 있습니다.",
 "where": [
-"guide_static.py:2869"
+"guide_static.py:2924"
 ],
 "n": 1
 },
 {
 "ko": "기본 정보",
 "where": [
-"guide_static.py:2871"
+"guide_static.py:2926"
 ],
 "n": 1
 },
 {
 "ko": "등장 적",
 "where": [
-"guide_static.py:2872"
+"guide_static.py:2927"
 ],
 "n": 1
 },
 {
 "ko": "감염자 계열은 이벤트 기간에만 출현하고, 다른 보스의 출현 확률도 이벤트 중에는 평소와 다를 수 있습니다.",
 "where": [
-"guide_static.py:2875"
+"guide_static.py:2930"
 ],
 "n": 1
 },
 {
 "ko": "출현 확률",
 "where": [
-"guide_static.py:2876"
+"guide_static.py:2931"
 ],
 "n": 1
 },
 {
 "ko": "출현 위치",
 "where": [
-"guide_static.py:2876"
+"guide_static.py:2931"
 ],
 "n": 1
 },
 {
 "ko": "호위",
 "where": [
-"guide_static.py:2876"
+"guide_static.py:2931"
 ],
 "n": 1
 },
 {
 "ko": "탈출구",
 "where": [
-"guide_static.py:2878",
-"guide_static.py:2879"
+"guide_static.py:2933",
+"guide_static.py:2934"
 ],
 "n": 2
 },
 {
 "ko": "목록은 공식 위키 탈출구 표 기준으로 지금 게임에 있는 것만 남겼습니다(공개 데이터에 남아 있던 1.0 개편 전 탈출구는 뺐습니다). 조건이 적혀 있지 않은 탈출구는 대개 그냥 나갈 수 있습니다. 조건은 공식 위키 기준이며, 탈출구가 열리는지는 레이드마다 달라질 수 있으니 게임 안 탈출구 목록(O키 두 번)도 확인하세요.",
 "where": [
-"guide_static.py:2878"
+"guide_static.py:2933"
 ],
 "n": 1
 },
 {
 "ko": "다른 맵으로 이동(트랜짓)",
 "where": [
-"guide_static.py:2880"
+"guide_static.py:2935"
 ],
 "n": 1
 },
 {
 "ko": "이 맵의 퀘스트",
 "where": [
-"guide_static.py:2881"
+"guide_static.py:2936"
 ],
 "n": 1
 },
 {
 "ko": "공략 정보 — 탈출구·보스·퀘스트",
 "where": [
-"guide_static.py:2884"
+"guide_static.py:2939"
 ],
 "n": 1
 },
 {
 "ko": "개 | 탈콥 가이드",
 "where": [
-"guide_static.py:2884"
+"guide_static.py:2939"
 ],
 "n": 1
 },
 {
 "ko": ") 맵 정보: 레이드",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": "분,",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": "명, 보스",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": ", 탈출구",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": "개, 트랜짓, 이 맵 퀘스트",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": "개. 데이터 기준",
 "where": [
-"guide_static.py:2885"
+"guide_static.py:2940"
 ],
 "n": 1
 },
 {
 "ko": "맵 공략:",
 "where": [
-"guide_static.py:2888"
+"guide_static.py:2943"
 ],
 "n": 1
 },
 {
 "ko": "· 탈출구 · 퀘스트",
 "where": [
-"guide_static.py:2888"
+"guide_static.py:2943"
 ],
 "n": 1
 },
 {
 "ko": "개 정리.",
 "where": [
-"guide_static.py:2888"
+"guide_static.py:2943"
 ],
 "n": 1
 },
 {
 "ko": "레이드",
 "where": [
-"guide_static.py:2912"
+"guide_static.py:2981"
 ],
 "n": 1
 },
 {
 "ko": "분 ·",
 "where": [
-"guide_static.py:2912"
+"guide_static.py:2981"
 ],
 "n": 1
 },
 {
 "ko": "명 · 탈출구",
 "where": [
-"guide_static.py:2912"
+"guide_static.py:2981"
 ],
 "n": 1
 },
 {
 "ko": "보스:",
 "where": [
-"guide_static.py:2913"
+"guide_static.py:2982"
 ],
 "n": 1
 },
 {
 "ko": "개 · 보스·탈출구·트랜짓·퀘스트 · 데이터 기준",
 "where": [
-"guide_static.py:2914"
+"guide_static.py:2983"
 ],
 "n": 1
 },
 {
 "ko": "보스별로 모아 보려면",
 "where": [
-"guide_static.py:2916"
+"guide_static.py:2985"
 ],
 "n": 1
 },
 {
 "ko": "보스 총정리",
 "where": [
-"guide_static.py:2916",
-"guide_static.py:2971",
-"guide_static.py:2996"
+"guide_static.py:2985",
+"guide_static.py:3040",
+"guide_static.py:3067"
 ],
 "n": 3
 },
 {
 "ko": ", 열쇠는",
 "where": [
-"guide_static.py:2916"
+"guide_static.py:2985"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 맵 정보 총정리 — 보스 출현 확률·탈출구·퀘스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:2918"
+"guide_static.py:2987"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 전체 맵(세관·삼림·해안선·인터체인지·리저브·등대·시내·연구소·쇄빙선 등)의 레이드 시간, 인원, 보스 출현 확률, 탈출구, 트랜짓, 맵별 퀘스트.",
 "where": [
-"guide_static.py:2919"
+"guide_static.py:2988"
 ],
 "n": 1
 },
 {
 "ko": "체력 합계",
 "where": [
-"guide_static.py:2956",
-"guide_static.py:2967"
+"guide_static.py:3025",
+"guide_static.py:3036"
 ],
 "n": 2
 },
 {
 "ko": "호위:",
 "where": [
-"guide_static.py:2958"
+"guide_static.py:3027"
 ],
 "n": 1
 },
 {
 "ko": "— 맵 전역에서 나올 수 있음",
 "where": [
-"guide_static.py:2968"
+"guide_static.py:3037"
 ],
 "n": 1
 },
 {
 "ko": "출현 확률은 공개 데이터에 없음(카르마가 낮은 PMC가 있는 레이드에 더 자주 나타나고, 1.3.0에서 카르마 낮은 플레이어가 없는 레이드의 출현 확률 계산 오류가 수정됨).",
 "where": [
-"guide_static.py:2969"
+"guide_static.py:3038"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키 Partisan",
 "where": [
-"guide_static.py:2970"
+"guide_static.py:3039"
 ],
 "n": 1
 },
 {
 "ko": "보스·특수 적",
 "where": [
-"guide_static.py:2971"
+"guide_static.py:3040"
 ],
 "n": 1
 },
 {
 "ko": "종 · 출현 맵과 확률 · 호위 · 데이터 기준",
 "where": [
-"guide_static.py:2971"
+"guide_static.py:3040"
 ],
 "n": 1
 },
 {
 "ko": "출현 확률은 레이드마다의 기본 확률이며, 이벤트 기간에는 크게 달라집니다(예: 2026-09 이벤트 때 글루하가 등대 정수장에 100% 출현). 같은 보스가 맵의 여러 변형(야간 공장 등)에 따로 나오면 각각 표시합니다.",
 "where": [
-"guide_static.py:2972"
+"guide_static.py:3041"
 ],
 "n": 1
 },
 {
 "ko": "감염자·감염된 타길라는 이벤트 기간에만 출현하며(",
 "where": [
-"guide_static.py:2973"
+"guide_static.py:3042"
 ],
 "n": 1
 },
 {
 "ko": "오염된 공장",
 "where": [
-"guide_static.py:2973"
+"guide_static.py:3042"
 ],
 "n": 1
 },
 {
 "ko": "오염된 연구소",
 "where": [
-"guide_static.py:2973"
+"guide_static.py:3042"
 ],
 "n": 1
 },
 {
 "ko": "참고), 아래 확률은 이벤트 중 값입니다.",
 "where": [
-"guide_static.py:2973"
+"guide_static.py:3042"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 보스 총정리 — 출현 맵·확률·위치·호위·체력 | 탈콥 가이드",
 "where": [
-"guide_static.py:2976"
+"guide_static.py:3045"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 보스",
 "where": [
-"guide_static.py:2977"
+"guide_static.py:3046"
 ],
 "n": 1
 },
 {
 "ko": "종(르샬라·킬라·타길라·세니타·글루하·슈트르만·카반·즈리야치 등)의 출현 맵, 출현 확률, 출현 위치, 호위 인원, 체력. 데이터 기준",
 "where": [
-"guide_static.py:2977"
+"guide_static.py:3046"
 ],
 "n": 1
 },
 {
 "ko": "열쇠통 스크린샷을 넣으면 열쇠를 맵별로 정리 · 브라우저 안에서만 처리",
 "where": [
-"guide_static.py:2988"
+"guide_static.py:3057"
+],
+"n": 1
+},
+{
+"ko": "무기 모딩 추천",
+"where": [
+"guide_static.py:3058",
+"guide_static.py:4093"
+],
+"n": 2
+},
+{
+"ko": "반동 최소·균형·인체공학 최대 조립 · 칸별 호환 부품 조립기 · 수치 계산",
+"where": [
+"guide_static.py:3058"
+],
+"n": 1
+},
+{
+"ko": "무기",
+"where": [
+"guide_static.py:3058",
+"guide_static.py:3669",
+"guide_static.py:3998",
+"guide_static.py:4090"
+],
+"n": 5
+},
+{
+"ko": "정",
+"where": [
+"guide_static.py:3058",
+"guide_static.py:3667",
+"guide_static.py:4089",
+"guide_static.py:4330"
+],
+"n": 4
+},
+{
+"ko": "맵을 고르면 진행 중 퀘스트에 필요한 카메라·마커·열쇠·탈출 준비물을 체크리스트로",
+"where": [
+"guide_static.py:3059"
+],
+"n": 1
+},
+{
+"ko": "개 · 연동하면 자동",
+"where": [
+"guide_static.py:3059"
 ],
 "n": 1
 },
 {
 "ko": "투어(Tour)로 상인·맵 여는 순서 · 10레벨까지 퀘스트 · 미리 모을 아이템",
 "where": [
-"guide_static.py:2989"
+"guide_static.py:3060"
 ],
 "n": 1
 },
 {
 "ko": "처음·프레스티지 직후",
 "where": [
-"guide_static.py:2989"
+"guide_static.py:3060"
 ],
 "n": 1
 },
 {
 "ko": "상인별 해금 순서 · 퀘스트마다 목표·필요템·열쇠·보상",
 "where": [
-"guide_static.py:2990"
+"guide_static.py:3061"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트·은신처에 들어가는 아이템 총량 · 버리면 안 되는 템",
 "where": [
-"guide_static.py:2991"
+"guide_static.py:3062"
 ],
 "n": 1
 },
 {
 "ko": "어떤 퀘스트가 이 아이템을 주는지 · 처음부터 어떤 순서로 깨야 받는지",
 "where": [
-"guide_static.py:2992"
+"guide_static.py:3063"
 ],
 "n": 1
 },
 {
 "ko": "레이드에서 찾는 퀘스트템 · 지도별",
 "where": [
-"guide_static.py:2993"
+"guide_static.py:3064"
 ],
 "n": 1
 },
 {
 "ko": "시설별 단계 재료·조건·효과·제작 · 남은 재료 계산기",
 "where": [
-"guide_static.py:2994"
+"guide_static.py:3065"
 ],
 "n": 1
 },
 {
 "ko": "개 시설",
 "where": [
-"guide_static.py:2994"
+"guide_static.py:3065"
 ],
 "n": 1
 },
 {
 "ko": "보스 출현 확률·탈출구·트랜짓·맵별 퀘스트",
 "where": [
-"guide_static.py:2995"
+"guide_static.py:3066"
 ],
 "n": 1
 },
 {
 "ko": "출현 맵·확률·위치·호위",
 "where": [
-"guide_static.py:2996"
+"guide_static.py:3067"
 ],
 "n": 1
 },
 {
 "ko": "제작 수익표",
 "where": [
-"guide_static.py:2997"
+"guide_static.py:3068"
 ],
 "n": 1
 },
 {
 "ko": "은신처 제작 재료비·판매가·시간당 이익 순위",
 "where": [
-"guide_static.py:2997"
+"guide_static.py:3068"
 ],
 "n": 1
 },
 {
 "ko": "구경별 관통력·데미지·방어구 피해·상인 구매처",
 "where": [
-"guide_static.py:2998"
+"guide_static.py:3069"
 ],
 "n": 1
 },
 {
 "ko": "PVE·PVP 단계별 조건과 보상",
 "where": [
-"guide_static.py:2999"
+"guide_static.py:3070"
 ],
 "n": 1
 },
 {
 "ko": "1.2.0 PVE 반영",
 "where": [
-"guide_static.py:2999"
+"guide_static.py:3070"
 ],
 "n": 1
 },
 {
 "ko": "주요 변경 한국어 정리",
 "where": [
-"guide_static.py:3000"
+"guide_static.py:3071"
 ],
 "n": 1
 },
 {
 "ko": "지금 쓸 수 있는 공식 프로모 코드 · 모드별 · 등록 방법",
 "where": [
-"guide_static.py:3001"
+"guide_static.py:3072"
 ],
 "n": 1
 },
 {
 "ko": "건스미스 부품 총정리",
 "where": [
-"guide_static.py:3002",
-"guide_static.py:3626"
+"guide_static.py:3073",
+"guide_static.py:3699",
+"guide_static.py:4102"
 ],
-"n": 2
+"n": 3
 },
 {
 "ko": "퀘스트별 무기·필수 부품·성능 조건 + 전체 부품 체크리스트(즐겨찾기용)",
 "where": [
-"guide_static.py:3002"
+"guide_static.py:3073"
 ],
 "n": 1
 },
 {
 "ko": "개 퀘스트 · 부품",
 "where": [
-"guide_static.py:3002"
+"guide_static.py:3073"
 ],
 "n": 1
 },
 {
 "ko": "수집가(Collector) 제출 아이템 · 보유 체크",
 "where": [
-"guide_static.py:3003"
+"guide_static.py:3074"
 ],
 "n": 1
 },
 {
 "ko": "여는 곳·퀘스트 필요 키·시세",
 "where": [
-"guide_static.py:3004"
+"guide_static.py:3075"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 한국어 정리",
 "where": [
-"guide_static.py:3010"
+"guide_static.py:3081"
 ],
 "n": 1
 },
 {
 "ko": "공개 게임 데이터로 만드는 한국어 정리 · 패치·이벤트 뒤 다시 생성 · 데이터 기준",
 "where": [
-"guide_static.py:3011"
+"guide_static.py:3082"
 ],
 "n": 1
 },
 {
 "ko": "· 게임",
 "where": [
-"guide_static.py:3011"
+"guide_static.py:3082"
 ],
 "n": 1
 },
 {
 "ko": "이 가이드는",
 "where": [
-"guide_static.py:3013"
+"guide_static.py:3084"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 목표·아이템·은신처·맵 정보는",
 "where": [
-"guide_static.py:3013"
+"guide_static.py:3084"
 ],
 "n": 1
 },
 {
 "ko": "공개 데이터에서 자동으로 만들고,",
 "where": [
-"guide_static.py:3013"
+"guide_static.py:3084"
 ],
 "n": 1
 },
 {
 "ko": "초반 진행·프레스티지 설명은 공식 위키와 패치 노트를 확인해 직접 정리했습니다. 보유·완료 체크는 이 브라우저에만 저장됩니다.",
 "where": [
-"guide_static.py:3014"
+"guide_static.py:3085"
 ],
 "n": 1
 },
 {
 "ko": "탈콥 가이드 — 타르코프 퀘스트·은신처·필요 아이템·맵·보스·카파템 한국어 정리",
 "where": [
-"guide_static.py:3015"
+"guide_static.py:3086"
 ],
 "n": 1
 },
 {
 "ko": "타르코프(Escape from Tarkov) 한국어 가이드: 초반 투어 진행, 전체 퀘스트 목표·필요템, 퀘스트·은신처 필요 아이템 총정리, 은신처 단계별 재료, 맵별 보스·탈출구, 프레스티지, 카파템, 맵별 열쇠.",
 "where": [
-"guide_static.py:3016"
+"guide_static.py:3087"
 ],
 "n": 1
 },
 {
 "ko": "⚠ 이 표의 시세는",
 "where": [
-"guide_static.py:3091"
+"guide_static.py:3162"
 ],
 "n": 1
 },
 {
 "ko": "일 전(",
 "where": [
-"guide_static.py:3091"
+"guide_static.py:3162"
 ],
 "n": 1
 },
 {
 "ko": ") 기준이라 지금 시세와 다를 수 있어요. 레이드 중 실시간 시세는 오버레이(F2)로 확인하세요.",
 "where": [
-"guide_static.py:3091"
+"guide_static.py:3162"
 ],
 "n": 1
 },
 {
 "ko": "도구",
 "where": [
-"guide_static.py:3110",
-"guide_static.py:3130"
+"guide_static.py:3181",
+"guide_static.py:3201"
 ],
 "n": 2
 },
 {
 "ko": "제작 시간",
 "where": [
-"guide_static.py:3126"
+"guide_static.py:3197"
 ],
 "n": 1
 },
 {
 "ko": "재료비",
 "where": [
-"guide_static.py:3127",
-"guide_static.py:3134"
+"guide_static.py:3198",
+"guide_static.py:3205"
 ],
 "n": 2
 },
 {
 "ko": "판매가",
 "where": [
-"guide_static.py:3127",
-"guide_static.py:3134"
+"guide_static.py:3198",
+"guide_static.py:3205"
 ],
 "n": 2
 },
 {
 "ko": "이익",
 "where": [
-"guide_static.py:3127",
-"guide_static.py:3134"
+"guide_static.py:3198",
+"guide_static.py:3205"
 ],
 "n": 2
 },
 {
 "ko": "시간당",
 "where": [
-"guide_static.py:3127",
-"guide_static.py:3134"
+"guide_static.py:3198",
+"guide_static.py:3205"
 ],
 "n": 2
 },
 {
 "ko": "모든 시설",
 "where": [
-"guide_static.py:3128"
+"guide_static.py:3199"
 ],
 "n": 1
 },
 {
 "ko": "은신처 제작 수익표",
 "where": [
-"guide_static.py:3129"
+"guide_static.py:3200"
 ],
 "n": 1
 },
 {
 "ko": "제작",
 "where": [
-"guide_static.py:3129"
+"guide_static.py:3200"
 ],
 "n": 1
 },
 {
 "ko": "개 · 시간당 이익 순 · 시세 기준",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "(tarkov.dev 24시간 평균)",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키 Crafts 표와 다른 제작(2026-11-02 전수 대조, 어느 쪽이 현재 게임과 맞는지 미확인)",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "— 재료: 5.56x45 MK 318(SOST) 90발은 위키가 화약 Eagle 2·Kite 4, M855A1 90발은 위키에 Kite 없음, ANA M2 플레이트 캐리어는 위키가 Ox bleach 2·Ripstop 없음, AK-50은 위키에 RPK-16 요구 없음 · 산출: 12/70 플레셰트 위키 60발(데이터 40) · 시설 단계: .300 BLK M62 작업대 3단계(데이터 2), 차량 배터리 작업대 2단계(데이터 1), Wilston 담배 조리 시설 2단계(데이터 1) · 시간: BNTI Zhuk(Press) 위키 2시간 6분(데이터 1시간 6분) 등 8건은 몇 분 차이. 위키에만 있는 제작 5개(스토리 챕터 연계)는 데이터에 없음. 시즌 모드에서는 제작 시간이 절반입니다.",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "이익 = 결과물 판매가 − 재료 구입비. 결과물은 플리 24시간 평균가(플리 거래 불가면 상인 최고 매입가), 재료는 플리 평균가와 상인 판매가 중 싼 쪽으로 계산했습니다.",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "표시 재료는 돌려받으므로 비용에서 뺐습니다.",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "연료비·플리 수수료(1.1.0부터 인상)·판매 시간은 빠져 있으니",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "실제 이익은 이보다 작습니다. 시세는 하루에도 크게 움직이니 참고용으로만 보세요.",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "결과물·재료 이름 검색",
 "where": [
-"guide_static.py:3130"
+"guide_static.py:3201"
 ],
 "n": 1
 },
 {
 "ko": "PVP 시세",
 "where": [
-"guide_static.py:3134",
+"guide_static.py:3205",
 "kappa.html:27",
 "keys.html:47"
 ],
@@ -6685,7 +6853,7 @@
 {
 "ko": "PVE 시세",
 "where": [
-"guide_static.py:3134",
+"guide_static.py:3205",
 "kappa.html:27",
 "keys.html:47"
 ],
@@ -6694,1547 +6862,1548 @@
 {
 "ko": "이익 나는 것만",
 "where": [
-"guide_static.py:3134"
+"guide_static.py:3205"
 ],
 "n": 1
 },
 {
 "ko": "결과물",
 "where": [
-"guide_static.py:3134"
+"guide_static.py:3205"
 ],
 "n": 1
 },
 {
 "ko": "시설별 단계 조건과 레시피는",
 "where": [
-"guide_static.py:3138"
+"guide_static.py:3209"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 은신처 제작 수익표 — 시간당 이익 순위·재료비·판매가 | 탈콥 가이드",
 "where": [
-"guide_static.py:3142"
+"guide_static.py:3213"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 은신처 제작",
 "where": [
-"guide_static.py:3143"
+"guide_static.py:3214"
 ],
 "n": 1
 },
 {
 "ko": "개의 재료비·판매가·이익·시간당 이익을 tarkov.dev 시세로 계산해 정렬. PVP·PVE 시세 전환, 시설별 필터. 기준",
 "where": [
-"guide_static.py:3143"
+"guide_static.py:3214"
 ],
 "n": 1
 },
 {
 "ko": "(퀘스트 해금)",
 "where": [
-"guide_static.py:3203"
+"guide_static.py:3274",
+"guide_static.py:3928"
 ],
-"n": 1
+"n": 2
 },
 {
 "ko": "예광",
 "where": [
-"guide_static.py:3204"
+"guide_static.py:3275"
 ],
 "n": 1
 },
 {
 "ko": "상인 판매 없음",
 "where": [
-"guide_static.py:3211"
+"guide_static.py:3282"
 ],
 "n": 1
 },
 {
 "ko": "탄",
 "where": [
-"guide_static.py:3213"
+"guide_static.py:3284"
 ],
 "n": 1
 },
 {
 "ko": "데미지",
 "where": [
-"guide_static.py:3213"
+"guide_static.py:3284"
 ],
 "n": 1
 },
 {
 "ko": "관통력",
 "where": [
-"guide_static.py:3213"
+"guide_static.py:3284"
 ],
 "n": 1
 },
 {
 "ko": "방어구 피해",
 "where": [
-"guide_static.py:3214"
+"guide_static.py:3285"
 ],
 "n": 1
 },
 {
 "ko": "파편화",
 "where": [
-"guide_static.py:3214"
+"guide_static.py:3285"
 ],
 "n": 1
 },
 {
 "ko": "초속(m/s)",
 "where": [
-"guide_static.py:3214"
+"guide_static.py:3285"
 ],
 "n": 1
 },
 {
 "ko": "상인 구매",
 "where": [
-"guide_static.py:3214"
+"guide_static.py:3285"
 ],
 "n": 1
 },
 {
 "ko": "구경",
 "where": [
-"guide_static.py:3218"
+"guide_static.py:3289"
 ],
 "n": 1
 },
 {
 "ko": "종 · 탄",
 "where": [
-"guide_static.py:3218"
+"guide_static.py:3289"
 ],
 "n": 1
 },
 {
 "ko": "종 · 관통력 높은 순 · 데이터 기준",
 "where": [
-"guide_static.py:3218"
+"guide_static.py:3289"
 ],
 "n": 1
 },
 {
 "ko": "관통력 색은 대략적인 기준입니다 — 방어 등급 N 방어구는 내구도가 충분할 때 관통력 약 N×10 이상에서 잘 뚫립니다",
 "where": [
-"guide_static.py:3219"
+"guide_static.py:3290"
 ],
 "n": 1
 },
 {
 "ko": "3등급 ·",
 "where": [
-"guide_static.py:3220"
+"guide_static.py:3291"
 ],
 "n": 1
 },
 {
 "ko": "4등급 ·",
 "where": [
-"guide_static.py:3220"
+"guide_static.py:3291"
 ],
 "n": 1
 },
 {
 "ko": "5등급 ·",
 "where": [
-"guide_static.py:3220"
+"guide_static.py:3291"
 ],
 "n": 1
 },
 {
 "ko": "6등급).",
 "where": [
-"guide_static.py:3220"
+"guide_static.py:3291"
 ],
 "n": 1
 },
 {
 "ko": "현재 탄약은 모두",
 "where": [
-"guide_static.py:3221"
+"guide_static.py:3292"
 ],
 "n": 1
 },
 {
 "ko": "플리마켓 거래가 막혀 있어",
 "where": [
-"guide_static.py:3221"
+"guide_static.py:3292"
 ],
 "n": 1
 },
 {
 "ko": "상인 구매가와 해금 등급을 함께 적었습니다(가장 낮은 등급 기준).",
 "where": [
-"guide_static.py:3221"
+"guide_static.py:3292"
 ],
 "n": 1
 },
 {
 "ko": "게임 안에서는 시세 오버레이로 탄약에 F2를 누르면 같은 구경 탄 비교표가 바로 뜹니다.",
 "where": [
-"guide_static.py:3223"
+"guide_static.py:3294"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 탄약표 — 구경별 관통력·데미지·방어구 피해·상인 구매처 | 탈콥 가이드",
 "where": [
-"guide_static.py:3225"
+"guide_static.py:3296"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 탄약",
 "where": [
-"guide_static.py:3226"
+"guide_static.py:3297"
 ],
 "n": 1
 },
 {
 "ko": "종을 구경별로 관통력 순 정리: 데미지, 관통력, 방어구 피해, 파편화, 초속, 상인 구매 등급·가격. 5.45·5.56·7.62·9x19·12게이지 등. 기준",
 "where": [
-"guide_static.py:3226"
+"guide_static.py:3297"
 ],
 "n": 1
 },
 {
 "ko": "할로윈 퀘스트 「첫 번째 결과」·「최후의 총력전」의 가스 수류탄 감염자 처치 수 감소",
 "where": [
-"guide_static.py:3232"
+"guide_static.py:3303"
 ],
 "n": 1
 },
 {
 "ko": "(공식 위키 기준 25·30명 → 15명)",
 "where": [
-"guide_static.py:3232"
+"guide_static.py:3303"
 ],
 "n": 1
 },
 {
 "ko": "업적 「Triumph of Science」·「Shields Up!」 보상에 할로윈 메인 메뉴 배경 추가",
 "where": [
-"guide_static.py:3233"
+"guide_static.py:3304"
 ],
 "n": 1
 },
 {
 "ko": "오염된 공장 일부 구역의 조명 오류 수정",
 "where": [
-"guide_static.py:3234"
+"guide_static.py:3305"
 ],
 "n": 1
 },
 {
 "ko": "오염된 연구소의 과학자 시체 하나를 뒤질 수 없던 문제 수정",
 "where": [
-"guide_static.py:3235"
+"guide_static.py:3306"
 ],
 "n": 1
 },
 {
 "ko": "할로윈 메인 메뉴 배경: 텍스처 낮음에서 저해상도로 보이던 문제·레이드 후 애니메이션이 사라지던 문제 수정",
 "where": [
-"guide_static.py:3236"
+"guide_static.py:3307"
 ],
 "n": 1
 },
 {
 "ko": ": 연구소에서 퍼진 감염으로",
 "where": [
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 1
 },
 {
 "ko": "오염된 공장·오염된 연구소",
 "where": [
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 1
 },
 {
 "ko": "맵 추가(맵 선택 화면에서 맵별 감염 정도 표시), 감염자(민간인·연구원·PMC·블랙 디비전 요원)와 감염된 타길라 출현(공장·인터체인지에도 가끔), 감염자에게 맞으면",
 "where": [
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 1
 },
 {
 "ko": "바이러스",
 "where": [
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 1
 },
 {
 "ko": "효과(잠시 청력 상실·수분 감소, 탈출하거나 죽어야 해제), 할로윈 퀘스트 19개, 플레이어 스캐브가 스캐브를 죽여도 카르마 감점 없음, 월드에 사탕 든 호박 배치",
 "where": [
-"guide_static.py:3238"
+"guide_static.py:3309"
 ],
 "n": 1
 },
 {
 "ko": "날씨 계절이 가을로 전환 · PVE 고레벨 맵에 고난도 PMC 봇 추가 · 화폐·귀중품 일부의 충돌 범위를 키워 줍기 쉽게",
 "where": [
-"guide_static.py:3239"
+"guide_static.py:3310"
 ],
 "n": 1
 },
 {
 "ko": "은신처 꾸미기 세트 2종(Expansion Hub) ·",
 "where": [
-"guide_static.py:3240"
+"guide_static.py:3311"
 ],
 "n": 1
 },
 {
 "ko": "Unity 6 엔진 전환은 11월 중순 1.3.5.0으로 연기",
 "where": [
-"guide_static.py:3240"
+"guide_static.py:3311"
 ],
 "n": 1
 },
 {
 "ko": "스킬: 대사(Metabolism) 성장이 회복한 에너지·수분량 기준으로 바뀜, 시즌 모드는 전 스킬 성장 속도 대폭 상승, 수확 체감 보정, 무기 스킬 성장 속도를 다른 스킬과 같게 수정",
 "where": [
-"guide_static.py:3241"
+"guide_static.py:3312"
 ],
 "n": 1
 },
 {
 "ko": "플레이어가 설치한 트립와이어 지속 시간 증가 · 카르마 낮은 플레이어가 없는 레이드의 파르티잔 출현 확률 계산 오류 수정 ·",
 "where": [
-"guide_static.py:3242"
+"guide_static.py:3313"
 ],
 "n": 1
 },
 {
 "ko": "PMC 봇은 이제 항상 플레이어를 적대",
 "where": [
-"guide_static.py:3242"
+"guide_static.py:3313"
 ],
 "n": 1
 },
 {
 "ko": "(1.2.0의",
 "where": [
-"guide_static.py:3242"
+"guide_static.py:3313"
 ],
 "n": 1
 },
 {
 "ko": "접근 전까지 중립",
 "where": [
-"guide_static.py:3242"
+"guide_static.py:3313"
 ],
 "n": 1
 },
 {
 "ko": "동작은 사실상 사라짐) · 일부 조준경 시야각, 고장 뒤 탄창 장전·분리 불가, 상인 상호작용 화면 진입 불가, 쇄빙선·인터체인지·해안선 지형 수정 · 10-30: 특정 지역에서 엎드려 이동·넘기 불가, 컨테이너 수색 중단 문제 수정",
 "where": [
-"guide_static.py:3242"
+"guide_static.py:3313"
 ],
 "n": 1
 },
 {
 "ko": "PVE: PMC 봇이 총소리에 반응하는 거리·엄폐 시간 단축 등 행동 조정",
 "where": [
-"guide_static.py:3244"
+"guide_static.py:3315"
 ],
 "n": 1
 },
 {
 "ko": "이벤트 퀘스트 라인 완료 업적 추가, 이벤트 보스 Scourge와 경호원 약화(체력·시야·원거리 명중률·발견 속도)",
 "where": [
-"guide_static.py:3245"
+"guide_static.py:3316"
 ],
 "n": 1
 },
 {
 "ko": "블랙 디비전 순간이동 버그, RShG-2 장전 해제로 막히던 문제 등 수정",
 "where": [
-"guide_static.py:3246"
+"guide_static.py:3317"
 ],
 "n": 1
 },
 {
 "ko": "PVE 프레스티지 6단계",
 "where": [
-"guide_static.py:3248"
+"guide_static.py:3319"
 ],
 "n": 1
 },
 {
 "ko": "— PVE 1단계는 PVP보다 조건 완화, 장비 일부·스킬/숙련 최대 50% 이월 (",
 "where": [
-"guide_static.py:3248"
+"guide_static.py:3319"
 ],
 "n": 1
 },
 {
 "ko": "EXFIL Brothers 추천 프로그램(신규 친구와 함께하면 경험치 +5%와 보상)",
 "where": [
-"guide_static.py:3249"
+"guide_static.py:3320"
 ],
 "n": 1
 },
 {
 "ko": "PVE 봇: USEC·BEAR 봇끼리 협력 확률↑, 일부 봇은 접근 전까지 중립, 봇 수·장비가 레벨과 진영에 맞게 조정",
 "where": [
-"guide_static.py:3250"
+"guide_static.py:3321"
 ],
 "n": 1
 },
 {
 "ko": "세관: 탈출구 추가, 잠긴 상자 보상 보장, 새 열쇠",
 "where": [
-"guide_static.py:3251"
+"guide_static.py:3322"
 ],
 "n": 1
 },
 {
 "ko": "ZB-1013 열쇠·경비 초소 열쇠",
 "where": [
-"guide_static.py:3251"
+"guide_static.py:3322"
 ],
 "n": 1
 },
 {
 "ko": "· 인터체인지: 루팅 장소 추가, ULTRA 단독 매장 계산대는 열쇠 불필요",
 "where": [
-"guide_static.py:3251"
+"guide_static.py:3322"
 ],
 "n": 1
 },
 {
 "ko": "편의: 거래 화면 Ctrl+좌클릭으로 구매/판매 전환, 런스루 탈출 표시, 드럼 탄창 개선, 친구 고정",
 "where": [
-"guide_static.py:3252"
+"guide_static.py:3323"
 ],
 "n": 1
 },
 {
 "ko": "등대 개편",
 "where": [
-"guide_static.py:3254"
+"guide_static.py:3325"
 ],
 "n": 1
 },
 {
 "ko": ": 로그가 산장 지역으로 이동, 정수장 거치 화기·지뢰 제거, BTR 순찰, 산악 지하 통로, 마킹룸 이동",
 "where": [
-"guide_static.py:3254"
+"guide_static.py:3325"
 ],
 "n": 1
 },
 {
 "ko": "등대지기 해금 체인",
 "where": [
-"guide_static.py:3255"
+"guide_static.py:3326"
 ],
 "n": 1
 },
 {
 "ko": "전면 개편",
 "where": [
-"guide_static.py:3255"
+"guide_static.py:3326"
 ],
 "n": 1
 },
 {
 "ko": ": 투어로 등대 해금 + 펜스·레프 제외 전 상인 LL3 + 펜스 평판 2.0 + 메카닉에게 문의",
 "where": [
-"guide_static.py:3255"
+"guide_static.py:3326"
 ],
 "n": 1
 },
 {
 "ko": "쇄빙선: 해안선·등대에서 입장, 루블 대신",
 "where": [
-"guide_static.py:3256"
+"guide_static.py:3327"
 ],
 "n": 1
 },
 {
 "ko": "수닥-투닥",
 "where": [
-"guide_static.py:3256"
+"guide_static.py:3327"
 ],
 "n": 1
 },
 {
 "ko": "수리 키트(래그맨",
 "where": [
-"guide_static.py:3256"
+"guide_static.py:3327"
 ],
 "n": 1
 },
 {
 "ko": "보상) 필요",
 "where": [
-"guide_static.py:3256"
+"guide_static.py:3327"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트에 지금 제출 가능한 아이템 표시, 달러·유로 구매가 인하",
 "where": [
-"guide_static.py:3257"
+"guide_static.py:3328"
 ],
 "n": 1
 },
 {
 "ko": "시즌 캐릭터 전용 리그(주간 경험치 순위, 50명 그룹) — 09-15",
 "where": [
-"guide_static.py:3258"
+"guide_static.py:3329"
 ],
 "n": 1
 },
 {
 "ko": "시즌 시스템",
 "where": [
-"guide_static.py:3260"
+"guide_static.py:3331"
 ],
 "n": 1
 },
 {
 "ko": ": 별도 서버의 시즌 캐릭터(4~6개월마다 초기화), 전역·개인 수정자, 시즌 보상은 모든 모드에 영구 해금, 무료 배틀패스(테라그룹 문서)",
 "where": [
-"guide_static.py:3260"
+"guide_static.py:3331"
 ],
 "n": 1
 },
 {
 "ko": "사이드 퀘스트 개편",
 "where": [
-"guide_static.py:3261"
+"guide_static.py:3332"
 ],
 "n": 1
 },
 {
 "ko": ": 상인 등급(LL)별 2~4개 묶음으로 해금, 일부만 연쇄. 스캐브 처치 목표에서 보스·레이더·로그 제외, 분대 공유 진행",
 "where": [
-"guide_static.py:3261"
+"guide_static.py:3332"
 ],
 "n": 1
 },
 {
 "ko": "경제",
 "where": [
-"guide_static.py:3262"
+"guide_static.py:3333"
 ],
 "n": 1
 },
 {
 "ko": ": 상인 판매가 평균 +25%, 상인 매입가 평균 −20%, 플리마켓 수수료 3%→5%",
 "where": [
-"guide_static.py:3262"
+"guide_static.py:3333"
 ],
 "n": 1
 },
 {
 "ko": "상인 등급: 판매액 조건 삭제, 평판·레벨 조건 재조정 / 일부 탄약·탄창 해금 등급 1단계 하향",
 "where": [
-"guide_static.py:3263"
+"guide_static.py:3334"
 ],
 "n": 1
 },
 {
 "ko": "은신처: 1~3단계 일부 완화(일부 인레이드 조건 해제·건설 시간 단축), 많은 시설에 돈 요구 추가, 무기 빌드는 작업대 없이도 가능",
 "where": [
-"guide_static.py:3264"
+"guide_static.py:3335"
 ],
 "n": 1
 },
 {
 "ko": "보험: 예거 보험 추가(가장 빠르고 비쌈), 프라퍼·테라피스트 반환 빨라짐",
 "where": [
-"guide_static.py:3265"
+"guide_static.py:3336"
 ],
 "n": 1
 },
 {
 "ko": "신규: QBZ-191·Howa Type 20·HK 416A5,",
 "where": [
-"guide_static.py:3266"
+"guide_static.py:3337"
 ],
 "n": 1
 },
 {
 "ko": "5.8x42 구경",
 "where": [
-"guide_static.py:3266"
+"guide_static.py:3337"
 ],
 "n": 1
 },
 {
 "ko": ", 자물쇠 달린 문·상자, 모드 선택 화면, Arena→시즌 진행 동기화",
 "where": [
-"guide_static.py:3266"
+"guide_static.py:3337"
 ],
 "n": 1
 },
 {
 "ko": "카파 업적 변경",
 "where": [
-"guide_static.py:3267"
+"guide_static.py:3338"
 ],
 "n": 1
 },
 {
 "ko": "업적은 시즌 1부터 더 얻을 수 없고, 수집가(Collector) 완료 시",
 "where": [
-"guide_static.py:3267"
+"guide_static.py:3338"
 ],
 "n": 1
 },
 {
 "ko": "업적을 받음(기존 획득자는 프로필에 유지)",
 "where": [
-"guide_static.py:3267"
+"guide_static.py:3338"
 ],
 "n": 1
 },
 {
 "ko": "래그맨 전술 의류는 계정 영구 해금(프로필 초기화·프레스티지·시즌 캐릭터 뒤 다시 살 필요 없음), 기본 의류 가격 인상 · 시즌 모드는 보험 사용 불가",
 "where": [
-"guide_static.py:3268"
+"guide_static.py:3339"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 화면에서 이름·목표·지역·상인으로 검색",
 "where": [
-"guide_static.py:3269"
+"guide_static.py:3340"
 ],
 "n": 1
 },
 {
 "ko": "Expansion Hub 준비(유료 상점)",
 "where": [
-"guide_static.py:3269"
+"guide_static.py:3340"
 ],
 "n": 1
 },
 {
 "ko": "쇄빙선(Icebreaker)",
 "where": [
-"guide_static.py:3270"
+"guide_static.py:3341"
 ],
 "n": 1
 },
 {
 "ko": ": 1~3인 PvE 탐사 지역 + 스토리 챕터",
 "where": [
-"guide_static.py:3270"
+"guide_static.py:3341"
 ],
 "n": 1
 },
 {
 "ko": "보레아스",
 "where": [
-"guide_static.py:3270"
+"guide_static.py:3341"
 ],
 "n": 1
 },
 {
 "ko": "레이드 중 퀘스트 아이템 근처에 가면 방향 표시",
 "where": [
-"guide_static.py:3271"
+"guide_static.py:3342"
 ],
 "n": 1
 },
 {
 "ko": "2026년 5월~10월 주요 변경 · 현재 게임 버전",
 "where": [
-"guide_static.py:3279"
+"guide_static.py:3350"
 ],
 "n": 1
 },
 {
 "ko": "· 정리",
 "where": [
-"guide_static.py:3279"
+"guide_static.py:3350"
 ],
 "n": 1
 },
 {
 "ko": "공식 패치 노트(위키 Changelog 모음)를 읽고 플레이에 영향이 큰 것만 골라 한국어로 요약했습니다. 원문은",
 "where": [
-"guide_static.py:3280"
+"guide_static.py:3351"
 ],
 "n": 1
 },
 {
 "ko": "공식 위키 Changelog",
 "where": [
-"guide_static.py:3281"
+"guide_static.py:3352"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 패치 요약 1.0.5~",
 "where": [
-"guide_static.py:3284"
+"guide_static.py:3355"
 ],
 "n": 1
 },
 {
 "ko": "— 할로윈 이벤트·시즌·퀘스트 개편·PVE 프레스티지·경제 변경 | 탈콥 가이드",
 "where": [
-"guide_static.py:3284"
+"guide_static.py:3355"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 2026년 5~10월 패치 한국어 요약: 1.1.0 KORD BREACH(시즌·사이드 퀘스트 묶음 해금·플리 수수료 5%), 1.1.5 등대 개편·등대지기 체인, 1.2.0 PVE 프레스티지, 1.2.5,",
 "where": [
-"guide_static.py:3285"
+"guide_static.py:3356"
 ],
 "n": 1
 },
 {
 "ko": "할로윈 이벤트·오염된 맵·스킬 변경.",
 "where": [
-"guide_static.py:3285"
+"guide_static.py:3356"
 ],
 "n": 1
 },
 {
 "ko": "🎃 신규 — 모드 미확인",
 "where": [
-"guide_static.py:3297"
+"guide_static.py:3368"
 ],
 "n": 1
 },
 {
 "ko": "최근 나온 코드인데 어느 모드(PVE·PVP·시즌) 캐릭터가 받는지 출처가 아직 없습니다. 등록은 계정당 한 번이니 주로 쓰는 캐릭터로 접속한 뒤 등록하세요.",
 "where": [
-"guide_static.py:3297"
+"guide_static.py:3368"
 ],
 "n": 1
 },
 {
 "ko": "PVE 존",
 "where": [
-"guide_static.py:3298"
+"guide_static.py:3369"
 ],
 "n": 1
 },
 {
 "ko": "PVE 캐릭터로 접속해 메신저에서 받습니다. 1.2.0(10-06) 업데이트 기념으로 해외 매체마다 하나씩 나온 코드라 이름이 매체명입니다.",
 "where": [
-"guide_static.py:3298"
+"guide_static.py:3369"
 ],
 "n": 1
 },
 {
 "ko": "PVP 시즌 (KORD BREACH)",
 "where": [
-"guide_static.py:3299"
+"guide_static.py:3370"
 ],
 "n": 1
 },
 {
 "ko": "시즌 캐릭터 전용 — 영구 PVP·PVE 캐릭터에는 안 들어옵니다.",
 "where": [
-"guide_static.py:3299"
+"guide_static.py:3370"
 ],
 "n": 1
 },
 {
 "ko": "PVP 영구 존",
 "where": [
-"guide_static.py:3300"
+"guide_static.py:3371"
 ],
 "n": 1
 },
 {
 "ko": "영구 PVP 캐릭터 전용. 대부분 소소한 보급품·루블이고 2025년 말~2026년 초에 나온 뒤 아직 살아 있는 코드입니다.",
 "where": [
-"guide_static.py:3300"
+"guide_static.py:3371"
 ],
 "n": 1
 },
 {
 "ko": "M60E6 기관총 + 100발 박스 + 7.62x51 M993 200발, ComTac II 헤드셋, TC 800 헬멧, M53A1 방독면, LV-119 플레이트 캐리어, 배낭",
 "where": [
-"guide_static.py:3304"
+"guide_static.py:3375"
 ],
 "n": 1
 },
 {
 "ko": "가장 알찬 코드",
 "where": [
-"guide_static.py:3304"
+"guide_static.py:3375"
 ],
 "n": 1
 },
 {
 "ko": "HK 416A5 + PMAG + 5.56 M995 120발, LV-119 플레이트 캐리어, Bastion 헬멧, SOTR 마스크, Sordin 헤드셋, 배낭",
 "where": [
-"guide_static.py:3305"
+"guide_static.py:3376"
 ],
 "n": 1
 },
 {
 "ko": "나무 장비 상자 2개 + 탄약 상자 1개",
 "where": [
-"guide_static.py:3306"
+"guide_static.py:3377"
 ],
 "n": 1
 },
 {
 "ko": "PVE 프레스티지 추가 기념",
 "where": [
-"guide_static.py:3306"
+"guide_static.py:3377"
 ],
 "n": 1
 },
 {
 "ko": "HK G36 + AKS-74U, RBAV-AF 플레이트 캐리어, DevTac Ronin 헬멧, 탄창 케이스, 탄약·의료품",
 "where": [
-"guide_static.py:3307"
+"guide_static.py:3378"
 ],
 "n": 1
 },
 {
 "ko": "시즌 시작(08-03) 기념",
 "where": [
-"guide_static.py:3307"
+"guide_static.py:3378"
 ],
 "n": 1
 },
 {
 "ko": "Desert Tech MDR, Trooper 방탄복, Ronin 헬멧, T20 배낭, TV-104 체스트리그, PMAG 3개, Grizzly·CMS·Salewa 의료품",
 "where": [
-"guide_static.py:3308"
+"guide_static.py:3379"
 ],
 "n": 1
 },
 {
 "ko": "Velociraptor .300 BLK + .300 BLK 탄 120발, SLR-106/AK 5.56 30발 탄창 3개, TV-110 플레이트 캐리어, TC 800 헬멧, Walker",
 "where": [
-"guide_static.py:3309"
+"guide_static.py:3380"
 ],
 "n": 1
 },
 {
 "ko": "s Razor 헤드셋, 배낭, Grizzly 의료품, 제작 재료",
 "where": [
-"guide_static.py:3309"
+"guide_static.py:3380"
 ],
 "n": 1
 },
 {
 "ko": "SLR-106은 소총이 아니라 탄창(11-02 정정)",
 "where": [
-"guide_static.py:3309"
+"guide_static.py:3380"
 ],
 "n": 1
 },
 {
 "ko": "좀비 잡이 세트",
 "where": [
-"guide_static.py:3310"
+"guide_static.py:3381"
 ],
 "n": 1
 },
 {
 "ko": "— M3 Super 90 산탄총 + 12게이지 플레셰트, SP PC V2 플레이트 캐리어, ULACH 헬멧, ComTac V, Salewa·CALOK-B·붕대, RGD-5 4개, Klesch-2P 손전등 등(디시 갤러리 보관함 캡처 기준, 공식 목록 없음)",
 "where": [
-"guide_static.py:3310"
+"guide_static.py:3381"
 ],
 "n": 1
 },
 {
 "ko": "10-30 공개(할로윈 1.3.0 연동). 런처",
 "where": [
-"guide_static.py:3311"
+"guide_static.py:3382"
 ],
 "n": 1
 },
 {
 "ko": "등록됨",
 "where": [
-"guide_static.py:3311"
+"guide_static.py:3382"
 ],
 "n": 1
 },
 {
 "ko": "캡처와 갤러리 보고 5건으로 확인. 어느 모드에 들어오는지는 어떤 출처에도 없음 — 쓰는 캐릭터로 접속해 메신저 확인",
 "where": [
-"guide_static.py:3311"
+"guide_static.py:3382"
 ],
 "n": 1
 },
 {
 "ko": "Elvisvista 피규어, 은색 트리 장식 2개",
 "where": [
-"guide_static.py:3312"
+"guide_static.py:3383"
 ],
 "n": 1
 },
 {
 "ko": "BSG 아트 리드 공개(2025-12-24)",
 "where": [
-"guide_static.py:3312"
+"guide_static.py:3383"
 ],
 "n": 1
 },
 {
 "ko": "TOZ-106 산탄총, Blicky 장난감 총, FAST MT 헬멧(모조), GP 코인",
 "where": [
-"guide_static.py:3313"
+"guide_static.py:3384"
 ],
 "n": 1
 },
 {
 "ko": "니키타가 올린 장난 코드(2025-12-07)",
 "where": [
-"guide_static.py:3313"
+"guide_static.py:3384"
 ],
 "n": 1
 },
 {
 "ko": "절전형 전구 6개",
 "where": [
-"guide_static.py:3314"
+"guide_static.py:3385"
 ],
 "n": 1
 },
 {
 "ko": "50,000₽, CALOK-B, 원정용 연료통, 설탕, 볼트 2, KEKTAPE 2",
 "where": [
-"guide_static.py:3315"
+"guide_static.py:3386"
 ],
 "n": 1
 },
 {
 "ko": "개발자 방송 공개",
 "where": [
-"guide_static.py:3315"
+"guide_static.py:3386"
 ],
 "n": 1
 },
 {
 "ko": "50,000₽, CALOK-B, 원정용 연료통, 위스키, 알룐카 초콜릿, 볼트 2, 너트 2, 전원 코드",
 "where": [
-"guide_static.py:3316"
+"guide_static.py:3387"
 ],
 "n": 1
 },
 {
 "ko": "50,000₽, CALOK-B, 원정용 연료통, 주름 호스 2, 연유, Slickers 초코바, Iskra 전투식량",
 "where": [
-"guide_static.py:3317"
+"guide_static.py:3388"
 ],
 "n": 1
 },
 {
 "ko": "M1A 소총 세트. 인벤 독자용으로",
 "where": [
-"guide_static.py:3321"
+"guide_static.py:3392"
 ],
 "n": 1
 },
 {
 "ko": "업데이트 뒤 2주 한정",
 "where": [
-"guide_static.py:3321"
+"guide_static.py:3392"
 ],
 "n": 1
 },
 {
 "ko": "이라고 인벤 기사(10-07)에 명시 → 10-20 전후 만료. 20일까지 됐다는 댓글이 마지막 보고.",
 "where": [
-"guide_static.py:3321"
+"guide_static.py:3392"
 ],
 "n": 1
 },
 {
 "ko": "SIG MCX .300 BLK 세트. 일본 매체 배포 코드로",
 "where": [
-"guide_static.py:3322"
+"guide_static.py:3393"
 ],
 "n": 1
 },
 {
 "ko": "교환 2주 한정",
 "where": [
-"guide_static.py:3322"
+"guide_static.py:3393"
 ],
 "n": 1
 },
 {
 "ko": "(10-06 시작 → 10-20 전후)이라고 안내됨(11-02 확인). 해외 정리 사이트 상당수는 아직",
 "where": [
-"guide_static.py:3322"
+"guide_static.py:3393"
 ],
 "n": 1
 },
 {
 "ko": "활성",
 "where": [
-"guide_static.py:3322",
-"guide_static.py:3396",
-"guide_static.py:3397"
+"guide_static.py:3393",
+"guide_static.py:3467",
+"guide_static.py:3468"
 ],
 "n": 3
 },
 {
 "ko": "으로 두고 있어 런처에서 넣어 봐도 손해는 없음.",
 "where": [
-"guide_static.py:3322"
+"guide_static.py:3393"
 ],
 "n": 1
 },
 {
 "ko": "WIPE · GAMESPARK · PCGAMESN · ELVISVISTA · PAY2WIN · SCAVYBOI 참고",
 "where": [
-"guide_static.py:3323"
+"guide_static.py:3394"
 ],
 "n": 1
 },
 {
 "ko": "위 표에 그대로 두었지만, 정리 사이트 두 곳(10-03·10-30)이",
 "where": [
-"guide_static.py:3323"
+"guide_static.py:3394"
 ],
 "n": 1
 },
 {
 "ko": "만료됐을 수 있음",
 "where": [
-"guide_static.py:3323"
+"guide_static.py:3394"
 ],
 "n": 1
 },
 {
 "ko": "묶음에 넣고 있습니다. 같은 시기 갱신된 다른 사이트들은 전부 활성이라 유지 — 안 들어오면 만료된 것.",
 "where": [
-"guide_static.py:3323"
+"guide_static.py:3394"
 ],
 "n": 1
 },
 {
 "ko": "12주년 선물",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "전 모드",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "코드가 아니라",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "프로필 선물함",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "에서 받는 식료품 꾸러미. 공식 트윗 기준",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "10-19 20:00(한국)",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "에 끝남.",
 "where": [
-"guide_static.py:3324"
+"guide_static.py:3395"
 ],
 "n": 1
 },
 {
 "ko": "확장 허브",
 "where": [
-"guide_static.py:3325"
+"guide_static.py:3396"
 ],
 "n": 1
 },
 {
 "ko": "TarCoin 150개. 선착순 4만 명 한정이라 소진됨(8월 공개).",
 "where": [
-"guide_static.py:3325"
+"guide_static.py:3396"
 ],
 "n": 1
 },
 {
 "ko": "정리 사이트마다 활성/만료가 갈려서 뺐습니다. 런처에서 직접 넣어 보는 건 손해 볼 게 없습니다.",
 "where": [
-"guide_static.py:3326"
+"guide_static.py:3397"
 ],
 "n": 1
 },
 {
 "ko": "만료 의심",
 "where": [
-"guide_static.py:3347",
-"guide_static.py:3396"
+"guide_static.py:3418",
+"guide_static.py:3467"
 ],
 "n": 2
 },
 {
 "ko": "곳에서 활성",
 "where": [
-"guide_static.py:3349"
+"guide_static.py:3420"
 ],
 "n": 1
 },
 {
 "ko": "등록함",
 "where": [
-"guide_static.py:3353",
-"guide_static.py:3374",
-"guide_static.py:3374",
-"guide_static.py:3388"
+"guide_static.py:3424",
+"guide_static.py:3445",
+"guide_static.py:3445",
+"guide_static.py:3459"
 ],
 "n": 6
 },
 {
 "ko": "복사",
 "where": [
-"guide_static.py:3375",
-"guide_static.py:3375",
-"guide_static.py:3389",
-"guide_static.py:3420"
+"guide_static.py:3446",
+"guide_static.py:3446",
+"guide_static.py:3460",
+"guide_static.py:3491"
 ],
 "n": 4
 },
 {
 "ko": "등록",
 "where": [
-"guide_static.py:3380",
-"guide_static.py:3387"
+"guide_static.py:3451",
+"guide_static.py:3458"
 ],
 "n": 2
 },
 {
 "ko": "코드",
 "where": [
-"guide_static.py:3380",
-"guide_static.py:3387",
-"guide_static.py:3410"
+"guide_static.py:3451",
+"guide_static.py:3458",
+"guide_static.py:3481"
 ],
 "n": 3
 },
 {
 "ko": "비고",
 "where": [
-"guide_static.py:3380"
+"guide_static.py:3451"
 ],
 "n": 1
 },
 {
 "ko": "🆕 자동 감지된 새 코드",
 "where": [
-"guide_static.py:3385"
+"guide_static.py:3456"
 ],
 "n": 1
 },
 {
 "ko": "확인 중",
 "where": [
-"guide_static.py:3385"
+"guide_static.py:3456"
 ],
 "n": 1
 },
 {
 "ko": "정리 사이트 3곳 이상에서 새로 보이는 코드입니다. 모드·보상은 아직 사람이 확인하지 않았으니 런처에 넣어 보고 결과를 알려 주세요.",
 "where": [
-"guide_static.py:3386"
+"guide_static.py:3457"
 ],
 "n": 1
 },
 {
 "ko": "활성 확인",
 "where": [
-"guide_static.py:3387"
+"guide_static.py:3458"
 ],
 "n": 1
 },
 {
 "ko": "지금 쓸 수 있는 공식 코드",
 "where": [
-"guide_static.py:3394"
+"guide_static.py:3465"
 ],
 "n": 1
 },
 {
 "ko": "개 · 사람 확인",
 "where": [
-"guide_static.py:3394"
+"guide_static.py:3465"
 ],
 "n": 1
 },
 {
 "ko": "· 자동 확인",
 "where": [
-"guide_static.py:3394"
+"guide_static.py:3465"
 ],
 "n": 1
 },
 {
 "ko": "에 체크해 두면 이 브라우저에 저장되고,",
 "where": [
-"guide_static.py:3395"
+"guide_static.py:3466"
 ],
 "n": 1
 },
 {
 "ko": "이 켜진 PC에서는 앱에도 저장돼 다른 브라우저에서도 같은 체크가 보입니다.",
 "where": [
-"guide_static.py:3395"
+"guide_static.py:3466"
 ],
 "n": 1
 },
 {
 "ko": "코드 옆",
 "where": [
-"guide_static.py:3396"
+"guide_static.py:3467"
 ],
 "n": 1
 },
 {
 "ko": "활성 n곳",
 "where": [
-"guide_static.py:3396"
+"guide_static.py:3467"
 ],
 "n": 1
 },
 {
 "ko": "은 자동 점검(매일)이 정리 사이트에서 그 코드를",
 "where": [
-"guide_static.py:3396"
+"guide_static.py:3467"
 ],
 "n": 1
 },
 {
 "ko": "으로 본 수,",
 "where": [
-"guide_static.py:3396"
+"guide_static.py:3467"
 ],
 "n": 1
 },
 {
 "ko": "은 어느 곳도 활성으로 안 적고 만료로 적은 곳이 있다는 뜻입니다.",
 "where": [
-"guide_static.py:3396"
+"guide_static.py:3467"
 ],
 "n": 1
 },
 {
 "ko": "넣는 기준",
 "where": [
-"guide_static.py:3397"
+"guide_static.py:3468"
 ],
 "n": 1
 },
 {
 "ko": "— 서로 다른 정리 사이트 3곳 이상이 최근 2주 안에",
 "where": [
-"guide_static.py:3397"
+"guide_static.py:3468"
 ],
 "n": 1
 },
 {
 "ko": "으로 확인했고, 디시 타르코프 갤러리에서도 쓴 보고가 있는 코드만 올립니다.",
 "where": [
-"guide_static.py:3397"
+"guide_static.py:3468"
 ],
 "n": 1
 },
 {
 "ko": "한 곳이라도 만료로 적은 코드는 아래",
 "where": [
-"guide_static.py:3398"
+"guide_static.py:3469"
 ],
 "n": 1
 },
 {
 "ko": "제외",
 "where": [
-"guide_static.py:3398"
+"guide_static.py:3469"
 ],
 "n": 1
 },
 {
 "ko": "표로 내립니다. BSG는 만료일을 공지하지 않고 하루 만에 닫는 코드도 있어서,",
 "where": [
-"guide_static.py:3398"
+"guide_static.py:3469"
 ],
 "n": 1
 },
 {
 "ko": "보이면 바로 넣는 게 답",
 "where": [
-"guide_static.py:3398"
+"guide_static.py:3469"
 ],
 "n": 1
 },
 {
 "ko": "코드는",
 "where": [
-"guide_static.py:3399"
+"guide_static.py:3470"
 ],
 "n": 1
 },
 {
 "ko": "모드별",
 "where": [
-"guide_static.py:3399"
+"guide_static.py:3470"
 ],
 "n": 1
 },
 {
 "ko": "로 들어오니 PVE 코드를 넣고 PVP 캐릭터로 접속하면 메신저에 아무것도 없습니다.",
 "where": [
-"guide_static.py:3399"
+"guide_static.py:3470"
 ],
 "n": 1
 },
 {
 "ko": "등록 방법",
 "where": [
-"guide_static.py:3400",
-"guide_static.py:3401"
+"guide_static.py:3471",
+"guide_static.py:3472"
 ],
 "n": 2
 },
 {
 "ko": "끝난·제외",
 "where": [
-"guide_static.py:3400"
+"guide_static.py:3471"
 ],
 "n": 1
 },
 {
 "ko": "런처",
 "where": [
-"guide_static.py:3402"
+"guide_static.py:3473"
 ],
 "n": 1
 },
 {
 "ko": ": 오른쪽 위 계정 이름 →",
 "where": [
-"guide_static.py:3402"
+"guide_static.py:3473"
 ],
 "n": 1
 },
 {
 "ko": "Activate code(코드 활성화)",
 "where": [
-"guide_static.py:3402"
+"guide_static.py:3473"
 ],
 "n": 1
 },
 {
 "ko": "→ 코드 입력 → Enter. 대소문자를 구분합니다.",
 "where": [
-"guide_static.py:3402"
+"guide_static.py:3473"
 ],
 "n": 1
 },
 {
 "ko": "웹",
 "where": [
-"guide_static.py:3403"
+"guide_static.py:3474"
 ],
 "n": 1
 },
 {
 "ko": "에 로그인해 입력해도 같습니다.",
 "where": [
-"guide_static.py:3403"
+"guide_static.py:3474"
 ],
 "n": 1
 },
 {
 "ko": "게임에",
 "where": [
-"guide_static.py:3404"
+"guide_static.py:3475"
 ],
 "n": 1
 },
 {
 "ko": "해당 모드 캐릭터",
 "where": [
-"guide_static.py:3404"
+"guide_static.py:3475"
 ],
 "n": 1
 },
 {
 "ko": "로 접속 → 오른쪽 아래",
 "where": [
-"guide_static.py:3404"
+"guide_static.py:3475"
 ],
 "n": 1
 },
 {
 "ko": "메신저",
 "where": [
-"guide_static.py:3404"
+"guide_static.py:3475"
 ],
 "n": 1
 },
 {
 "ko": "→ 보낸 사람 탭에서 수령. 보관함이 꽉 차면 안 들어오니 자리를 비워 두세요.",
 "where": [
-"guide_static.py:3404"
+"guide_static.py:3475"
 ],
 "n": 1
 },
 {
 "ko": "여러 개를 연달아 넣으면 잠깐 쿨다운이 걸립니다. 점검 중엔 등록이 안 되니 서버가 열린 뒤에 넣으세요.",
 "where": [
-"guide_static.py:3405"
+"guide_static.py:3476"
 ],
 "n": 1
 },
 {
 "ko": "이미 사용됨",
 "where": [
-"guide_static.py:3406"
+"guide_static.py:3477"
 ],
 "n": 1
 },
 {
 "ko": "은 계정당 1회라서,",
 "where": [
-"guide_static.py:3406"
+"guide_static.py:3477"
 ],
 "n": 1
 },
 {
 "ko": "유효하지 않음",
 "where": [
-"guide_static.py:3406"
+"guide_static.py:3477"
 ],
 "n": 1
 },
 {
 "ko": "은 만료라서 뜹니다. 두 번째가 뜨면 아래 표에서 내려야 하니 알려 주세요(시세 오버레이 앱 ⚙ → 피드백, 또는 디시 타르코프 갤러리).",
 "where": [
-"guide_static.py:3406"
+"guide_static.py:3477"
 ],
 "n": 1
 },
 {
 "ko": "최근 끝났거나 넣지 않은 것",
 "where": [
-"guide_static.py:3409"
+"guide_static.py:3480"
 ],
 "n": 1
 },
 {
 "ko": "모드",
 "where": [
-"guide_static.py:3410",
-"guide_static.py:3685"
+"guide_static.py:3481",
+"guide_static.py:4119"
 ],
 "n": 2
 },
 {
 "ko": "이유",
 "where": [
-"guide_static.py:3410"
+"guide_static.py:3481"
 ],
 "n": 1
 },
 {
 "ko": "확인 출처(2026-10-26): Dexerto(10-20 갱신)·PCGamesN(10-24)·Guided.news(10-14)·Timesaver(10-15)·games.gg(10-07)·tarkov.help, 디시 타르코프 갤러리 10-09·10-15 글, 인벤 기사(10-07), Battlestate Games 공식 X(10-15).",
 "where": [
-"guide_static.py:3412"
+"guide_static.py:3483"
 ],
 "n": 1
 },
 {
 "ko": "보상 구성은 사이트마다 조금씩 달라 공통되는 것만 적었습니다. 직접 받아 보고 다르면 알려 주세요.",
 "where": [
-"guide_static.py:3413"
+"guide_static.py:3484"
 ],
 "n": 1
 },
 {
 "ko": "복사됨",
 "where": [
-"guide_static.py:3419"
+"guide_static.py:3490"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 프로모 코드",
 "where": [
-"guide_static.py:3423"
+"guide_static.py:3494"
 ],
 "n": 1
 },
 {
 "ko": "— 지금 쓸 수 있는 공식 코드",
 "where": [
-"guide_static.py:3423"
+"guide_static.py:3494"
 ],
 "n": 1
 },
 {
 "ko": "개 (PVE·시즌·PVP) | 탈콥 가이드",
 "where": [
-"guide_static.py:3423"
+"guide_static.py:3494"
 ],
 "n": 1
 },
 {
 "ko": "타르코프(Escape from Tarkov) 프로모 코드",
 "where": [
-"guide_static.py:3424"
+"guide_static.py:3495"
 ],
 "n": 1
 },
 {
 "ko": "확인판: PVE 존 POLYGON·AUTOMATON·YYSTV·PVEPRESTIGE, KORD BREACH 시즌 WIPE·GAMESPARK·PCGAMESN, PVP 영구 존 6개. 보상·모드·런처 등록 방법·만료된 코드.",
 "where": [
-"guide_static.py:3424"
+"guide_static.py:3495"
 ],
 "n": 1
 },
 {
 "ko": "보유 체크를 모두 지울까요?",
 "where": [
-"guide_static.py:3434",
+"guide_static.py:3505",
 "kappa.html:108"
 ],
 "n": 2
@@ -8242,308 +8411,312 @@
 {
 "ko": "피스키퍼",
 "where": [
-"guide_static.py:3453"
+"guide_static.py:3524"
 ],
 "n": 1
 },
 {
 "ko": "펜스",
 "where": [
-"guide_static.py:3454"
+"guide_static.py:3525"
 ],
 "n": 1
 },
 {
 "ko": "플리마켓",
 "where": [
-"guide_static.py:3454"
+"guide_static.py:3525",
+"guide_static.py:3868"
 ],
-"n": 1
+"n": 2
 },
 {
 "ko": "(교환)",
 "where": [
-"guide_static.py:3517"
+"guide_static.py:3588"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립 부품",
 "where": [
-"guide_static.py:3521"
+"guide_static.py:3592"
 ],
 "n": 1
 },
 {
 "ko": "파는 곳 · 등급",
 "where": [
-"guide_static.py:3521"
+"guide_static.py:3592"
 ],
 "n": 1
 },
 {
 "ko": "기본 무기:",
 "where": [
-"guide_static.py:3523"
+"guide_static.py:3594"
 ],
 "n": 1
 },
 {
 "ko": "위키 예시 조립 보기",
 "where": [
-"guide_static.py:3526",
-"guide_static.py:3630"
+"guide_static.py:3597",
+"guide_static.py:3703"
 ],
 "n": 2
 },
 {
 "ko": "(여러 방법 중 하나 ·",
 "where": [
-"guide_static.py:3526"
+"guide_static.py:3597"
 ],
 "n": 1
 },
 {
 "ko": "출처",
 "where": [
-"guide_static.py:3527"
+"guide_static.py:3598"
 ],
 "n": 1
 },
 {
 "ko": "필수 종류:",
 "where": [
-"guide_static.py:3575"
+"guide_static.py:3646"
 ],
 "n": 1
 },
 {
 "ko": "없음 — 성능 조건만",
 "where": [
-"guide_static.py:3579"
+"guide_static.py:3650"
 ],
 "n": 1
 },
 {
 "ko": "메카닉 묶음",
 "where": [
-"guide_static.py:3582"
+"guide_static.py:3653"
 ],
 "n": 1
 },
 {
 "ko": "개 완료 뒤",
 "where": [
-"guide_static.py:3582"
+"guide_static.py:3653"
 ],
 "n": 1
 },
 {
 "ko": "메카닉 LL",
 "where": [
-"guide_static.py:3583"
+"guide_static.py:3654"
 ],
 "n": 1
 },
 {
 "ko": "바로 받음",
 "where": [
-"guide_static.py:3583"
+"guide_static.py:3654"
 ],
 "n": 1
 },
 {
-"ko": "무기",
+"ko": "· 무기",
 "where": [
-"guide_static.py:3596"
+"guide_static.py:3667"
 ],
 "n": 1
 },
 {
 "ko": "성능 조건",
 "where": [
-"guide_static.py:3596",
-"guide_static.py:3629"
+"guide_static.py:3669",
+"guide_static.py:3702"
 ],
 "n": 2
 },
 {
 "ko": "메카닉 무기 조립 퀘스트",
 "where": [
-"guide_static.py:3627"
+"guide_static.py:3700"
 ],
 "n": 1
 },
 {
 "ko": "개 · 반드시 포함할 부품",
 "where": [
-"guide_static.py:3627"
+"guide_static.py:3700"
 ],
 "n": 1
 },
 {
 "ko": "종 · 데이터 기준",
 "where": [
-"guide_static.py:3627"
+"guide_static.py:3700",
+"guide_static.py:4045"
 ],
-"n": 1
+"n": 2
 },
 {
 "ko": "쓰는 법",
 "where": [
-"guide_static.py:3628"
+"guide_static.py:3701",
+"guide_static.py:4095",
+"guide_static.py:4414"
 ],
-"n": 1
+"n": 3
 },
 {
 "ko": "— 아래",
 "where": [
-"guide_static.py:3628"
+"guide_static.py:3701"
 ],
 "n": 1
 },
 {
 "ko": "전체 부품 체크리스트",
 "where": [
-"guide_static.py:3628",
-"guide_static.py:3632",
-"guide_static.py:3635"
+"guide_static.py:3701",
+"guide_static.py:3705",
+"guide_static.py:3708"
 ],
 "n": 3
 },
 {
 "ko": "의 이름을 플리마켓 검색창에 넣고 ★(즐겨찾기)를 눌러 두면 시세 볼 때 한 번에 모입니다.",
 "where": [
-"guide_static.py:3628"
+"guide_static.py:3701"
 ],
 "n": 1
 },
 {
 "ko": "표의",
 "where": [
-"guide_static.py:3629"
+"guide_static.py:3702"
 ],
 "n": 1
 },
 {
 "ko": "은 조립에 꼭 들어가야 하는 것이고, 그 외 인체공학·반동·무게 같은",
 "where": [
-"guide_static.py:3629"
+"guide_static.py:3702"
 ],
 "n": 1
 },
 {
 "ko": "은 어떤 부품으로든 맞추면 됩니다.",
 "where": [
-"guide_static.py:3629"
+"guide_static.py:3702"
 ],
 "n": 1
 },
 {
 "ko": "각 줄의",
 "where": [
-"guide_static.py:3630"
+"guide_static.py:3703"
 ],
 "n": 1
 },
 {
 "ko": "를 펼치면 공식 위키가 올린 조립 예시(부품·파는 상인·등급)가 나오고, 그 부품들도 체크리스트에",
 "where": [
-"guide_static.py:3630"
+"guide_static.py:3703"
 ],
 "n": 1
 },
 {
 "ko": "예시",
 "where": [
-"guide_static.py:3630",
-"guide_static.py:3641",
-"guide_static.py:3643"
+"guide_static.py:3703",
+"guide_static.py:3714",
+"guide_static.py:3716"
 ],
 "n": 3
 },
 {
 "ko": "열로 들어가 있습니다.",
 "where": [
-"guide_static.py:3630"
+"guide_static.py:3703"
 ],
 "n": 1
 },
 {
 "ko": "조립한 무기를 통째로 제출하므로 같은 부품을 두 퀘스트가 요구하면 두 개가 필요합니다(횟수 열). 보유 체크는 이 브라우저에만 저장됩니다.",
 "where": [
-"guide_static.py:3631"
+"guide_static.py:3704"
 ],
 "n": 1
 },
 {
 "ko": "건스미스 마스터",
 "where": [
-"guide_static.py:3632",
-"guide_static.py:3634"
+"guide_static.py:3705",
+"guide_static.py:3707"
 ],
 "n": 2
 },
 {
 "ko": "메카닉 기본 조립 퀘스트. 선행 순서대로 정렬했고, 퀘스트 이름을 누르면 상세(보상·선행·해금)로 갑니다.",
 "where": [
-"guide_static.py:3633"
+"guide_static.py:3706"
 ],
 "n": 1
 },
 {
 "ko": "40레벨 이후 이어지는 상위 조립 퀘스트. 한 퀘스트에 무기가 여러 정이면 줄이 나뉩니다.",
 "where": [
-"guide_static.py:3634"
+"guide_static.py:3707"
 ],
 "n": 1
 },
 {
 "ko": "부품 이름 검색 (한글·영문)",
 "where": [
-"guide_static.py:3636"
+"guide_static.py:3709"
 ],
 "n": 1
 },
 {
 "ko": "필수만",
 "where": [
-"guide_static.py:3637"
+"guide_static.py:3710"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립만",
 "where": [
-"guide_static.py:3637"
+"guide_static.py:3710"
 ],
 "n": 1
 },
 {
 "ko": "보유 숨기기",
 "where": [
-"guide_static.py:3638"
+"guide_static.py:3711"
 ],
 "n": 1
 },
 {
 "ko": "표시",
 "where": [
-"guide_static.py:3639"
+"guide_static.py:3712"
 ],
 "n": 1
 },
 {
 "ko": "· 보유",
 "where": [
-"guide_static.py:3639"
+"guide_static.py:3712"
 ],
 "n": 1
 },
 {
 "ko": "체크 초기화",
 "where": [
-"guide_static.py:3640",
+"guide_static.py:3713",
 "kappa.html:29"
 ],
 "n": 2
@@ -8551,528 +8724,1858 @@
 {
 "ko": "부품",
 "where": [
-"guide_static.py:3641"
-],
-"n": 1
-},
-{
-"ko": "필수",
-"where": [
-"guide_static.py:3641",
-"guide_static.py:3643"
+"guide_static.py:3714",
+"guide_static.py:3906"
 ],
 "n": 2
 },
 {
+"ko": "필수",
+"where": [
+"guide_static.py:3714",
+"guide_static.py:3716",
+"guide_static.py:3928"
+],
+"n": 3
+},
+{
 "ko": "쓰는 퀘스트",
 "where": [
-"guide_static.py:3641"
+"guide_static.py:3714"
 ],
 "n": 1
 },
 {
 "ko": "시세(PVP)",
 "where": [
-"guide_static.py:3641"
+"guide_static.py:3714"
 ],
 "n": 1
 },
 {
 "ko": "는 데이터상 반드시 포함해야 하는 횟수,",
 "where": [
-"guide_static.py:3643"
+"guide_static.py:3716"
 ],
 "n": 1
 },
 {
 "ko": "는 위키 예시 조립에 쓰인 횟수입니다. 출처: tarkov.dev 퀘스트 데이터(buildWeapon 목표),",
 "where": [
-"guide_static.py:3643"
+"guide_static.py:3716"
 ],
 "n": 1
 },
 {
 "ko": "예시 조립은",
 "where": [
-"guide_static.py:3644"
+"guide_static.py:3717"
 ],
 "n": 1
 },
 {
 "ko": "(CC BY-NC-SA, 각 퀘스트 줄에 문서 링크).",
 "where": [
-"guide_static.py:3644"
+"guide_static.py:3717"
 ],
 "n": 1
 },
 {
 "ko": "시세는 24시간 평균이며",
 "where": [
-"guide_static.py:3645"
+"guide_static.py:3718"
 ],
 "n": 1
 },
 {
 "ko": "은 플리마켓 거래 불가 품목입니다.",
 "where": [
-"guide_static.py:3645"
+"guide_static.py:3718"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 건스미스 부품 총정리 — 퀘스트",
 "where": [
-"guide_static.py:3669"
+"guide_static.py:3742"
 ],
 "n": 1
 },
 {
 "ko": "개 필수 부품",
 "where": [
-"guide_static.py:3669"
+"guide_static.py:3742"
 ],
 "n": 1
 },
 {
 "ko": "종·성능 조건·즐겨찾기 체크리스트 | 탈콥 가이드",
 "where": [
-"guide_static.py:3669"
+"guide_static.py:3742"
 ],
 "n": 1
 },
 {
 "ko": "타르코프 건스미스(메카닉 무기 조립) 퀘스트",
 "where": [
-"guide_static.py:3670"
+"guide_static.py:3743"
 ],
 "n": 1
 },
 {
 "ko": "개 전부: 무기별 반드시 포함할 부품",
 "where": [
-"guide_static.py:3670"
+"guide_static.py:3743"
 ],
 "n": 1
 },
 {
 "ko": "종, 인체공학·반동·무게 조건,",
 "where": [
-"guide_static.py:3670"
+"guide_static.py:3743"
 ],
 "n": 1
 },
 {
 "ko": "플리마켓 즐겨찾기용 전체 부품 체크리스트. 건스미스 마스터 포함.",
 "where": [
-"guide_static.py:3671"
+"guide_static.py:3744"
+],
+"n": 1
+},
+{
+"ko": "돌격소총",
+"where": [
+"guide_static.py:3756"
+],
+"n": 1
+},
+{
+"ko": "돌격 카빈",
+"where": [
+"guide_static.py:3756"
+],
+"n": 1
+},
+{
+"ko": "기관단총",
+"where": [
+"guide_static.py:3756"
+],
+"n": 1
+},
+{
+"ko": "지정사수소총",
+"where": [
+"guide_static.py:3757"
+],
+"n": 1
+},
+{
+"ko": "볼트액션 소총",
+"where": [
+"guide_static.py:3757"
+],
+"n": 1
+},
+{
+"ko": "산탄총",
+"where": [
+"guide_static.py:3757"
+],
+"n": 1
+},
+{
+"ko": "기관총",
+"where": [
+"guide_static.py:3758"
+],
+"n": 1
+},
+{
+"ko": "권총",
+"where": [
+"guide_static.py:3758"
+],
+"n": 1
+},
+{
+"ko": "유탄발사기",
+"where": [
+"guide_static.py:3758",
+"guide_static.py:3767"
+],
+"n": 2
+},
+{
+"ko": "특수 무기",
+"where": [
+"guide_static.py:3758"
+],
+"n": 1
+},
+{
+"ko": "반동 최소",
+"where": [
+"guide_static.py:3759",
+"guide_static.py:3928",
+"guide_static.py:4090"
+],
+"n": 3
+},
+{
+"ko": "균형",
+"where": [
+"guide_static.py:3759",
+"guide_static.py:3928",
+"guide_static.py:4090"
+],
+"n": 3
+},
+{
+"ko": "인체공학 최대",
+"where": [
+"guide_static.py:3759",
+"guide_static.py:3928",
+"guide_static.py:4090"
+],
+"n": 3
+},
+{
+"ko": "반동을 가장 많이 줄이는 조합. 인체공학은 같은 반동일 때만 따집니다.",
+"where": [
+"guide_static.py:3760"
+],
+"n": 1
+},
+{
+"ko": "인체공학을 기본 조립 이상(최소 60)으로 지키면서 반동을 가장 많이 줄인 조합.",
+"where": [
+"guide_static.py:3761"
+],
+"n": 1
+},
+{
+"ko": "인체공학을 낼 수 있는 만큼(100까지) 올린 조합 중 반동이 가장 적은 것.",
+"where": [
+"guide_static.py:3762"
+],
+"n": 1
+},
+{
+"ko": "마운트",
+"where": [
+"guide_static.py:3764"
+],
+"n": 1
+},
+{
+"ko": "조준경",
+"where": [
+"guide_static.py:3764"
+],
+"n": 1
+},
+{
+"ko": "전술 장비",
+"where": [
+"guide_static.py:3764"
+],
+"n": 1
+},
+{
+"ko": "총구",
+"where": [
+"guide_static.py:3764"
+],
+"n": 1
+},
+{
+"ko": "탄창",
+"where": [
+"guide_static.py:3765"
+],
+"n": 1
+},
+{
+"ko": "개머리판",
+"where": [
+"guide_static.py:3765"
+],
+"n": 1
+},
+{
+"ko": "총열",
+"where": [
+"guide_static.py:3765"
+],
+"n": 1
+},
+{
+"ko": "총열 덮개",
+"where": [
+"guide_static.py:3765"
+],
+"n": 1
+},
+{
+"ko": "권총 손잡이",
+"where": [
+"guide_static.py:3766"
+],
+"n": 1
+},
+{
+"ko": "리시버",
+"where": [
+"guide_static.py:3766"
+],
+"n": 1
+},
+{
+"ko": "장전 손잡이",
+"where": [
+"guide_static.py:3766"
+],
+"n": 1
+},
+{
+"ko": "앞 손잡이",
+"where": [
+"guide_static.py:3766"
+],
+"n": 1
+},
+{
+"ko": "가스 블록",
+"where": [
+"guide_static.py:3767"
+],
+"n": 1
+},
+{
+"ko": "앞 가늠쇠",
+"where": [
+"guide_static.py:3767"
+],
+"n": 1
+},
+{
+"ko": "뒤 가늠자",
+"where": [
+"guide_static.py:3767"
+],
+"n": 1
+},
+{
+"ko": "양각대",
+"where": [
+"guide_static.py:3768"
+],
+"n": 1
+},
+{
+"ko": "노리쇠 멈치",
+"where": [
+"guide_static.py:3768"
+],
+"n": 1
+},
+{
+"ko": "공이치기",
+"where": [
+"guide_static.py:3768"
+],
+"n": 1
+},
+{
+"ko": "방아쇠",
+"where": [
+"guide_static.py:3768"
+],
+"n": 1
+},
+{
+"ko": "장비",
+"where": [
+"guide_static.py:3769"
+],
+"n": 1
+},
+{
+"ko": "야간 투시경",
+"where": [
+"guide_static.py:3769"
+],
+"n": 1
+},
+{
+"ko": "손전등",
+"where": [
+"guide_static.py:3769"
+],
+"n": 1
+},
+{
+"ko": "기본 포함",
+"where": [
+"guide_static.py:3861",
+"guide_static.py:3928"
+],
+"n": 2
+},
+{
+"ko": "· 퀘스트 해금",
+"where": [
+"guide_static.py:3866"
+],
+"n": 1
+},
+{
+"ko": "구매 불가",
+"where": [
+"guide_static.py:3869",
+"guide_static.py:3928"
+],
+"n": 2
+},
+{
+"ko": "반동",
+"where": [
+"guide_static.py:3906"
+],
+"n": 1
+},
+{
+"ko": "구하는 곳",
+"where": [
+"guide_static.py:3906"
+],
+"n": 1
+},
+{
+"ko": "가격",
+"where": [
+"guide_static.py:3906"
+],
+"n": 1
+},
+{
+"ko": "플리",
+"where": [
+"guide_static.py:3928",
+"kappa.html:75",
+"keys.html:87"
+],
+"n": 3
+},
+{
+"ko": "인체",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "· 반동",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4034"
+],
+"n": 2
+},
+{
+"ko": "· 기본 포함",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "· 구매 불가",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "발",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "— 비움 —",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "(계산",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "수직 반동",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4050"
+],
+"n": 2
+},
+{
+"ko": "수평 반동",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4050"
+],
+"n": 2
+},
+{
+"ko": "반동 보정",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "무게",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4050"
+],
+"n": 2
+},
+{
+"ko": "추가 부품값",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "(구매 불가",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "⚠ 같이 달 수 없는 부품:",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "장착",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "부품 (게임 짧은 이름)",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "구하는 곳 · 가격",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "기본 조립",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4024",
+"guide_static.py:4054",
+"guide_static.py:4090"
+],
+"n": 4
+},
+{
+"ko": "내 조립",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "내 프리셋",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:3998"
+],
+"n": 2
+},
+{
+"ko": "인체공학 / 수직 반동",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:3998",
+"guide_static.py:4096"
+],
+"n": 3
+},
+{
+"ko": "불러오기",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "링크",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "삭제",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "저장한 프리셋이 없어요. 이름을 적고 저장하면 이 브라우저에 남습니다(무기마다 30개까지).",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "링크 복사됨 ✓",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "복사됨 ✓",
+"where": [
+"guide_static.py:3928",
+"guide_static.py:4330"
+],
+"n": 2
+},
+{
+"ko": "」 프리셋을 지울까요?",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "모딩 시뮬레이터 데이터를 불러오지 못했어요. 새로고침해 보세요.",
+"where": [
+"guide_static.py:3928"
+],
+"n": 1
+},
+{
+"ko": "개 · 이 브라우저",
+"where": [
+"guide_static.py:3998"
+],
+"n": 1
+},
+{
+"ko": "프리셋",
+"where": [
+"guide_static.py:3998"
+],
+"n": 1
+},
+{
+"ko": "· 수직 반동",
+"where": [
+"guide_static.py:4034",
+"guide_static.py:4040"
+],
+"n": 2
+},
+{
+"ko": "부품값",
+"where": [
+"guide_static.py:4035",
+"guide_static.py:4050"
+],
+"n": 2
+},
+{
+"ko": "₽(플리마켓·상인 중 싼 쪽, 기본 포함 부품 0₽).",
+"where": [
+"guide_static.py:4035"
+],
+"n": 1
+},
+{
+"ko": "이 조립을 모딩 시뮬레이터에 넣기",
+"where": [
+"guide_static.py:4037"
+],
+"n": 1
+},
+{
+"ko": "상인 현금 구매만으로도 같은 조립입니다.",
+"where": [
+"guide_static.py:4038"
+],
+"n": 1
+},
+{
+"ko": "상인만 버전을 모딩 시뮬레이터에 넣기",
+"where": [
+"guide_static.py:4039"
+],
+"n": 1
+},
+{
+"ko": "상인만: 인체공학",
+"where": [
+"guide_static.py:4040"
+],
+"n": 1
+},
+{
+"ko": "· 필수",
+"where": [
+"guide_static.py:4042"
+],
+"n": 1
+},
+{
+"ko": "모딩 추천",
+"where": [
+"guide_static.py:4044"
+],
+"n": 1
+},
+{
+"ko": "· 기본 인체공학",
+"where": [
+"guide_static.py:4045"
+],
+"n": 1
+},
+{
+"ko": "· 기본 반동",
+"where": [
+"guide_static.py:4045"
+],
+"n": 1
+},
+{
+"ko": "· 달 수 있는 부품",
+"where": [
+"guide_static.py:4045"
+],
+"n": 1
+},
+{
+"ko": "🔧 모딩 시뮬레이터 바로가기",
+"where": [
+"guide_static.py:4047"
+],
+"n": 1
+},
+{
+"ko": "칸마다 부품을 바꿔 보며 수치를 바로 계산 · 프리셋 저장",
+"where": [
+"guide_static.py:4047"
+],
+"n": 1
+},
+{
+"ko": "보는 법",
+"where": [
+"guide_static.py:4048"
+],
+"n": 1
+},
+{
+"ko": "— 아래 세 조립은 부품 수치로 계산한 추천입니다. 표의 숫자는 조립을 마친 총의",
+"where": [
+"guide_static.py:4048"
+],
+"n": 1
+},
+{
+"ko": "인체공학·수직 반동·수평 반동·무게·부품값",
+"where": [
+"guide_static.py:4048"
+],
+"n": 1
+},
+{
+"ko": "이고, 괄호는 기본 조립과의 차이입니다.",
+"where": [
+"guide_static.py:4048"
+],
+"n": 1
+},
+{
+"ko": "맨 아래",
+"where": [
+"guide_static.py:4049"
+],
+"n": 1
+},
+{
+"ko": "모딩 시뮬레이터",
+"where": [
+"guide_static.py:4049",
+"guide_static.py:4053"
+],
+"n": 2
+},
+{
+"ko": "에서 칸마다 부품을 바꾸면 수치가 바로 다시 계산됩니다. 조준경은 취향이라 추천에 넣지 않았습니다.",
+"where": [
+"guide_static.py:4049"
+],
+"n": 1
+},
+{
+"ko": "한눈에 비교",
+"where": [
+"guide_static.py:4050"
+],
+"n": 1
+},
+{
+"ko": "조립",
+"where": [
+"guide_static.py:4050"
+],
+"n": 1
+},
+{
+"ko": "상인만(인체공학 / 수직 반동 · 값)",
+"where": [
+"guide_static.py:4050"
+],
+"n": 1
+},
+{
+"ko": "칸별 호환 부품 · 수치 계산 · 프리셋 저장",
+"where": [
+"guide_static.py:4053"
+],
+"n": 1
+},
+{
+"ko": "플리 포함",
+"where": [
+"guide_static.py:4056"
+],
+"n": 1
+},
+{
+"ko": "상인만",
+"where": [
+"guide_static.py:4056"
+],
+"n": 1
+},
+{
+"ko": "조립 링크 복사",
+"where": [
+"guide_static.py:4057"
+],
+"n": 1
+},
+{
+"ko": "프리셋 이름 (예: 레이드용 저반동)",
+"where": [
+"guide_static.py:4058"
+],
+"n": 1
+},
+{
+"ko": "지금 조립을 프리셋으로 저장",
+"where": [
+"guide_static.py:4059"
+],
+"n": 1
+},
+{
+"ko": "모딩 시뮬레이터를 불러오는 중…",
+"where": [
+"guide_static.py:4060"
+],
+"n": 1
+},
+{
+"ko": "게임에서 맞추기 · 구매 목록",
+"where": [
+"guide_static.py:4061"
+],
+"n": 1
+},
+{
+"ko": "게임 정비 화면에서 위에서부터 순서대로 끼우면 됩니다(위 칸을 먼저 달아야 아래 칸이 생깁니다). 다 끼운 뒤 게임 안에서 프리셋으로 저장해 두세요 — 사이트 프리셋을 게임으로 바로 보내는 기능은 게임에 없습니다.",
+"where": [
+"guide_static.py:4062"
+],
+"n": 1
+},
+{
+"ko": "부품 목록 복사",
+"where": [
+"guide_static.py:4063"
+],
+"n": 1
+},
+{
+"ko": "선택 상자의 부품은 지금 기준(마지막으로 누른 조립)의 점수 순입니다. 칸을 바꾸면 그 아래 칸은 비고, 필수 칸만 자동으로 채웁니다. 조립은 이 브라우저에 저장됩니다.",
+"where": [
+"guide_static.py:4064"
+],
+"n": 1
+},
+{
+"ko": "이 총에 바로 다는 칸",
+"where": [
+"guide_static.py:4065"
+],
+"n": 1
+},
+{
+"ko": "계산 방식",
+"where": [
+"guide_static.py:4066"
+],
+"n": 1
+},
+{
+"ko": "— 인체공학 = 총 기본값 + 부품 값의 합, 반동 = 총 기본 반동 × (1 + 부품 반동 보정의 합).",
+"where": [
+"guide_static.py:4066"
+],
+"n": 1
+},
+{
+"ko": "게임 무기 화면과 같은 계산이고(공개된 게임 코드 분석 기준, 2025~2026 패치 노트에 계산식 변경 없음), 탄약의 반동 보정·숙련도·무게 초과 페널티는 게임 무기 화면처럼 넣지 않았습니다(탄약은",
+"where": [
+"guide_static.py:4067"
+],
+"n": 1
+},
+{
+"ko": "게임은 인체공학을 0~100으로 잘라 표시하고 조준 효과도 100에서 멈추므로, 100을 넘는 값은 100으로 보여 주고 추천에서도 더 쳐주지 않습니다. 같이 달 수 없는 부품(충돌)은 피해서 고르지만, 칸 위치 충돌 일부는 데이터에 없어 게임에서 막힐 수 있습니다.",
+"where": [
+"guide_static.py:4068"
+],
+"n": 1
+},
+{
+"ko": "가격은 플리마켓 24시간 평균(PVP)과 상인 현금 구매가이며 물물교환은 넣지 않았습니다.",
+"where": [
+"guide_static.py:4069"
+],
+"n": 1
+},
+{
+"ko": "모딩 추천 — 반동 최소·인체공학 최대 조립과 부품 가격 | 탈콥 가이드",
+"where": [
+"guide_static.py:4070"
+],
+"n": 1
+},
+{
+"ko": "무기 모딩: 기본 조립 인체공학",
+"where": [
+"guide_static.py:4071"
+],
+"n": 1
+},
+{
+"ko": "·수직 반동",
+"where": [
+"guide_static.py:4071"
+],
+"n": 1
+},
+{
+"ko": "→ 반동 최소",
+"where": [
+"guide_static.py:4071"
+],
+"n": 1
+},
+{
+"ko": "균형 인체공학",
+"where": [
+"guide_static.py:4072"
+],
+"n": 1
+},
+{
+"ko": ", 인체공학 최대",
+"where": [
+"guide_static.py:4072"
+],
+"n": 1
+},
+{
+"ko": ". 부품별 상인·플리 가격, 칸별 호환 부품",
+"where": [
+"guide_static.py:4072"
+],
+"n": 1
+},
+{
+"ko": "종 모딩 시뮬레이터.",
+"where": [
+"guide_static.py:4072"
+],
+"n": 1
+},
+{
+"ko": "정 · 추천 조립 3종(반동 최소·균형·인체공학 최대) · 칸별 호환 부품 모딩 시뮬레이터 · 데이터 기준",
+"where": [
+"guide_static.py:4094"
+],
+"n": 1
+},
+{
+"ko": "— 무기를 누르면 추천 조립 세 가지의 부품·구하는 곳·가격이 나오고, 같은 페이지 아래 모딩 시뮬레이터에서 칸마다 부품을 바꿔 수치를 바로 계산할 수 있습니다.",
+"where": [
+"guide_static.py:4095"
+],
+"n": 1
+},
+{
+"ko": "표의 숫자는",
+"where": [
+"guide_static.py:4096"
+],
+"n": 1
+},
+{
+"ko": "입니다(반동은 낮을수록, 인체공학은 높을수록 좋음).",
+"where": [
+"guide_static.py:4096"
+],
+"n": 1
+},
+{
+"ko": "무기 이름 검색 (예: M4A1, AK-74, 모신)",
+"where": [
+"guide_static.py:4098"
+],
+"n": 1
+},
+{
+"ko": "추천은 부품 수치(인체공학·반동 보정)로 계산한 것이라 커뮤니티 유행 조립과 다를 수 있습니다. 조준경·전술 장비는 취향이라 넣지 않았습니다.",
+"where": [
+"guide_static.py:4101"
+],
+"n": 1
+},
+{
+"ko": "건스미스 퀘스트용 조립은",
+"where": [
+"guide_static.py:4102"
+],
+"n": 1
+},
+{
+"ko": "에 따로 있습니다.",
+"where": [
+"guide_static.py:4102"
+],
+"n": 1
+},
+{
+"ko": "타르코프 무기 모딩 추천 —",
+"where": [
+"guide_static.py:4104"
+],
+"n": 1
+},
+{
+"ko": "정 반동 최소·인체공학 최대 조립 계산기 | 탈콥 가이드",
+"where": [
+"guide_static.py:4104"
+],
+"n": 1
+},
+{
+"ko": "타르코프 무기",
+"where": [
+"guide_static.py:4105"
+],
+"n": 1
+},
+{
+"ko": "정의 모딩 추천: 반동 최소·균형·인체공학 최대 조립, 부품별 상인·플리 가격, 칸별 호환 부품을 고르는 모딩 시뮬레이터와 수치 계산.",
+"where": [
+"guide_static.py:4105"
 ],
 "n": 1
 },
 {
 "ko": "// 상단 그룹 메뉴: 마우스가 없는(터치) 환경이나 좁은 화면에선 그룹 제목을 누르면 펼치고, 다시 누르면 이동. 바깥 클릭이면 닫힘",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "방금",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "분 전",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "시간 전",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "🔗 오버레이 연동 · 완료",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "(시즌)",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "기준 ↻",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "마지막으로 받은 진행도(",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": ")를 쓰고 있어요. 지금은 오버레이를 직접 읽지 못했어요",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": ". 눌러서 다시 읽기.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "시세 오버레이가 게임 로그로 확인한 완료 퀘스트를 자동 반영 중",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "— 오버레이가 게임 로그 폴더를 찾지 못해 완료 목록이 비어 있을 수 있어요. 오버레이 설정에서 로그 경로를 확인하세요.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "연동 다시 시도 중…",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 받은 진행도는 그 서버(PVP/PVE/시즌)의 칸(guide.sync.m.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": ")에",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "교체",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "로 저장한다 — 직접 체크(guide.quests)와 섞지 않는다(11-04).",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 사이트 모드도 오버레이 서버로 맞춘다(안 맞추면 다음 페이지의 자동 읽기가 다른 서버 진행도를 가져온다).",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 상인 LL 하한 추정(11-04) — 깬·진행 중 퀘스트가 요구한 LL 의 최댓값(받았으니 적어도 그 등급). ll.json = 빌드가 만든 퀘스트→[상인, LL]",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 프로모 코드",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "체크 — 앱(같은 PC)에 저장된 목록을 브라우저 체크에 합친다(앱 쪽이 더 많이 알고 있으면 추가만)",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 1) 오버레이의",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "가이드 열기",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "버튼이 주소 해시(#sync=base64 JSON)로 넘긴 진행도 — 브라우저의 로컬 네트워크 정책과 무관하게 동작",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 2) 같은 PC의 사이드카에서 직접 읽기 — https 페이지에서 127.0.0.1 로 가려면 크롬은 targetAddressSpace:",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "이 필요하고,",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "//    처음 한 번",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "로컬 네트워크 접근 허용",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "창이 뜬다. 앱을 안 쓰는 방문자에게 권한 창을 띄우지 않도록 자동 시도는",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "//    한 번이라도 연동된 브라우저에서만, 처음인 브라우저엔 상단 버튼(사용자 동작)으로.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 실패 이유: 권한 거부 / 앱은 떠 있는데 연동 없는 예전 버전(no-cors 요청은 닿음) / 앱 꺼짐·차단 / 시간 초과",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "응답 형식 오류",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "브라우저가 로컬 네트워크 접근을 막음",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "연동이 없는 예전 버전 오버레이",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "응답 없음(시간 초과)",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "오버레이가 꺼져 있거나 연결이 막힘",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "// 휴대폰·태블릿(마우스 없음)에선 같은 PC의 오버레이가 있을 수 없으니 버튼을 내지 않는다(누르면 항상 실패하던 것, 11-04)",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "🔗 연동",
 "where": [
-"guide_static.py:3685",
-"guide_static.py:3685"
+"guide_static.py:4119",
+"guide_static.py:4119"
 ],
 "n": 2
 },
 {
 "ko": "같은 PC에서 켜 둔 시세 오버레이의 퀘스트 진행도·은신처 단계를 이 브라우저에 가져옵니다. 데이터는 브라우저 밖으로 나가지 않아요.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "연동 중…",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "브라우저가 이 사이트의 로컬 네트워크 접근을 막아 두었어요.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "크롬·엣지:",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "주소창 자물쇠 → 사이트 설정 → 로컬 네트워크 접근 → 허용",
 "where": [
-"guide_static.py:3685",
-"guide_static.py:3685"
+"guide_static.py:4119",
+"guide_static.py:4119"
 ],
 "n": 2
 },
 {
 "ko": "후 새로고침. 브레이브:",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "에서 이 사이트 허용.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "오버레이는 켜져 있지만 연동 기능이 없는 예전 버전이에요.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "오버레이를",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "최신 버전",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "으로 업데이트한 뒤 다시 눌러 주세요(설치판은 다음 실행 때 자동 업데이트).",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "오버레이를 찾지 못했어요.",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "(1.2.6 이상)를 켜 두고 다시 눌러 주세요. 크롬이",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "로컬 네트워크 접근",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "을 차단해 두었다면",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": ", 브레이브는",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
-"ko": "그래도 안 되면 오버레이",
+"ko": "가장 확실한 방법:",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
+],
+"n": 1
+},
+{
+"ko": "오버레이",
+"where": [
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "설정 → 사이트 연동하기",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
-"ko": "버튼으로 이 사이트를 열면 진행도가 같이 넘어옵니다.",
+"ko": "를 누르세요. 이 사이트가 열리면서 진행도가 바로 넘어와요(브라우저 권한 설정이 필요 없어요).",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
+],
+"n": 1
+},
+{
+"ko": "이 버튼이 안 된 이유:",
+"where": [
+"guide_static.py:4119"
 ],
 "n": 1
 },
 {
 "ko": "닫기",
 "where": [
-"guide_static.py:3685"
+"guide_static.py:4119"
+],
+"n": 1
+},
+{
+"ko": "설치",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "표시(마커)",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "사용",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "진행 중 (연동)",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "직접 추가 — 이 맵의 남은 퀘스트",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "오버레이 연동 전이라 진행 중 퀘스트를 몰라요. 아래에서 이번 출정에 할 퀘스트를 직접 고르세요(위 🔗 연동 버튼 또는 앱의 사이트 연동하기를 쓰면 자동으로 담깁니다).",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "이 맵에 준비물이 필요한 남은 퀘스트가 없어요.",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "퀘스트 아이템 챙기기",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "착용:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "착용 금지:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "무기:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "부품:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "장비·무기 조건",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "탈출:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "쓰는 탈출구:",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "조명탄 탈출",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "등반 탈출",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "· 방탄조끼 착용 불가",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "차량 요금",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "· 인원·스캐브 카르마에 따라 요금이 달라요",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "탈출 요금",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "탈출에 낼 아이템",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "탈출구 관련 아이템",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "조건이 있는 탈출구",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "레이드에서 주울 퀘스트템",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "빼기",
+"where": [
+"guide_static.py:4330",
+"guide_static.py:4330"
+],
+"n": 2
+},
+{
+"ko": "내 기본 준비물",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "이번 출정에 넣은 퀘스트가 없어요. 위에서 퀘스트를 고르거나 아래 탈출구·기본 준비물을 추가하세요.",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "챙길 것",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "개 중",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "개 챙김",
+"where": [
+"guide_static.py:4330"
+],
+"n": 1
+},
+{
+"ko": "맵을 고르면 지금 하는 퀘스트에 필요한 아이템·열쇠·탈출 준비물을 한 목록으로 · 퀘스트",
+"where": [
+"guide_static.py:4413"
+],
+"n": 1
+},
+{
+"ko": "— ① 갈 맵을 고르고 ② 이번 출정에 할 퀘스트를 체크하면(오버레이를 연동하면 진행 중 퀘스트가 자동으로 담기고, 연동 전이면 이 맵의 남은 퀘스트에서 직접 고름)",
+"where": [
+"guide_static.py:4414"
+],
+"n": 1
+},
+{
+"ko": "③ 설치할 카메라·마커 개수, 필요한 열쇠, 착용·무기 조건, 주울 퀘스트템과 이 맵 탈출구에 쓰이는 조명탄·등반 장비·차량 요금이 한 목록으로 나옵니다(탈출구는 레이드에 들어가야 정해지니 쓸 수 있는 것을 모두 보여 줍니다).",
+"where": [
+"guide_static.py:4415"
+],
+"n": 1
+},
+{
+"ko": "체크 표시는 이 브라우저에만 저장됩니다.",
+"where": [
+"guide_static.py:4416"
+],
+"n": 1
+},
+{
+"ko": "① 이번 출정에 할 퀘스트",
+"where": [
+"guide_static.py:4421"
+],
+"n": 1
+},
+{
+"ko": "② 챙길 것",
+"where": [
+"guide_static.py:4422"
+],
+"n": 1
+},
+{
+"ko": "내 기본 준비물 추가 (예: 지혈대 2개, 여분 탄창 3개)",
+"where": [
+"guide_static.py:4423"
+],
+"n": 1
+},
+{
+"ko": "추가",
+"where": [
+"guide_static.py:4424"
+],
+"n": 1
+},
+{
+"ko": "목록 복사",
+"where": [
+"guide_static.py:4425"
+],
+"n": 1
+},
+{
+"ko": "이 맵 체크 지우기",
+"where": [
+"guide_static.py:4425"
+],
+"n": 1
+},
+{
+"ko": "이 페이지는 자바스크립트가 필요합니다.",
+"where": [
+"guide_static.py:4428"
+],
+"n": 1
+},
+{
+"ko": "맵별 바로가기",
+"where": [
+"guide_static.py:4429"
+],
+"n": 1
+},
+{
+"ko": "퀘스트 목표의 설치·표시·사용 아이템, 필요 열쇠, 착용·무기 조건은 tarkov.dev 공개 데이터 기준이고, 탈출구 조건은 공식 위키 표를 옮긴 것입니다.",
+"where": [
+"guide_static.py:4430"
+],
+"n": 1
+},
+{
+"ko": "차량 탈출 요금은 인원·스캐브 카르마에 따라 달라 금액을 적지 않았습니다. 레이드에서 찾아 제출하는(인레이드) 아이템은 가져갈 수 없어 목록에 넣지 않았습니다.",
+"where": [
+"guide_static.py:4431"
+],
+"n": 1
+},
+{
+"ko": "타르코프 출정 준비물 — 맵별 퀘스트 아이템·열쇠·탈출 준비 체크리스트 | 탈콥 가이드",
+"where": [
+"guide_static.py:4433"
+],
+"n": 1
+},
+{
+"ko": "타르코프 맵을 고르면 진행 중 퀘스트에 필요한 와이파이 카메라·MS2000 마커 개수, 열쇠, 착용·무기 조건, 조명탄·등반 장비·차량 요금 같은 탈출 준비물을 한 체크리스트로.",
+"where": [
+"guide_static.py:4434"
 ],
 "n": 1
 },
@@ -9332,9 +10835,10 @@
 {
 "ko": "지금 받을 수 있는 것만",
 "where": [
-"quests.html:54"
+"quests.html:54",
+"quests.html:58"
 ],
-"n": 1
+"n": 2
 },
 {
 "ko": "내 상인 등급",
@@ -9365,37 +10869,65 @@
 "n": 1
 },
 {
+"ko": "내 레벨",
+"where": [
+"quests.html:58"
+],
+"n": 1
+},
+{
+"ko": "넣으면 등급의 레벨 조건과",
+"where": [
+"quests.html:58"
+],
+"n": 1
+},
+{
+"ko": "에 씁니다",
+"where": [
+"quests.html:58"
+],
+"n": 1
+},
+{
+"ko": "우호도는 깬 퀘스트 보상의 합이라 일일·주간 퀘스트 보상, 에디션 시작 보너스, 실패 감점은 빠져 있습니다 — 실제 우호도는 보통 이보다 조금 높습니다.",
+"where": [
+"quests.html:60"
+],
+"n": 1
+},
+{
 "ko": "레이드 중",
 "where": [
-"quests.html:62"
+"quests.html:64"
 ],
 "n": 1
 },
 {
 "ko": "이면",
 "where": [
-"quests.html:62"
+"quests.html:64"
 ],
 "n": 1
 },
 {
 "ko": "이 아이템이 어느 퀘스트에 몇 개 필요한지",
 "where": [
-"quests.html:62"
+"quests.html:64"
 ],
 "n": 1
 },
 {
 "ko": "가 바로 뜹니다",
 "where": [
-"quests.html:62"
+"quests.html:64"
 ],
 "n": 1
 },
 {
 "ko": "데이터:",
 "where": [
-"quests.html:64",
+"quests.html:66",
 "kappa.html:35",
 "keys.html:52",
 "keyfinder.html:82"
@@ -9405,105 +10937,140 @@
 {
 "ko": "공개 데이터 · 제출(handover) 목표만 집계 · 완료 체크는 이 브라우저에만 저장 ·",
 "where": [
-"quests.html:64"
+"quests.html:66"
 ],
 "n": 1
 },
 {
 "ko": "var done = gdone();  // 직접 체크 ∪ 지금 모드 연동분(sync.js 의 gdone — PVP/PVE 분리)",
 "where": [
-"quests.html:76"
+"quests.html:78"
 ],
 "n": 1
 },
 {
 "ko": "); // ★ 즐겨찾기 — /guide/favorites/ 에 모임",
 "where": [
-"quests.html:77"
+"quests.html:79"
 ],
 "n": 1
 },
 {
 "ko": "모든 상인",
 "where": [
-"quests.html:89"
+"quests.html:91"
 ],
 "n": 1
 },
 {
 "ko": "// 내 상인 등급(11-04): 오버레이 연동으로 추정한 최소 LL(gllE) 또는 직접 고른 값(gllM) — 모드별",
 "where": [
-"quests.html:91"
+"quests.html:93"
 ],
 "n": 1
 },
 {
-"ko": "자동 (LL",
+"ko": "펜스는 스캐브 카르마로 올라 추정하지 않아요",
 "where": [
-"quests.html:100"
+"quests.html:98"
 ],
 "n": 1
 },
 {
-"ko": "이상 추정)",
-"where": [
-"quests.html:100"
-],
-"n": 1
-},
-{
-"ko": "자동 (추정 없음)",
-"where": [
-"quests.html:100"
-],
-"n": 1
-},
-{
-"ko": "— 연동하거나 직접 고르세요",
+"ko": "까지 우호도",
 "where": [
 "quests.html:103"
 ],
 "n": 1
 },
 {
+"ko": "더, 레벨",
+"where": [
+"quests.html:103"
+],
+"n": 1
+},
+{
+"ko": "받은 퀘스트 LL",
+"where": [
+"quests.html:104"
+],
+"n": 1
+},
+{
+"ko": "· 우호도",
+"where": [
+"quests.html:104"
+],
+"n": 1
+},
+{
+"ko": "자동 (LL",
+"where": [
+"quests.html:112"
+],
+"n": 1
+},
+{
+"ko": "이상 추정)",
+"where": [
+"quests.html:112"
+],
+"n": 1
+},
+{
+"ko": "자동 (추정 없음)",
+"where": [
+"quests.html:112"
+],
+"n": 1
+},
+{
+"ko": "— 연동하거나 직접 고르세요",
+"where": [
+"quests.html:115"
+],
+"n": 1
+},
+{
 "ko": "// 대체 가능한 아이템이 3개 이상이면",
 "where": [
-"quests.html:136"
+"quests.html:150"
 ],
 "n": 1
 },
 {
 "ko": "첫 아이템 외 N종",
 "where": [
-"quests.html:136"
+"quests.html:150"
 ],
 "n": 1
 },
 {
 "ko": "으로 줄이고 전체는 툴팁으로",
 "where": [
-"quests.html:136"
+"quests.html:150"
 ],
 "n": 1
 },
 {
 "ko": "즐겨찾기 — 내 즐겨찾기 페이지에 모임",
 "where": [
-"quests.html:158"
+"quests.html:172"
 ],
 "n": 1
 },
 {
 "ko": "조건에 맞는 퀘스트가 없습니다",
 "where": [
-"quests.html:167"
+"quests.html:181"
 ],
 "n": 1
 },
 {
 "ko": "조건에 맞는 아이템이 없습니다",
 "where": [
-"quests.html:183",
+"quests.html:197",
 "kappa.html:86"
 ],
 "n": 2
@@ -9511,42 +11078,42 @@
 {
 "ko": "아이템 종류",
 "where": [
-"quests.html:185"
+"quests.html:199"
 ],
 "n": 1
 },
 {
 "ko": "개 · 인레이드 필요 총",
 "where": [
-"quests.html:185"
+"quests.html:199"
 ],
 "n": 1
 },
 {
 "ko": "퀘스트 수",
 "where": [
-"quests.html:186"
+"quests.html:200"
 ],
 "n": 1
 },
 {
 "ko": "완료 체크",
 "where": [
-"quests.html:201"
+"quests.html:215"
 ],
 "n": 1
 },
 {
 "ko": "e.preventDefault(); // label 안의 버튼 — 완료 체크박스가 같이 눌리지 않게",
 "where": [
-"quests.html:206"
+"quests.html:220"
 ],
 "n": 1
 },
 {
 "ko": "// 오버레이 연동(sync.js)이 완료 퀘스트를 guide.quests 에 합치면 다시 읽어 그린다",
 "where": [
-"quests.html:222"
+"quests.html:236"
 ],
 "n": 1
 },
@@ -9679,14 +11246,6 @@
 },
 {
 "ko": "플리 거래 불가",
-"where": [
-"kappa.html:75",
-"keys.html:87"
-],
-"n": 2
-},
-{
-"ko": "플리",
 "where": [
 "kappa.html:75",
 "keys.html:87"
