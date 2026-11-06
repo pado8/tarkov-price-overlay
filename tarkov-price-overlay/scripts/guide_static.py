@@ -976,6 +976,18 @@ OG_IMAGE = {"ko": "og.png", "en": "og-en.png", "ru": "og-ru.png", "zh": "og-zh.p
 GSEARCH_SLOT = '<div class="gsearch" role="search"><input type="search" autocomplete="off" aria-label="검색" /></div>'
 
 
+def key_groups_html(ctx: Ctx, groups) -> str:
+    """requiredKeys 묶음 → 칩. 묶음이 여럿이면 '모두 필요', 한 묶음 안 여러 개면 '그중 하나'."""
+    gs = [[x.get("id") if isinstance(x, dict) else x for x in (g or []) if x] for g in (groups or [])]
+    gs = [g for g in gs if g]
+    if not gs:
+        return ""
+    if len(gs) == 1:
+        return ctx.chips_alt(gs[0])
+    return ('<div class="alt"><span class="muted small">모두 필요</span><div class="chips">'
+            + "".join(ctx.chip(g[0]) if len(g) == 1 else ctx.chips_alt(g) for g in gs) + "</div></div>")
+
+
 def page(ctx: Ctx, *, path: str, title: str, desc: str, body: str, nav: str = "", crumbs=None,
          og_type: str = "article", extra_head: str = "", scripts: str = "") -> str:
     url = SITE + lang_path(path)
@@ -1171,9 +1183,9 @@ def objective_html(ctx: Ctx, o: dict) -> str:
         detail.append(f'<div class="osub">{ctx.task_link(o["task"])} {e(st)}</div>')
     elif ty == "useItem":
         detail.append(ctx.chips_alt(_flat(o.get("useAny")), cnt))
-    keys = _flat(o.get("requiredKeys"))
-    if keys:
-        detail.append('<div class="sublabel">열쇠</div>' + ctx.chips_alt(keys))
+    kh = key_groups_html(ctx, o.get("requiredKeys"))
+    if kh:
+        detail.append('<div class="sublabel">열쇠</div>' + kh)
     maps = []
     for m in o.get("maps") or []:
         mid = m.get("id") if isinstance(m, dict) else m
@@ -1379,15 +1391,24 @@ def quest_page(ctx: Ctx, tid: str) -> tuple[str, str]:
         sections_main.append(notes)
     # 다운로드 한 줄 안내 — 목표(PVE 목표 포함)를 다 본 바로 아래(11-03, 자리 표식 guide-quest)
     sections_main.append('<p class="qcta">레이드 중 아이템에 마우스 올리고 <b>F2</b> — 이 퀘스트에 필요한지·시세가 바로 떠요 <a href="/?src=guide-quest">무료 시세 오버레이 받기</a></p>')
-    keys_html = ""
+    # 필요한 열쇠(11-06): 목표마다 무엇에 쓰는지 한 줄씩. neededKeys 를 '아래 중 아무거나'로 보이던 것(9개 퀘스트)을 고침
+    keys_html, covered = "", set()
+    for o in t.get("objectives") or []:
+        kh = key_groups_html(ctx, o.get("requiredKeys"))
+        if not kh:
+            continue
+        covered.update(x.get("id") if isinstance(x, dict) else x for g in o.get("requiredKeys") or [] for x in g or [])
+        od = ctx.tk(o.get("description"), "") or ""
+        keys_html += f'<div class="keyrow">{kh}<span class="muted small">{e(od)}</span></div>'
     for nk in t.get("neededKeys") or []:
-        ks = _flat(nk.get("keys"))
+        ks = [k for k in _flat(nk.get("keys")) if k not in covered]
         if ks:
             mp = nk.get("map")
             mid = mp.get("id") if isinstance(mp, dict) else mp
-            keys_html += f'<div class="keyrow"><span class="muted small">{ctx.map_link(mid) or "지도"}</span>{ctx.chips_alt(ks)}</div>'
+            keys_html += (f'<div class="keyrow"><div class="chips">{"".join(ctx.chip(k) for k in ks)}</div>'
+                          f'<span class="muted small">{ctx.map_link(mid) or "지도"}에서 쓰는 열쇠</span></div>')
     if keys_html:
-        sections_main.append(f'<section class="box"><h2>필요한 열쇠</h2>{keys_html}</section>')
+        sections_main.append(f'<section class="box"><h2>필요한 열쇠</h2><p class="small muted">목표마다 따로 필요해요 — 「아래 중 아무거나」라고 적힌 것만 그중 하나면 됩니다.</p>{keys_html}</section>')
     fail = []
     for fc in t.get("failConditions") or []:
         if fc.get("type") == "taskStatus" and fc.get("task") in ctx.tasks:
@@ -4282,20 +4303,23 @@ def raid_data(ctx: Ctx) -> dict:
                 used.update(i for g in wear[:4] for i in g[:6])
                 used.update(gun[:40])
                 used.update(i for g in gmods[:4] for i in g[:4])
-            for g in o.get("requiredKeys") or []:
-                if g:
-                    rows.append({"k": "key", "ids": _ids(g)[:6], "m": om})
+            kg = [_ids(g)[:6] for g in (o.get("requiredKeys") or []) if g]
+            if kg:
+                rows.append({"k": "key", "g": kg, "d": desc, "m": om})
         for nk in t.get("neededKeys") or []:
             mp = nk.get("map")
             mid = mp.get("id") if isinstance(mp, dict) else mp
             slug = (ctx.maps.get(mid) or {}).get("normalizedName") or ""
             bm = ctx.map_by_slug.get(MAP_VARIANTS.get(slug, slug), mid)
-            if nk.get("keys"):
-                rows.append({"k": "key", "ids": _ids(nk["keys"])[:6], "m": [bm] if bm else []})
+            covered = {i for r in rows if r["k"] == "key" for g in r["g"] for i in g}
+            for kid in _ids(nk.get("keys")):
+                if kid not in covered:
+                    rows.append({"k": "key", "g": [[kid]], "d": "", "m": [bm] if bm else []})
         if not rows:
             continue
         for r in rows:
             used.update(r.get("ids") or [])
+            used.update(i for g in r.get("g") or [] for i in g)
             if r.get("id"):
                 used.add(r["id"])
         pre = []
@@ -4361,13 +4385,16 @@ return k===1?'<details'+(y?"":" open")+'><summary>'+GL[k]+' <span class="muted s
 var on=qs.filter(inc),agg={},keys={},cond=[],find=[],qx=[],bring=[];
 on.forEach(function(q){q.r.forEach(function(r){if(!rOn(q,r))return;
 if(r.k==="i"){var k=r.ids.slice().sort().join("|")+":"+r.w;var a=agg[k]||(agg[k]={ids:r.ids,n:0,w:r.w,q:[]});a.n+=r.n;if(a.q.indexOf(q.n)<0)a.q.push(q.n)}
-else if(r.k==="key"){var kk=r.ids.slice().sort().join("|");var b=keys[kk]||(keys[kk]={ids:r.ids,q:[]});if(b.q.indexOf(q.n)<0)b.q.push(q.n)}
+else if(r.k==="key"){var kk=r.g.map(function(g){return g.slice().sort().join("|")}).sort().join("+");var b=keys[kk]||(keys[kk]={g:r.g,q:[]});var why=q.n+(r.d?" — "+r.d:"");if(b.q.indexOf(why)<0)b.q.push(why)}
 else if(r.k==="c")cond.push([q,r]);else if(r.k==="f")find.push([q,r]);else if(r.k==="q")bring.push([q,r]);else if(r.k==="x")qx.push([q,r])})});
 var L=[],tot=0,got=0;function line(key,html,sub){tot++;if(c[key])got++;L.push('<li class="'+(c[key]?"done":"")+'"><label>'+cb(key,c[key])+html+"</label>"+(sub?'<div class="muted small">'+sub+"</div>":"")+"</li>")}
 var sec=[];function flush(t){if(L.length)sec.push("<h3>"+t+'</h3><ul class="plain rlist">'+L.join("")+"</ul>");L=[]}
 Object.keys(agg).forEach(function(k){var a=agg[k];line("i:"+k,anyOf(a.ids,a.n)+' <span class="badge">'+W[a.w]+"</span>",a.q.join(", "))});
 bring.forEach(function(p){line("q:"+p[1].id,chip(p[1].id,p[1].n),p[0].n)});flush("퀘스트 아이템 챙기기");
-Object.keys(keys).forEach(function(k){var a=keys[k];line("k:"+k,anyOf(a.ids,1),a.q.join(", "))});flush("열쇠");
+Object.keys(keys).forEach(function(k){var a=keys[k],h;
+if(a.g.length>1)h=a.g.map(function(g){return anyOf(g,1)}).join('<span class="muted small"> + </span>')+' <span class="badge">모두 필요</span>';
+else h=anyOf(a.g[0],1)+(a.g[0].length>1?' <span class="badge">둘 중 하나만</span>':"");
+line("k:"+k,h,esc(a.q.join(" / ")))});flush("열쇠");
 cond.forEach(function(p,i){var r=p[1],h=esc(r.d||"");if(r.wear.length)h+='<div class="chips">착용: '+r.wear.map(function(g){return g.map(function(i){return chip(i)}).join("+")}).join('<span class="muted small"> 또는 </span>')+"</div>";
 if(r.nw.length)h+='<div class="chips">착용 금지: '+r.nw.map(function(i){return chip(i)}).join("")+"</div>";
 if(r.gun.length)h+='<div class="chips">무기: '+r.gun.slice(0,6).map(function(i){return chip(i)}).join("")+(r.gun.length>6?' <span class="muted small">외 '+(r.gun.length-6)+"정</span>":"")+"</div>";

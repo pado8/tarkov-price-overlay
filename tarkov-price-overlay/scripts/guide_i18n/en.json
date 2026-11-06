@@ -1689,5 +1689,9 @@
 "자동 최소치": "Auto minimum",
 "(받은 퀘스트 최소 레벨": "(taken quests min level",
 "· 깬 퀘스트 경험치": "· completed quest XP",
-") — 비워 두면 이 값을 씁니다": ") — used when left empty"
+") — 비워 두면 이 값을 씁니다": ") — used when left empty",
+"모두 필요": "All required",
+"에서 쓰는 열쇠": " — key used here",
+"목표마다 따로 필요해요 — 「아래 중 아무거나」라고 적힌 것만 그중 하나면 됩니다.": "Each objective needs its own key — only where it says 「Any of the following」 is one of them enough.",
+"둘 중 하나만": "Either one"
 }
