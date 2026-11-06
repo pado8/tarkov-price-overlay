@@ -6959,6 +6959,8 @@ ${t.fleaFeeHint}`}
                                         openGuide(region.lang, `quest/${q.slug}/`);
                                       }}
                                     >
+                                      {/* 11-07 회색 70%라 잘 안 보였다 → 금색 테두리 아이콘(App.css .quest-row .guide-link-btn).
+                                          '공략' 글자도 붙여 봤으나 좁은 카드(280px)에서 퀘스트 이름이 '방'처럼 잘려 뺐다 */}
                                       <Icon name="book" />
                                     </button>
                                   )}

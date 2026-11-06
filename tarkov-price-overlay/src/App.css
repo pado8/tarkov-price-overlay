@@ -288,6 +288,16 @@ html, body, #root {
   color: var(--gold-light);
   opacity: 1;
 }
+/* 11-07 퀘스트 행의 가이드(공략) 버튼 — 금색 테두리로 눈에 띄게(회색 70%라 잘 안 보였다). 글자는 이름 칸을 먹어서 안 붙인다 */
+.quest-row .guide-link-btn {
+  display: inline-flex;
+  align-items: center;
+  color: var(--gold-light);
+  opacity: 1;
+  border: 1px solid rgba(200, 170, 100, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+}
 /* 11-04 첫 설정 도움 상자 — 업데이트 배너와 같은 결의 금색 테두리 */
 .capture-help {
   margin: 6px 0 2px;
