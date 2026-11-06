@@ -3188,7 +3188,8 @@ function App() {
       const r = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(questDisplayMode)}`);
       if (r.ok) {
         const p = await r.json();
-        const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0, log_ok: p.log_ok };
+        // 11-06: 진영(faction·faction_source)도 넘긴다 — 사이트 필요 아이템·'받을 수 있는 것만'이 반대 진영 판을 뺀다
+        const payload = { mode: p.mode, completed: p.completed ?? [], started: p.started ?? [], hideout: p.hideout ?? {}, quest_count: p.quest_count ?? 0, log_ok: p.log_ok, faction: p.faction ?? null, faction_source: p.faction_source ?? null };
         const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
         // 윈도우 명령줄(브라우저 실행) 한도 32,767자 아래로 — 넘으면 사이트의 직접 읽기(버튼)로 연동하게 둔다
         hash = b64.length < 30000 ? `#sync=${encodeURIComponent(b64)}` : "#sync-fail=too_long";
