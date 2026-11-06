@@ -2716,25 +2716,26 @@ function App() {
   // screen rect. Outside the card (rest of the 800x600 invisible window)
   // clicks pass through to whatever's underneath (the game).
   useEffect(() => {
-    const win = getCurrentWindow();
+    // 11-06: 클릭 투과는 tao 의 setIgnoreCursorEvents 대신 Rust set_click_through(활성화 없이 스타일 비트만) — 마우스를
+    // 카드에 올리면 오버레이가 활성 창이 돼 게임이 포커스를 잃던 것(#55). tao 가 다른 일로 스타일을 다시 계산하면 비트가
+    // 되돌려질 수 있어 매번 다시 맞춘다(Rust 쪽은 이미 같으면 아무것도 안 함).
+    const clickThrough = (v: boolean) => invoke("set_click_through", { ignore: v }).catch(() => {});
     if (!cardVisible) {
-      // Hidden: full pass-through.
-      win.setIgnoreCursorEvents(true).catch(() => {});
+      // Hidden: full pass-through. 숨긴 동안에도 0.5초마다 다시 맞춘다 — 보이지 않는 창이 게임 클릭을 가로채면 안 된다
+      clickThrough(true);
+      const keep = window.setInterval(() => clickThrough(true), 500);
       // The poll is stopped, so the ref can't refresh — clear it. A stale
       // `true` here would make scheduleHide() skip the countdown on the
       // next show even when the cursor is nowhere near the card, leaving
       // the card up forever.
       mouseOverCardRef.current = false;
       holdRef.current = HOLD_START;
-      return;
+      return () => window.clearInterval(keep);
     }
 
     let cancelled = false;
-    let currentlyIgnoring: boolean | null = null;
     const setIgnore = (v: boolean) => {
-      if (currentlyIgnoring === v) return;
-      currentlyIgnoring = v;
-      win.setIgnoreCursorEvents(v).catch(() => {});
+      clickThrough(v); // 폴링마다 — 값이 같으면 Rust 가 아무것도 안 한다(tao 가 되돌린 경우만 다시 맞춤)
     };
     // Start in pass-through; the first poll will flip it if cursor is on card.
     setIgnore(true);

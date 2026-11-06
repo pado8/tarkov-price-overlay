@@ -52,6 +52,59 @@ fn reveal_overlay_no_activate(window: &tauri::WebviewWindow) {
     let _ = window.show();
 }
 
+/// 클릭 투과(마우스가 오버레이를 지나 게임으로 가게) 켜기/끄기 — 11-06.
+/// tao 의 set_ignore_cursor_events 는 창 플래그를 바꿀 때마다 창이 보이면 ShowWindow(SW_SHOW)를 불러 창을 **활성화**한다
+/// (tao 0.35.2 window_state.rs apply_diff, SW_SHOWNOACTIVATE 는 생성 직후 한 번뿐). 커서가 카드 위면 마우스 입력이
+/// 오버레이로 가서 Windows 가 활성화를 허락하고, 그 순간 게임이 포커스를 잃는다 — 전체 화면은 최소화, 창 모드는 게임이
+/// 다시 포커스를 가져가며 오버레이를 덮어 '마우스를 올리면 사라진다'(#55, 11-06 친구 제보·전체 창 모드에서도).
+/// → 확장 스타일 비트만 직접 바꾸고 SetWindowPos(SWP_NOACTIVATE) — 활성화 없음. tao 와 같은 비트(TRANSPARENT|LAYERED).
+/// tao 는 자기 플래그로 스타일을 다시 계산할 때가 있어(보이기·숨기기 등) 프런트가 주기적으로 다시 맞춘다(바뀔 때만 실제 호출).
+#[cfg(windows)]
+fn apply_click_through(window: &tauri::WebviewWindow, ignore: bool) -> bool {
+    #[link(name = "user32")]
+    extern "system" {
+        fn GetWindowLongPtrW(hwnd: isize, index: i32) -> isize;
+        fn SetWindowLongPtrW(hwnd: isize, index: i32, value: isize) -> isize;
+        fn SetWindowPos(hwnd: isize, after: isize, x: i32, y: i32, cx: i32, cy: i32, flags: u32) -> i32;
+    }
+    const GWL_EXSTYLE: i32 = -20;
+    const WS_EX_TRANSPARENT: isize = 0x0000_0020;
+    const WS_EX_LAYERED: isize = 0x0008_0000;
+    // SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOOWNERZORDER
+    const SWP_FLAGS: u32 = 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020 | 0x0200;
+    let Ok(hwnd) = window.hwnd() else {
+        let _ = window.set_ignore_cursor_events(ignore);
+        return true;
+    };
+    let hwnd = hwnd.0 as isize;
+    unsafe {
+        let cur = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        let bits = WS_EX_TRANSPARENT | WS_EX_LAYERED;
+        let want = if ignore { cur | bits } else { cur & !bits };
+        if want == cur {
+            return false;
+        }
+        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, want);
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_FLAGS);
+    }
+    true
+}
+
+#[cfg(not(windows))]
+fn apply_click_through(window: &tauri::WebviewWindow, ignore: bool) -> bool {
+    let _ = window.set_ignore_cursor_events(ignore);
+    true
+}
+
+/// 프런트 클릭 투과 폴링이 부른다. 반환 = 실제로 바꿨는가(같으면 아무것도 안 함).
+#[tauri::command]
+fn set_click_through(app: tauri::AppHandle, ignore: bool) -> bool {
+    match app.get_webview_window("main") {
+        Some(w) => apply_click_through(&w, ignore),
+        None => false,
+    }
+}
+
 /// Frontend-invokable passive reveal — used by the F2 / toggle handlers so a
 /// re-shown price card doesn't pull focus off the game.
 #[tauri::command]
@@ -1209,6 +1262,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             prepare_quit,
             get_cursor_position,
+            set_click_through,
             log_msg,
             register_lookup_hotkey,
             register_toggle_hotkey,
