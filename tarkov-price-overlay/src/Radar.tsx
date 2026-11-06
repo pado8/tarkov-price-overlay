@@ -270,22 +270,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       </div>
     );
   }
-  if (!data.folder) {
-    return (
-      <div className="radar">
-        {header}
-        <div className="hint">{t.radarNoFolder}</div>
-      </div>
-    );
-  }
-  if (!data.shot) {
-    return (
-      <div className="radar">
-        {header}
-        <div className="hint">{t.radarNoShot}</div>
-      </div>
-    );
-  }
 
   const mapPicker = (
     <select
@@ -303,15 +287,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     </select>
   );
 
-  if (!data.map) {
-    return (
-      <div className="radar">
-        {header}
-        <div className="hint">{t.radarNoMap}</div>
-        {mapPicker}
-      </div>
-    );
-  }
 
   // 크기 슬라이더(지도 높이).
   // 끄는 동안은 숫자만 미리 보여주고 손을 뗄 때 적용한다 — 바로 적용하면 카드가 넓어지며 슬라이더가 커서 밑에서 움직여
@@ -354,14 +329,14 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   );
 
   // 목록은 지도와 같은 필터: 탈출구(PMC/공용 = pmc 칩, 스캐브 = showScav)·트랜짓·퀘스트(+개별 숨김)
-  const visible = data.targets.filter((x) =>
+  const visible = (data.targets ?? []).filter((x) =>
     x.kind === "extract" ? (x.faction === "scav" ? showScav : layers.pmc)
     : x.kind === "transit" ? layers.transits
     : layers.quests && !hiddenSet.has(questKey(x)),
   );
   // 대상 목록(탈출구·트랜짓·진행 중 퀘스트 목표 요약) — 카드는 지도 아래, 나란히 패널은 지도 오른쪽 열
-  const heading = data.shot.heading;
-  const stale = data.shot.age > STALE_SEC;
+  const heading = data.shot?.heading ?? null;
+  const stale = (data.shot?.age ?? 0) > STALE_SEC;
   const listMax = fill ? 40 : 8;
   const rows = visible.slice(0, listMax).map((x, i) => (
         <div className="radar-row" key={`${x.kind}-${x.name}-${i}`}>
@@ -492,6 +467,20 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         </details>
       </>
   );
+  // 11-06 친구 시험 피드백 '맵을 고르기 전엔 지도 옵션이 안 뜬다' — 스크린샷 폴더·스크린샷·맵이 아직 없어도 안내 문구 아래에
+  // 맵 선택·크기·고정·내 위치 크게·불투명도·파티·미니맵을 그대로 보여 준다(레이드 전에 파티 방부터 들어가는 경우 등).
+  // 전엔 이 세 경우에 패널이 옵션을 만들기 전에 끝나 머리글과 안내 한 줄만 보였다.
+  const noMapHint = !data.folder ? t.radarNoFolder : !data.shot ? t.radarNoShot : !data.map ? t.radarNoMap : null;
+  if (noMapHint) {
+    return (
+      <div className="radar" ref={radarRef}>
+        {header}
+        {error(data, t)}
+        <div className="hint">{noMapHint}</div>
+        {controls}
+      </div>
+    );
+  }
   return (
     <div className="radar" ref={radarRef}>
       {header}
