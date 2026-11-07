@@ -13,6 +13,7 @@
     "core:window:allow-set-min-size",
     "core:window:allow-start-resize-dragging",
     "core:window:allow-show",
+    "core:window:allow-set-skip-taskbar",
     "core:window:allow-hide",
     "opener:default",
     "global-shortcut:allow-register",

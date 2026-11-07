@@ -985,6 +985,8 @@ const TOGGLE_HOTKEY_KEY = "tarkov.toggleHotkey";
 const HOTKEY_PASSTHROUGH_KEY = "tarkov.hotkeyPassthrough";
 const SOUND_KEY = "tarkov.soundOn";
 const PIN_KEY = "tarkov.pinned";
+// 11-07 사용자: "트레이로만 있으니 사람들이 찾기 어렵다" → 기본은 작업표시줄에 보이고, 설정에서 끄면 트레이로만(tauri.conf skipTaskbar=false)
+const TASKBAR_KEY = "tarkov.showInTaskbar";
 const HISTORY_KEY = "tarkov.history";
 const SETTINGS_HEIGHT_KEY = "tarkov.settingsHeight";
 const QUEST_DISPLAY_MODE_KEY = "tarkov.questDisplayMode";
@@ -1602,6 +1604,19 @@ function App() {
   // Pin: locks window move (drag region off), resize (handle hidden) and the
   // ✕ button so a mid-raid misclick can't displace or close the overlay.
   // Unpinning stays available in settings.
+  const [showInTaskbar, setShowInTaskbar] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(TASKBAR_KEY) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(TASKBAR_KEY, showInTaskbar ? "1" : "0");
+    } catch {}
+    invoke("set_show_in_taskbar", { show: showInTaskbar }).catch((e) => log(`set_show_in_taskbar failed: ${String(e)}`));
+  }, [showInTaskbar]);
   const [pinned, setPinned] = useState<boolean>(
     () => localStorage.getItem(PIN_KEY) === "true"
   );
@@ -5186,6 +5201,10 @@ function App() {
                   if (e.target.checked) dailyAdd("pin");
                 }}
               />
+            </div>
+            <div className="settings-row" title={t.showInTaskbarHint}>
+              <label>{t.showInTaskbar}</label>
+              <input type="checkbox" checked={showInTaskbar} onChange={(e) => setShowInTaskbar(e.target.checked)} />
             </div>
             <div className="settings-section-header">
               {t.inputSection}

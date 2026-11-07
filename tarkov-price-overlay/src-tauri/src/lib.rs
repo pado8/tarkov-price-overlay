@@ -45,6 +45,7 @@ fn reveal_overlay_no_activate(window: &tauri::WebviewWindow) {
             let _ = window.show();
         }
     }
+    reapply_taskbar(window);
 }
 
 #[cfg(not(windows))]
@@ -253,6 +254,22 @@ struct KeyPollConfig {
 }
 struct KeyPolls(Arc<Mutex<KeyPollConfig>>);
 struct HotkeyPassthrough(AtomicBool);
+/// 11-07 '작업표시줄에 표시'(프런트 설정, 기본 켬). tao 의 set_skip_taskbar 는 ITaskbarList DeleteTab/AddTab 이라 창을
+/// 숨겼다 다시 보이면(트레이 → F2) Windows 가 버튼을 도로 붙인다 → 창을 보이는 모든 경로에서 다시 맞춘다(reapply_taskbar).
+struct ShowInTaskbar(AtomicBool);
+
+fn reapply_taskbar(window: &tauri::WebviewWindow) {
+    let show = window.state::<ShowInTaskbar>().0.load(Ordering::SeqCst);
+    let _ = window.set_skip_taskbar(!show);
+}
+
+#[tauri::command]
+fn set_show_in_taskbar(app: tauri::AppHandle, show: bool) {
+    app.state::<ShowInTaskbar>().0.store(show, Ordering::SeqCst);
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_skip_taskbar(!show);
+    }
+}
 
 /// Tauri 가속기 문자열("Shift+F2", "F5", "Ctrl+Alt+K")을 폴링용 키로. 지원 안 하는 키면 None
 /// → 호출 쪽이 RegisterHotKey로 되돌아간다(그 키는 게임과 공유 불가).
@@ -1230,6 +1247,7 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
                 let _ = window.unminimize();
+                reapply_taskbar(&window);
                 let _ = window.set_focus();
             }
             let _ = app
@@ -1299,6 +1317,7 @@ pub fn run() {
         .manage(SidecarChild(Mutex::new(None)))
         .manage(IsQuitting(AtomicBool::new(false)))
         .manage(TrayNotifShown(AtomicBool::new(false)))
+        .manage(ShowInTaskbar(AtomicBool::new(true)))
         .manage(Hotkeys(Mutex::new(HotkeyConfig::default())))
         .manage(MouseHotkeys(Arc::new(Mutex::new(MouseHotkeyConfig::default()))))
         .manage(MouseHotkeyStop(Arc::new(AtomicBool::new(false))))
@@ -1311,6 +1330,7 @@ pub fn run() {
             prepare_quit,
             get_cursor_position,
             set_click_through,
+            set_show_in_taskbar,
             get_foreground_kind,
             log_msg,
             register_lookup_hotkey,
@@ -1378,6 +1398,7 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
                             let _ = window.set_focus();
+                            reapply_taskbar(&window);
                         }
                         let _ = app.emit("tray-show", ());
                     }
@@ -1385,6 +1406,7 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
                             let _ = window.set_focus();
+                            reapply_taskbar(&window);
                         }
                         let _ = app.emit("tray-settings", ());
                     }
@@ -1422,6 +1444,7 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
                             let _ = window.set_focus();
+                            reapply_taskbar(&window);
                         }
                         let _ = app.emit("tray-show", ());
                     }
