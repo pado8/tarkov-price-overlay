@@ -2079,3 +2079,13 @@ html, body, #root {
 .party-alias-btn { margin-left: 4px; padding: 0 4px; font-size: 0.85em; line-height: 1.2; background: none; border: 1px solid transparent; border-radius: 3px; color: var(--text-disabled); cursor: pointer; }
 .party-alias-btn:hover { border-color: var(--border, #3a3f4a); color: inherit; }
 .party-alias { width: 9em; font-size: 0.95em; }
+/* 11-07 시작 카드(처음 5분) + 설정 맨 위 사용 설명서 버튼 */
+.start-card { margin: 4px 0 2px; padding: 8px 10px; border: 1px solid rgba(200, 170, 100, 0.35); border-radius: var(--radius-md); background: rgba(200, 170, 100, 0.08); font-size: var(--card-fs-sm); }
+.start-title { color: var(--gold-light); font-weight: 700; margin-bottom: 6px; }
+.start-row { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.start-key { flex: none; min-width: 52px; text-align: center; padding: 2px 7px; border: 1px solid var(--gold-light); border-radius: 6px; color: var(--gold-light); font-weight: 700; font-family: Consolas, monospace; font-size: 0.95em; }
+.start-key svg { vertical-align: -2px; }
+.start-actions { display: flex; gap: 6px; margin-top: 8px; }
+.start-manual { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; margin-left: 0; padding: 4px 8px; border-color: var(--gold-light); color: var(--gold-light); }
+.start-gotit { flex: none; margin-left: 0; padding: 4px 10px; }
+.manual-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; margin: 0 0 6px; padding: 5px 8px; border-color: var(--gold-light); color: var(--gold-light); }

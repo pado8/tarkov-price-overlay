@@ -130,6 +130,8 @@ const PAYPAL_URL = "https://paypal.me/tarkovoverlay";
 const STATS_ENDPOINT = "https://api.aquapado.com/priceoverlay/events";
 const INSTALL_ID_KEY = "tarkov.installId";
 const STATS_CONSENT_KEY = "tarkov.statsConsent";
+// 11-07 시작 카드(처음 5분: F2·스크린샷 키·⚙ + 사용 설명서) — 첫 조회가 성공하거나 "알겠어요"를 누르면 끝. 이미 조회 기록이 있는 PC 는 안 띄움
+const START_DONE_KEY = "tarkov.startCardDone";
 
 // Public downloads page. Portable users get sent here from the update
 // banner instead of going through `update.downloadAndInstall()`, which
@@ -271,6 +273,7 @@ type StatsEvent =
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
   | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | shown_tip:<연속실패수>(11-07 툴팁 안내) | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
+  //          11-07 시작 카드·사용 설명서: start:shown | start:manual | start:got_it | start:done(첫 조회 성공) | manual:settings
   | "daily" // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
   | "donate"; // 11-06 후원 창 사용: open:<탭> | tab:<탭> | paypal_open | copy:<탭> (탭 = kakao|paypal). 금액·결제 정보 없음
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
@@ -1503,6 +1506,33 @@ function App() {
   // Anonymous stats are opt-out: enabled by default, with a one-time
   // informational notice (not a blocking consent gate).
   const [statsEnabled, setStatsEnabled] = useState<boolean>(loadStatsEnabled);
+  // 11-07 시작 카드 — 처음 켠 PC(기록 없음·끝낸 적 없음)에만. 기록이 있으면 조용히 끝난 것으로 적어 둔다(업데이트한 기존 사용자에게 안 뜨게)
+  const [startCard, setStartCard] = useState<boolean>(() => {
+    try {
+      if (localStorage.getItem(START_DONE_KEY) === "1") return false;
+      if (loadHistory().length > 0) {
+        localStorage.setItem(START_DONE_KEY, "1");
+        return false;
+      }
+    } catch {}
+    return true;
+  });
+  const startCardRef = useRef(startCard);
+  startCardRef.current = startCard;
+  const markStartDone = (why: "got_it" | "done") => {
+    if (!startCardRef.current) return;
+    try {
+      localStorage.setItem(START_DONE_KEY, "1");
+    } catch {}
+    setStartCard(false);
+    reportEvent("help", `start:${why}`);
+  };
+  const markStartDoneRef = useRef(markStartDone);
+  markStartDoneRef.current = markStartDone;
+  useEffect(() => {
+    if (startCard) reportEvent("help", "start:shown");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [statsNoticeShown, setStatsNoticeShown] = useState<boolean>(
     loadStatsNoticeShown
   );
@@ -3923,6 +3953,7 @@ function App() {
           if (view.kind === "result") {
             setResult(data);
             setStatus("success");
+            if (data.item_name != null) markStartDoneRef.current("done");
           } else {
             setStatus(view.status);
             if (view.kind === "map") void openRadarRef.current(true, false);
@@ -4799,6 +4830,16 @@ function App() {
 
         {showSettings && !captureModalOpen && (
           <div className="settings" ref={settingsRef}>
+            <button
+              className="reset-btn manual-btn"
+              title={t.manualHint}
+              onClick={() => {
+                reportEvent("help", "manual:settings");
+                openGuide(region.lang, "manual/");
+              }}
+            >
+              <Icon name="book" /> {t.manualBtn}
+            </button>
             <div className="support-note">{t.supportNote}</div>
             <div className="settings-row settings-feedback-row">
               <button
@@ -6030,7 +6071,27 @@ function App() {
             }}
           />
         )}
-        {!showSettings && !radarActive && status === "idle" && <div className="hint">{t.hintIdle}</div>}
+        {!showSettings && !radarActive && status === "idle" && !startCard && <div className="hint">{t.hintIdle}</div>}
+        {!showSettings && !radarActive && status === "idle" && startCard && (
+          <div className="start-card">
+            <div className="start-title">{t.startTitle}</div>
+            <div className="start-row"><span className="start-key">{formatHotkeyLabel(hotkey, t)}</span><span>{t.startF2}</span></div>
+            <div className="start-row"><span className="start-key">PrtScn</span><span>{t.startShot}</span></div>
+            <div className="start-row"><span className="start-key"><Icon name="gear" /></span><span>{t.startSettings}</span></div>
+            <div className="start-actions">
+              <button
+                className="reset-btn start-manual"
+                onClick={() => {
+                  reportEvent("help", "start:manual");
+                  openGuide(region.lang, "manual/");
+                }}
+              >
+                <Icon name="book" /> {t.startManual}
+              </button>
+              <button className="reset-btn start-gotit" onClick={() => markStartDone("got_it")}>{t.startGotIt}</button>
+            </div>
+          </div>
+        )}
         {!showSettings && !radarActive && status === "loading" && (
           <div className="hint loading-hint">
             <span className="loading-spinner" aria-hidden="true" />
