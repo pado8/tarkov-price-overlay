@@ -2602,6 +2602,9 @@ function App() {
           if (dead) return;
           wideSaveArmedAtRef.current = Date.now() + 1500; // 켜는 순간의 이동·크기 변경은 '사용자가 바꾼 크기'가 아니다
           await win.setMinSize(new LogicalSize(WIDE_MIN_W, WIDE_MIN_H)).catch(() => {});
+          // 11-07 나란히에서만 최대화 허용 — 모니터 위로 끌어 올리는 Windows 스냅이 '모니터 채우기'가 된다(아래 save 가 받음).
+          // 보통 모드는 tauri.conf maximizable=false(최대화되면 내용 높이 로직이 되돌려 커졌다 줄어드는 현상)
+          await win.setMaximizable(true).catch(() => {});
           const saved = await savedWideRect();
           if (dead) return;
           if (saved) {
@@ -2620,6 +2623,7 @@ function App() {
           const raw = localStorage.getItem(WIDE_PREV_POS_KEY);
           localStorage.removeItem(WIDE_PREV_POS_KEY);
           await win.setMinSize(null).catch(() => {}); // 일반 카드 창은 내용 높이(100px~)까지 줄어든다
+          await win.setMaximizable(false).catch(() => {});
           applyRef.current?.(); // 내용 크기로 되돌린다
           if (raw) {
             const { x, y } = JSON.parse(raw);
@@ -2676,6 +2680,13 @@ function App() {
         resizingRef.current = false; // 모서리 끌기가 끝났다(크기 변경 이벤트가 0.4초 멈춤)
         if (!wideModeRef.current || Date.now() < wideSaveArmedAtRef.current) return;
         try {
+          // 11-07 사용자: 모니터 맨 위로 끌어 최대화하면 커졌다 바로 줄어듦 → 최대화는 '이 모니터 채우기'로 받고 최대화 상태는 푼다
+          if (await win.isMaximized().catch(() => false)) {
+            log("wide: maximized → fill monitor");
+            await win.unmaximize().catch(() => {});
+            await resetWideRect();
+            return;
+          }
           const [pos, size] = await Promise.all([win.outerPosition(), win.outerSize()]);
           localStorage.setItem(WIDE_RECT_KEY, JSON.stringify({ x: pos.x, y: pos.y, w: size.width, h: size.height }));
           // 모니터 작업 영역 밖으로 늘리거나 옮겼으면 바로 안쪽으로(손잡이가 화면 밖으로 나가지 않게)
@@ -4297,8 +4308,15 @@ function App() {
   // 머리글을 두 번 누르면 창이 모니터 크기로 커졌다가(최대화) 크기 기억 로직·복원에 되돌아와 '커졌다 바로 줄어드는' 현상.
   // 첫 클릭(detail 1)만 끌기, 더블클릭은 아무것도 안 함. 머리글 안 버튼·입력칸은 제외.
   const onHeaderDown = (e: React.MouseEvent) => {
-    if (pinned || e.button !== 0 || e.detail !== 1) return;
+    if (pinned || e.button !== 0) return;
     if ((e.target as Element).closest("button, input, select, a, textarea")) return;
+    if (e.detail === 2) {
+      // 더블클릭: 나란히 = 이 모니터 채우기(모서리 더블클릭과 같음) / 보통 = 카드 크기 초기화
+      if (wideModeRef.current) void resetWideRect();
+      else resetCardSize();
+      return;
+    }
+    if (e.detail !== 1) return;
     getCurrentWindow()
       .startDragging()
       .catch((err) => log(`header drag failed: ${String(err)}`));
