@@ -2089,3 +2089,7 @@ html, body, #root {
 .start-manual { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px; margin-left: 0; padding: 4px 8px; border-color: var(--gold-light); color: var(--gold-light); }
 .start-gotit { flex: none; margin-left: 0; padding: 4px 10px; }
 .manual-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; margin: 0 0 6px; padding: 5px 8px; border-color: var(--gold-light); color: var(--gold-light); }
+/* 11-07 인게임 메모 반영: 파티 내 닉네임 라벨·안내, 피드백 진단 설명 한 줄 */
+.party-name-lbl { font-size: var(--card-fs-xs); color: var(--text-muted); white-space: nowrap; }
+.party-hint { font-size: var(--card-fs-xs); color: var(--text-muted); margin: -2px 0 4px; }
+.feedback-diag-note { font-size: var(--card-fs-xs); color: var(--text-muted); line-height: 1.35; margin: 0 0 6px; }

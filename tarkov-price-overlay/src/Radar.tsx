@@ -575,6 +575,8 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
     <div className="party">
       <div className="party-row">
         <b>{t.partyTitle}</b>
+        {/* 11-07 인게임 메모: '파티 방'이라고만 있어 내 닉네임을 어디서 바꾸는지 모르겠다 → 라벨 + 방 안에선 안내 한 줄 */}
+        <span className="party-name-lbl">{t.partyMyName}</span>
         <input
           type="text"
           value={party.name}
@@ -588,10 +590,11 @@ function PartyPanel({ party, t, maps, mapId }: { party: PartyApi; t: Strings; ma
               (e.target as HTMLInputElement).blur();
             }
           }}
-          aria-label={t.partyNamePh}
+          aria-label={t.partyMyName}
           title={party.code ? t.partyNameLiveHint : t.partyNamePh}
         />
       </div>
+      {party.code && <div className="party-hint">{t.partyNameLiveShort}</div>}
       {!party.code ? (
         <div className="party-row">
           <button type="button" onClick={() => party.create()}>{t.partyCreate}</button>

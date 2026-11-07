@@ -132,6 +132,7 @@ const INSTALL_ID_KEY = "tarkov.installId";
 const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 11-07 시작 카드(처음 5분: F2·스크린샷 키·⚙ + 사용 설명서) — 첫 조회가 성공하거나 "알겠어요"를 누르면 끝. 이미 조회 기록이 있는 PC 는 안 띄움
 const START_DONE_KEY = "tarkov.startCardDone";
+const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
 
 // Public downloads page. Portable users get sent here from the update
 // banner instead of going through `update.downloadAndInstall()`, which
@@ -1818,7 +1819,14 @@ function App() {
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
-  const [feedbackDiag, setFeedbackDiag] = useState(true); // 11-06 진단 정보 함께 보내기(기본 켬)
+  // 11-06 진단 정보 함께 보내기 — 11-07 인게임 메모: "기본으로 체크돼 있는 건 별로" → 기본 꺼짐, 마지막 선택 기억
+  const [feedbackDiag, setFeedbackDiag] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(FEEDBACK_DIAG_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   // 진단 덩어리: 버전·설정·모니터·창·게임 화면 모드 + 최근 사건(diagLog). 남은 글자(room)에 맞춰 자른다
   const buildDiag = async (room: number): Promise<string> => {
     const head: string[] = [`앱 ${APP_VERSION} · ${navigator.userAgent.match(/Windows NT [\d.]+/)?.[0] ?? ""}`];
@@ -4936,9 +4944,20 @@ function App() {
                     </label>
                   )}
                   <label className="feedback-attach-label" title={t.feedbackDiagHint}>
-                    <input type="checkbox" checked={feedbackDiag} onChange={(e) => setFeedbackDiag(e.target.checked)} /> {t.feedbackDiag}
+                    <input
+                      type="checkbox"
+                      checked={feedbackDiag}
+                      onChange={(e) => {
+                        setFeedbackDiag(e.target.checked);
+                        try {
+                          localStorage.setItem(FEEDBACK_DIAG_KEY, e.target.checked ? "1" : "0");
+                        } catch {}
+                      }}
+                    />{" "}
+                    {t.feedbackDiag}
                   </label>
                 </div>
+                <div className="feedback-diag-note">{t.feedbackDiagNote}</div>
                 <div className="feedback-actions">
                   <span
                     className={`feedback-status${
