@@ -255,12 +255,25 @@ def _list_log_folders(install_path: str) -> list[Path]:
     logs_root = _resolve_logs_root(install_path)
     if logs_root is None:
         return []
-    folders = [
-        p for p in logs_root.iterdir()
-        if p.is_dir() and _LOG_FOLDER_RE.match(p.name)
-    ]
+    # 11-08: 지도 폴링(/radar, 0.4초마다)이 매번 불러 폴더 348개를 하나씩 is_dir(stat)로 확인 → 한 번 8ms, 대기 중 사이드카 CPU 의
+    # 절반. 목록은 새 레이드 폴더가 생길 때만 바뀌므로 Logs 폴더 수정 시각이 같으면 직전 목록을 쓴다. scandir 는 윈도우에서
+    # 목록과 함께 폴더 여부가 와서 추가 stat 이 없다.
+    try:
+        mtime = logs_root.stat().st_mtime_ns
+    except OSError:
+        return []
+    key = str(logs_root)
+    hit = _log_folders_cache.get(key)
+    if hit and hit[0] == mtime:
+        return list(hit[1])
+    with os.scandir(logs_root) as it:
+        folders = [Path(e.path) for e in it if _LOG_FOLDER_RE.match(e.name) and e.is_dir()]
     folders.sort(key=_folder_sort_key)
-    return folders
+    _log_folders_cache[key] = (mtime, folders)
+    return list(folders)
+
+
+_log_folders_cache: dict[str, tuple[int, list[Path]]] = {}
 
 
 def _push_notification_files(folder: Path) -> list[Path]:

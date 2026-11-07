@@ -360,15 +360,83 @@ _data_lock = threading.Lock()
 _data: dict[str, tuple[float, object]] = {}
 
 
+# 11-08: 메모리 캐시만 있어 앱을 켤 때마다 첫 지도가 문서(지도 9MB·퀘스트·로케일)를 다시 받느라 ~5초 걸렸다(실측 4.8초).
+# 받은 문서를 상태 폴더 mapdata/ 에 gzip 으로 두고, 다음 실행부터는 7일 안의 디스크 사본을 바로 쓴다.
+# 6시간(_DATA_TTL)이 지난 사본이면 그대로 쓰면서 뒤에서 새로 받는다(같은 문서는 한 번에 하나만).
+_DOC_DISK_MAX_AGE = 7 * 24 * 3600
+_doc_refreshing: set[str] = set()
+
+
+def _doc_file(path: str) -> Path:
+    from quest_tracker import _state_dir  # 순환 import 방지
+
+    return _state_dir() / "mapdata" / (path.replace("/", "__") + ".json.gz")
+
+
+def _doc_fetch(path: str):
+    import gzip
+
+    import tarkov_json_fallback as tj  # 지연 import — 시험에서 네트워크 없이 모듈을 쓸 수 있게
+
+    doc = (tj._get(path) or {}).get("data")
+    if doc is not None:
+        try:
+            f = _doc_file(path)
+            f.parent.mkdir(parents=True, exist_ok=True)
+            tmp = f.with_suffix(".tmp")
+            tmp.write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False).encode("utf-8"), 5))
+            os.replace(tmp, f)
+        except Exception as e:  # noqa: BLE001 — 디스크 사본은 덤
+            log.warning("mapdata save failed (%s): %r", path, e)
+    return doc
+
+
+def _doc_refresh_bg(path: str) -> None:
+    with _data_lock:
+        if path in _doc_refreshing:
+            return
+        _doc_refreshing.add(path)
+
+    def run():
+        try:
+            doc = _doc_fetch(path)
+            if doc is not None:
+                with _data_lock:
+                    _data[path] = (time.time(), doc)
+        except Exception as e:  # noqa: BLE001 — 실패하면 디스크 사본을 계속 쓴다
+            log.warning("mapdata refresh failed (%s): %r", path, e)
+        finally:
+            with _data_lock:
+                _doc_refreshing.discard(path)
+
+    threading.Thread(target=run, daemon=True, name="mapdata-refresh").start()
+
+
 def _doc(path: str):
-    """json.tarkov.dev 문서(data 부분). 지도 문서가 9MB라 6시간 캐시."""
+    """json.tarkov.dev 문서(data 부분). 메모리 6시간 → 디스크 사본(7일 안, 6시간 넘었으면 뒤에서 새로 받기) → 네트워크."""
     now = time.time()
     with _data_lock:
         hit = _data.get(path)
         if hit and now - hit[0] < _DATA_TTL:
             return hit[1]
-    import tarkov_json_fallback as tj  # 지연 import — 시험에서 네트워크 없이 모듈을 쓸 수 있게
-    doc = (tj._get(path) or {}).get("data")
+    try:
+        f = _doc_file(path)
+        age = now - f.stat().st_mtime if f.exists() else None
+    except Exception:  # noqa: BLE001
+        f, age = None, None
+    if f is not None and age is not None and age < _DOC_DISK_MAX_AGE:
+        try:
+            import gzip
+
+            doc = json.loads(gzip.decompress(f.read_bytes()).decode("utf-8"))
+            with _data_lock:
+                _data[path] = (now, doc)
+            if age >= _DATA_TTL:
+                _doc_refresh_bg(path)
+            return doc
+        except Exception as e:  # noqa: BLE001 — 깨진 사본이면 네트워크로
+            log.warning("mapdata load failed (%s): %r", path, e)
+    doc = _doc_fetch(path)
     with _data_lock:
         _data[path] = (now, doc)
     return doc
