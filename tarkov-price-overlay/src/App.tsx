@@ -132,7 +132,9 @@ const INSTALL_ID_KEY = "tarkov.installId";
 const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 11-07 시작 카드(처음 5분: F2·스크린샷 키·⚙ + 사용 설명서) — 첫 조회가 성공하거나 "알겠어요"를 누르면 끝. 이미 조회 기록이 있는 PC 는 안 띄움
 const START_DONE_KEY = "tarkov.startCardDone";
-const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
+const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag";
+// 1.3.1 설정 절 접힘 — 열린 절 id 목록(처음엔 '일반'만). 42줄·2,116px 스크롤이 한 화면에 들어오게(11-07 UX 분석)
+const SETTINGS_OPEN_KEY = "tarkov.settingsOpenSections"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
 
 // Public downloads page. Portable users get sent here from the update
 // banner instead of going through `update.downloadAndInstall()`, which
@@ -1834,6 +1836,22 @@ function App() {
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
+  const [openSecs, setOpenSecs] = useState<string[]>(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem(SETTINGS_OPEN_KEY) || "null");
+      return Array.isArray(v) ? v.filter((x) => typeof x === "string") : ["general"];
+    } catch {
+      return ["general"];
+    }
+  });
+  const toggleSec = (id: string) =>
+    setOpenSecs((prev) => {
+      const n = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      try {
+        localStorage.setItem(SETTINGS_OPEN_KEY, JSON.stringify(n));
+      } catch {}
+      return n;
+    });
   // 11-06 진단 정보 함께 보내기 — 11-07 인게임 메모: "기본으로 체크돼 있는 건 별로" → 기본 꺼짐, 마지막 선택 기억
   const [feedbackDiag, setFeedbackDiag] = useState<boolean>(() => {
     try {
@@ -5134,24 +5152,7 @@ function App() {
                 </div>
               );
             })()}
-            <div className="settings-section-header">
-              {t.generalSection}
-            </div>
-            <div className="settings-row" title={t.statsToggleHint}>
-              <label>{t.statsToggle}</label>
-              <input
-                type="checkbox"
-                checked={statsEnabled}
-                onChange={(e) => {
-                  const enabled = e.target.checked;
-                  localStorage.setItem(
-                    STATS_CONSENT_KEY,
-                    enabled ? "true" : "false"
-                  );
-                  setStatsEnabled(enabled);
-                }}
-              />
-            </div>
+            <SettingsSec id="general" title={t.generalSection} open={openSecs.includes("general")} onToggle={toggleSec}>
             <div className="settings-row">
               <label>{t.language}</label>
               <select
@@ -5233,9 +5234,8 @@ function App() {
               <label>{t.showInTaskbar}</label>
               <input type="checkbox" checked={showInTaskbar} onChange={(e) => setShowInTaskbar(e.target.checked)} />
             </div>
-            <div className="settings-section-header">
-              {t.inputSection}
-            </div>
+            </SettingsSec>
+            <SettingsSec id="input" title={t.inputSection} open={openSecs.includes("input")} onToggle={toggleSec}>
             <div className="settings-row">
               <label>{t.hotkey}</label>
               <button
@@ -5279,9 +5279,8 @@ function App() {
             <div className="settings-hint">
               {hotkeyPassthrough ? t.hotkeyPassthroughOn.replace("{key}", formatHotkeyLabel(hotkey, t)) : t.hotkeyPassthroughHint}
             </div>
-            <div className="settings-section-header">
-              {t.mapSection}
-            </div>
+            </SettingsSec>
+            <SettingsSec id="map" title={t.mapSection} open={openSecs.includes("map")} onToggle={toggleSec}>
             <div className="settings-row" title={t.wideModeHint}>
               <label>{t.wideMode}</label>
               <input type="checkbox" checked={wideMode} onChange={toggleWide} />
@@ -5339,9 +5338,8 @@ function App() {
               </select>
             </div>
             <div className="settings-hint">{t.radarPruneHint}</div>
-            <div className="settings-section-header">
-              {t.displaySection}
-            </div>
+            </SettingsSec>
+            <SettingsSec id="display" title={t.displaySection} open={openSecs.includes("display")} onToggle={toggleSec}>
             <div className="settings-row">
               <label>{t.fontSize}</label>
               <select
@@ -5518,9 +5516,8 @@ function App() {
               );
             })()}
 
-            <div className="settings-section-header">
-              {t.questSyncSection}
-            </div>
+            </SettingsSec>
+            <SettingsSec id="quest" title={t.questSyncSection} open={openSecs.includes("quest")} onToggle={toggleSec}>
             {/* 가장 영향이 큰 선택(어느 서버 진행도로 보일지)을 맨 위로. 기본은 게임 모드 따라가기 */}
             <div className="settings-row">
               <label title={t.questDisplayModeHint}>
@@ -5726,10 +5723,8 @@ function App() {
               </>
             )}
 
-            <details className="hideout-level-details" open>
-              <summary className="settings-section-header hideout-level-summary">
-                {t.hideoutLevelSection}
-              </summary>
+            </SettingsSec>
+            <SettingsSec id="hideout" title={t.hideoutLevelSection} open={openSecs.includes("hideout")} onToggle={toggleSec}>
               <div className="settings-hint" style={{ color: "var(--text-muted)", marginBottom: 4 }}>
                 {t.hideoutLevelHint}
               </div>
@@ -5798,11 +5793,9 @@ function App() {
                   </div>
                 </>
               )}
-            </details>
+            </SettingsSec>
 
-            <div className="settings-section-header">
-              {t.captureSection}
-            </div>
+            <SettingsSec id="capture" title={t.captureSection} open={openSecs.includes("capture")} onToggle={toggleSec}>
             <div className="settings-row">
               <label>{t.captureRegion}</label>
               <button
@@ -5842,8 +5835,22 @@ function App() {
                 {t.windowRecoverBtn}
               </button>
             </div>
-            <div className="settings-section-header">
-              {t.infoSection}
+            </SettingsSec>
+            <SettingsSec id="info" title={t.infoSection} open={openSecs.includes("info")} onToggle={toggleSec}>
+            <div className="settings-row" title={t.statsToggleHint}>
+              <label>{t.statsToggle}</label>
+              <input
+                type="checkbox"
+                checked={statsEnabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  localStorage.setItem(
+                    STATS_CONSENT_KEY,
+                    enabled ? "true" : "false"
+                  );
+                  setStatsEnabled(enabled);
+                }}
+              />
             </div>
             <div className="settings-row">
               <label>{t.autoCheckUpdate}</label>
@@ -5893,6 +5900,7 @@ function App() {
                     : t.updateCheckNow}
               </button>
             </div>
+            </SettingsSec>
             <div className="copyright">
               <div className="copyright-line">{t.copyright}</div>
               <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
@@ -7320,6 +7328,21 @@ ${t.fleaFeeHint}`}
         </div>
       )}
     </div>
+  );
+}
+
+/** 설정 패널의 접히는 절. 접혀도 안의 내용은 그대로 살아 있다(단축키 녹화·퀘스트 상태 같은 효과가 끊기지 않게 hidden 으로만 숨김). */
+function SettingsSec({ id, title, open, onToggle, children }: { id: string; title: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
+  return (
+    <section className={`settings-sec${open ? " open" : ""}`}>
+      <button type="button" className="settings-section-header settings-sec-head" aria-expanded={open} onClick={() => onToggle(id)}>
+        <span className="settings-sec-caret" aria-hidden="true">{open ? "▾" : "▸"}</span>
+        {title}
+      </button>
+      <div className="settings-sec-body" hidden={!open}>
+        {children}
+      </div>
+    </section>
   );
 }
 
