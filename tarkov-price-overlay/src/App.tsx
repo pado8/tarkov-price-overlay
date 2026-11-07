@@ -14,7 +14,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
-import { viewAfterLookup, shotAction, nomatchCategory } from "./lookupOutcome";
+import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
@@ -3828,26 +3828,33 @@ function App() {
         // the X button (which calls hide_to_tray → window.hide()), in which
         // case flipping React state alone leaves the card invisible.
         const win = getCurrentWindow();
-        try {
-          if (!(await win.isVisible())) {
-            // Passive reveal: show WITHOUT taking focus, so ESC/Tab keep going
-            // to the game. A plain show()+setFocus() stole focus — after the
-            // card auto-hid, the next F2 made the overlay swallow the keypress
-            // until you clicked back in-game (reported on 1.1.1/1.1.2).
-            await invoke("show_overlay_passive");
-          }
-        } catch {}
-        showCard(); // bring card up + cancel any in-flight hide
-        setShowSettings(false);
+        const reveal = async () => {
+          try {
+            if (!(await win.isVisible())) {
+              // Passive reveal: show WITHOUT taking focus, so ESC/Tab keep going
+              // to the game. A plain show()+setFocus() stole focus — after the
+              // card auto-hid, the next F2 made the overlay swallow the keypress
+              // until you clicked back in-game (reported on 1.1.1/1.1.2).
+              await invoke("show_overlay_passive");
+            }
+          } catch {}
+          showCard(); // bring card up + cancel any in-flight hide
+          setShowSettings(false);
+        };
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
-        // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게
+        // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게.
+        // 11-07: 공유 중이면 누르는 순간 '조회 중'·숨은 카드 띄우기도 안 한다(lookupOutcome.pressView) — 읽었을 때만 카드
+        const atPress = pressView({ passthrough: hotkeyPassthroughRef.current, mapShown: radarActiveRef.current, wideMode: wideModeRef.current });
+        if (atPress.reveal) await reveal();
         diag("f2");
         if (pipActiveRef.current) miniReturnRef.current = true; // 작은 지도에서 누른 조회 — 카드를 다 보면 작은 지도로
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
         else sharedPressAtRef.current = performance.now();
         const prevStatus = statusRef.current; // 키 공유로 결과를 숨기게 되면 이 상태로 되돌린다
-        setStatus("loading");
-        setError("");
+        if (atPress.loading) {
+          setStatus("loading");
+          setError("");
+        }
         // New lookup generation: invalidates any still-running older lookup
         // so its late (retried) response can't overwrite this one.
         const seq = ++lookupSeqRef.current;
@@ -3899,7 +3906,13 @@ function App() {
           // 화면 결정(lookupOutcome.viewAfterLookup): 읽었거나 키가 따로면 결과 카드. 같은 키 + 못 읽음(인벤토리 밖
           // 스크린샷용 누름)이면 보통 모드는 지도, 나란히 모드는 화면 그대로 — 둘 다 상태는 조회 직전으로 되돌린다
           // (11-03: 예전엔 "loading" 에 남아 '조회 중…'이 멈췄고, 보통 모드는 스크린샷 감지 속도에 따라 지도·못 찾음이 갈렸다).
-          if (data.item_name != null) setRadarActive(false);
+          if (data.item_name != null) {
+            if (!atPress.reveal) {
+              await reveal(); // 공유 키로 읽은 아이템 — 이제 카드를 띄운다
+              if (seq !== lookupSeqRef.current) return;
+            }
+            setRadarActive(false);
+          }
           const view = viewAfterLookup({
             passthrough: hotkeyPassthroughRef.current,
             matched: data.item_name != null,
@@ -3922,7 +3935,8 @@ function App() {
           if (data.attempt !== "wide") {
             setHistory(addToHistory(data));
           }
-          if (loadSoundOn()) playDing(data.item_name != null);
+          // 공유 키로 못 읽은 누름(인벤토리 밖 스크린샷)은 실패음도 안 낸다 — 스크린샷마다 '실패' 소리가 났다
+          if (loadSoundOn() && (data.item_name != null || !hotkeyPassthroughRef.current)) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
           // "wide_" prefix = the zoom-out rescue produced this read; without
           // it, rescue-read text silently migrates capture-miss events from
@@ -3959,6 +3973,7 @@ function App() {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
           if (seq !== lookupSeqRef.current) return; // stale failure — ignore
+          if (!atPress.reveal) await reveal(); // 사이드카 오류는 공유 키여도 알린다
           // Human messages for the two known cases; raw error only for the
           // unexpected rest. "TypeError: Failed to fetch" terrified users —
           // it's just the sidecar (re)starting.

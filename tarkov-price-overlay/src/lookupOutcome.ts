@@ -33,6 +33,18 @@ export function viewAfterLookup(o: { passthrough: boolean; matched: boolean; wid
   return o.wideMode ? { kind: "keep", status } : { kind: "map", status };
 }
 
+/** 조회 키를 누른 순간 화면을 어떻게 할지.
+ *  11-07 피드백 "인벤 끄고 스샷 찍어도 계속 아이템 인식만 하려 한다": 같은 키(엿듣기)면 누름 대부분이 인벤토리 밖
+ *  스크린샷용인데, 예전엔 누르자마자 숨은 카드를 띄우고 '조회 중' 스피너(지도가 닫혀 있을 때)를 보였다 — OCR 이
+ *  끝나 못 읽었다고 나온 뒤에야 지도로 바뀜(실앱 재현: 스피너 약 1.4~3.5초).
+ *  → 같은 키면 '조회 중' 상태를 쓰지 않는다. 지금 카드 자리가 지도이거나 나란히 모드면 바로 드러내고(스크린샷이 지도를
+ *    갱신하니 기다릴 이유가 없음), 아니면 결과가 나올 때까지 화면을 건드리지 않는다 — 읽었으면 그때 결과 카드,
+ *    못 읽었으면 viewAfterLookup 대로 지도. 키가 따로면 예전 그대로(바로 드러내고 '조회 중'). */
+export function pressView(o: { passthrough: boolean; mapShown: boolean; wideMode: boolean }): { reveal: boolean; loading: boolean } {
+  if (!o.passthrough) return { reveal: true, loading: true };
+  return { reveal: o.mapShown || o.wideMode, loading: false };
+}
+
 /** 같은 키로 누른 뒤 이 시간 안에 감지된 스크린샷은 그 누름이 만든 것으로 본다(게임 저장 + 1초 폴링 + 폴더 훑기 지연). */
 export const SHARED_SHOT_WINDOW_MS = 6000;
 
