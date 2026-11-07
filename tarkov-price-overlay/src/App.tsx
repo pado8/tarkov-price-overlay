@@ -4292,6 +4292,17 @@ function App() {
     window.addEventListener("pointerup", onUp);
   };
 
+  // 11-07 머리글 끌기를 직접 처리. Tauri 의 data-tauri-drag-region(drag.js)은 mousedown detail===2(더블클릭)에
+  // internal_toggle_maximize 를 걸고, 그 명령은 resizable 이면 maximizable 과 무관하게 창을 최대화한다 → 나란히 모드에서
+  // 머리글을 두 번 누르면 창이 모니터 크기로 커졌다가(최대화) 크기 기억 로직·복원에 되돌아와 '커졌다 바로 줄어드는' 현상.
+  // 첫 클릭(detail 1)만 끌기, 더블클릭은 아무것도 안 함. 머리글 안 버튼·입력칸은 제외.
+  const onHeaderDown = (e: React.MouseEvent) => {
+    if (pinned || e.button !== 0 || e.detail !== 1) return;
+    if ((e.target as Element).closest("button, input, select, a, textarea")) return;
+    getCurrentWindow()
+      .startDragging()
+      .catch((err) => log(`header drag failed: ${String(err)}`));
+  };
   const resetCardSize = () => {
     // Width resets in every mode (the handle drives width everywhere).
     setCardWidth(null);
@@ -4397,13 +4408,11 @@ function App() {
           if (!recordingHotkey) scheduleHide();
         }}
       >
-        {/* Pinned: drop the drag-region attributes so the OS can't move the
-            window via the header — that's the only move affordance in a
-            borderless window. */}
-        <div className="header" data-tauri-drag-region={pinned ? undefined : true}>
-          <span className="title" data-tauri-drag-region={pinned ? undefined : true}>{t.title}</span>
+        {/* 머리글 끌기 = onHeaderDown(첫 클릭만). 고정이면 안 끌림. data-tauri-drag-region 은 더블클릭 최대화 때문에 안 쓴다(11-07) */}
+        <div className="header" onMouseDown={onHeaderDown}>
+          <span className="title">{t.title}</span>
           <div className="header-actions">
-            <span className="hotkey" data-tauri-drag-region={pinned ? undefined : true}>
+            <span className="hotkey">
               {/* 키보드 바인딩은 키보드, 마우스 바인딩(휠·X1·X2)은 마우스 아이콘 — 전엔 i18n 문구에 🖱 가 들어 있었다 */}
               <span className="hotkey-icon" aria-hidden="true">
                 <Icon name={isMouseHotkey(hotkey) ? "mouse" : "keyboard"} />

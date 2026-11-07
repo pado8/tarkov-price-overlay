@@ -1,5 +1,6 @@
 // 지도 패널(RadarMap + 대상 목록). 데이터는 사이드카 /radar(radar.py)가 계산한다 —
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
@@ -278,7 +279,17 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         )}
         {ready && data!.shot!.age > STALE_SEC && <div className="radar-mini-stale" title={t.radarStale}>{ago(data!.shot!.age, t)}</div>}
         <div className="radar-mini-tools">
-          <span className="radar-mini-grip" data-tauri-drag-region={dragRegion ? true : undefined} title={t.radarMiniDrag}>⠿</span>
+          {/* 11-07 data-tauri-drag-region 대신 직접 끌기 — 그 속성은 더블클릭에 창 최대화를 건다(App.tsx onHeaderDown 과 같은 이유) */}
+          <span
+            className="radar-mini-grip"
+            title={t.radarMiniDrag}
+            onMouseDown={(e) => {
+              if (!dragRegion || e.button !== 0 || e.detail !== 1) return;
+              getCurrentWindow().startDragging().catch(() => {});
+            }}
+          >
+            ⠿
+          </span>
           <button type="button" onClick={() => step(-20)} disabled={miniSize <= RADAR_MINI_MIN} title={t.radarMiniSmaller} aria-label={t.radarMiniSmaller}>−</button>
           <button type="button" onClick={() => step(20)} disabled={miniSize >= RADAR_MINI_MAX} title={t.radarMiniBigger} aria-label={t.radarMiniBigger}>+</button>
           <button type="button" onClick={() => onMini?.(false)} title={t.radarMiniExpand}>{t.radarMiniExpand}</button>
