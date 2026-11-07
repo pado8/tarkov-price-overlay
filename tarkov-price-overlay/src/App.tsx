@@ -1840,6 +1840,28 @@ function App() {
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
+  // 1.3.1 사이드카에 지금 쓰는 (게임 언어, 모드)를 알린다 — 그 조합만 10분마다 시세 목록 갱신(예전 9개 전부).
+  // 사이드카가 막 켜지는 중이면 2초 간격으로 몇 번 더 시도.
+  const activeLang = getGameLang(region);
+  useEffect(() => {
+    let dead = false;
+    (async () => {
+      for (let i = 0; i < 30 && !dead; i++) {
+        try {
+          const r = await fetch(`${PYTHON_API}/catalog/active`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lang: activeLang, game_mode: region.gameMode }),
+          });
+          if (r.ok) return;
+        } catch {}
+        await new Promise((res) => setTimeout(res, 2000));
+      }
+    })();
+    return () => {
+      dead = true;
+    };
+  }, [activeLang, region.gameMode]);
   // 11-06 진단 정보 함께 보내기 — 11-07 인게임 메모: "기본으로 체크돼 있는 건 별로" → 기본 꺼짐, 마지막 선택 기억
   const [feedbackDiag, setFeedbackDiag] = useState<boolean>(() => {
     try {

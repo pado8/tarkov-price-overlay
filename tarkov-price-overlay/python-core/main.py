@@ -591,6 +591,20 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+class CatalogActiveRequest(BaseModel):
+    lang: str
+    game_mode: str
+
+
+@app.post("/catalog/active")
+def catalog_active_ep(req: CatalogActiveRequest) -> dict:
+    """1.3.1 — 앱이 지금 쓰는 (게임 언어, 모드)를 알린다(시작·설정 변경 때). 이 조합만 10분마다 갱신된다."""
+    from tarkov_api import mark_active
+
+    mark_active(req.lang, req.game_mode, announced=True)
+    return {"ok": True}
+
+
 @app.get("/catalog/status")
 def catalog_status_ep() -> dict:
     """시세 카탈로그 상태 — (언어/모드)별 항목 수·나이·출처(json/graphql/disk), 소스 순서, 스냅샷 폴더. 진단용."""
@@ -1104,6 +1118,12 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         f"winapi_cursor={winapi_cursor}"
     )
     lang = req.lang if req.lang in ("ko", "en", "ru") else "ko"
+    try:
+        from tarkov_api import mark_active
+
+        mark_active(lang, req.game_mode)  # 1.3.1 조회에 쓴 조합 = 정기 갱신 대상
+    except Exception:  # noqa: BLE001
+        pass
     game_mode = req.game_mode if req.game_mode in ("regular", "pve", "pvp-season") else "regular"
 
     # Direct-name lookup path: skip capture+OCR, use the supplied text.

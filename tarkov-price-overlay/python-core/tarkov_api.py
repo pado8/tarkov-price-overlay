@@ -1141,7 +1141,7 @@ def _refresh_one(lang: str, game_mode: str) -> int:
 def load_snapshots() -> int:
     """앱 시작 때 네트워크보다 먼저 — 디스크 스냅샷이 있는 (lang, mode) 를 메모리에 올린다. 올린 카탈로그 수."""
     n = 0
-    for lang in ("ko", "en"):
+    for lang in ("ko", "en", "ru"):
         for game_mode in ("regular", "pve", "pvp-season"):
             if _price_cache.get((lang, game_mode)):
                 continue  # 이미 네트워크로 채워졌으면 덮지 않는다
@@ -1339,35 +1339,78 @@ def _finish_install(lang: str, game_mode: str, by_name: dict[str, dict], source:
     print(f"[cache] refreshed ({lang},{game_mode}) - {len(by_name)} items [{source}]")
 
 
+# ── 1.3.1 쓰는 조합만 갱신(11-08) ───────────────────────────────────────────
+# 예전엔 9개(ko·en·ru × regular·pve·pvp-season)를 10분마다 전부 받아 사이드카가 30~60초 동안 코어 45~65% 를 썼다
+# (11-07 실측). 조회는 (게임 언어, 모드) 하나만 쓴다 → 앱이 알려 준 조합(POST /catalog/active)과 최근 조회에 쓴
+# 조합만 CACHE_TTL_SEC 마다 갱신. 나머지는 시작 때 디스크 스냅샷만 — 처음 쓰면 _cold_warm·mark_active 가 바로 받는다.
+ACTIVE_WINDOW_SEC = 2 * 3600  # 조회에 쓴 조합은 이 시간 동안 '쓰는 중'
+REFRESH_TICK_SEC = 60
+_active_lock = threading.Lock()
+_active_used: dict[tuple[str, str], float] = {}
+_active_announced: tuple[str, str] | None = None
+_refreshing_now: set[tuple[str, str]] = set()
+
+
+def _catalog_age(lang: str, game_mode: str) -> float:
+    with _price_cache_lock:
+        ts = _price_cache_ts.get((lang, game_mode))
+    return time.time() - ts if ts else float("inf")
+
+
+def _active_combos() -> list[tuple[str, str]]:
+    now = time.time()
+    with _active_lock:
+        keys = {k for k, t in _active_used.items() if now - t < ACTIVE_WINDOW_SEC}
+        if _active_announced:
+            keys.add(_active_announced)
+    return sorted(keys)
+
+
+def _refresh_guarded(lang: str, game_mode: str) -> None:
+    """같은 조합을 두 곳(틱·알림)에서 동시에 받지 않게."""
+    key = (lang, game_mode)
+    with _active_lock:
+        if key in _refreshing_now:
+            return
+        _refreshing_now.add(key)
+    try:
+        _refresh_one(lang, game_mode)
+        # 새 구경(패치 추가 탄)이 탄약표에 들어오게 — 예전처럼 갱신 뒤마다 탄약 캐시를 비운다
+        with _ammo_cache_lock:
+            _ammo_cache.clear()
+    except Exception as e:  # noqa: BLE001
+        print(f"[cache] refresh ({lang},{game_mode}) failed: {e!r}")
+    finally:
+        with _active_lock:
+            _refreshing_now.discard(key)
+
+
+def mark_active(lang: str, game_mode: str, announced: bool = False) -> None:
+    """이 조합을 쓰는 중으로 기록. 비었거나 TTL 이 지났으면 백그라운드로 바로 받는다(조회는 기다리지 않음)."""
+    global _active_announced
+    if lang not in ("ko", "en", "ru") or game_mode not in ("regular", "pve", "pvp-season"):
+        return
+    key = (lang, game_mode)
+    with _active_lock:
+        _active_used[key] = time.time()
+        if announced:
+            _active_announced = key
+    if _catalog_age(lang, game_mode) > CACHE_TTL_SEC:
+        threading.Thread(target=_refresh_guarded, args=key, daemon=True, name=f"catalog-{lang}-{game_mode}").start()
+
+
 def _refresher_loop() -> None:
-    """Periodic warm-up + refresh of all (lang, game_mode) catalogs."""
+    """시작: 디스크 스냅샷 전부. 그 뒤 1분마다 '쓰는 조합'만 TTL 지나면 갱신."""
     try:
         load_snapshots()  # 네트워크 전에 디스크 스냅샷부터 — 첫 조회를 바로, 오프라인이면 끝까지 이걸로
     except Exception as e:  # noqa: BLE001
         print(f"[cache] snapshot restore failed: {e!r}")
     while True:
-        # ru 도 미리 받아 둔다(11-03): 빠져 있어 러시아어 조회가 전부 아이템별 GraphQL 네트워크 경로로 갔고,
-        # tarkov.dev GraphQL 장애 땐 러시아어 사용자는 조회가 아예 안 됐다(스냅샷 ~6MB 씩 3개 추가).
-        for lang in ("ko", "en", "ru"):
-            for game_mode in ("regular", "pve", "pvp-season"):
-                try:
-                    _refresh_one(lang, game_mode)
-                except Exception as e:
-                    print(f"[cache] refresh ({lang},{game_mode}) failed: {e!r}")
-                    time.sleep(REFRESH_RETRY_BACKOFF_SEC)
-                    continue
-                # Tiny gap between calls so we don't slam tarkov.dev.
+        for lang, game_mode in _active_combos():
+            if _catalog_age(lang, game_mode) > CACHE_TTL_SEC:
+                _refresh_guarded(lang, game_mode)
                 time.sleep(1)
-        # Invalidate the ammo cache after each catalog refresh so newly
-        # released calibers (game-patch additions) get picked up within the
-        # CACHE_TTL_SEC window. Without this, the React-side caliber
-        # re-fetch hits the same stale dict every time and never sees new
-        # calibers until the process restarts. Lang-keyed clear is enough
-        # since _fetch_ammo is per-lang.
-        with _ammo_cache_lock:
-            _ammo_cache.clear()
-            print("[ammo] cache invalidated for next /ammo fetch")
-        time.sleep(CACHE_TTL_SEC)
+        time.sleep(REFRESH_TICK_SEC)
 
 
 def start_background_refresher() -> None:
