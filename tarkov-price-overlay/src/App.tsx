@@ -132,7 +132,11 @@ const INSTALL_ID_KEY = "tarkov.installId";
 const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 11-07 시작 카드(처음 5분: F2·스크린샷 키·⚙ + 사용 설명서) — 첫 조회가 성공하거나 "알겠어요"를 누르면 끝. 이미 조회 기록이 있는 PC 는 안 띄움
 const START_DONE_KEY = "tarkov.startCardDone";
-const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
+const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag";
+// 피드백 #58(11-07) '마우스를 올리면 비켜 주기' — 게임이 앞에 있을 때 커서가 카드·미니맵 위면 투명 + 클릭은 게임으로(기본 꺼짐).
+// 예전(1.3.0 전)엔 #55 버그로 카드에 마우스를 올리면 게임이 앞으로 와 오버레이를 덮었는데, 그걸 '장비창 위 미니맵 치우기'로 쓰던 사용자가 있었다.
+// 포커스를 뺏는 옛 방식은 전체 화면 최소화(#55)가 같이 오므로 쓰지 않고, 투명 + 클릭 투과로만 비켜 준다.
+const HOVER_DODGE_KEY = "tarkov.hoverDodge"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
 
 // Public downloads page. Portable users get sent here from the update
 // banner instead of going through `update.downloadAndInstall()`, which
@@ -2338,6 +2342,23 @@ function App() {
   // will take over the moment it leaves; scheduling here would only
   // wrongly hide while the user is still hovering.
   const mouseOverCardRef = useRef(false);
+  const [hoverDodge, setHoverDodge] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(HOVER_DODGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const hoverDodgeRef = useRef(hoverDodge);
+  hoverDodgeRef.current = hoverDodge;
+  useEffect(() => {
+    try {
+      localStorage.setItem(HOVER_DODGE_KEY, hoverDodge ? "1" : "0");
+    } catch {}
+  }, [hoverDodge]);
+  const [dodging, setDodging] = useState(false);
+  const dodgingRef = useRef(false);
+  const fgKindRef = useRef(""); // 앞 창 종류(game·overlay·other·none) — 진단 기록용 0.7초 폴링이 채운다
   const holdRef = useRef<HoldState>(HOLD_START); // 카드 위에서 누른 채 끄는 중인가(cursorHold.ts)
   // 커서가 지금 카드(지도 나란히 패널 포함) 위인가 — 물리 px 로 비교. 클릭 투과 폴링과 숨김 직전 확인이 같이 쓴다.
   // CSS→물리 변환은 창의 scaleFactor(카드가 실제로 있는 모니터 배율)로 한다 — devicePixelRatio 는 모니터를 옮기면
@@ -2851,6 +2872,7 @@ function App() {
     const iv = window.setInterval(() => {
       invoke<string>("get_foreground_kind")
         .then((k) => {
+          fgKindRef.current = k;
           if (k !== lastFg) {
             lastFg = k;
             diag("fg:" + k);
@@ -2882,6 +2904,10 @@ function App() {
       // the card up forever.
       mouseOverCardRef.current = false;
       holdRef.current = HOLD_START;
+      if (dodgingRef.current) {
+        dodgingRef.current = false;
+        setDodging(false);
+      }
       return () => window.clearInterval(keep);
     }
 
@@ -2911,7 +2937,20 @@ function App() {
         // 이 폴링이 속한 효과가 끝났으면(카드를 숨김 등) 여기서 멈춘다. 늦게 돌아온 이전 폴링이 숨김 효과 뒤에
         // 클릭 투과를 끄거나(숨긴 창이 게임 마우스를 가로챔) 커서 상태를 덮어쓰던 경쟁을 막는다(11-04).
         if (cancelled) return;
-        setIgnore(!inside);
+        // #58 비켜 주기: 게임이 앞일 때만(오버레이·다른 창이 앞이면 평소대로 만질 수 있게). 설정 중·크기 조절 중·나란히 모드(보통 다른 모니터)는 제외
+        const dodge =
+          inside &&
+          hoverDodgeRef.current &&
+          // 개발 시험용: localStorage tarkov.dodgeAnyWindow=1 이면 게임이 앞에 없어도(게임 없이 확인)
+          (fgKindRef.current === "game" || localStorage.getItem("tarkov.dodgeAnyWindow") === "1") &&
+          !settingsOpenRef.current &&
+          !wideModeRef.current; // 장비창 아이템을 누른 채 끌면 holdStep 이 '위'를 유지해 끄는 동안 계속 투명
+        if (dodge !== dodgingRef.current) {
+          dodgingRef.current = dodge;
+          setDodging(dodge);
+          diag(dodge ? "dodge:on" : "dodge:off");
+        }
+        setIgnore(!inside || dodge);
         // Drive auto-hide from the poll — the single source of truth for
         // "cursor on card". The card's DOM mouseenter/mouseleave fire
         // unreliably because the window is click-through most of the time,
@@ -4416,7 +4455,7 @@ function App() {
 
   const miniOn = radarMini && radarActive && !showSettings && !wideMode; // 미니맵 모드가 실제로 보이는 조건(나란히·설정 중엔 아님)
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}`}>
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}>
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -5251,6 +5290,11 @@ function App() {
               />
             </div>
             <div className="settings-sub">{t.subAutoHide}</div>
+            <div className="settings-row" title={t.hoverDodgeHint}>
+              <label>{t.hoverDodge}</label>
+              <input type="checkbox" checked={hoverDodge} onChange={(e) => setHoverDodge(e.target.checked)} />
+            </div>
+            <div className="settings-sub">{t.subHoverDodge}</div>
             <div className="settings-row">
               <label>{t.hideDelay}</label>
               <input

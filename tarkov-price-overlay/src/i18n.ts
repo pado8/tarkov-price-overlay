@@ -459,6 +459,9 @@ export const T = {
     hideDelay: "표시 시간(초)",
     autoHideToggle: "자동 숨기기",
     autoHideHint: "끄면 카드가 계속 떠 있어요 (✕ 또는 카드 토글 단축키로 숨김 · 창 고정 중엔 토글 단축키만)",
+    hoverDodge: "마우스를 올리면 비켜 주기",
+    subHoverDodge: "게임 중 카드·미니맵 위에 마우스를 올리면 잠깐 투명해지고 클릭은 게임으로 가요(장비창이 가려질 때)",
+    hoverDodgeHint: "게임 창이 앞에 있을 때만 동작해요. 마우스가 벗어나면 다시 보여요. 이 동안엔 오버레이를 누를 수 없으니, 오버레이를 만지려면 Alt+Tab 등으로 게임 밖에서 쓰세요. 설정을 연 동안·나란히 보기에선 꺼져요",
     connError:
       "로컬 서버에 연결할 수 없어요 — 자동 복구 중입니다. 잠시 후 다시 F2를 눌러주세요.",
     sidecarDead:
@@ -962,6 +965,9 @@ export const T = {
     hideDelay: "Auto-hide (s)",
     autoHideToggle: "Auto-hide",
     autoHideHint: "Off keeps the card on screen (hide via ✕ or the toggle hotkey; while pinned: toggle hotkey only)",
+    hoverDodge: "Step aside on mouse-over",
+    subHoverDodge: "In game, hovering the card or minimap makes it see-through and clicks go to the game (when it covers your gear)",
+    hoverDodgeHint: "Only while the game window is in front. It comes back when the mouse leaves. While see-through the overlay can't be clicked — to use it, switch out of the game (e.g. Alt+Tab). Off while settings are open and in side-by-side view",
     connError:
       "Can't reach the local server — auto-recovering. Try F2 again in a few seconds.",
     sidecarDead:
@@ -1465,6 +1471,9 @@ export const T = {
     hideDelay: "Авто-скрытие (с)",
     autoHideToggle: "Авто-скрытие",
     autoHideHint: "Выкл. оставляет карточку на экране (скрыть через ✕ или горячей клавишей; при закреплении — только горячей клавишей)",
+    hoverDodge: "Убирать при наведении",
+    subHoverDodge: "В игре при наведении на карточку или мини-карту она становится прозрачной, а клики уходят в игру (если закрывает снаряжение)",
+    hoverDodgeHint: "Только когда окно игры на переднем плане. Возвращается, когда курсор уходит. Пока прозрачна, нажать на оверлей нельзя — чтобы им пользоваться, выйдите из игры (например, Alt+Tab). Не работает при открытых настройках и в режиме «рядом»",
     connError:
       "Нет связи с локальным сервером — авто-восстановление. Повторите F2 через несколько секунд.",
     sidecarDead:
@@ -1959,6 +1968,9 @@ export const T = {
     hideDelay: "自动隐藏（秒）",
     autoHideToggle: "自动隐藏",
     autoHideHint: "关闭后卡片会一直显示（通过 ✕ 或切换快捷键隐藏；窗口固定时只能使用切换快捷键）",
+    hoverDodge: "鼠标移上去时让开",
+    subHoverDodge: "游戏中把鼠标移到卡片或小地图上会暂时变透明，点击会传给游戏（挡住装备栏时）",
+    hoverDodgeHint: "仅在游戏窗口位于前台时生效。鼠标移开后恢复显示。透明期间无法点击浮窗——要操作浮窗请切出游戏（如 Alt+Tab）。打开设置时和并排显示时不生效",
     connError: "无法连接本地服务器——正在自动恢复。请稍后再按 F2。",
     sidecarDead: "查询服务器无法恢复。请右键点击托盘图标 → 退出，然后重新启动程序。",
     exit: "退出",
