@@ -45,3 +45,18 @@ export function shotAction(o: { wideMode: boolean; passthrough: boolean; lookupI
   if (o.passthrough && (o.lookupInFlight || o.msSincePress < SHARED_SHOT_WINDOW_MS)) return "refresh"; // 같은 누름 — 조회 결과가 화면을 정한다
   return "popup";
 }
+
+/** 못 찾음 통계 분류(lookup_nomatch detail) — 대시보드가 '캡처 빗나감'과 '읽었는데 매칭 실패'를 가르는 기준.
+ *   empty    = 아무 글자도 못 읽음(캡처 영역이 툴팁을 벗어남·툴팁 없는 곳에서 누름)
+ *   junk     = 글자 조각만(3자 미만·문자 없음) — 캡처가 툴팁 가장자리만 스침
+ *   no_match = 이름으로 보이는 글자를 읽었지만 카탈로그에 없음(오독·별칭 누락·새 아이템)
+ * 11-07: 라틴·한글만 '글자'로 쳐서 러시아어 클라(키릴)·중국어 클라(한자)에서 읽은 이름이 전부 junk 로 떨어졌다 —
+ *   RU 사용자의 진짜 오독이 '캡처 영역 문제'로 잘못 집계됨. 키릴(U+0400~04FF)·한자(U+4E00~9FFF)도 글자로 본다.
+ *   한자 이름은 2자(钥匙 등)도 흔해 최소 길이를 2 로 둔다. */
+export function nomatchCategory(raw?: string | null): string {
+  const t = (raw || "").trim();
+  if (!t) return "empty";
+  const minLen = /[一-鿿]/.test(t) ? 2 : 3;
+  if (t.length < minLen || !/[a-zA-Z가-힣Ѐ-ӿ一-鿿]/.test(t)) return "junk";
+  return "no_match";
+}

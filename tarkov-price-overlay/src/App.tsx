@@ -14,7 +14,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
-import { viewAfterLookup, shotAction } from "./lookupOutcome";
+import { viewAfterLookup, shotAction, nomatchCategory } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
@@ -496,13 +496,6 @@ if (typeof window !== "undefined") {
 // just a coarse category so the dashboard can tell a capture/alignment miss
 // ("empty" = nothing read, "junk" = too short / no letters → region likely
 // misaligned) apart from a genuine OCR misread or new item ("no_match").
-function nomatchCategory(raw?: string | null): string {
-  const t = (raw || "").trim();
-  if (!t) return "empty";
-  if (t.length < 3 || !/[a-zA-Z가-힣]/.test(t)) return "junk";
-  return "no_match";
-}
-
 const hideToTray = () => {
   invoke("hide_to_tray").catch(() => {});
 };
