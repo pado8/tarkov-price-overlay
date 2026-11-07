@@ -386,6 +386,9 @@ export const T = {
       "F2를 누를 때 아이템 이름이 캡처 영역(빨간 상자) 안에 들어와야 읽을 수 있어요. 해상도·배율이 1920×1080·100%가 아니면 먼저 '해상도 자동 조정'을 눌러 보고, 그래도 안 되면 '캡처 영역 맞추기'에서 빨간 상자를 아이템 이름 위로 옮겨 주세요. (지금 화면 {res})",
     captureHelpOpen: "캡처 영역 맞추기",
     captureHelpScaled: "해상도에 맞춰 조정했어요 — 아이템에 마우스를 올리고 다시 F2를 눌러 보세요.",
+    tipHelpTitle: "툴팁이 뜬 뒤에 눌러 주세요",
+    tipHelpBody:
+      "평소엔 잘 읽히는데 빈 화면이 연달아 나오고 있어요. 아이템 위에 마우스를 올리고 이름 툴팁이 화면에 보인 뒤에 F2를 눌러 주세요 — 빈 칸·인벤토리 밖·툴팁이 뜨기 전에 누르면 못 찾는 게 정상이에요. 툴팁이 떠 있는데도 안 읽힐 때만 '캡처 영역 맞추기'를 써 주세요.",
     updateApplyNow: "지금 적용",
     autoInstallUpdate: "새 버전 자동 설치",
     autoInstallUpdateHint: "뒤에서 받아 두고 앱을 닫을 때 설치",
@@ -862,6 +865,9 @@ export const T = {
       "When you press F2, the item name has to fall inside the capture region (the red box). If your resolution or scaling is not 1920×1080 at 100%, try Auto-scale to monitor first; if it still fails, open Adjust capture region and move the red box over the item name. (Current screen {res})",
     captureHelpOpen: "Adjust capture region",
     captureHelpScaled: "Adjusted to your resolution — hover an item and press F2 again.",
+    tipHelpTitle: "Press after the tooltip appears",
+    tipHelpBody:
+      "Reading usually works for you, but several captures in a row came back blank. Hover an item and press F2 once its name tooltip is on screen — pressing on an empty slot, outside the inventory or before the tooltip shows is expected to find nothing. Use Adjust capture region only if it still fails with the tooltip visible.",
     updateApplyNow: "Apply now",
     autoInstallUpdate: "Install updates automatically",
     autoInstallUpdateHint: "downloads in the background, installs on close",
@@ -1338,6 +1344,9 @@ export const T = {
       "При нажатии F2 название предмета должно попадать в область захвата (красная рамка). Если разрешение или масштаб не 1920×1080 и 100%, сначала нажмите «Автоподбор разрешения»; если не помогло — откройте «Настроить область захвата» и сдвиньте рамку на название. (Сейчас экран {res})",
     captureHelpOpen: "Настроить область захвата",
     captureHelpScaled: "Подобрано под ваше разрешение — наведите на предмет и снова нажмите F2.",
+    tipHelpTitle: "Нажимайте, когда появится подсказка",
+    tipHelpBody:
+      "Обычно распознавание у вас работает, но несколько захватов подряд оказались пустыми. Наведите курсор на предмет и нажмите F2, когда на экране появится подсказка с названием — нажатие на пустой ячейке, вне инвентаря или до появления подсказки ничего не найдёт, это нормально. Настраивайте область захвата, только если при видимой подсказке всё равно не читается.",
     updateApplyNow: "Применить сейчас",
     autoInstallUpdate: "Устанавливать обновления автоматически",
     autoInstallUpdateHint: "скачивается в фоне, ставится при закрытии",
@@ -1807,6 +1816,8 @@ export const T = {
     captureHelpBody: "按 F2 时，物品名称必须落在捕获区域（红框）内。如果你的分辨率或缩放不是 1920×1080 / 100%，请先试试“根据显示器自动缩放”；仍然失败的话，打开“调整捕获区域”，把红框移到物品名称上。（当前屏幕 {res}）",
     captureHelpOpen: "调整捕获区域",
     captureHelpScaled: "已按你的分辨率调整——请把鼠标悬停在物品上，再按一次 F2。",
+    tipHelpTitle: "请等提示框出现后再按",
+    tipHelpBody: "平时能正常识别，但最近连续几次都是空白。把鼠标悬停在物品上，等名称提示框出现在屏幕上后再按 F2——在空格子、库存外或提示框出现前按下，读不到是正常的。只有提示框已经显示却仍然读取失败时，才需要“调整捕获区域”。",
     updateApplyNow: "立即应用",
     autoInstallUpdate: "自动安装更新",
     autoInstallUpdateHint: "在后台下载，关闭程序时安装",

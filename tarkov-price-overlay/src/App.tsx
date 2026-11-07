@@ -15,6 +15,7 @@ import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction } from "./lookupOutcome";
+import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -269,7 +270,7 @@ type StatsEvent =
   | "sidecar_fail" // 사이드카가 끝내 안 뜸. detail = probe_refused|probe_timeout|probe_http_<n>|dead:<이유>
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
-  | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
+  | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | shown_tip:<연속실패수>(11-07 툴팁 안내) | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
   | "daily" // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
   | "donate"; // 11-06 후원 창 사용: open:<탭> | tab:<탭> | paypal_open | copy:<탭> (탭 = kakao|paypal). 금액·결제 정보 없음
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
@@ -1106,8 +1107,12 @@ function clearHistory() {
 // in their smaller hover boxes. Primary monitor (not the window's current
 // monitor) so dual-monitor setups where the overlay sits on a secondary
 // screen still get sensible defaults for the gameplay monitor.
-function scaleRegionForMonitor(base: Region, monitorWidth: number): Region {
-  const scale = Math.max(monitorWidth / 1920, 1.0);
+// 11-07: the tooltip follows the screen's vertical size, so ultrawide screens
+// (3440×1440, 2560×1080) used to get oversized boxes from a width-only ratio
+// (1.79 / 1.33 instead of 1.33 / 1.0) that picked up neighbouring text — use
+// the smaller of the two ratios (captureScale). 16:9 screens get exactly the same scale as before.
+function scaleRegionForMonitor(base: Region, monitorWidth: number, monitorHeight?: number): Region {
+  const scale = captureScale(monitorWidth, monitorHeight);
   const r = Math.round;
   return {
     ...base,
@@ -1132,7 +1137,7 @@ async function applyMonitorScaling(force: boolean): Promise<Region | null> {
   try {
     const mon = await primaryMonitor();
     if (!mon) return null;
-    const scaled = scaleRegionForMonitor(DEFAULT_REGION, mon.size.width);
+    const scaled = scaleRegionForMonitor(DEFAULT_REGION, mon.size.width, mon.size.height);
     // Only overwrite the CAPTURE GEOMETRY. This button's job is to recompute
     // offsets/sizes for the monitor — it must never wipe the user's other
     // ~20 settings (lang, gameMode, fontSize, display toggles, autoHide,
@@ -1417,15 +1422,22 @@ function App() {
   const [captureModalOpen, setCaptureModalOpen] = useState(false);
   // 11-04 첫 설정 도움: F2 가 연달아 못 읽으면 못 찾음 카드 아래에 캡처 영역 맞추기 안내.
   // 통계상 신규 사용자 실패율 13~27%(기존 4~7%) — 대부분 캡처 영역이 아이템 이름을 못 덮는 경우.
-  const [captureHelp, setCaptureHelp] = useState<{ streak: number; scaled: boolean } | null>(null);
+  // mode "tip" (11-07): 평소엔 잘 읽히는데 빈 화면만 이어지면 캡처 영역이 아니라 툴팁 없는 곳(빈 칸·인벤토리 밖·툴팁 뜨기 전)에서
+  // 누른 것 — 통계상 이런 사람이 '캡처 맞추기'를 수십 번 눌러도 회복 0이었다 → 그땐 툴팁 안내를 먼저 보인다
+  const [captureHelp, setCaptureHelp] = useState<{ streak: number; scaled: boolean; mode: HelpMode } | null>(null);
   const failStreakRef = useRef(0);
   const recentF2Ref = useRef<boolean[]>([]); // 최근 F2 결과(true = 읽음), 최대 10개
+  const recentFailKindsRef = useRef<string[]>([]); // 최근 실패 종류(empty/junk/no_match), 최대 10개
+  const sessionOkRef = useRef(0); // 이번 세션 성공 수
+  const helpActionsRef = useRef(0); // 상자의 캡처 맞추기·자동 조정을 누른 뒤 아직 회복 못 한 횟수
   const helpShownRef = useRef(false); // 이번 세션에 상자를 띄운 적 있음 → 다음 성공을 'recovered' 로 보고
-  const trackF2Outcome = (ok: boolean) => {
+  const trackF2Outcome = (ok: boolean, failKind?: string) => {
     const recent = [...recentF2Ref.current, ok].slice(-10);
     recentF2Ref.current = recent;
     if (ok) {
       failStreakRef.current = 0;
+      sessionOkRef.current += 1;
+      helpActionsRef.current = 0;
       try {
         localStorage.setItem(EVER_OK_KEY, "1");
       } catch {}
@@ -1436,6 +1448,7 @@ function App() {
       setCaptureHelp(null);
       return;
     }
+    if (failKind) recentFailKindsRef.current = [...recentFailKindsRef.current, failKind].slice(-10);
     failStreakRef.current += 1;
     const streak = failStreakRef.current;
     if (streak < 3) return;
@@ -1446,12 +1459,13 @@ function App() {
     // 닫은 지 7일 안이면 다시 안 띄운다(한 번도 성공 못 한 사람은 예외)
     const dismissedAt = Number(localStorage.getItem(CAPTURE_HELP_DISMISS_KEY) || 0);
     if (everOk && Date.now() - dismissedAt < 7 * 86400000) return;
+    const mode = chooseHelpMode(everOk, sessionOkRef.current, recentFailKindsRef.current, helpActionsRef.current);
     setCaptureHelp((h) => {
-      if (!h) {
+      if (!h || h.mode !== mode) {
         helpShownRef.current = true;
-        reportEvent("help", `shown:${streak}`);
+        reportEvent("help", `${mode === "tip" ? "shown_tip" : "shown"}:${streak}`);
       }
-      return { streak, scaled: h?.scaled ?? false };
+      return { streak, scaled: h?.scaled ?? false, mode };
     });
   };
   const [previewAnchorMode, setPreviewAnchorMode] =
@@ -3927,7 +3941,7 @@ function App() {
             const pfx = (hotkeyPassthroughRef.current ? "share_" : "") + (data.attempt === "wide" ? "wide_" : "");
             reportEvent("lookup_nomatch", pfx + nomatchCategory(data.raw_text));
             // 스크린샷 키 공유 중엔 인벤토리 밖 누름이 대부분이라 도움 판단에서 뺀다
-            if (!hotkeyPassthroughRef.current) trackF2Outcome(false);
+            if (!hotkeyPassthroughRef.current) trackF2Outcome(false, nomatchCategory(data.raw_text));
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
             // catalog id so the dashboard shows WHICH items (e.g. new patch
@@ -6129,12 +6143,14 @@ function App() {
             {/* 11-04 첫 설정 도움 — 연달아 못 읽을 때만(조건은 trackF2Outcome) */}
             {!result.item_name && captureHelp && (
               <div className="capture-help" role="status">
-                <div className="capture-help-title"><Icon name="warn" /> {t.captureHelpTitle}</div>
+                <div className="capture-help-title"><Icon name="warn" /> {captureHelp.mode === "tip" ? t.tipHelpTitle : t.captureHelpTitle}</div>
                 <div className="capture-help-body">
-                  {t.captureHelpBody.replace(
-                    "{res}",
-                    `${Math.round((window.screen?.width ?? 0) * (window.devicePixelRatio || 1))}×${Math.round((window.screen?.height ?? 0) * (window.devicePixelRatio || 1))} · ${Math.round((window.devicePixelRatio || 1) * 100)}%`
-                  )}
+                  {captureHelp.mode === "tip"
+                    ? t.tipHelpBody
+                    : t.captureHelpBody.replace(
+                        "{res}",
+                        `${Math.round((window.screen?.width ?? 0) * (window.devicePixelRatio || 1))}×${Math.round((window.screen?.height ?? 0) * (window.devicePixelRatio || 1))} · ${Math.round((window.devicePixelRatio || 1) * 100)}%`
+                      )}
                 </div>
                 {captureHelp.scaled && <div className="capture-help-done">{t.captureHelpScaled}</div>}
                 <div className="capture-help-actions">
@@ -6142,6 +6158,7 @@ function App() {
                     className="reset-btn update-btn"
                     onClick={() => {
                       reportEvent("help", "capture");
+                      helpActionsRef.current += 1;
                       setShowSettings(true);
                       setCaptureModalOpen(true);
                     }}
@@ -6152,6 +6169,7 @@ function App() {
                     className="reset-btn"
                     onClick={async () => {
                       reportEvent("help", "autoscale");
+                      helpActionsRef.current += 1;
                       const r = await applyMonitorScaling(true);
                       if (r) setRegion(r);
                       setCaptureHelp((h) => (h ? { ...h, scaled: true } : h));
