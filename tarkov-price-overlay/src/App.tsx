@@ -3735,6 +3735,7 @@ function App() {
       } catch {}
     })();
 
+    let moveSettleTimer = 0;
     const unlistenPromise = win.listen("tauri://move", () => {
       if (wideModeRef.current) return; // 모니터 원점으로 옮긴 건 사용자 위치가 아니다
       if (pipActiveRef.current) {
@@ -3744,17 +3745,24 @@ function App() {
         return;
       }
       if (Date.now() < pipMoveArmedAtRef.current) return; // PiP 를 끄며 원래 자리로 되돌린 이동
-      win.outerPosition().then((pos) => {
-        localStorage.setItem(
-          POSITION_KEY,
-          JSON.stringify({ x: pos.x, y: pos.y })
-        );
-      }).catch(() => {});
-      // Window moved → its top edge changed → recompute the height ceiling so
-      // settings stay reachable wherever the user parks the overlay (id20).
-      applyRef.current?.();
+      // 11-07 '설정을 연 채 창을 끌면 글자가 엄청 떨린다': 이동 이벤트마다 높이 한계를 다시 재고 창 크기·설정 패널 높이를
+      // 맞췄더니 실측 3초 끌기에 창 크기 설정 153회·창 높이 89번 변경(931→936→930…, 엇갈린 setSize 가 커졌다 작아졌다)이 났다.
+      // → 끄는 동안엔 손대지 않고 이동이 멈춘 뒤 0.2초에 한 번만 위치 저장 + 높이 한계 다시 계산.
+      window.clearTimeout(moveSettleTimer);
+      moveSettleTimer = window.setTimeout(() => {
+        win.outerPosition().then((pos) => {
+          localStorage.setItem(
+            POSITION_KEY,
+            JSON.stringify({ x: pos.x, y: pos.y })
+          );
+        }).catch(() => {});
+        // Window moved → its top edge changed → recompute the height ceiling so
+        // settings stay reachable wherever the user parks the overlay (id20).
+        applyRef.current?.();
+      }, 200);
     });
     return () => {
+      window.clearTimeout(moveSettleTimer);
       unlistenPromise.then((fn) => fn());
     };
   }, []);
