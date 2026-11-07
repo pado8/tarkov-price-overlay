@@ -407,8 +407,11 @@ function scheduleStatsFlush(): void {
   }, msToNextFlushWindow());
 }
 
+// 본 창 여부 — 캡처 영역 미리보기 창은 index.html?window=preview-* 로 같은 번들을 띄운다(main.tsx 가 App 을 정적 import)
+const IS_MAIN_WINDOW = typeof window === "undefined" || !new URLSearchParams(window.location.search).get("window");
+
 const reportEvent = (eventType: StatsEvent, detail?: string, ts?: number) => {
-  if (!loadStatsEnabled()) return;
+  if (!IS_MAIN_WINDOW || !loadStatsEnabled()) return; // 미리보기 창은 통계를 쌓지 않는다(11-07 중복 원인)
   statsQueue.push({
     install_id: ensureInstallId(),
     event_type: eventType,
@@ -444,6 +447,7 @@ const persistDaily = () => {
   } catch {}
 };
 function dailyRollover(): void {
+  if (!IS_MAIN_WINDOW) return; // 전날 요약은 본 창만 보내고 비운다(미리보기 창이 같은 저장소를 읽어 또 보내던 것, 11-07)
   const today = kstDay();
   if (dailyAcc.d === today) return;
   const parts = Object.entries(dailyAcc.c)
@@ -486,7 +490,9 @@ function dailyLat(ms: number): void {
 
 // Startup: adopt anything a previous session couldn't deliver (app closed
 // before a window, or the DB was down) and put it on the next window.
-if (typeof window !== "undefined") {
+// 11-07: 본 창에서만 — 캡처 미리보기 창 3개(?window=preview-*)도 같은 번들을 불러 이 모듈 최상위 코드를 실행한다.
+// 예전엔 4개 창이 같은 localStorage 의 전날 하루 요약·못 보낸 큐를 각자 읽어 보내 daily 가 같은 날 4줄씩 쌓였다.
+if (typeof window !== "undefined" && IS_MAIN_WINDOW) {
   loadStatsQueue();
   dailyRollover(); // 전날 요약이 남아 있으면 지금 큐에 싣는다
   if (statsQueue.length) scheduleStatsFlush();
