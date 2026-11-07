@@ -2101,3 +2101,11 @@ html, body, #root {
 
 /* 피드백 #58 마우스를 올리면 비켜 주기 — 투명(클릭 투과는 폴링이 함께 켠다) */
 .overlay.dodge { opacity: 0; transition: opacity 0.12s ease-out; }
+
+/* 11-08 피드백 개인 답장 배너(공지 배너 모양 + 세로 배치) */
+.reply-banner { align-items: flex-start; gap: 8px; }
+.reply-body { flex: 1; min-width: 0; }
+.reply-title { color: var(--gold-light); font-weight: 700; margin-bottom: 2px; }
+.reply-about { color: var(--text-muted); font-size: 0.92em; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reply-text { white-space: pre-wrap; word-break: break-word; }
+.reply-ok { flex: none; margin-left: 0; }

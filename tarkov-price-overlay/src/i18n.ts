@@ -462,6 +462,9 @@ export const T = {
     hoverDodge: "마우스를 올리면 비켜 주기",
     subHoverDodge: "게임 중 카드·미니맵 위에 마우스를 올리면 잠깐 투명해지고 클릭은 게임으로 가요(장비창이 가려질 때)",
     hoverDodgeHint: "게임 창이 앞에 있을 때만 동작해요. 마우스가 벗어나면 다시 보여요. 이 동안엔 오버레이를 누를 수 없으니, 오버레이를 만지려면 Alt+Tab 등으로 게임 밖에서 쓰세요. 설정을 연 동안·나란히 보기에선 꺼져요",
+    devReplyTitle: "💬 개발자 답장",
+    devReplyAbout: "보내신 피드백: “{msg}”",
+    devReplyOk: "확인",
     connError:
       "로컬 서버에 연결할 수 없어요 — 자동 복구 중입니다. 잠시 후 다시 F2를 눌러주세요.",
     sidecarDead:
@@ -968,6 +971,9 @@ export const T = {
     hoverDodge: "Step aside on mouse-over",
     subHoverDodge: "In game, hovering the card or minimap makes it see-through and clicks go to the game (when it covers your gear)",
     hoverDodgeHint: "Only while the game window is in front. It comes back when the mouse leaves. While see-through the overlay can't be clicked — to use it, switch out of the game (e.g. Alt+Tab). Off while settings are open and in side-by-side view",
+    devReplyTitle: "💬 Reply from the developer",
+    devReplyAbout: "Your feedback: “{msg}”",
+    devReplyOk: "OK",
     connError:
       "Can't reach the local server — auto-recovering. Try F2 again in a few seconds.",
     sidecarDead:
@@ -1474,6 +1480,9 @@ export const T = {
     hoverDodge: "Убирать при наведении",
     subHoverDodge: "В игре при наведении на карточку или мини-карту она становится прозрачной, а клики уходят в игру (если закрывает снаряжение)",
     hoverDodgeHint: "Только когда окно игры на переднем плане. Возвращается, когда курсор уходит. Пока прозрачна, нажать на оверлей нельзя — чтобы им пользоваться, выйдите из игры (например, Alt+Tab). Не работает при открытых настройках и в режиме «рядом»",
+    devReplyTitle: "💬 Ответ разработчика",
+    devReplyAbout: "Ваш отзыв: «{msg}»",
+    devReplyOk: "Понятно",
     connError:
       "Нет связи с локальным сервером — авто-восстановление. Повторите F2 через несколько секунд.",
     sidecarDead:
@@ -1971,6 +1980,9 @@ export const T = {
     hoverDodge: "鼠标移上去时让开",
     subHoverDodge: "游戏中把鼠标移到卡片或小地图上会暂时变透明，点击会传给游戏（挡住装备栏时）",
     hoverDodgeHint: "仅在游戏窗口位于前台时生效。鼠标移开后恢复显示。透明期间无法点击浮窗——要操作浮窗请切出游戏（如 Alt+Tab）。打开设置时和并排显示时不生效",
+    devReplyTitle: "💬 开发者回复",
+    devReplyAbout: "您的反馈：“{msg}”",
+    devReplyOk: "知道了",
     connError: "无法连接本地服务器——正在自动恢复。请稍后再按 F2。",
     sidecarDead: "查询服务器无法恢复。请右键点击托盘图标 → 退出，然后重新启动程序。",
     exit: "退出",

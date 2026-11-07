@@ -136,7 +136,36 @@ const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag";
 // 피드백 #58(11-07) '마우스를 올리면 비켜 주기' — 게임이 앞에 있을 때 커서가 카드·미니맵 위면 투명 + 클릭은 게임으로(기본 꺼짐).
 // 예전(1.3.0 전)엔 #55 버그로 카드에 마우스를 올리면 게임이 앞으로 와 오버레이를 덮었는데, 그걸 '장비창 위 미니맵 치우기'로 쓰던 사용자가 있었다.
 // 포커스를 뺏는 옛 방식은 전체 화면 최소화(#55)가 같이 오므로 쓰지 않고, 투명 + 클릭 투과로만 비켜 준다.
-const HOVER_DODGE_KEY = "tarkov.hoverDodge"; // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
+const HOVER_DODGE_KEY = "tarkov.hoverDodge";
+// 11-08 피드백 개인 답장 — 공지 응답(6시간 공용 캐시)에 실린 암호문 중 내 설치 ID 로 풀리는 것만 '개발자 답장'으로.
+// 꼬리표 = SHA-256("reply-id:"+설치ID) 앞 16자, 키 = SHA-256("reply-key:"+설치ID)(AES-GCM). 본 것(n = 답장 시각)은 기억.
+const REPLIES_SEEN_KEY = "tarkov.repliesSeen";
+type DevReply = { n: number; text: string; at: number; msg: string };
+async function openDevReplies(list: unknown): Promise<DevReply[]> {
+  if (!Array.isArray(list) || !list.length || !crypto?.subtle) return [];
+  const iid = ensureInstallId();
+  const te = new TextEncoder();
+  const sha = async (x: string) => new Uint8Array(await crypto.subtle.digest("SHA-256", te.encode(x)));
+  const tag = [...(await sha("reply-id:" + iid))].slice(0, 8).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const mine = list.filter((r: any) => r && r.t === tag && typeof r.i === "string" && typeof r.c === "string");
+  if (!mine.length) return [];
+  let seen: number[] = [];
+  try {
+    seen = JSON.parse(localStorage.getItem(REPLIES_SEEN_KEY) || "[]");
+  } catch {}
+  const key = await crypto.subtle.importKey("raw", await sha("reply-key:" + iid), "AES-GCM", false, ["decrypt"]);
+  const unb64 = (x: string) => Uint8Array.from(atob(x), (ch) => ch.charCodeAt(0));
+  const out: DevReply[] = [];
+  for (const r of mine as any[]) {
+    if (seen.includes(Number(r.n))) continue;
+    try {
+      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(r.i) }, key, unb64(r.c));
+      const j = JSON.parse(new TextDecoder().decode(plain));
+      if (typeof j.text === "string" && j.text) out.push({ n: Number(r.n), text: j.text, at: Number(j.at) || Number(r.n), msg: String(j.msg || "") });
+    } catch {}
+  }
+  return out.sort((a, b) => a.n - b.n);
+} // 피드백 '진단 정보 함께 보내기' 마지막 선택(기본 꺼짐)
 
 // Public downloads page. Portable users get sent here from the update
 // banner instead of going through `update.downloadAndInstall()`, which
@@ -1841,6 +1870,14 @@ function App() {
   // In-app feedback form (posts to the DB). Mutually exclusive with the
   // donate panel so the two don't stack.
   const [showFeedback, setShowFeedback] = useState(false);
+  const [devReplies, setDevReplies] = useState<DevReply[]>([]);
+  const ackDevReply = (n: number) => {
+    try {
+      const seen: number[] = JSON.parse(localStorage.getItem(REPLIES_SEEN_KEY) || "[]");
+      localStorage.setItem(REPLIES_SEEN_KEY, JSON.stringify([...seen.filter((x) => x !== n), n].slice(-50)));
+    } catch {}
+    setDevReplies((rs) => rs.filter((r) => r.n !== n));
+  };
   const [feedbackText, setFeedbackText] = useState("");
   // Attached screenshot as a compressed JPEG data URL (null = none).
   const [feedbackImage, setFeedbackImage] = useState<string | null>(null);
@@ -2120,6 +2157,17 @@ function App() {
           setForcedMinVersion(a.min_version);
           log(`update: forced — ${APP_VERSION} < min ${a.min_version}`);
           reportEvent("update_apply", `blocked:${a.min_version.slice(0, 16)}`);
+        }
+        // 11-08 개인 답장은 공지가 꺼져 있어도 온다
+        if (a.replies) {
+          openDevReplies(a.replies)
+            .then((rs) => {
+              if (rs.length) {
+                setDevReplies(rs);
+                log(`reply: ${rs.length} new`);
+              }
+            })
+            .catch(() => {});
         }
         if (!a.active || (!a.ko && !a.en && !a.ru && !a.zh)) return;
         const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD local
@@ -4881,6 +4929,18 @@ function App() {
           </div>
         )}
 
+        {devReplies.length > 0 && (
+          <div className="announce-banner reply-banner">
+            <div className="reply-body">
+              <div className="reply-title">{t.devReplyTitle}</div>
+              {devReplies[0].msg && <div className="reply-about">{t.devReplyAbout.replace("{msg}", devReplies[0].msg)}</div>}
+              <div className="reply-text">{devReplies[0].text}</div>
+            </div>
+            <button className="reset-btn reply-ok" onClick={() => ackDevReply(devReplies[0].n)}>
+              {t.devReplyOk}
+            </button>
+          </div>
+        )}
         {banner === "announce" && announcementText && (
             <div className="announce-banner">
               <span className="announce-text">
