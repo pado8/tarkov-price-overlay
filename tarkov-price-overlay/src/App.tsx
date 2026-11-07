@@ -2412,14 +2412,28 @@ function App() {
   // CSS→물리 변환은 창의 scaleFactor(카드가 실제로 있는 모니터 배율)로 한다 — devicePixelRatio 는 모니터를 옮기면
   // 늦게 바뀌거나 주 모니터 값을 돌려줘 카드 위 커서를 '밖'으로 읽었다(id20). EDGE_PAD 는 125% 같은 분수 배율에서
   // 테두리에 걸친 커서가 안/밖을 오가지 않게 하는 여유. 카드가 없거나 크기가 0 이면 false.
-  const cursorOverCard = async (): Promise<boolean> => {
+  // 11-08: 클릭 투과 폴링(40ms)용 창 위치·배율 캐시 — 매 틱 IPC 2번을 줄인다. 창이 움직이거나 배율이 바뀌면 비워서 바로 새로 읽고,
+  // 그 밖엔 1초마다 새로. 숨김 직전 확인(armHide)은 캐시를 안 쓴다.
+  const winGeomRef = useRef<{ x: number; y: number; sf: number; at: number } | null>(null);
+  const cursorOverCard = async (cached = false): Promise<boolean> => {
     const cardEl = cardRef.current;
     if (!cardEl) return false;
     const rect = cardEl.getBoundingClientRect();
     if (!(rect.width > 0 && rect.height > 0)) return false;
     const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
-    const win = getCurrentWindow();
-    const [winPos, winScale] = await Promise.all([win.outerPosition(), win.scaleFactor()]);
+    const g = winGeomRef.current;
+    let winPos: { x: number; y: number };
+    let winScale: number;
+    if (cached && g && performance.now() - g.at < 1000) {
+      winPos = g;
+      winScale = g.sf;
+    } else {
+      const win = getCurrentWindow();
+      const [p, sc] = await Promise.all([win.outerPosition(), win.scaleFactor()]);
+      winPos = p;
+      winScale = sc;
+      winGeomRef.current = { x: p.x, y: p.y, sf: sc, at: performance.now() };
+    }
     const cursor = await invoke<{ x: number; y: number; left?: boolean }>("get_cursor_position");
     const dpr = winScale || window.devicePixelRatio || 1;
     const EDGE_PAD = 6;
@@ -2960,9 +2974,25 @@ function App() {
     }
 
     let cancelled = false;
+    // 11-08: 예전엔 폴링(40ms)마다 불렀다(같은 값이면 Rust 가 아무것도 안 함). 값이 바뀔 때 + 0.2초(5틱)마다만 — tao 가 비트를
+    // 되돌린 경우도 0.2초 안에 다시 맞춘다. 창 위치·배율은 cursorOverCard(true) 의 캐시를 쓰고, 움직이면 비운다.
+    let lastIgnore: boolean | null = null;
+    let sinceAssert = 0;
     const setIgnore = (v: boolean) => {
-      clickThrough(v); // 폴링마다 — 값이 같으면 Rust 가 아무것도 안 한다(tao 가 되돌린 경우만 다시 맞춤)
+      sinceAssert++;
+      if (v !== lastIgnore || sinceAssert >= 5) {
+        lastIgnore = v;
+        sinceAssert = 0;
+        clickThrough(v);
+      }
     };
+    const geomWin = getCurrentWindow();
+    const unMoved = geomWin.onMoved(() => {
+      winGeomRef.current = null;
+    });
+    const unScale = geomWin.onScaleChanged(() => {
+      winGeomRef.current = null;
+    });
     // Start in pass-through; the first poll will flip it if cursor is on card.
     setIgnore(true);
     // Assume cursor-off-card until the first poll proves otherwise, so a
@@ -2981,7 +3011,7 @@ function App() {
         return;
       }
       try {
-        const inside = await cursorOverCard();
+        const inside = await cursorOverCard(true);
         // 이 폴링이 속한 효과가 끝났으면(카드를 숨김 등) 여기서 멈춘다. 늦게 돌아온 이전 폴링이 숨김 효과 뒤에
         // 클릭 투과를 끄거나(숨긴 창이 게임 마우스를 가로챔) 커서 상태를 덮어쓰던 경쟁을 막는다(11-04).
         if (cancelled) return;
@@ -3023,6 +3053,8 @@ function App() {
     poll();
     return () => {
       cancelled = true;
+      unMoved.then((f) => f()).catch(() => {});
+      unScale.then((f) => f()).catch(() => {});
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardVisible]);
@@ -4263,7 +4295,7 @@ function App() {
     setRegion((r) => ({ ...r, [key]: value }));
 
   // Direct-name lookup (skips capture+OCR). Used by recent-history re-lookup.
-  const lookupByName = async (name: string) => {
+  const lookupByName = async (name: string, itemId?: string | null) => {
     const r = loadRegion();
     showCard();
     setStatus("loading");
@@ -4285,6 +4317,8 @@ function App() {
       lang: getGameLang(r),
       game_mode: r.gameMode,
       override_text: name,
+      // 11-08: 게임 언어를 바꾼 뒤 예전 기록을 누르면 그 이름이 지금 목록에 없다 — 사이드카가 id 로 지금 언어 이름을 찾게
+      item_id: itemId ?? null,
       // Bump the server's seen-seq too, so a manual/history re-lookup
       // supersedes any F2 capture still running in the sidecar.
       client_seq: seq,
@@ -5001,7 +5035,7 @@ function App() {
                     className="history-row"
                     onClick={() => {
                       if (entry.result.item_name) {
-                        lookupByName(entry.result.item_name);
+                        lookupByName(entry.result.item_name, entry.result.item_id);
                       }
                       setHistoryVisible(false);
                     }}

@@ -174,6 +174,8 @@ class CaptureRequest(BaseModel):
     # If set, skip capture/OCR entirely and look this name up directly.
     # Used by "직접 입력" / 최근 검색 재조회.
     override_text: str | None = None
+    # 11-08 기록 재조회: 이름이 지금 언어 목록에 없으면(게임 언어를 바꾼 뒤 예전 기록) 이 아이템 id 로 지금 언어 이름을 찾는다
+    item_id: str | None = None
     # User-trained OCR corrections. Keys are lowercased OCR text, values are
     # the canonical item name to query GraphQL with.
     corrections: dict[str, str] = {}
@@ -1136,6 +1138,13 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             game_mode=game_mode,
             corrections=req.corrections,
         )
+        if not price.get("name") and req.item_id:
+            from tarkov_api import name_for_id
+
+            alt = name_for_id(lang, game_mode, req.item_id)
+            if alt and alt != req.override_text:
+                print(f"[lookup] override_text by id - {req.override_text!r} -> {alt!r}")
+                price = get_item_price(alt, lang=lang, game_mode=game_mode, corrections=req.corrections)
         return _build_response(req.override_text, price, game_mode, lang=req.lang)
 
     # Prefer the WinAPI-measured cursor (Python is per-monitor DPI aware,

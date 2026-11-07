@@ -1138,6 +1138,18 @@ def _refresh_one(lang: str, game_mode: str) -> int:
     return len(by_name)
 
 
+def name_for_id(lang: str, game_mode: str, item_id: str) -> str | None:
+    """지금 (언어, 모드) 시세 목록에서 아이템 id 의 정식 이름. 목록이 없거나 없는 id 면 None."""
+    with _price_cache_lock:
+        by_name = _price_cache.get((lang, game_mode))
+    if not by_name or not item_id:
+        return None
+    for e in by_name.values():
+        if e.get("id") == item_id and e.get("name"):
+            return e["name"]
+    return None
+
+
 def load_snapshots() -> int:
     """앱 시작 때 네트워크보다 먼저 — 디스크 스냅샷이 있는 (lang, mode) 를 메모리에 올린다. 올린 카탈로그 수."""
     n = 0
