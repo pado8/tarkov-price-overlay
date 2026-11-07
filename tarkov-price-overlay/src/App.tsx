@@ -4445,7 +4445,7 @@ function App() {
         }}
       >
         {/* 머리글 끌기 = onHeaderDown(첫 클릭만). 고정이면 안 끌림. data-tauri-drag-region 은 더블클릭 최대화 때문에 안 쓴다(11-07) */}
-        <div className="header" onMouseDown={onHeaderDown}>
+        <div className={`header${startCard ? " header-labels" : ""}`} onMouseDown={onHeaderDown}>
           <span className="title">{t.title}</span>
           <div className="header-actions">
             <span className="hotkey">
@@ -4472,6 +4472,7 @@ function App() {
               title={t.history}
             >
               <Icon name="clock" />
+              {startCard && <span className="hdr-lbl">{t.hdrHistory}</span>}
             </button>
             {/* 지도 나란히 모드에선 오른쪽 패널이 이미 지도라 카드 안 지도 버튼은 뺀다
                 (눌리면 왼쪽 시세 카드까지 지도로 덮였다 — 11-02 제보) */}
@@ -4485,6 +4486,7 @@ function App() {
                 title={t.radarOpen}
               >
                 <Icon name="map" />
+                {startCard && <span className="hdr-lbl">{t.hdrMap}</span>}
               </button>
             )}
             <button
@@ -4493,6 +4495,7 @@ function App() {
               title={t.wideModeBtn}
             >
               <Icon name="wideMap" />
+              {startCard && <span className="hdr-lbl">{t.hdrWide}</span>}
             </button>
             <button
               className="settings-btn settings-gear"
@@ -4509,6 +4512,7 @@ function App() {
               title={t.settings}
             >
               <Icon name="gear" />
+              {startCard && <span className="hdr-lbl">{t.hdrSettings}</span>}
             </button>
             {pinned ? (
               // Pinned: replace ✕ with an inert 📌 badge so a misclick can't
@@ -5176,6 +5180,7 @@ function App() {
                 <option value="ru">Русский</option>
               </select>
             </div>
+            <div className="settings-sub">{t.subGameLanguage}</div>
             <div className="settings-row">
               <label>{t.gameMode}</label>
               <select
@@ -5203,6 +5208,7 @@ function App() {
                 onChange={(e) => updateRegion("autoHide", e.target.checked)}
               />
             </div>
+            <div className="settings-sub">{t.subAutoHide}</div>
             <div className="settings-row">
               <label>{t.hideDelay}</label>
               <input
@@ -5285,6 +5291,7 @@ function App() {
               <label>{t.wideMode}</label>
               <input type="checkbox" checked={wideMode} onChange={toggleWide} />
             </div>
+            <div className="settings-sub">{t.subWideMode}</div>
             <div className="settings-row" title={t.radarSettingHint}>
               <label>{t.radarSettingLabel}</label>
               <input
@@ -5297,6 +5304,7 @@ function App() {
                 }}
               />
             </div>
+            <div className="settings-sub">{t.subRadarSetting}</div>
             <div className="settings-row" title={t.radarFolderHint}>
               <label>{t.radarFolderLabel}</label>
               <span style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -5547,6 +5555,7 @@ function App() {
                 onChange={(e) => setQuestEnabled(e.target.checked)}
               />
             </div>
+            <div className="settings-sub">{t.subQuestSync}</div>
             {/* 11-06 진영은 퀘스트 로그 연동을 꺼도 직접 고를 수 있어야 해서 연동 상태(questStatus)와 상관없이 보인다 */}
             <div className="settings-row">
               <label title={t.factionHint}>{t.factionLabel}</label>
@@ -5564,6 +5573,7 @@ function App() {
                 <option value="USEC">USEC</option>
               </select>
             </div>
+            <div className="settings-sub">{t.subFaction}</div>
             {questStatus == null && (
               <div className="settings-row">
                 <label>{t.questSyncStatus}</label>
@@ -5595,6 +5605,7 @@ function App() {
                     {t.guideOpenBtn}
                   </button>
                 </div>
+                <div className="settings-sub">{t.subGuideOpen}</div>
                 <div className="settings-row settings-row-stack">
                   <label title={t.questSyncPathHint}>{t.questSyncPath}</label>
                   <div className="quest-path-row">
