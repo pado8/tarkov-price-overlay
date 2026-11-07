@@ -3806,6 +3806,11 @@ function App() {
         override != null ? override : Math.ceil(el.scrollHeight + (el.offsetHeight - el.clientHeight));
       const h = contentH + WIN_VPAD;
       const clamped = Math.min(Math.max(h, 100), maxWinHRef.current);
+      // 11-07 '설정창 글자가 계속 떨린다'(멈춘 상태): 125% 배율에서 요청한 높이(929)가 물리 픽셀 반올림으로 928/930 이 되고,
+      // 카드 scrollHeight(내용이 칸보다 작으면 칸 높이)가 따라 바뀌어 setSize 가 초당 60번 928↔930 을 왕복했다(실측 3초 193회).
+      // 창이 필요한 것보다 3px 이내로만 크면 그대로 둔다(조금 큰 건 스크롤 막대도 안 생겨 무해). 모자라거나 크게 줄 때만 맞춘다.
+      const cur = window.innerHeight;
+      if (clamped <= cur && cur - clamped <= 3) return;
       getCurrentWindow()
         .setSize(new LogicalSize(WIN_BASE_W, clamped))
         .catch(() => {});
