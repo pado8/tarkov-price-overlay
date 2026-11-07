@@ -1950,14 +1950,9 @@ function App() {
       // 잘린 값이 '원하는 높이'를 덮어써 큰 화면으로 돌아가도 작은 패널로 남는다
       // 지도 나란히 모드: 창은 모니터 크기 그대로(여기서 800×내용 높이로 되돌리면 패널이 카드를 눌러 버린다)
       if (wideModeRef.current) return;
-      // Re-measure the card and resize the window to match the new
-      // natural content height. Uses the same formula as the card's
-      // observer so the two paths agree.
-      const ch = Math.ceil(cardEl.scrollHeight + (cardEl.offsetHeight - cardEl.clientHeight)) + WIN_VPAD; // + 카드 테두리
-      const clamped = Math.min(Math.max(ch, 100), screenMaxH());
-      getCurrentWindow()
-        .setSize(new LogicalSize(WIN_BASE_W, clamped))
-        .catch(() => {});
+      // 카드 크기 맞춤과 같은 함수로(11-07 2차: 여기서 따로 LogicalSize 로 setSize 하던 것이 카드 쪽 apply 와 다른 값을 넣어
+      // 125% 에서 732↔734 무한 왕복 — 1px 넘침 → 카드 스크롤 막대 → 패널 폭 변화 → 이 감시 → 다른 높이 요청)
+      applySizeRef.current?.();
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -2301,6 +2296,8 @@ function App() {
   // the window is dragged (see the window-resize effect + id20 fix).
   const maxWinHRef = useRef<number>(screenMaxH());
   const applyRef = useRef<(() => void) | null>(null);
+  // 11-07 창 높이 맞춤 함수(apply) 자체 — 설정 패널 쪽도 같은 규칙(3px 여유·실제 픽셀 올림)을 쓰게. 따로 setSize 하면 두 경로가 732/733/916px 로 싸웠다
+  const applySizeRef = useRef<(() => void) | null>(null);
   // Mirrors showSettings into a ref so scheduleHide can check the latest
   // value without re-creating the callback on every render. While settings
   // is open the user is actively interacting with controls (sliders,
@@ -3811,8 +3808,12 @@ function App() {
       // 창이 필요한 것보다 3px 이내로만 크면 그대로 둔다(조금 큰 건 스크롤 막대도 안 생겨 무해). 모자라거나 크게 줄 때만 맞춘다.
       const cur = window.innerHeight;
       if (clamped <= cur && cur - clamped <= 3) return;
+      // 11-07 2차: 논리 높이로 요청하면 125% 에서 733 → 916.25px 처럼 만들 수 없는 높이가 되어 반올림으로 732 가 되고,
+      // '1px 모자람' → 다시 요청을 끝없이 반복했다(실측 멈춘 상태 3초 123회, 732↔734). 실제 픽셀로 올림해 요청하면
+      // 요청한 높이 이상이 항상 만들어져 다음 계산에서 멈춘다.
+      const sf = window.devicePixelRatio || 1;
       getCurrentWindow()
-        .setSize(new LogicalSize(WIN_BASE_W, clamped))
+        .setSize(new PhysicalSize(Math.round(WIN_BASE_W * sf), Math.ceil(clamped * sf)))
         .catch(() => {});
     };
     // Recompute the window-height ceiling for the window's CURRENT position.
@@ -3845,6 +3846,7 @@ function App() {
     };
     // Let the move listener trigger a recompute when the user drags the window.
     applyRef.current = recompute;
+    applySizeRef.current = apply;
     const ro = new ResizeObserver(() => {
       // Coalesce bursts of resize events to one frame.
       if (raf) cancelAnimationFrame(raf);
