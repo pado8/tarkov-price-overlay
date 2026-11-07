@@ -161,6 +161,14 @@ let sideAppliedFor: string | null = null;
 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party }: Props) {
   const [showParty, setShowParty] = useState(false);
+  // 1.3.1 지도 조작부 1차/2차 — 펼침 기억
+  const [moreOpts, setMoreOpts] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("tarkov.radar.moreOpts") === "1";
+    } catch {
+      return false;
+    }
+  });
   // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
   // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
   const radarRef = useRef<HTMLDivElement>(null);
@@ -457,6 +465,32 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     <>
       <div className="radar-foot">
           {mapPicker}
+          {sizeCtl}
+        </div>
+        {party && (
+          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
+            👥 {t.partyBtn}
+            {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
+          </button>
+        )}
+        {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
+        {onMini && !fill && (
+          <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
+            <Icon name="map" /> {t.radarMini}
+          </button>
+        )}
+        <details
+          className="radar-help radar-more"
+          open={moreOpts}
+          onToggle={(e) => {
+            const o = (e.currentTarget as HTMLDetailsElement).open;
+            setMoreOpts(o);
+            try {
+              localStorage.setItem("tarkov.radar.moreOpts", o ? "1" : "0");
+            } catch {}
+          }}
+        >
+          <summary title={t.radarMoreOptsHint}>{t.radarMoreOpts}</summary>
           {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
           {(data.story_chapters?.length ?? 0) > 0 && (
             <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
@@ -470,32 +504,15 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               <option value="all">{t.radarStoryAll}</option>
             </select>
           )}
-          {sizeCtl}
-        </div>
-        {fixedCtl}
-        {bigMeCtl}
-        {onMapAlpha && (
-          <label className="radar-size" title={t.radarMapOpacityHint}>
-            <span>{t.radarMapOpacity}</span>
-            <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
-            <span className="radar-size-val">{mapAlpha}%</span>
-          </label>
-        )}
-        {party && (
-          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
-            👥 {t.partyBtn}
-            {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
-          </button>
-        )}
-        {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
-        {onMini && !fill && (
-          <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
-            <Icon name="map" /> {t.radarMini}
-          </button>
-        )}
-        {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
-        <details className="radar-help">
-          <summary>{t.radarHelp}</summary>
+          {fixedCtl}
+          {bigMeCtl}
+          {onMapAlpha && (
+            <label className="radar-size" title={t.radarMapOpacityHint}>
+              <span>{t.radarMapOpacity}</span>
+              <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
+              <span className="radar-size-val">{mapAlpha}%</span>
+            </label>
+          )}
           <div className="radar-note">{t.radarMapNote}</div>
           <div className="radar-note">{t.radarMyExitsNote}</div>
         </details>

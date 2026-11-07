@@ -257,6 +257,21 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
+  // 1.3.1 칩 1차/2차 — 위험·보스·잠긴 문·지도 그림은 '⋯ 더 보기'(펼침 기억). 켜 둔 2차 칩은 접혀도 보여 상태를 잃지 않게
+  const [moreChips, setMoreChips] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("tarkov.radar.moreChips") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleMoreChips = () =>
+    setMoreChips((v) => {
+      try {
+        localStorage.setItem("tarkov.radar.moreChips", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
   const [myExitsOnly, setMyExitsOnly] = useState<boolean>(() => {
     try {
       return localStorage.getItem("tarkov.radar.myExitsOnly") !== "0";
@@ -786,10 +801,13 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {mine && chip(myExitsOnly, "mine", t.radarMyExits.replace("{n}", String(mine.size)), toggleMyExits)}
         {chip(layers.transits, "transit", t.radarLayerTransits, () => onToggleLayer("transits"))}
         {chip(layers.quests, "quest", t.radarLayerQuests, () => onToggleLayer("quests"))}
-        {chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}
-        {chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
-        {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
-        {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
+        {(moreChips || layers.hazards) && chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}
+        {(moreChips || layers.spawns) && chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
+        {(moreChips || layers.locks) && chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
+        {doc?.img && (moreChips || !showImg) && chip(showImg, "img", t.radarLayerImg, toggleImg)}
+        <button type="button" className="radar-chip radar-chip-more" aria-expanded={moreChips} onClick={toggleMoreChips}>
+          {moreChips ? t.radarLessChips : t.radarMoreChips}
+        </button>
       </div>}
       {!mini && questNote && <div className="radar-note">{questNote}</div>}
       {!mini && doc?.img && showImg && doc.img.layers.length > 0 && (
