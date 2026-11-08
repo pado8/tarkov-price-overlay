@@ -1096,6 +1096,28 @@ fn relaunch_as_admin(app: tauri::AppHandle) -> Result<(), String> {
 /// looping forever would just burn CPU re-loading OCR models.
 const SIDECAR_MAX_RESTARTS: u32 = 5;
 
+/// 11-08 통계: 1.3.0 신규 설치 1곳이 조회 132건 중 ~119건 실패, 텔레메트리 sidecar_fail = dead:spawn_failed:_os_error_2_
+/// (파일 없음 — 백신이 tarkov-server.exe 를 격리한 것으로 추정). 재시도 5번(~62초) 뒤에야 '앱을 다시 실행'만 알렸는데
+/// 다시 실행해도 소용없다 → 띄우기가 '파일 없음'으로 실패하면 바로 웹뷰에 알린다(실행당 한 번). 재시도는 그대로.
+static SIDECAR_MISSING_SENT: AtomicBool = AtomicBool::new(false);
+
+/// 웹뷰가 뜰 때 묻는다 — 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 놓친다(11-08 재현).
+#[tauri::command]
+fn sidecar_missing_state() -> bool {
+    SIDECAR_MISSING_SENT.load(Ordering::SeqCst)
+}
+
+fn sidecar_missing(err: &str) -> bool {
+    if err.contains("os error 2") || err.contains("os error 3") {
+        return true;
+    }
+    std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("tarkov-server.exe")))
+        .map(|f| !f.exists())
+        .unwrap_or(false)
+}
+
 fn is_quitting(app: &tauri::AppHandle) -> bool {
     app.try_state::<IsQuitting>()
         .map(|s| s.0.load(Ordering::SeqCst))
@@ -1152,7 +1174,11 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         Err(e) => {
             // Config-level failure (bad externalBin) — retrying won't help,
             // but it shares the budget so a fluke still gets another shot.
-            schedule_sidecar_restart(app, attempt + 1, &format!("sidecar() failed: {e}"));
+            let why = format!("sidecar() failed: {e}");
+            if sidecar_missing(&why) && !SIDECAR_MISSING_SENT.swap(true, Ordering::SeqCst) {
+                let _ = app.emit("sidecar-missing", ());
+            }
+            schedule_sidecar_restart(app, attempt + 1, &why);
             return;
         }
     };
@@ -1162,7 +1188,12 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
             // Transient spawn failures are REAL: AV scanners briefly lock
             // fresh PyInstaller exes. Retry within the same budget instead
             // of giving up on the very failure mode we built this for.
-            schedule_sidecar_restart(app, attempt + 1, &format!("spawn failed: {e}"));
+            let why = format!("spawn failed: {e}");
+            if sidecar_missing(&why) && !SIDECAR_MISSING_SENT.swap(true, Ordering::SeqCst) {
+                eprintln!("[sidecar] executable missing - telling the webview (likely AV quarantine)");
+                let _ = app.emit("sidecar-missing", ());
+            }
+            schedule_sidecar_restart(app, attempt + 1, &why);
             return;
         }
     };
@@ -1335,6 +1366,7 @@ pub fn run() {
             log_msg,
             register_lookup_hotkey,
             register_toggle_hotkey,
+            sidecar_missing_state,
             register_lookup_mouse,
             register_toggle_mouse,
             set_hotkey_passthrough,

@@ -183,6 +183,12 @@ function guideUrl(lang: string, path: string): string {
   const [p, hash] = path.split("#");
   return `${guideBase(lang)}${p}${p.includes("?") ? "&" : "?"}src=app${hash ? "#" + hash : ""}`;
 }
+// 사이드카 연결 실패 문구(F2·이름 조회 공통). 파일 없음(백신 격리 추정) > 복구 포기 > 자동 복구 중(3번 연속이면 백신 한 줄 덧붙임)
+function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number): string {
+  if (missing) return s.sidecarMissing;
+  if (dead) return s.sidecarDead;
+  return fails >= 3 ? `${s.connError} ${s.connErrorAvHint}` : s.connError;
+}
 function openGuide(lang: string, path: string): void {
   openUrl(guideUrl(lang, path)).catch((e) => {
     console.warn("guide: openUrl failed", e);
@@ -1967,6 +1973,9 @@ function App() {
   // then on "auto-recovering, try again" would be a LIE — connection errors
   // switch to an honest "restart the app" instruction instead.
   const sidecarDeadRef = useRef(false);
+  // 11-08 통계 후속: 사이드카 실행 파일이 없음(백신 격리 추정) — 다시 실행해도 소용없으니 복원·예외·재설치 안내
+  const sidecarMissingRef = useRef(false);
+  const connFailRef = useRef(0); // 연결 실패 연속 횟수(조회 성공하면 0)
   useEffect(() => {
     const un = listen<string>("sidecar-dead", (e) => {
       log("React: sidecar-dead received — restart budget exhausted");
@@ -1975,9 +1984,36 @@ function App() {
       const why = String(e.payload ?? "").toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, 50);
       reportEvent("sidecar_fail", `dead:${why || "unknown"}`);
     });
+    const onMissing = async () => {
+      if (sidecarMissingRef.current) return;
+      log("React: sidecar-missing — tarkov-server.exe not found (AV quarantine?)");
+      sidecarMissingRef.current = true;
+      // F2 를 기다리지 않고 바로 카드로 알린다
+      try {
+        if (!(await getCurrentWindow().isVisible())) await invoke("show_overlay_passive");
+      } catch {}
+      showCard();
+      setShowSettings(false);
+      setRadarActive(false);
+      setError(T[loadRegion().lang].sidecarMissing);
+      setStatus("error");
+    };
+    const unMissing = listen("sidecar-missing", () => void onMissing());
+    // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
+    const ask = () =>
+      invoke<boolean>("sidecar_missing_state")
+        .then((m) => {
+          if (m) void onMissing();
+        })
+        .catch(() => {});
+    ask();
+    const again = window.setTimeout(ask, 3000);
     return () => {
       un.then((fn) => fn());
+      unMissing.then((fn) => fn());
+      window.clearTimeout(again);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const hideDelayRef = useRef(region.hideDelaySec);
   useEffect(() => {
@@ -4124,6 +4160,7 @@ function App() {
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
+          connFailRef.current = 0;
           if (seq !== lookupSeqRef.current) {
             log("React: stale lookup result discarded (newer press in flight)");
             return;
@@ -4204,13 +4241,12 @@ function App() {
           // Human messages for the two known cases; raw error only for the
           // unexpected rest. "TypeError: Failed to fetch" terrified users —
           // it's just the sidecar (re)starting.
+          if (e instanceof TypeError) connFailRef.current++;
           setError(
             e instanceof Error && e.name === "AbortError"
               ? T[r.lang].timeout
               : e instanceof TypeError
-                ? sidecarDeadRef.current
-                  ? T[r.lang].sidecarDead
-                  : T[r.lang].connError
+                ? sidecarErrorText(T[r.lang], sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current)
                 : msg
           );
           setStatus("error");
@@ -4332,6 +4368,7 @@ function App() {
         body,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      connFailRef.current = 0;
       const data: LookupResult = await res.json();
       if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won
       setResult(data);
@@ -4359,13 +4396,12 @@ function App() {
       // reads like a crash; it's just the sidecar restarting). AbortError here
       // is the 30s timer (a supersession-abort would have hit the stale-seq
       // return above), so use the 30s copy — not the 120s F2 message.
+      if (e instanceof TypeError) connFailRef.current++;
       setError(
         e instanceof Error && e.name === "AbortError"
           ? t.timeoutShort
           : e instanceof TypeError
-            ? sidecarDeadRef.current
-              ? t.sidecarDead
-              : t.connError
+            ? sidecarErrorText(t, sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current)
             : msg
       );
       setStatus("error");
@@ -6359,6 +6395,11 @@ function App() {
         {!showSettings && !radarActive && status === "error" && (
           <div className="error">
             <Icon name="warn" /> {error}{" "}
+            {(error === t.sidecarMissing || error === t.sidecarDead || error.startsWith(t.connError)) && (
+              <button className="status-link" onClick={() => openGuide(region.lang, "manual/#trouble")}>
+                {t.troubleHelp}
+              </button>
+            )}
             <button
               className="status-link"
               onClick={() => openStatusPage(region.lang)}
