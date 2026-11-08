@@ -3245,6 +3245,19 @@ function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(region));
   }, [region]);
 
+  // 11-09 통계 hotkey_fail(14일 4명): 다른 프로그램이 같은 키를 쥐고 있으면 등록이 조용히 실패해 F2 를 눌러도 아무 일이 없었다
+  // (기록·통계에만 남음). 카드에 알려 설정에서 다른 키로 바꾸게 한다.
+  const notifyHotkeyFail = (key: string) => {
+    void (async () => {
+      try {
+        if (!(await getCurrentWindow().isVisible())) await invoke("show_overlay_passive");
+      } catch {}
+      showCard();
+      setShowSettings(false);
+      setError(T[loadRegion().lang].hotkeyRegisterFailed.replace("{key}", key));
+      setStatus("error");
+    })();
+  };
   useEffect(() => {
     localStorage.setItem(HOTKEY_KEY, hotkey);
     // Either the keyboard or the mouse slot is active per binding — clear
@@ -3260,6 +3273,7 @@ function App() {
           // presses their key and nothing happens, which is indistinguishable
           // from "never tried" in the funnel. Surface it.
           reportEvent("hotkey_fail", hotkey);
+          notifyHotkeyFail(hotkey);
         });
     } else {
       invoke("register_lookup_mouse", { button: "" }).catch(() => {});
@@ -3268,6 +3282,7 @@ function App() {
         .catch((e) => {
           log(`React: lookup hotkey FAILED (${hotkey}): ${e}`);
           reportEvent("hotkey_fail", hotkey);
+          notifyHotkeyFail(hotkey);
         });
     }
   }, [hotkey]);
