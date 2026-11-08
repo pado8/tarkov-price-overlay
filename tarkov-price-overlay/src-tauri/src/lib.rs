@@ -416,14 +416,28 @@ fn notify_minimized_to_tray(app: &tauri::AppHandle) {
 }
 
 #[tauri::command]
-fn get_cursor_position() -> CursorPos {
+fn get_cursor_position() -> CursorNow {
     let device_state = DeviceState::new();
     let mouse = device_state.get_mouse();
-    CursorPos {
+    // 11-08 '비켜 주기' 예외 키 — 게임이 앞이면 웹뷰는 키를 못 받으니 여기서 같이 읽는다(GetAsyncKeyState, 읽기만)
+    let held = |vk: u16| async_key(vk) & 0x8000 != 0;
+    let mods = (held(0x11) as u8) | ((held(0x10) as u8) << 1) | ((held(0x12) as u8) << 2); // Ctrl 1 · Shift 2 · Alt 4
+    CursorNow {
         x: mouse.coords.0,
         y: mouse.coords.1,
         left: mouse.button_pressed.get(1).copied().unwrap_or(false), // [1] = VK_LBUTTON
+        mods,
     }
+}
+
+/// get_cursor_position 응답 — CursorPos(이벤트 페이로드와 공용)에 수정 키 상태를 더한 것
+#[derive(Clone, serde::Serialize)]
+struct CursorNow {
+    x: i32,
+    y: i32,
+    left: bool,
+    /// 지금 누르고 있는 수정 키: Ctrl 1 · Shift 2 · Alt 4
+    mods: u8,
 }
 
 #[tauri::command]

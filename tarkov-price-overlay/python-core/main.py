@@ -26,6 +26,24 @@ if sys.platform == "win32":
 
 print(f"[startup] DPI awareness: {DPI_STATUS}")
 
+# 11-08 게임 중 프레임 드랍: 시세 엔진은 게임보다 먼저 CPU 를 잡을 이유가 없다 → 우선순위 '보통 이하'.
+# 게임이 쉬는 코어에서 돌고, 게임이 바쁜 순간엔 OCR 이 조금 늦어진다(조회 응답 시간은 빌드 때 실측).
+import os as _os  # (아래 'import os' 보다 먼저 실행되는 시작부라 따로 가져온다)
+
+if sys.platform == "win32" and _os.environ.get("TPO_NORMAL_PRIORITY") != "1":
+    try:
+        import ctypes as _ct
+        import ctypes.wintypes as _wt
+
+        _k32 = _ct.WinDLL("kernel32", use_last_error=True)
+        _k32.GetCurrentProcess.restype = _wt.HANDLE  # 64비트 핸들 — 기본 int(32비트)로 넘기면 핸들이 깨져 조용히 실패한다
+        _k32.SetPriorityClass.argtypes = (_wt.HANDLE, _wt.DWORD)
+        _k32.SetPriorityClass.restype = _wt.BOOL
+        _ok = _k32.SetPriorityClass(_k32.GetCurrentProcess(), 0x4000)  # BELOW_NORMAL_PRIORITY_CLASS
+        print(f"[startup] process priority: {'below normal' if _ok else f'unchanged (err {_ct.get_last_error()})'}")
+    except Exception as _e:  # noqa: BLE001
+        print(f"[startup] priority change failed: {_e!r}")
+
 import json
 import os
 import re
@@ -176,6 +194,8 @@ class CaptureRequest(BaseModel):
     override_text: str | None = None
     # 11-08 기록 재조회: 이름이 지금 언어 목록에 없으면(게임 언어를 바꾼 뒤 예전 기록) 이 아이템 id 로 지금 언어 이름을 찾는다
     item_id: str | None = None
+    # 11-08 조회 키를 게임 스크린샷 키와 공유 중인 누름 — 툴팁·바닥 이름표가 없으면 OCR 을 건너뛴다(레이드 중 스크린샷마다 프레임 드랍)
+    shared: bool = False
     # User-trained OCR corrections. Keys are lowercased OCR text, values are
     # the canonical item name to query GraphQL with.
     corrections: dict[str, str] = {}
@@ -1252,6 +1272,12 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     def _tw(resp: LookupResponse) -> LookupResponse:
         resp.tooltip_wait = tip_state
         return resp
+
+    if req.shared and tip_state == "waited_none":
+        # 공유 키로 누른 스크린샷인데 인벤토리 툴팁도 바닥 이름표도 없다 = 레이드 중 지도용 스크린샷. 예전엔 여기서 게임 화면에
+        # OCR 5번(전부 실패, 0.2~3초씩·코어 10개 넘게)을 돌려 게임 프레임이 끊겼다. 빈 결과로 바로 끝낸다.
+        print("[lookup] shared key + no tooltip/label - skip OCR (map screenshot)")
+        return _tw(_build_response("", {"name": None}, game_mode, attempt="shared_skip", lang=req.lang))
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")

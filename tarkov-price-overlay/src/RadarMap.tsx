@@ -578,7 +578,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
-    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={onClick}>
+    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={onClick} data-chip={k}>
       <span className={`radar-sw ${k}`} /> {text}
     </button>
   );

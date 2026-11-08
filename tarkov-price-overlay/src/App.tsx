@@ -134,13 +134,35 @@ const STATS_CONSENT_KEY = "tarkov.statsConsent";
 const START_DONE_KEY = "tarkov.startCardDone";
 // 11-08 첫 사용자 둘러보기 — 머리글 버튼을 하나씩 짚는 단계 패널. 처음 PC 에서 자동, 설정에서 다시 보기.
 const TOUR_DONE_KEY = "tarkov.tourDone";
-// 각 단계가 짚는 머리글 요소(data-tour). null = 짚는 곳 없음(환영·끝)
-const TOUR_TARGETS: (string | null)[] = [null, "f2", "drag", "hist", "map", "wide", "gear", "hide", null];
+// 단계: id(문구 키 tourT_<id>·tourB_<id>) · sel(반짝일 요소 — '||' 로 여럿이면 앞에서부터 있는 것, 없으면 null) · open(그 단계에서 둘러보기가 여는 화면).
+// 지도 안 버튼(칩·도구·파티)과 나란히 화면(오른쪽 패널·크기 조절)은 화면을 열어야 보여서 그 단계에서 열고, 둘러보기가 연 것만 닫는다.
+type TourStep = { id: string; sel: string | null; open?: "map" | "wide" };
+const TOUR: TourStep[] = [
+  { id: "welcome", sel: null },
+  { id: "f2", sel: '[data-tour="f2"]' },
+  { id: "drag", sel: '[data-tour="drag"]' },
+  { id: "hist", sel: '[data-tour="hist"]' },
+  { id: "map", sel: '[data-tour="map"]' },
+  { id: "layers", sel: ".radar-layers", open: "map" },
+  // '내 탈출구만' 칩은 탈출구 목록이 찍힌 스크린샷이 있어야 생긴다 → 없으면 칩 줄을 짚는다(sel 은 '||' 앞부터 차례로)
+  { id: "myexits", sel: '[data-chip="mine"]||.radar-layers', open: "map" },
+  { id: "maptools", sel: ".radar-maptools", open: "map" },
+  { id: "party", sel: ".radar-party-btn", open: "map" },
+  { id: "wide", sel: '[data-tour="wide"]' },
+  { id: "widepane", sel: ".wide-pane", open: "wide" },
+  { id: "wideresize", sel: ".wide-resize-handle", open: "wide" },
+  { id: "gear", sel: '[data-tour="gear"]' },
+  { id: "hide", sel: '[data-tour="hide"]' },
+  { id: "end", sel: null },
+];
 const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag";
 // 피드백 #58(11-07) '마우스를 올리면 비켜 주기' — 게임이 앞에 있을 때 커서가 카드·미니맵 위면 투명 + 클릭은 게임으로(기본 꺼짐).
 // 예전(1.3.0 전)엔 #55 버그로 카드에 마우스를 올리면 게임이 앞으로 와 오버레이를 덮었는데, 그걸 '장비창 위 미니맵 치우기'로 쓰던 사용자가 있었다.
 // 포커스를 뺏는 옛 방식은 전체 화면 최소화(#55)가 같이 오므로 쓰지 않고, 투명 + 클릭 투과로만 비켜 준다.
 const HOVER_DODGE_KEY = "tarkov.hoverDodge";
+// 11-08 비켜 주기 예외 키 — 누른 채 올리면 비키지 않고 평소처럼 누를 수 있다. ctrl|shift|alt|none(기본 ctrl, 사용자 제안)
+const HOVER_DODGE_MOD_KEY = "tarkov.hoverDodgeMod";
+const DODGE_MOD_BIT: Record<string, number> = { ctrl: 1, shift: 2, alt: 4, none: 0 };
 // 11-08 피드백 개인 답장 — 공지 응답(6시간 공용 캐시)에 실린 암호문 중 내 설치 ID 로 풀리는 것만 '개발자 답장'으로.
 // 꼬리표 = SHA-256("reply-id:"+설치ID) 앞 16자, 키 = SHA-256("reply-key:"+설치ID)(AES-GCM). 본 것(n = 답장 시각)은 기억.
 const REPLIES_SEEN_KEY = "tarkov.repliesSeen";
@@ -1605,11 +1627,7 @@ function App() {
   };
   const endTourRef = useRef(endTour);
   endTourRef.current = endTour;
-  useEffect(() => {
-    document.querySelectorAll(".tour-hl").forEach((el) => el.classList.remove("tour-hl"));
-    const target = tourStep !== null && !showSettings ? TOUR_TARGETS[tourStep] : null;
-    if (target) document.querySelector(`[data-tour="${target}"]`)?.classList.add("tour-hl");
-  }, [tourStep, showSettings]);
+  const tourOpenedRef = useRef({ map: false, wide: false }); // 둘러보기가 연 화면(끝나거나 다른 단계로 가면 이것만 닫는다)
   useEffect(() => {
     if (tourStep === 0 && startCard) reportEvent("help", "tour:shown");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2477,6 +2495,22 @@ function App() {
       localStorage.setItem(HOVER_DODGE_KEY, hoverDodge ? "1" : "0");
     } catch {}
   }, [hoverDodge]);
+  const [hoverDodgeMod, setHoverDodgeMod] = useState<string>(() => {
+    try {
+      const v = localStorage.getItem(HOVER_DODGE_MOD_KEY) || "ctrl";
+      return v in DODGE_MOD_BIT ? v : "ctrl";
+    } catch {
+      return "ctrl";
+    }
+  });
+  const hoverDodgeModRef = useRef(hoverDodgeMod);
+  hoverDodgeModRef.current = hoverDodgeMod;
+  useEffect(() => {
+    try {
+      localStorage.setItem(HOVER_DODGE_MOD_KEY, hoverDodgeMod);
+    } catch {}
+  }, [hoverDodgeMod]);
+  const modsRef = useRef(0); // 마지막 커서 폴링 때 누르고 있던 수정 키(Ctrl 1 · Shift 2 · Alt 4)
   const [dodging, setDodging] = useState(false);
   const dodgingRef = useRef(false);
   const fgKindRef = useRef(""); // 앞 창 종류(game·overlay·other·none) — 진단 기록용 0.7초 폴링이 채운다
@@ -2507,7 +2541,8 @@ function App() {
       winScale = sc;
       winGeomRef.current = { x: p.x, y: p.y, sf: sc, at: performance.now() };
     }
-    const cursor = await invoke<{ x: number; y: number; left?: boolean }>("get_cursor_position");
+    const cursor = await invoke<{ x: number; y: number; left?: boolean; mods?: number }>("get_cursor_position");
+    modsRef.current = cursor.mods ?? 0;
     const dpr = winScale || window.devicePixelRatio || 1;
     const EDGE_PAD = 6;
     const hit = (r: DOMRect) =>
@@ -2703,6 +2738,54 @@ function App() {
   // F2 리스너는 한 번만 등록되는 클로저라, 같은 키 + 못 읽음일 때 지도를 여는 건 최신 openRadar 를 ref 로 부른다
   const openRadarRef = useRef(openRadar);
   openRadarRef.current = openRadar;
+  // 둘러보기 단계 바뀜 → 그 단계에 필요한 화면(지도·나란히)을 열고, 짚을 요소를 찾아 반짝임(늦게 그려지면 3초까지 다시)
+  useEffect(() => {
+    const clear = () => document.querySelectorAll(".tour-hl").forEach((el) => el.classList.remove("tour-hl"));
+    clear();
+    const st = tourStep !== null ? TOUR[tourStep] : null;
+    const opened = tourOpenedRef.current;
+    if (st?.open !== "wide" && opened.wide) {
+      opened.wide = false;
+      if (wideModeRef.current) toggleWide();
+    }
+    if (st?.open !== "map" && opened.map) {
+      opened.map = false;
+      setRadarActive(false);
+    }
+    if (!st || showSettings) return clear;
+    if (st.open === "wide" && !wideModeRef.current) {
+      opened.wide = true;
+      toggleWide();
+    }
+    if (st.open === "map" && !radarActiveRef.current) {
+      opened.map = true;
+      void openRadar(false, false);
+    }
+    if (!st.sel) return clear;
+    let tries = 0;
+    let timer = 0;
+    const find = () => {
+      // 지도에 아직 데이터가 없으면(스크린샷 전) 칩·도구가 안 그려진다 → 3초 뒤엔 지도 머리라도 짚는다
+      let el: Element | null = null;
+      for (const one of (st.sel as string).split("||")) {
+        el = document.querySelector(one);
+        if (el) break;
+      }
+      el = el ?? (tries >= 14 && st.open === "map" ? document.querySelector(".radar-head") : null);
+      if (el) {
+        el.classList.add("tour-hl");
+        try {
+          el.scrollIntoView({ block: "nearest" });
+        } catch {}
+      } else if (++tries < 15) timer = window.setTimeout(find, 200);
+    };
+    find();
+    return () => {
+      window.clearTimeout(timer);
+      clear();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourStep, showSettings]);
   // ── PiP 창: 켜면 지금 위치를 기억하고 창을 미니맵 크기로 줄여 화면 오른쪽(또는 끌어 둔 자리)에, 끄면 원래 위치·내용 크기로 ──
   useEffect(() => {
     const win = getCurrentWindow();
@@ -3097,7 +3180,8 @@ function App() {
           // 개발 시험용: localStorage tarkov.dodgeAnyWindow=1 이면 게임이 앞에 없어도(게임 없이 확인)
           (fgKindRef.current === "game" || localStorage.getItem("tarkov.dodgeAnyWindow") === "1") &&
           !settingsOpenRef.current &&
-          !wideModeRef.current; // 장비창 아이템을 누른 채 끌면 holdStep 이 '위'를 유지해 끄는 동안 계속 투명
+          !wideModeRef.current && // 장비창 아이템을 누른 채 끌면 holdStep 이 '위'를 유지해 끄는 동안 계속 투명
+          !(modsRef.current & (DODGE_MOD_BIT[hoverDodgeModRef.current] ?? 0)); // 예외 키를 누른 채면 비키지 않는다(오버레이를 누르려고)
         if (dodge !== dodgingRef.current) {
           dodgingRef.current = dodge;
           setDodging(dodge);
@@ -4178,6 +4262,8 @@ function App() {
           // if a newer F2 arrives mid-flight (server keys ordering on this,
           // not a ticket it assigns after its own cursor/clamp work).
           client_seq: seq,
+          // 11-08 스크린샷 키와 공유 중인 누름 — 툴팁·바닥 이름표가 없으면 사이드카가 OCR 을 건너뛴다(레이드 중 프레임 드랍)
+          shared: hotkeyPassthroughRef.current,
         });
         // Abort the previous in-flight request so its catch sees AbortError +
         // stale seq → no-op (frees the client-side wait). Aborting alone does
@@ -5412,21 +5498,6 @@ function App() {
             <div className="settings-section-header">
               {t.generalSection}
             </div>
-            <div className="settings-row" title={t.statsToggleHint}>
-              <label>{t.statsToggle}</label>
-              <input
-                type="checkbox"
-                checked={statsEnabled}
-                onChange={(e) => {
-                  const enabled = e.target.checked;
-                  localStorage.setItem(
-                    STATS_CONSENT_KEY,
-                    enabled ? "true" : "false"
-                  );
-                  setStatsEnabled(enabled);
-                }}
-              />
-            </div>
             <div className="settings-row">
               <label>{t.language}</label>
               <select
@@ -5484,6 +5555,17 @@ function App() {
               <input type="checkbox" checked={hoverDodge} onChange={(e) => setHoverDodge(e.target.checked)} />
             </div>
             <div className="settings-sub">{t.subHoverDodge}</div>
+            {hoverDodge && (
+              <div className="settings-row" title={t.hoverDodgeModHint}>
+                <label>{t.hoverDodgeMod}</label>
+                <select value={hoverDodgeMod} onChange={(e) => setHoverDodgeMod(e.target.value)}>
+                  <option value="ctrl">Ctrl</option>
+                  <option value="shift">Shift</option>
+                  <option value="alt">Alt</option>
+                  <option value="none">{t.hoverDodgeModNone}</option>
+                </select>
+              </div>
+            )}
             <div className="settings-row">
               <label>{t.hideDelay}</label>
               <input
@@ -6132,6 +6214,21 @@ function App() {
             <div className="settings-section-header">
               {t.infoSection}
             </div>
+            <div className="settings-row" title={t.statsToggleHint}>
+              <label>{t.statsToggle}</label>
+              <input
+                type="checkbox"
+                checked={statsEnabled}
+                onChange={(e) => {
+                  const enabled = e.target.checked;
+                  localStorage.setItem(
+                    STATS_CONSENT_KEY,
+                    enabled ? "true" : "false"
+                  );
+                  setStatsEnabled(enabled);
+                }}
+              />
+            </div>
             <div className="settings-row">
               <label>{t.autoCheckUpdate}</label>
               <input
@@ -6380,6 +6477,52 @@ function App() {
             the card's bottom-right corner handle now resizes the settings
             panel vertically (see onResizeHandleDown's `inSettings` branch). */}
 
+        {!showSettings && tourStep !== null && (() => {
+          const last = TOUR.length - 1;
+          const sid = TOUR[tourStep].id;
+          const key = formatHotkeyLabel(hotkey, t);
+          const title = ((t as Record<string, string>)[`tourT_${sid}`] ?? "").split("{key}").join(key);
+          const body = ((t as Record<string, string>)[`tourB_${sid}`] ?? "").split("{key}").join(key);
+          return (
+            <div className="tour" role="dialog" aria-live="polite">
+              <div className="tour-top">
+                <span className="tour-count">
+                  {tourStep + 1} / {last + 1}
+                </span>
+                <button className="tour-skip" onClick={() => endTour(`skip:${tourStep}`)}>
+                  {t.tourSkip}
+                </button>
+              </div>
+              {TOUR[tourStep].sel && <div className="tour-arrow">{TOUR[tourStep].open ? "▼" : "▲"} {TOUR[tourStep].open ? t.tourLookBelow : t.tourLook}</div>}
+              <div className="tour-title">{title}</div>
+              <div className="tour-body">{body}</div>
+              <div className="tour-actions">
+                {tourStep > 0 && (
+                  <button className="reset-btn" onClick={() => setTourStep(tourStep - 1)}>
+                    {t.tourPrev}
+                  </button>
+                )}
+                {tourStep === last && (
+                  <button
+                    className="reset-btn tour-manual"
+                    onClick={() => {
+                      reportEvent("help", "tour:manual");
+                      openGuide(region.lang, "manual/");
+                    }}
+                  >
+                    <Icon name="book" /> {t.startManual}
+                  </button>
+                )}
+                <button
+                  className="reset-btn tour-next"
+                  onClick={() => (tourStep === last ? endTour("done") : setTourStep(tourStep + 1))}
+                >
+                  {tourStep === 0 ? t.tourStart : tourStep === last ? t.tourFinish : t.tourNext}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
         {!showSettings && radarActive && (
           <RadarPanel
             party={party}
@@ -6423,51 +6566,6 @@ function App() {
             }}
           />
         )}
-        {!showSettings && !radarActive && tourStep !== null && (() => {
-          const last = TOUR_TARGETS.length - 1;
-          const key = formatHotkeyLabel(hotkey, t);
-          const title = ((t as Record<string, string>)[`tour${tourStep}Title`] ?? "").split("{key}").join(key);
-          const body = ((t as Record<string, string>)[`tour${tourStep}Body`] ?? "").split("{key}").join(key);
-          return (
-            <div className="tour" role="dialog" aria-live="polite">
-              <div className="tour-top">
-                <span className="tour-count">
-                  {tourStep + 1} / {last + 1}
-                </span>
-                <button className="tour-skip" onClick={() => endTour(`skip:${tourStep}`)}>
-                  {t.tourSkip}
-                </button>
-              </div>
-              {TOUR_TARGETS[tourStep] && <div className="tour-arrow">▲ {t.tourLook}</div>}
-              <div className="tour-title">{title}</div>
-              <div className="tour-body">{body}</div>
-              <div className="tour-actions">
-                {tourStep > 0 && (
-                  <button className="reset-btn" onClick={() => setTourStep(tourStep - 1)}>
-                    {t.tourPrev}
-                  </button>
-                )}
-                {tourStep === last && (
-                  <button
-                    className="reset-btn tour-manual"
-                    onClick={() => {
-                      reportEvent("help", "tour:manual");
-                      openGuide(region.lang, "manual/");
-                    }}
-                  >
-                    <Icon name="book" /> {t.startManual}
-                  </button>
-                )}
-                <button
-                  className="reset-btn tour-next"
-                  onClick={() => (tourStep === last ? endTour("done") : setTourStep(tourStep + 1))}
-                >
-                  {tourStep === 0 ? t.tourStart : tourStep === last ? t.tourFinish : t.tourNext}
-                </button>
-              </div>
-            </div>
-          );
-        })()}
         {!showSettings && !radarActive && tourStep === null && status === "idle" && !startCard && <div className="hint">{t.hintIdle}</div>}
         {!showSettings && !radarActive && tourStep === null && status === "idle" && startCard && (
           <div className="start-card">

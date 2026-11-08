@@ -6,6 +6,16 @@ import sys
 import cv2
 import easyocr
 import numpy as np
+import torch
+
+# 11-08 게임 중 프레임 드랍: torch 기본 스레드(이 PC 16)로 OCR 이 돌면 그 순간 코어 6개를 2초간 써서 게임(메인 스레드에 묶임)과
+# 다퉜다(실측: 스크린샷 → 탈출구 목록 OCR). 작은 조각 OCR 은 4스레드 넘게 줘도 거의 안 빨라진다 → 코어의 1/4, 2~4개.
+OCR_THREADS = max(2, min(4, (os.cpu_count() or 8) // 4))
+try:
+    torch.set_num_threads(OCR_THREADS)
+    torch.set_num_interop_threads(1)
+except Exception:  # noqa: BLE001 — 이미 병렬 작업이 시작됐으면 interop 은 못 바꾼다(무시)
+    pass
 
 
 def _resource_base() -> str:
