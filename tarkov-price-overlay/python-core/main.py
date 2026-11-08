@@ -813,6 +813,106 @@ def _diag_save(label: str, x: int, y: int, w: int, h: int, image, fragments: lis
 TOOLTIP_POLL_SEC = 0.05
 TOOLTIP_WAIT_MAX_SEC = 0.6
 
+# ── 툴팁 대기 자가 보정(11-09) ────────────────────────────────────────────
+# 통계(stats-deep latency_14d, 11-08): 1.2.7 에서 툴팁 대기를 넣은 뒤 같은 설치 61곳의 중간 응답이 349→797ms(34곳이 20% 이상 느려짐),
+# 1920x1080@100(가장 많은 그룹)은 신규·기존 모두 ~920ms — 판정기(tooltip_detect)가 그 화면에선 툴팁을 못 보고 조회마다 0.6초를
+# 다 기다린 것. 이 PC 1440p 캡처(툴팁이 분명한 544장)를 0.75배로 줄이면 2장만 잡힌다(테두리 87·순검정 가정이 작은 UI 에서 깨짐).
+# 1080p 실화면이 없어 수치를 고치는 대신 자가 보정: '끝내 없음(waited_none)'인데 인벤토리 상자(primary/mirror)에서 아이템을 읽었다
+# = 판정이 놓침. 놓침 4번 연속(그동안 '있음' 0번)이거나 8번 이상 중 3/4 이상이면 이 PC 에선 기다리지 않는다(상태 'off', 예전과 같은
+# 즉시 읽기). 꺼진 뒤에도 30번마다 한 번 판정만 돌려(기다리진 않음) 3번 맞으면 다시 켠다. 상태 폴더 tooltip_wait.json 에 남겨
+# 다음 실행도 바로 적용(TW_CALIB_VERSION 이 바뀌면 처음부터).
+TW_CALIB_VERSION = 1
+TW_OFF_STREAK = 4
+TW_OFF_MIN_N = 8
+TW_OFF_RATIO = 0.75
+TW_PROBE_EVERY = 30
+TW_ON_HITS = 3
+_tw_lock = threading.Lock()
+_tw = {"loaded": False, "off": False, "hit": 0, "miss": 0, "streak": 0, "n_off": 0, "probe_hits": 0}
+
+
+def _tw_path():
+    from quest_tracker import _state_dir
+
+    return _state_dir() / "tooltip_wait.json"
+
+
+def _tw_load() -> None:
+    if _tw["loaded"]:
+        return
+    _tw["loaded"] = True
+    try:
+        d = json.loads(_tw_path().read_text(encoding="utf-8"))
+        if d.get("calib") == TW_CALIB_VERSION:
+            _tw["off"] = bool(d.get("off"))
+            _tw["hit"] = int(d.get("hit") or 0)
+            _tw["miss"] = int(d.get("miss") or 0)
+    except Exception:  # noqa: BLE001 — 없거나 깨졌으면 켜진 상태에서 시작
+        pass
+    if _tw["off"]:
+        print("[tooltip] wait is OFF for this PC (detector missed before) - lookups read immediately")
+
+
+def _tw_save() -> None:
+    try:
+        p = _tw_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps({"calib": TW_CALIB_VERSION, "off": _tw["off"], "hit": _tw["hit"], "miss": _tw["miss"],
+                                 "ts": int(time.time())}), encoding="utf-8")
+    except Exception as e:  # noqa: BLE001
+        print(f"[tooltip] calib save failed: {e!r}")
+
+
+def _tw_is_off() -> bool:
+    with _tw_lock:
+        _tw_load()
+        return _tw["off"]
+
+
+def _tw_learn(tip_state: str, found: bool, attempt: str | None) -> None:
+    """조회가 끝난 뒤 판정이 맞았는지 배운다(응답 조립 _tw 에서 호출)."""
+    with _tw_lock:
+        _tw_load()
+        if _tw["off"]:
+            return
+        if tip_state in ("present", "waited_ok"):
+            _tw["hit"] += 1
+            _tw["streak"] = 0
+        elif tip_state == "waited_none" and found and attempt in ("primary", "mirror"):
+            _tw["miss"] += 1
+            _tw["streak"] += 1
+        else:
+            return
+        n = _tw["hit"] + _tw["miss"]
+        if (_tw["streak"] >= TW_OFF_STREAK and _tw["hit"] == 0) or (n >= TW_OFF_MIN_N and _tw["miss"] / n >= TW_OFF_RATIO):
+            _tw["off"] = True
+            _tw["probe_hits"] = 0
+            _tw["n_off"] = 0
+            print(f"[tooltip] detector missed {_tw['miss']}/{n} on this PC - turning the wait OFF")
+            _tw_save()
+        elif n % 10 == 0:
+            _tw_save()
+
+
+def _tw_probe(tooltip_now) -> None:
+    """꺼진 동안 30번에 한 번 판정만 돌려 본다(기다리지 않음). 3번 맞으면 다시 켠다."""
+    with _tw_lock:
+        _tw["n_off"] += 1
+        if _tw["n_off"] % TW_PROBE_EVERY:
+            return
+    try:
+        seen = bool(tooltip_now())
+    except Exception:  # noqa: BLE001
+        return
+    with _tw_lock:
+        if not seen:
+            return
+        _tw["probe_hits"] += 1
+        if _tw["probe_hits"] >= TW_ON_HITS:
+            _tw.update(off=False, hit=0, miss=0, streak=0, probe_hits=0)
+            print("[tooltip] detector sees tooltips again - wait back ON")
+            _tw_save()
+
 
 def _wait_for_tooltip(attempts: list, client_seq) -> str:
     """present(이미 있음) · label(바닥 이름표) · waited_ok(기다려서 뜸) · waited_none(끝내 없음) · skip(판정 안 함)"""
@@ -830,6 +930,10 @@ def _wait_for_tooltip(attempts: list, client_seq) -> str:
 
     def tooltip_now() -> bool:
         return any(has_tooltip(capture_region(*b)) for b in inv)
+
+    if _tw_is_off():
+        _tw_probe(tooltip_now)  # 30번에 한 번만 캡처 1~2장(기다리진 않음)
+        return "off"
 
     try:
         if tooltip_now():
@@ -1058,7 +1162,6 @@ def _recent_game_update_hours() -> int | None:
     try:
         import quest_tracker as qt
         import story_progress as sp
-        from datetime import datetime as _dt
         inst = qt.get_tracker()._effective_install_path()
         metas = [sp.folder_meta(f.name) for f in (qt._list_log_folders(inst) if inst else [])]
         metas = [(ts, ver) for ts, ver in metas if ver]
@@ -1273,13 +1376,21 @@ def lookup(req: CaptureRequest) -> LookupResponse:
 
     def _tw(resp: LookupResponse) -> LookupResponse:
         resp.tooltip_wait = tip_state
+        _tw_learn(tip_state, resp.item_name is not None, resp.attempt)
         return resp
 
+    # 공유 키(스크린샷 키와 같은 키)로 누른 것인데 툴팁·바닥 이름표가 없다 = 대부분 레이드 중 지도용 스크린샷. 1.3.0 까지는 여기서
+    # 게임 화면에 OCR 5번(전부 실패, 코어 10개 넘게)을 돌려 프레임이 끊겼고, 11-08 엔 아예 건너뛰었는데 판정기가 툴팁을 못 보는
+    # 화면(1080p, 위 자가 보정 참고)에선 진짜 조회까지 버린다 → 첫 상자(primary)만 한 번 읽고 넓은 상자·새 아이템 구제는 생략
+    # (OCR 1번, 보통 0.2~0.4초). 판정이 꺼진 PC(off)면 툴팁 유무를 모르니 가운데 안내 상자·구제만 빼고 셋(primary·mirror·ground)만.
+    shared_lite = False
     if req.shared and tip_state == "waited_none":
-        # 공유 키로 누른 스크린샷인데 인벤토리 툴팁도 바닥 이름표도 없다 = 레이드 중 지도용 스크린샷. 예전엔 여기서 게임 화면에
-        # OCR 5번(전부 실패, 0.2~3초씩·코어 10개 넘게)을 돌려 게임 프레임이 끊겼다. 빈 결과로 바로 끝낸다.
-        print("[lookup] shared key + no tooltip/label - skip OCR (map screenshot)")
-        return _tw(_build_response("", {"name": None}, game_mode, attempt="shared_skip", lang=req.lang))
+        shared_lite = True
+        attempts = attempts[:1]
+        print("[lookup] shared key + no tooltip/label - primary box only")
+    elif req.shared and tip_state == "off":
+        shared_lite = True
+        attempts = [a for a in attempts if a[0] in ("primary", "mirror", "ground")]
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
@@ -1301,7 +1412,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # back blank, retry ONCE with a box grown around the primary region
     # (60% wider, 2x taller, re-centered) before giving up. Runs only on the
     # total-miss path, so the extra OCR pass costs nothing on normal lookups.
-    if price.get("name") is None and not best_text and not _lookup_superseded(req.client_seq):
+    if price.get("name") is None and not best_text and not shared_lite and not _lookup_superseded(req.client_seq):
         ex = int(primary_x - req.width * 0.3)
         ey = int(primary_y - req.height * 0.5)
         ew = int(req.width * 1.6)
@@ -1327,7 +1438,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
 
     # Deferred cold-path: one network shot at the best-read strings, for
     # brand-new patch items the (≤10min-stale) catalog cache can't know yet.
-    if price.get("name") is None and rescue_pool and not _lookup_superseded(req.client_seq):
+    if price.get("name") is None and rescue_pool and not shared_lite and not _lookup_superseded(req.client_seq):
         rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
         if rescued is not None:
             return _tw(_build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used, lang=req.lang))
@@ -1716,7 +1827,30 @@ def quests_reset(req: QuestResetRequest | None = None) -> dict:
     return get_tracker().get_status()
 
 
+def _wait_port_free(port: int, max_sec: float = 8.0) -> None:
+    """11-09 통계 sidecar_fail 'unexpected exit code=1'(14일 17명, 설치당 1~2번 = 일시적): 앱을 끄고 바로 다시 켜거나 업데이트로
+    재시작할 때 이전 시세 엔진이 아직 포트를 놓기 전이면 uvicorn 이 bind 실패로 즉시 종료(1) → 앱이 2초 뒤 다시 띄우고 그 사이
+    조회는 '연결 실패'. 포트가 비기를 최대 max_sec 기다린 뒤 띄운다(그래도 바쁘면 예전처럼 시도)."""
+    import socket
+
+    t0 = time.time()
+    while True:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.bind(("127.0.0.1", port))
+            return
+        except OSError:
+            if time.time() - t0 >= max_sec:
+                print(f"[startup] port {port} still busy after {max_sec:.0f}s - starting anyway")
+                return
+            print(f"[startup] port {port} busy (previous engine still closing?) - waiting")
+            time.sleep(0.5)
+        finally:
+            s.close()
+
+
 if __name__ == "__main__":
     import uvicorn
 
+    _wait_port_free(8765)
     uvicorn.run(app, host="127.0.0.1", port=8765)

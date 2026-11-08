@@ -210,10 +210,15 @@ function guideUrl(lang: string, path: string): string {
   const [p, hash] = path.split("#");
   return `${guideBase(lang)}${p}${p.includes("?") ? "&" : "?"}src=app${hash ? "#" + hash : ""}`;
 }
-// 사이드카 연결 실패 문구(F2·이름 조회 공통). 파일 없음(백신 격리 추정) > 복구 포기 > 자동 복구 중(3번 연속이면 백신 한 줄 덧붙임)
+// 사이드카 연결 실패 문구(F2·이름 조회 공통). 파일 없음(백신 격리 추정) > 복구 포기 > 켜지는 중(시작 45초 안) > 자동 복구 중(3번 연속이면 백신 한 줄 덧붙임)
+// 11-09 통계: 시세 엔진이 24초 안에 못 뜨는 PC(sidecar_fail probe_refused, 14일 16명)에선 첫 조회가 '연결 실패 — 자동 복구 중'으로
+// 보였다 — 고장이 아니라 첫 실행 OCR 모델 로딩(백신 검사까지 1분 가까이). 시작 직후엔 '켜지는 중'으로.
+const APP_STARTED_AT = Date.now();
+const SIDECAR_STARTING_MS = 45_000;
 function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number): string {
   if (missing) return s.sidecarMissing;
   if (dead) return s.sidecarDead;
+  if (Date.now() - APP_STARTED_AT < SIDECAR_STARTING_MS) return s.connStarting;
   return fails >= 3 ? `${s.connError} ${s.connErrorAvHint}` : s.connError;
 }
 function openGuide(lang: string, path: string): void {
@@ -4374,6 +4379,7 @@ function App() {
             );
             dailyLat(performance.now() - t0);
             if (data.tooltip_wait === "waited_none") dailyAdd("twn"); // 툴팁이 떠 있었는데 판정이 놓쳐 끝까지 기다린 성공 조회
+            if (data.tooltip_wait === "off") dailyAdd("two"); // 11-09 이 PC 에선 판정이 계속 빗나가 대기를 끈 상태의 성공 조회(자가 보정)
           }
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
