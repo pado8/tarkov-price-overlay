@@ -100,6 +100,49 @@ export function friendAgo(ms: number, t: Strings): string {
 const cache = new Map<string, MapDoc>();
 const floorMemo: Record<string, string> = {}; // 맵별 층 선택(세션 동안)
 
+// 11-08 레이드 로딩 화면에서 맵을 알면(로그) 지도 문서를 캐시에 넣고 배경 그림을 받아 디코드해 둔다 — 첫 스크린샷·지도 열기 때
+// 바로 그리게. 그림은 사이드카가 Cache-Control 1일로 주므로 <image href> 가 같은 주소를 다시 받지 않는다.
+let warmImg: HTMLImageElement | null = null; // 디코드가 끝나기 전에 GC 되지 않게 붙잡아 둔다
+export function prefetchMap(slug: string, lang: string): void {
+  const warm = (d: MapDoc) => {
+    if (!d.img) return;
+    const url = `${PYTHON_API}${d.img.url}`;
+    if (warmImg?.src === url) return; // 같은 맵을 이미 데워 둠
+    const im = new Image();
+    im.src = url;
+    warmImg = im;
+    im.decode?.().catch(() => {});
+  };
+  const key = `${slug}|${lang}`;
+  const hit = cache.get(key);
+  if (hit) {
+    warm(hit);
+    return;
+  }
+  fetch(`${PYTHON_API}/radar/map?map=${encodeURIComponent(slug)}&lang=${encodeURIComponent(lang === "zh" ? "en" : lang)}`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+    .then((d: MapDoc) => {
+      cache.set(key, d);
+      warm(d);
+    })
+    .catch(() => {});
+}
+
+/** 맵 전체(지도 그림 포함)가 보이는 보기 — '전체 보기' 버튼과, 내 위치를 모를 때(레이드 시작 전)의 기본 보기 */
+function fitViewOf(doc: MapDoc | null, showImg: boolean, box: { w: number; h: number }): { cx: number; cz: number; s: number } | null {
+  if (!doc?.bounds) return null;
+  const b = { ...doc.bounds };
+  if (doc.img && showImg) {
+    // 지도 그림까지 다 보이게
+    for (const [bx, bz] of doc.img.bounds) {
+      b.minx = Math.min(b.minx, bx); b.maxx = Math.max(b.maxx, bx);
+      b.minz = Math.min(b.minz, bz); b.maxz = Math.max(b.maxz, bz);
+    }
+  }
+  const spanM = Math.max(b.maxx - b.minx, b.maxz - b.minz, 50) * 1.08;
+  return { cx: (b.minx + b.maxx) / 2, cz: (b.minz + b.maxz) / 2, s: Math.min(box.w, box.h) / spanM };
+}
+
 /** 맵별 90° 회전 설정(↻로 돌린 값) */
 function loadMapRot(slug: string | null | undefined, fallback = 0): number {
   if (!slug) return fallback;
@@ -344,11 +387,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     return () => ro.disconnect();
   }, [size]);
 
-  // 기본 보기: 내 위치 중심, 짧은 변이 span m
+  // 기본 보기: 내 위치 중심, 짧은 변이 span m. 내 위치를 모르면(레이드 로딩 중·첫 스크린샷 전) 맵 전체
   const baseView = useMemo(() => {
-    if (!me) return null;
+    if (!me) return fitViewOf(doc, showImg, box);
     return { cx: me.x, cz: me.z, s: Math.min(box.w, box.h) / span };
-  }, [me?.x, me?.z, box.w, box.h, span]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [me?.x, me?.z, box.w, box.h, span, doc, showImg]); // eslint-disable-line react-hooks/exhaustive-deps
   const v = view ?? baseView;
   useEffect(() => {
     lastVRef.current = { slug, v };
@@ -374,17 +417,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   };
 
   const fit = () => {
-    if (!doc?.bounds) return;
-    const b = { ...doc.bounds };
-    if (doc.img && showImg) {
-      // 지도 그림까지 다 보이게
-      for (const [bx, bz] of doc.img.bounds) {
-        b.minx = Math.min(b.minx, bx); b.maxx = Math.max(b.maxx, bx);
-        b.minz = Math.min(b.minz, bz); b.maxz = Math.max(b.maxz, bz);
-      }
-    }
-    const spanM = Math.max(b.maxx - b.minx, b.maxz - b.minz, 50) * 1.08;
-    setView({ cx: (b.minx + b.maxx) / 2, cz: (b.minz + b.maxz) / 2, s: Math.min(box.w, box.h) / spanM });
+    const f = fitViewOf(doc, showImg, box);
+    if (f) setView(f);
   };
   const centerMe = () => setView(null);
   const rotate = () => {
@@ -806,8 +840,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       )}
       {sel && !mini && (
         <div className="radar-mapsel">
-          <b>{sel.name}</b> · {Math.round(dist(sel.p))}m
-          {Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
+          <b>{sel.name}</b>
+          {me && <> · {Math.round(dist(sel.p))}m</>}
+          {me && Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
         </div>
       )}
     </div>

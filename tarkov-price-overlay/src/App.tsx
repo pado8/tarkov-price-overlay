@@ -13,6 +13,7 @@ import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
+import { prefetchMap } from "./RadarMap";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
@@ -1872,6 +1873,7 @@ function App() {
   });
   const radarStoryRef = useRef<string>(radarStory);
   const radarLastShotRef = useRef<string | null | undefined>(undefined); // undefined = 아직 첫 확인 전
+  const radarLoadingTsRef = useRef<number | null>(null); // 11-08 마지막으로 본 맵 로딩 시각(로그) — 바뀌면 새 레이드
   const radarPollBusyRef = useRef(false);
   const [history, setHistory] = useState<HistoryEntry[]>(loadHistory);
   const [autoCheckUpdate, setAutoCheckUpdate] = useState<boolean>(
@@ -3043,6 +3045,17 @@ function App() {
         const d = (await res.json()) as RadarState;
         // 지도 나란히 모드로 켜진 채 시작하면 사이드카가 뜨기 전에 첫 loadRadar 가 실패한다 → 응답이 오기 시작하면 한 번 받아 둔다
         if (wideModeRef.current && !radarDataRef.current && !radarLoading) void loadRadar();
+        // 11-08 사용자 '맵 로딩할 때 어떤 맵인지 알아서 미리': 게임은 로딩 화면 시작(레이드 1~2분 전)에 맵을 로그에 쓴다.
+        // 마지막 스크린샷 뒤의 새 로딩이 보이면 그 맵 지도를 미리 받아 그려 두고 지도 데이터만 조용히 바꾼다(창은 안 띄움).
+        // 첫 스크린샷 전엔 사이드카가 지난 레이드 스크린샷을 빼고 맵·탈출구·퀘스트 위치만 준다(pre_raid).
+        const lt = d.loading?.ts ?? null;
+        if (lt != null && lt !== radarLoadingTsRef.current) {
+          radarLoadingTsRef.current = lt;
+          radarMapRef.current = null; // 새 레이드 — 수동 선택은 풀고 로그 맵으로
+          log(`radar: map loading ${d.loading!.map}`);
+          prefetchMap(d.loading!.map, region.lang);
+          void loadRadar();
+        }
         const id = d.shot?.id ?? null;
         const first = radarLastShotRef.current === undefined;
         if (id !== radarLastShotRef.current) {

@@ -159,11 +159,13 @@ def parse_side_lines(text: str) -> list[tuple[float, str, str]]:
     return out
 
 
-def raid_side_at(evs: list[tuple[float, str, str]], shot_ts: float) -> Optional[str]:
-    """스크린샷 시각의 레이드가 'pmc'|'scav'. 레이드 시작 기록·그 전 본 프로필 기록이 없거나 너무 오래됐으면 None."""
+def raid_side_at(evs: list[tuple[float, str, str]], shot_ts: float, since: Optional[float] = None) -> Optional[str]:
+    """스크린샷 시각의 레이드가 'pmc'|'scav'. 레이드 시작 기록·그 전 본 프로필 기록이 없거나 너무 오래됐으면 None.
+    since = 이번 레이드 맵 로딩 시각 — 그보다 앞선 레이드 줄은 지난 레이드 것이라 쓰지 않는다(진영 줄은 로딩 뒤에 찍힌다).
+    11-08 실측: PVE 세관 레이드(진영 줄 없음)에서 40분 전 시내 레이드 줄을 가져와 scav 로 판정 → 내 탈출구 판정까지 막혔다."""
     raid = None
     for ev in evs:
-        if ev[1] == "raid" and ev[0] <= shot_ts + 5 and (raid is None or ev[0] >= raid[0]):
+        if ev[1] == "raid" and ev[0] <= shot_ts + 5 and (since is None or ev[0] >= since) and (raid is None or ev[0] >= raid[0]):
             raid = ev
     if not raid or shot_ts - raid[0] > MAX_RAID_AGE_SEC:
         return None
@@ -209,6 +211,22 @@ def map_event_at(events: list[tuple[float, str, str]], shot_ts: float) -> Option
     if not best or shot_ts - best[0] > MAX_RAID_AGE_SEC:
         return None
     return best
+
+
+def loading_after(events: list[tuple[float, str, str]], shot_ts: Optional[float], now: float) -> Optional[tuple[float, str, str]]:
+    """마지막 스크린샷 뒤에 시작한 맵 로딩(시각, preset, slug) — 새 레이드에 들어가는 중이거나 들어와서 아직 안 찍었다.
+    11-08 사용자 '맵 로딩할 때 어떤 맵인지 알아서 미리': 게임은 로딩 화면이 시작될 때 'scene preset path' 줄을 쓴다
+    (실측: 시내 레이드 시작 2분 20초 전, 세관 1분 20초 전). 전엔 스크린샷을 찍어야 그 시각의 맵을 찾아 첫 스크린샷 전까지
+    지도가 지난 레이드 맵이었다. 맵 이름을 모르는 로딩(은신처 등)·2시간 넘은 로딩·스크린샷과 5초 안(map_event_at 이
+    그 스크린샷 레이드로 보는 범위)은 뺀다."""
+    if not events:
+        return None
+    last = max(events)
+    if not last[2] or now - last[0] > MAX_RAID_AGE_SEC:
+        return None
+    if shot_ts is not None and last[0] <= shot_ts + 5:
+        return None
+    return last
 
 
 def map_at(events: list[tuple[float, str, str]], shot_ts: float) -> tuple[Optional[str], Optional[str]]:
@@ -1389,30 +1407,50 @@ class RadarService:
             slug = map_override or None
             source = "manual" if slug else None
             raid_ts: Optional[float] = None  # 이번 레이드 로딩 시각(로그) — 내 탈출구 기억 열쇠
-            if not slug and shot:
-                try:
-                    import quest_tracker as qt
-                    tr = qt.get_tracker()
-                    inst = tr._effective_install_path()
-                    folders = qt._list_log_folders(inst)[-3:] if inst else []
-                    ev = map_event_at(self._logs.events(folders), shot["ts"])
+            pre_raid = False  # 11-08 새 레이드 로딩 중·첫 스크린샷 전 — 맵만 알고 내 위치는 아직 모른다
+            try:
+                import quest_tracker as qt
+                tr = qt.get_tracker()
+                inst = tr._effective_install_path()
+                folders = qt._list_log_folders(inst)[-3:] if inst else []
+                evs = self._logs.events(folders)  # 파일 크기가 그대로면 다시 안 읽는다(0.4초 폴링도 가볍다)
+                now = time.time()
+                nxt = loading_after(evs, shot["ts"] if shot else None, now)
+                if nxt:
+                    # 가벼운 응답에도 싣는다 — 앱이 이 시각이 바뀌면 지도를 조용히 미리 받아 둔다
+                    res["loading"] = {"map": EVENT_MAPS.get(nxt[2], nxt[2]), "ts": nxt[0]}
+                if not slug and nxt:
+                    # 마지막 스크린샷은 지난 레이드 것 → 빼고(내 위치·파티 위치 전송이 지난 맵 좌표를 쓰지 않게) 맵만
+                    pre_raid = True
+                    shot = None
+                    res["shot"] = None
+                    res["pre_raid"] = True
+                    slug, raid_ts = nxt[2], nxt[0]
+                    res["raid_ts"] = raid_ts
+                    res["preset"] = nxt[1]
+                    source = "log"
+                    side = raid_side_at(self._logs.sides(folders), now, since=raid_ts)  # 레이드 진영 줄은 로딩 뒷부분에 찍힌다
+                    if side:
+                        res["raid_side"] = side
+                elif not slug and shot:
+                    ev = map_event_at(evs, shot["ts"])
                     slug, preset = ((ev[2] or None), ev[1]) if ev else (None, None)
                     raid_ts = ev[0] if ev else None
-                    side = raid_side_at(self._logs.sides(folders), shot["ts"])
+                    side = raid_side_at(self._logs.sides(folders), shot["ts"], since=raid_ts)
                     if side:
                         res["raid_side"] = side  # 11-07 이번 레이드 PMC/스캐브 — 앱이 탈출구 칩을 자동으로 맞춘다
                     if raid_ts is not None:
                         res["raid_ts"] = raid_ts
                     res["preset"] = preset
                     source = "log" if slug else None
-                except Exception as e:  # 로그를 못 읽어도 레이더는 수동 선택으로 쓸 수 있다
-                    log.warning(f"[radar] 로그 맵 판정 실패: {e}")
+            except Exception as e:  # 로그를 못 읽어도 레이더는 수동 선택으로 쓸 수 있다
+                log.warning(f"[radar] 로그 맵 판정 실패: {e}")
             if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
                 slug = EVENT_MAPS[slug]
             if shot and slug and folder:
                 self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts)  # 탈출구 목록 사진이면 백그라운드 OCR
             jmode = _mode_doc(game_mode)
-            fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC
+            fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC  # 레이드 시작 전(pre_raid)은 앱이 full 로 받는다
             if not (full or fresh or map_override):
                 res["light"] = True  # 가벼운 응답 — 새 스크린샷 감지용
                 return res
@@ -1448,7 +1486,9 @@ class RadarService:
                         if side:
                             res["raid_side"] = side
                             res["raid_side_source"] = "exits"
-            if shot and slug:
+            if slug and (shot or pre_raid):
+                # 레이드 시작 전엔 내 위치가 없다 — 원점 기준으로 계산하고 거리·방향·높이 차는 뺀다(지도는 좌표 x·z 로 찍는다)
+                pose = shot or {"x": 0.0, "y": 0.0, "z": 0.0, "heading": None}
                 active: set[str] = set()
                 try:
                     import quest_tracker as qt
@@ -1468,12 +1508,16 @@ class RadarService:
                 except Exception:
                     key_names = {}
                 res["targets"] = build_targets(maps_doc, slug, loc_maps, all_tasks(tasks_doc), loc_tasks,
-                                               active, shot, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
+                                               active, pose, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
                 if story:
                     auto = story_auto_quests(game_mode) if story == "auto" else None
-                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, shot, loc_tasks, auto=auto), key=lambda r: r["dist"])
+                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, pose, loc_tasks, auto=auto), key=lambda r: r["dist"])
                     if story == "auto":
                         res["story_auto"] = sorted(auto or {})  # 추정된 진행 중 챕터(slug) — 화면 안내용
+                if pre_raid:
+                    for r in res["targets"]:
+                        r["dist"], r["rel"], r["dy"] = None, None, None
+                    res["targets"].sort(key=lambda r: (r.get("kind") != "quest", r.get("name") or ""))
                 res["active_quests"] = len(active)
             return res
 

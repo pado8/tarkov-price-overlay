@@ -33,9 +33,9 @@ type Strings = { [K in keyof LiteralStrings]: string };
 export type RadarTarget = {
   kind: "extract" | "transit" | "quest";
   name: string;
-  dist: number;
+  dist: number | null; // 레이드 시작 전(pre_raid, 내 위치 모름)엔 null
   rel: number | null; // 0 = 정면, +90 = 오른쪽, -90 = 왼쪽
-  dy: number; // 대상 높이 - 내 높이 (m)
+  dy: number | null; // 대상 높이 - 내 높이 (m) — 레이드 시작 전엔 null
   faction?: string; // 탈출구: pmc | scav | shared
   switch?: boolean;
   paid?: boolean;
@@ -66,6 +66,8 @@ export type RadarState = {
   my_exits?: string[]; // 11-06 이번 레이드 내 탈출구(탈출구 목록 사진 OCR, 영어 원문)
   raid_side?: "pmc" | "scav"; // 11-07 이번 레이드 진영(로그의 레이드 프로필 = 본 프로필이면 PMC)
   raid_ts?: number; // 이번 레이드 맵 로딩 시각 — 레이드가 바뀌었는지 알 때
+  pre_raid?: boolean; // 11-08 새 레이드 로딩 중·첫 스크린샷 전 — 맵은 로그로 알지만 내 위치(shot)는 없다
+  loading?: { map: string; ts: number }; // 11-08 마지막 스크린샷 뒤에 시작한 맵 로딩 — 가벼운 응답에도 실려 앱이 지도를 미리 받는다
   story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
   story_auto?: string[]; // '자동' 일 때 로그로 추정한 진행 중 챕터 id 들(없으면 빈 배열)
 };
@@ -267,8 +269,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
 
   if (mini) {
     // 지도만 남긴 미니맵 — 상태 안내도 지도 자리 안에서 한 줄로. 도구(옮기기·작게·크게·펼치기)는 마우스를 올렸을 때만(CSS)
-    const ready = !!(data && data.folder && data.shot && data.map);
-    const msg = !data ? (loading ? t.hintLoading : t.radarNoShot) : !data.folder ? t.radarNoFolder : !data.shot ? t.radarNoShot : t.radarNoMap;
+    const ready = !!(data && data.folder && (data.shot || data.pre_raid) && data.map);
+    const msg = !data ? (loading ? t.hintLoading : t.radarNoShot) : !data.folder ? t.radarNoFolder : !data.shot && !data.pre_raid ? t.radarNoShot : t.radarNoMap;
     const step = (d: number) => onMiniSize?.(Math.max(RADAR_MINI_MIN, Math.min(RADAR_MINI_MAX, miniSize + d)));
     return (
       <div className="radar radar-mini" style={{ width: miniSize }}>
@@ -277,7 +279,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         ) : (
           <div className="radar-mini-msg" style={{ width: miniSize, height: Math.round(miniSize * 0.5) }}>{msg}</div>
         )}
-        {ready && data!.shot!.age > STALE_SEC && <div className="radar-mini-stale" title={t.radarStale}>{ago(data!.shot!.age, t)}</div>}
+        {ready && data!.shot && data!.shot.age > STALE_SEC && <div className="radar-mini-stale" title={t.radarStale}>{ago(data!.shot.age, t)}</div>}
+        {ready && !data!.shot && <div className="radar-mini-stale" title={t.radarPreRaid}>{t.radarPreRaidShort}</div>}
         <div className="radar-mini-tools">
           {/* 11-07 data-tauri-drag-region 대신 직접 끌기 — 그 속성은 더블클릭에 창 최대화를 건다(App.tsx onHeaderDown 과 같은 이유) */}
           <span
@@ -410,13 +413,13 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               </button>
             )}
           </span>
-          <span className="radar-dist">{Math.round(x.dist)}m</span>
+          {x.dist != null && <span className="radar-dist">{Math.round(x.dist)}m</span>}
           {x.rel != null && heading != null && (
             <span className="radar-arrow" style={{ transform: `rotate(${x.rel}deg)` }} aria-hidden="true">
               ↑
             </span>
           )}
-          {Math.abs(x.dy) >= 2.5 && (
+          {x.dy != null && Math.abs(x.dy) >= 2.5 && (
             <span className={`radar-dy ${x.dy > 0 ? "up" : "down"}`}>
               {x.dy > 0 ? "▲" : "▼"}
               {Math.round(Math.abs(x.dy))}m
@@ -504,7 +507,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 11-06 친구 시험 피드백 '맵을 고르기 전엔 지도 옵션이 안 뜬다' — 스크린샷 폴더·스크린샷·맵이 아직 없어도 안내 문구 아래에
   // 맵 선택·크기·고정·내 위치 크게·불투명도·파티·미니맵을 그대로 보여 준다(레이드 전에 파티 방부터 들어가는 경우 등).
   // 전엔 이 세 경우에 패널이 옵션을 만들기 전에 끝나 머리글과 안내 한 줄만 보였다.
-  const noMapHint = !data.folder ? t.radarNoFolder : !data.shot ? t.radarNoShot : !data.map ? t.radarNoMap : null;
+  const noMapHint = !data.folder ? t.radarNoFolder : !data.shot && !data.pre_raid ? t.radarNoShot : !data.map ? t.radarNoMap : null;
   if (noMapHint) {
     return (
       <div className="radar" ref={radarRef}>
@@ -520,7 +523,9 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {header}
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
-      {heading == null && <div className="hint">{t.radarDirUnknown}</div>}
+      {/* 11-08 레이드 로딩 화면에서 맵을 미리 띄운 상태 — 위치·방향은 첫 스크린샷부터 */}
+      {!data.shot && data.pre_raid && <div className="hint">{t.radarPreRaid}</div>}
+      {data.shot && heading == null && <div className="hint">{t.radarDirUnknown}</div>}
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
       {fill ? (
         <div className="radar-maprow">
