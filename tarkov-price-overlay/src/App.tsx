@@ -40,6 +40,8 @@ const ANNOUNCEMENT_ENDPOINT = "https://api.aquapado.com/priceoverlay/announcemen
 const ANNOUNCE_SEEN_KEY = "tarkov.announceSeen";
 // Hideout levels: {[stationId]: currentLevel}. Persisted across sessions.
 const HIDEOUT_LEVELS_KEY = "tarkov.hideoutLevels";
+// 11-08 가져온 은신처 레벨 — 바뀐 시설과 되돌리기용 이전 값
+type HideoutImport = { source: "tt"; changes: { id: string; name: string; from: number; to: number }[]; prev: Record<string, number> };
 // 카드에서 직접 '달성' 표시한 퀘스트 id — 서버(모드)별 (피드백 #49-②).
 const MANUAL_QUEST_DONE_KEY = "tarkov.manualQuestDone";
 // 이미 안내한 프레스티지 시각(모드별) — 같은 프레스티지로 두 번 묻지 않도록.
@@ -1694,6 +1696,12 @@ function App() {
     }
   );
   const [hideoutStations, setHideoutStations] = useState<HideoutStation[]>([]);
+  // 11-08 은신처 레벨 가져오기(TarkovTracker) — 마지막으로 바뀐 시설(되돌리기용 이전 값 포함)·연결 상태·안내
+  const [hideoutImport, setHideoutImport] = useState<HideoutImport | null>(null);
+  const [ttStatus, setTtStatus] = useState<{ connected: boolean; token: string; game_mode: string | null; last_ok: number | null; last_error: string | null } | null>(null);
+  const [ttToken, setTtToken] = useState("");
+  const [ttBusy, setTtBusy] = useState(false);
+  const [ttMsg, setTtMsg] = useState<{ k: "applied" | "same" | "empty" | "mismatch" | "err" | "undone"; n?: number; code?: string; mode?: string } | null>(null);
   // Ammo matrix data is fetched once per language on mount/lang-change.
   // Null while loading; {calibers: {}} after a failed fetch (we still treat
   // both as "no matrix" for rendering).
@@ -3684,6 +3692,140 @@ function App() {
     localStorage.removeItem(HIDEOUT_LEVELS_KEY);
     setHideoutLevels({});
   };
+
+  // ── 11-08 은신처 레벨 가져오기(TarkovTracker 연동) ─────────────────────────
+  // 게임 로그엔 은신처 업그레이드 기록이 없어 수동 입력만 있었다. 가져온 값은 바뀐 시설만 알리고 되돌릴 수 있게 한다.
+  // full=true: 가져온 쪽에 없는 시설은 0(TarkovTracker 는 지은 레벨만 준다). false: 가져온 시설만 바꾼다.
+  const hideoutLevelsRef = useRef(hideoutLevels);
+  hideoutLevelsRef.current = hideoutLevels;
+  const hideoutStationsRef = useRef(hideoutStations);
+  hideoutStationsRef.current = hideoutStations;
+  const applyHideoutImport = (levels: Record<string, number>, source: "tt", full: boolean): number => {
+    const cur = hideoutLevelsRef.current;
+    const next = { ...cur };
+    const changes: HideoutImport["changes"] = [];
+    for (const s of hideoutStationsRef.current) {
+      if (!full && !(s.id in levels)) continue;
+      const to = Math.max(0, Math.min(s.maxLevel, levels[s.id] ?? 0));
+      const from = cur[s.id] ?? 0;
+      if (to === from) continue;
+      changes.push({ id: s.id, name: s.name, from, to });
+      next[s.id] = to;
+    }
+    if (!changes.length) return 0;
+    try {
+      localStorage.setItem(HIDEOUT_LEVELS_KEY, JSON.stringify(next));
+    } catch {}
+    setHideoutLevels(next);
+    setHideoutImport({ source, changes, prev: cur });
+    return changes.length;
+  };
+  const undoHideoutImport = () => {
+    if (!hideoutImport) return;
+    try {
+      localStorage.setItem(HIDEOUT_LEVELS_KEY, JSON.stringify(hideoutImport.prev));
+    } catch {}
+    setHideoutLevels(hideoutImport.prev);
+    setHideoutImport(null);
+    setTtMsg({ k: "undone" });
+  };
+  const ttModeName = (m: string | null | undefined) => (m === "pve" ? "PvE" : m === "seasonal" || m === "season" ? t.ttSeason : "PvP");
+  const ttMsgText = (): string => {
+    const m = ttMsg;
+    if (!m) return "";
+    if (m.k === "applied") return t.ttApplied.replace("{n}", String(m.n ?? 0));
+    if (m.k === "same") return t.ttSame;
+    if (m.k === "empty") return t.ttEmpty;
+    if (m.k === "undone") return t.ttUndone;
+    if (m.k === "mismatch") return t.ttMismatch.replace("{tt}", ttModeName(m.mode)).replace("{app}", ttModeName(questDisplayMode));
+    const errs: Record<string, string> = {
+      bad_format: t.ttErrFormat,
+      bad_token: t.ttErrToken,
+      no_permission: t.ttErrPermission,
+      rate_limited: t.ttErrRate,
+      network: t.ttErrNetwork,
+    };
+    return errs[m.code ?? ""] ?? t.ttErrOther;
+  };
+  const loadTtStatus = async () => {
+    try {
+      const r = await fetch(`${PYTHON_API}/tracker/tt/status`);
+      if (r.ok) setTtStatus(await r.json());
+    } catch {}
+  };
+  const questDisplayModeRef = useRef(questDisplayMode);
+  questDisplayModeRef.current = questDisplayMode;
+  const pullTtHideout = async (force: boolean) => {
+    setTtBusy(true);
+    try {
+      if (!hideoutStationsRef.current.length) {
+        // 설정을 아직 안 열었으면 시설 목록이 비어 있다 — 바뀐 시설 이름·최대 레벨이 필요
+        const sr = await fetch(`${PYTHON_API}/hideout/stations?lang=${dataLang(region.lang)}`);
+        if (sr.ok) {
+          const st = (await sr.json()) as HideoutStation[];
+          hideoutStationsRef.current = st;
+          setHideoutStations(st);
+        }
+      }
+      const r = await fetch(`${PYTHON_API}/tracker/tt/hideout?app_mode=${questDisplayModeRef.current}&force=${force}`);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setTtMsg({ k: "err", code: d.detail || "error" });
+        return;
+      }
+      if (!d.mode_match) {
+        setTtMsg({ k: "mismatch", mode: d.game_mode });
+        return;
+      }
+      if (!d.modules) {
+        setTtMsg({ k: "empty" });
+        return;
+      }
+      const n = applyHideoutImport(d.levels || {}, "tt", true);
+      setTtMsg(n ? { k: "applied", n } : { k: "same" });
+      if (n) log(`tracker: hideout ${n} station(s) changed`);
+    } catch {
+      setTtMsg({ k: "err", code: "network" });
+    } finally {
+      setTtBusy(false);
+      void loadTtStatus();
+    }
+  };
+  const connectTt = async (token: string) => {
+    setTtBusy(true);
+    setTtMsg(null);
+    try {
+      const r = await fetch(`${PYTHON_API}/tracker/tt/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setTtMsg({ k: "err", code: d.detail || "error" });
+        setTtBusy(false);
+        return;
+      }
+      // 연결되면 아래 효과(ttStatus.connected)가 한 번 가져온다 — 여기서 또 부르면 두 번째 결과('같음')가 첫 결과 안내를 덮는다
+      setTtStatus(d);
+      setTtToken("");
+      setTtBusy(false);
+    } catch {
+      setTtMsg({ k: "err", code: "network" });
+      setTtBusy(false);
+    }
+  };
+  useEffect(() => {
+    void loadTtStatus();
+  }, []);
+  // 연결돼 있으면 앱을 켤 때 한 번 + 15분마다(사이드카가 60초 간격·304 로 TarkovTracker 하루 한도를 아낀다)
+  useEffect(() => {
+    if (!ttStatus?.connected) return;
+    void pullTtHideout(false);
+    const iv = window.setInterval(() => void pullTtHideout(false), 15 * 60 * 1000);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ttStatus?.connected, questDisplayMode]);
   // 피드백 #49-②: 카드의 은신처 줄을 눌러 그 레벨 달성/해제. 설정의 은신처
   // 레벨과 같은 값을 고치므로 두 화면이 항상 일치한다.
   const toggleHideoutNeedDone = (stationId: string, level: number, done: boolean) => {
@@ -5146,6 +5288,27 @@ function App() {
           </div>
         )}
 
+        {hideoutImport && (
+          // 11-08 가져온 은신처 레벨 — 무엇이 바뀌었는지 + 되돌리기(잘못 가져왔을 때)
+          <div className="announce-banner reply-banner hideout-import-banner">
+            <div className="reply-body">
+              <div className="reply-title">{t.hideoutImportTitle}</div>
+              <div className="reply-text">
+                {hideoutImport.changes
+                  .slice(0, 6)
+                  .map((c) => `${c.name} ${c.from}→${c.to}`)
+                  .join(" · ")}
+                {hideoutImport.changes.length > 6 && ` ${t.hideoutImportMore.replace("{n}", String(hideoutImport.changes.length - 6))}`}
+              </div>
+            </div>
+            <button className="reset-btn reply-ok" onClick={undoHideoutImport}>
+              {t.hideoutImportUndo}
+            </button>
+            <button className="reset-btn reply-ok" onClick={() => setHideoutImport(null)}>
+              {t.devReplyOk}
+            </button>
+          </div>
+        )}
         {devReplies.length > 0 && (
           <div className="announce-banner reply-banner">
             <div className="reply-body">
@@ -6114,6 +6277,52 @@ function App() {
               </summary>
               <div className="settings-hint" style={{ color: "var(--text-muted)", marginBottom: 4 }}>
                 {t.hideoutLevelHint}
+              </div>
+              {/* 11-08 TarkovTracker 에서 은신처 레벨 가져오기 — 토큰은 이 PC 에만 저장 */}
+              <div className="tt-box">
+                <div className="settings-row">
+                  <label>{t.ttTitle}</label>
+                  {ttStatus?.connected && (
+                    <span className="tt-state">
+                      {t.ttConnected.replace("{mode}", ttModeName(ttStatus.game_mode)).replace("{token}", ttStatus.token)}
+                    </span>
+                  )}
+                </div>
+                {ttStatus?.connected ? (
+                  <div className="settings-row tt-row">
+                    <button className="reset-btn" disabled={ttBusy} onClick={() => void pullTtHideout(true)}>
+                      {ttBusy ? t.ttBusy : t.ttPull}
+                    </button>
+                    <button className="reset-btn" disabled={ttBusy} onClick={() => void connectTt("")}>
+                      {t.ttDisconnect}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="settings-row tt-row">
+                    <input
+                      className="tt-input"
+                      type="password"
+                      autoComplete="off"
+                      spellCheck={false}
+                      placeholder={t.ttTokenPlaceholder}
+                      value={ttToken}
+                      onChange={(e) => setTtToken(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && ttToken.trim() && !ttBusy) void connectTt(ttToken);
+                      }}
+                    />
+                    <button className="reset-btn" disabled={ttBusy || !ttToken.trim()} onClick={() => void connectTt(ttToken)}>
+                      {ttBusy ? t.ttBusy : t.ttConnect}
+                    </button>
+                  </div>
+                )}
+                {ttMsg && <div className={`settings-hint tt-msg${ttMsg.k === "err" || ttMsg.k === "mismatch" ? " warn" : ""}`}>{ttMsgText()}</div>}
+                <div className="settings-hint" style={{ color: "var(--text-muted)" }}>
+                  {t.ttHint}{" "}
+                  <button type="button" className="radar-link" onClick={() => void openUrl("https://tarkovtracker.org/").catch(() => {})}>
+                    {t.ttGetToken}
+                  </button>
+                </div>
               </div>
               {hideoutStations.length === 0 ? (
                 <div className="settings-row">

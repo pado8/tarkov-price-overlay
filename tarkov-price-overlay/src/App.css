@@ -1333,6 +1333,23 @@ html, body, #root {
   border-radius: var(--radius-sm);
 }
 
+/* 11-08 TarkovTracker 연동(은신처 레벨 가져오기) */
+.tt-box { margin: 2px 0 8px; padding: 6px 8px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
+.tt-row { gap: 6px; }
+.tt-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: 2px 6px;
+  font-size: var(--card-fs-sm);
+  font-family: "Consolas", monospace;
+  border-radius: var(--radius-sm);
+}
+.tt-state { font-size: var(--card-fs-xs); color: var(--text-muted); }
+.tt-msg.warn { color: var(--gold-bright); }
+
 .no-market-note {
   font-size: var(--card-fs-sm);
   color: var(--text-muted);
