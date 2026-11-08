@@ -1516,42 +1516,6 @@ def sync_hideout(req: HideoutSyncRequest) -> dict:
     return {"ok": True, "count": len(levels), "mode": _load_app_mode(), "faction": _load_app_faction()}
 
 
-# ── TarkovTracker 연동 (11-08) — 은신처 레벨 가져오기. 토큰은 이 PC 에만(tarkov_tracker.py) ──────────────────
-class TrackerTokenRequest(BaseModel):
-    token: str = ""  # 빈 문자열 = 연결 끊기
-
-
-def _tracker_http(e: "Exception") -> HTTPException:
-    code = getattr(e, "code", "error")
-    status = {"bad_format": 400, "bad_token": 401, "no_permission": 403, "not_connected": 409, "rate_limited": 429}.get(code, 502)
-    return HTTPException(status_code=status, detail=code)
-
-
-@app.get("/tracker/tt/status", dependencies=[Depends(_reject_foreign_origin)])
-def tracker_tt_status() -> dict:
-    import tarkov_tracker
-    return tarkov_tracker.status()
-
-
-@app.post("/tracker/tt/token", dependencies=[Depends(_reject_foreign_origin)])
-def tracker_tt_token(req: TrackerTokenRequest) -> dict:
-    import tarkov_tracker
-    try:
-        return tarkov_tracker.connect(req.token)
-    except tarkov_tracker.TrackerError as e:
-        raise _tracker_http(e) from e
-
-
-@app.get("/tracker/tt/hideout", dependencies=[Depends(_reject_foreign_origin)])
-def tracker_tt_hideout(app_mode: str | None = None, force: bool = False) -> dict:
-    """TarkovTracker 진행도 → {game_mode, levels{시설 id: 레벨}, modules, mode_match}. 적용은 앱이 한다(되돌리기·알림)."""
-    import tarkov_tracker
-    try:
-        return tarkov_tracker.fetch_hideout(app_mode, force=force)
-    except tarkov_tracker.TrackerError as e:
-        raise _tracker_http(e) from e
-
-
 @app.get("/progress")
 def progress(game_mode: str | None = None) -> dict:
     """가이드 사이트용 진행도 요약 — 게임 로그에서 읽은 퀘스트 상태(모드별) + 앱 설정의 은신처 단계.
