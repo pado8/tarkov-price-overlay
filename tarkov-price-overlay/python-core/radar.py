@@ -258,7 +258,48 @@ def exfil_banner(path: Path) -> bool:
     return float(m.mean()) >= EXFIL_GREEN_MIN
 
 
-def read_exfil_lines(path: Path) -> list[str]:
+def exfil_list_box(im) -> Optional[tuple[int, int]]:
+    """탈출구 목록 머리(라임 초록 띠)의 왼쪽 x·아래 y — 목록 열만 잘라 읽으려고. 띠를 못 찾으면 None."""
+    import numpy as np
+
+    a = np.asarray(im, dtype=np.int16)
+    h, w, _ = a.shape
+    x_off = int(w * 0.45)
+    top = a[: int(h * 0.25), x_off:]
+    r, g, b = top[..., 0], top[..., 1], top[..., 2]
+    ys, xs = np.nonzero((g > 150) & (g - r > 25) & (g - b > 70) & (r > 90))
+    if len(xs) < 50:
+        return None
+    return int(np.percentile(xs, 1)) + x_off, int(np.percentile(ys, 99))
+
+
+def _join_rows(res: list, tol: Optional[float] = None) -> list[str]:
+    """OCR 조각을 같은 높이끼리 x 순서로 이어 한 줄로(실측: 'Primorsky Ave' / 'V-Ex' / 'Taxi' 로 나뉘어 이름이 안 맞던 것).
+    같은 줄 기준은 글자 높이의 절반 — 넉넉히 잡으면 두 줄로 접힌 이름의 아랫줄('Parking')이 같은 줄로 붙어 앞에 온다(실측)."""
+    items = []
+    heights = []
+    for box, t, conf in res:
+        if conf <= 0.2:
+            continue
+        ys = [pt[1] for pt in box]
+        items.append(((min(ys) + max(ys)) / 2, min(pt[0] for pt in box), t))
+        heights.append(max(ys) - min(ys))
+    if tol is None:
+        tol = (sorted(heights)[len(heights) // 2] * 0.5) if heights else 8
+    items.sort()
+    rows: list[list] = []
+    for yc, x, t in items:
+        if rows and abs(rows[-1][0] - yc) <= tol:
+            rows[-1][1].append((x, t))
+        else:
+            rows.append([yc, [(x, t)]])
+    return [" ".join(t for _, t in sorted(r[1])) for r in rows]
+
+
+def read_exfil_lines(path: Path, lang: str = "en") -> list[str]:
+    """탈출구 목록 사진 → 줄 글자들. 11-08: 화면 오른쪽 위를 통째로 영어로 읽던 것(시내 6개 중 4개) → 초록 띠 아래 목록 열만,
+    한국어 게임이면 한국어+영어로('탈출지점05 Klimov Street (조명탄 탈출구)' 처럼 한글이 섞인 줄을 영어 전용은 버렸다),
+    같은 높이 조각은 한 줄로. 띠를 못 찾으면 예전 영역."""
     import numpy as np
     from PIL import Image
 
@@ -266,28 +307,57 @@ def read_exfil_lines(path: Path) -> list[str]:
 
     im = Image.open(path).convert("RGB")
     w, h = im.size
-    crop = np.asarray(im.crop((int(w * 0.55), 0, w, int(h * 0.5))))
-    res = ocr._get_reader(("en",)).readtext(crop, detail=1, paragraph=False)
-    return [t for _, t, conf in res if conf > 0.2]
+    box = exfil_list_box(im)
+    if box:
+        x0, y1 = box
+        crop = im.crop((x0, y1, w, min(h, y1 + int(h * 0.45))))
+    else:
+        crop = im.crop((int(w * 0.55), 0, w, int(h * 0.5)))
+    langs = ("ko", "en") if lang == "ko" else ("en",)  # ko+en 은 앱 시작 때 이미 올라와 있다(main.py)
+    res = ocr._get_reader(langs).readtext(np.asarray(crop), detail=1, paragraph=False)
+    return _join_rows(res)
 
 
 def match_exfils(lines: list[str], names: list[str]) -> set[str]:
     """OCR 줄 → 맞는 탈출구 영어 이름들. 줄 앞의 번호('게임종료01' → 숫자 찌꺼기)는 무시하고 이름이 들어 있으면 맞춤,
-    아니면 비슷한 이름(0.8 이상)."""
+    아니면 비슷한 이름(0.8 이상). 11-08: 끝 괄호를 뺀 이름도 열쇠로 — 원문 'Klimov Street (Flare)' 가 한국어 게임 화면엔
+    'Klimov Street (조명탄 탈출구)'. 괄호를 빼면 다른 탈출구와 같아지는 이름은 빼지 않는다."""
     import difflib
 
     def norm(s: str) -> str:
         return re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
 
     keys = {norm(n): n for n in names if n and len(norm(n)) >= 4}
+    bare: dict[str, list[str]] = {}
+    for n in names:
+        b = norm(re.sub(r"\s*\([^)]*\)\s*$", "", n or ""))
+        if len(b) >= 4 and b != norm(n):
+            bare.setdefault(b, []).append(n)
+    for b, ns in bare.items():
+        if len(ns) == 1 and b not in keys:
+            keys[b] = ns[0]
+    def words_in(key: str, line_words: list[str]) -> bool:
+        """이름의 3자 이상 단어가 줄에 순서 상관없이 다 있다(한 글자 틀림 정도는 0.8 유사도로 허용)."""
+        kw = [w for w in key.split() if len(w) >= 3]
+        if len(kw) < 2:
+            return False
+        return all(any(w == lw or difflib.SequenceMatcher(None, w, lw).ratio() >= 0.8 for lw in line_words) for w in kw)
+
     out: set[str] = set()
-    for ln in lines:
+    singles = list(lines)
+    # 두 줄로 접힌 긴 이름('Cardinal Apartment Complex' / 'Parking')도 맞게 이웃 줄을 이어 붙인 것도 본다
+    for i, ln in enumerate(singles + [a + " " + b for a, b in zip(lines, lines[1:])]):
         l = norm(ln)
         hit = [n for k, n in keys.items() if k in l]
         if not hit:
             tail = re.sub(r"^[0-9 ]+", "", l)
             m = difflib.get_close_matches(tail, list(keys), n=1, cutoff=0.8)
             hit = [keys[m[0]]] if m else []
+        if not hit and i < len(singles):
+            # 실측(16:24 시내): 줄 번호가 두 줄 가운데라 OCR 이 '게임종료03 rarking' 으로 묶어 'rarking Cardinal Apartment Complex'
+            # 처럼 단어 순서가 바뀐다 → 한 줄 안에서만 단어 단위로(이웃 줄을 이은 것엔 안 씀 — 다른 탈출구 단어가 섞일 수 있다)
+            lw = l.split()
+            hit = [n for k, n in keys.items() if words_in(k, lw)]
         out.update(hit)
     return out
 
@@ -1235,7 +1305,7 @@ class RadarService:
         self._my_exits: Optional[dict] = None  # {"slug", "raid", "names": set[str]}
         self._load_settings()
 
-    def _start_exfil_check(self, path: Path, slug: str, raid: Optional[float]) -> None:
+    def _start_exfil_check(self, path: Path, slug: str, raid: Optional[float], lang: str = "en") -> None:
         with self._exfil_lock:
             if self._exfil_busy or path.name in self._exfil_seen:
                 return
@@ -1246,7 +1316,7 @@ class RadarService:
             try:
                 if not exfil_banner(path):
                     return
-                got = match_exfils(read_exfil_lines(path), exfil_names(slug))
+                got = match_exfils(read_exfil_lines(path, lang), exfil_names(slug))
                 log.info(f"[radar] 탈출구 목록 사진 {path.name}: {slug} 맞춤 {sorted(got)}")
                 if len(got) < 2:
                     return  # 탈출구 안 '머무르십시오' 띠(하나만 보임) 등 — 목록으로 안 봄
@@ -1448,7 +1518,7 @@ class RadarService:
             if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
                 slug = EVENT_MAPS[slug]
             if shot and slug and folder:
-                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts)  # 탈출구 목록 사진이면 백그라운드 OCR
+                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, lang)  # 탈출구 목록 사진이면 백그라운드 OCR
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC  # 레이드 시작 전(pre_raid)은 앱이 full 로 받는다
             if not (full or fresh or map_override):
