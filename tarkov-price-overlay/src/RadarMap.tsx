@@ -534,7 +534,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 켜져 있으면(기본) 그것만 그린다. 아직 못 읽었으면 예전처럼 전부.
   const mine = data.my_exits && data.my_exits.length ? new Set(data.my_exits) : null;
   const mineOn = !!mine && myExitsOnly;
-  const showEx = (x: { faction: string; en?: string }) => showExtract(x.faction) && (!mineOn || (!!x.en && mine!.has(x.en)));
+  // 11-08 사용자: '내 탈출구만'이면 PMC/스캐브 칩과 상관없이 내 탈출구는 다 보이게 — 진영 칩이 지난 레이드 그대로거나(스캐브 켜진 채
+  // PMC 레이드) 진영 판정이 늦어도 내 탈출구가 칩에 걸려 사라지지 않는다. 내 탈출구를 모르면 예전처럼 칩대로.
+  const showEx = (x: { faction: string; en?: string }) => (mineOn ? !!x.en && mine!.has(x.en) : showExtract(x.faction));
 
   // 이름표 자리 잡기: 가까운 것부터 놓고, 먼저 놓인 이름표·내 마커와 겹치거나 화면 밖이면 생략
   const labels = new Map<string, { text: string; lx: number; ly: number }>();

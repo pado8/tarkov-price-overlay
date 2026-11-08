@@ -209,7 +209,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 그 뒤 직접 바꾼 칩은 그 레이드 동안 그대로(지도를 다시 열어도).
   useEffect(() => {
     const side = data?.raid_side;
-    const key = data?.raid_ts != null ? String(data.raid_ts) : null;
+    // 11-08: 열쇠에 진영도 — 같은 레이드에서 진영 판정이 나중에 바뀌면(로그엔 없다가 내 탈출구로 정해짐 등) 다시 맞춘다
+    const key = data?.raid_ts != null && side ? `${data.raid_ts}|${side}` : null;
     if (!side || !key || sideAppliedFor === key) return;
     sideAppliedFor = key;
     const scav = side === "scav";
