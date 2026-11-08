@@ -299,6 +299,9 @@ class BuyOffer(BaseModel):
 
 class LookupResponse(BaseModel):
     raw_text: str
+    # 11-08 F2 경로의 툴팁 대기 결과(present·waited_ok·waited_none·label·superseded·skip). 앱이 '끝까지 기다렸는데 성공'
+    # (툴팁 판정이 놓쳐 0.6초 손해)을 하루 요약 twn 으로 센다 — 해상도별 판정 실패·응답 시간 상승 근거.
+    tooltip_wait: str | None = None
     item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
@@ -1245,6 +1248,10 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     tip_ms = round((time.perf_counter() - tip_t0) * 1000)
     print(f"[tooltip] {tip_state} ({tip_ms}ms)")
     _diag_note({"kind": "tooltip_wait", "state": tip_state, "ms": tip_ms})  # 개발 PC 에서만: F2 뒤 툴팁이 뜨기까지 실측
+
+    def _tw(resp: LookupResponse) -> LookupResponse:
+        resp.tooltip_wait = tip_state
+        return resp
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
@@ -1287,15 +1294,15 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             if wide_price.get("name") is None:
                 rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
                 if rescued is not None:
-                    return _build_response(rescued[0], rescued[1], game_mode, attempt="wide", lang=req.lang)
-            return _build_response(wide_text, wide_price, game_mode, attempt="wide", lang=req.lang)
+                    return _tw(_build_response(rescued[0], rescued[1], game_mode, attempt="wide", lang=req.lang))
+            return _tw(_build_response(wide_text, wide_price, game_mode, attempt="wide", lang=req.lang))
 
     # Deferred cold-path: one network shot at the best-read strings, for
     # brand-new patch items the (≤10min-stale) catalog cache can't know yet.
     if price.get("name") is None and rescue_pool and not _lookup_superseded(req.client_seq):
         rescued = _cold_rescue(rescue_pool, lang, game_mode, req.corrections)
         if rescued is not None:
-            return _build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used, lang=req.lang)
+            return _tw(_build_response(rescued[0], rescued[1], game_mode, attempt=attempt_used, lang=req.lang))
 
     # No match: report the most informative text read across attempts.
     final_text = text if price.get("name") is not None else best_text
@@ -1305,8 +1312,8 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         refreshing = no_match and catalog_refresh_running(lang, game_mode)
     except Exception:  # noqa: BLE001
         refreshing = False
-    return _build_response(final_text, price, game_mode, attempt=attempt_used, lang=req.lang,
-                           catalog_refreshing=refreshing, game_updated_hours=_recent_game_update_hours())
+    return _tw(_build_response(final_text, price, game_mode, attempt=attempt_used, lang=req.lang,
+                           catalog_refreshing=refreshing, game_updated_hours=_recent_game_update_hours()))
 
 
 # ─── Quest tracker endpoints ─────────────────────────────────────────

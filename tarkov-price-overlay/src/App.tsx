@@ -807,6 +807,7 @@ type BuyOffer = {
 type LookupResult = {
   raw_text: string;
   item_id: string | null;
+  tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -4232,6 +4233,7 @@ function App() {
               data.attempt === "wide" ? (okId ? `wide:${okId}` : "wide") : okId || undefined
             );
             dailyLat(performance.now() - t0);
+            if (data.tooltip_wait === "waited_none") dailyAdd("twn"); // 툴팁이 떠 있었는데 판정이 놓쳐 끝까지 기다린 성공 조회
           }
         } catch (e) {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
