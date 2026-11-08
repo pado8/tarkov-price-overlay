@@ -132,6 +132,10 @@ const INSTALL_ID_KEY = "tarkov.installId";
 const STATS_CONSENT_KEY = "tarkov.statsConsent";
 // 11-07 시작 카드(처음 5분: F2·스크린샷 키·⚙ + 사용 설명서) — 첫 조회가 성공하거나 "알겠어요"를 누르면 끝. 이미 조회 기록이 있는 PC 는 안 띄움
 const START_DONE_KEY = "tarkov.startCardDone";
+// 11-08 첫 사용자 둘러보기 — 머리글 버튼을 하나씩 짚는 단계 패널. 처음 PC 에서 자동, 설정에서 다시 보기.
+const TOUR_DONE_KEY = "tarkov.tourDone";
+// 각 단계가 짚는 머리글 요소(data-tour). null = 짚는 곳 없음(환영·끝)
+const TOUR_TARGETS: (string | null)[] = [null, "f2", "drag", "hist", "map", "wide", "gear", "hide", null];
 const FEEDBACK_DIAG_KEY = "tarkov.feedbackDiag";
 // 피드백 #58(11-07) '마우스를 올리면 비켜 주기' — 게임이 앞에 있을 때 커서가 카드·미니맵 위면 투명 + 클릭은 게임으로(기본 꺼짐).
 // 예전(1.3.0 전)엔 #55 버그로 카드에 마우스를 올리면 게임이 앞으로 와 오버레이를 덮었는데, 그걸 '장비창 위 미니맵 치우기'로 쓰던 사용자가 있었다.
@@ -1578,6 +1582,38 @@ function App() {
   };
   const markStartDoneRef = useRef(markStartDone);
   markStartDoneRef.current = markStartDone;
+  // 둘러보기: null = 꺼짐, 0..8 = 단계. 처음 PC(시작 카드 조건)에서 한 번 자동으로
+  const [tourStep, setTourStep] = useState<number | null>(() => {
+    try {
+      return startCard && localStorage.getItem(TOUR_DONE_KEY) !== "1" ? 0 : null;
+    } catch {
+      return null;
+    }
+  });
+  const tourStepRef = useRef(tourStep);
+  tourStepRef.current = tourStep;
+  const scheduleHideRef = useRef<(() => void) | null>(null); // 아래 scheduleHide 를 둘러보기 끝에서 부르려고
+  const endTour = (why: string) => {
+    if (tourStepRef.current === null) return;
+    try {
+      localStorage.setItem(TOUR_DONE_KEY, "1");
+    } catch {}
+    reportEvent("help", `tour:${why}`);
+    tourStepRef.current = null;
+    setTourStep(null);
+    scheduleHideRef.current?.();
+  };
+  const endTourRef = useRef(endTour);
+  endTourRef.current = endTour;
+  useEffect(() => {
+    document.querySelectorAll(".tour-hl").forEach((el) => el.classList.remove("tour-hl"));
+    const target = tourStep !== null && !showSettings ? TOUR_TARGETS[tourStep] : null;
+    if (target) document.querySelector(`[data-tour="${target}"]`)?.classList.add("tour-hl");
+  }, [tourStep, showSettings]);
+  useEffect(() => {
+    if (tourStep === 0 && startCard) reportEvent("help", "tour:shown");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     if (startCard) reportEvent("help", "start:shown");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2520,6 +2556,7 @@ function App() {
     if (pipActiveRef.current) return; // 미니맵(작은 지도)은 계속 떠 있어야 한다
     // Don't auto-hide while settings is open — the user is mid-interaction.
     if (settingsOpenRef.current) return;
+    if (tourStepRef.current !== null) return; // 11-08 둘러보기를 읽는 중(처음 사용자) — 카드가 사라지면 안 된다
     // Cursor parked on the card keeps it alive. Without this, any
     // scheduleHide fired while the user is ALREADY hovering (lookup
     // finally, tray-show, hotkey-recording end) starts a countdown that
@@ -2534,6 +2571,7 @@ function App() {
     if (lookupInFlightRef.current) return;
     armHide(Math.max(1, hideDelayRef.current) * 1000);
   };
+  scheduleHideRef.current = scheduleHide;
   // 숨김 타이머. 숨기기 **직전에 커서를 직접 다시 본다** — 커서가 카드(·나란히 패널) 위면 숨기지 않고 같은 간격으로
   // 다시 잰다. 2026-11-04 제보 'Shift+F2 로 숨겼다 띄운 뒤 마우스를 올리면 카드가 사라짐': 실제 앱에서 토글로 띄울 때
   // 걸린 타이머를 커서 폴링이 끝내 취소하지 못하고 커서 아래에서 카드가 사라지는 것을 재현했다(폴링의 진입 판정이
@@ -2545,7 +2583,7 @@ function App() {
         on = await cursorOverCard();
       } catch {}
       if (hideTimerRef.current !== handle) return; // 그 사이 취소되거나 새 타이머로 바뀜
-      if ((!autoHideRef.current && !miniReturnRef.current) || wideModeRef.current || settingsOpenRef.current || lookupInFlightRef.current) {
+      if ((!autoHideRef.current && !miniReturnRef.current) || wideModeRef.current || settingsOpenRef.current || lookupInFlightRef.current || tourStepRef.current !== null) {
         hideTimerRef.current = null; // 그 사이 숨기면 안 되는 상태가 됨 — 각자 끝날 때 다시 건다
         return;
       }
@@ -4187,7 +4225,10 @@ function App() {
           if (view.kind === "result") {
             setResult(data);
             setStatus("success");
-            if (data.item_name != null) markStartDoneRef.current("done");
+            if (data.item_name != null) {
+              markStartDoneRef.current("done");
+              endTourRef.current("lookup");
+            }
           } else {
             setStatus(view.status);
             if (view.kind === "map") void openRadarRef.current(true, false);
@@ -4630,9 +4671,9 @@ function App() {
       >
         {/* 머리글 끌기 = onHeaderDown(첫 클릭만). 고정이면 안 끌림. data-tauri-drag-region 은 더블클릭 최대화 때문에 안 쓴다(11-07) */}
         <div className={`header${startCard ? " header-labels" : ""}`} onMouseDown={onHeaderDown}>
-          <span className="title">{t.title}</span>
+          <span className="title" data-tour="drag">{t.title}</span>
           <div className="header-actions">
-            <span className="hotkey">
+            <span className="hotkey" data-tour="f2">
               {/* 키보드 바인딩은 키보드, 마우스 바인딩(휠·X1·X2)은 마우스 아이콘 — 전엔 i18n 문구에 🖱 가 들어 있었다 */}
               <span className="hotkey-icon" aria-hidden="true">
                 <Icon name={isMouseHotkey(hotkey) ? "mouse" : "keyboard"} />
@@ -4654,6 +4695,7 @@ function App() {
                 });
               }}
               title={t.history}
+              data-tour="hist"
             >
               <Icon name="clock" />
               {startCard && <span className="hdr-lbl">{t.hdrHistory}</span>}
@@ -4668,6 +4710,7 @@ function App() {
                   else void openRadar(false);
                 }}
                 title={t.radarOpen}
+                data-tour="map"
               >
                 <Icon name="map" />
                 {startCard && <span className="hdr-lbl">{t.hdrMap}</span>}
@@ -4677,6 +4720,7 @@ function App() {
               className={`settings-btn${wideMode ? " active" : ""}`}
               onClick={toggleWide}
               title={t.wideModeBtn}
+              data-tour="wide"
             >
               <Icon name="wideMap" />
               {startCard && <span className="hdr-lbl">{t.hdrWide}</span>}
@@ -4694,6 +4738,7 @@ function App() {
                 return !s;
               })}
               title={t.settings}
+              data-tour="gear"
             >
               <Icon name="gear" />
               {startCard && <span className="hdr-lbl">{t.hdrSettings}</span>}
@@ -4726,6 +4771,7 @@ function App() {
                   hideToTray();
                 }}
                 title={t.hideToTrayTitle}
+                data-tour="hide"
               >
                 {/* 창 내리기(트레이) — 빨간 ✕ 는 '종료'로 읽혀서 최소화 기호 + 다른 버튼과 같은 금색으로(11-02 사용자 요청) */}
                 <Icon name="minimize" />
@@ -5107,6 +5153,17 @@ function App() {
               }}
             >
               <Icon name="book" /> {t.manualBtn}
+            </button>
+            <button
+              className="reset-btn manual-btn"
+              onClick={() => {
+                reportEvent("help", "tour:replay");
+                setShowSettings(false);
+                setRadarActive(false);
+                setTourStep(0);
+              }}
+            >
+              {t.tourReplay}
             </button>
             <div className="support-note">{t.supportNote}</div>
             <div className="settings-row settings-feedback-row">
@@ -6366,8 +6423,53 @@ function App() {
             }}
           />
         )}
-        {!showSettings && !radarActive && status === "idle" && !startCard && <div className="hint">{t.hintIdle}</div>}
-        {!showSettings && !radarActive && status === "idle" && startCard && (
+        {!showSettings && !radarActive && tourStep !== null && (() => {
+          const last = TOUR_TARGETS.length - 1;
+          const key = formatHotkeyLabel(hotkey, t);
+          const title = ((t as Record<string, string>)[`tour${tourStep}Title`] ?? "").split("{key}").join(key);
+          const body = ((t as Record<string, string>)[`tour${tourStep}Body`] ?? "").split("{key}").join(key);
+          return (
+            <div className="tour" role="dialog" aria-live="polite">
+              <div className="tour-top">
+                <span className="tour-count">
+                  {tourStep + 1} / {last + 1}
+                </span>
+                <button className="tour-skip" onClick={() => endTour(`skip:${tourStep}`)}>
+                  {t.tourSkip}
+                </button>
+              </div>
+              {TOUR_TARGETS[tourStep] && <div className="tour-arrow">▲ {t.tourLook}</div>}
+              <div className="tour-title">{title}</div>
+              <div className="tour-body">{body}</div>
+              <div className="tour-actions">
+                {tourStep > 0 && (
+                  <button className="reset-btn" onClick={() => setTourStep(tourStep - 1)}>
+                    {t.tourPrev}
+                  </button>
+                )}
+                {tourStep === last && (
+                  <button
+                    className="reset-btn tour-manual"
+                    onClick={() => {
+                      reportEvent("help", "tour:manual");
+                      openGuide(region.lang, "manual/");
+                    }}
+                  >
+                    <Icon name="book" /> {t.startManual}
+                  </button>
+                )}
+                <button
+                  className="reset-btn tour-next"
+                  onClick={() => (tourStep === last ? endTour("done") : setTourStep(tourStep + 1))}
+                >
+                  {tourStep === 0 ? t.tourStart : tourStep === last ? t.tourFinish : t.tourNext}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+        {!showSettings && !radarActive && tourStep === null && status === "idle" && !startCard && <div className="hint">{t.hintIdle}</div>}
+        {!showSettings && !radarActive && tourStep === null && status === "idle" && startCard && (
           <div className="start-card">
             <div className="start-title">{t.startTitle}</div>
             <div className="start-row"><span className="start-key">{formatHotkeyLabel(hotkey, t)}</span><span>{t.startF2}</span></div>
@@ -6387,14 +6489,14 @@ function App() {
             </div>
           </div>
         )}
-        {!showSettings && !radarActive && status === "loading" && (
+        {!showSettings && !radarActive && tourStep === null && status === "loading" && (
           <div className="hint loading-hint">
             <span className="loading-spinner" aria-hidden="true" />
             <span>{t.hintLoading}</span>
             <div className="hint-sub">{t.hintFirstLoad}</div>
           </div>
         )}
-        {!showSettings && !radarActive && status === "error" && (
+        {!showSettings && !radarActive && tourStep === null && status === "error" && (
           <div className="error">
             <Icon name="warn" /> {error}{" "}
             {(error === t.sidecarMissing || error === t.sidecarDead || error.startsWith(t.connError)) && (
@@ -6411,7 +6513,7 @@ function App() {
             </button>
           </div>
         )}
-        {!showSettings && !radarActive && status === "success" && result && (
+        {!showSettings && !radarActive && tourStep === null && status === "success" && result && (
           <div className="result">
             <div className="item-row">
               {result.icon && (
