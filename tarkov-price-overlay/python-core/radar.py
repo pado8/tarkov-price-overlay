@@ -176,6 +176,30 @@ def raid_side_at(evs: list[tuple[float, str, str]], shot_ts: float) -> Optional[
     return "pmc" if sel[2] == raid[2] else "scav"
 
 
+def side_from_exits(map_slug: Optional[str], names: list[str]) -> Optional[str]:
+    """내 탈출구(탈출구 목록 스크린샷에서 읽은 영어 원문 이름) → 'pmc'|'scav'|None.
+    11-08: PVE 는 시내(Streets) 말고는 로그에 레이드 프로필 줄(NetworkGameCreate)이 없어 raid_side_at 이 늘 None 이었다
+    (사용자 제보: PMC 로 해안선 시작 + 스크린샷 → 칩이 PMC 로 안 바뀜). 탈출구는 위키 표(extract_current)에 진영이 있다.
+    다른 이름 안에 통째로 든 이름은 뺀다(실측: 'Path to Lighthouse' 를 읽다 스캐브 전용 'Lighthouse' 도 잡힘).
+    한쪽이 2개 이상이고 다른 쪽의 3배 이상일 때만 판정(공용은 세지 않음)."""
+    if not map_slug or not names:
+        return None
+    keys = {n: extract_current.norm(n) for n in names}
+    kept = [n for n in names if keys[n] and not any(o != n and keys[n] != keys[o] and keys[n] in keys[o] for o in names)]
+    pmc = scav = 0
+    for n in kept:
+        _keep, fac, _k = extract_current.lookup(map_slug, n)
+        if fac == "pmc":
+            pmc += 1
+        elif fac == "scav":
+            scav += 1
+    if pmc >= 2 and pmc >= 3 * scav:
+        return "pmc"
+    if scav >= 2 and scav >= 3 * pmc:
+        return "scav"
+    return None
+
+
 def map_event_at(events: list[tuple[float, str, str]], shot_ts: float) -> Optional[tuple[float, str, str]]:
     """스크린샷 시각에 열려 있던 맵의 로딩 사건 (시각, preset, slug) — 시각 = 이번 레이드를 가르는 열쇠(내 탈출구 기억용)."""
     best = None
@@ -1419,6 +1443,11 @@ class RadarService:
                 mine = self.my_exits(slug, raid_ts)
                 if mine:
                     res["my_exits"] = mine  # 이번 레이드 내 탈출구(영어 원문 이름) — 앱이 지도에서 이것만 보인다
+                    if "raid_side" not in res:
+                        side = side_from_exits(slug, mine)  # 로그에 진영 줄이 없으면(PVE 대부분) 내 탈출구로
+                        if side:
+                            res["raid_side"] = side
+                            res["raid_side_source"] = "exits"
             if shot and slug:
                 active: set[str] = set()
                 try:
