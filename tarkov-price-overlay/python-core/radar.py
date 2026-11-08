@@ -1456,7 +1456,8 @@ class RadarService:
         return {"map": mp, "locks": out}
 
     def state(self, lang: str = "ko", game_mode: str = "regular", map_override: Optional[str] = None,
-              full: bool = False, story: Optional[str] = None) -> dict:
+              full: bool = False, story: Optional[str] = None, game_lang: Optional[str] = None) -> dict:
+        """lang = 앱 UI 언어(이름·문구), game_lang = 게임 클라이언트 언어(탈출구 목록 사진 OCR 에 — 11-09, 없으면 lang)."""
         with self._lock:
             folder = self._folder_override or screenshots_dir()
             res: dict = {"folder": str(folder) if folder else None,
@@ -1518,7 +1519,7 @@ class RadarService:
             if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
                 slug = EVENT_MAPS[slug]
             if shot and slug and folder:
-                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, lang)  # 탈출구 목록 사진이면 백그라운드 OCR
+                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, game_lang or lang)  # 탈출구 목록 사진이면 백그라운드 OCR
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC  # 레이드 시작 전(pre_raid)은 앱이 full 로 받는다
             if not (full or fresh or map_override):

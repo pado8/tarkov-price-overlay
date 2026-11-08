@@ -1212,6 +1212,8 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         }
     };
     println!("[sidecar] tarkov-server spawned (attempt {attempt})");
+    // 11-09 검토: 첫 시도만 '파일 없음'(백신이 검사 중 잠깐 치움)이고 재시도가 성공하면 플래그를 풀어 웹뷰가 잘못 안내하지 않게
+    SIDECAR_MISSING_SENT.store(false, Ordering::SeqCst);
     if let Some(state) = app.try_state::<SidecarChild>() {
         *state.0.lock().unwrap() = Some(child);
     }

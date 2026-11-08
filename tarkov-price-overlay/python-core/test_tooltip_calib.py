@@ -22,7 +22,7 @@ def eq(name, got, want):
 
 tmp = Path(tempfile.mkdtemp()) / "tooltip_wait.json"
 main._tw_path = lambda: tmp
-main._tw.update(loaded=False, off=False, hit=0, miss=0, streak=0, n_off=0, probe_hits=0)
+main._tw.update(loaded=False, off=False, hist="", n_off=0, probe_hits=0)
 
 # 판정기: 항상 '없음'(1080p 같은 PC)
 seen = {"v": False, "calls": 0}
@@ -48,9 +48,10 @@ eq("파일에 저장됨", tmp.exists() and '"off": true' in tmp.read_text(encodi
 
 t0 = time.perf_counter()
 st = main._wait_for_tooltip(attempts, None)
-eq("꺼지면 안 기다리고 'off'", (st, time.perf_counter() - t0 < 0.05), ("off", True))
+dt = time.perf_counter() - t0
+eq("꺼지면 판정 없이 고정 0.3초만 기다리고 'off'", (st, 0.25 <= dt <= 0.6), ("off", True))
 main._tw_learn("off", True, "primary")
-eq("꺼진 동안 학습 안 함(hit/miss 그대로)", (main._tw["hit"], main._tw["miss"]), (0, 4))
+eq("꺼진 동안 학습 안 함(기록 그대로)", main._tw["hist"], "mmmm")
 
 # 재확인: 30번마다 판정만 — 판정기가 다시 보이기 시작하면 3번 맞고 켜짐(위에서 꺼진 채 한 번 불렀으니 카운터를 0 에서 다시)
 main._tw.update(n_off=0, probe_hits=0)
@@ -68,16 +69,25 @@ eq("재확인 3번 맞음 → 다시 켬", main._tw_is_off(), False)
 eq("켜진 뒤 첫 판정은 '있음'", main._wait_for_tooltip(attempts, None), "present")
 
 # 비율 규칙: 8번 중 6번 놓침(맞춘 적 있어도) → 끔
-main._tw.update(off=False, hit=2, miss=0, streak=0)
+main._tw.update(off=False, hist="hh")
 for _ in range(6):
     main._tw_learn("waited_none", True, "primary")
 eq("8번 중 6번(75%) 놓침 → 끔", main._tw_is_off(), True)
 
+# 창 규칙: 오래 맞다가(모니터 교체 등) 마지막 4번 연속 놓침 → 누적과 상관없이 끔
+main._tw.update(off=False, hist="hhhhhhhh")
+for _ in range(3):
+    main._tw_learn("waited_none", True, "primary")
+eq("맞음 8 뒤 놓침 3 → 아직 켜짐", main._tw_is_off(), False)
+main._tw_learn("waited_none", True, "primary")
+eq("마지막 4번 연속 놓침 → 끔(옛 맞음 누적과 무관)", main._tw_is_off(), True)
+eq("기록은 최근 12개만", len(main._tw["hist"]) <= main.TW_WINDOW, True)
+
 # 다음 실행: 파일에서 이어받음 / 보정 버전이 바뀌면 처음부터
-main._tw.update(loaded=False, off=False, hit=0, miss=0)
+main._tw.update(loaded=False, off=False, hist="")
 eq("다음 실행도 파일의 '끔' 이어받음", main._tw_is_off(), True)
 tmp.write_text(tmp.read_text(encoding="utf-8").replace('"calib": %d' % main.TW_CALIB_VERSION, '"calib": 0'), encoding="utf-8")
-main._tw.update(loaded=False, off=False, hit=0, miss=0)
+main._tw.update(loaded=False, off=False, hist="")
 eq("보정 버전이 다르면 무시(켜진 채 시작)", main._tw_is_off(), False)
 
 # 끈 플래그(TPO_TOOLTIP_WAIT=0)는 보정과 무관하게 skip

@@ -1955,7 +1955,8 @@ function App() {
   useEffect(() => {
     let dead = false;
     (async () => {
-      for (let i = 0; i < 30 && !dead; i++) {
+      // 11-09 검토: 첫 실행은 OCR 모델 로딩+백신 검사로 시세 엔진이 1분 넘게 걸릴 수 있어 60초 상한이면 알림이 유실됐다 → 5분
+      for (let i = 0; i < 150 && !dead; i++) {
         try {
           const r = await fetch(`${PYTHON_API}/catalog/active`, {
             method: "POST",
@@ -2654,7 +2655,7 @@ function App() {
 
   // ── 지도 ───────────────────────────────────────────────────────────
   const radarUrl = (full: boolean) => {
-    const q = new URLSearchParams({ lang: dataLang(region.lang), game_mode: region.gameMode });
+    const q = new URLSearchParams({ lang: dataLang(region.lang), game_mode: region.gameMode, glang: getGameLang(region) }); // glang = 탈출구 목록 OCR 언어(11-09)
     if (full) q.set("full", "true");
     if (radarMapRef.current) q.set("map", radarMapRef.current);
     if (radarStoryRef.current) q.set("story", radarStoryRef.current);
@@ -2753,7 +2754,7 @@ function App() {
     const opened = tourOpenedRef.current;
     if (st?.open !== "wide" && opened.wide) {
       opened.wide = false;
-      if (wideModeRef.current) toggleWide();
+      if (wideModeRef.current) setWideMode(false); // 11-09 검토: 둘러보기가 연 것은 저장(WIDE_KEY)하지 않는다 — 중간에 끄면 다음 실행이 나란히로 시작하던 것
     }
     if (st?.open !== "map" && opened.map) {
       opened.map = false;
@@ -2762,7 +2763,7 @@ function App() {
     if (!st || showSettings) return clear;
     if (st.open === "wide" && !wideModeRef.current) {
       opened.wide = true;
-      toggleWide();
+      setWideMode(true); // 저장 없이(위 참고)
     }
     if (st.open === "map" && !radarActiveRef.current) {
       opened.map = true;
@@ -4319,6 +4320,7 @@ function App() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
           connFailRef.current = 0;
+          sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
           if (seq !== lookupSeqRef.current) {
             log("React: stale lookup result discarded (newer press in flight)");
             return;
@@ -4532,6 +4534,7 @@ function App() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       connFailRef.current = 0;
+      sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
       const data: LookupResult = await res.json();
       if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won
       setResult(data);

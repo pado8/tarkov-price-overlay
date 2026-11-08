@@ -818,17 +818,21 @@ TOOLTIP_WAIT_MAX_SEC = 0.6
 # 1920x1080@100(가장 많은 그룹)은 신규·기존 모두 ~920ms — 판정기(tooltip_detect)가 그 화면에선 툴팁을 못 보고 조회마다 0.6초를
 # 다 기다린 것. 이 PC 1440p 캡처(툴팁이 분명한 544장)를 0.75배로 줄이면 2장만 잡힌다(테두리 87·순검정 가정이 작은 UI 에서 깨짐).
 # 1080p 실화면이 없어 수치를 고치는 대신 자가 보정: '끝내 없음(waited_none)'인데 인벤토리 상자(primary/mirror)에서 아이템을 읽었다
-# = 판정이 놓침. 놓침 4번 연속(그동안 '있음' 0번)이거나 8번 이상 중 3/4 이상이면 이 PC 에선 기다리지 않는다(상태 'off', 예전과 같은
-# 즉시 읽기). 꺼진 뒤에도 30번마다 한 번 판정만 돌려(기다리진 않음) 3번 맞으면 다시 켠다. 상태 폴더 tooltip_wait.json 에 남겨
-# 다음 실행도 바로 적용(TW_CALIB_VERSION 이 바뀌면 처음부터).
-TW_CALIB_VERSION = 1
+# = 판정이 놓침. 최근 12번(창) 중 마지막 4번이 전부 놓침이거나 8번 이상 중 3/4 이상이 놓침이면 이 PC 에선 판정을 쓰지 않는다
+# (상태 'off': 판정 대신 TOOLTIP_OFF_FIXED_SEC 만 고정으로 기다림 — 1.2.7 이 대기를 넣은 이유(툴팁 전에 눌러 칸 글자를 읽는 오독)를
+# 절반쯤 지키면서 0.6초 상한은 피한다. 이 PC 실측: 기다려서 뜬 툴팁 중앙 317ms). 창을 쓰는 이유: 모니터를 바꾼 사용자가 예전 '맞음'
+# 누적 때문에 오래 못 끄지 않게. 꺼진 뒤에도 30번마다 한 번 판정만 돌려(기다리진 않음) 3번 맞으면 다시 켠다. 상태 폴더 tooltip_wait.json
+# 에 남겨 다음 실행도 바로 적용(TW_CALIB_VERSION 이 바뀌면 처음부터).
+TW_CALIB_VERSION = 2
+TW_WINDOW = 12
 TW_OFF_STREAK = 4
 TW_OFF_MIN_N = 8
 TW_OFF_RATIO = 0.75
 TW_PROBE_EVERY = 30
 TW_ON_HITS = 3
+TOOLTIP_OFF_FIXED_SEC = 0.3
 _tw_lock = threading.Lock()
-_tw = {"loaded": False, "off": False, "hit": 0, "miss": 0, "streak": 0, "n_off": 0, "probe_hits": 0}
+_tw = {"loaded": False, "off": False, "hist": "", "n_off": 0, "probe_hits": 0}  # hist = 최근 결과('h' 맞음·'m' 놓침), 오래된 것부터
 
 
 def _tw_path():
@@ -845,8 +849,7 @@ def _tw_load() -> None:
         d = json.loads(_tw_path().read_text(encoding="utf-8"))
         if d.get("calib") == TW_CALIB_VERSION:
             _tw["off"] = bool(d.get("off"))
-            _tw["hit"] = int(d.get("hit") or 0)
-            _tw["miss"] = int(d.get("miss") or 0)
+            _tw["hist"] = "".join(c for c in str(d.get("hist") or "") if c in "hm")[-TW_WINDOW:]
     except Exception:  # noqa: BLE001 — 없거나 깨졌으면 켜진 상태에서 시작
         pass
     if _tw["off"]:
@@ -857,8 +860,8 @@ def _tw_save() -> None:
     try:
         p = _tw_path()
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps({"calib": TW_CALIB_VERSION, "off": _tw["off"], "hit": _tw["hit"], "miss": _tw["miss"],
-                                 "ts": int(time.time())}), encoding="utf-8")
+        p.write_text(json.dumps({"calib": TW_CALIB_VERSION, "off": _tw["off"], "hist": _tw["hist"], "ts": int(time.time())}),
+                     encoding="utf-8")
     except Exception as e:  # noqa: BLE001
         print(f"[tooltip] calib save failed: {e!r}")
 
@@ -876,21 +879,21 @@ def _tw_learn(tip_state: str, found: bool, attempt: str | None) -> None:
         if _tw["off"]:
             return
         if tip_state in ("present", "waited_ok"):
-            _tw["hit"] += 1
-            _tw["streak"] = 0
+            _tw["hist"] = (_tw["hist"] + "h")[-TW_WINDOW:]
         elif tip_state == "waited_none" and found and attempt in ("primary", "mirror"):
-            _tw["miss"] += 1
-            _tw["streak"] += 1
+            _tw["hist"] = (_tw["hist"] + "m")[-TW_WINDOW:]
         else:
             return
-        n = _tw["hit"] + _tw["miss"]
-        if (_tw["streak"] >= TW_OFF_STREAK and _tw["hit"] == 0) or (n >= TW_OFF_MIN_N and _tw["miss"] / n >= TW_OFF_RATIO):
+        h = _tw["hist"]
+        n = len(h)
+        miss = h.count("m")
+        if h.endswith("m" * TW_OFF_STREAK) or (n >= TW_OFF_MIN_N and miss / n >= TW_OFF_RATIO):
             _tw["off"] = True
             _tw["probe_hits"] = 0
             _tw["n_off"] = 0
-            print(f"[tooltip] detector missed {_tw['miss']}/{n} on this PC - turning the wait OFF")
+            print(f"[tooltip] detector missed {miss}/{n} recent lookups on this PC - using a fixed {TOOLTIP_OFF_FIXED_SEC}s wait instead")
             _tw_save()
-        elif n % 10 == 0:
+        elif n % 6 == 0:
             _tw_save()
 
 
@@ -909,7 +912,7 @@ def _tw_probe(tooltip_now) -> None:
             return
         _tw["probe_hits"] += 1
         if _tw["probe_hits"] >= TW_ON_HITS:
-            _tw.update(off=False, hit=0, miss=0, streak=0, probe_hits=0)
+            _tw.update(off=False, hist="", probe_hits=0)
             print("[tooltip] detector sees tooltips again - wait back ON")
             _tw_save()
 
@@ -933,6 +936,7 @@ def _wait_for_tooltip(attempts: list, client_seq) -> str:
 
     if _tw_is_off():
         _tw_probe(tooltip_now)  # 30번에 한 번만 캡처 1~2장(기다리진 않음)
+        time.sleep(TOOLTIP_OFF_FIXED_SEC)  # 판정 없이 짧게 고정 대기
         return "off"
 
     try:
@@ -1382,15 +1386,13 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # 공유 키(스크린샷 키와 같은 키)로 누른 것인데 툴팁·바닥 이름표가 없다 = 대부분 레이드 중 지도용 스크린샷. 1.3.0 까지는 여기서
     # 게임 화면에 OCR 5번(전부 실패, 코어 10개 넘게)을 돌려 프레임이 끊겼고, 11-08 엔 아예 건너뛰었는데 판정기가 툴팁을 못 보는
     # 화면(1080p, 위 자가 보정 참고)에선 진짜 조회까지 버린다 → 첫 상자(primary)만 한 번 읽고 넓은 상자·새 아이템 구제는 생략
-    # (OCR 1번, 보통 0.2~0.4초). 판정이 꺼진 PC(off)면 툴팁 유무를 모르니 가운데 안내 상자·구제만 빼고 셋(primary·mirror·ground)만.
+    # → 가운데 안내 상자·넓은 상자·새 아이템 구제만 빼고 셋(primary·mirror·ground)만 읽는다(OCR 5~6번 → 최대 3번). 판정이 꺼진 PC(off)도
+    # 같게. 바닥 상자를 남기는 이유: 바닥 이름표 판정(has_label)도 작은 UI 에선 놓칠 수 있어, 빼면 레이드 중 바닥 아이템 조회가 사라진다.
     shared_lite = False
-    if req.shared and tip_state == "waited_none":
-        shared_lite = True
-        attempts = attempts[:1]
-        print("[lookup] shared key + no tooltip/label - primary box only")
-    elif req.shared and tip_state == "off":
+    if req.shared and tip_state in ("waited_none", "off"):
         shared_lite = True
         attempts = [a for a in attempts if a[0] in ("primary", "mirror", "ground")]
+        print(f"[lookup] shared key + {tip_state} - inventory/ground boxes only, no rescue")
     for label, ax, ay, aw, ah in attempts:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
@@ -1490,11 +1492,12 @@ def hideout_stations(lang: str = "en") -> list:
 
 @app.get("/radar")
 def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
-                story: str | None = None) -> dict:
+                story: str | None = None, glang: str | None = None) -> dict:
     """레이더(미니맵 1단계): 가장 최근 좌표 스크린샷 + 게임 로그로 판정한 맵 + 그 맵의 탈출구·트랜짓·
     진행 중 퀘스트 목표까지의 거리·상대 각도·높이 차. 게임 메모리는 읽지 않는다(radar.py 참고).
     앱이 1초마다 부르므로 지도 데이터는 스크린샷이 새로울 때나 사용자가 직접 열 때(full)만 받는다."""
-    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full, story=story or None)
+    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full, story=story or None,
+                             game_lang=glang or None)
 
 
 @app.get("/radar/keylocks")

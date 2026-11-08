@@ -1140,13 +1140,16 @@ def _refresh_one(lang: str, game_mode: str) -> int:
 
 def name_for_id(lang: str, game_mode: str, item_id: str) -> str | None:
     """지금 (언어, 모드) 시세 목록에서 아이템 id 의 정식 이름. 목록이 없거나 없는 id 면 None."""
+    if not item_id:
+        return None
+    # 11-09 검토: 잠금 밖에서 dict 를 돌면 다른 조회의 cold 경로가 같은 dict 에 끼워 넣는 순간 'dictionary changed size' 로 /lookup 이 500
     with _price_cache_lock:
         by_name = _price_cache.get((lang, game_mode))
-    if not by_name or not item_id:
-        return None
-    for e in by_name.values():
-        if e.get("id") == item_id and e.get("name"):
-            return e["name"]
+        if not by_name:
+            return None
+        for e in by_name.values():
+            if e.get("id") == item_id and e.get("name"):
+                return e["name"]
     return None
 
 
