@@ -9,6 +9,7 @@ import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialo
 import { QRCodeSVG } from "qrcode.react";
 import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
+import { setStatSink, stat } from "./statBus";
 import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
 import { diag, diagBlock } from "./diagLog";
@@ -222,6 +223,7 @@ function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, 
   return fails >= 3 ? `${s.connError} ${s.connErrorAvHint}` : s.connError;
 }
 function openGuide(lang: string, path: string): void {
+  stat("gd"); // 11-09 하루 요약: 앱에서 가이드를 연 횟수
   openUrl(guideUrl(lang, path)).catch((e) => {
     console.warn("guide: openUrl failed", e);
   });
@@ -502,7 +504,9 @@ const reportEvent = (eventType: StatsEvent, detail?: string, ts?: number) => {
 // 기능마다 이벤트를 따로 보내지 않고 사용자당 하루 한 행에 횟수를 묶는다(행 수 하루 ~80).
 // KST 날짜가 바뀐 뒤 처음 손댈 때(또는 플러시 창·다음 실행 때) 전날 치를 전날 23:59 시각으로 보낸다.
 const DAILY_KEY = "tarkov.stats.daily";
-type DailyAcc = { d: string; c: Record<string, number>; lat: number[] };
+// st = 11-09 성공 조회 단계별 시간(ms) 배열 — lw 툴팁 대기·lc 캡처·lo OCR·lm 매칭·la 읽은 상자 수(하루 중앙값만 보낸다)
+type DailyAcc = { d: string; c: Record<string, number>; lat: number[]; st?: Record<string, number[]> };
+type LookupTiming = { w?: number; c?: number; o?: number; m?: number; a?: number };
 const kstDay = (ms = Date.now()) => new Date(ms + 9 * 3600 * 1000).toISOString().slice(0, 10);
 let dailyAcc: DailyAcc = { d: kstDay(), c: {}, lat: [] };
 try {
@@ -528,6 +532,11 @@ function dailyRollover(): void {
     const s = [...dailyAcc.lat].sort((a, b) => a - b);
     parts.push(`lat=${s[Math.floor(s.length / 2)]}`, `n=${s.length}`);
   }
+  for (const [k, arr] of Object.entries(dailyAcc.st || {})) {
+    if (!Array.isArray(arr) || !arr.length) continue;
+    const s2 = [...arr].sort((a, b) => a - b);
+    parts.push(`${k}=${s2[Math.floor(s2.length / 2)]}`);
+  }
   if (parts.length && /^\d{4}-\d{2}-\d{2}$/.test(dailyAcc.d)) {
     // 서버 detail 한도 64자 — 예전엔 64자에서 그냥 잘라 마지막 키가 'pr=12'→'pr=1'처럼 틀린 숫자로 갔다.
     // 키 단위로 64자까지 담고 넘치면 같은 날짜의 다음 행으로(콘솔은 행마다 키별로 더하므로 합계가 그대로 맞다, 11-05 파티 키 추가 때)
@@ -543,7 +552,7 @@ function dailyRollover(): void {
     }
     if (cur) reportEvent("daily", cur, ts);
   }
-  dailyAcc = { d: today, c: {}, lat: [] };
+  dailyAcc = { d: today, c: {}, lat: [], st: {} };
   persistDaily();
 }
 /** 기능 사용 1회. key 는 짧게(hist·man·wide·pin·fb·don). */
@@ -557,6 +566,59 @@ function dailyLat(ms: number): void {
   dailyRollover();
   if (dailyAcc.lat.length < 500 && Number.isFinite(ms) && ms >= 0) dailyAcc.lat.push(Math.round(ms));
   persistDaily();
+}
+/** 11-09 성공 조회의 단계별 시간(사이드카 timing) — 응답 시간이 어디서 늘었는지 가르는 근거(1.2.7 툴팁 대기 회귀) */
+function dailyStages(tm?: LookupTiming | null): void {
+  if (!tm) return;
+  dailyRollover();
+  if (!dailyAcc.st) dailyAcc.st = {};
+  const st = dailyAcc.st;
+  const put = (k: string, v: unknown) => {
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0) return;
+    if (!st[k]) st[k] = [];
+    if (st[k].length < 500) st[k].push(Math.round(v));
+  };
+  put("lw", tm.w);
+  put("lc", tm.c);
+  put("lo", tm.o);
+  put("lm", tm.m);
+  put("la", tm.a);
+  persistDaily();
+}
+setStatSink(dailyAdd); // Radar 등 App 밖 컴포넌트가 하루 요약에 더할 수 있게(statBus.ts)
+
+// 11-09 화면 오류 횟수(하루 요약 err, 하루 50번까지) — 오류 내용은 보내지 않는다. 조용한 고장을 늦게 알던 것
+if (typeof window !== "undefined" && IS_MAIN_WINDOW) {
+  const onErr = () => {
+    if ((dailyAcc.c.err ?? 0) < 50) dailyAdd("err");
+  };
+  window.addEventListener("error", onErr);
+  window.addEventListener("unhandledrejection", onErr);
+}
+
+// 11-09 새 설치의 첫 조회 성공까지 걸린 시간(하루 요약 fok = 초, fokf = 그 전 실패 수) — 처음 켠 PC(시작 카드 조건)만 잰다
+const FIRST_RUN_KEY = "tarkov.stats.firstRun";
+const FOK_DONE_KEY = "tarkov.stats.fokDone";
+const PREFOK_FAILS_KEY = "tarkov.stats.preFokFails";
+function markFirstRun(): void {
+  try {
+    if (!localStorage.getItem(FIRST_RUN_KEY)) localStorage.setItem(FIRST_RUN_KEY, String(Date.now()));
+  } catch {}
+}
+function noteFirstOutcome(ok: boolean): void {
+  if (!IS_MAIN_WINDOW) return;
+  try {
+    const fr = Number(localStorage.getItem(FIRST_RUN_KEY) || 0);
+    if (!fr || localStorage.getItem(FOK_DONE_KEY) === "1") return;
+    if (!ok) {
+      localStorage.setItem(PREFOK_FAILS_KEY, String(Number(localStorage.getItem(PREFOK_FAILS_KEY) || 0) + 1));
+      return;
+    }
+    localStorage.setItem(FOK_DONE_KEY, "1");
+    dailyAdd("fok", Math.max(1, Math.min(30 * 86400, Math.round((Date.now() - fr) / 1000))));
+    const f = Number(localStorage.getItem(PREFOK_FAILS_KEY) || 0);
+    if (f > 0) dailyAdd("fokf", f);
+  } catch {}
 }
 
 // Startup: adopt anything a previous session couldn't deliver (app closed
@@ -839,6 +901,7 @@ type BuyOffer = {
 type LookupResult = {
   raw_text: string;
   item_id: string | null;
+  timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
   tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
   item_name: string | null;
   short_name: string | null;
@@ -1509,6 +1572,7 @@ function App() {
   const helpActionsRef = useRef(0); // 상자의 캡처 맞추기·자동 조정을 누른 뒤 아직 회복 못 한 횟수
   const helpShownRef = useRef(false); // 이번 세션에 상자를 띄운 적 있음 → 다음 성공을 'recovered' 로 보고
   const trackF2Outcome = (ok: boolean, failKind?: string) => {
+    noteFirstOutcome(ok);
     const recent = [...recentF2Ref.current, ok].slice(-10);
     recentF2Ref.current = recent;
     if (ok) {
@@ -1596,6 +1660,7 @@ function App() {
         return false;
       }
     } catch {}
+    markFirstRun();
     return true;
   });
   const startCardRef = useRef(startCard);
@@ -2062,6 +2127,7 @@ function App() {
       setStatus("error");
     };
     const unMissing = listen("sidecar-missing", () => void onMissing());
+    const unRestart = listen("sidecar-restart", () => dailyAdd("sr")); // 11-09 조용한 재시작 횟수(하루 요약 sr)
     // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
     const ask = () =>
       invoke<boolean>("sidecar_missing_state")
@@ -2074,6 +2140,7 @@ function App() {
     return () => {
       un.then((fn) => fn());
       unMissing.then((fn) => fn());
+      unRestart.then((fn) => fn());
       window.clearTimeout(again);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3124,6 +3191,22 @@ function App() {
       unFocus.then((f) => f()).catch(() => {});
     };
   }, []);
+  // 11-09 사용 시간(하루 요약 up = 앱이 켜져 있던 분, gm = 그중 게임이 맨 앞이던 분) — 본 창만, 1분마다 1
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    const iv = window.setInterval(() => {
+      dailyAdd("up");
+      if (fgKindRef.current === "game") dailyAdd("gm");
+    }, 60_000);
+    return () => window.clearInterval(iv);
+  }, []);
+  // 11-09 기능 사용: 설정·캡처 영역 설정을 연 횟수(set·cap)
+  useEffect(() => {
+    if (showSettings) dailyAdd("set");
+  }, [showSettings]);
+  useEffect(() => {
+    if (captureModalOpen) dailyAdd("cap");
+  }, [captureModalOpen]);
   // Region-based click-through: while the card is visible, poll cursor
   // position and only capture clicks when the cursor is over the card's
   // screen rect. Outside the card (rest of the 800x600 invisible window)
@@ -3666,6 +3749,7 @@ function App() {
       // 사이드카가 없으면 진행도 없이 연다(hash = sidecar)
     }
     // UI 언어별 가이드(en/ru 앱이 한국어 가이드를 열던 것, 11-04) + src=app 표식
+    stat("gd");
     openUrl(`${guideBase(region.lang)}items/?src=app${hash}`).catch((e) => {
       log(`guide: openUrl failed — ${String(e)}`);
     });
@@ -4395,6 +4479,7 @@ function App() {
               data.attempt === "wide" ? (okId ? `wide:${okId}` : "wide") : okId || undefined
             );
             dailyLat(performance.now() - t0);
+            dailyStages(data.timing);
             if (data.tooltip_wait === "waited_none") dailyAdd("twn"); // 툴팁이 떠 있었는데 판정이 놓쳐 끝까지 기다린 성공 조회
             if (data.tooltip_wait === "off") dailyAdd("two"); // 11-09 이 PC 에선 판정이 계속 빗나가 대기를 끈 상태의 성공 조회(자가 보정)
           }
@@ -6707,7 +6792,7 @@ function App() {
                     title={t.wikiLink}
                     aria-label={t.wikiLink}
                     onClick={() =>
-                      openUrl(result.wiki!).catch((e) =>
+                      (stat("wk"), openUrl(result.wiki!)).catch((e) =>
                         log(`wiki: openUrl failed — ${String(e)}`)
                       )
                     }

@@ -9,6 +9,7 @@ import type { Layers } from "./RadarMap";
 import { Icon } from "./Icon";
 import { type useParty, type Friend, normCode, validCode, defaultPartyName } from "./party";
 import { friendAgo } from "./RadarMap";
+import { stat } from "./statBus";
 
 type PartyApi = ReturnType<typeof useParty>;
 
@@ -167,6 +168,17 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
   const radarRef = useRef<HTMLDivElement>(null);
   const [fitSize, setFitSize] = useState<number | null>(null);
+  // 11-09 통계: 파티 방이 안 쓰이는 게 '몰라서'인지 — 지도를 열 때 파티 버튼이 창 안에 보였나(pbv) / 화면 밖이었나(pbo), 누름(pbc)
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const btn = radarRef.current?.querySelector(".radar-party-btn") as HTMLElement | null;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const inView = r.height > 0 && r.top >= 0 && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth;
+      stat(inView ? "pbv" : "pbo");
+    }, 400); // 첫 그리기·높이 맞춤이 끝난 뒤
+    return () => window.clearTimeout(id);
+  }, []);
   const measureFit = () => {
     const el = radarRef.current;
     if (!fill || !el) return;
@@ -401,7 +413,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
               <button
                 type="button"
                 className="radar-hide radar-guide"
-                onClick={() => void openUrl(guideQuestUrl(lang, x.slug!)).catch(() => {})}
+                onClick={() => {
+                  stat("gq");
+                  void openUrl(guideQuestUrl(lang, x.slug!)).catch(() => {});
+                }}
                 title={t.radarOpenGuide}
                 aria-label={t.radarOpenGuide}
               >
@@ -486,7 +501,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           </label>
         )}
         {party && (
-          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => setShowParty((v) => !v)} aria-expanded={showParty}>
+          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => {
+            if (!showParty) stat("pbc");
+            setShowParty((v) => !v);
+          }} aria-expanded={showParty}>
             👥 {t.partyBtn}
             {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
           </button>

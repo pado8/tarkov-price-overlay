@@ -1156,6 +1156,8 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
         let _ = app.emit("sidecar-dead", why.to_string());
         return;
     }
+    // 11-09 통계: 재시작이 몇 번 일어나는지(하루 요약 sr) — 포기 전의 조용한 재시작은 웹뷰가 몰랐다
+    let _ = app.emit("sidecar-restart", next);
     // Exponential backoff (2,4,8,16,32s ≈ 62s window): a fixed 2s delay
     // burned the whole budget in ~10s, which is SHORTER than a typical
     // on-access AV scan of a fresh unsigned PyInstaller exe — the exact

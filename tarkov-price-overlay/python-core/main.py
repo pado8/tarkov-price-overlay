@@ -322,6 +322,8 @@ class LookupResponse(BaseModel):
     # 11-08 F2 경로의 툴팁 대기 결과(present·waited_ok·waited_none·label·superseded·skip). 앱이 '끝까지 기다렸는데 성공'
     # (툴팁 판정이 놓쳐 0.6초 손해)을 하루 요약 twn 으로 센다 — 해상도별 판정 실패·응답 시간 상승 근거.
     tooltip_wait: str | None = None
+    # 11-09 통계: 응답 시간 단계별(ms) — w 툴팁 대기 · c 캡처 · o OCR · m 매칭 · a 읽은 상자 수. 앱이 하루 요약에 단계별 중앙값으로 싣는다
+    timing: dict[str, int] | None = None
     item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
@@ -957,6 +959,16 @@ def _wait_for_tooltip(attempts: list, client_seq) -> str:
         return "skip"
 
 
+# 조회 한 번(F2) 동안 _capture_and_lookup 이 쓴 시간을 더하는 곳 — 핸들러가 시작할 때 비우고 응답에 싣는다(스레드별)
+_tm = threading.local()
+
+
+def _tm_add(key: str, v: float) -> None:
+    d = getattr(_tm, "d", None)
+    if d is not None:
+        d[key] = d.get(key, 0.0) + v
+
+
 def _capture_and_lookup(
     x: int,
     y: int,
@@ -973,6 +985,8 @@ def _capture_and_lookup(
     t0 = time.perf_counter()
     image = capture_region(x, y, width, height)
     t1 = time.perf_counter()
+    _tm_add("c", t1 - t0)
+    _tm_add("a", 1)
     # Ground labels sit on the game world, not a dark tooltip panel, so the
     # tooltip-background filter would wrongly drop them — skip it for ground.
     # OCR language set follows the game-client language. The Russian client
@@ -995,6 +1009,7 @@ def _capture_and_lookup(
         print(f"[lookup] OCR({label}) dropped price/status fragments: {price_noise!r}")
         fragments = [f for f in fragments if not is_price_or_status_line(f)]
     t2 = time.perf_counter()
+    _tm_add("o", t2 - t1)
     text = " ".join(fragments).strip()
     print(f"[lookup] OCR({label}): {text!r} ({len(fragments)} fragments)")
 
@@ -1122,6 +1137,7 @@ def _capture_and_lookup(
             price = cand_price
 
     t3 = time.perf_counter()
+    _tm_add("m", t3 - t2)
     print(
         f"[timing/{label}] capture={t1 - t0:.3f}s ocr={t2 - t1:.3f}s "
         f"price_lookup={t3 - t2:.3f}s total={t3 - t0:.3f}s"
@@ -1372,6 +1388,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # Every string read across ALL attempts, for the single deferred cold-
     # rescue at the end (in-flow probes are cache-only — see _cold_rescue).
     rescue_pool: list[str] = []
+    _tm.d = {}
     tip_t0 = time.perf_counter()
     tip_state = _wait_for_tooltip(attempts, req.client_seq)
     tip_ms = round((time.perf_counter() - tip_t0) * 1000)
@@ -1380,6 +1397,8 @@ def lookup(req: CaptureRequest) -> LookupResponse:
 
     def _tw(resp: LookupResponse) -> LookupResponse:
         resp.tooltip_wait = tip_state
+        d = getattr(_tm, "d", None) or {}
+        resp.timing = {"w": tip_ms, **{k: round(d.get(k, 0.0) * 1000) for k in ("c", "o", "m")}, "a": int(d.get("a", 0))}
         _tw_learn(tip_state, resp.item_name is not None, resp.attempt)
         return resp
 
