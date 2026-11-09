@@ -15,6 +15,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { prefetchMap } from "./RadarMap";
+import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
@@ -1826,6 +1827,23 @@ function App() {
   const [historyVisible, setHistoryVisible] = useState(false);
   // ── 지도(미니맵) — 게임 스크린샷을 찍으면 그 위치 기준으로 띄운다(Radar.tsx, radar.py)
   const [radarActive, setRadarActive] = useState(false);
+  // 지도 자료 보내기(선택·기본 꺼짐) — 켰을 때만 하루 한 번쯤 스크린샷 좌표를 보낸다(MapShare.tsx·map_share.py)
+  const [mapShareOn, setMapShareOn] = useState<boolean>(loadMapShareOn);
+  useEffect(() => {
+    try {
+      localStorage.setItem(MAP_SHARE_KEY, mapShareOn ? "1" : "0");
+    } catch {}
+  }, [mapShareOn]);
+  useMapShareAuto(mapShareOn);
+  // 앱을 켜면 카드 맨 위에서 한 번 묻기 — 답하면 다시 안 물음(설정 체크로 변경). 둘러보기 중엔 묻지 않는다
+  const [mapShareAsked, setMapShareAsked] = useState<boolean>(loadMapShareAsked);
+  const answerMapShare = (yes: boolean) => {
+    setMapShareOn(yes);
+    setMapShareAsked(true);
+    try {
+      localStorage.setItem(MAP_SHARE_ASKED_KEY, "1");
+    } catch {}
+  };
   const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
   radarActiveRef.current = radarActive;
   const [radarData, setRadarData] = useState<RadarState | null>(null);
@@ -5279,6 +5297,8 @@ function App() {
           </div>
         )}
 
+        {/* 지도 자료 보내기 — 답할 때까지 카드 맨 위(공지·관리자 안내보다 위). 둘러보기 중엔 안 띄움 */}
+        {!mapShareAsked && tourStep == null && <MapShareAsk t={t} onAnswer={answerMapShare} />}
         {banner === "admin" && (
           <div className="admin-banner">
             <span className="admin-text">
@@ -5880,6 +5900,7 @@ function App() {
               </select>
             </div>
             <div className="settings-hint">{t.radarPruneHint}</div>
+            <MapShareSettings t={t} on={mapShareOn} onToggle={setMapShareOn} />
             <div className="settings-section-header">
               {t.displaySection}
             </div>
@@ -6455,6 +6476,7 @@ function App() {
             <div className="copyright">
               <div className="copyright-line">{t.copyright}</div>
               <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
+              <div className="copyright-line copyright-sub">{t.copyrightLine3}</div>
             </div>
           </div>
         )}

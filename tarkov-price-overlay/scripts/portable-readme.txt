@@ -28,6 +28,10 @@ Tarkov Price Overlay (Portable v{VERSION})
 앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 조회한 아이템 종류(공개 아이템 ID), 버전, 국가, 해상도·주요 설정, 조회 실패 유형)만 수집합니다.
 검색어·화면 내용·게임 내 위치·개인정보·IP는 절대 수집하지 않습니다.
 설정에서 언제든 끌 수 있습니다. (오픈소스라 수집 코드를 직접 확인 가능)
+지도 자료 보내기(선택·기본 꺼짐): 앱을 켜면 한 번 묻고, 켜면 스크린샷 파일
+이름의 맵·위치·방향 숫자만 하루 한 번쯤 보냅니다(지도 개선용). 사진·날짜·시각·설치 ID 는
+보내지 않고 무작위 익명 ID 로만 구분합니다. 설정 체크로 언제든 끌 수 있습니다.
+데이터 출처: tarkov.dev(지도 그림 CC BY-NC-SA 4.0) · 일부 데이터: Escape from Tarkov Wiki (CC BY-NC-SA)
 
 [전체화면(Fullscreen) 모드에서 F2가 안 먹는 경우]
 타르코프 그래픽 설정에서 "전체화면" → "테두리 없는 전체화면(Borderless Fullscreen)"
@@ -70,6 +74,11 @@ F2 lookup counts, version, country, elevation (admin/non-admin), lookup-failure
 category). Searched item names, screen captures,
 personal info, and IP are never collected. Turn it off anytime in Settings.
 (Open source — you can inspect the collection code yourself.)
+Send map data (optional, off by default): asked once when you launch the
+app; when on, only the map/position/facing numbers from screenshot file names
+are sent about once a day to improve the map. No images, dates, times or
+install ID — only a random anonymous ID. Untick it in Settings anytime.
+Data: tarkov.dev (map images CC BY-NC-SA 4.0) · some data: Escape from Tarkov Wiki (CC BY-NC-SA)
 
 [F2 not working in fullscreen mode?]
 Switch Tarkov's graphics setting from "Fullscreen" to

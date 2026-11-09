@@ -1789,6 +1789,32 @@ def radar_prune_set(req: RadarPruneRequest) -> dict:
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# ── 지도 자료 보내기(선택·기본 꺼짐) — 사용자가 켠 경우에만 앱이 부른다. 내용·형식은 map_share.py
+@app.get("/mapshare/preview")
+def mapshare_preview() -> dict:
+    import map_share
+
+    return map_share.preview()
+
+
+class MapShareSend(BaseModel):
+    force: bool = False  # True = 설정의 '지금 보내기'(간격 무시)
+
+
+@app.post("/mapshare/send", dependencies=[Depends(_reject_foreign_origin)])
+def mapshare_send(req: MapShareSend) -> dict:
+    import map_share
+
+    return map_share.send(force=req.force)
+
+
+@app.post("/mapshare/forget", dependencies=[Depends(_reject_foreign_origin)])
+def mapshare_forget() -> dict:
+    import map_share
+
+    return map_share.forget()
+
+
 @app.get("/diag/env")
 def diag_env() -> dict:
     """진단 정보(11-06, 피드백 '진단 정보 함께 보내기'): 운영체제 + 타르코프 화면 설정(Graphics.ini DisplaySettings).
