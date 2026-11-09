@@ -12,6 +12,14 @@
 가장자리에 닿은 덩어리는 가로세로 비율을 따지지 않는다. 거래 화면의 'SPACE 거래하기' 패널(바탕 24)은 툴팁이 아니다.
 
 빗나가도 안전한 방향: 없는 툴팁을 '있다'고 보면 지금처럼 바로 읽고, 있는 툴팁을 '없다'고 보면 최대 대기 시간만큼 늦어질 뿐이다.
+
+11-09 문턱 넓힘(통계: 1.2.7 뒤 같은 설치 64곳의 중간 응답 350→829ms, 1920x1080 은 920ms — 그 화면에선 판정이 늘 '없음'이라 조회마다
+상한 0.6초를 다 기다림. 2560x1440·2880x1620 만 정상). 원래 문턱은 이 PC(1440p) 한 곳의 실측에 딱 붙어 있었다: 글자 픽셀(>150) 비율의
+중앙이 1.6% 인데 하한이 1%, 테두리는 76~98. 다른 화면 높이는 UI 가 줄거나 커져 글자 획·1px 테두리가 섞인 색으로 그려진다.
+이 PC 캡처(툴팁 544장·인벤토리 조각 960장)를 0.75~1.5배로 바꿔 비교(dev/…audit tip_eval): 원래 규칙은 원본 94.7% → 그 밖 0.4~9.6%,
+새 규칙(글자 >110 이 1.5% 이상, 테두리 중앙 55~110 + 그 ±18 안에 70%)은 전 배율 93.6~94.7%, 인벤토리 오탐 0.6% → 1.0~1.4%.
+바닥 이름표(테두리 없음) 쪽은 넓혀도 검출이 안 늘고 오탐만 늘어 그대로 둔다. 실화면(1080p)으로는 미확인 — 빗나가는 PC 는
+main.py 의 자가 보정이 받는다.
 """
 from __future__ import annotations
 
@@ -25,8 +33,12 @@ except Exception:  # noqa: BLE001 — cv2 가 없으면 판정 불가 → 호출
 DARK_MAX = 32  # 덩어리로 묶을 어두운 픽셀 상한
 PURE_MED_MAX = 6  # 툴팁 바탕 = 순검정(어두운 픽셀 중앙값, 실측 0)
 LABEL_MED_MAX = 10  # 바닥 이름표 바탕(실측 7)
-BRIGHT_MIN = 150  # 글자 픽셀 하한
-BORDER_LO, BORDER_HI = 76, 98  # 툴팁 테두리(87) 허용 범위
+BRIGHT_MIN = 150  # 글자 픽셀 하한(바닥 이름표)
+BRIGHT_FRAC_MIN = 0.01
+TIP_BRIGHT_MIN = 110  # 툴팁 글자 픽셀 하한 — 작은 UI 의 가는 획은 150 을 못 넘는다(11-09)
+TIP_BRIGHT_FRAC_MIN = 0.015
+BORDER_LO, BORDER_HI = 55, 110  # 툴팁 테두리(1440p 에서 87) 허용 범위 — 다른 화면 높이에선 배경과 섞여 50~70대·100 안팎(11-09, 전 76~98)
+BORDER_TOL = 18  # 테두리 선은 '고른 회색': 선의 70% 이상이 중앙값 ±이 안
 
 
 def _gray(image: np.ndarray) -> np.ndarray:
@@ -51,7 +63,10 @@ def _border_sides(g: np.ndarray, x: int, y: int, w: int, h: int) -> int:
         sides.append(g[y:y + h, x + w])
     n = 0
     for s in sides:
-        if s.size and BORDER_LO <= float(np.median(s)) <= BORDER_HI and float(((s >= 70) & (s <= 105)).mean()) >= 0.7:
+        if not s.size:
+            continue
+        med = float(np.median(s))
+        if BORDER_LO <= med <= BORDER_HI and float((np.abs(s.astype(np.int16) - med) <= BORDER_TOL).mean()) >= 0.7:
             n += 1
     return n
 
@@ -83,8 +98,8 @@ def find_panel(image: np.ndarray | None, need_border: bool = True) -> dict | Non
         darkpx = inner[inner < DARK_MAX]
         if darkpx.size == 0 or float(np.median(darkpx)) > (PURE_MED_MAX if need_border else LABEL_MED_MAX):
             continue  # 순검정이 아니다(장비 칸·빈 칸·거래 패널)
-        bright = float((inner > BRIGHT_MIN).mean())
-        if bright < 0.01 or bright > 0.45:
+        bright = float((inner > (TIP_BRIGHT_MIN if need_border else BRIGHT_MIN)).mean())
+        if bright < (TIP_BRIGHT_FRAC_MIN if need_border else BRIGHT_FRAC_MIN) or bright > 0.45:
             continue
         sides = _border_sides(g, x, y, w, h)
         if need_border and sides < 1:

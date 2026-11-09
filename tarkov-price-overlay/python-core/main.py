@@ -823,7 +823,7 @@ TOOLTIP_WAIT_MAX_SEC = 0.6
 # 절반쯤 지키면서 0.6초 상한은 피한다. 이 PC 실측: 기다려서 뜬 툴팁 중앙 317ms). 창을 쓰는 이유: 모니터를 바꾼 사용자가 예전 '맞음'
 # 누적 때문에 오래 못 끄지 않게. 꺼진 뒤에도 30번마다 한 번 판정만 돌려(기다리진 않음) 3번 맞으면 다시 켠다. 상태 폴더 tooltip_wait.json
 # 에 남겨 다음 실행도 바로 적용(TW_CALIB_VERSION 이 바뀌면 처음부터).
-TW_CALIB_VERSION = 2
+TW_CALIB_VERSION = 3  # 3 = 11-09 판정기 문턱 넓힘(tooltip_detect) — 예전 판정으로 배운 '끔'은 버리고 다시 배운다
 TW_WINDOW = 12
 TW_OFF_STREAK = 4
 TW_OFF_MIN_N = 8
