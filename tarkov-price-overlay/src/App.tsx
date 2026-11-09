@@ -2544,6 +2544,12 @@ function App() {
   const applyRef = useRef<(() => void) | null>(null);
   // 11-07 창 높이 맞춤 함수(apply) 자체 — 설정 패널 쪽도 같은 규칙(3px 여유·실제 픽셀 올림)을 쓰게. 따로 setSize 하면 두 경로가 732/733/916px 로 싸웠다
   const applySizeRef = useRef<(() => void) | null>(null);
+  // 11-09 창을 옮기는 중·배율이 바뀌는 중(마지막 이벤트 뒤 0.2초까지)엔 창 크기를 맞추지 않는다 — 아래 move/배율 감시가 켜고 끈다
+  const windowSettlingRef = useRef(false);
+  // 11-09 배율이 다른 두 모니터에 걸친 창: 폭 800(논리)을 맞추면 덮는 넓이가 뒤집혀 배율이 또 바뀌는 무한 왕복 → 감지하면 멈춤(옮기면 풀림)
+  const dprFlipsRef = useRef<number[]>([]);
+  const lastDprRef = useRef<number>(window.devicePixelRatio || 1);
+  const dprHoldRef = useRef<{ x: number; y: number } | null>(null);
   // Mirrors showSettings into a ref so scheduleHide can check the latest
   // value without re-creating the callback on every render. While settings
   // is open the user is actively interacting with controls (sliders,
@@ -2897,6 +2903,8 @@ function App() {
           const p = pipPrevRef.current;
           pipPrevRef.current = null;
           pipMoveArmedAtRef.current = Date.now() + 800;
+          dprHoldRef.current = null; // 배율 왕복 멈춤이 남아 있으면 내용 크기로 못 돌아간다
+          dprFlipsRef.current = [];
           applyRef.current?.(); // 폭 800·내용 높이로
           await win.setPosition(new PhysicalPosition(p.x, p.y));
           log("pip: off");
@@ -2965,6 +2973,8 @@ function App() {
           localStorage.removeItem(WIDE_PREV_POS_KEY);
           await win.setMinSize(null).catch(() => {}); // 일반 카드 창은 내용 높이(100px~)까지 줄어든다
           await win.setMaximizable(false).catch(() => {});
+          dprHoldRef.current = null; // 배율 왕복 멈춤이 남아 있으면 내용 크기로 못 돌아간다
+          dprFlipsRef.current = [];
           applyRef.current?.(); // 내용 크기로 되돌린다
           if (raw) {
             const { x, y } = JSON.parse(raw);
@@ -4169,22 +4179,47 @@ function App() {
       // 11-07 '설정을 연 채 창을 끌면 글자가 엄청 떨린다': 이동 이벤트마다 높이 한계를 다시 재고 창 크기·설정 패널 높이를
       // 맞췄더니 실측 3초 끌기에 창 크기 설정 153회·창 높이 89번 변경(931→936→930…, 엇갈린 setSize 가 커졌다 작아졌다)이 났다.
       // → 끄는 동안엔 손대지 않고 이동이 멈춘 뒤 0.2초에 한 번만 위치 저장 + 높이 한계 다시 계산.
+      settleAfterMove(true);
+    });
+    // 11-09 '창을 옮기니 앱이 왔다갔다·글자가 떨어졌다 붙으며 흔들렸다'(125%↔100% 모니터): 경계를 넘는 순간 Windows 가 창을 새 배율
+    // 크기로 바꾸는데 devicePixelRatio 는 아직 옛 값이라, 카드 감시 → apply 가 옛 배율로 setSize(100% 모니터에 1000px 폭)를 끼워 넣어
+    // Windows 와 반대로 당겼다(실측: 640x438@1.25 → setSize 1000x682 → 800x546 두 번). 이동 중 억제가 위치 저장에만 걸려 있었던 것.
+    // → 옮기는 중·배율 바뀌는 중엔 apply 를 통째로 쉬고, 마지막 이벤트 0.2초 뒤 한계 재계산 + 크기 맞춤을 한 번만
+    const settleAfterMove = (savePos: boolean) => {
+      windowSettlingRef.current = true;
       window.clearTimeout(moveSettleTimer);
       moveSettleTimer = window.setTimeout(() => {
+        windowSettlingRef.current = false;
+        if (!savePos) {
+          // Window moved → its top edge changed → recompute the height ceiling so
+          // settings stay reachable wherever the user parks the overlay (id20).
+          applyRef.current?.();
+          return;
+        }
         win.outerPosition().then((pos) => {
           localStorage.setItem(
             POSITION_KEY,
             JSON.stringify({ x: pos.x, y: pos.y })
           );
-        }).catch(() => {});
-        // Window moved → its top edge changed → recompute the height ceiling so
-        // settings stay reachable wherever the user parks the overlay (id20).
-        applyRef.current?.();
+          // 배율 왕복으로 멈춰 있었으면: 사용자가 실제로 옮겼을 때만(8px 넘게) 푼다. 왕복 중 Windows 가 보내는 제자리 이동으론 안 풂
+          const hold = dprHoldRef.current;
+          if (hold && Number.isFinite(hold.x) && !(Math.abs(pos.x - hold.x) <= 8 && Math.abs(pos.y - hold.y) <= 8)) {
+            dprHoldRef.current = null;
+            dprFlipsRef.current = [];
+          }
+          applyRef.current?.();
+        }).catch(() => applyRef.current?.());
       }, 200);
+    };
+    const unScalePromise = win.onScaleChanged(() => {
+      if (wideModeRef.current || pipActiveRef.current) return; // 이 두 모드는 창 크기를 apply 가 정하지 않는다
+      settleAfterMove(false);
     });
     return () => {
       window.clearTimeout(moveSettleTimer);
+      windowSettlingRef.current = false;
       unlistenPromise.then((fn) => fn());
+      unScalePromise.then((fn) => fn()).catch(() => {});
     };
   }, []);
 
@@ -4202,6 +4237,24 @@ function App() {
     if (!el) return;
     let raf = 0;
     const apply = () => {
+      // 창을 옮기는 중·배율이 바뀌는 중엔 쉰다 — 멈춘 뒤 0.2초에 move/배율 감시가 recompute → apply 를 한 번 부른다
+      if (windowSettlingRef.current) return;
+      // 배율 왕복 차단: 2초 안에 배율이 3번 바뀌면(크기를 맞출 때마다 Windows 가 창을 다른 모니터 것으로 본다) 그 자리에선 더 맞추지 않는다.
+      // 실측(경계에 걸친 x=2110): 3초에 setSize 390회, 1000x562@1 ↔ 800x450@1.25 왕복. 사용자가 창을 옮기면 move 감시가 푼다
+      const dpr = window.devicePixelRatio || 1;
+      if (dpr !== lastDprRef.current) {
+        lastDprRef.current = dpr;
+        const now = Date.now();
+        dprFlipsRef.current = [...dprFlipsRef.current.filter((t) => now - t < 2000), now];
+        if (dprFlipsRef.current.length >= 3 && !dprHoldRef.current) {
+          dprHoldRef.current = { x: NaN, y: NaN };
+          getCurrentWindow().outerPosition().then((p) => {
+            if (dprHoldRef.current) dprHoldRef.current = { x: p.x, y: p.y };
+          }).catch(() => {});
+          log("window: 배율 왕복 감지(두 모니터 경계에 걸침) — 창을 옮길 때까지 크기 맞춤 멈춤");
+        }
+      }
+      if (dprHoldRef.current) return;
       // 설정 패널이 열려 있으면 먼저 화면에 들어가는 높이로 잘라 둔다 — 창을 아래로 옮기거나(한계가 줄어듦)
       // 배너가 생겨 나머지 내용이 커졌을 때도 카드 스크롤(두 번째 막대)이 생기지 않게
       const se = settingsRef.current;
