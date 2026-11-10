@@ -17,6 +17,7 @@ const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 // 카드(App.tsx guideUrl)와 같은 규칙: UI 언어별 가이드 + src=app(GA4 앱발 방문 표식)
 const guideQuestUrl = (lang: string, slug: string) =>
   `${GUIDE_URL}${lang === "ko" ? "" : `${lang}/`}quest/${slug}/?src=app`;
+const PYTHON_API = "http://127.0.0.1:8765";
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
 type HiddenQuest = { id: string; name: string };
 function loadHidden(): HiddenQuest[] {
@@ -71,6 +72,7 @@ export type RadarState = {
   loading?: { map: string; ts: number }; // 11-08 마지막 스크린샷 뒤에 시작한 맵 로딩 — 가벼운 응답에도 실려 앱이 지도를 미리 받는다
   story_chapters?: { id: string; name: string }[]; // 스토리 챕터 선택 목록(스토리 순)
   story_auto?: string[]; // '자동' 일 때 로그로 추정한 진행 중 챕터 id 들(없으면 빈 배열)
+  story_site_hidden?: number; // 11-10 가이드 사이트에서 체크해 지도에서 뺀 스토리 목표 수(POST /progress/story)
 };
 
 // 지도 높이(px). 사용자가 슬라이더로 바꾸고 App 이 카드 폭을 여기에 맞춘다(창 폭 800 안에서 카드 최대 760).
@@ -167,6 +169,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
   // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
   const radarRef = useRef<HTMLDivElement>(null);
+  const siteSeen = useRef(false); // 11-10 사이트 스토리 체크 줄 노출 지표(ssh)는 패널을 연 동안 한 번만
   const [fitSize, setFitSize] = useState<number | null>(null);
   // 11-09 통계: 파티 방이 안 쓰이는 게 '몰라서'인지 — 지도를 열 때 파티 버튼이 창 안에 보였나(pbv) / 화면 밖이었나(pbo), 누름(pbc)
   useEffect(() => {
@@ -546,6 +549,16 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {!data.shot && data.pre_raid && <div className="hint">{t.radarPreRaid}</div>}
       {data.shot && heading == null && <div className="hint">{t.radarDirUnknown}</div>}
       {story === "auto" && data.story_auto && data.story_auto.length === 0 && <div className="hint">{t.radarStoryAutoNone}</div>}
+      {/* 11-10 사이트에서 체크한 스토리 목표는 지도에서 뺀다 — 몇 개 뺐는지 + 다시 보이기(지표 ssh 노출·ssc 다시 보이기) */}
+      {story && (data.story_site_hidden ?? 0) > 0 && (
+        <div className="hint" ref={(el) => { if (el && !siteSeen.current) { siteSeen.current = true; stat("ssh"); } }}>
+          {t.radarStorySite.replace("{n}", String(data.story_site_hidden))}{" "}
+          <button type="button" className="radar-link" onClick={() => {
+            stat("ssc");
+            fetch(`${PYTHON_API}/progress/story`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ v: 1, clear: true }) }).catch(() => {});
+          }}>{t.radarStorySiteShow}</button>
+        </div>
+      )}
       {fill ? (
         <div className="radar-maprow">
           <div className="radar-leftcol">

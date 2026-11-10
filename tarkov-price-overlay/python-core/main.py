@@ -128,7 +128,7 @@ class _ProgressCORS:
 
     async def __call__(self, scope, receive, send):
         # /progress(읽기) + /progress/promo(프로모 코드 '등록함' 체크 저장, 2026-11-02) 두 경로만
-        if scope.get("type") != "http" or scope.get("path") not in ("/progress", "/progress/promo"):
+        if scope.get("type") != "http" or scope.get("path") not in ("/progress", "/progress/promo", "/progress/story"):
             return await self.app(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
         origin = headers.get("origin", "")
@@ -617,8 +617,9 @@ def _build_response(
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict:
+    # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story)
+    return {"status": "ok", "features": ["story_sync"]}
 
 
 class CatalogActiveRequest(BaseModel):
@@ -1764,6 +1765,30 @@ def progress_promo(req: PromoUsedRequest) -> dict:
     except Exception as ex:  # noqa: BLE001
         print(f"[sync] promo_used save failed: {ex}")
     return {"ok": True, "promo_used": sorted(new.keys())}
+
+
+# ── 메인 스토리: 가이드 사이트 체크 → 지도에서 끝낸 목표 숨기기 (2026-11-10, story_site.py) ──
+class StorySiteRequest(BaseModel):
+    v: int = 1
+    chapter: str | None = None
+    done: list[str] = []
+    game_mode: str | None = None
+    lang: str | None = None
+    clear: bool = False  # 앱 지도 패널의 '다시 보이기'
+
+
+@app.post("/progress/story", dependencies=[Depends(_reject_foreign_site_origin)])
+def progress_story(req: StorySiteRequest) -> dict:
+    import story_site
+    from radar import story_doc
+    doc = story_doc()
+    if req.clear:
+        story_site.clear()
+        return {"ok": True, "done": 0, "hidden": 0}
+    known = {c.get("id") for c in doc.get("chapters") or []}
+    saved = story_site.save(req.chapter, req.done, known)
+    marks = {m.get("id") for m in doc.get("marks") or []}
+    return {"ok": True, "done": len(saved["done"]), "hidden": len(marks & set(saved["done"])), "chapter": saved["chapter"]}
 
 
 class RadarFolderRequest(BaseModel):

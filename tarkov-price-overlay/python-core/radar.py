@@ -669,12 +669,19 @@ def story_auto_quests(game_mode: str = "regular") -> dict[str, list[str]]:
         return {}
 
 
-def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict, auto: Optional[dict] = None) -> list[dict]:
+def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict, auto: Optional[dict] = None,
+                  done: Optional[set] = None, site_chapter: Optional[str] = None) -> list[dict]:
     """고른 챕터(또는 'all'·'auto')의 목표 위치 → 퀘스트 대상과 같은 모양(kind='quest', story=챕터 id).
     'auto' 는 auto={챕터: [하위 퀘스트 id…]} 에 든 하위 퀘스트의 목표만. 구역(area)은 윤곽 점들의 중심 하나로.
-    높이는 모르므로 내 높이와 같다고 본다(dy 0)."""
+    높이는 모르므로 내 높이와 같다고 본다(dy 0).
+    11-10 done = 가이드 사이트에서 체크한 목표 id(story_site.py) → 모든 모드에서 뺀다. site_chapter = 사이트가 최근(7일) 보낸
+    진행 중 챕터 → '자동'일 때 그 챕터에 남은 목표가 있으면 로그 추정 대신 그 챕터의 남은 목표를 낸다(직접 체크가 더 정확)."""
     if not chapter:
         return []
+    done = done or set()
+    if chapter == "auto" and site_chapter and any(m.get("chapter") == site_chapter and m.get("id") not in done
+                                                  for m in story_doc().get("marks") or []):
+        chapter = site_chapter
     if chapter == "auto" and not auto:
         return []
     base = MAP_BASE.get(map_slug, map_slug)
@@ -684,6 +691,8 @@ def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict, auto
     out: list[dict] = []
     seen: dict[tuple, dict] = {}  # (챕터, 반올림 x, z) → 이미 낸 대상: 같은 자리 목표(예: 쇄빙선 엔진실 3개)는 한 점으로, 목표 문구는 ' / '
     for m in story_doc().get("marks") or []:
+        if m.get("id") in done:
+            continue
         if chapter == "auto":
             if m.get("quest") not in set((auto or {}).get(m.get("chapter") or "", [])):
                 continue
@@ -1582,7 +1591,15 @@ class RadarService:
                                                active, pose, loc_en=_doc("regular/maps_en") or {}, key_names=key_names)
                 if story:
                     auto = story_auto_quests(game_mode) if story == "auto" else None
-                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, pose, loc_tasks, auto=auto), key=lambda r: r["dist"])
+                    try:
+                        import story_site
+                        s_done, s_ch = story_site.done_set(), story_site.recent_chapter()
+                    except Exception:  # noqa: BLE001
+                        s_done, s_ch = set(), None
+                    res["targets"] = sorted(res["targets"] + story_targets(story, slug, pose, loc_tasks, auto=auto, done=s_done, site_chapter=s_ch),
+                                            key=lambda r: r["dist"])
+                    # 사이트에서 체크해 지도에서 뺀 목표 수(지도 목표가 있는 것만) — 패널의 '다시 보이기' 줄
+                    res["story_site_hidden"] = sum(1 for m in story_doc().get("marks") or [] if m.get("id") in s_done)
                     if story == "auto":
                         res["story_auto"] = sorted(auto or {})  # 추정된 진행 중 챕터(slug) — 화면 안내용
                 if pre_raid:
