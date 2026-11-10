@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
 import { Icon } from "./Icon";
+import { stat } from "./statBus";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
@@ -614,7 +615,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
-    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={onClick} data-chip={k}>
+    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => { stat(k === "mine" ? "mxt" : "mly"); onClick(); }} data-chip={k}>
       <span className={`radar-sw ${k}`} /> {text}
     </button>
   );
@@ -805,10 +806,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
-          <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={toggleHold} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
-          {view && <button type="button" onClick={centerMe} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
-          <button type="button" onClick={fit} title={t.radarMapFit}>{t.radarMapFit}</button>
-          {!headingUp && <button type="button" onClick={rotate} title={t.radarMapRotate} aria-label={t.radarMapRotate}><Icon name="rotate" /></button>}
+          <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
+          {view && <button type="button" onClick={() => { stat("mtc"); centerMe(); }} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
+          <button type="button" onClick={() => { stat("mtf"); fit(); }} title={t.radarMapFit}>{t.radarMapFit}</button>
+          {!headingUp && <button type="button" onClick={() => { stat("mtr"); rotate(); }} title={t.radarMapRotate} aria-label={t.radarMapRotate}><Icon name="rotate" /></button>}
         </div>
         {v && <div className="radar-mapscale">━ {scaleM}m</div>}
         {headingUp && <div className="radar-mapup">▲ {t.radarMapHeadingUp}</div>}

@@ -1115,6 +1115,90 @@ const SIDECAR_MAX_RESTARTS: u32 = 5;
 /// 다시 실행해도 소용없다 → 띄우기가 '파일 없음'으로 실패하면 바로 웹뷰에 알린다(실행당 한 번). 재시도는 그대로.
 static SIDECAR_MISSING_SENT: AtomicBool = AtomicBool::new(false);
 
+/// 11-10 통계: 앱 자원 사용량 표본 — 이 앱 아래 프로세스 전체(화면 WebView2 + 시세 엔진)의 누적 CPU 시간(ms)과 메모리(작업 집합).
+/// 시세 엔진(tarkov-server*)은 따로 센다. 웹뷰가 1분 간격 두 번 읽어 '가만히 있을 때 CPU'를 계산해 하루 요약에 싣는다.
+/// 내용(경로·창 제목)은 보지 않고 숫자만.
+#[tauri::command]
+fn proc_usage() -> serde_json::Value {
+    #[cfg(windows)]
+    {
+        proc_usage_windows()
+    }
+    #[cfg(not(windows))]
+    {
+        serde_json::json!({})
+    }
+}
+
+#[cfg(windows)]
+fn proc_usage_windows() -> serde_json::Value {
+    use windows_sys::Win32::Foundation::{CloseHandle, FILETIME, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
+    };
+    use windows_sys::Win32::System::ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS};
+    use windows_sys::Win32::System::Threading::{
+        GetCurrentProcessId, GetProcessTimes, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+    let ft = |f: &FILETIME| ((f.dwHighDateTime as u64) << 32) | f.dwLowDateTime as u64;
+    unsafe {
+        let me = GetCurrentProcessId();
+        let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snap == INVALID_HANDLE_VALUE {
+            return serde_json::json!({});
+        }
+        let mut procs: Vec<(u32, u32, String)> = Vec::new();
+        let mut e: PROCESSENTRY32W = std::mem::zeroed();
+        e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+        if Process32FirstW(snap, &mut e) != 0 {
+            loop {
+                let len = e.szExeFile.iter().position(|&c| c == 0).unwrap_or(e.szExeFile.len());
+                procs.push((e.th32ProcessID, e.th32ParentProcessID, String::from_utf16_lossy(&e.szExeFile[..len]).to_lowercase()));
+                if Process32NextW(snap, &mut e) == 0 {
+                    break;
+                }
+            }
+        }
+        CloseHandle(snap);
+        // 이 앱과 그 아래 프로세스(웹뷰·시세 엔진) — 부모 번호를 따라 내려간다
+        let mut set: Vec<u32> = vec![me];
+        let mut i = 0;
+        while i < set.len() {
+            let p = set[i];
+            for (pid, ppid, _) in &procs {
+                if *ppid == p && *pid != 0 && *pid != p && !set.contains(pid) {
+                    set.push(*pid);
+                }
+            }
+            i += 1;
+        }
+        let (mut acpu, mut amem, mut scpu, mut smem, mut n) = (0u64, 0u64, 0u64, 0u64, 0u32);
+        for pid in &set {
+            let name = procs.iter().find(|x| x.0 == *pid).map(|x| x.2.as_str()).unwrap_or("");
+            let h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, *pid);
+            if h.is_null() {
+                continue;
+            }
+            let (mut c0, mut x0, mut k0, mut u0): (FILETIME, FILETIME, FILETIME, FILETIME) =
+                (std::mem::zeroed(), std::mem::zeroed(), std::mem::zeroed(), std::mem::zeroed());
+            let cpu = if GetProcessTimes(h, &mut c0, &mut x0, &mut k0, &mut u0) != 0 { (ft(&k0) + ft(&u0)) / 10_000 } else { 0 };
+            let mut m: PROCESS_MEMORY_COUNTERS = std::mem::zeroed();
+            m.cb = std::mem::size_of::<PROCESS_MEMORY_COUNTERS>() as u32;
+            let mem = if GetProcessMemoryInfo(h, &mut m, m.cb) != 0 { m.WorkingSetSize as u64 } else { 0 };
+            CloseHandle(h);
+            if name.starts_with("tarkov-server") {
+                scpu += cpu;
+                smem += mem;
+            } else {
+                acpu += cpu;
+                amem += mem;
+            }
+            n += 1;
+        }
+        serde_json::json!({ "app_cpu_ms": acpu, "app_mem_mb": amem / 1_048_576, "sc_cpu_ms": scpu, "sc_mem_mb": smem / 1_048_576, "procs": n })
+    }
+}
+
 /// 웹뷰가 뜰 때 묻는다 — 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 놓친다(11-08 재현).
 #[tauri::command]
 fn sidecar_missing_state() -> bool {
@@ -1376,6 +1460,7 @@ pub fn run() {
             std::env::var("TPO_HOTKEY_PASSTHROUGH").map(|v| v == "1").unwrap_or(false),
         )))
         .invoke_handler(tauri::generate_handler![
+            proc_usage,
             prepare_quit,
             get_cursor_position,
             set_click_through,
@@ -1543,4 +1628,16 @@ pub fn run() {
         }
         _ => {}
     });
+}
+
+#[cfg(all(test, windows))]
+mod proc_usage_tests {
+    // 11-10: 자원 사용량 명령이 실제 숫자를 돌려주는지(시험 프로세스 자신이 '앱' 쪽으로 잡혀야 한다)
+    #[test]
+    fn proc_usage_reports_self() {
+        let v = super::proc_usage_windows();
+        assert!(v["procs"].as_u64().unwrap_or(0) >= 1, "{v}");
+        assert!(v["app_mem_mb"].as_u64().unwrap_or(0) > 0, "{v}");
+        println!("proc_usage = {v}");
+    }
 }

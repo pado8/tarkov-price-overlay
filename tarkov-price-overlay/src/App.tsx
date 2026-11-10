@@ -586,6 +586,15 @@ function dailyStages(tm?: LookupTiming | null): void {
   put("la", tm.a);
   persistDaily();
 }
+/** 11-10 하루 중앙값으로 보낼 표본 하나(st 배열, 하루 500개까지) — rdy 시작 시간·자원 사용량 등 */
+function dailySample(key: string, v: number): void {
+  if (!IS_MAIN_WINDOW || !Number.isFinite(v) || v < 0) return;
+  dailyRollover();
+  if (!dailyAcc.st) dailyAcc.st = {};
+  if (!dailyAcc.st[key]) dailyAcc.st[key] = [];
+  if (dailyAcc.st[key].length < 500) dailyAcc.st[key].push(Math.round(v));
+  persistDaily();
+}
 setStatSink(dailyAdd); // Radar 등 App 밖 컴포넌트가 하루 요약에 더할 수 있게(statBus.ts)
 
 // 11-09 화면 오류 횟수(하루 요약 err, 하루 50번까지) — 오류 내용은 보내지 않는다. 조용한 고장을 늦게 알던 것
@@ -1915,6 +1924,7 @@ function App() {
   const [miniSize, setMiniSize] = useState<number>(loadMiniSize);
   const [mapAlpha, setMapAlpha] = useState<number>(loadMapAlpha);
   const pickRadarMini = (v: boolean) => {
+    dailyAdd(v ? "mmn" : "mmf"); // 11-10 통계: 미니 지도로 줄임·다시 펼침
     if (!v) miniReturnRef.current = false;
     setRadarMini(v);
     try {
@@ -3163,6 +3173,7 @@ function App() {
           radarMapRef.current = null; // 새 레이드 — 수동 선택은 풀고 로그 맵으로
           log(`radar: map loading ${d.loading!.map}`);
           prefetchMap(d.loading!.map, region.lang);
+          dailyAdd("lp"); // 11-10 통계: 로딩 화면에서 맵을 미리 알아내 지도를 받아 둠(1.3.1 기능)
           void loadRadar();
         }
         const id = d.shot?.id ?? null;
@@ -3235,6 +3246,38 @@ function App() {
       if (fgKindRef.current === "game") dailyAdd("gm");
     }, 60_000);
     return () => window.clearInterval(iv);
+  }, []);
+  // 11-10 통계: 가만히 있을 때(카드 숨김) 자원 사용량 — 1분 간격 두 번 읽어 CPU(코어 하나 = 1000)·메모리(MB) 표본.
+  // cpa·mma = 화면(앱+웹뷰), cps·mms = 시세 엔진. 켠 지 10분 뒤 한 번, 이후 30분마다. 숫자만(프로세스 이름·경로 안 보냄)
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    type U = { app_cpu_ms?: number; app_mem_mb?: number; sc_cpu_ms?: number; sc_mem_mb?: number };
+    let stop = false;
+    let pending: number | undefined;
+    const sample = async () => {
+      if (stop || cardVisibleRef.current) return;
+      try {
+        const a = await invoke<U>("proc_usage");
+        pending = window.setTimeout(async () => {
+          if (stop || cardVisibleRef.current) return; // 그사이 카드를 띄웠으면 '가만히'가 아님
+          try {
+            const b = await invoke<U>("proc_usage");
+            if (a.app_cpu_ms != null && b.app_cpu_ms != null) dailySample("cpa", ((b.app_cpu_ms - a.app_cpu_ms) / 60_000) * 1000);
+            if (a.sc_cpu_ms != null && b.sc_cpu_ms != null) dailySample("cps", ((b.sc_cpu_ms - a.sc_cpu_ms) / 60_000) * 1000);
+            if (b.app_mem_mb != null) dailySample("mma", b.app_mem_mb);
+            if (b.sc_mem_mb != null) dailySample("mms", b.sc_mem_mb);
+          } catch {}
+        }, 60_000);
+      } catch {}
+    };
+    const first = window.setTimeout(sample, 10 * 60_000);
+    const iv = window.setInterval(sample, 30 * 60_000);
+    return () => {
+      stop = true;
+      window.clearTimeout(first);
+      window.clearInterval(iv);
+      if (pending) window.clearTimeout(pending);
+    };
   }, []);
   // 11-09 기능 사용: 설정·캡처 영역 설정을 연 횟수(set·cap)
   useEffect(() => {
@@ -3457,6 +3500,7 @@ function App() {
   // can take >3s on a cold start while it loads OCR models). Drives the admin-
   // rights banner and the elevation telemetry.
   const adminReportedRef = useRef(false);
+  const sidecarReadyReportedRef = useRef(false);
   useEffect(() => {
     let mounted = true;
     let tries = 0;
@@ -3465,6 +3509,11 @@ function App() {
       const info = await fetchDiagnostics();
       if (!mounted) return;
       if (info) {
+        // 11-10 통계: 앱 실행부터 시세 엔진 첫 응답까지(ms) — 1.3.0 에서 늘어난 사이드카 시작 실패(14.6%)가 '늦게 뜸'인지 가르기
+        if (!sidecarReadyReportedRef.current) {
+          sidecarReadyReportedRef.current = true;
+          dailySample("rdy", Date.now() - APP_STARTED_AT);
+        }
         setAdminInfo(info);
         // Elevation telemetry (once/session): tag a launch event with the
         // admin status so the dashboard can measure how many users — and
@@ -5587,6 +5636,10 @@ function App() {
                       setFeedbackStatus("sending");
                       try {
                         await submitFeedback(feedbackDiag ? msg + "\n\n" + (await buildDiag(3990 - msg.length)) : msg, feedbackImage);
+                        // 11-10 통계: 보낸 피드백 중 진단 정보·스크린샷을 붙인 비율(fbs 보냄 · fbd 진단 · fbi 사진)
+                        dailyAdd("fbs");
+                        if (feedbackDiag) dailyAdd("fbd");
+                        if (feedbackImage) dailyAdd("fbi");
                         setFeedbackStatus("sent");
                         setFeedbackText("");
                         setFeedbackImage(null);
