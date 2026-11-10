@@ -7,7 +7,7 @@ const PYTHON_API = "http://127.0.0.1:8765";
 export const MAP_SHARE_KEY = "tarkov.mapShare.on"; // "1" = 켬
 export const MAP_SHARE_ASKED_KEY = "tarkov.mapShare.asked"; // "1" = 묻는 창에 답함(다시 안 물음)
 const FIRST_DELAY_MS = 90 * 1000; // 켠 뒤 첫 보내기(게임 시작과 겹치지 않게)
-const EVERY_MS = 6 * 3600 * 1000; // 이후 확인 간격 — 실제 보내기는 사이드카가 12시간 간격으로 거른다
+const EVERY_MS = 1 * 3600 * 1000; // 이후 확인 간격 — 실제 보내기는 사이드카가 3시간 간격으로 거른다(11-10 12→3시간)
 
 type Strings = { [k: string]: string };
 
@@ -40,7 +40,7 @@ export function MapShareAsk({ t, onAnswer }: { t: Strings; onAnswer: (yes: boole
   );
 }
 
-/** 켜져 있으면 켠 뒤 90초, 이후 6시간마다 자동 보내기(사이드카가 12시간 간격·새 줄만) */
+/** 켜져 있으면 켠 뒤 90초, 이후 1시간마다 자동 보내기(사이드카가 3시간 간격·새 줄만) */
 export function useMapShareAuto(on: boolean): void {
   useEffect(() => {
     if (!on) return;

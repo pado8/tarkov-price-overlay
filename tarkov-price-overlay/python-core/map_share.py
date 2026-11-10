@@ -25,7 +25,7 @@ from typing import Callable, Optional
 import radar
 
 SHARE_URL = os.environ.get("TPO_MAPSHARE_URL") or "https://aquapado-mapshare.aquapado.workers.dev/mapshare"
-MIN_INTERVAL_SEC = 12 * 3600  # 자동 보내기 최소 간격(직접 '지금 보내기'는 무시)
+MIN_INTERVAL_SEC = 3 * 3600  # 자동 보내기 최소 간격(직접 '지금 보내기'는 무시) — 11-10 사용자 12→3시간(서버는 익명 ID 당 하루 20묶음까지)
 MAX_LINES = 5000  # 한 번에 보내는 최대 줄 수 — 넘으면 다음 번에 이어서
 TIMEOUT_SEC = 15
 
@@ -104,7 +104,9 @@ def _events() -> list[tuple[float, str, str]]:
 
 
 def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None) -> list[str]:
-    """스크린샷 폴더 → 보낼 줄 목록(정렬·중복 없음). 맵을 모르면 프리셋 칸이 빈 줄."""
+    """스크린샷 폴더 → 보낼 줄 목록(정렬·중복 없음). 맵을 모르는 스크린샷(앞선 맵 로딩 기록이 없거나 2시간 넘음)은 뺀다.
+    11-10: 1.3.1 첫 받기 1,807줄 중 135줄(7.5%)이 프리셋 칸이 빈 줄 — 여러 맵 좌표가 섞여 서버에서 맵을 정할 수 없어 지도에 못 쓴다.
+    프리셋 이름은 있는데 모르는 맵(새 맵·변형)은 그대로 보낸다."""
     shots_dir = shots_dir if shots_dir is not None else radar.screenshots_dir()
     if not shots_dir or not Path(shots_dir).is_dir():
         return []
@@ -126,7 +128,9 @@ def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None)
     out = set()
     for ts, coords in shots:
         best = radar.map_event_at(evs, ts)
-        out.add(f"{best[1] if best else ''}|{coords}")
+        if not best or not best[1]:
+            continue
+        out.add(f"{best[1]}|{coords}")
     return sorted(out)
 
 
