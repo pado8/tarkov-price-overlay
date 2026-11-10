@@ -1,6 +1,7 @@
 // 지도 자료 보내기(선택·기본 꺼짐). 사용자가 켠 경우에만 사이드카 /mapshare/send 를 부른다.
 // 앱을 켜면 카드 맨 위에서 한 번 묻고(MapShareAsk), 설정엔 체크 한 줄(MapShareSettings) — 내용·형식은 python-core/map_share.py.
 import { useEffect } from "react";
+import { stat } from "./statBus";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 export const MAP_SHARE_KEY = "tarkov.mapShare.on"; // "1" = 켬
@@ -43,8 +44,20 @@ export function MapShareAsk({ t, onAnswer }: { t: Strings; onAnswer: (yes: boole
 export function useMapShareAuto(on: boolean): void {
   useEffect(() => {
     if (!on) return;
+    stat("msh"); // 11-10 통계: 켜 둔 채 실행한 횟수(하루 요약) → 켠 사람 수
     const go = () => {
-      fetch(`${PYTHON_API}/mapshare/send`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ force: false }) }).catch(() => {});
+      fetch(`${PYTHON_API}/mapshare/send`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ force: false }) })
+        .then((r) => r.json())
+        .then((j: { ok?: boolean; sent?: number; skipped?: string }) => {
+          // 11-10 통계: 보내기 결과(하루 요약) — mss 성공 횟수·msl 보낸 줄 수·ms0 보낼 게 없음(스크린샷 없음)·msf 실패. 간격 건너뜀은 안 셈
+          if (j.skipped) return;
+          if (j.ok && (j.sent ?? 0) > 0) {
+            stat("mss");
+            stat("msl", j.sent ?? 0);
+          } else if (j.ok) stat("ms0");
+          else stat("msf");
+        })
+        .catch(() => stat("msf"));
     };
     const first = window.setTimeout(go, FIRST_DELAY_MS);
     const iv = window.setInterval(go, EVERY_MS);

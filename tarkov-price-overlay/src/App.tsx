@@ -1838,12 +1838,20 @@ function App() {
   // 앱을 켜면 카드 맨 위에서 한 번 묻기 — 답하면 다시 안 물음(설정 체크로 변경). 둘러보기 중엔 묻지 않는다
   const [mapShareAsked, setMapShareAsked] = useState<boolean>(loadMapShareAsked);
   const answerMapShare = (yes: boolean) => {
+    reportEvent("help", yes ? "mapshare:yes" : "mapshare:no"); // 11-10 통계: 동의 창 응답(싫어요 비율)
     setMapShareOn(yes);
     setMapShareAsked(true);
     try {
       localStorage.setItem(MAP_SHARE_ASKED_KEY, "1");
     } catch {}
   };
+  const mapShareShownRef = useRef(false);
+  useEffect(() => {
+    // 11-10 통계: 동의 창이 실제로 뜬 횟수(실행당 한 번) — 응답(yes/no)과 함께 보면 무시·나중 응답 비율이 나온다
+    if (mapShareAsked || tourStep != null || mapShareShownRef.current) return;
+    mapShareShownRef.current = true;
+    reportEvent("help", "mapshare:shown");
+  }, [mapShareAsked, tourStep]);
   const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
   radarActiveRef.current = radarActive;
   const [radarData, setRadarData] = useState<RadarState | null>(null);
@@ -5900,7 +5908,14 @@ function App() {
               </select>
             </div>
             <div className="settings-hint">{t.radarPruneHint}</div>
-            <MapShareSettings t={t} on={mapShareOn} onToggle={setMapShareOn} />
+            <MapShareSettings
+              t={t}
+              on={mapShareOn}
+              onToggle={(v) => {
+                reportEvent("help", v ? "mapshare:on" : "mapshare:off"); // 11-10 통계: 설정에서 바꾼 것
+                setMapShareOn(v);
+              }}
+            />
             <div className="settings-section-header">
               {t.displaySection}
             </div>
