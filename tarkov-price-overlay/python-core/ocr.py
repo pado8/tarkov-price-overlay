@@ -217,6 +217,7 @@ def recognize_text_fragments(
     image: np.ndarray,
     langs: tuple[str, ...] = ("ko", "en"),
     skip_bg_filter: bool = False,
+    mag_ratio: float = 1.5,
 ) -> list[str]:
     """Return OCR text fragments, filtered to keep only text that sits on
     an EFT tooltip background. Drops text painted onto neighboring
@@ -243,7 +244,9 @@ def recognize_text_fragments(
     # mag_ratio=1.5: game tooltip text is small (~12-16px); upscaling the
     # detector input reads it more accurately (synthetic bench: 75→78/80
     # names read correctly, +23ms on a tooltip-sized box — see bench_ocr.py).
-    results = reader.readtext(gray, detail=1, paragraph=False, mag_ratio=1.5)
+    # 11-10: 4K 화면(글자가 이미 1440p 의 1.5배)은 호출부가 1.0 을 넘긴다 — 1440p 실캡처 150장을 1.5배로 키운 시험에서
+    # 정확도 같고(98.7% vs 98.0%) OCR 965→552ms. 1440p 크기 글자엔 1.0 이 손해(99.3→97.3%)라 기본값은 그대로 1.5.
+    results = reader.readtext(gray, detail=1, paragraph=False, mag_ratio=mag_ratio)
     if not results:
         return []
     # Ground loot: no tooltip background to test against — keep all text.

@@ -324,6 +324,9 @@ class LookupResponse(BaseModel):
     tooltip_wait: str | None = None
     # 11-09 통계: 응답 시간 단계별(ms) — w 툴팁 대기 · c 캡처 · o OCR · m 매칭 · a 읽은 상자 수. 앱이 하루 요약에 단계별 중앙값으로 싣는다
     timing: dict[str, int] | None = None
+    # 11-10 통계: 조회 때 커서가 있는 모니터 크기 [가로, 세로](물리 픽셀). 앱이 저장된 캡처 상자가 이 모니터에 맞는지 하루 요약에
+    # 센다(bxm·bxf) — 4K@150 실패 가설(상자는 첫 실행 때 주 모니터 바탕화면 기준인데 게임은 다른 해상도·모니터) 판정용
+    mon: list[int] | None = None
     item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
@@ -721,6 +724,18 @@ def _clamp_to_monitor(
     return x, y, width, height
 
 
+def _cursor_monitor_wh(cursor_x: int, cursor_y: int) -> tuple[int, int] | None:
+    """커서가 있는 모니터의 (가로, 세로) — 통계용(LookupResponse.mon). 못 찾으면 None."""
+    try:
+        with mss.mss() as sct:
+            for m in sct.monitors[1:]:
+                if m["left"] <= cursor_x < m["left"] + m["width"] and m["top"] <= cursor_y < m["top"] + m["height"]:
+                    return int(m["width"]), int(m["height"])
+    except Exception:
+        pass
+    return None
+
+
 def _monitor_center_box(
     cursor_x: int, cursor_y: int, width: int, height: int
 ) -> tuple[int, int, int, int] | None:
@@ -979,6 +994,7 @@ def _capture_and_lookup(
     label: str,
     corrections: dict[str, str],
     rescue_pool: list[str] | None = None,
+    mag: float = 1.5,
 ) -> tuple[str, dict]:
     import time
 
@@ -995,7 +1011,7 @@ def _capture_and_lookup(
     # (English client names are Latin and read fine with the ko+en reader).
     ocr_langs = ("ru", "en") if lang == "ru" else ("ko", "en")
     fragments = recognize_text_fragments(
-        image, langs=ocr_langs, skip_bg_filter=(label == "ground")
+        image, langs=ocr_langs, skip_bg_filter=(label == "ground"), mag_ratio=mag
     )
     # Trade-menu noise: drop price labels ("98,000₽", "#####₽") and trader
     # status lines before joining, so they neither sink the fuzzy match nor
@@ -1395,8 +1411,14 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     print(f"[tooltip] {tip_state} ({tip_ms}ms)")
     _diag_note({"kind": "tooltip_wait", "state": tip_state, "ms": tip_ms})  # 개발 PC 에서만: F2 뒤 툴팁이 뜨기까지 실측
 
+    mon_wh = _cursor_monitor_wh(cursor_x, cursor_y) if can_clamp else None
+    # 11-10 OCR 확대비: 게임 모니터가 4K(세로 2000+)면 글자가 이미 커서 1.0(OCR ~40% 빠름, 정확도 같음 — ocr.py 주석).
+    # 상자 크기가 아니라 모니터로 정한다: 상자가 4K 인데 게임이 1440p 인 경우(어긋남 가설) 1.0 은 손해라서.
+    ocr_mag = 1.0 if mon_wh and mon_wh[1] >= 2000 else 1.5
+
     def _tw(resp: LookupResponse) -> LookupResponse:
         resp.tooltip_wait = tip_state
+        resp.mon = list(mon_wh) if mon_wh else None
         d = getattr(_tm, "d", None) or {}
         resp.timing = {"w": tip_ms, **{k: round(d.get(k, 0.0) * 1000) for k in ("c", "o", "m")}, "a": int(d.get("a", 0))}
         _tw_learn(tip_state, resp.item_name is not None, resp.attempt)
@@ -1418,7 +1440,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             return _build_response(best_text, {"name": None}, game_mode, attempt="superseded", lang=req.lang)
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections,
-            rescue_pool=rescue_pool,
+            rescue_pool=rescue_pool, mag=ocr_mag,
         )
         if len(text.strip()) > len(best_text):
             best_text = text.strip()
@@ -1442,7 +1464,7 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             ex, ey, ew, eh = _clamp_to_monitor(ex, ey, ew, eh, cursor_x, cursor_y)
         wide_text, wide_price = _capture_and_lookup(
             ex, ey, ew, eh, lang, game_mode, "wide", req.corrections,
-            rescue_pool=rescue_pool,
+            rescue_pool=rescue_pool, mag=ocr_mag,
         )
         # Adopt the wide result if it found a name — or at least read SOME
         # text (better diagnostics for the user than a silent blank). Tag the

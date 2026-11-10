@@ -22,3 +22,12 @@ export function captureScale(monitorWidth: number, monitorHeight?: number): numb
   const byHeight = monitorHeight ? monitorHeight / 1080 : byWidth;
   return Math.max(Math.min(byWidth, byHeight), 1.0);
 }
+
+/** 11-10 통계(하루 요약 bxm·bxf): 저장된 캡처 상자 높이가 조회 때 커서가 있는 모니터의 기본값(70 × captureScale)과
+ *  20% 넘게 다르면 true. 상자는 첫 실행 때 주 모니터 바탕화면 기준으로 정해지는데, 게임을 다른 해상도·모니터에서 돌리면
+ *  어긋난다(4K@150 실패 가설). 직접 맞춘 상자도 true 가 될 수 있다 — 콘솔에서 실패율을 어긋남/맞음으로 나눠 본다. */
+export function boxMismatch(boxHeight: number, monitorWidth: number, monitorHeight: number, baseHeight = 70): boolean {
+  if (!(boxHeight > 0 && monitorWidth > 0 && monitorHeight > 0)) return false;
+  const expected = baseHeight * captureScale(monitorWidth, monitorHeight);
+  return Math.abs(boxHeight - expected) / expected > 0.2;
+}

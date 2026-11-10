@@ -18,7 +18,7 @@ import { prefetchMap } from "./RadarMap";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
-import { chooseHelpMode, captureScale, type HelpMode } from "./captureHelp";
+import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -913,6 +913,7 @@ type LookupResult = {
   item_id: string | null;
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
   tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
+  mon?: number[] | null; // 11-10 조회 때 커서가 있는 모니터 [가로, 세로](물리 픽셀) — 상자 어긋남 통계(bxm·bxf)
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -4581,6 +4582,19 @@ function App() {
           // it, rescue-read text silently migrates capture-miss events from
           // "empty" into "no_match" and the misread-vs-misaligned split on
           // the dashboard stops meaning anything.
+          // 11-10 상자 어긋남(하루 요약): 저장된 캡처 상자가 지금 게임 모니터에 맞는지 · 어긋난 조회의 실패 수 — 4K@150 실패 가설
+          // 판정용(상자는 첫 실행 때 주 모니터 바탕화면 기준). 공유 키 누름은 인벤토리 밖이 대부분이라 뺀다.
+          if (!hotkeyPassthroughRef.current && Array.isArray(data.mon) && data.mon.length === 2) {
+            const fail = data.item_name == null;
+            dailyAdd("bxn");
+            if (fail) dailyAdd("bxe");
+            if (boxMismatch(r.height, data.mon[0], data.mon[1])) {
+              dailyAdd("bxm");
+              if (fail) dailyAdd("bxf");
+            }
+            dailySample("mh", data.mon[1]);
+            dailySample("bxh", r.height);
+          }
           if (data.item_name == null) {
             // "share_" = 게임 스크린샷 키와 공유 중인 누름 — 인벤토리 밖에서 누른 게 대부분이라
             // 대시보드의 '캡처 영역 빗나감(empty)' 비율에 섞이지 않게 따로 표시
