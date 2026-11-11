@@ -4045,7 +4045,9 @@ function App() {
       if (!questCfgReportedRef.current) {
         questCfgReportedRef.current = true;
         // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0}`);
+        // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
+        const ws = localStorage.getItem(WIDE_KEY) === "1" ? (loadWideMapSide(localStorage) === "left" ? "L" : "R") : "0";
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
