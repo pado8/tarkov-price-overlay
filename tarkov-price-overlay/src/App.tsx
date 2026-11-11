@@ -216,6 +216,19 @@ function guideUrl(lang: string, path: string): string {
 // 11-09 통계: 시세 엔진이 24초 안에 못 뜨는 PC(sidecar_fail probe_refused, 14일 16명)에선 첫 조회가 '연결 실패 — 자동 복구 중'으로
 // 보였다 — 고장이 아니라 첫 실행 OCR 모델 로딩(백신 검사까지 1분 가까이). 시작 직후엔 '켜지는 중'으로.
 const APP_STARTED_AT = Date.now();
+// 11-11 받아 둔 업데이트 → 다음 실행 때 설치. 통계: 1.3.1 뒤 업데이트 안 한 70곳 중 34곳이 이미 받아 뒀는데 설치 안 됨 —
+// 받은 파일은 메모리에만 있고 설치는 트레이 '종료'·'지금 적용'에서만 됐다(창 X 는 트레이로 숨김, PC 종료는 설치 없이 끝).
+// 받기를 마치면 버전을 남겨 두고, 다음 실행 직후(게임이 꺼져 있을 때만) 같은 버전이면 받아서 바로 설치·재시작한다.
+const UPDATE_PENDING_KEY = "tarkov.update.pendingInstall"; // {"v":"1.3.2","at":ms}
+const NEXT_LAUNCH_WINDOW_MS = 3 * 60 * 1000; // 켠 뒤 이 안에 확인이 끝났을 때만(오래 켜 둔 앱이 갑자기 재시작하지 않게)
+function readPendingUpdate(): string | null {
+  try {
+    const j = JSON.parse(localStorage.getItem(UPDATE_PENDING_KEY) || "null");
+    return j && typeof j.v === "string" ? j.v : null;
+  } catch {
+    return null;
+  }
+}
 const SIDECAR_STARTING_MS = 45_000;
 function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number): string {
   if (missing) return s.sidecarMissing;
@@ -342,7 +355,7 @@ type StatsEvent =
   // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
   | "install_mode" // 세션당 1회. detail = portable | installer
   | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
-  | "update_apply" // detail = downloaded | install_now | install_quit | error | blocked:<min>
+  | "update_apply" // detail = downloaded | install_now | install_quit | install_next_launch | banner_shown | banner_dismiss | error | blocked:<min>
   // 11-03 2차 계측(v1.2.6). 전부 실행당 1회 또는 하루 1회라 행 수 영향은 하루 수백.
   | "sidecar_fail" // 사이드카가 끝내 안 뜸. detail = probe_refused|probe_timeout|probe_http_<n>|dead:<이유>
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
@@ -1996,6 +2009,17 @@ function App() {
   const [forcedMinVersion, setForcedMinVersion] = useState<string | null>(null);
   // update_check 텔레메트리 중복 방지 — 같은 결과는 세션에 한 번만
   const updateCheckReportedRef = useRef<string | null>(null);
+  const updateBannerSeenRef = useRef<string | null>(null); // 11-11 banner_shown 은 버전당 세션 1번
+  // 11-11 받아 둔 업데이트 표시: 이미 그 버전(이상)으로 켜졌으면 지운다 — 다음 실행 설치가 끝났거나 다른 길로 업데이트됨
+  useEffect(() => {
+    const v = readPendingUpdate();
+    if (v && cmpVersion(APP_VERSION, v) >= 0) {
+      try {
+        localStorage.removeItem(UPDATE_PENDING_KEY);
+      } catch {}
+      log(`update: pending ${v} cleared — running ${APP_VERSION}`);
+    }
+  }, []);
   const [questStatus, setQuestStatus] = useState<QuestStatus | null>(null);
   const questCfgReportedRef = useRef(false);
   const [questPathInput, setQuestPathInput] = useState<string>("");
@@ -2015,6 +2039,7 @@ function App() {
   const dismissUpdate = (version: string) => {
     dismissedAtRef.current = Date.now();
     setDismissedUpdate(version);
+    reportEvent("update_apply", "banner_dismiss"); // 11-11 계측: 배너를 닫은 횟수
   };
   useEffect(() => {
     const iv = window.setInterval(() => {
@@ -3613,9 +3638,21 @@ function App() {
         setUpdatePhase("idle");
         log(`update: ${APP_VERSION} -> ${update.version} available`);
         reportUpdateCheck(`available:${update.version.slice(0, 16)}`);
-        // 조용한 자동 업데이트(설치판만): 지금 받아 두고 앱을 닫을 때 설치한다.
+        // 조용한 자동 업데이트(설치판만): 지금 받아 두고 트레이 '종료'·'지금 적용'·다음 실행 때 설치한다.
         // 포터블은 exe 교체가 안 되니 기존대로 배너에서 페이지로 보낸다.
-        if (autoInstallRef.current && !isPortableRef.current) void downloadUpdateQuietly(update);
+        if (autoInstallRef.current && !isPortableRef.current) {
+          // 지난번에 받아 두고 설치 못 한 그 버전 + 켠 직후 + 게임이 꺼져 있음 → 지금 설치(모르면 게임 중으로 보고 미룬다)
+          const nextLaunch =
+            readPendingUpdate() === update.version &&
+            Date.now() - APP_STARTED_AT < NEXT_LAUNCH_WINDOW_MS &&
+            !(await invoke<boolean>("game_running").catch(() => true));
+          if (nextLaunch) {
+            log(`update: installing ${update.version} on launch (downloaded last session)`);
+            void runInstall(false, true);
+          } else {
+            void downloadUpdateQuietly(update);
+          }
+        }
       } else {
         pendingUpdateRef.current = null;
         setUpdateInfo(null);
@@ -3661,8 +3698,11 @@ function App() {
         }
       });
       setUpdatePhase("downloaded");
-      log(`update: ${update.version} downloaded — installs on quit`);
+      log(`update: ${update.version} downloaded — installs on tray quit, Apply now, or next launch`);
       reportEvent("update_apply", "downloaded");
+      try {
+        localStorage.setItem(UPDATE_PENDING_KEY, JSON.stringify({ v: update.version, at: Date.now() }));
+      } catch {}
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       log(`update: background download failed — ${msg}`);
@@ -3694,12 +3734,15 @@ function App() {
 
   // onClick 에 바로 넘기는 installUpdate 는 인자 없음. 포터블 전환은 runInstall(true) 로 같은 흐름을 탄다
   const installUpdate = () => runInstall(false);
-  const runInstall = async (portableSwitch: boolean) => {
+  // nextLaunch = 지난번에 받아 둔 업데이트를 이번 실행 직후 설치(확인 창 없이 — 배너 진행률·설치 창만)
+  const runInstall = async (portableSwitch: boolean, nextLaunch = false) => {
     const update = pendingUpdateRef.current;
     if (!update) return;
     if (updatePhaseRef.current === "downloaded") return applyDownloadedUpdate();
     if (updatePhaseRef.current === "downloading") return; // 자동 다운로드가 받는 중 — 겹치지 않게
-    if (!portableSwitch) {
+    if (nextLaunch) {
+      reportEvent("update_apply", "install_next_launch");
+    } else if (!portableSwitch) {
       reportEvent("update_apply", "install_now");
       // Tell the user what's about to happen: the app closes and the installer
       // downloads + launches with a gap before the setup window appears. Without
@@ -3738,6 +3781,12 @@ function App() {
       setUpdateError(msg);
       setUpdatePhase("error");
       reportEvent("update_apply", portableSwitch ? "portable_switch_error" : "error");
+      // 다음 실행 설치가 실패했으면 표시를 지운다 — 켤 때마다 같은 실패를 되풀이하지 않게(배너 '지금 설치'는 그대로)
+      if (nextLaunch) {
+        try {
+          localStorage.removeItem(UPDATE_PENDING_KEY);
+        } catch {}
+      }
     }
   };
 
@@ -3968,7 +4017,8 @@ function App() {
       // 11-03 퀘스트 연동 켬 여부·경로 유효·퀘스트 수(세션당 1회) — 실제로 켜는 사람 수를 처음 재는 것
       if (!questCfgReportedRef.current) {
         questCfgReportedRef.current = true;
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0}`);
+        // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
@@ -5255,7 +5305,16 @@ function App() {
         )}
 
         {banner === "update" && updateInfo && (
-          <div className="update-banner">
+          <div
+            className="update-banner"
+            ref={(el) => {
+              // 11-11 계측: 카드가 보일 때 업데이트 배너가 떠 있었나(버전당 세션 1번) — 노출 → 닫기(banner_dismiss)·설치로 이어지는지
+              if (el && cardVisible && updateBannerSeenRef.current !== updateInfo.version) {
+                updateBannerSeenRef.current = updateInfo.version;
+                reportEvent("update_apply", "banner_shown");
+              }
+            }}
+          >
             {updatePhase === "idle" && (
               <>
                 <span className="update-text">

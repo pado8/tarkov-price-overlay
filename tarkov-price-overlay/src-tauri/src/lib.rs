@@ -1115,6 +1115,44 @@ const SIDECAR_MAX_RESTARTS: u32 = 5;
 /// 다시 실행해도 소용없다 → 띄우기가 '파일 없음'으로 실패하면 바로 웹뷰에 알린다(실행당 한 번). 재시도는 그대로.
 static SIDECAR_MISSING_SENT: AtomicBool = AtomicBool::new(false);
 
+/// 11-11 받아 둔 업데이트를 다음 실행 때 설치할지 — 게임(EscapeFromTarkov.exe)이 켜져 있으면 설치·재시작하지 않는다.
+/// 앞 창 종류(foreground_kind)는 게임이 맨 앞일 때만 잡혀서, 게임을 켜 둔 채 다른 창을 보고 있으면 놓친다 → 프로세스 목록으로 본다.
+#[tauri::command]
+fn game_running() -> bool {
+    #[cfg(windows)]
+    unsafe {
+        use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+        use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+            CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
+        };
+        let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snap == INVALID_HANDLE_VALUE {
+            return true; // 모르면 '게임 중'으로 — 설치를 미루는 쪽이 안전
+        }
+        let mut found = false;
+        let mut e: PROCESSENTRY32W = std::mem::zeroed();
+        e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+        if Process32FirstW(snap, &mut e) != 0 {
+            loop {
+                let len = e.szExeFile.iter().position(|&c| c == 0).unwrap_or(e.szExeFile.len());
+                if String::from_utf16_lossy(&e.szExeFile[..len]).eq_ignore_ascii_case("escapefromtarkov.exe") {
+                    found = true;
+                    break;
+                }
+                if Process32NextW(snap, &mut e) == 0 {
+                    break;
+                }
+            }
+        }
+        CloseHandle(snap);
+        found
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
 /// 11-10 통계: 앱 자원 사용량 표본 — 이 앱 아래 프로세스 전체(화면 WebView2 + 시세 엔진)의 누적 CPU 시간(ms)과 메모리(작업 집합).
 /// 시세 엔진(tarkov-server*)은 따로 센다. 웹뷰가 1분 간격 두 번 읽어 '가만히 있을 때 CPU'를 계산해 하루 요약에 싣는다.
 /// 내용(경로·창 제목)은 보지 않고 숫자만.
@@ -1461,6 +1499,7 @@ pub fn run() {
         )))
         .invoke_handler(tauri::generate_handler![
             proc_usage,
+            game_running,
             prepare_quit,
             get_cursor_position,
             set_click_through,
