@@ -1935,12 +1935,13 @@ html, body, #root {
 .quest-sub { color: var(--text-muted); }
 .price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }
 
-/* 지도 나란히 모드(모니터 꽉 채움): 왼쪽 카드는 원래 크기, 오른쪽 패널이 나머지를 채우고 안의 지도는 패널 높이에 맞춘다 */
+/* Side-by-side mode keeps the card's saved width and gives the rest to the map. */
+.overlay.wide.map-left:not(.portrait) { flex-direction: row-reverse; }
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
 .wide-pane .radar-mapblock { flex: 1; min-height: 0; }
-/* 나란히 모드 창 크기 손잡이(패널 오른쪽 아래) — 카드 손잡이와 같은 모양, 지도 위에 얹힌다 */
-.wide-pane .wide-resize-handle { width: 18px; height: 18px; z-index: 6; }
+/* Keep the window resize handle at the actual bottom-right corner on either side. */
+.overlay.wide > .wide-resize-handle { position: fixed; right: 12px; bottom: 12px; width: 18px; height: 18px; z-index: 6; }
 /* 지도 나란히 패널: 지도 왼쪽 + 대상 목록 오른쪽 열 */
 .radar-maprow { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
 .radar-maprow .radar-mapblock { flex: 1 1 auto; min-width: 0; }

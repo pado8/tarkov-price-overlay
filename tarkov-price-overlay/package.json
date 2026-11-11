@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test:layout": "node --test tests/wideLayout.test.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },
