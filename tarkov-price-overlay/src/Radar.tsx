@@ -166,6 +166,13 @@ let sideAppliedFor: string | null = null;
 
 export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party }: Props) {
   const [showParty, setShowParty] = useState(false);
+  // 11-11 파티 창을 열면 그 창이 다 보이게 카드를 필요한 만큼만 스크롤(작은 창·안내 상자가 있으면 아래가 걸쳤다 — 실측 32px).
+  // 나란히 모드에선 이미 보이는 자리라 그대로
+  useEffect(() => {
+    if (!showParty) return;
+    const id = requestAnimationFrame(() => (radarRef.current?.querySelector(".party") as HTMLElement | null)?.scrollIntoView({ block: "nearest" }));
+    return () => cancelAnimationFrame(id);
+  }, [showParty]);
   // 나란히(fill): 지도 높이를 '패널 − 고정값'이 아니라 실제로 그려진 나머지(머리글·경고·칩·아래 조작부·세로면 목록 열) 높이를
   // 재서 정한다 — 파티 패널을 열거나 경고 줄이 생겨도 패널 밖으로 넘치지 않게(11-05: 고정값이라 아래가 잘렸다)
   const radarRef = useRef<HTMLDivElement>(null);
@@ -277,24 +284,11 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {data?.shot && (
         <span className={`radar-age${data.shot.age > STALE_SEC ? " stale" : ""}`}>{ago(data.shot.age, t)}</span>
       )}
-      {/* 11-11 파티 버튼을 머리글로(통계: 지도를 열 때 버튼이 화면 밖 13/23명 — 목표 목록이 길면 아래 조작부가 창 밖으로 밀렸다).
-          클래스 radar-party-btn 은 그대로 — pbv/pbo 판정이 같은 기준으로 1.3.1 과 비교되게 */}
-      {party && (
-        <button type="button" className={`radar-mini-btn radar-party-btn radar-head-party${showParty || party.code ? " on" : ""}`} onClick={() => {
-          if (!showParty) stat("pbc");
-          setShowParty((v) => !v);
-        }} aria-expanded={showParty} title={t.partyBtn}>
-          👥 {t.partyBtn}
-          {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
-        </button>
-      )}
       <button className="settings-btn" onClick={onClose} title={t.radarClose}>
         <Icon name="back" />
       </button>
     </div>
   );
-  // 파티 패널은 머리글 바로 아래(지도 위)에 연다 — 버튼만 올리고 패널이 맨 아래에 열리면 또 안 보인다
-  const partyPanel = party && showParty ? <PartyPanel party={party} t={t} maps={data?.maps ?? []} mapId={mapId} /> : null;
 
   if (mini) {
     // 지도만 남긴 미니맵 — 상태 안내도 지도 자리 안에서 한 줄로. 도구(옮기기·작게·크게·펼치기)는 마우스를 올렸을 때만(CSS)
@@ -334,7 +328,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     return (
       <div className="radar">
         {header}
-        {partyPanel}
         <div className="hint">{loading ? t.hintLoading : t.radarNoShot}</div>
       </div>
     );
@@ -487,9 +480,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {hiddenBlock}
     </div>
   );
-  // 맵 선택·스토리·크기·고정·내 위치 크게·지도 불투명도·미니맵·사용법 — 카드는 지도 아래, 나란히는 오른쪽 열 위(파티는 11-11부터 머리글)
+  // 맵 선택·스토리·크기·고정·내 위치 크게·지도 불투명도·파티·미니맵·사용법 — 카드는 지도 아래, 나란히는 오른쪽 열 위
   // (나란히 패널은 지도 높이를 '패널 − 210px'로 잡아서, 아래에 붙이면 파티 패널 등이 잘렸다 — 11-05 피드백)
-  const controls = (
+  // 11-11 통계: 지도를 열 때 파티 버튼이 화면 밖 13/23명. 실측(창 731): 카드 내용 1,191px — 목표 목록 396px(한 줄에 설명 3줄)과
+  // 위아래로 쌓인 조작부 234px 때문에 파티 버튼이 창 아래 410px 밖(카드 안 스크롤)이었다.
+  // → 자주 쓰는 도구(맵·스토리·크기·파티·미니맵)는 한 줄로 지도 바로 아래(파티 창도 그 바로 밑), 목록은 그다음, 덜 만지는 것은 맨 아래
+  const toolbar = (
     <>
       <div className="radar-foot">
           {mapPicker}
@@ -507,7 +503,27 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             </select>
           )}
           {sizeCtl}
+          {party && (
+            <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => {
+              if (!showParty) stat("pbc");
+              setShowParty((v) => !v);
+            }} aria-expanded={showParty}>
+              👥 {t.partyBtn}
+              {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
+            </button>
+          )}
+          {onMini && !fill && (
+            <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
+              <Icon name="map" /> {t.radarMini}
+            </button>
+          )}
         </div>
+        {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
+      </>
+  );
+  // 덜 만지는 것 — 카드에선 목표 목록 아래 맨 끝
+  const moreControls = (
+    <>
         {fixedCtl}
         {bigMeCtl}
         {onMapAlpha && (
@@ -517,11 +533,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             <span className="radar-size-val">{mapAlpha}%</span>
           </label>
         )}
-        {onMini && !fill && (
-          <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
-            <Icon name="map" /> {t.radarMini}
-          </button>
-        )}
         {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}
         <details className="radar-help">
           <summary>{t.radarHelp}</summary>
@@ -529,6 +540,12 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <div className="radar-note">{t.radarMyExitsNote}</div>
         </details>
       </>
+  );
+  const controls = (
+    <>
+      {toolbar}
+      {moreControls}
+    </>
   );
   // 11-06 친구 시험 피드백 '맵을 고르기 전엔 지도 옵션이 안 뜬다' — 스크린샷 폴더·스크린샷·맵이 아직 없어도 안내 문구 아래에
   // 맵 선택·크기·고정·내 위치 크게·불투명도·파티·미니맵을 그대로 보여 준다(레이드 전에 파티 방부터 들어가는 경우 등).
@@ -538,7 +555,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     return (
       <div className="radar" ref={radarRef}>
         {header}
-        {partyPanel}
         {error(data, t)}
         <div className="hint">{noMapHint}</div>
         {controls}
@@ -548,7 +564,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   return (
     <div className="radar" ref={radarRef}>
       {header}
-      {partyPanel}
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
       {/* 11-08 레이드 로딩 화면에서 맵을 미리 띄운 상태 — 위치·방향은 첫 스크린샷부터 */}
@@ -582,10 +597,11 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       ) : (
         <>
           <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
+          {toolbar}
           {targetList}
+          {moreControls}
         </>
       )}
-      {!fill && controls}
     </div>
   );
 }

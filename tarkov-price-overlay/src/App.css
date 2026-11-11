@@ -1881,6 +1881,7 @@ html, body, #root {
 .radar-dy.up { color: var(--success); }
 .radar-dy.down { color: var(--warning); }
 .radar-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; }
+.radar-foot .radar-mini-btn { align-self: center; } /* 11-11 파티·미니맵을 맵 선택·크기 줄로 — 줄 가운데 맞춤 */
 .radar-chk { display: inline-flex; align-items: center; gap: 4px; font-size: var(--card-fs-xs); color: var(--text-muted); cursor: pointer; }
 .radar-map { background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: var(--radius-md); font: inherit; font-size: var(--card-fs-xs); padding: 2px 4px; max-width: 100%; }
 .radar-note { font-size: var(--card-fs-xs); color: var(--text-disabled); margin-top: 3px; line-height: 1.4; }
@@ -2052,7 +2053,6 @@ html, body, #root {
 .party-note { color: var(--text-muted); }
 .party-warn { color: var(--warning, #e8b84a); }
 .radar-party-btn.on { border-color: var(--gold-bright); color: var(--gold-bright); }
-.radar-head-party { flex: none; align-self: center; white-space: nowrap; } /* 11-11 머리글 안(맵 이름 옆) — 이름이 길면 이름 쪽이 줄어든다 */
 
 /* 나란히(11-05 2차): 왼쪽 열 = 지도 + 아래 조작부(가로로 나란히), 오른쪽 열 = 목록만(열 높이 전부). 지도 높이는 Radar.tsx 가 실측으로 정한다 */
 .radar-leftcol { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
