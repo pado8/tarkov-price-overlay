@@ -570,6 +570,7 @@ export const T = {
     mapShareAskText: "지도 기능 개발·개선을 위해 스크린샷 좌표(사진 X, 숫자만)가 필요합니다. 설정에서 언제든 끌 수 있어요.\n지도 개선에 큰 도움이 됩니다. 감사합니다.",
     mapShareYes: "좋아요",
     mapShareNo: "싫어요",
+    mapShareClosed: "지금은 받지 않아요",
   },
   en: {
     title: "Tarkov Price",
@@ -1134,6 +1135,7 @@ export const T = {
     mapShareAskText: "To develop and improve the map features, we need screenshot coordinates (numbers only, no images). You can turn this off anytime in Settings.\nIt helps the map a lot — thank you!",
     mapShareYes: "Sure",
     mapShareNo: "No thanks",
+    mapShareClosed: "not collecting right now",
   },
   ru: {
     title: "Цены Tarkov",
@@ -1698,6 +1700,7 @@ export const T = {
     mapShareAskText: "Для разработки и улучшения карты нужны координаты из скриншотов (только числа, без изображений). Отключить можно в любой момент в настройках.\nЭто очень поможет карте — спасибо!",
     mapShareYes: "Да",
     mapShareNo: "Нет",
+    mapShareClosed: "сейчас не принимаем",
   },
   zh: {
     title: "Tarkov 价格",
@@ -2249,6 +2252,7 @@ export const T = {
     mapShareAskText: "为了开发和改进地图功能，需要截图坐标（仅数字，不含图片）。随时可在设置中关闭。\n这对改进地图帮助很大，谢谢！",
     mapShareYes: "好的",
     mapShareNo: "不要",
+    mapShareClosed: "目前暂不接收",
   },
 } as const;
 

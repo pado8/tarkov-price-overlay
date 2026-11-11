@@ -3,7 +3,8 @@
 ② 맵 판정 = 저장 시각 +5초 안의 가장 늦은 로딩, 2시간 넘으면(맵 모름) 줄에서 뺌 ③ 보기: 새 줄 수·맵별·앞 5줄·익명 ID 유지
 ④ 보내기: 본문에 익명 ID·v2·새 줄만, 설치 ID 없음 → 보낸 줄은 다음에 안 보냄 ⑤ 자동은 3시간 간격(11-10 12→3), '지금 보내기'는 무시
 ⑥ 실패하면 기록 안 함(다음에 다시) ⑦ 지우기 요청 = DELETE ?id=, 성공하면 새 익명 ID·빈 기록, 실패하면 그대로
-⑧ (인자로 주면) 친구용 스크립트 결과와 줄 단위로 같음."""
+⑧ (인자로 주면) 친구용 스크립트 결과와 줄 단위로 같음
+⑨ 서버 닫힘(11-11) — 닫힘 응답은 '보냄'으로 안 적고 표시, 닫힌 동안 자동은 /status 만, 열리면 재개."""
 import json
 import os
 import sys
@@ -103,6 +104,44 @@ eq("⑦ 지우기 요청 = DELETE ?id=익명 ID", (calls[-1][0], calls[-1][1].en
 st = M.load_state()
 eq("⑦ 새 익명 ID·빈 기록", (st["anon_id"] != old_id, st["sent"], st["last_send"]), (True, [], 0))
 eq("⑦ 지운 뒤엔 전부 새 줄", M.preview(more2)["new"], len(more2))
+
+# ⑨ 서버 닫힘(11-11, Worker vars.CLOSED) — 응답 closed:true → 줄은 '보냄'으로 안 적고 닫힘 표시, 닫힌 동안 자동은 GET /status 만, 열리면 재개
+srv = {"closed": True}
+calls9 = []
+
+
+def http_srv(method, url, body):
+    calls9.append((method, url))
+    if method == "GET":
+        return 200, {"ok": True, "closed": srv["closed"]}
+    if srv["closed"]:
+        return 200, {"ok": True, "closed": True, "n": 0}
+    return 200, {"ok": True, "n": len(json.loads(body)["shots"])}
+
+
+T9 = T0 + 100 * 3600
+r = M.send(lines=more2, http=http_srv, now=T9)
+eq("⑨ 닫힘 응답 → closed·처음 표시", (r["ok"], r["sent"], r.get("closed"), r.get("closed_new")), (True, 0, True, True))
+eq("⑨ 닫힘 시각 저장", M.load_state().get("closed"), T9)
+eq("⑨ 서버가 안 받은 줄은 '보냄'으로 안 적음", M.preview(more2)["new"], len(more2))
+eq("⑨ 보기에도 닫힘", M.preview(more2)["closed"], True)
+eq("⑨ 3시간 안이면 그냥 건너뜀(요청 없음)", (M.send(lines=more2, http=http_srv, now=T9 + 3600)["skipped"], len(calls9)), ("interval", 1))
+r = M.send(lines=more2, http=http_srv, now=T9 + 4 * 3600)
+eq("⑨ 닫힌 동안 자동은 /status 만(POST 안 함)", (r.get("skipped"), calls9[-1][0], calls9[-1][1].endswith("/status")), ("closed", "GET", True))
+eq("⑨ 다시 받은 닫힘엔 '처음' 표시 없음", "closed_new" in r, False)
+eq("⑨ 닫힘 시각은 처음 것 그대로", M.load_state().get("closed"), T9)
+r = M.send(lines=more2, http=lambda m, u, b: (_ for _ in ()).throw(OSError("offline")), now=T9 + 8 * 3600)
+eq("⑨ /status 실패 = 닫힘 그대로 건너뜀", (r.get("skipped"), bool(M.load_state().get("closed"))), ("closed", True))
+srv["closed"] = False
+r = M.send(lines=more2, http=http_srv, now=T9 + 12 * 3600)
+eq("⑨ 열리면 표시 지우고 다시 보냄", (r["ok"], r["sent"], r.get("reopened"), calls9[-1][0]), (True, len(more2), True, "POST"))
+eq("⑨ 열린 뒤 닫힘 표시 없음", "closed" in M.load_state(), False)
+srv["closed"] = True
+more3 = more2 + ["customs_preset|3.0, 3.0, 3.0_0, 0, 0, 1"]
+eq("⑨ 다시 닫히면 다시 '처음'", M.send(force=True, lines=more3, http=http_srv, now=T9 + 13 * 3600).get("closed_new"), True)
+srv["closed"] = False
+r = M.send(force=True, lines=more3, http=http_srv, now=T9 + 13 * 3600 + 5)
+eq("⑨ 직접 보내기는 /status 없이 POST, 열려 있으면 닫힘 지움", (r["sent"], calls9[-1][0], "closed" in M.load_state()), (1, "POST", False))
 
 if len(sys.argv) > 1:
     # ⑧ 친구용 스크립트 결과(같은 PC·같은 폴더)와 비교 — 실제 스크린샷 폴더·로그로

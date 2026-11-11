@@ -5,6 +5,8 @@
 날짜·시각·이미지·로그 내용·설치 ID 는 보내지 않는다. 맵 판정(저장 시각 ↔ 게임 로그의 맵 로딩 시각)은 이 PC 안에서 끝낸다.
 보낸 사람 구분은 설치 ID 와 무관한 익명 ID(처음 한 번 무작위로 만듦). '보낸 자료 지우기'를 하면 서버에서 지우고 새 익명 ID 로 바꾼다.
 이미 보낸 줄은 해시로 기억해 다시 보내지 않는다. 받는 곳 = Cloudflare Worker aquapado-mapshare.
+11-11 닫힘: 서버가 받기를 멈추면(Worker vars.CLOSED) 보내기 응답에 closed:true — 상태 파일에 'closed'(받은 시각)를 남기고
+그 줄은 '보냄'으로 적지 않는다(다시 열리면 그대로 보냄). 닫힌 동안 자동 보내기는 3시간마다 GET /status 만 보고, 열리면 표시를 지우고 다시 보낸다.
 시험용: TPO_MAPSHARE_URL(받는 주소).
 """
 from __future__ import annotations
@@ -25,6 +27,7 @@ from typing import Callable, Optional
 import radar
 
 SHARE_URL = os.environ.get("TPO_MAPSHARE_URL") or "https://aquapado-mapshare.aquapado.workers.dev/mapshare"
+STATUS_URL = urllib.parse.urljoin(SHARE_URL, "/status")  # {ok, closed} — 5분 캐시(Worker)
 MIN_INTERVAL_SEC = 3 * 3600  # 자동 보내기 최소 간격(직접 '지금 보내기'는 무시) — 11-10 사용자 12→3시간(서버는 익명 ID 당 하루 20묶음까지)
 MAX_LINES = 5000  # 한 번에 보내는 최대 줄 수 — 넘으면 다음 번에 이어서
 TIMEOUT_SEC = 15
@@ -144,7 +147,7 @@ def preview(lines: Optional[list[str]] = None) -> dict:
     new = [l for l in lines if _hash(l) not in sent]
     maps = Counter((l.split("|", 1)[0] or "?") for l in new)
     return {"anon_id": s["anon_id"], "total": len(lines), "new": len(new), "maps": dict(maps.most_common()),
-            "sample": new[:5], "last_send": s["last_send"], "last_result": s["last_result"]}
+            "sample": new[:5], "last_send": s["last_send"], "last_result": s["last_result"], "closed": bool(s.get("closed"))}
 
 
 Http = Callable[[str, str, Optional[bytes]], tuple[int, dict]]
@@ -163,12 +166,29 @@ def _http(method: str, url: str, body: Optional[bytes]) -> tuple[int, dict]:
 
 
 def send(force: bool = False, lines: Optional[list[str]] = None, http: Http = _http, now: Optional[float] = None) -> dict:
-    """새 줄만 보낸다. force=False(자동)면 MIN_INTERVAL_SEC 안에는 건너뛴다."""
+    """새 줄만 보낸다. force=False(자동)면 MIN_INTERVAL_SEC 안에는 건너뛴다.
+    서버가 닫혀 있으면(closed) 자동은 GET /status 만 — 아직 닫힘이면 건너뛰고, 열렸으면 표시를 지우고 보낸다(reopened)."""
     now = time.time() if now is None else now
     with _lock:
         s = load_state()
         if not force and now - float(s["last_send"] or 0) < MIN_INTERVAL_SEC:
             return {"ok": True, "skipped": "interval", "sent": 0}
+    reopened = False
+    if s.get("closed") and not force:
+        try:
+            status, j = http("GET", STATUS_URL, None)
+        except Exception:  # noqa: BLE001 — 확인 실패는 닫힘 그대로(다음 간격에 다시)
+            status, j = 0, {}
+        with _lock:
+            s = load_state()
+            if status == 200 and j.get("closed") is False:
+                s.pop("closed", None)
+                reopened = True
+            else:
+                s["last_send"] = now
+            save_state(s)
+        if not reopened:
+            return {"ok": True, "skipped": "closed", "sent": 0, "closed": True}
     lines = build_lines() if lines is None else lines
     sent = set(s["sent"])
     new = [l for l in lines if _hash(l) not in sent][:MAX_LINES]
@@ -177,21 +197,32 @@ def send(force: bool = False, lines: Optional[list[str]] = None, http: Http = _h
             s["last_send"] = now
             s["last_result"] = {"at": now, "ok": True, "sent": 0}
             save_state(s)
-        return {"ok": True, "sent": 0}
+        return {"ok": True, "sent": 0, **({"reopened": True} if reopened else {})}
     body = json.dumps({"v": 2, "id": s["anon_id"], "shots": new}, ensure_ascii=False).encode("utf-8")
     try:
         status, j = http("POST", SHARE_URL, body)
     except Exception as e:  # noqa: BLE001 — 네트워크 실패는 다음 번에 다시
         status, j = 0, {"error": repr(e)}
     ok = status == 200 and bool(j.get("ok"))
+    if ok and j.get("closed"):
+        # 서버가 받지 않음(저장 안 함) — 줄은 '보냄'으로 적지 않고 닫힘만 남긴다
+        with _lock:
+            s = load_state()
+            first = not s.get("closed")
+            s["closed"] = s.get("closed") or now
+            s["last_send"] = now
+            s["last_result"] = {"at": now, "ok": True, "sent": 0, "closed": True}
+            save_state(s)
+        return {"ok": True, "sent": 0, "closed": True, **({"closed_new": True} if first else {})}
     with _lock:
         s = load_state()
         if ok:
+            s.pop("closed", None)
             s["sent"] = sorted(set(s["sent"]) | {_hash(l) for l in new})
             s["last_send"] = now
         s["last_result"] = {"at": now, "ok": ok, "sent": len(new) if ok else 0, **({} if ok else {"error": j.get("error") or status})}
         save_state(s)
-    return {"ok": ok, "sent": len(new) if ok else 0, **({} if ok else {"error": j.get("error") or status})}
+    return {"ok": ok, "sent": len(new) if ok else 0, **({} if ok else {"error": j.get("error") or status}), **({"reopened": True} if reopened else {})}
 
 
 def forget(http: Http = _http) -> dict:

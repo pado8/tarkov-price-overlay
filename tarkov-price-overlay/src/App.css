@@ -2127,6 +2127,9 @@ html, body, #root {
 .tour-hl { outline: 2px solid var(--gold-bright); outline-offset: 1px; border-radius: 6px; animation: tour-pulse 1.1s ease-in-out infinite; }
 @keyframes tour-pulse { 0%, 100% { outline-color: var(--gold-bright); } 50% { outline-color: rgba(240, 192, 64, 0.25); } }
 
+/* 11-11 서버가 받기를 멈춤 — 설정 줄 회색 + 안내 */
+.mapshare-closed label { opacity: 0.6; }
+.mapshare-closed-note { color: var(--text-secondary); font-size: var(--card-fs-xs); }
 /* 지도 자료 보내기 — 처음 지도를 열 때 한 번 묻는 창(MapShare.tsx) */
 .mapshare-ask { margin: 6px 0; padding: 9px 11px; border: 1px solid var(--gold-bright); border-radius: 6px; background: rgba(28, 26, 18, 0.92); }
 .mapshare-ask-text { white-space: pre-line; font-size: var(--card-fs-sm); line-height: 1.5; color: var(--text-primary); }

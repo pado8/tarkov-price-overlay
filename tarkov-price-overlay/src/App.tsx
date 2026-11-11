@@ -15,7 +15,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { prefetchMap } from "./RadarMap";
-import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
+import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
@@ -1857,8 +1857,22 @@ function App() {
       localStorage.setItem(MAP_SHARE_KEY, mapShareOn ? "1" : "0");
     } catch {}
   }, [mapShareOn]);
-  useMapShareAuto(mapShareOn);
-  // 앱을 켜면 카드 맨 위에서 한 번 묻기 — 답하면 다시 안 물음(설정 체크로 변경). 둘러보기 중엔 묻지 않는다
+  // 11-11 서버 닫힘(받기 멈춤) — null = 확인 중. 실행 때 한 번, 아직 안 물었거나 켜 둔 사람만 Cloudflare /status 를 본다(그 밖엔 부르지 않음)
+  const [mapShareClosed, setMapShareClosed] = useState<boolean | null>(() => (!loadMapShareAsked() || loadMapShareOn() ? null : false));
+  useEffect(() => {
+    if (mapShareClosed !== null) return;
+    let alive = true;
+    fetchMapShareClosed().then((c) => alive && setMapShareClosed(c));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useMapShareAuto(mapShareOn, (closed, first) => {
+    if (first) reportEvent("help", "mapshare:closed_seen"); // 11-11 통계: 닫힘 응답을 이 PC 가 처음 받음
+    setMapShareClosed(closed);
+  });
+  // 앱을 켜면 카드 맨 위에서 한 번 묻기 — 답하면 다시 안 물음(설정 체크로 변경). 둘러보기 중엔 묻지 않는다. 서버가 닫혔으면 묻지 않음(다시 열리면 다시 물음)
   const [mapShareAsked, setMapShareAsked] = useState<boolean>(loadMapShareAsked);
   const answerMapShare = (yes: boolean) => {
     reportEvent("help", yes ? "mapshare:yes" : "mapshare:no"); // 11-10 통계: 동의 창 응답(싫어요 비율)
@@ -1871,10 +1885,17 @@ function App() {
   const mapShareShownRef = useRef(false);
   useEffect(() => {
     // 11-10 통계: 동의 창이 실제로 뜬 횟수(실행당 한 번) — 응답(yes/no)과 함께 보면 무시·나중 응답 비율이 나온다
-    if (mapShareAsked || tourStep != null || mapShareShownRef.current) return;
+    if (mapShareAsked || tourStep != null || mapShareClosed !== false || mapShareShownRef.current) return;
     mapShareShownRef.current = true;
     reportEvent("help", "mapshare:shown");
-  }, [mapShareAsked, tourStep]);
+  }, [mapShareAsked, tourStep, mapShareClosed]);
+  const mapShareSkipRef = useRef(false);
+  useEffect(() => {
+    // 11-11 통계: 서버 닫힘이라 묻는 창을 띄우지 않음(실행당 한 번)
+    if (mapShareAsked || mapShareClosed !== true || mapShareSkipRef.current) return;
+    mapShareSkipRef.current = true;
+    reportEvent("help", "mapshare:ask_skipped_closed");
+  }, [mapShareAsked, mapShareClosed]);
   const radarActiveRef = useRef(false); // 창 크기 계산 클로저용(아래 cardHeightOverrideForResize)
   radarActiveRef.current = radarActive;
   const [radarData, setRadarData] = useState<RadarState | null>(null);
@@ -5428,7 +5449,7 @@ function App() {
         )}
 
         {/* 지도 자료 보내기 — 답할 때까지 카드 맨 위(공지·관리자 안내보다 위). 둘러보기 중엔 안 띄움 */}
-        {!mapShareAsked && tourStep == null && <MapShareAsk t={t} onAnswer={answerMapShare} />}
+        {!mapShareAsked && mapShareClosed === false && tourStep == null && <MapShareAsk t={t} onAnswer={answerMapShare} />}
         {banner === "admin" && (
           <div className="admin-banner">
             <span className="admin-text">
@@ -6037,6 +6058,7 @@ function App() {
             <MapShareSettings
               t={t}
               on={mapShareOn}
+              closed={mapShareClosed === true}
               onToggle={(v) => {
                 reportEvent("help", v ? "mapshare:on" : "mapshare:off"); // 11-10 통계: 설정에서 바꾼 것
                 setMapShareOn(v);
