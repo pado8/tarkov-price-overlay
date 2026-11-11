@@ -19,6 +19,7 @@ import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetc
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
+import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -1979,6 +1980,7 @@ function App() {
     } catch {}
   };
   const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
+  const [wideMapSide, setWideMapSide] = useState<WideMapSide>(() => loadWideMapSide(localStorage));
   const wideModeRef = useRef(wideMode);
   wideModeRef.current = wideMode;
   // PiP(11-05 피드백 '진짜 아무것도 안 뜨고 미니맵만 게임 위에'): 미니맵일 때 창 자체를 지도 크기로 줄여 화면 오른쪽에.
@@ -1999,6 +2001,7 @@ function App() {
     if (pipActive) miniReturnRef.current = false; // 작은 지도로 돌아옴(또는 스크린샷으로 다시 열림)
   }, [pipActive]);
   const paneRef = useRef<HTMLDivElement>(null);
+  const wideResizeRef = useRef<HTMLDivElement>(null);
   // 세로 모니터(높이 > 폭)에서 나란히 모드 = 카드 위·지도 아래 전체 폭·목록은 지도 밑(11-04 피드백 "세로 서브모니터에서 공간 활용이 아쉽다")
   const [portrait, setPortrait] = useState(false);
   const [sideH, setSideH] = useState(0); // 세로 배치에서 대상 목록에 주는 높이(px)
@@ -2692,6 +2695,7 @@ function App() {
     const rect = cardEl.getBoundingClientRect();
     if (!(rect.width > 0 && rect.height > 0)) return false;
     const paneRect = paneRef.current?.getBoundingClientRect() ?? null; // 지도 나란히 패널도 클릭을 받아야 한다
+    const resizeRect = wideResizeRef.current?.getBoundingClientRect() ?? null;
     const g = winGeomRef.current;
     let winPos: { x: number; y: number };
     let winScale: number;
@@ -2714,7 +2718,9 @@ function App() {
       cursor.x < winPos.x + Math.ceil((r.left + r.width) * dpr) + EDGE_PAD &&
       cursor.y >= winPos.y + Math.floor(r.top * dpr) - EDGE_PAD &&
       cursor.y < winPos.y + Math.ceil((r.top + r.height) * dpr) + EDGE_PAD;
-    const over = hit(rect) || (!!paneRect && paneRect.width > 0 && hit(paneRect));
+    const over = hit(rect) ||
+      (!!paneRect && paneRect.width > 0 && hit(paneRect)) ||
+      (!!resizeRect && resizeRect.width > 0 && hit(resizeRect));
     // 카드 위에서 누른 채 끄는 중이면 판정이 잠깐 '밖'으로 흔들려도 카드 위로 본다(11-05 모니터 넘겨 끌 때 창이 사라지던 것)
     holdRef.current = holdStep(holdRef.current, over, !!cursor.left);
     return holdRef.current.over;
@@ -5037,7 +5043,7 @@ function App() {
 
   const miniOn = radarMini && radarActive && !showSettings && !wideMode; // 미니맵 모드가 실제로 보이는 조건(나란히·설정 중엔 아님)
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}>
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}>
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -6001,6 +6007,22 @@ function App() {
               <input type="checkbox" checked={wideMode} onChange={toggleWide} />
             </div>
             <div className="settings-sub">{t.subWideMode}</div>
+            <div className="settings-row" title={t.wideMapSideHint}>
+              <label htmlFor="wide-map-side">{t.wideMapSide}</label>
+              <select
+                id="wide-map-side"
+                value={wideMapSide}
+                onChange={(e) => {
+                  const side = e.target.value === "left" ? "left" : "right";
+                  setWideMapSide(side);
+                  saveWideMapSide(localStorage, side);
+                }}
+              >
+                <option value="left">{t.wideMapSideLeft}</option>
+                <option value="right">{t.wideMapSideRight}</option>
+              </select>
+            </div>
+            <div className="settings-sub">{t.wideMapSideHint}</div>
             <div className="settings-row" title={t.radarSettingHint}>
               <label>{t.radarSettingLabel}</label>
               <input
@@ -8104,15 +8126,16 @@ ${t.fleaFeeHint}`}
             onSize={() => {}}
             fill
           />
-          {!pinned && (
-            <div
-              className="card-resize-handle wide-resize-handle"
-              title={t.wideResizeHint}
-              onPointerDown={onWideResizeDown}
-              onDoubleClick={() => void resetWideRect()}
-            />
-          )}
         </div>
+      )}
+      {wideMode && cardVisible && !pinned && (
+        <div
+          ref={wideResizeRef}
+          className="card-resize-handle wide-resize-handle"
+          title={t.wideResizeHint}
+          onPointerDown={onWideResizeDown}
+          onDoubleClick={() => void resetWideRect()}
+        />
       )}
     </div>
   );

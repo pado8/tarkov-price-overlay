@@ -166,7 +166,8 @@ EFT 게임 로그를 직접 파싱해서 본인이 어떤 퀘스트를 완료/�
 게임 설정의 **스크린샷 키(기본 PrtScn)** 를 누르면 그 자리 기준으로 탈출구·트랜짓·진행 중 퀘스트 목표·보스 구역·메인 스토리 챕터 목표의 **방향·거리·층 차이**를 보여줍니다. 위치는 스크린샷을 찍을 때만 갱신되며, 게임이 **스크린샷 파일 이름에 적어 두는 좌표**와 게임 로그만 읽습니다(게임 메모리는 읽지 않음).
 
 - 설정 → 지도 → **'스크린샷 찍으면 지도 띄우기'**: 스크린샷마다 지도가 자동으로 뜸
-- 설정 → **'지도 나란히 보기'**: 창을 지금 있는 모니터에 꽉 채우고 왼쪽엔 시세 카드, 오른쪽엔 전체 지도 (모니터가 둘이면 하나를 통째로)
+- 설정 → **'지도 나란히 보기'**: 창을 지금 있는 모니터에 꽉 채우고 시세 카드와 전체 지도를 나란히 표시 (모니터가 둘이면 하나를 통째로)
+- 설정 → 지도 → **'지도 위치'**에서 왼쪽/오른쪽 선택. 선택은 저장되며 기본은 기존과 같은 오른쪽입니다. 세로 모니터에서는 시세 카드가 지도 위에 유지됩니다.
 - **'조회 키를 게임에도 전달'**을 켜고 게임의 스크린샷 키를 조회 키와 같게 두면, 한 번 눌러 시세 조회 + 지도 갱신. 아이템을 읽으면 시세, 못 읽으면(인벤토리 밖) 지도가 뜹니다
 - 시세로 조회한 열쇠가 **지금 맵에서 여는 문**도 지도에 표시
 - 게임 스크린샷은 장당 5~7MB라 **'지도용 스크린샷 자동 정리'**를 켜면 좌표가 적힌 것만 오래된 순으로 휴지통에 보냅니다
@@ -404,6 +405,10 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 ---
 
 ## 📸 In Action
+
+### Side-by-side map position
+
+In **Settings → Map**, enable **Side-by-side map** and choose **Map side → Left / Right**. The choice is saved on this PC. Existing installations keep the map on the right by default. Portrait monitors keep the price card above the map. The window resize handle stays at the bottom-right corner in either landscape layout.
 
 In the inventory, hover an item and press F2 once its name tooltip appears; for loose loot in raid, press F2 as soon as you look at it — the card appears in about a second.
 
