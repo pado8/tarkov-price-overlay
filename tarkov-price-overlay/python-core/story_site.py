@@ -26,15 +26,17 @@ def _path():
 
 
 def load() -> dict:
-    """{"at": 초, "chapter": slug|None, "done": [id…]} — 없거나 깨졌으면 빈 값."""
+    """{"at": 초, "chapter": slug|None, "chapter_at": 초, "done": [id…]} — 없거나 깨졌으면 빈 값."""
     global _cache
     if _cache is None:
         try:
             d = json.loads(_path().read_text(encoding="utf-8"))
-            _cache = {"at": float(d.get("at") or 0), "chapter": d.get("chapter") if _SLUG.match(str(d.get("chapter") or "")) else None,
+            at = float(d.get("at") or 0)
+            _cache = {"at": at, "chapter": d.get("chapter") if _SLUG.match(str(d.get("chapter") or "")) else None,
+                      "chapter_at": float(d.get("chapter_at") or at),  # 11-11 전 파일엔 없음 → at
                       "done": [i for i in d.get("done") or [] if _ID.match(str(i))][:MAX_DONE]}
         except Exception:  # noqa: BLE001
-            _cache = {"at": 0.0, "chapter": None, "done": []}
+            _cache = {"at": 0.0, "chapter": None, "chapter_at": 0.0, "done": []}
     return _cache
 
 
@@ -44,17 +46,25 @@ def done_set() -> set[str]:
 
 def recent_chapter(now: Optional[float] = None) -> Optional[str]:
     d = load()
-    if d["chapter"] and (now or time.time()) - d["at"] < RECENT_SEC:
+    if d["chapter"] and (now or time.time()) - d.get("chapter_at", d["at"]) < RECENT_SEC:
         return d["chapter"]
     return None
 
 
 def save(chapter: Optional[str], done: list, known_chapters: set[str]) -> dict:
-    """사이트가 보낸 전체 목록으로 교체한다(체크 해제도 반영). 형식이 아닌 값은 버린다."""
+    """사이트가 보낸 전체 목록으로 교체한다(체크 해제도 반영). 형식이 아닌 값은 버린다.
+    11-11 챕터 없이 오면(사이트가 페이지를 열 때 하는 동기화) 체크 목록만 바꾸고 이전 챕터·그 시각은 그대로 —
+    읽으려고 다른 챕터 페이지를 열기만 해도 '자동' 지도가 그 챕터로 바뀌던 것(실측: 바티야 페이지를 열자 세관 목표가 바티야 3개로)."""
     global _cache
     ids = list(dict.fromkeys(str(i) for i in (done or []) if _ID.match(str(i))))[:MAX_DONE]
     ch = chapter if (chapter and chapter in known_chapters) else None
-    _cache = {"at": time.time(), "chapter": ch, "done": ids}
+    now = time.time()
+    prev = load()
+    if ch:
+        ch_at = now
+    else:
+        ch, ch_at = prev.get("chapter"), prev.get("chapter_at", prev.get("at", 0.0))
+    _cache = {"at": now, "chapter": ch, "chapter_at": ch_at, "done": ids}
     try:
         _path().write_text(json.dumps(_cache, ensure_ascii=False), encoding="utf-8")
     except Exception as e:  # noqa: BLE001
@@ -64,7 +74,7 @@ def save(chapter: Optional[str], done: list, known_chapters: set[str]) -> dict:
 
 def clear() -> None:
     global _cache
-    _cache = {"at": 0.0, "chapter": None, "done": []}
+    _cache = {"at": 0.0, "chapter": None, "chapter_at": 0.0, "done": []}
     try:
         _path().unlink(missing_ok=True)
     except Exception as e:  # noqa: BLE001

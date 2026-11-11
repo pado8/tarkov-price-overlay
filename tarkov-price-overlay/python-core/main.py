@@ -127,12 +127,17 @@ class _ProgressCORS:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        # /progress(읽기) + /progress/promo(프로모 코드 '등록함' 체크 저장, 2026-11-02) 두 경로만
-        if scope.get("type") != "http" or scope.get("path") not in ("/progress", "/progress/promo", "/progress/story"):
+        # /progress(읽기) + /progress/promo(프로모 코드 '등록함' 체크 저장, 2026-11-02) + /progress/story + /health
+        # 11-11 /health 추가: 사이트 스토리 페이지가 GET /health 의 features 로 연동 가능 여부를 보는데, 여기 없어서 출처 헤더가
+        # 안 붙어 브라우저가 응답을 막았다(CORS MissingAllowOriginHeader) → 사이트가 '앱 없음'으로 보고 체크를 한 번도 안 보냄.
+        path = scope.get("path")
+        if scope.get("type") != "http" or path not in ("/progress", "/progress/promo", "/progress/story", "/health"):
             return await self.app(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
         origin = headers.get("origin", "")
         allowed = bool(_SITE_ORIGIN_RE.match(origin))
+        if path == "/health" and not allowed:
+            return await self.app(scope, receive, send)  # 사이트가 아닌 출처는 원래 처리(CORSMiddleware) 그대로
         cors = [
             (b"access-control-allow-origin", origin.encode()),
             (b"access-control-allow-methods", b"GET, POST, OPTIONS"),
