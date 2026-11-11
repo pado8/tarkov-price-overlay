@@ -277,11 +277,24 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {data?.shot && (
         <span className={`radar-age${data.shot.age > STALE_SEC ? " stale" : ""}`}>{ago(data.shot.age, t)}</span>
       )}
+      {/* 11-11 파티 버튼을 머리글로(통계: 지도를 열 때 버튼이 화면 밖 13/23명 — 목표 목록이 길면 아래 조작부가 창 밖으로 밀렸다).
+          클래스 radar-party-btn 은 그대로 — pbv/pbo 판정이 같은 기준으로 1.3.1 과 비교되게 */}
+      {party && (
+        <button type="button" className={`radar-mini-btn radar-party-btn radar-head-party${showParty || party.code ? " on" : ""}`} onClick={() => {
+          if (!showParty) stat("pbc");
+          setShowParty((v) => !v);
+        }} aria-expanded={showParty} title={t.partyBtn}>
+          👥 {t.partyBtn}
+          {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
+        </button>
+      )}
       <button className="settings-btn" onClick={onClose} title={t.radarClose}>
         <Icon name="back" />
       </button>
     </div>
   );
+  // 파티 패널은 머리글 바로 아래(지도 위)에 연다 — 버튼만 올리고 패널이 맨 아래에 열리면 또 안 보인다
+  const partyPanel = party && showParty ? <PartyPanel party={party} t={t} maps={data?.maps ?? []} mapId={mapId} /> : null;
 
   if (mini) {
     // 지도만 남긴 미니맵 — 상태 안내도 지도 자리 안에서 한 줄로. 도구(옮기기·작게·크게·펼치기)는 마우스를 올렸을 때만(CSS)
@@ -321,6 +334,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     return (
       <div className="radar">
         {header}
+        {partyPanel}
         <div className="hint">{loading ? t.hintLoading : t.radarNoShot}</div>
       </div>
     );
@@ -473,7 +487,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {hiddenBlock}
     </div>
   );
-  // 맵 선택·스토리·크기·고정·내 위치 크게·지도 불투명도·파티·미니맵·사용법 — 카드는 지도 아래, 나란히는 오른쪽 열 위
+  // 맵 선택·스토리·크기·고정·내 위치 크게·지도 불투명도·미니맵·사용법 — 카드는 지도 아래, 나란히는 오른쪽 열 위(파티는 11-11부터 머리글)
   // (나란히 패널은 지도 높이를 '패널 − 210px'로 잡아서, 아래에 붙이면 파티 패널 등이 잘렸다 — 11-05 피드백)
   const controls = (
     <>
@@ -503,16 +517,6 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             <span className="radar-size-val">{mapAlpha}%</span>
           </label>
         )}
-        {party && (
-          <button type="button" className={`radar-mini-btn radar-party-btn${showParty || party.code ? " on" : ""}`} onClick={() => {
-            if (!showParty) stat("pbc");
-            setShowParty((v) => !v);
-          }} aria-expanded={showParty}>
-            👥 {t.partyBtn}
-            {party.code ? ` · ${party.friends.filter((f) => f.online).length + 1}` : ""}
-          </button>
-        )}
-        {party && showParty && <PartyPanel party={party} t={t} maps={data.maps} mapId={mapId} />}
         {onMini && !fill && (
           <button type="button" className="radar-mini-btn" onClick={() => onMini(true)} title={t.radarMiniHint}>
             <Icon name="map" /> {t.radarMini}
@@ -534,6 +538,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     return (
       <div className="radar" ref={radarRef}>
         {header}
+        {partyPanel}
         {error(data, t)}
         <div className="hint">{noMapHint}</div>
         {controls}
@@ -543,6 +548,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   return (
     <div className="radar" ref={radarRef}>
       {header}
+      {partyPanel}
       {error(data, t)}
       {stale && <div className="radar-warn">{t.radarStale}</div>}
       {/* 11-08 레이드 로딩 화면에서 맵을 미리 띄운 상태 — 위치·방향은 첫 스크린샷부터 */}
