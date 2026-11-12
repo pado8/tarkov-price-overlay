@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { MiniWindow } from "./MiniWindow";
 
 // Capture-region preview windows are tiny secondary webviews loaded with
 // ?window=preview-primary / preview-ground / preview-anchor. They render
@@ -91,6 +92,12 @@ if (previewMode === "preview-primary" || previewMode === "preview-ground") {
       />
     </div>,
   );
+} else if (previewMode === "minimap") {
+  // 나란히 보기와 함께 띄우는 미니맵 창(11-12 피드백 #61-5) — 투명 창에 지도만
+  document.documentElement.style.background = "transparent";
+  document.body.style.background = "transparent";
+  document.body.style.margin = "0";
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<MiniWindow />);
 } else {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>

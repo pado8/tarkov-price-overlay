@@ -25,6 +25,22 @@
         "shadow": false
       },
       {
+        "label": "minimap",
+        "url": "index.html?window=minimap",
+        "title": "Tarkov Price Overlay minimap",
+        "width": 260,
+        "height": 260,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "maximizable": false,
+        "shadow": false,
+        "visible": false,
+        "focus": false
+      },
+      {
         "label": "preview-primary",
         "url": "index.html?window=preview-primary",
         "title": "Capture region preview (primary)",

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { listen } from "@tauri-apps/api/event";
+import { emitTo, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow, PhysicalPosition, PhysicalSize, LogicalSize, primaryMonitor, currentMonitor, availableMonitors } from "@tauri-apps/api/window";
+import { getCurrentWindow, PhysicalPosition, PhysicalSize, LogicalSize, primaryMonitor, currentMonitor, availableMonitors, Window as TauriWindow } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -22,6 +22,7 @@ import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./capt
 import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { spotNearCursor, cursorLeft } from "./cardAtCursor";
+import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -1145,6 +1146,7 @@ const RADAR_MIN_OPACITY = 90;
 // 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
 const WIDE_KEY = "tarkov.wideMode";
 const CARD_AT_CURSOR_KEY = "tarkov.cardAtCursor"; // "1" = 시세 카드를 커서 옆에(11-12 피드백 #61-3, 기본 끔)
+const MINI_WITH_WIDE_KEY = "tarkov.radar.miniWithWide"; // "1" = 나란히 보기 중에 게임 화면에도 미니맵 창(11-12 피드백 #61-5, 기본 끔)
 const MINI_SNAP_KEY = "tarkov.radar.miniSnap"; // "0" = 미니맵 자석 끔(기본 켬, 11-12 피드백 #61)
 const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos";
 // 나란히 모드 창을 사용자가 끌어서 바꾼 크기·위치(물리 px). 없으면 모니터 전체(11-04 피드백 #54)
@@ -1973,6 +1975,14 @@ function App() {
   const [miniSnap, setMiniSnap] = useState<boolean>(() => localStorage.getItem(MINI_SNAP_KEY) !== "0");
   const miniSnapRef = useRef(miniSnap);
   miniSnapRef.current = miniSnap;
+  // 11-12 피드백 #61-5: 나란히 보기(옆 모니터 큰 지도)를 켠 채 게임 화면 위에도 작은 미니맵 — 따로 띄운 창(MiniWindow.tsx)
+  const [miniWithWide, setMiniWithWide] = useState<boolean>(() => localStorage.getItem(MINI_WITH_WIDE_KEY) === "1");
+  const pickMiniWithWide = (v: boolean) => {
+    setMiniWithWide(v);
+    try {
+      localStorage.setItem(MINI_WITH_WIDE_KEY, v ? "1" : "0");
+    } catch {}
+  };
   const pickRadarMini = (v: boolean) => {
     dailyAdd(v ? "mmn" : "mmf"); // 11-10 통계: 미니 지도로 줄임·다시 펼침
     if (!v) miniReturnRef.current = false;
@@ -3054,6 +3064,81 @@ function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pipActive, miniSize]);
+  // 나란히 보기와 함께 띄우는 미니맵 창 — 켜지면 저장한 미니맵 자리(없으면 나란히 창이 없는 모니터 오른쪽 위)에 포커스 없이 띄우고
+  // 지도 데이터를 이벤트로 넘긴다(미니맵 창은 사이드카를 따로 부르지 않음). 꺼지면 숨김
+  const companionOn = IS_MAIN_WINDOW && wideMode && miniWithWide && radarEnabled;
+  const companionOnRef = useRef(companionOn);
+  companionOnRef.current = companionOn;
+  const miniPayloadRef = useRef<MiniPayload | null>(null);
+  miniPayloadRef.current = { data: radarData, lang: region.lang, showScav: radarShowScav, snap: miniSnap, fontSize: region.fontSize, opacity: region.opacity, bgOpacity: region.bgOpacity };
+  const sendMini = () => {
+    if (miniPayloadRef.current) emitTo(MINI_LABEL, "mini-data", miniPayloadRef.current).catch(() => {});
+  };
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    if (!companionOn) {
+      invoke("hide_preview_rect", { label: MINI_LABEL }).catch(() => {});
+      return;
+    }
+    let dead = false;
+    (async () => {
+      try {
+        const mw = await TauriWindow.getByLabel(MINI_LABEL);
+        if (!mw || dead) return;
+        const mons = await availableMonitors();
+        let target: { x: number; y: number } | null = null;
+        try {
+          const r = JSON.parse(localStorage.getItem(RADAR_PIP_POS_KEY) || "null");
+          if (r && Number.isFinite(r.x) && Number.isFinite(r.y) && mons.some((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height)) target = r;
+        } catch {}
+        if (!target) {
+          const [me, pm] = await Promise.all([currentMonitor(), primaryMonitor()]);
+          const other = (m: { name: string | null } | null) => !!m && (!me || m.name !== me.name);
+          const mon = (other(pm) ? pm : mons.find(other)) ?? pm ?? me;
+          if (mon) {
+            const sf = mon.scaleFactor;
+            target = { x: mon.position.x + mon.size.width - Math.round(loadMiniSize() * sf) - Math.round(16 * sf), y: mon.position.y + Math.round(mon.size.height * 0.12) };
+          }
+        }
+        if (dead) return;
+        if (target) await mw.setPosition(new PhysicalPosition(target.x, target.y));
+        await invoke("show_overlay_passive", { label: MINI_LABEL });
+        sendMini();
+        dailyAdd("mww"); // 11-12 통계: 나란히 보기와 함께 미니맵을 띄운 횟수
+        log(`mini window: on @ ${target?.x},${target?.y}`);
+      } catch (e) {
+        log(`mini window: failed ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
+    return () => {
+      dead = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companionOn]);
+  useEffect(() => {
+    if (companionOn) sendMini();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companionOn, radarData, region.lang, radarShowScav, miniSnap, region.fontSize, region.opacity, region.bgOpacity]);
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    const ready = listen("mini-ready", () => {
+      if (companionOnRef.current) sendMini();
+    });
+    const close = listen("mini-close", () => {
+      dailyAdd("mwx"); // 11-12 통계: 미니맵 창의 ✕ 로 끔
+      setMiniWithWide(false);
+      try {
+        localStorage.setItem(MINI_WITH_WIDE_KEY, "0");
+      } catch {}
+    });
+    const snapped = listen("mini-snapped", () => dailyAdd("msn")); // 미니맵 창이 모서리에 붙음(본 창 미니맵과 같은 키)
+    return () => {
+      ready.then((f) => f());
+      close.then((f) => f());
+      snapped.then((f) => f());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // 지도 나란히 모드 — 켜면 지금 있는 모니터에 창을 꽉 채우고(위치는 저장), 끄면 저장한 위치·내용 크기로
   useEffect(() => {
     const win = getCurrentWindow();
@@ -4094,7 +4179,7 @@ function App() {
         // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
         // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
         const ws = localStorage.getItem(WIDE_KEY) === "1" ? (loadWideMapSide(localStorage) === "left" ? "L" : "R") : "0";
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};cac=${localStorage.getItem(CARD_AT_CURSOR_KEY) === "1" ? 1 : 0}`);
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};cac=${localStorage.getItem(CARD_AT_CURSOR_KEY) === "1" ? 1 : 0};mww=${localStorage.getItem(MINI_WITH_WIDE_KEY) === "1" ? 1 : 0}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
@@ -6137,6 +6222,11 @@ function App() {
               />
             </div>
             <div className="settings-sub">{t.radarMiniSnapHint}</div>
+            <div className="settings-row" title={t.radarMiniWithWideHint}>
+              <label htmlFor="mini-with-wide">{t.radarMiniWithWide}</label>
+              <input id="mini-with-wide" type="checkbox" checked={miniWithWide} onChange={(e) => pickMiniWithWide(e.target.checked)} />
+            </div>
+            <div className="settings-sub">{t.radarMiniWithWideHint}</div>
             <div className="settings-row" title={t.radarSettingHint}>
               <label>{t.radarSettingLabel}</label>
               <input

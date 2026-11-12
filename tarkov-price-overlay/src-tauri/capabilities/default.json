@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main", "preview-primary", "preview-ground"],
+  "windows": ["main", "minimap", "preview-primary", "preview-ground"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",

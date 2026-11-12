@@ -146,9 +146,10 @@ fn get_foreground_kind() -> String {
 }
 
 /// 프런트 클릭 투과 폴링이 부른다. 반환 = 실제로 바꿨는가(같으면 아무것도 안 함).
+/// label 없으면 본 창 — 11-12 나란히 보기와 함께 띄우는 미니맵 창("minimap")도 같은 방식으로(피드백 #61-5).
 #[tauri::command]
-fn set_click_through(app: tauri::AppHandle, ignore: bool) -> bool {
-    match app.get_webview_window("main") {
+fn set_click_through(app: tauri::AppHandle, ignore: bool, label: Option<String>) -> bool {
+    match app.get_webview_window(label.as_deref().unwrap_or("main")) {
         Some(w) => apply_click_through(&w, ignore),
         None => false,
     }
@@ -157,8 +158,8 @@ fn set_click_through(app: tauri::AppHandle, ignore: bool) -> bool {
 /// Frontend-invokable passive reveal — used by the F2 / toggle handlers so a
 /// re-shown price card doesn't pull focus off the game.
 #[tauri::command]
-fn show_overlay_passive(app: tauri::AppHandle) {
-    if let Some(window) = app.get_webview_window("main") {
+fn show_overlay_passive(app: tauri::AppHandle, label: Option<String>) {
+    if let Some(window) = app.get_webview_window(label.as_deref().unwrap_or("main")) {
         reveal_overlay_no_activate(&window);
     }
 }
@@ -750,9 +751,9 @@ fn hide_to_tray(app: tauri::AppHandle) {
     // Also hide the capture-region preview rectangles. They live in
     // separate always-on-top windows, so hiding the main overlay alone
     // leaves them floating with no UI to dismiss them.
-    for label in ["preview-primary", "preview-ground", "preview-anchor"] {
+    for label in ["preview-primary", "preview-ground", "preview-anchor", "minimap"] {
         if let Some(w) = app.get_webview_window(label) {
-            let _ = w.hide();
+            hide_window_hard(&w);
         }
     }
     notify_minimized_to_tray(&app);
@@ -803,9 +804,29 @@ fn show_preview_rect(
 #[tauri::command]
 fn hide_preview_rect(app: tauri::AppHandle, label: String) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(&label) {
-        window.hide().map_err(|e| e.to_string())?;
+        hide_window_hard(&window);
     }
     Ok(())
+}
+
+/// 11-12 미니맵 창(나란히 보기와 함께, "minimap")은 reveal_overlay_no_activate(ShowWindow SW_SHOWNOACTIVATE)로 띄워서
+/// tao 는 아직 '숨김'으로 알고 있다 → window.hide() 가 아무것도 안 했다(실측: hide 호출 ok 뒤에도 IsWindowVisible true).
+/// tao hide 와 함께 Windows 에 직접 SW_HIDE 도 보낸다(이미 숨김이면 아무 일 없음).
+fn hide_window_hard(window: &tauri::WebviewWindow) {
+    let _ = window.hide();
+    #[cfg(windows)]
+    {
+        #[link(name = "user32")]
+        extern "system" {
+            fn ShowWindow(hwnd: isize, n_cmd_show: i32) -> i32;
+        }
+        const SW_HIDE: i32 = 0;
+        if let Ok(hwnd) = window.hwnd() {
+            unsafe {
+                ShowWindow(hwnd.0 as isize, SW_HIDE);
+            }
+        }
+    }
 }
 
 /// True when the running .exe is part of a portable ZIP distribution.
@@ -1646,9 +1667,9 @@ pub fn run() {
                 }
                 // Hide preview rectangles too (same reason as hide_to_tray:
                 // they're independent windows that survive main-window hide).
-                for label in ["preview-primary", "preview-ground", "preview-anchor"] {
+                for label in ["preview-primary", "preview-ground", "preview-anchor", "minimap"] {
                     if let Some(w) = app_handle.get_webview_window(label) {
-                        let _ = w.hide();
+                        hide_window_hard(&w);
                     }
                 }
                 notify_minimized_to_tray(app_handle);
