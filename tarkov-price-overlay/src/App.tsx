@@ -20,6 +20,7 @@ import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
 import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
+import { snapToWorkArea } from "./miniSnap";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -1142,6 +1143,7 @@ const RADAR_POPUP_MAX_AGE_SEC = 60;
 const RADAR_MIN_OPACITY = 90;
 // 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
 const WIDE_KEY = "tarkov.wideMode";
+const MINI_SNAP_KEY = "tarkov.radar.miniSnap"; // "0" = 미니맵 자석 끔(기본 켬, 11-12 피드백 #61)
 const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos";
 // 나란히 모드 창을 사용자가 끌어서 바꾼 크기·위치(물리 px). 없으면 모니터 전체(11-04 피드백 #54)
 const WIDE_RECT_KEY = "tarkov.wideMode.rect"; // 지도 표시 중 카드 전체 불투명도 하한(%)
@@ -1959,6 +1961,10 @@ function App() {
   const [radarMini, setRadarMini] = useState<boolean>(() => localStorage.getItem(RADAR_MINI_KEY) === "1");
   const [miniSize, setMiniSize] = useState<number>(loadMiniSize);
   const [mapAlpha, setMapAlpha] = useState<number>(loadMapAlpha);
+  // 11-12 피드백 #61: 미니맵을 끌어 화면 모서리·가장자리 가까이 놓으면 자석처럼 붙는다(기본 켬, 설정에서 끄면 자유 이동)
+  const [miniSnap, setMiniSnap] = useState<boolean>(() => localStorage.getItem(MINI_SNAP_KEY) !== "0");
+  const miniSnapRef = useRef(miniSnap);
+  miniSnapRef.current = miniSnap;
   const pickRadarMini = (v: boolean) => {
     dailyAdd(v ? "mmn" : "mmf"); // 11-10 통계: 미니 지도로 줄임·다시 펼침
     if (!v) miniReturnRef.current = false;
@@ -4047,7 +4053,7 @@ function App() {
         // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
         // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
         const ws = localStorage.getItem(WIDE_KEY) === "1" ? (loadWideMapSide(localStorage) === "left" ? "L" : "R") : "0";
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws}`);
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
@@ -4322,12 +4328,32 @@ function App() {
     })();
 
     let moveSettleTimer = 0;
+    let pipSnapTimer = 0;
+    // 미니맵 끌기가 멈추면(0.25초, 마우스 버튼을 놓은 뒤) 자리 저장 — 자석이 켜져 있으면 작업 영역 가장자리 48px 안이면 붙인다
+    const settlePip = async () => {
+      try {
+        const cur = await invoke<{ left?: boolean }>("get_cursor_position").catch(() => ({ left: false }));
+        if (cur.left) {
+          pipSnapTimer = window.setTimeout(() => void settlePip(), 250); // 아직 끄는 중(버튼 누른 채 멈춤)
+          return;
+        }
+        const [pos, size] = await Promise.all([win.outerPosition(), win.outerSize()]);
+        const p = miniSnapRef.current ? snapToWorkArea(pos, size, await availableMonitors()) : { x: pos.x, y: pos.y };
+        if (p.x !== pos.x || p.y !== pos.y) {
+          pipMoveArmedAtRef.current = Date.now() + 400; // 붙이는 이동은 다시 받지 않는다
+          await win.setPosition(new PhysicalPosition(p.x, p.y));
+          dailyAdd("msn"); // 11-12 통계: 미니맵이 모서리·가장자리에 붙은 횟수
+        }
+        localStorage.setItem(RADAR_PIP_POS_KEY, JSON.stringify(p));
+      } catch {}
+    };
     const unlistenPromise = win.listen("tauri://move", () => {
       if (wideModeRef.current) return; // 모니터 원점으로 옮긴 건 사용자 위치가 아니다
       if (pipActiveRef.current) {
         // PiP 창을 끌어 옮긴 위치는 따로 기억(카드 자리 POSITION_KEY 는 그대로 둬야 끌 때 돌아간다)
         if (Date.now() < pipMoveArmedAtRef.current) return;
-        win.outerPosition().then((pos) => localStorage.setItem(RADAR_PIP_POS_KEY, JSON.stringify({ x: pos.x, y: pos.y }))).catch(() => {});
+        window.clearTimeout(pipSnapTimer);
+        pipSnapTimer = window.setTimeout(() => void settlePip(), 250);
         return;
       }
       if (Date.now() < pipMoveArmedAtRef.current) return; // PiP 를 끄며 원래 자리로 되돌린 이동
@@ -4372,6 +4398,7 @@ function App() {
     });
     return () => {
       window.clearTimeout(moveSettleTimer);
+      window.clearTimeout(pipSnapTimer);
       windowSettlingRef.current = false;
       unlistenPromise.then((fn) => fn());
       unScalePromise.then((fn) => fn()).catch(() => {});
@@ -6025,6 +6052,21 @@ function App() {
               </select>
             </div>
             <div className="settings-sub">{t.wideMapSideHint}</div>
+            <div className="settings-row" title={t.radarMiniSnapHint}>
+              <label htmlFor="mini-snap">{t.radarMiniSnap}</label>
+              <input
+                id="mini-snap"
+                type="checkbox"
+                checked={miniSnap}
+                onChange={(e) => {
+                  setMiniSnap(e.target.checked);
+                  try {
+                    localStorage.setItem(MINI_SNAP_KEY, e.target.checked ? "1" : "0");
+                  } catch {}
+                }}
+              />
+            </div>
+            <div className="settings-sub">{t.radarMiniSnapHint}</div>
             <div className="settings-row" title={t.radarSettingHint}>
               <label>{t.radarSettingLabel}</label>
               <input
