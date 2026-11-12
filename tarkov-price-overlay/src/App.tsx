@@ -21,6 +21,7 @@ import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./looku
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
 import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
+import { spotNearCursor, cursorLeft } from "./cardAtCursor";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import "./App.css";
 
@@ -1143,6 +1144,7 @@ const RADAR_POPUP_MAX_AGE_SEC = 60;
 const RADAR_MIN_OPACITY = 90;
 // 지도 나란히 모드: 창을 지금 있는 모니터에 꽉 채우고 왼쪽 카드 + 오른쪽 전체 지도. 끄면 저장해 둔 위치·원래 크기로
 const WIDE_KEY = "tarkov.wideMode";
+const CARD_AT_CURSOR_KEY = "tarkov.cardAtCursor"; // "1" = 시세 카드를 커서 옆에(11-12 피드백 #61-3, 기본 끔)
 const MINI_SNAP_KEY = "tarkov.radar.miniSnap"; // "0" = 미니맵 자석 끔(기본 켬, 11-12 피드백 #61)
 const WIDE_PREV_POS_KEY = "tarkov.wideMode.prevPos";
 // 나란히 모드 창을 사용자가 끌어서 바꾼 크기·위치(물리 px). 없으면 모니터 전체(11-04 피드백 #54)
@@ -1796,6 +1798,12 @@ function App() {
   // both as "no matrix" for rendering).
   const [ammoData, setAmmoData] = useState<AmmoData | null>(null);
   const [cardVisible, setCardVisible] = useState(true);
+  // 11-12 피드백 #61-3: 시세 카드를 F2 를 누른 커서 오른쪽 아래에 — 결과가 나온 뒤(캡처를 가리지 않게) 옮겨 띄우고,
+  // 커서가 그 자리에서 멀리 가면(또는 자동 숨김 시간이 지나면) 숨긴다. 쓰는 동안 창을 옮겨도 원래 카드 자리(POSITION_KEY)는 그대로
+  const [cardAtCursor, setCardAtCursor] = useState<boolean>(() => localStorage.getItem(CARD_AT_CURSOR_KEY) === "1");
+  const cardAtCursorRef = useRef(cardAtCursor);
+  cardAtCursorRef.current = cardAtCursor;
+  const cursorAnchorRef = useRef<{ x: number; y: number } | null>(null); // 커서 옆에 띄운 F2 자리(물리 px) — 멀어지면 숨김
   // 토글 핫키가 '지금 보이는지'를 상태 업데이터 밖에서 읽기 위한 거울(업데이터 안에서 타이머를 거는 부작용을 없앤다)
   const cardVisibleRef = useRef(cardVisible);
   cardVisibleRef.current = cardVisible;
@@ -2819,6 +2827,39 @@ function App() {
   const showCard = () => {
     cancelHideTimer();
     setCardVisible(true);
+  };
+  // 커서 옆에 띄운 카드 — 커서가 F2 자리에서 멀리 가면 숨긴다(카드 위에 있거나 설정을 연 동안은 그대로). 0.25초마다 커서만 읽는다
+  useEffect(() => {
+    if (!cardAtCursor || !cardVisible) return;
+    const iv = window.setInterval(async () => {
+      const a = cursorAnchorRef.current;
+      if (!a || mouseOverCardRef.current || settingsOpenRef.current) return;
+      try {
+        const c = await invoke<{ x: number; y: number }>("get_cursor_position");
+        if (cursorAnchorRef.current !== a || !cursorLeft(a, c, window.devicePixelRatio)) return;
+        cursorAnchorRef.current = null;
+        cancelHideTimer();
+        diag("hide:cursor");
+        dailyAdd("cal"); // 11-12 통계: 커서가 멀어져 숨긴 횟수
+        setCardVisible(false);
+      } catch {}
+    }, 250);
+    return () => window.clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardAtCursor, cardVisible]);
+  const pickCardAtCursor = (v: boolean) => {
+    setCardAtCursor(v);
+    cursorAnchorRef.current = null;
+    try {
+      localStorage.setItem(CARD_AT_CURSOR_KEY, v ? "1" : "0");
+    } catch {}
+    if (!v) {
+      // 끄면 원래 카드 자리로
+      try {
+        const r = JSON.parse(localStorage.getItem(POSITION_KEY) || "null");
+        if (r && Number.isFinite(r.x) && Number.isFinite(r.y)) void getCurrentWindow().setPosition(new PhysicalPosition(r.x, r.y));
+      } catch {}
+    }
   };
 
   // ── 지도 ───────────────────────────────────────────────────────────
@@ -4053,7 +4094,7 @@ function App() {
         // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
         // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
         const ws = localStorage.getItem(WIDE_KEY) === "1" ? (loadWideMapSide(localStorage) === "left" ? "L" : "R") : "0";
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1}`);
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};cac=${localStorage.getItem(CARD_AT_CURSOR_KEY) === "1" ? 1 : 0}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
@@ -4360,7 +4401,7 @@ function App() {
       // 11-07 '설정을 연 채 창을 끌면 글자가 엄청 떨린다': 이동 이벤트마다 높이 한계를 다시 재고 창 크기·설정 패널 높이를
       // 맞췄더니 실측 3초 끌기에 창 크기 설정 153회·창 높이 89번 변경(931→936→930…, 엇갈린 setSize 가 커졌다 작아졌다)이 났다.
       // → 끄는 동안엔 손대지 않고 이동이 멈춘 뒤 0.2초에 한 번만 위치 저장 + 높이 한계 다시 계산.
-      settleAfterMove(true);
+      settleAfterMove(!cardAtCursorRef.current); // 커서 옆 모드가 옮긴 자리는 카드 자리로 저장하지 않는다
     });
     // 11-09 '창을 옮기니 앱이 왔다갔다·글자가 떨어졌다 붙으며 흔들렸다'(125%↔100% 모니터): 경계를 넘는 순간 Windows 가 창을 새 배율
     // 크기로 바꾸는데 devicePixelRatio 는 아직 옛 값이라, 카드 감시 → apply 가 옛 배율로 setSize(100% 모니터에 1000px 폭)를 끼워 넣어
@@ -4582,7 +4623,29 @@ function App() {
         // F2는 시세 카드로. 단, 게임 스크린샷 키와 공유 중이면 지도를 띄워 둔 채 조회한다 —
         // 인벤토리 밖에서 누른 F2는 '스크린샷+지도 갱신'이 목적이라 빈 조회로 지도를 덮지 않게.
         // 11-07: 공유 중이면 누르는 순간 '조회 중'·숨은 카드 띄우기도 안 한다(lookupOutcome.pressView) — 읽었을 때만 카드
-        const atPress = pressView({ passthrough: hotkeyPassthroughRef.current, mapShown: radarActiveRef.current, wideMode: wideModeRef.current });
+        const pv = pressView({ passthrough: hotkeyPassthroughRef.current, mapShown: radarActiveRef.current, wideMode: wideModeRef.current });
+        // 커서 옆 모드(미니맵·나란히 중엔 안 씀): 누르는 순간엔 띄우지 않고, 떠 있던 카드도 숨긴다 — 새 툴팁 캡처를 가리지 않게
+        const cursorMode = cardAtCursorRef.current && !wideModeRef.current && !pipActiveRef.current;
+        const atPress = cursorMode ? { ...pv, reveal: false, loading: false } : pv;
+        if (cursorMode) {
+          cursorAnchorRef.current = null;
+          cancelHideTimer();
+          setCardVisible(false);
+          await new Promise((res) => setTimeout(res, 60)); // 숨긴 화면이 그려진 뒤 캡처
+        }
+        // 결과가 나오면 커서 오른쪽 아래로 옮겨 띄운다(창 크기가 새 결과에 맞춰진 뒤)
+        const showAtCursor = async () => {
+          await new Promise((res) => setTimeout(res, 80));
+          if (seq !== lookupSeqRef.current) return;
+          try {
+            const [size, mons] = await Promise.all([win.outerSize(), availableMonitors()]);
+            const p = spotNearCursor(event.payload.x, event.payload.y, size.width, size.height, mons);
+            await win.setPosition(new PhysicalPosition(p.x, p.y));
+          } catch {}
+          await reveal();
+          cursorAnchorRef.current = { x: event.payload.x, y: event.payload.y };
+          dailyAdd("cac"); // 11-12 통계: 커서 옆에 띄운 횟수
+        };
         if (atPress.reveal) await reveal();
         diag("f2");
         if (pipActiveRef.current) miniReturnRef.current = true; // 작은 지도에서 누른 조회 — 카드를 다 보면 작은 지도로
@@ -4649,7 +4712,7 @@ function App() {
           // 스크린샷용 누름)이면 보통 모드는 지도, 나란히 모드는 화면 그대로 — 둘 다 상태는 조회 직전으로 되돌린다
           // (11-03: 예전엔 "loading" 에 남아 '조회 중…'이 멈췄고, 보통 모드는 스크린샷 감지 속도에 따라 지도·못 찾음이 갈렸다).
           if (data.item_name != null) {
-            if (!atPress.reveal) {
+            if (!atPress.reveal && !cursorMode) {
               await reveal(); // 공유 키로 읽은 아이템 — 이제 카드를 띄운다
               if (seq !== lookupSeqRef.current) return;
             }
@@ -4681,6 +4744,7 @@ function App() {
           if (data.attempt !== "wide") {
             setHistory(addToHistory(data));
           }
+          if (cursorMode && (data.item_name != null || !hotkeyPassthroughRef.current)) await showAtCursor();
           // 공유 키로 못 읽은 누름(인벤토리 밖 스크린샷)은 실패음도 안 낸다 — 스크린샷마다 '실패' 소리가 났다
           if (loadSoundOn() && (data.item_name != null || !hotkeyPassthroughRef.current)) playDing(data.item_name != null);
           // Outcome telemetry (breakage detection): classify the lookup.
@@ -4735,7 +4799,8 @@ function App() {
           const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
           log(`React: fetch ERROR ${msg}`);
           if (seq !== lookupSeqRef.current) return; // stale failure — ignore
-          if (!atPress.reveal) await reveal(); // 사이드카 오류는 공유 키여도 알린다
+          if (cursorMode) await showAtCursor();
+          else if (!atPress.reveal) await reveal(); // 사이드카 오류는 공유 키여도 알린다
           // Human messages for the two known cases; raw error only for the
           // unexpected rest. "TypeError: Failed to fetch" terrified users —
           // it's just the sidecar (re)starting.
@@ -5935,6 +6000,11 @@ function App() {
               />
             </div>
             <div className="settings-sub">{t.subAutoHide}</div>
+            <div className="settings-row" title={t.cardAtCursorHint}>
+              <label htmlFor="card-at-cursor">{t.cardAtCursor}</label>
+              <input id="card-at-cursor" type="checkbox" checked={cardAtCursor} onChange={(e) => pickCardAtCursor(e.target.checked)} />
+            </div>
+            <div className="settings-sub">{t.cardAtCursorHint}</div>
             <div className="settings-row" title={t.hoverDodgeHint}>
               <label>{t.hoverDodge}</label>
               <input type="checkbox" checked={hoverDodge} onChange={(e) => setHoverDodge(e.target.checked)} />
