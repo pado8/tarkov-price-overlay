@@ -3110,8 +3110,22 @@ function App() {
         log(`mini window: failed ${e instanceof Error ? e.message : String(e)}`);
       }
     })();
+    // 트레이로 숨겼다(미니맵 창도 같이 숨음) 다시 띄우는 길이 여럿(트레이 메뉴·아이콘·F2) — 켜져 있는 동안 1.5초마다
+    // '본 창은 보이는데 미니맵 창은 숨음'이면 그 자리에 다시 띄운다(11-12 QA: 트레이에서 돌아오면 미니맵이 안 돌아오던 것)
+    const watch = window.setInterval(async () => {
+      try {
+        const mw = await TauriWindow.getByLabel(MINI_LABEL);
+        if (!mw || dead) return;
+        const [mainVis, miniVis] = await Promise.all([getCurrentWindow().isVisible(), mw.isVisible()]);
+        if (dead || !mainVis || miniVis) return;
+        await invoke("show_overlay_passive", { label: MINI_LABEL });
+        sendMini();
+        log("mini window: shown again (main visible)");
+      } catch {}
+    }, 1500);
     return () => {
       dead = true;
+      window.clearInterval(watch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companionOn]);
