@@ -55,9 +55,9 @@ $tauriCfgPath = "$root\src-tauri\tauri.conf.json"
 
 # Snapshot originals — restored in finally so test builds never pollute
 # the working tree (no accidental commit of "1.0.10-rc1" or localhost URL).
-$pkgBackup      = Get-Content -Raw $pkgPath
-$cargoBackup    = Get-Content -Raw $cargoPath
-$tauriCfgBackup = Get-Content -Raw $tauriCfgPath
+$pkgBackup      = Get-Content -Raw -Encoding UTF8 $pkgPath
+$cargoBackup    = Get-Content -Raw -Encoding UTF8 $cargoPath
+$tauriCfgBackup = Get-Content -Raw -Encoding UTF8 $tauriCfgPath
 
 $testEndpoint = "http://127.0.0.1:$Port/latest.json"
 

@@ -21,6 +21,7 @@ import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./looku
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
 import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
+import { cmpVersion } from "./version";
 import { spotNearCursor, cursorLeft } from "./cardAtCursor";
 import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
@@ -58,16 +59,6 @@ function loadAutoCheckUpdate(): boolean {
 function loadAutoInstallUpdate(): boolean {
   const v = localStorage.getItem(UPDATE_AUTO_INSTALL_KEY);
   return v == null ? true : v === "true";
-}
-// "1.2.10" vs "1.2.9" 같은 숫자 비교(문자열 비교 함정 방지). 음수=a가 낮음.
-function cmpVersion(a: string, b: string): number {
-  const pa = a.split(".").map((x) => parseInt(x, 10) || 0);
-  const pb = b.split(".").map((x) => parseInt(x, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (d !== 0) return d;
-  }
-  return 0;
 }
 
 type Diagnostics = {
