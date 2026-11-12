@@ -2838,7 +2838,7 @@ function App() {
     cancelHideTimer();
     setCardVisible(true);
   };
-  // 커서 옆에 띄운 카드 — 커서가 F2 자리에서 멀리 가면 숨긴다(카드 위에 있거나 설정을 연 동안은 그대로). 0.25초마다 커서만 읽는다
+  // 커서 옆에 띄운 카드 — 커서가 F2 자리에서 벗어나면 숨긴다(카드 위에 있거나 설정을 연 동안은 그대로). 0.15초마다 커서만 읽는다(11-12 50px 로 줄이며 더 빨리)
   useEffect(() => {
     if (!cardAtCursor || !cardVisible) return;
     const iv = window.setInterval(async () => {
@@ -2853,7 +2853,7 @@ function App() {
         dailyAdd("cal"); // 11-12 통계: 커서가 멀어져 숨긴 횟수
         setCardVisible(false);
       } catch {}
-    }, 250);
+    }, 150);
     return () => window.clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardAtCursor, cardVisible]);

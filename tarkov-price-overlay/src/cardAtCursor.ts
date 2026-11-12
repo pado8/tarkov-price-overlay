@@ -1,6 +1,6 @@
 // 시세 카드를 커서 옆에 띄우기(11-12 피드백 #61-3) — 창 자리 계산(창 이동·숨김은 App.tsx)
 export const CARD_GAP_PX = 24; // 커서에서 오른쪽 아래로 띄우는 거리(논리 px)
-export const CURSOR_LEAVE_PX = 280; // F2 를 누른 자리에서 커서가 이만큼(논리 px) 넘게 멀어지면 카드를 숨긴다
+export const CURSOR_LEAVE_PX = 50; // F2 를 누른 자리에서 커서가 이만큼(논리 px) 넘게 멀어지면 카드를 숨긴다 — 11-12 사용자 280→50(아이템에서 커서를 떼면 바로)
 
 type Mon = { position: { x: number; y: number }; size: { width: number; height: number }; scaleFactor: number; workArea?: { position: { x: number; y: number }; size: { width: number; height: number } } };
 
