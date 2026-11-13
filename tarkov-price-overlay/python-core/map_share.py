@@ -6,7 +6,7 @@
 보낸 사람 구분은 설치 ID 와 무관한 익명 ID(처음 한 번 무작위로 만듦). '보낸 자료 지우기'를 하면 서버에서 지우고 새 익명 ID 로 바꾼다.
 이미 보낸 줄은 해시로 기억해 다시 보내지 않는다. 받는 곳 = Cloudflare Worker aquapado-mapshare.
 11-11 닫힘: 서버가 받기를 멈추면(Worker vars.CLOSED) 보내기 응답에 closed:true — 상태 파일에 'closed'(받은 시각)를 남기고
-그 줄은 '보냄'으로 적지 않는다(다시 열리면 그대로 보냄). 닫힌 동안 자동 보내기는 3시간마다 GET /status 만 보고, 열리면 표시를 지우고 다시 보낸다.
+그 줄은 '보냄'으로 적지 않는다(다시 열리면 그대로 보냄). 닫힌 동안 자동 보내기는 보내는 간격마다 GET /status 만 보고, 열리면 표시를 지우고 다시 보낸다.
 시험용: TPO_MAPSHARE_URL(받는 주소).
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ import radar
 
 SHARE_URL = os.environ.get("TPO_MAPSHARE_URL") or "https://aquapado-mapshare.aquapado.workers.dev/mapshare"
 STATUS_URL = urllib.parse.urljoin(SHARE_URL, "/status")  # {ok, closed} — 5분 캐시(Worker)
-MIN_INTERVAL_SEC = 3 * 3600  # 자동 보내기 최소 간격(직접 '지금 보내기'는 무시) — 11-10 사용자 12→3시간(서버는 익명 ID 당 하루 20묶음까지)
+MIN_INTERVAL_SEC = 12 * 3600  # 자동 보내기 최소 간격(직접 '지금 보내기'는 무시) — 11-10 사용자 12→3시간, 11-13 사용자 '자료 많이 쌓였다(4일 161명·2.7만 줄)' → 다시 12시간(서버는 익명 ID 당 하루 20묶음까지)
 MAX_LINES = 5000  # 한 번에 보내는 최대 줄 수 — 넘으면 다음 번에 이어서
 TIMEOUT_SEC = 15
 
