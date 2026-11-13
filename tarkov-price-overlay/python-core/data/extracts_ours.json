@@ -1,0 +1,620 @@
+{
+ "checked": "2026-11-10",
+ "source": "tarkov.dev 탈출구 목록 + 우리 규칙(두 진영 줄→모두·변형 맵→본 맵·빈 진영→모두) + 근거 적은 예외(scripts/extracts_ours.py)",
+ "evidence": {
+  "removed": {
+   "factory": {
+    "Gate 2": "사용자 게임 확인 필요(공식 노트에 없음)"
+   },
+   "customs": {
+    "Factory Shacks": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Old Road Gate": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Passage Between Rocks": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "RUAF Roadblock": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Sniper Roadblock": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Warehouse 4": "사용자 게임 확인 필요(공식 노트에 없음)"
+   },
+   "shoreline": {
+    "CCP Temporary": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Cliff Descent": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Rock Passage": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Ruined House Fence": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Svetliy Dead End": "사용자 게임 확인 필요(공식 노트에 없음)"
+   },
+   "streets-of-tarkov": {
+    "Basement Entrance": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Scav Checkpoint": "사용자 게임 확인 필요(공식 노트에 없음)"
+   },
+   "ground-zero": {
+    "Pinewood Basement (Co-Op)": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Scav Bunker": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "UN Roadblock": "사용자 게임 확인 필요(공식 노트에 없음)"
+   }
+  },
+  "shared": {
+   "factory": {
+    "Smugglers' Passage": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "customs": {
+    "Railroad to Reserve": "사용자 게임 확인 필요(공식 노트에 없음)",
+    "Smugglers' Boat": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요",
+    "Smugglers' Bunker (ZB-1012)": "사용자 게임 확인 필요(공식 노트에 없음)"
+   },
+   "woods": {
+    "Railway Bridge to Tarkov": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "lighthouse": {
+    "Passage by the Lake": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "shoreline": {
+    "Mountain Bunker": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "reserve": {
+    "Exit to Woods": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "interchange": {
+    "Hole in the Fence": "반대 근거 있음(비공식 가이드: PMC 전용·초록 조명탄) · 게임 확인 필요"
+   },
+   "streets-of-tarkov": {
+    "Smugglers' Basement": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   },
+   "ground-zero": {
+    "Tartowers Sales Office": "부분: 공식 0.16.0.0 규칙 news/id/323(숨겨진 탈출구=PMC·스캐브 공용) · 숨겨진 탈출구인지는 게임 확인 필요"
+   }
+  }
+ },
+ "maps": {
+  "factory": [
+   {
+    "name": "Camera Bunker Door",
+    "faction": "scav"
+   },
+   {
+    "name": "Cellars",
+    "faction": "pmc"
+   },
+   {
+    "name": "Courtyard Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Gate 0",
+    "faction": "pmc"
+   },
+   {
+    "name": "Gate 3",
+    "faction": "shared"
+   },
+   {
+    "name": "Med Tent Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Office Window",
+    "faction": "scav"
+   },
+   {
+    "name": "Smugglers' Passage",
+    "faction": "shared"
+   }
+  ],
+  "customs": [
+   {
+    "name": "Administration Gate",
+    "faction": "scav"
+   },
+   {
+    "name": "Boiler Room Basement (Co-op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Crossroads",
+    "faction": "shared"
+   },
+   {
+    "name": "Dorms V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Gate Near Medblock",
+    "faction": "scav"
+   },
+   {
+    "name": "Old Gas Station",
+    "faction": "shared"
+   },
+   {
+    "name": "Railroad Passage (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Railroad to Port",
+    "faction": "scav"
+   },
+   {
+    "name": "Railroad to Reserve",
+    "faction": "shared"
+   },
+   {
+    "name": "Railroad to Tarkov",
+    "faction": "scav"
+   },
+   {
+    "name": "Reserve Checkpoint",
+    "faction": "scav"
+   },
+   {
+    "name": "Smugglers' Boat",
+    "faction": "shared"
+   },
+   {
+    "name": "Smugglers' Bunker (ZB-1012)",
+    "faction": "shared"
+   },
+   {
+    "name": "Trailer Park",
+    "faction": "shared"
+   },
+   {
+    "name": "ZB-1011",
+    "faction": "shared"
+   },
+   {
+    "name": "ZB-1013",
+    "faction": "pmc"
+   }
+  ],
+  "woods": [
+   {
+    "name": "Boat",
+    "faction": "scav"
+   },
+   {
+    "name": "Bridge V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Dead Man's Place",
+    "faction": "scav"
+   },
+   {
+    "name": "Eastern Rocks",
+    "faction": "scav"
+   },
+   {
+    "name": "Friendship Bridge (Co-Op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Mountain Stash",
+    "faction": "scav"
+   },
+   {
+    "name": "Northern UN Roadblock",
+    "faction": "pmc"
+   },
+   {
+    "name": "Old Railway Depot",
+    "faction": "scav"
+   },
+   {
+    "name": "Outskirts",
+    "faction": "shared"
+   },
+   {
+    "name": "Power Line Passage (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Railway Bridge to Tarkov",
+    "faction": "shared"
+   },
+   {
+    "name": "RUAF Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "RUAF Roadblock",
+    "faction": "scav"
+   },
+   {
+    "name": "Scav Bunker",
+    "faction": "scav"
+   },
+   {
+    "name": "Scav House",
+    "faction": "scav"
+   },
+   {
+    "name": "UN Roadblock",
+    "faction": "shared"
+   },
+   {
+    "name": "ZB-014",
+    "faction": "pmc"
+   },
+   {
+    "name": "ZB-016",
+    "faction": "pmc"
+   }
+  ],
+  "lighthouse": [
+   {
+    "name": "Armored Train",
+    "faction": "shared"
+   },
+   {
+    "name": "Hideout Under the Landing Stage",
+    "faction": "scav"
+   },
+   {
+    "name": "Industrial Zone Gates",
+    "faction": "scav"
+   },
+   {
+    "name": "Mountain Pass",
+    "faction": "pmc"
+   },
+   {
+    "name": "Northern Checkpoint",
+    "faction": "pmc"
+   },
+   {
+    "name": "Passage by the Lake",
+    "faction": "shared"
+   },
+   {
+    "name": "Path to Shoreline",
+    "faction": "shared"
+   },
+   {
+    "name": "Scav Hideout at the Grotto",
+    "faction": "scav"
+   },
+   {
+    "name": "Side Tunnel (Co-Op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Southern Road",
+    "faction": "pmc"
+   },
+   {
+    "name": "Southern Road Landslide",
+    "faction": "scav"
+   }
+  ],
+  "shoreline": [
+   {
+    "name": "Admin Basement",
+    "faction": "scav"
+   },
+   {
+    "name": "Climber's Trail",
+    "faction": "pmc"
+   },
+   {
+    "name": "East Wing Gym Entrance",
+    "faction": "scav"
+   },
+   {
+    "name": "Lighthouse",
+    "faction": "scav"
+   },
+   {
+    "name": "Mountain Bunker",
+    "faction": "shared"
+   },
+   {
+    "name": "Path to Lighthouse",
+    "faction": "pmc"
+   },
+   {
+    "name": "Pier Boat",
+    "faction": "pmc"
+   },
+   {
+    "name": "Railway Bridge",
+    "faction": "pmc"
+   },
+   {
+    "name": "Road to Customs",
+    "faction": "shared"
+   },
+   {
+    "name": "Road to North V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Ruined Road",
+    "faction": "scav"
+   },
+   {
+    "name": "Smugglers' Path (Co-op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Tunnel",
+    "faction": "pmc"
+   }
+  ],
+  "reserve": [
+   {
+    "name": "Armored Train",
+    "faction": "shared"
+   },
+   {
+    "name": "Bunker Hermetic Door",
+    "faction": "shared"
+   },
+   {
+    "name": "Checkpoint Fence",
+    "faction": "scav"
+   },
+   {
+    "name": "Cliff Descent",
+    "faction": "pmc"
+   },
+   {
+    "name": "D-2",
+    "faction": "pmc"
+   },
+   {
+    "name": "Depot Hermetic Door",
+    "faction": "scav"
+   },
+   {
+    "name": "Exit to Woods",
+    "faction": "shared"
+   },
+   {
+    "name": "Heating Pipe",
+    "faction": "scav"
+   },
+   {
+    "name": "Hole in the Wall by the Mountains",
+    "faction": "scav"
+   },
+   {
+    "name": "Scav Lands (Co-Op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Sewer Manhole",
+    "faction": "shared"
+   }
+  ],
+  "interchange": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared"
+   },
+   {
+    "name": "Hole in the Fence",
+    "faction": "shared"
+   },
+   {
+    "name": "Path to River (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Power Station V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Railway Exfil",
+    "faction": "shared"
+   },
+   {
+    "name": "Saferoom Exfil",
+    "faction": "pmc"
+   },
+   {
+    "name": "Scav Camp (Co-Op)",
+    "faction": "shared"
+   }
+  ],
+  "streets-of-tarkov": [
+   {
+    "name": "Cardinal Apartment Complex Parking",
+    "faction": "scav"
+   },
+   {
+    "name": "Collapsed Crane",
+    "faction": "pmc"
+   },
+   {
+    "name": "Courtyard",
+    "faction": "pmc"
+   },
+   {
+    "name": "Crash Site",
+    "faction": "pmc"
+   },
+   {
+    "name": "Damaged House",
+    "faction": "pmc"
+   },
+   {
+    "name": "Entrance to Catacombs",
+    "faction": "scav"
+   },
+   {
+    "name": "Expo Checkpoint",
+    "faction": "pmc"
+   },
+   {
+    "name": "Klimov Shopping Mall Exfil",
+    "faction": "scav"
+   },
+   {
+    "name": "Klimov Street (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Near Kamchatskaya Arch",
+    "faction": "scav"
+   },
+   {
+    "name": "Pinewood Basement (Co-Op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Primorsky Ave Taxi V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Sewer Manhole",
+    "faction": "scav"
+   },
+   {
+    "name": "Sewer River",
+    "faction": "pmc"
+   },
+   {
+    "name": "Smugglers' Basement",
+    "faction": "shared"
+   },
+   {
+    "name": "Stylobate Building Elevator",
+    "faction": "pmc"
+   },
+   {
+    "name": "Ventilation Shaft",
+    "faction": "scav"
+   }
+  ],
+  "night-factory": [
+   {
+    "name": "Camera Bunker Door",
+    "faction": "scav"
+   },
+   {
+    "name": "Cellars",
+    "faction": "pmc"
+   },
+   {
+    "name": "Courtyard Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Gate 0",
+    "faction": "pmc"
+   },
+   {
+    "name": "Gate 3",
+    "faction": "shared"
+   },
+   {
+    "name": "Med Tent Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Office Window",
+    "faction": "scav"
+   },
+   {
+    "name": "Smugglers' Passage",
+    "faction": "shared"
+   }
+  ],
+  "the-lab": [
+   {
+    "name": "Cargo Elevator",
+    "faction": "shared"
+   },
+   {
+    "name": "Hangar Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Main Elevator",
+    "faction": "shared"
+   },
+   {
+    "name": "Medical Block Elevator",
+    "faction": "shared"
+   },
+   {
+    "name": "Parking Gate",
+    "faction": "pmc"
+   },
+   {
+    "name": "Sewage Conduit",
+    "faction": "pmc"
+   },
+   {
+    "name": "Ventilation Shaft",
+    "faction": "pmc"
+   }
+  ],
+  "ground-zero": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared"
+   },
+   {
+    "name": "Mira Ave (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Nakatani Basement Stairs",
+    "faction": "shared"
+   },
+   {
+    "name": "Police Cordon V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Scav Checkpoint (Co-op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Tartowers Sales Office",
+    "faction": "shared"
+   }
+  ],
+  "ground-zero-21": [
+   {
+    "name": "Emercom Checkpoint",
+    "faction": "shared"
+   },
+   {
+    "name": "Mira Ave (Flare)",
+    "faction": "pmc"
+   },
+   {
+    "name": "Nakatani Basement Stairs",
+    "faction": "shared"
+   },
+   {
+    "name": "Police Cordon V-Ex",
+    "faction": "pmc"
+   },
+   {
+    "name": "Scav Checkpoint (Co-op)",
+    "faction": "shared"
+   },
+   {
+    "name": "Tartowers Sales Office",
+    "faction": "shared"
+   }
+  ],
+  "the-labyrinth": [
+   {
+    "name": "Ariadne's Path",
+    "faction": "pmc"
+   },
+   {
+    "name": "The Way Up",
+    "faction": "pmc"
+   }
+  ],
+  "icebreaker": [
+   {
+    "name": "Helicopter",
+    "faction": "pmc"
+   }
+  ]
+ }
+}

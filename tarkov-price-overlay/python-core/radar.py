@@ -775,7 +775,7 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
         if wkey:
             seen_ex.add(wkey)
         fac = wfac or ex.get("faction") or "shared"
-        # 조건은 위키 기준 표 — 데이터의 switches 는 맵 전체 스위치가 모든 탈출구에 붙어 있어 쓰면 틀린다
+        # 조건은 extract_conditions 의 사실 자료(우리 문장 틀) — 데이터의 switches 는 맵 전체 스위치가 모든 탈출구에 붙어 있어 쓰면 틀린다
         tags, _text, _give = extract_conditions.conditions(map_slug, ex)
         add("extract", _disp_name(loc_maps, loc_en, ex.get("name")), ex.get("position"),
             faction=fac, switch="lever" in tags, paid="paid" in tags, cond=sorted(tags))
@@ -948,9 +948,9 @@ BOSS_ANCHORS: dict = {
     "shoreline": {"ZonePort": [(-335.9, 564.1)]},
 }
 
-# 원본 bosses[].spawnLocations 에 아예 없는 스폰 장소(11-04, 사용자 지적 + 공식 위키 확인).
-#   등대 군즈(Knight): 위키 Knight 문서 "At the water treatment plant in the north, and at the blue chalet" —
-#   tarkov.dev 는 별장(Zone_Chalet)만 갖고 있다. 정수장 쪽 보스 범주 스폰 구역 셋의 점으로 채운다(확률은 같은 보스의 맵 확률).
+# 원본 bosses[].spawnLocations 에 아예 없는 스폰 장소. 근거 = 사용자 게임 안 확인(11-04 지적) — 위키 문장은 근거로 쓰지 않음(11-10).
+#   등대 군즈(Knight): 북쪽 정수장에서도 나온다. tarkov.dev 는 별장(Zone_Chalet)만 갖고 있어
+#   정수장 쪽 보스 범주 스폰 구역 셋(tarkov.dev spawns 의 zoneName)의 점으로 채운다(확률은 같은 보스의 맵 확률).
 # (맵, 보스 mob, 표시 이름, 스폰 zoneName 들)
 BOSS_EXTRA: list = [
     ("lighthouse", "bossKnight", "Water Treatment Plant", ["Zone_TreatmentBeach", "Zone_TreatmentContainers", "Zone_TreatmentRocks"]),

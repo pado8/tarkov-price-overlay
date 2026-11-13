@@ -1,9 +1,9 @@
 """탈출구 이용 조건 — 탈콥 가이드(scripts/guide_static.py)와 레이더(radar.py)가 같이 쓴다.
 
 tarkov.dev 데이터의 extract.switches 는 조건이 아니다: 세관은 탈출구 28개 전부, 연구소는 7개 전부에
-같은 스위치가 붙어 있다(2026-10-27 확인). 그래서 조건은 공식 위키(escapefromtarkov.fandom.com 각 맵 문서의
-Extractions 표, 2026-10-27)를 손으로 옮겨 여기 둔다. 아이템 제출·요금(transferItem)은 데이터가 위키와 맞아
-그대로 쓰되, 돈이면 '유료', 아이템이면 '필요 아이템'으로 구분한다.
+같은 스위치가 붙어 있다(2026-10-27 확인). 그래서 조건은 여기 FACTS 에 사실(태그·장소·열쇠·시간·인원)만 두고
+문장은 _render 의 우리 문장 틀로 만든다(11-10 — 전엔 위키 문장을 옮겨 썼는데 CC BY-NC-SA 라 걷어냄).
+아이템 제출·요금(transferItem)은 tarkov.dev 데이터를 그대로 쓰되, 돈이면 '유료', 아이템이면 '필요 아이템'으로 구분한다.
 
 키 = "<맵>:<탈출구 내부 이름>" (내부 이름은 데이터의 extract.name, 번역 전 값). 맵 변형은 MAP_BASE로 묶는다.
 태그: lever(레버·전원·스위치) flare(초록 조명탄) key(열쇠·키카드) item(아이템 제출) paid(돈) coop(스캐브+PMC 협동)
@@ -16,74 +16,110 @@ MAP_BASE = {"night-factory": "factory", "ground-zero-21": "ground-zero", "the-la
 # 돈 아이템 — transferItem 이 이거면 '유료', 아니면 '필요 아이템'
 MONEY_IDS = {"5449016a4bdc2d6f028b456f": "₽", "569668774bdc2da2298b4568": "€", "5696686a4bdc2da3298b456a": "$"}
 
-_FLARE = "탈출 구역 안에서 초록 조명탄을 하늘로 쏴야 열림"
-_VEX = "차량 탈출 — 인원별 요금(스캐브 카르마에 따라 달라짐)"
-_COOP = "스캐브와 PMC가 함께 와야 열림(협동)"
-_CLIMB = "Red Rebel 아이스 바일 + Paracord 낙하산 줄 필요, 방탄조끼 착용 불가"
+# ── 조건 = '사실'만 적은 자료 + 우리 문장 틀(11-10, 위키 문장 걷어내기) ─────────────────────────────
+# 전에는 위키 문장을 손으로 옮긴 글이었다(CC BY-NC-SA). 이제 자료는 태그·장소 이름·열쇠 이름·시간·인원 같은 사실만 두고,
+# 문장은 아래 _render 의 틀로 만든다. 사실 근거 = 게임 안 표시·공식 패치 노트·사용자 확인(위키 문장은 근거로 쓰지 않음).
+# 자료 칸: lever=(어디서, 무엇을) · key=열쇠 이름 · steps=[순서대로 할 일] · vex=최대 인원 · train=(도착 시작 분, 도착 끝 분, 머무는 분)
+#          after=레이드 시작 뒤 몇 분 · note=덧붙일 짧은 사실 · flare_only_sometimes=True 면 '항상 열려 있지 않음'
+_CLIMB_GEAR = ("Red Rebel 아이스 바일", "Paracord")
 
-# (태그, 설명)
-COND: dict[str, tuple[frozenset, str]] = {
+FACTS: dict[str, dict] = {
     # 세관
-    "customs:ex_customs_pmc_zb1013": (frozenset({"lever", "key"}), "크레인 야적장 4번 창고의 레버를 당긴 뒤 ZB-1013 열쇠로 문을 열어야 함"),
-    "customs:ex_customs_pmc_gasstation": (frozenset({"flare"}), "PMC는 초록 조명탄을 쏴야 열림"),
-    "customs:ex_customs_pmc_flare": (frozenset({"flare"}), _FLARE),
-    "customs:ex_customs_coop_boiler": (frozenset({"coop"}), _COOP),
-    "customs:ex_customs_pmc_auto": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
+    "customs:ex_customs_pmc_zb1013": {"tags": {"lever", "key"}, "lever": ("크레인 야적장 4번 창고", "레버"), "key": "ZB-1013"},
+    "customs:ex_customs_pmc_gasstation": {"tags": {"flare"}, "note": "PMC 만 해당"},
+    "customs:ex_customs_pmc_flare": {"tags": {"flare"}},
+    "customs:ex_customs_coop_boiler": {"tags": {"coop"}},
+    "customs:ex_customs_pmc_auto": {"tags": {"vex", "paid"}, "vex": 4},
     # 공장
-    "factory:Gate m": (frozenset({"key"}), "공장 비상구 열쇠로 문을 열어야 함"),
-    "factory:Cellars": (frozenset({"key"}), "공장 비상구 열쇠로 문을 열어야 함"),
+    "factory:Gate m": {"tags": {"key"}, "key": "공장 비상구"},
+    "factory:Cellars": {"tags": {"key"}, "key": "공장 비상구"},
     # 그라운드 제로
-    "ground-zero:Sniper_exit": (frozenset({"flare"}), _FLARE),
-    "ground-zero:Scav_coop_exit": (frozenset({"coop"}), _COOP),
-    "ground-zero:Sandbox_VExit": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
+    "ground-zero:Sniper_exit": {"tags": {"flare"}},
+    "ground-zero:Scav_coop_exit": {"tags": {"coop"}},
+    "ground-zero:Sandbox_VExit": {"tags": {"vex", "paid"}, "vex": 4},
     # 쇄빙선
-    "icebreaker:Heli": (frozenset({"flare"}), "탈출 구역 안에서 초록 조명탄을 쏴야 헬기가 옴"),
+    "icebreaker:Heli": {"tags": {"flare"}, "note": "헬기 탈출"},
     # 인터체인지
-    "interchange:ex_interchange_pmc_sniper": (frozenset({"flare"}), _FLARE),
-    "interchange:ex_interchange_pmc_auto": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
-    "interchange:ex_interchange_coop_basement": (frozenset({"coop"}), _COOP),
-    "interchange:ex_interchange_pmc_saferoom": (frozenset({"lever", "key"}),
-        "발전소 전원 켜기 → 버거 가게(Burger Spot) 소변기 물 내리기 → 드러난 패널에 오브젝트 #11SR 키카드 사용 → 안으로 들어가 문 옆 버튼을 눌러 문을 잠가야 탈출(안쪽에 Object-14 컨테이너 여는 레버 있음)"),
+    "interchange:ex_interchange_pmc_sniper": {"tags": {"flare"}},
+    "interchange:ex_interchange_pmc_auto": {"tags": {"vex", "paid"}, "vex": 4},
+    "interchange:ex_interchange_coop_basement": {"tags": {"coop"}},
+    "interchange:ex_interchange_pmc_saferoom": {"tags": {"lever", "key"}, "key": "오브젝트 #11SR 키카드",
+        "steps": ["발전소 전원 켜기", "Burger Spot 화장실 소변기 물 내리기", "드러난 패널에 키카드", "안에서 문 옆 버튼으로 문 닫기"]},
     # 등대
-    "lighthouse:Alpinist_light": (frozenset({"climb"}), _CLIMB),
-    "lighthouse:tunnel_shared": (frozenset({"coop"}), _COOP),
-    "lighthouse:EXFIL_Train": (frozenset({"time"}), "장갑열차 — 레이드 종료 20~15분 전 사이에 도착해 7분 정차(도착 때 경적 2회, 출발 1분 전 1회). 그 밖의 시간엔 못 나감"),
+    "lighthouse:Alpinist_light": {"tags": {"climb"}},
+    "lighthouse:tunnel_shared": {"tags": {"coop"}},
+    "lighthouse:EXFIL_Train": {"tags": {"time"}, "train": (20, 15, 7)},
     # 리저브
-    "reserve:EXFIL_Train": (frozenset({"time"}), "장갑열차 — 레이드 종료 16~12분 전 사이에 도착해 7분 정차(도착 때 경적 2회, 출발 1분 전 1회). 항상 열리는 탈출구 아님, 도착 무렵 레이더가 올 수 있음"),
-    "reserve:EXFIL_Bunker": (frozenset({"lever"}), "흰색 폰(Pawn) 막사 서쪽 오두막의 레버를 당겨야 열림 — 레버를 당기면 사이렌이 울리고 4분 동안만 열림"),
-    "reserve:EXFIL_Bunker_D2": (frozenset({"lever"}), "지하 벙커에서 레버로 전원을 켠 뒤, 미닫이문 옆 벽 버튼을 눌러야 열림"),
-    "reserve:Alpinist": (frozenset({"climb"}), _CLIMB),
-    "reserve:EXFIL_ScavCooperation": (frozenset({"coop"}), _COOP),
-    "reserve:EXFIL_vent": (frozenset({"nobag"}), "배낭을 메고는 못 나감"),
+    "reserve:EXFIL_Train": {"tags": {"time"}, "train": (16, 12, 7), "note": "도착 무렵 레이더가 올 수 있음"},
+    "reserve:EXFIL_Bunker": {"tags": {"lever"}, "lever": ("흰 폰(Pawn) 막사 서쪽 오두막", "레버"), "note": "당기면 사이렌, 4분만 열림"},
+    "reserve:EXFIL_Bunker_D2": {"tags": {"lever"}, "steps": ["지하 벙커 레버로 전원 켜기", "미닫이문 옆 벽 버튼 누르기"]},
+    "reserve:Alpinist": {"tags": {"climb"}},
+    "reserve:EXFIL_ScavCooperation": {"tags": {"coop"}},
+    "reserve:EXFIL_vent": {"tags": {"nobag"}},
     # 해안선
-    "shoreline:RedRebel_alp": (frozenset({"climb"}), _CLIMB),
-    "shoreline:Alpinist": (frozenset({"climb"}), _CLIMB),
-    "shoreline:Pier Boat": (frozenset({"flare"}), "초록 조명탄을 쏴야 열림(항상 열리는 탈출구 아님)"),
-    "shoreline:Smugglers_Trail_coop": (frozenset({"coop"}), _COOP),
-    "shoreline:Shorl_V-Ex": (frozenset({"vex", "paid"}), _VEX + " · 최대 5명"),
+    "shoreline:RedRebel_alp": {"tags": {"climb"}},
+    "shoreline:Alpinist": {"tags": {"climb"}},
+    "shoreline:Pier Boat": {"tags": {"flare"}, "flare_only_sometimes": True},
+    "shoreline:Smugglers_Trail_coop": {"tags": {"coop"}},
+    "shoreline:Shorl_V-Ex": {"tags": {"vex", "paid"}, "vex": 5},
     # 타르코프 시내
-    "streets-of-tarkov:E8_yard": (frozenset({"flare"}), "초록 조명탄을 쏴야 열림(항상 열리는 탈출구 아님)"),
-    "streets-of-tarkov:E9_sniper": (frozenset({"flare"}), _FLARE),
-    "streets-of-tarkov:Exit_E10_coop": (frozenset({"coop"}), _COOP),
-    "streets-of-tarkov:E7_car": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
+    "streets-of-tarkov:E8_yard": {"tags": {"flare"}, "flare_only_sometimes": True},
+    "streets-of-tarkov:E9_sniper": {"tags": {"flare"}},
+    "streets-of-tarkov:Exit_E10_coop": {"tags": {"coop"}},
+    "streets-of-tarkov:E7_car": {"tags": {"vex", "paid"}, "vex": 4},
     # 연구소 — 탈출구마다 여는 방법이 다르다
-    "the-lab:lab_Elevator_Cargo": (frozenset({"lever"}), "지하 G1 방에서 전원을 복구해야 작동"),
-    "the-lab:lab_Elevator_Main": (frozenset({"lever"}), "지하 R4 맞은편에서 전원을 복구해야 작동"),
-    "the-lab:lab_Elevator_Med": (frozenset({"lever"}), "지하 G6 방에서 전원을 복구해야 작동"),
-    "the-lab:lab_Hangar_Gate": (frozenset({"lever"}), "격납고 2층 B24 조종실에서 게이트를 열어야 함"),
-    "the-lab:lab_Parking_Gate": (frozenset({"lever"}), "2층 Y21(R22 옆)에서 게이트를 열어야 함"),
-    "the-lab:lab_Under_Storage_Collector": (frozenset({"lever"}), "수위를 낮춰야 지나갈 수 있음"),
-    "the-lab:lab_Vent": (frozenset({"nobag"}), "배낭을 메고는 못 나감"),
+    "the-lab:lab_Elevator_Cargo": {"tags": {"lever"}, "lever": ("지하 G1 방", "전원 복구")},
+    "the-lab:lab_Elevator_Main": {"tags": {"lever"}, "lever": ("지하 R4 맞은편", "전원 복구")},
+    "the-lab:lab_Elevator_Med": {"tags": {"lever"}, "lever": ("지하 G6 방", "전원 복구")},
+    "the-lab:lab_Hangar_Gate": {"tags": {"lever"}, "lever": ("격납고 2층 B24 조종실", "게이트 열기")},
+    "the-lab:lab_Parking_Gate": {"tags": {"lever"}, "lever": ("2층 Y21(R22 옆)", "게이트 열기")},
+    "the-lab:lab_Under_Storage_Collector": {"tags": {"lever"}, "note": "물을 빼야 지나갈 수 있음"},
+    "the-lab:lab_Vent": {"tags": {"nobag"}},
     # 미궁
-    "the-labyrinth:labir_exit": (frozenset({"time"}), "레이드 시작 15분 뒤부터 이용 가능"),
+    "the-labyrinth:labir_exit": {"tags": {"time"}, "after": 15},
     # 삼림
-    "woods:wood_sniper_exit": (frozenset({"flare"}), _FLARE),
-    "woods:RUAF Gate": (frozenset({"flare"}), "초록 조명탄을 쏴야 열림(항상 열리는 탈출구 아님)"),
-    "woods:ZB-014": (frozenset({"flare", "key"}), "초록 조명탄을 쏴야 열리고, ZB-014 열쇠로 문을 열어야 함"),
-    "woods:ZB-016": (frozenset({"flare"}), "초록 조명탄을 쏴야 열림(항상 열리는 탈출구 아님)"),
-    "woods:Factory Gate": (frozenset({"coop"}), _COOP),
-    "woods:South V-Ex": (frozenset({"vex", "paid"}), _VEX + " · 최대 4명"),
+    "woods:wood_sniper_exit": {"tags": {"flare"}},
+    "woods:RUAF Gate": {"tags": {"flare"}, "flare_only_sometimes": True},
+    "woods:ZB-014": {"tags": {"flare", "key"}, "key": "ZB-014"},
+    "woods:ZB-016": {"tags": {"flare"}, "flare_only_sometimes": True},
+    "woods:Factory Gate": {"tags": {"coop"}},
+    "woods:South V-Ex": {"tags": {"vex", "paid"}, "vex": 4},
 }
+
+
+def _render(f: dict) -> str:
+    """사실 자료 → 한 줄 설명(우리 문장 틀). 조각을 ' · ' 로 잇는다."""
+    t = f["tags"]
+    parts: list[str] = []
+    if f.get("steps"):
+        parts.append("순서: " + " → ".join(f["steps"]))
+    elif f.get("lever"):
+        where, what = f["lever"]
+        parts.append(f"{where}에서 {what}")
+    if "key" in t and f.get("key"):
+        parts.append(f"{f['key']} 열쇠 필요" if "키카드" not in f["key"] else f"{f['key']} 필요")
+    if "flare" in t:
+        parts.append("탈출 지점에서 초록 조명탄 발사" + (" — 평소엔 닫혀 있음" if f.get("flare_only_sometimes") else ""))
+    if "coop" in t:
+        parts.append("협동 탈출: 스캐브와 PMC 가 함께 있어야 함")
+    if "vex" in t:
+        parts.append(f"차량 탈출 · 요금(스캐브 카르마 따라 다름) · 최대 {f['vex']}명")
+    if "climb" in t:
+        parts.append("등반 장비 " + " + ".join(_CLIMB_GEAR) + " · 방탄조끼 입으면 불가")
+    if "nobag" in t:
+        parts.append("배낭 메면 못 나감")
+    if f.get("train"):
+        a, b, stay = f["train"]
+        parts.append(f"장갑열차: 레이드 종료 {a}~{b}분 전 도착, {stay}분 정차 · 그 외 시간엔 불가")
+    if f.get("after"):
+        parts.append(f"레이드 시작 {f['after']}분 뒤부터")
+    if f.get("note"):
+        parts.append(f["note"])
+    return " · ".join(parts)
+
+
+# 예전과 같은 모양 — 키 = "<맵>:<탈출구 내부 이름>", 값 = (태그, 설명). 호출하는 쪽(conditions·가이드)은 그대로
+COND: dict[str, tuple[frozenset, str]] = {k: (frozenset(f["tags"]), _render(f)) for k, f in FACTS.items()}
 
 
 def _item_id(ti: dict | None) -> str | None:

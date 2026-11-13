@@ -33,7 +33,7 @@ for pkg in ("easyocr", "torch", "torchvision"):
 
 # OCR model files (already migrated into python-core/models/easyocr/)
 datas += [("python-core/models/easyocr", "models/easyocr")]
-# 레이더 자료: 위키 현재 탈출구 표(extracts_current.json) + tarkov.dev 지도 그림 메타(td_maps.json)
+# 레이더 자료: 우리 탈출구 표(extracts_ours.json, scripts/extracts_ours.py) + tarkov.dev 지도 그림 메타(td_maps.json)
 datas += [("python-core/data", "data")]
 
 
