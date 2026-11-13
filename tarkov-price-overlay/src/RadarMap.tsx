@@ -9,6 +9,7 @@ import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
 import { Icon } from "./Icon";
 import { stat } from "./statBus";
+import { RaidPrep } from "./RaidPrep";
 import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, planExit, planWarnings, PLAN_REACH_M, type LootPlan, type SpawnGroup } from "./LootPlan";
 
 const PYTHON_API = "http://127.0.0.1:8765";
@@ -323,6 +324,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 루팅 계획(11-13): 이 PC 에만 저장. planId = 지금 띄운 계획, planDone = 이번 레이드에 지난 지점
   const [plans, setPlans] = useState<LootPlan[]>(loadPlans);
   const [planOpen, setPlanOpen] = useState(false);
+  const [prepOpen, setPrepOpen] = useState(false);
   const [myKeys, setMyKeys] = useState<string[]>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(MY_KEYS_KEY) || "[]");
@@ -953,6 +955,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
+          <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
           <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
           <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
           {view && <button type="button" onClick={() => { stat("mtc"); centerMe(); }} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
@@ -1014,6 +1017,22 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           {sel.keyId && <button type="button" className="radar-planadd" onClick={() => toggleMyKey(sel.keyId!)}>{myKeys.includes(sel.keyId) ? t.radarMyKeyOff : t.radarMyKeyOn}</button>}
           {planOpen && <button type="button" className="radar-planadd" onClick={() => addStop(sel.p, sel.name)}>＋ {t.radarPlanAdd}</button>}
         </div>
+      )}
+      {prepOpen && !mini && slug && doc && (
+        <RaidPrep
+          t={t}
+          mapName={doc.name}
+          raidMin={doc.raid_min ?? null}
+          side={data.map_source === "log" ? data.raid_side ?? null : null}
+          targets={data.targets || []}
+          bosses={doc.bosses ?? []}
+          mines={doc.hazards.filter((h) => h.type === "minefield").length}
+          snipers={doc.hazards.filter((h) => h.type === "sniper").length}
+          plans={plans.filter((p) => p.map === slug)}
+          planId={plan?.id ?? null}
+          planKeys={planKeys}
+          onPickPlan={(id) => setPlanId(id)}
+        />
       )}
       {planOpen && !mini && slug && (
         <PlanPanel

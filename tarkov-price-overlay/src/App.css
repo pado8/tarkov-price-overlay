@@ -1955,6 +1955,19 @@ html, body, #root {
 .radar-planexit { margin: 4px 0; color: #7dff9a; }
 .radar-planwarn { margin: 2px 0; color: #ff8a80; }
 .radar-plankeys { margin: 4px 0; color: #d7c3ff; }
+.radar-prep { margin-top: 6px; padding: 8px 10px; border: 1px solid rgba(255, 213, 79, 0.35); border-radius: 8px; background: rgba(30, 24, 8, 0.6); font-size: 12px; }
+.radar-prep-h { margin-bottom: 4px; }
+.radar-prep section { margin-top: 6px; }
+.radar-prep h4 { margin: 0 0 2px; font-size: 12px; color: #ffd54f; font-weight: 700; }
+.radar-prep h4 i { font-style: normal; opacity: 0.7; font-weight: 400; }
+.radar-prep p { margin: 2px 0; }
+.radar-prep ul { margin: 2px 0; padding-left: 18px; }
+.radar-prep .dim { opacity: 0.6; }
+.radar-prep .key { color: #d7c3ff; }
+.radar-prep .cond { color: #ffb74d; }
+.radar-prep-plans { display: flex; flex-wrap: wrap; gap: 6px; }
+.radar-prep-plans button { background: rgba(64, 224, 208, 0.14); color: #bff5ee; border: 1px solid rgba(64, 224, 208, 0.45); border-radius: 5px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+.radar-prep-plans button.on { background: #40e0d0; color: #062020; }
 .radar-plankeys .own { color: #7dff9a; }
 .radar-sw.mykeys { background: #7dff9a; }
 .radar-planrow input.mins { flex: 0 0 110px; }
