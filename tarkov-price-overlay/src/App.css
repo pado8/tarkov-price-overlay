@@ -1932,6 +1932,34 @@ html, body, #root {
 .radar-sw.hazard { background: #ff9f1c; }
 .radar-sw.spawn { background: #ff4d4d; }
 .radar-sw.lock { background: #c08cff; }
+.radar-sw.loot { background: #ffd54f; }
+.radar-sw.trail { background: #9be564; }
+.radar-raidleft { position: absolute; left: 8px; top: 8px; padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.55); color: #ffe082; font-size: 12px; font-weight: 700; pointer-events: none; }
+.radar-lootrow { margin-top: 4px; }
+.radar-planpanel { margin-top: 6px; padding: 8px; border: 1px solid rgba(64, 224, 208, 0.35); border-radius: 8px; background: rgba(8, 26, 26, 0.6); font-size: 12px; }
+.radar-planrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0; }
+.radar-planrow select, .radar-planrow input { flex: 1 1 120px; min-width: 0; background: rgba(0, 0, 0, 0.35); color: inherit; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 5px; padding: 3px 6px; font-size: 12px; }
+.radar-planpanel button, .radar-planadd { background: rgba(64, 224, 208, 0.14); color: #bff5ee; border: 1px solid rgba(64, 224, 208, 0.45); border-radius: 5px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+.radar-planpanel button:disabled { opacity: 0.35; cursor: default; }
+.radar-planadd { margin-left: 8px; }
+.radar-planspawn span { opacity: 0.8; }
+.radar-planhint { opacity: 0.7; margin: 4px 0; }
+.radar-planstops { margin: 4px 0; padding-left: 22px; max-height: 180px; overflow-y: auto; }
+.radar-planstops li { margin: 2px 0; }
+.radar-planstops li > * { vertical-align: middle; }
+.radar-planstops .nm { display: inline-block; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 6px; }
+.radar-planstops .d { opacity: 0.7; margin-right: 6px; }
+.radar-planstops li.done { opacity: 0.4; text-decoration: line-through; }
+.radar-planstops li.next .nm { color: #40e0d0; font-weight: 700; }
+.radar-planstops li.late .nm { color: #ffb74d; }
+.radar-planexit { margin: 4px 0; color: #7dff9a; }
+.radar-planwarn { margin: 2px 0; color: #ff8a80; }
+.radar-plankeys { margin: 4px 0; color: #d7c3ff; }
+.radar-plankeys .own { color: #7dff9a; }
+.radar-sw.mykeys { background: #7dff9a; }
+.radar-planrow input.mins { flex: 0 0 110px; }
+.radar-planstops button { padding: 0 5px; margin-left: 2px; }
+.radar-lootrow .radar-chip { font-size: 11px; }
 .quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
 .quest-sub { color: var(--text-muted); }
 .price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }

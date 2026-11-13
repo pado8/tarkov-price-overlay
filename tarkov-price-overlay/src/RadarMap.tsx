@@ -9,6 +9,7 @@ import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
 import { Icon } from "./Icon";
 import { stat } from "./statBus";
+import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, planExit, planWarnings, PLAN_REACH_M, type LootPlan, type SpawnGroup } from "./LootPlan";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
@@ -59,16 +60,19 @@ export type MapDoc = {
   extracts: { name: string; en?: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[]; // en = 영어 원문(내 탈출구 맞춤, 11-06)
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
-  locks: { p: Pt; type: string; key?: string | null }[]; // key = 여는 열쇠 아이템 id
+  locks: { p: Pt; type: string; key?: string | null; kn?: string; loot?: Record<string, number> }[]; // key = 여는 열쇠 아이템 id
   containers: Pt[];
+  raid_min?: number | null; // 이 맵 레이드 길이(분)
+  spawn_groups?: SpawnGroup[]; // 플레이어 스폰 무리(루팅 계획을 붙이는 단위)
+  loot?: [number, number, number, string][]; // 루팅 상자: 마지막 = 묶음(w 무기·탄 t 기술 m 의료 v 귀중품 c 은닉처 b 가방·상자 d 시체)
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
   bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
   weapons: Pt[];
   switches: Pt[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
-export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; loot: boolean; trail: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, loot: false, trail: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -155,6 +159,20 @@ function loadMapRot(slug: string | null | undefined, fallback = 0): number {
     return fallback;
   }
 }
+
+// 루팅 상자 층(11-13): 묶음별 켜고 끄기 — 기억은 LOOT_KEY
+export const LOOT_KEY = "tarkov.radar.lootGroups";
+// 이번 레이드 이동 자취(11-13): 스크린샷을 찍을 때마다 내 위치를 쌓는다. 지도 패널을 닫았다 열어도 남게 모듈에 둔다(앱을 끄면 사라짐)
+const TRAIL_MIN_M = 3;
+const trailMemo: { key: string; pts: [number, number][] } = { key: "", pts: [] };
+const PLAN_SEL_KEY = "tarkov.radar.planSel";
+export const MY_KEYS_KEY = "tarkov.radar.myKeys"; // 내가 가진 열쇠(아이템 id 목록) — 잠긴 문 층의 '내 열쇠만'·계획의 필요한 열쇠 표시
+const lockLootText = (l: Record<string, number> | undefined, t: Strings): string =>
+  l ? LOOT_ORDER.filter((g) => l[g]).map((g) => `${lootName(g, t)} ${l[g]}`).join(", ") : ""; // 마지막으로 띄운 루팅 계획 id
+export const LOOT_ORDER = ["w", "t", "m", "v", "c", "b", "d"] as const;
+export const LOOT_COLOR: Record<string, string> = { w: "#ff8a65", t: "#4fc3f7", m: "#81c784", v: "#ffd54f", c: "#b39ddb", b: "#bcaaa4", d: "#90a4ae" };
+const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, c: true, b: false, d: false }; // 흔한 가방·상자·시체는 기본 끔(시내 1,282개)
+const lootName = (g: string, t: Strings): string => t[`radarLoot_${g}`] ?? t.radarLayerLoot;
 
 export function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -301,6 +319,57 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
+  const [lootG, setLootG] = useState<Record<string, boolean>>(() => loadJson(LOOT_KEY, LOOT_DEFAULT));
+  // 루팅 계획(11-13): 이 PC 에만 저장. planId = 지금 띄운 계획, planDone = 이번 레이드에 지난 지점
+  const [plans, setPlans] = useState<LootPlan[]>(loadPlans);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [myKeys, setMyKeys] = useState<string[]>(() => {
+    try {
+      const v = JSON.parse(localStorage.getItem(MY_KEYS_KEY) || "[]");
+      return Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  const [myKeysOnly, setMyKeysOnly] = useState(false);
+  const toggleMyKey = (id: string) =>
+    setMyKeys((o) => {
+      const n = o.includes(id) ? o.filter((x) => x !== id) : [...o, id];
+      try {
+        localStorage.setItem(MY_KEYS_KEY, JSON.stringify(n));
+      } catch {
+        /* 저장 실패는 무시 */
+      }
+      stat("mky");
+      return n;
+    });
+  const [planId, setPlanIdState] = useState<string | null>(() => localStorage.getItem(PLAN_SEL_KEY) || null);
+  const setPlanId = (id: string | null) => {
+    setPlanIdState(id);
+    try {
+      localStorage.setItem(PLAN_SEL_KEY, id ?? "");
+    } catch {
+      /* 저장 실패는 무시 */
+    }
+  };
+  const [planDone, setPlanDone] = useState<Set<number>>(() => new Set());
+  const planAutoRef = useRef<string>("");
+  const upPlans = (fn: (o: LootPlan[]) => LootPlan[]) =>
+    setPlans((o) => {
+      const n = fn(o);
+      savePlans(n);
+      return n;
+    });
+  const toggleLoot = (g: string) =>
+    setLootG((o) => {
+      const n = { ...o, [g]: !o[g] };
+      try {
+        localStorage.setItem(LOOT_KEY, JSON.stringify(n));
+      } catch {
+        /* 저장 실패는 무시 */
+      }
+      return n;
+    });
   const [myExitsOnly, setMyExitsOnly] = useState<boolean>(() => {
     try {
       return localStorage.getItem("tarkov.radar.myExitsOnly") !== "0";
@@ -337,7 +406,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [box, setBox] = useState({ w: 300, h: size });
   // 보기: null = 내 위치 중심(기억한 배율) · 값 = 끌거나 '전체'로 옮긴 중심과 축척(px/m)
   const [view, setView] = useState<{ cx: number; cz: number; s: number } | null>(null);
-  const [sel, setSel] = useState<{ name: string; p: Pt } | null>(null);
+  const [sel, setSel] = useState<{ name: string; p: Pt; keyId?: string } | null>(null);
   const dragRef = useRef<{ x: number; y: number; cx: number; cz: number; moved: boolean } | null>(null);
   const movedRef = useRef(false); // 끌고 난 뒤 따라오는 click 은 선택으로 치지 않는다
   const [dragging, setDragging] = useState(false);
@@ -365,6 +434,49 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
 
   const me = data.shot;
   const myY = me?.y ?? 0;
+  const plan = plans.find((p) => p.id === planId && p.map === slug) ?? null;
+  const hereGroup = me && data.map_source === "log" ? nearestGroup(doc?.spawn_groups, me.x, me.z) : null;
+  // 레이드가 바뀌면 지난 지점을 비우고, 그 레이드의 첫 위치가 스폰 무리 근처면 거기 붙여 둔 계획을 띄운다
+  const raidKey = `${slug ?? ""}|${data.raid_ts ?? ""}`;
+  if (trailMemo.key !== raidKey) {
+    trailMemo.key = raidKey;
+    trailMemo.pts = [];
+  }
+  if (me && data.map_source === "log") {
+    const last = trailMemo.pts[trailMemo.pts.length - 1];
+    if (!last || Math.hypot(last[0] - me.x, last[1] - me.z) >= TRAIL_MIN_M) trailMemo.pts.push([me.x, me.z]);
+  }
+  // 남은 레이드 시간(초) 어림: PMC 는 처음부터 들어가므로 '맵 로딩 시각 + 맵 레이드 길이'. 스캐브는 중간 투입이라 알 수 없다(null → 직접 입력)
+  const raidLeftSec = data.raid_side === "pmc" && data.raid_ts && doc?.raid_min ? Math.round(doc.raid_min * 60 - (Date.now() / 1000 - data.raid_ts)) : null;
+  const raidLeft = raidLeftSec != null && raidLeftSec > 0 && raidLeftSec <= (doc?.raid_min ?? 0) * 60 ? raidLeftSec : null;
+  useEffect(() => {
+    setPlanDone(new Set());
+  }, [raidKey]);
+  useEffect(() => {
+    if (!me || data.map_source !== "log" || !doc?.spawn_groups || planAutoRef.current === raidKey) return;
+    planAutoRef.current = raidKey; // 레이드마다 한 번만(첫 위치 기준)
+    const g = nearestGroup(doc.spawn_groups, me.x, me.z);
+    const hit = g && plans.find((p) => p.map === slug && p.spawn === g.id);
+    if (hit) {
+      stat("plz"); // 스폰 자리로 계획이 자동으로 뜸
+      setPlanId(hit.id);
+    }
+  }, [me?.id, doc, raidKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!me || !plan) return;
+    const hit = plan.stops.map((s, i) => (Math.hypot(s.p[0] - me.x, s.p[2] - me.z) <= PLAN_REACH_M ? i : -1)).filter((i) => i >= 0 && !planDone.has(i));
+    if (hit.length) setPlanDone((o) => new Set([...o, ...hit]));
+  }, [me?.id, plan]); // eslint-disable-line react-hooks/exhaustive-deps
+  const addStop = (p: Pt, name: string) => {
+    if (!slug) return;
+    stat("pla");
+    if (plan) upPlans((o) => o.map((x) => (x.id === plan.id ? { ...x, stops: [...x.stops, { p, name }] } : x)));
+    else {
+      const np: LootPlan = { id: newPlanId(), map: slug, name: "", spawn: null, stops: [{ p, name }] };
+      upPlans((o) => [...o, np]);
+      setPlanId(np.id);
+    }
+  };
   const heading = me?.heading ?? null;
 
   // 새 스크린샷(위치가 바뀜) → 미니맵답게 내 위치로 돌아온다. 확대 배율(span)은 그대로.
@@ -496,7 +608,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     dragRef.current = null;
     setDragging(false);
   };
-  const pick = (s: { name: string; p: Pt } | null) => {
+  const pick = (s: { name: string; p: Pt; keyId?: string } | null) => {
     if (movedRef.current) return; // 끌기 끝의 click
     setSel(s);
   };
@@ -534,6 +646,18 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 11-06 내 탈출구: 탈출구 목록(O)을 연 채 찍은 스크린샷에서 사이드카가 읽은 이번 레이드 탈출구(영어 원문). '내 탈출구만' 칩이
   // 켜져 있으면(기본) 그것만 그린다. 아직 못 읽었으면 예전처럼 전부.
   const mine = data.my_exits && data.my_exits.length ? new Set(data.my_exits) : null;
+  // 루팅 계획 보조: 이번 레이드 내 탈출구 중 경로 끝에서 가장 가까운 것 + 지뢰밭·보스 구역 경고
+  const planMe = me && data.map_source !== "manual" ? me : null;
+  const planEx = plan && doc ? planExit(plan, doc.extracts, mine, planMe) : null;
+  const planWarn = plan && doc ? planWarnings(plan, planEx, doc.hazards, doc.bosses ?? []) : [];
+  const planKeys = (() => {
+    if (!plan || !doc) return [];
+    const m = new Map<string, { name: string; own: boolean }>();
+    for (const s of plan.stops)
+      for (const lk of doc.locks)
+        if (lk.key && lk.kn && Math.abs(lk.p[1] - s.p[1]) <= 3 && Math.hypot(lk.p[0] - s.p[0], lk.p[2] - s.p[2]) <= 10) m.set(lk.key, { name: lk.kn, own: myKeys.includes(lk.key) });
+    return [...m.values()];
+  })();
   const mineOn = !!mine && myExitsOnly;
   // 11-08 사용자: '내 탈출구만'이면 PMC/스캐브 칩과 상관없이 내 탈출구는 다 보이게 — 진영 칩이 지난 레이드 그대로거나(스캐브 켜진 채
   // PMC 레이드) 진영 판정이 늦어도 내 탈출구가 칩에 걸려 사라지지 않는다. 내 탈출구를 모르면 예전처럼 칩대로.
@@ -693,13 +817,36 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     </g>
                   );
                 })}
+            {layers.trail && trailMemo.pts.length > 1 && (
+              <g style={{ pointerEvents: "none" }}>
+                <polyline points={trailMemo.pts.map((p) => { const s = toScreen(p[0], p[1]); return `${s.x},${s.y}`; }).join(" ")} fill="none" stroke="#9be564" strokeWidth={1.6} strokeOpacity={0.55} strokeLinejoin="round" strokeDasharray="1 4" strokeLinecap="round" />
+                {trailMemo.pts.slice(0, -1).map((p, i) => { const s = toScreen(p[0], p[1]); return <circle key={i} cx={s.x} cy={s.y} r={1.8} fill="#9be564" opacity={0.6} />; })}
+              </g>
+            )}
+            {plan && plan.stops.length > 0 && <PlanOverlay plan={plan} done={planDone} me={planMe} exit={planEx} warns={planWarn} toScreen={toScreen} />}
+            {layers.loot &&
+              (doc.loot ?? []).map((x, i) => {
+                if (!lootG[x[3]]) return null;
+                const s = toScreen(x[0], x[2]);
+                return (
+                  <g key={`lt${i}`} onClick={() => pick({ name: lootName(x[3], t), p: [x[0], x[1], x[2]] })} opacity={op(x[0], x[1], x[2])}>
+                    <circle cx={s.x} cy={s.y} r={6} fill="transparent" />
+                    <rect x={s.x - 2.6} y={s.y - 2.6} width={5.2} height={5.2} rx={1} fill={LOOT_COLOR[x[3]] ?? "#bbb"} stroke="#000" strokeWidth={0.6} />
+                  </g>
+                );
+              })}
             {layers.locks &&
               doc.locks.map((x, i) => {
+                const own = !!x.key && myKeys.includes(x.key);
+                if (myKeysOnly && !own) return null;
                 const s = toScreen(x.p[0], x.p[2]);
+                const lootTxt = lockLootText(x.loot, t);
+                // 이름: 잠긴 문 · 열쇠 이름 · 문 근처 상자(10m 안 어림)
+                const nm = `${t.radarLayerLocks}${x.type && x.type !== "door" ? " · " + x.type : ""}${x.kn ? ` · 🔑 ${x.kn}` : ""}${lootTxt ? ` · ${t.radarLockLoot}: ${lootTxt}` : ""}`;
                 return (
-                  <g key={`lk${i}`} onClick={() => pick({ name: `${t.radarLayerLocks}${x.type && x.type !== "door" ? " · " + x.type : ""}`, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                  <g key={`lk${i}`} onClick={() => pick({ name: nm, p: x.p, keyId: x.key ?? undefined })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                     <circle cx={s.x} cy={s.y} r={8} fill="transparent" />
-                    <rect x={s.x - 3} y={s.y - 3} width={6} height={6} fill="#c08cff" stroke="#000" strokeWidth={0.7} transform={`rotate(45 ${s.x} ${s.y})`} />
+                    <rect x={s.x - 3} y={s.y - 3} width={6} height={6} fill={own ? "#7dff9a" : "#c08cff"} stroke={x.loot ? "#fff" : "#000"} strokeWidth={x.loot ? 1 : 0.7} transform={`rotate(45 ${s.x} ${s.y})`} />
                   </g>
                 );
               })}
@@ -806,6 +953,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
+          <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
           <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
           {view && <button type="button" onClick={() => { stat("mtc"); centerMe(); }} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
           <button type="button" onClick={() => { stat("mtf"); fit(); }} title={t.radarMapFit}>{t.radarMapFit}</button>
@@ -814,6 +962,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {v && <div className="radar-mapscale">━ {scaleM}m</div>}
         {headingUp && <div className="radar-mapup">▲ {t.radarMapHeadingUp}</div>}
         {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
+        {raidLeft != null && !mini && <div className="radar-raidleft" title={t.radarRaidLeftHint}>⏱ {Math.max(1, Math.round(raidLeft / 60))}{t.radarMinShort}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
       {!mini && <div className="radar-layers">
@@ -826,8 +975,24 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}
         {chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
         {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
+        {layers.locks && myKeys.length > 0 && chip(myKeysOnly, "mykeys", t.radarMyKeysOnly.replace("{n}", String(myKeys.length)), () => setMyKeysOnly((o) => !o))}
+        {trailMemo.pts.length > 1 && chip(layers.trail, "trail", t.radarLayerTrail, () => onToggleLayer("trail"))}
+        {(doc?.loot?.length ?? 0) > 0 && chip(layers.loot, "loot", t.radarLayerLoot, () => { if (!layers.loot) stat("lto"); onToggleLayer("loot"); })}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>}
+      {!mini && layers.loot && (doc?.loot?.length ?? 0) > 0 && (
+        <div className="radar-layers radar-lootrow">
+          {LOOT_ORDER.map((g) => {
+            const n = doc!.loot!.reduce((a, x) => a + (x[3] === g ? 1 : 0), 0);
+            if (!n) return null;
+            return (
+              <button key={g} type="button" className={`radar-chip${lootG[g] ? " on" : ""}`} aria-pressed={!!lootG[g]} onClick={() => toggleLoot(g)} data-chip={`loot-${g}`}>
+                <span className="radar-sw" style={{ background: LOOT_COLOR[g] }} /> {lootName(g, t)} {n}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {!mini && questNote && <div className="radar-note">{questNote}</div>}
       {!mini && doc?.img && showImg && doc.img.layers.length > 0 && (
         <div className="radar-layers radar-floors">
@@ -846,7 +1011,41 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           <b>{sel.name}</b>
           {me && <> · {Math.round(dist(sel.p))}m</>}
           {me && Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
+          {sel.keyId && <button type="button" className="radar-planadd" onClick={() => toggleMyKey(sel.keyId!)}>{myKeys.includes(sel.keyId) ? t.radarMyKeyOff : t.radarMyKeyOn}</button>}
+          {planOpen && <button type="button" className="radar-planadd" onClick={() => addStop(sel.p, sel.name)}>＋ {t.radarPlanAdd}</button>}
         </div>
+      )}
+      {planOpen && !mini && slug && (
+        <PlanPanel
+          t={t}
+          plans={plans.filter((p) => p.map === slug)}
+          plan={plan}
+          done={planDone}
+          hereGroup={hereGroup}
+          me={planMe}
+          exit={planEx}
+          warns={planWarn}
+          autoLeftSec={raidLeft}
+          keys={planKeys}
+          onSelect={setPlanId}
+          onNew={() => {
+            const np: LootPlan = { id: newPlanId(), map: slug, name: "", spawn: null, stops: [] };
+            upPlans((o) => [...o, np]);
+            setPlanId(np.id);
+          }}
+          onChange={(np) => upPlans((o) => o.map((x) => (x.id === np.id ? np : x)))}
+          onDelete={(id) => {
+            upPlans((o) => o.filter((x) => x.id !== id));
+            setPlanId(null);
+          }}
+          onAddMe={() => me && addStop([me.x, me.y, me.z], t.radarPlanMe)}
+          onImport={(np) => {
+            stat("pli");
+            upPlans((o) => [...o, np]);
+            if (np.map === slug) setPlanId(np.id);
+          }}
+          onResetDone={() => setPlanDone(new Set())}
+        />
       )}
     </div>
   );

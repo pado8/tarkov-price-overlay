@@ -977,6 +977,55 @@ def _cluster_pts(pts: list, th: float) -> list:
     return sorted(groups.values(), key=lambda g: pts.index(g[0]))
 
 
+# 루팅 상자 종류 → 묶음 한 글자(11-13 지도 기능 계획 4단계, 지도 '루팅 상자' 층의 묶음 필터).
+#   w 무기·탄 · t 기술·공구 · m 의료 · v 돈·귀중품 · c 은닉처 · b 가방·상자 · d 시체. 모르는 종류는 b.
+# 바닥 아이템(lootLoose)은 뿌리가 SPT 서버 자료라 지도에 내지 않는다(11-13 사용자 결정).
+LOOT_GROUPS: dict = {
+    "weapon-box": "w", "grenade-box": "w", "wooden-ammo-box": "w",
+    "toolbox": "t", "technical-supply-crate": "t", "pc-block": "t",
+    "medbag": "m", "medcase": "m", "medical-supply-crate": "m",
+    "safe": "v", "cash-register": "v", "drawer": "v", "jacket": "v", "plastic-suitcase": "v", "bank-safe": "v", "bank-cash-register": "v",
+    "buried-barrel-cache": "c", "ground-cache": "c", "shturmans-stash": "c",
+    "duffle-bag": "b", "wooden-crate": "b", "ration-supply-crate": "b",
+    "dead-scav": "d", "pmc-body": "d", "civilian-body": "d", "scav-body": "d", "lab-technician-body": "d",
+}
+
+
+def loot_group(kind: Optional[str]) -> str:
+    return LOOT_GROUPS.get(kind or "", "b")
+
+
+SPAWN_GROUP_M = 60.0  # 플레이어 스폰 지점을 이 거리 안에서 이어지는 것끼리 한 무리로(루팅 계획을 붙이는 단위)
+
+
+def spawn_groups(m: dict) -> list:
+    """플레이어 스폰 지점(PMC·스캐브) → 무리 목록 [{id, c: [x, z], n, p, s}]. id = 무리 중심을 10m 로 반올림한 값(자료가 조금 바뀌어도 유지)."""
+    pts, side = [], {}
+    for s in m.get("spawns") or []:
+        p = s.get("position")
+        if "player" not in (s.get("categories") or []) or not isinstance(p, dict) or p.get("x") is None or p.get("z") is None:
+            continue
+        q = (round(float(p["x"]), 1), round(float(p["z"]), 1))
+        sides = [str(x).lower() for x in (s.get("sides") or [])]
+        side[q] = "s" if sides == ["scav"] else "p" if sides == ["pmc"] else "a"
+        pts.append(q)
+    # 무리 = '첫 점에서 SPAWN_GROUP_M 안'(대표점 방식). 이어지는 점끼리 묶으면(단일 연결) 세관은 46점·수백 m 짜리 한 덩어리가 됐다
+    groups: list = []
+    for q in sorted(set(pts)):
+        g = next((g for g in groups if math.hypot(g[0][0] - q[0], g[0][1] - q[1]) <= SPAWN_GROUP_M), None)
+        if g is None:
+            groups.append([q])
+        else:
+            g.append(q)
+    out = []
+    for grp in groups:
+        cx = sum(p[0] for p in grp) / len(grp)
+        cz = sum(p[1] for p in grp) / len(grp)
+        out.append({"id": f"{round(cx / 10) * 10}_{round(cz / 10) * 10}", "c": [round(cx, 1), round(cz, 1)], "n": len(grp),
+                    "p": sum(side[p] in ("p", "a") for p in grp), "s": sum(side[p] in ("s", "a") for p in grp)})
+    return out
+
+
 def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> dict:
     """맵 문서 하나 → 전체 지도(2단계)가 그릴 좌표만 추린 작은 문서.
     SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(데이터 라이선스 명시 없음)로만 그린다.
@@ -1049,6 +1098,9 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
     locks = [{"p": note(pt(lk["position"])), "type": lk.get("lockType") or "door", "key": lk.get("key") or None}  # key = 여는 열쇠 아이템 id(시세 조회한 열쇠 강조용)
              for lk in m.get("locks") or [] if ok(lk.get("position"))]
     containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]
+    ctn = (_doc("regular/maps") or {}).get("lootContainers") or {}  # 상자 id → 종류 이름
+    loot = [[*pt(c["position"]), loot_group((ctn.get(c.get("lootContainer")) or {}).get("normalizedName"))]
+            for c in m.get("lootContainers") or [] if ok(c.get("position"))]
     spawns = []
     for s in m.get("spawns") or []:
         if not ok(s.get("position")):
@@ -1065,7 +1117,7 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
     return {"slug": m.get("normalizedName"), "name": _loc(loc_maps, m.get("name"), m.get("normalizedName")),
             "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds, "img": img,
             "extracts": extracts, "transits": transits, "hazards": hazards, "locks": locks,
-            "containers": containers, "spawns": spawns, "weapons": weapons, "switches": switches,
+            "containers": containers, "loot": loot, "spawn_groups": spawn_groups(m), "raid_min": m.get("raidDuration"), "spawns": spawns, "weapons": weapons, "switches": switches,
             "bosses": boss_zones(m, loc_maps, loc_en)}
 
 
@@ -1248,6 +1300,41 @@ def map_image_file(slug: str) -> Optional[Path]:
 _map_cache: dict = {}
 
 
+LOCK_ROOM_M = 10.0  # 잠긴 문에서 이 거리 안(같은 층 ±3m)의 상자를 '문 근처 상자'로 센다 — 방 모양 자료가 없어 어림이다
+LOCK_ROOM_DY = 3.0
+
+
+def annotate_locks(doc: dict, lang: str) -> None:
+    """잠긴 문에 열쇠 이름(kn)과 문 근처 상자 수(loot: {묶음: 개수})를 붙인다(11-13 열쇠 ↔ 문 ↔ 상자).
+    이름 문서를 못 받으면 이름만 빠진다."""
+    locks = doc.get("locks") or []
+    ids = {lk.get("key") for lk in locks if lk.get("key")}
+    names: dict = {}
+    if ids:
+        try:
+            items = (_doc("regular/items") or {}).get("items") or {}
+            loc = _doc(f"regular/items_{lang}") or {}
+            loc_en = loc if lang == "en" else (_doc("regular/items_en") or {})
+            for i in ids:
+                it = items.get(i) or {}
+                nm = _loc(loc, it.get("name")) or _loc(loc_en, it.get("name")) or _loc(loc, it.get("shortName")) or _loc(loc_en, it.get("shortName"))
+                if nm:
+                    names[i] = nm
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"[radar] 열쇠 이름 문서 로드 실패: {e}")
+    loot = doc.get("loot") or []
+    for lk in locks:
+        if lk.get("key") in names:
+            lk["kn"] = names[lk["key"]]
+        x, y, z = lk["p"]
+        cnt: dict = {}
+        for c in loot:
+            if abs(c[1] - y) <= LOCK_ROOM_DY and math.hypot(c[0] - x, c[2] - z) <= LOCK_ROOM_M:
+                cnt[c[3]] = cnt.get(c[3], 0) + 1
+        if cnt:
+            lk["loot"] = cnt
+
+
 def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     """전체 지도용 정적 좌표 문서(맵·언어별 캐시). 없는 맵이면 None."""
     slug = EVENT_MAPS.get(slug, slug)
@@ -1262,6 +1349,7 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
         return None
     loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
     doc = compact_map_features(m, loc_maps, _doc("regular/maps_en") or {})
+    annotate_locks(doc, lang)
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc
