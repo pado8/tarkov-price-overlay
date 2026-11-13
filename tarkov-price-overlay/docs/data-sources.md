@@ -4,6 +4,8 @@
 
 라이선스 약칭: **NC** = CC BY-NC-SA(비영리·출처 표시·동일 조건) · **자체** = 이 저장소에서 직접 만든 데이터.
 
+11-13 출처·라이선스 정리: **tarkov.dev 자료(api.tarkov.dev·json.tarkov.dev·assets.tarkov.dev)에는 데이터 라이선스가 명시돼 있지 않다** — MIT 는 사이트 코드 저장소(the-hideout/tarkov-dev)에만, API 코드(tarkov-api·tarkov-data-manager)는 GPL-3.0, API 문서의 자료 출처에 EFT 위키가 들어 있다. MIT 자료 2건(eft-where-am-i 프리셋 표, tarkov-dev maps.json 변환값)의 저작권 줄·전문은 `THIRD_PARTY_NOTICES.txt`(설치본·포터블에 포함). 앱 표기 = 설정 맨 아래 copyrightLine3~5(지도 그림·타일·자료·위키·스토리 CC0·상표 고지).
+
 ## 1. 앱
 
 | 기능 | 출처 | 언제 | 실패하면 | 조건 | 근거 |
@@ -33,8 +35,8 @@
 | 지도: 퀘스트 목표·필요 열쇠 | json tasks·items | 6시간 캐시 | 열쇠만 빠짐 | tarkov.dev | `radar.py` |
 | 지도: 스토리 목표 위치 | `data/story_marks.json` ← szepiz/tarkov-quest-data | 번들(생성 스크립트 없음) | 빈 값 | **CC0** | `radar.py` |
 | 지도 그림(SVG 10맵) | assets.tarkov.dev `maps/svg/*.svg` | 첫 표시, 7일 캐시 | 오래된 캐시 → 좌표만 | **NC + "치트·부당 이득 도구 사용 금지" 조항**(tarkov-dev-svg-maps) | `radar.py` |
-| 지도 그림(타일: 연구소·미궁) | assets.tarkov.dev 타일 PNG를 이어 붙임 | 7일 캐시 | 오래된 캐시 | **NC** | `radar.map_tile_png` |
-| 지도 좌표 변환값 | `data/td_maps.json` ← tarkov-dev `src/data/maps.json` | 번들(`scripts/td_maps.py`) | 그림 없음 | MIT | |
+| 지도 그림(타일: 연구소·미궁·쇄빙선) | assets.tarkov.dev 타일 PNG를 이어 붙임 | 7일 캐시 | 오래된 캐시 | 라이선스 표기 없음(연구소·미궁 © Tarkov.dev, 쇄빙선 © TarkovBOT.eu) | `radar.map_tile_png` |
+| 지도 좌표 변환값 | `data/td_maps.json` ← tarkov-dev `src/data/maps.json` | 번들(`scripts/td_maps.py`) | 그림 없음 | MIT (Copyright (c) 2019 Oskar Risberg, 고지 = THIRD_PARTY_NOTICES.txt) | |
 | 파티 방 | `wss://aquapado-party.aquapado.workers.dev` | 런타임 | 재접속 | 자체 서버(Cloudflare) | `src/party.ts` |
 | 원격 공지·최소 버전 | `api.aquapado.com/priceoverlay/announcement` | 시작 | 무시 | 자체 서버(Vercel) | `App.tsx` |
 | 익명 통계·피드백 | `api.aquapado.com/priceoverlay/events`·`feedback` | 30분 묶음 | 로컬 대기열 500건 | 자체 서버(Vercel→Neon) | `App.tsx` |
@@ -61,7 +63,7 @@
 
 ## 3. 표기·정리 필요 (11-06 조사에서 나온 것)
 
-- 앱 화면·`README.md` 에 **위키 출처·CC BY-NC-SA 표기가 없다** — 앱이 위키 유래 데이터 4종(거래 불가 쓰임새·탈출구 걸러내기·탈출 조건·건스미스 예시)을 보여 준다.
+- ~~앱 화면·`README.md` 에 위키 출처·CC BY-NC-SA 표기가 없다~~ → 1.3.1 에 표기, 11-13 출처 정리(tarkov.dev 데이터 라이선스 없음·타일·MIT 고지 파일·상표 고지)로 마무리. 위키 유래 3종(탈출구 표·조건 문구·보스 근거)을 우리 자료로 바꾸는 일은 1.3.3(사이트와 같이).
 - `radar.py`·`src/RadarMap.tsx` 머리 주석의 "SVG 는 쓰지 않는다"는 옛 내용 — 10-27부터 SVG 를 쓴다.
 - `README.md`·`CLAUDE.md`·`python-core/README.md` 의 "tarkov.dev GraphQL API 호출" 설명은 옛 내용 — 1순위는 json.tarkov.dev.
 - EasyOCR 모델 파일의 라이선스 표기가 저장소에 없다.

@@ -103,7 +103,8 @@
     ],
     "externalBin": ["binaries/tarkov-server"],
     "resources": {
-      "binaries/_internal": "_internal"
+      "binaries/_internal": "_internal",
+      "../THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
     },
     "windows": {
       "nsis": {

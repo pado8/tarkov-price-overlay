@@ -31,7 +31,7 @@ Tarkov Price Overlay (Portable v{VERSION})
 지도 자료 보내기(선택·기본 꺼짐): 앱을 켜면 한 번 묻고, 켜면 스크린샷 파일
 이름의 맵·위치·방향 숫자만 하루 한 번쯤 보냅니다(지도 개선용). 사진·날짜·시각·설치 ID 는
 보내지 않고 무작위 익명 ID 로만 구분합니다. 설정 체크로 언제든 끌 수 있습니다.
-데이터 출처: tarkov.dev(지도 그림 CC BY-NC-SA 4.0) · 일부 데이터: Escape from Tarkov Wiki (CC BY-NC-SA)
+데이터 출처: tarkov.dev(게임 자료·좌표, 지도 그림 SVG CC BY-NC-SA 4.0) · 타일 지도: 연구소·미궁 © Tarkov.dev, 쇄빙선 © TarkovBOT.eu · 일부 데이터: Escape from Tarkov Wiki (CC BY-NC-SA) · 오픈소스 고지: THIRD_PARTY_NOTICES.txt(이 폴더)
 
 [전체화면(Fullscreen) 모드에서 F2가 안 먹는 경우]
 타르코프 그래픽 설정에서 "전체화면" → "테두리 없는 전체화면(Borderless Fullscreen)"
@@ -78,7 +78,7 @@ Send map data (optional, off by default): asked once when you launch the
 app; when on, only the map/position/facing numbers from screenshot file names
 are sent about once a day to improve the map. No images, dates, times or
 install ID — only a random anonymous ID. Untick it in Settings anytime.
-Data: tarkov.dev (map images CC BY-NC-SA 4.0) · some data: Escape from Tarkov Wiki (CC BY-NC-SA)
+Data: tarkov.dev (game data & coordinates, map images SVG CC BY-NC-SA 4.0) · tile maps: The Lab & The Labyrinth © Tarkov.dev, Icebreaker © TarkovBOT.eu · some data: Escape from Tarkov Wiki (CC BY-NC-SA) · open-source notices: THIRD_PARTY_NOTICES.txt (this folder)
 
 [F2 not working in fullscreen mode?]
 Switch Tarkov's graphics setting from "Fullscreen" to

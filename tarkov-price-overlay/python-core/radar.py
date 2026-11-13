@@ -4,7 +4,8 @@
   `2026-10-26[01-30]_30.24, 1.62, 21.55_0.00000, 0.97307, 0.00000, 0.23051_15.47 (0).png`
   (x, y, z / 쿼터니언 qx, qy, qz, qw / 속도). 그래서 위치는 사용자가 스크린샷을 찍을 때만 갱신된다.
 - 현재 맵: 게임 application 로그의 `scene preset path:maps/<preset>.bundle` 줄(시각 포함).
-- 표시할 대상: tarkov.dev 공개 데이터(MIT)의 탈출구·트랜짓 좌표 + 퀘스트 트래커가 아는
+- 표시할 대상: tarkov.dev API 자료(데이터 라이선스 명시 없음 — 사이트 코드 MIT·API 코드 GPL-3.0, 자료 출처에 EFT 위키 포함)의
+  탈출구·트랜짓 좌표 + 퀘스트 트래커가 아는
   '진행 중' 퀘스트의 목표 좌표(zones·possibleLocations).
 
 방향은 '내가 바라보는 쪽 = 위'인 상대 각도로만 준다. 지도 북쪽 기준 방위는 맵마다 회전이 달라
@@ -978,7 +979,7 @@ def _cluster_pts(pts: list, th: float) -> list:
 
 def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> dict:
     """맵 문서 하나 → 전체 지도(2단계)가 그릴 좌표만 추린 작은 문서.
-    SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(MIT 사이트 데이터)로만 그린다.
+    SVG 지도(CC BY-NC-SA·치트 금지 조항)는 쓰지 않고 tarkov.dev API 좌표(데이터 라이선스 명시 없음)로만 그린다.
     점이 많은 것(상자·스폰)은 [x, y, z(, 종류)] 배열로 줄여 보낸다."""
     def pt(p):
         return [round(float(p["x"]), 1), round(float(p.get("y") or 0), 1), round(float(p["z"]), 1)]

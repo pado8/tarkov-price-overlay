@@ -24,7 +24,7 @@ SKIP_TILES = {
 def main() -> int:
     r = requests.get(SRC, timeout=60)
     r.raise_for_status()
-    out = {"source": SRC, "license": "maps.json MIT · SVG·타일 CC BY-NC-SA 4.0 (tarkov.dev · 쇄빙선 타일 TarkovBOT.eu)", "maps": {}}
+    out = {"source": SRC, "license": "maps.json MIT (Copyright (c) 2019 Oskar Risberg) · SVG CC BY-NC-SA 4.0 · 타일(연구소·미궁 Tarkov.dev, 쇄빙선 TarkovBOT.eu) 라이선스 표기 없음", "maps": {}}
     for m in r.json():
         slug = m.get("normalizedName")
         for x in m.get("maps") or []:

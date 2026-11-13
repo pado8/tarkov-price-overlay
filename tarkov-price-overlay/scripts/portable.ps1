@@ -67,6 +67,8 @@ Copy-Item $mainExe (Join-Path $stageDir "Tarkov Price Overlay.exe")
 # Rename the triple-suffixed externalBin to the runtime name the app spawns.
 Copy-Item $serverExe (Join-Path $stageDir "tarkov-server.exe")
 Copy-Item -Recurse $internalDir $stageDir
+# Third-party notices (MIT license texts etc.) - also bundled into the installer via tauri.conf.json resources
+Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.txt") (Join-Path $stageDir "THIRD_PARTY_NOTICES.txt")
 
 # Drop a quick-start README inside the ZIP root.
 # Read the template from a separate UTF-8 file so the .ps1 itself can

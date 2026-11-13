@@ -176,7 +176,7 @@ EFT 게임 로그를 직접 파싱해서 본인이 어떤 퀘스트를 완료/�
 
 ![지도 나란히 모드](assets/screenshots/08-wide.png)
 
-지도 그림·좌표: [tarkov.dev](https://tarkov.dev) (CC BY-NC-SA 4.0) · 스토리 목표 좌표: szepiz/tarkov-quest-data (CC0) · 일부 데이터(탈출 조건·거래 불가 아이템 쓰임새·조립 등): [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com) (CC BY-NC-SA)
+지도 그림: [tarkov.dev SVG](https://github.com/the-hideout/tarkov-dev-svg-maps) (CC BY-NC-SA 4.0) · 타일 지도: 연구소·미궁 © Tarkov.dev, 쇄빙선 © TarkovBOT.eu · 게임 자료·좌표·아이템 그림: [tarkov.dev](https://tarkov.dev) · 스토리 목표 좌표: szepiz/tarkov-quest-data (CC0) · 일부 데이터(탈출 조건·거래 불가 아이템 쓰임새·조립 등): [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com) (CC BY-NC-SA) · 오픈소스 고지(MIT 원문): [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)
 
 ### 4. 인식이 잘 안 될 때
 
@@ -340,6 +340,7 @@ A. [GitHub Issues](https://github.com/pado8/tarkov-price-overlay-releases/issues
 
 - **라이선스: [MIT](LICENSE)** — 자유롭게 사용/수정/배포 가능 (저작권 표시 유지 의무)
 - 가격 데이터: [tarkov.dev](https://tarkov.dev) (커뮤니티 운영 EFT DB)
+- 쓰고 있는 제3자 자료의 라이선스 고지(MIT 원문 등): [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) — 설치본·포터블에도 같이 들어 있음
 - 본 도구는 비공식 도구이며 **Battlestate Games와 무관**합니다
 - *Escape from Tarkov* 및 관련 자산은 Battlestate Games Limited의 상표/저작권입니다
 - © 2026 pado
@@ -515,7 +516,7 @@ Press the game's **screenshot key (PrtScn by default)** and the map shows extrac
 
 ![Side-by-side map mode](assets/screenshots/en/08-wide.png)
 
-Map images & coordinates: [tarkov.dev](https://tarkov.dev) (CC BY-NC-SA 4.0) · story objective coordinates: szepiz/tarkov-quest-data (CC0) · some data (extract conditions, uses of untradeable items, builds…): [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com) (CC BY-NC-SA)
+Map images: [tarkov.dev SVG](https://github.com/the-hideout/tarkov-dev-svg-maps) (CC BY-NC-SA 4.0) · tile maps: The Lab & The Labyrinth © Tarkov.dev, Icebreaker © TarkovBOT.eu · game data, coordinates and item images: [tarkov.dev](https://tarkov.dev) · story objective coordinates: szepiz/tarkov-quest-data (CC0) · some data (extract conditions, uses of untradeable items, builds…): [Escape from Tarkov Wiki](https://escapefromtarkov.fandom.com) (CC BY-NC-SA) · open-source notices (MIT texts): [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)
 
 ### 4. If recognition is off
 
@@ -663,6 +664,7 @@ This project uses the SignPath Foundation for code signing.
 ## 📜 License / Disclaimer
 
 - Price data: [tarkov.dev](https://tarkov.dev) (community-maintained EFT database)
+- Third-party license notices (MIT texts etc.): [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt) — also shipped with the installer and portable ZIP
 - This is an **unofficial tool, not affiliated with Battlestate Games**
 - *Escape from Tarkov* and related assets are trademarks/copyright of Battlestate Games Limited
 - © 2026 pado

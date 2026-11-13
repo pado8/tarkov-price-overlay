@@ -1,6 +1,6 @@
 {
  "source": "https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json",
- "license": "maps.json MIT · SVG·타일 CC BY-NC-SA 4.0 (tarkov.dev · 쇄빙선 타일 TarkovBOT.eu)",
+ "license": "maps.json MIT (Copyright (c) 2019 Oskar Risberg) · SVG CC BY-NC-SA 4.0 · 타일(연구소·미궁 Tarkov.dev, 쇄빙선 TarkovBOT.eu) 라이선스 표기 없음",
  "maps": {
   "streets-of-tarkov": {
    "svg": "https://assets.tarkov.dev/maps/svg/StreetsOfTarkov.svg",

@@ -6801,6 +6801,8 @@ function App() {
               <div className="copyright-line">{t.copyright}</div>
               <div className="copyright-line copyright-sub">{t.copyrightLine2}</div>
               <div className="copyright-line copyright-sub">{t.copyrightLine3}</div>
+              <div className="copyright-line copyright-sub">{t.copyrightLine4}</div>
+              <div className="copyright-line copyright-sub">{t.copyrightLine5}</div>
             </div>
           </div>
         )}
