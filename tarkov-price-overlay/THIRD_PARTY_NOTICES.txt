@@ -8,7 +8,7 @@ Other sources (no notice text required, credited in the app's Settings):
 - tarkov.dev API data, coordinates and item images (api.tarkov.dev / assets.tarkov.dev) — no data license stated
 - Map images: the-hideout/tarkov-dev-svg-maps — CC BY-NC-SA 4.0
 - Tile maps: The Lab and The Labyrinth (c) Tarkov.dev, Icebreaker (c) TarkovBOT.eu — no license stated
-- Some data (extract conditions, item uses): Escape from Tarkov Wiki — CC BY-NC-SA
+- Some data (uses of untradeable items, example builds): Escape from Tarkov Wiki — CC BY-NC-SA
 - Story quest positions: szepiz/tarkov-quest-data (api/firstparty) — CC0, with thanks
 
 ================================================================================

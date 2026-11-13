@@ -30,8 +30,8 @@
 | 지도: 내 위치·방향 | 게임 스크린샷 파일명의 좌표·쿼터니언 | 스크린샷 때 | — | 이 PC 파일 | `radar.py` |
 | 지도: 현재 맵 | 게임 application 로그 `scene preset path` (표는 eft-where-am-i MIT 참고) | 런타임 | 이름 단어로 추측 | MIT 참고 | `radar.py` |
 | 지도: 탈출구·트랜짓·위험·자물쇠·상자·스폰·보스 좌표 | json `regular/maps`·`maps_{lang}` | 6시간 메모리 캐시 | GitHub 미러 → 문서 없음 | tarkov.dev | `radar.py` |
-| 지도: 지금 있는 탈출구·진영 | `data/extracts_current.json` ← **위키** Extractions 표(`scripts/wiki_extracts.py`) | 번들 | 거르지 않음 | **NC** | `extract_current.py` |
-| 지도: 탈출 조건 문구 | `extract_conditions.py` — **위키 표를 옮김** | 코드 | — | **NC** | |
+| 지도: 지금 있는 탈출구·진영 | `data/extracts_ours.json` ← `scripts/extracts_ours.py`(tarkov.dev 목록 + 우리 규칙 + 근거 적은 예외, 11-13 위키 표에서 바꿈) | 번들 | 거르지 않음 | 자체 | `extract_current.py` |
+| 지도: 탈출 조건 문구 | `extract_conditions.py` — 사실 자료(FACTS) + 우리 문장 틀(_render), 11-13 위키 문장에서 바꿈 | 코드 | — | 자체 | |
 | 지도: 퀘스트 목표·필요 열쇠 | json tasks·items | 6시간 캐시 | 열쇠만 빠짐 | tarkov.dev | `radar.py` |
 | 지도: 스토리 목표 위치 | `data/story_marks.json` ← szepiz/tarkov-quest-data | 번들(생성 스크립트 없음) | 빈 값 | **CC0** | `radar.py` |
 | 지도 그림(SVG 10맵) | assets.tarkov.dev `maps/svg/*.svg` | 첫 표시, 7일 캐시 | 오래된 캐시 → 좌표만 | **NC + "치트·부당 이득 도구 사용 금지" 조항**(tarkov-dev-svg-maps) | `radar.py` |
@@ -50,7 +50,7 @@
 |---|---|---|---|
 | 퀘스트·상인·은신처·제작·탄약·맵·보스·카파·열쇠·키파인더·모딩·레이드·검색 | json.tarkov.dev `regular`·`pve` + 로케일 | 빌드 때(실패하면 빌드 중단) | tarkov.dev |
 | 아이콘·보스 초상 | assets.tarkov.dev **핫링크** | 브라우저가 볼 때 | 게임 이미지 |
-| 맵 탈출구 걸러내기·조건 | 앱과 같은 `extracts_current.json`·`extract_conditions` | 빌드 | **NC** |
+| 맵 탈출구 걸러내기·조건 | 앱과 같은 `extracts_ours.json`·`extract_conditions` | 빌드 | 자체 |
 | 퀘스트 이전·다음 연결 | `guide_data/wiki_quest_links.json` ← 위키 | 수동 | **NC** |
 | 퀘스트 받는 상인 레벨 | `guide_data/bundle_ll.json` ← 위키 | 수동 | **NC** |
 | 사라진 퀘스트 안내 | `guide_data/wiki_historical.json` ← 위키 | 수동 | **NC** |

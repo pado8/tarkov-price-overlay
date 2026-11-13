@@ -8,7 +8,7 @@
   3. 예외 목록(아래 REMOVED·SHARED) — 줄마다 근거를 적는다. 근거 = 공식 패치 노트·BSG 공지·사용자 게임 확인.
      위키 문장·표는 근거로 쓰지 않는다.
 
-출력 = python-core/data/extracts_ours.json — extracts_current.json 과 같은 모양({"maps": {slug: [{"name", "faction"}]}})이라
+출력 = python-core/data/extracts_ours.json — 예전 위키 표(extracts_current.json, 11-13 지움)와 같은 모양({"maps": {slug: [{"name", "faction"}]}})이라
 extract_current.py 는 읽는 파일만 바꾸면 된다.
 
   python-core/.venv/Scripts/python.exe scripts/extracts_ours.py           # 만들기 + 위키 표와 차이 보고
