@@ -95,9 +95,9 @@ def _render(f: dict) -> str:
         parts.append("순서: " + " → ".join(f["steps"]))
     elif f.get("lever"):
         where, what = f["lever"]
-        parts.append(f"{where}에서 {what}")
+        parts.append(f"{where}: {what}")  # 조사 없이 잇는다 — 가이드 번역(구간 치환)이 '에서'·'필요' 같은 흔한 조각과 안 섞이게
     if "key" in t and f.get("key"):
-        parts.append(f"{f['key']} 열쇠 필요" if "키카드" not in f["key"] else f"{f['key']} 필요")
+        parts.append(f"필요한 열쇠: {f['key']}")
     if "flare" in t:
         parts.append("탈출 지점에서 초록 조명탄 발사" + (" — 평소엔 닫혀 있음" if f.get("flare_only_sometimes") else ""))
     if "coop" in t:

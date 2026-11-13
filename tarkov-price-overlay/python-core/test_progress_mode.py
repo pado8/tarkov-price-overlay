@@ -39,6 +39,27 @@ r = main.progress(None)
 eq("auto → 앱 모드(pve)", (r["mode"], r["mode_source"], r["app_mode"]), ("pve", "app", "pve"))
 eq("은신처도 같이", r["hideout"], {"5d484fc0654e76006657e0ab": 2})
 
+# 2-1) 11-13 메인 스토리 진행 중 챕터 — 로그 추정(radar.story_auto_quests)의 챕터 slug 만, 모드는 pve/그 밖(regular), 실패해도 빈 목록
+import radar  # noqa: E402
+
+_seen_modes = []
+_real_auto = radar.story_auto_quests
+radar.story_auto_quests = lambda gm="regular": (_seen_modes.append(gm), {"tour": ["a"], "batya": []})[1]
+eq("story.started = 챕터 slug 정렬", main.progress(None)["story"], {"started": ["batya", "tour"]})
+eq("앱 모드 pve → pve 로 추정", _seen_modes[-1], "pve")
+main.progress("pvp")
+eq("pvp 요청 → regular 로 추정", _seen_modes[-1], "regular")
+
+
+def _boom(gm="regular"):
+    raise RuntimeError("no logs")
+
+
+radar.story_auto_quests = _boom
+eq("추정 실패 → 빈 목록(응답은 그대로)", (main.progress(None)["ok"], main.progress(None)["story"]), (True, {"started": []}))
+radar.story_auto_quests = _real_auto
+eq("/health 기능 목록", main.health()["features"], ["story_sync", "story_progress"])
+
 # 3) 사이트가 모드를 명시하면 그대로(연동된 뒤 사용자가 사이트에서 서버를 바꾼 경우)
 r = main.progress("regular")
 eq("명시 regular → pvp", (r["mode"], r["mode_source"], r["app_mode"]), ("pvp", "request", "pve"))

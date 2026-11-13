@@ -623,8 +623,9 @@ def _build_response(
 
 @app.get("/health")
 def health() -> dict:
-    # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story)
-    return {"status": "ok", "features": ["story_sync"]}
+    # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story,
+    # 11-13 story_progress = GET /progress 의 story.started — 게임 로그로 추정한 진행 중 스토리 챕터)
+    return {"status": "ok", "features": ["story_sync", "story_progress"]}
 
 
 class CatalogActiveRequest(BaseModel):
@@ -1715,7 +1716,20 @@ def progress(game_mode: str | None = None) -> dict:
         "hideout": _load_hideout_levels(),
         "gunsmith": gunsmith.status().get("updated") or None,
         "promo_used": sorted(_load_promo_used().keys()),  # 가이드 프로모 페이지에서 '등록함'으로 체크한 코드(계정 1회 등록이라 PC 공용)
+        "story": _story_started(mode),  # 11-13 메인 스토리 — 로그로 추정한 '시작했고 아직 남은' 챕터(가이드 사이트 표시용)
     }
+
+
+def _story_started(mode: str) -> dict:
+    """{"started": [챕터 slug…]} — 게임 출력 로그 경고로 추정(story_progress): 시작했고 아직 안 받은 하위 퀘스트가 남은 챕터.
+    목표 하나하나를 끝냈는지는 게임이 로그에 남기지 않아 모른다. 로그를 못 읽으면 빈 목록. 이 PC 안에서만 쓰인다(읽기 전용)."""
+    try:
+        from radar import story_auto_quests
+
+        return {"started": sorted(story_auto_quests("pve" if mode == "pve" else "regular"))}
+    except Exception as e:  # noqa: BLE001
+        print(f"[progress] story started failed: {e!r}")
+        return {"started": []}
 
 
 # ── 프로모 코드 '등록함' 체크 (2026-11-02) ──────────────────────────────────────
