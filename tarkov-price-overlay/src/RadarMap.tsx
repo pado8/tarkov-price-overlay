@@ -165,6 +165,7 @@ function loadMapRot(slug: string | null | undefined, fallback = 0): number {
 // 루팅 상자 층(11-13): 묶음별 켜고 끄기 — 기억은 LOOT_KEY
 export const LOOT_KEY = "tarkov.radar.lootGroups";
 // 이번 레이드 이동 자취(11-13): 스크린샷을 찍을 때마다 내 위치를 쌓는다. 지도 패널을 닫았다 열어도 남게 모듈에 둔다(앱을 끄면 사라짐)
+const ZONE_NAME_MIN_S = 0.3; // 화면 1m 가 이 px 보다 작게 축소되면 구역 이름표를 숨긴다(작은 지도 전체 보기에서 글자가 겹침)
 const TRAIL_MIN_M = 3;
 const trailMemo: { key: string; pts: [number, number][] } = { key: "", pts: [] };
 const PLAN_SEL_KEY = "tarkov.radar.planSel";
@@ -844,6 +845,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   );
                 })}
             {layers.names &&
+              v && v.s >= ZONE_NAME_MIN_S &&
               (doc.zones ?? []).map((z, i) => {
                 const s = toScreen(z.p[0], z.p[2]);
                 return <text key={`zn${i}`} x={s.x} y={s.y} textAnchor="middle" className="radar-zonename">{z.name}</text>;
@@ -870,11 +872,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {layers.loot &&
               (doc.loot ?? []).map((x, i) => {
                 if (!lootG[x[3]]) return null;
+                const lootR = v && v.s < 0.5 ? 1.5 : 2.6; // 멀리서 보면 작게(1m 가 0.5px 보다 작을 때)
                 const s = toScreen(x[0], x[2]);
                 return (
                   <g key={`lt${i}`} onClick={() => pick({ name: lootName(x[3], t), p: [x[0], x[1], x[2]] })} opacity={op(x[0], x[1], x[2])}>
                     <circle cx={s.x} cy={s.y} r={6} fill="transparent" />
-                    <rect x={s.x - 2.6} y={s.y - 2.6} width={5.2} height={5.2} rx={1} fill={LOOT_COLOR[x[3]] ?? "#bbb"} stroke="#000" strokeWidth={0.6} />
+                    <rect x={s.x - lootR} y={s.y - lootR} width={lootR * 2} height={lootR * 2} rx={1} fill={LOOT_COLOR[x[3]] ?? "#bbb"} stroke="#000" strokeWidth={lootR < 2 ? 0.3 : 0.6} />
                   </g>
                 );
               })}
@@ -996,9 +999,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
-          <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarLabelHint} aria-label={t.radarLabelAdd} data-tool="label">🏷</button>
-          <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
-          <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
           <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
           {view && <button type="button" onClick={() => { stat("mtc"); centerMe(); }} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
           <button type="button" onClick={() => { stat("mtf"); fit(); }} title={t.radarMapFit}>{t.radarMapFit}</button>
@@ -1010,6 +1010,13 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {raidLeft != null && !mini && <div className="radar-raidleft" title={t.radarRaidLeftHint}>⏱ {Math.max(1, Math.round(raidLeft / 60))}{t.radarMinShort}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
+      {!mini && doc && slug && (
+        <div className="radar-xtools">
+          <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
+          <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
+          <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} title={t.radarLabelHint} data-tool="label">{t.radarLabelShort}</button>
+        </div>
+      )}
       {!mini && <div className="radar-layers">
         {data.raid_side && <span className="radar-kind" title={t.radarSideHint}>{data.raid_side === "scav" ? t.radarSideScav : t.radarSidePmc}</span>}
         {chip(layers.pmc, "pmc", t.radarLayerPmc, () => onToggleLayer("pmc"))}
@@ -1059,7 +1066,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           {me && Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
           {sel.labelIdx != null && slug && <button type="button" className="radar-planadd" onClick={() => { saveLabels({ ...myLabels, [slug]: (myLabels[slug] ?? []).filter((_, k) => k !== sel.labelIdx) }); setSel(null); }}>{t.radarLabelDel}</button>}
           {sel.keyId && <button type="button" className="radar-planadd" onClick={() => toggleMyKey(sel.keyId!)}>{myKeys.includes(sel.keyId) ? t.radarMyKeyOff : t.radarMyKeyOn}</button>}
-          {planOpen && <button type="button" className="radar-planadd" onClick={() => addStop(sel.p, sel.name)}>＋ {t.radarPlanAdd}</button>}
+          {planOpen && <button type="button" className="radar-planadd" onClick={() => addStop(sel.p, sel.name.split(" · ").slice(0, 2).join(" · "))}>＋ {t.radarPlanAdd}</button>}
         </div>
       )}
       {labelMode && !mini && slug && (

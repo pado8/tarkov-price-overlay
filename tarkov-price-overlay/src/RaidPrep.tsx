@@ -28,10 +28,11 @@ type Props = {
 
 export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, snipers, plans, planId, planKeys, onPickPlan }: Props) {
   const quests = targets.filter((x) => x.kind === "quest");
-  const byTask = new Map<string, { n: number; keys: Set<string> }>();
+  // 묶는 열쇠는 task(내부 id), 보여 주는 건 퀘스트 이름(11-13 실앱: id 가 그대로 보였다)
+  const byTask = new Map<string, { name: string; n: number; keys: Set<string> }>();
   for (const q of quests) {
     const k = q.task ?? q.name;
-    const e = byTask.get(k) ?? { n: 0, keys: new Set<string>() };
+    const e = byTask.get(k) ?? { name: q.name, n: 0, keys: new Set<string>() };
     e.n += 1;
     (q.keys ?? []).forEach((x) => e.keys.add(x));
     byTask.set(k, e);
@@ -68,8 +69,8 @@ export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, sn
         <h4>{t.radarPrepQuests} {byTask.size > 0 && <i>{byTask.size}</i>}</h4>
         {byTask.size === 0 ? <p className="dim">{t.radarPrepNoQuests}</p> : (
           <ul>
-            {[...byTask.entries()].slice(0, 12).map(([name, e]) => (
-              <li key={name}>{name}{e.n > 1 ? ` ×${e.n}` : ""}{e.keys.size ? <span className="key"> 🔑 {[...e.keys].join(", ")}</span> : null}</li>
+            {[...byTask.entries()].slice(0, 12).map(([key, e]) => (
+              <li key={key}>{e.name}{e.n > 1 ? ` ×${e.n}` : ""}{e.keys.size ? <span className="key"> 🔑 {[...e.keys].join(", ")}</span> : null}</li>
             ))}
             {byTask.size > 12 && <li className="dim">+{byTask.size - 12}</li>}
           </ul>
