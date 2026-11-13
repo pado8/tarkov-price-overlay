@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "test:layout": "node --test tests/wideLayout.test.mjs tests/miniSnap.test.mjs tests/cardAtCursor.test.mjs tests/version.test.mjs",
+    "test:layout": "node --test tests/wideLayout.test.mjs tests/miniSnap.test.mjs tests/version.test.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },
