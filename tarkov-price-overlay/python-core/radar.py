@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Optional
 
 import extract_conditions
+import map_labels
 import extract_current
 import quest_ko
 import json
@@ -1350,6 +1351,7 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
     doc = compact_map_features(m, loc_maps, _doc("regular/maps_en") or {})
     annotate_locks(doc, lang)
+    doc["zones"] = map_labels.zone_labels(m, lang)  # 구역 이름표(스폰 구역 코드에 붙인 우리 이름)
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc

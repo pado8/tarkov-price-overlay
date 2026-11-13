@@ -63,6 +63,7 @@ export type MapDoc = {
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
   locks: { p: Pt; type: string; key?: string | null; kn?: string; loot?: Record<string, number> }[]; // key = 여는 열쇠 아이템 id
   containers: Pt[];
+  zones?: { name: string; p: Pt }[]; // 구역 이름표
   raid_min?: number | null; // 이 맵 레이드 길이(분)
   spawn_groups?: SpawnGroup[]; // 플레이어 스폰 무리(루팅 계획을 붙이는 단위)
   loot?: [number, number, number, string][]; // 루팅 상자: 마지막 = 묶음(w 무기·탄 t 기술 m 의료 v 귀중품 c 은닉처 b 가방·상자 d 시체)
@@ -72,8 +73,8 @@ export type MapDoc = {
   switches: Pt[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; loot: boolean; trail: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
-export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, loot: false, trail: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; loot: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, loot: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -167,6 +168,8 @@ export const LOOT_KEY = "tarkov.radar.lootGroups";
 const TRAIL_MIN_M = 3;
 const trailMemo: { key: string; pts: [number, number][] } = { key: "", pts: [] };
 const PLAN_SEL_KEY = "tarkov.radar.planSel";
+export const MY_LABELS_KEY = "tarkov.radar.myLabels"; // 내가 지도에 단 이름표 {맵: [{p: [x, z], text}]}
+type MyLabel = { p: [number, number]; text: string };
 export const MY_KEYS_KEY = "tarkov.radar.myKeys"; // 내가 가진 열쇠(아이템 id 목록) — 잠긴 문 층의 '내 열쇠만'·계획의 필요한 열쇠 표시
 const lockLootText = (l: Record<string, number> | undefined, t: Strings): string =>
   l ? LOOT_ORDER.filter((g) => l[g]).map((g) => `${lootName(g, t)} ${l[g]}`).join(", ") : ""; // 마지막으로 띄운 루팅 계획 id
@@ -325,6 +328,18 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [plans, setPlans] = useState<LootPlan[]>(loadPlans);
   const [planOpen, setPlanOpen] = useState(false);
   const [prepOpen, setPrepOpen] = useState(false);
+  // 내 라벨(11-13): 🏷 를 켜고 지도를 누르면 그 자리에 이름을 단다. 이 PC 에만 저장
+  const [myLabels, setMyLabels] = useState<Record<string, MyLabel[]>>(() => loadJson<Record<string, MyLabel[]>>(MY_LABELS_KEY, {}));
+  const [labelMode, setLabelMode] = useState(false);
+  const [labelDraft, setLabelDraft] = useState<{ p: [number, number]; text: string } | null>(null);
+  const saveLabels = (n: Record<string, MyLabel[]>) => {
+    setMyLabels(n);
+    try {
+      localStorage.setItem(MY_LABELS_KEY, JSON.stringify(n));
+    } catch {
+      /* 저장 실패는 무시 */
+    }
+  };
   const [myKeys, setMyKeys] = useState<string[]>(() => {
     try {
       const v = JSON.parse(localStorage.getItem(MY_KEYS_KEY) || "[]");
@@ -408,7 +423,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [box, setBox] = useState({ w: 300, h: size });
   // 보기: null = 내 위치 중심(기억한 배율) · 값 = 끌거나 '전체'로 옮긴 중심과 축척(px/m)
   const [view, setView] = useState<{ cx: number; cz: number; s: number } | null>(null);
-  const [sel, setSel] = useState<{ name: string; p: Pt; keyId?: string } | null>(null);
+  const [sel, setSel] = useState<{ name: string; p: Pt; keyId?: string; labelIdx?: number } | null>(null);
   const dragRef = useRef<{ x: number; y: number; cx: number; cz: number; moved: boolean } | null>(null);
   const movedRef = useRef(false); // 끌고 난 뒤 따라오는 click 은 선택으로 치지 않는다
   const [dragging, setDragging] = useState(false);
@@ -610,11 +625,20 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     dragRef.current = null;
     setDragging(false);
   };
-  const pick = (s: { name: string; p: Pt; keyId?: string } | null) => {
+  const pick = (s: { name: string; p: Pt; keyId?: string; labelIdx?: number } | null) => {
     if (movedRef.current) return; // 끌기 끝의 click
     setSel(s);
   };
   const onSvgClick = (e: React.MouseEvent) => {
+    if (labelMode && v && !movedRef.current) {
+      // 화면 → 게임 좌표(toScreen 의 역변환)
+      const rect = (e.currentTarget as Element).getBoundingClientRect();
+      const sx = ((e.clientX - rect.left) * (box.w / rect.width) - box.w / 2) / v.s;
+      const sy = -((e.clientY - rect.top) * (box.h / rect.height) - box.h / 2) / v.s;
+      const a = (eff * Math.PI) / 180;
+      setLabelDraft({ p: [Math.round((v.cx + sx * Math.cos(a) + sy * Math.sin(a)) * 10) / 10, Math.round((v.cz - sx * Math.sin(a) + sy * Math.cos(a)) * 10) / 10], text: "" });
+      return;
+    }
     if (!(e.target as Element).closest("g")) pick(null); // 빈 곳 클릭 → 선택 해제
   };
 
@@ -819,6 +843,23 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     </g>
                   );
                 })}
+            {layers.names &&
+              (doc.zones ?? []).map((z, i) => {
+                const s = toScreen(z.p[0], z.p[2]);
+                return <text key={`zn${i}`} x={s.x} y={s.y} textAnchor="middle" className="radar-zonename">{z.name}</text>;
+              })}
+            {layers.names &&
+              slug &&
+              (myLabels[slug] ?? []).map((l, i) => {
+                const s = toScreen(l.p[0], l.p[1]);
+                return (
+                  <g key={`ml${i}`} onClick={() => pick({ name: `🏷 ${l.text}`, p: [l.p[0], myY, l.p[1]], labelIdx: i })}>
+                    <circle cx={s.x} cy={s.y} r={2.4} fill="#ffe082" stroke="#000" strokeWidth={0.6} />
+                    <text x={s.x} y={s.y - 5} textAnchor="middle" className="radar-zonename mine">{l.text}</text>
+                  </g>
+                );
+              })}
+            {labelDraft && (() => { const s = toScreen(labelDraft.p[0], labelDraft.p[1]); return <circle cx={s.x} cy={s.y} r={5} fill="none" stroke="#ffe082" strokeWidth={1.6} strokeDasharray="2 2" style={{ pointerEvents: "none" }} />; })()}
             {layers.trail && trailMemo.pts.length > 1 && (
               <g style={{ pointerEvents: "none" }}>
                 <polyline points={trailMemo.pts.map((p) => { const s = toScreen(p[0], p[1]); return `${s.x},${s.y}`; }).join(" ")} fill="none" stroke="#9be564" strokeWidth={1.6} strokeOpacity={0.55} strokeLinejoin="round" strokeDasharray="1 4" strokeLinecap="round" />
@@ -955,6 +996,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
+          <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarLabelHint} aria-label={t.radarLabelAdd} data-tool="label">🏷</button>
           <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
           <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
           <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
@@ -980,6 +1022,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
         {layers.locks && myKeys.length > 0 && chip(myKeysOnly, "mykeys", t.radarMyKeysOnly.replace("{n}", String(myKeys.length)), () => setMyKeysOnly((o) => !o))}
         {trailMemo.pts.length > 1 && chip(layers.trail, "trail", t.radarLayerTrail, () => onToggleLayer("trail"))}
+        {((doc?.zones?.length ?? 0) > 0 || (slug && (myLabels[slug]?.length ?? 0) > 0)) && chip(layers.names, "names", t.radarLayerNames, () => onToggleLayer("names"))}
         {(doc?.loot?.length ?? 0) > 0 && chip(layers.loot, "loot", t.radarLayerLoot, () => { if (!layers.loot) stat("lto"); onToggleLayer("loot"); })}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>}
@@ -1014,8 +1057,23 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           <b>{sel.name}</b>
           {me && <> · {Math.round(dist(sel.p))}m</>}
           {me && Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
+          {sel.labelIdx != null && slug && <button type="button" className="radar-planadd" onClick={() => { saveLabels({ ...myLabels, [slug]: (myLabels[slug] ?? []).filter((_, k) => k !== sel.labelIdx) }); setSel(null); }}>{t.radarLabelDel}</button>}
           {sel.keyId && <button type="button" className="radar-planadd" onClick={() => toggleMyKey(sel.keyId!)}>{myKeys.includes(sel.keyId) ? t.radarMyKeyOff : t.radarMyKeyOn}</button>}
           {planOpen && <button type="button" className="radar-planadd" onClick={() => addStop(sel.p, sel.name)}>＋ {t.radarPlanAdd}</button>}
+        </div>
+      )}
+      {labelMode && !mini && slug && (
+        <div className="radar-labelrow">
+          {labelDraft ? (
+            <>
+              <input autoFocus value={labelDraft.text} maxLength={24} placeholder={t.radarLabelText} onChange={(e) => setLabelDraft({ ...labelDraft, text: e.target.value })}
+                onKeyDown={(e) => { if (e.key === "Enter" && labelDraft.text.trim()) { stat("lbl"); saveLabels({ ...myLabels, [slug]: [...(myLabels[slug] ?? []), { p: labelDraft.p, text: labelDraft.text.trim() }] }); setLabelDraft(null); } }} />
+              <button type="button" disabled={!labelDraft.text.trim()} onClick={() => { stat("lbl"); saveLabels({ ...myLabels, [slug]: [...(myLabels[slug] ?? []), { p: labelDraft.p, text: labelDraft.text.trim() }] }); setLabelDraft(null); }}>{t.radarLabelSave}</button>
+              <button type="button" onClick={() => setLabelDraft(null)}>{t.radarLabelCancel}</button>
+            </>
+          ) : (
+            <span>{t.radarLabelPick}</span>
+          )}
         </div>
       )}
       {prepOpen && !mini && slug && doc && (

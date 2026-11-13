@@ -1934,6 +1934,14 @@ html, body, #root {
 .radar-sw.lock { background: #c08cff; }
 .radar-sw.loot { background: #ffd54f; }
 .radar-sw.trail { background: #9be564; }
+.radar-sw.names { background: #e8e2d0; }
+.radar-zonename { font-size: 10px; font-weight: 700; fill: rgba(232, 226, 208, 0.82); paint-order: stroke; stroke: rgba(0, 0, 0, 0.8); stroke-width: 2.6px; letter-spacing: 0.5px; pointer-events: none; }
+.radar-zonename.mine { fill: #ffe082; pointer-events: auto; cursor: pointer; }
+.radar-mapwrap .radar-zonename { opacity: var(--map-alpha, 1); }
+.radar-labelrow { display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 12px; color: #ffe082; }
+.radar-labelrow input { flex: 1 1 140px; min-width: 0; background: rgba(0, 0, 0, 0.35); color: inherit; border: 1px solid rgba(255, 224, 130, 0.45); border-radius: 5px; padding: 3px 6px; font-size: 12px; }
+.radar-labelrow button { background: rgba(255, 224, 130, 0.14); color: #ffe082; border: 1px solid rgba(255, 224, 130, 0.45); border-radius: 5px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+.radar-labelrow button:disabled { opacity: 0.35; cursor: default; }
 .radar-raidleft { position: absolute; left: 8px; top: 8px; padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, 0.55); color: #ffe082; font-size: 12px; font-weight: 700; pointer-events: none; }
 .radar-lootrow { margin-top: 4px; }
 .radar-planpanel { margin-top: 6px; padding: 8px; border: 1px solid rgba(64, 224, 208, 0.35); border-radius: 8px; background: rgba(8, 26, 26, 0.6); font-size: 12px; }
