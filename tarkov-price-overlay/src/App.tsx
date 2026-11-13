@@ -15,6 +15,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { prefetchMap } from "./RadarMap";
+import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
@@ -5701,6 +5702,11 @@ function App() {
 
         {showSettings && !captureModalOpen && (
           <div className="settings" ref={settingsRef}>
+            <details className="radar-help">
+              <summary>{t.setupTitle}</summary>
+              <SetupCheck t={t} />
+              <SafetyNote t={t} />
+            </details>
             <button
               className="reset-btn manual-btn"
               title={t.manualHint}

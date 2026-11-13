@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
 import { RadarMap, loadJson, LAYER_KEY, DEFAULT_LAYERS } from "./RadarMap";
+import { SetupCheck, SafetyNote } from "./SetupCheck";
 import type { Layers } from "./RadarMap";
 import { Icon } from "./Icon";
 import { type useParty, type Friend, normCode, validCode, defaultPartyName } from "./party";
@@ -543,6 +544,14 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <summary>{t.radarHelp}</summary>
           <div className="radar-note">{t.radarMapNote}</div>
           <div className="radar-note">{t.radarMyExitsNote}</div>
+        </details>
+        <details className="radar-help">
+          <summary>{t.setupTitle}</summary>
+          <SetupCheck t={t} />
+        </details>
+        <details className="radar-help">
+          <summary>{t.safetyTitle}</summary>
+          <SafetyNote t={t} />
         </details>
       </>
   );

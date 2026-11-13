@@ -1935,6 +1935,16 @@ html, body, #root {
 .radar-sw.loot { background: #ffd54f; }
 .radar-sw.trail { background: #9be564; }
 .radar-sw.names { background: #e8e2d0; }
+.setup-check { margin: 6px 0; font-size: 12px; }
+.setup-check ul { list-style: none; margin: 6px 0 0; padding: 0; }
+.setup-check li { margin: 4px 0; }
+.setup-check .mk { display: inline-block; width: 16px; font-weight: 700; }
+.setup-check li.ok .mk { color: #7dff9a; }
+.setup-check li.bad .mk, .setup-check li.bad .nm { color: #ffb74d; }
+.setup-check li.unk .mk { color: #9aa4ae; }
+.setup-check .fx { margin: 2px 0 0 16px; opacity: 0.85; }
+.safety-note { margin: 6px 0; font-size: 12px; line-height: 1.6; }
+.safety-note .dim { opacity: 0.7; margin-top: 4px; }
 .radar-zonename { font-size: 10px; font-weight: 700; fill: rgba(232, 226, 208, 0.82); paint-order: stroke; stroke: rgba(0, 0, 0, 0.8); stroke-width: 2.6px; letter-spacing: 0.5px; pointer-events: none; }
 .radar-zonename.mine { fill: #ffe082; pointer-events: auto; cursor: pointer; }
 .radar-mapwrap .radar-zonename { opacity: var(--map-alpha, 1); }

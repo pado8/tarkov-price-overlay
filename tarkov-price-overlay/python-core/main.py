@@ -1898,6 +1898,14 @@ def diag_env() -> dict:
     return out
 
 
+@app.get("/diag/setup")
+def diag_setup() -> dict:
+    """설치 점검(11-13): 스크린샷 폴더·좌표 스크린샷·게임 설치 폴더·로그·화면 모드. 이 PC 안만 보고 밖으로 보내지 않는다."""
+    import setup_check
+
+    return {"items": setup_check.check(get_radar().folder_info())}
+
+
 @app.get("/quests/status")
 def quests_status() -> dict:
     """Current state of the quest log watcher: install path validity,
