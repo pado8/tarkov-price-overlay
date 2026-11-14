@@ -1999,7 +1999,7 @@ html, body, #root {
 .price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }
 
 /* Side-by-side mode keeps the card's saved width and gives the rest to the map. */
-.overlay.wide.map-left:not(.portrait) { flex-direction: row-reverse; }
+.overlay.wide.map-left:not(.stack) { flex-direction: row-reverse; }
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
 .wide-pane .radar-mapblock { flex: 1; min-height: 0; }
@@ -2018,9 +2018,19 @@ html, body, #root {
 .radar-side .radar-row { font-size: var(--card-fs-sm); }
 /* 세로 모니터(높이 > 폭)의 나란히 모드: 시세 카드 위(높이 38% 까지, 넘치면 카드 안에서 스크롤) → 지도 아래 전체 폭 →
    대상 목록은 지도 밑 한 줄 띠(--side-h). 가로 배치는 폭 1080 세로 모니터에서 지도가 300px 남짓으로 눌렸다(11-04 피드백) */
-.overlay.wide.portrait { flex-direction: column; align-items: stretch; }
-.overlay.wide.portrait > .card:not(.wide-pane) { align-self: flex-start; height: auto !important; max-height: 38vh !important; }
-.overlay.wide.portrait .wide-pane { flex: 1 1 0; height: auto; min-height: 0; }
+/* .stack = 카드와 지도를 위아래로(세로 창이거나 지도 위치를 위·아래로 고름), .portrait = 창이 세로로 김(대상 목록을 지도 밑으로) */
+.overlay.wide.stack { flex-direction: column; align-items: stretch; }
+.overlay.wide.stack > .card:not(.wide-pane) { align-self: flex-start; height: auto !important; max-height: 38vh !important; }
+.overlay.wide.stack .wide-pane { flex: 1 1 0; height: auto; min-height: 0; }
+/* 지도 위(11-15 피드백 #62): 지도 패널을 위에 고정 높이로 — 카드 몫(38vh)을 늘 비워 둬서 카드 길이가 바뀌어도 지도가 안 움직인다.
+   100vh - 위아래 여백 24 - 카드 38vh - 사이 간격 12 */
+.overlay.wide.stack.map-top .wide-pane { order: -1; flex: 0 0 auto; height: calc(62vh - 36px); }
+/* 세로 창에서 지도 위: 카드 몫을 따로 비우면 지도가 반 가까이 줄어든다(세로 FHD 776 → 427) → 패널을 창 전체 높이로 두고
+   카드를 지도 밑 대상 목록 띠(--side-h)의 왼쪽에 겹쳐 놓는다. 목록은 카드 폭만큼 오른쪽으로 비킨다.
+   카드 위쪽 = 띠 위쪽(창 아래 여백 12 + 패널 안쪽 여백 11 + 띠 높이), 길어지면 띠 높이까지만(그 뒤는 카드 안에서 스크롤) */
+.overlay.wide.stack.map-top.portrait .wide-pane { height: calc(100vh - 24px); }
+.overlay.wide.stack.map-top.portrait > .card:not(.wide-pane) { position: absolute; z-index: 5; left: 27px; top: calc(100vh - 23px - var(--side-h, 28vh)); max-height: var(--side-h, 28vh) !important; }
+.overlay.wide.stack.map-top.portrait .radar-side { margin-left: calc(var(--wide-card-w, 280px) + 12px); }
 .overlay.wide.portrait .radar-maprow { flex-direction: column; align-items: stretch; }
 .overlay.wide.portrait .radar-side { flex: 0 0 auto; height: var(--side-h, 28vh); max-height: var(--side-h, 28vh); }
 

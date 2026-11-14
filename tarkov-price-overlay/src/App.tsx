@@ -20,7 +20,7 @@ import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetc
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
-import { loadWideMapSide, saveWideMapSide, type WideMapSide } from "./wideLayout";
+import { loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
 import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
@@ -4143,7 +4143,8 @@ function App() {
         questCfgReportedRef.current = true;
         // 11-11 ac=업데이트 자동 확인·ai=자동 설치(받아 두기) — 받아 둔 업데이트가 설치 안 되는 원인이 설정 탓인지 가르려고
         // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
-        const ws = localStorage.getItem(WIDE_KEY) === "1" ? (loadWideMapSide(localStorage) === "left" ? "L" : "R") : "0";
+        // 11-15 T/B(지도 위/아래, 피드백 #62) 추가 — 고른 값 그대로(왼쪽·오른쪽인데 세로 창이라 쌓인 경우는 L/R)
+        const ws = localStorage.getItem(WIDE_KEY) === "1" ? wideSideCode(loadWideMapSide(localStorage)) : "0";
         reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};mww=${localStorage.getItem(MINI_WITH_WIDE_KEY) === "1" ? 1 : 0}`);
       }
       // Keep the user-set path field in sync with the server's view.
@@ -5162,8 +5163,16 @@ function App() {
   };
 
   const miniOn = radarMini && radarActive && !showSettings && !wideMode; // 미니맵 모드가 실제로 보이는 조건(나란히·설정 중엔 아님)
+  // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
+  // 설정이 열려 있으면 최소 360px — 긴 라벨·셀렉트·버튼 묶음이 좁은 카드에서 서로 밀어내지 않게(11-02 점검)
+  // 미니맵 모드는 지도 크기 그대로(카드 기본 폭·사용자가 넓힌 폭 무시 — '어느 선 이하로 안 줄어든다' 피드백)
+  const cardW = miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`;
+  const stacked = wideMode && wideStacked(wideMapSide, portrait);
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}>
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${stacked ? " stack" : ""}${stacked && wideMapOnTop(wideMapSide) ? " map-top" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}
+      // 세로 창 + 지도 위(피드백 #62): 카드를 대상 목록 띠 왼쪽에 놓는 데 쓰는 값(App.css .map-top.portrait)
+      style={wideMode ? ({ ["--wide-card-w" as string]: cardW, ["--side-h" as string]: sideH ? `${sideH}px` : undefined } as React.CSSProperties) : undefined}
+    >
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -5180,10 +5189,7 @@ function App() {
         className={`card${cardVisible ? "" : " card-hidden"}${pinned ? " card-pinned" : ""}${miniOn ? " card-mini" : ""}`}
         style={{
           "--card-fs": `${region.fontSize}px`,
-          // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
-          // 설정이 열려 있으면 최소 360px — 긴 라벨·셀렉트·버튼 묶음이 좁은 카드에서 서로 밀어내지 않게(11-02 점검)
-          // 미니맵 모드는 지도 크기 그대로(카드 기본 폭·사용자가 넓힌 폭 무시 — '어느 선 이하로 안 줄어든다' 피드백)
-          width: miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`,
+          width: cardW,
           // Explicit height only when the user dragged one AND we're in the
           // plain price-card view; otherwise auto (content height, capped by
           // max-height in CSS). Settings/capture-modal must not inherit the
@@ -6138,13 +6144,16 @@ function App() {
                 id="wide-map-side"
                 value={wideMapSide}
                 onChange={(e) => {
-                  const side = e.target.value === "left" ? "left" : "right";
+                  const v = e.target.value;
+                  const side: WideMapSide = v === "left" || v === "top" || v === "bottom" ? v : "right";
                   setWideMapSide(side);
                   saveWideMapSide(localStorage, side);
                 }}
               >
                 <option value="left">{t.wideMapSideLeft}</option>
                 <option value="right">{t.wideMapSideRight}</option>
+                <option value="top">{t.wideMapSideTop}</option>
+                <option value="bottom">{t.wideMapSideBottom}</option>
               </select>
             </div>
             <div className="settings-sub">{t.wideMapSideHint}</div>
