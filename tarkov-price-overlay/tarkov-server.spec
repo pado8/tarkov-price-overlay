@@ -98,6 +98,11 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    # 11-15 releases 이슈 #5(Win11 스마트 앱 컨트롤이 서명 없는 새 exe 를 막음): 파이썬 코드 묶음(PKG)을 exe 뒤에 붙이지 않고
+    # 옆 파일 tarkov-server.pkg 로 둔다 → tarkov-server.exe 는 PyInstaller 실행기만 남아, build.ps1 의 SOURCE_DATE_EPOCH 고정과 함께
+    # 코드가 바뀌어도 해시가 같다(11-15 실험: 코드 다른 두 빌드 exe·DLL 193개 모두 동일). 한 번 평판이 쌓이면 다음 릴리즈에도 안 막힌다.
+    # ⚠ PyInstaller·파이썬 버전이나 이 EXE 옵션을 바꾸면 exe 해시가 바뀌어 평판이 0부터 다시 시작한다.
+    append_pkg=False,
 )
 
 coll = COLLECT(

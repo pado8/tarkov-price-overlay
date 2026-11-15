@@ -225,7 +225,8 @@ function readPendingUpdate(): string | null {
   }
 }
 const SIDECAR_STARTING_MS = 45_000;
-function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number): string {
+function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number, blocked = false): string {
+  if (blocked) return s.sidecarBlocked;
   if (missing) return s.sidecarMissing;
   if (dead) return s.sidecarDead;
   if (Date.now() - APP_STARTED_AT < SIDECAR_STARTING_MS) return s.connStarting;
@@ -2197,6 +2198,8 @@ function App() {
   const sidecarDeadRef = useRef(false);
   // 11-08 통계 후속: 사이드카 실행 파일이 없음(백신 격리 추정) — 다시 실행해도 소용없으니 복원·예외·재설치 안내
   const sidecarMissingRef = useRef(false);
+  // 11-15 releases 이슈 #5: Windows 스마트 앱 컨트롤이 서명 없는 새 시세 엔진을 막음(os error 4551) — 다시 실행해도 같으니 바로 알린다
+  const sidecarBlockedRef = useRef(false);
   const connFailRef = useRef(0); // 연결 실패 연속 횟수(조회 성공하면 0)
   useEffect(() => {
     const un = listen<string>("sidecar-dead", (e) => {
@@ -2221,19 +2224,41 @@ function App() {
       setStatus("error");
     };
     const unMissing = listen("sidecar-missing", () => void onMissing());
+    const onBlocked = async () => {
+      if (sidecarBlockedRef.current) return;
+      log("React: sidecar-blocked — Windows application control (Smart App Control?) blocked tarkov-server.exe");
+      sidecarBlockedRef.current = true;
+      reportEvent("sidecar_fail", "blocked:app_control");
+      try {
+        if (!(await getCurrentWindow().isVisible())) await invoke("show_overlay_passive");
+      } catch {}
+      showCard();
+      setShowSettings(false);
+      setRadarActive(false);
+      setError(T[loadRegion().lang].sidecarBlocked);
+      setStatus("error");
+    };
+    const unBlocked = listen("sidecar-blocked", () => void onBlocked());
     const unRestart = listen("sidecar-restart", () => dailyAdd("sr")); // 11-09 조용한 재시작 횟수(하루 요약 sr)
     // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
-    const ask = () =>
+    const ask = () => {
       invoke<boolean>("sidecar_missing_state")
         .then((m) => {
           if (m) void onMissing();
         })
         .catch(() => {});
+      invoke<boolean>("sidecar_blocked_state")
+        .then((b) => {
+          if (b) void onBlocked();
+        })
+        .catch(() => {});
+    };
     ask();
     const again = window.setTimeout(ask, 3000);
     return () => {
       un.then((fn) => fn());
       unMissing.then((fn) => fn());
+      unBlocked.then((fn) => fn());
       unRestart.then((fn) => fn());
       window.clearTimeout(again);
     };
@@ -4731,6 +4756,7 @@ function App() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
           connFailRef.current = 0;
+          sidecarBlockedRef.current = false;
           sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
           if (seq !== lookupSeqRef.current) {
             log("React: stale lookup result discarded (newer press in flight)");
@@ -4836,7 +4862,7 @@ function App() {
             e instanceof Error && e.name === "AbortError"
               ? T[r.lang].timeout
               : e instanceof TypeError
-                ? sidecarErrorText(T[r.lang], sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current)
+                ? sidecarErrorText(T[r.lang], sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current, sidecarBlockedRef.current)
                 : msg
           );
           setStatus("error");
@@ -4959,6 +4985,7 @@ function App() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       connFailRef.current = 0;
+      sidecarBlockedRef.current = false;
       sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
       const data: LookupResult = await res.json();
       if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won

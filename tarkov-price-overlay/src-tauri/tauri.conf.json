@@ -104,6 +104,7 @@
     "externalBin": ["binaries/tarkov-server"],
     "resources": {
       "binaries/_internal": "_internal",
+      "binaries/tarkov-server.pkg": "tarkov-server.pkg",
       "../THIRD_PARTY_NOTICES.txt": "THIRD_PARTY_NOTICES.txt"
     },
     "windows": {

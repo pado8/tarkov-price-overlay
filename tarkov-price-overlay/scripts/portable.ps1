@@ -28,12 +28,14 @@ $mainExe = Join-Path $releaseDir "tarkov-price-overlay.exe"
 # clean each run (710MB vs 1585MB measured), so source from it.
 $serverExe = Join-Path $binDir "tarkov-server-x86_64-pc-windows-msvc.exe"
 $internalDir = Join-Path $binDir "_internal"
+# 11-15: python code archive beside the sidecar exe (spec append_pkg=False) - the exe alone cannot start without it
+$serverPkg = Join-Path $binDir "tarkov-server.pkg"
 
 # Read version from package.json
 $version = (Get-Content (Join-Path $root "package.json") -Raw | ConvertFrom-Json).version
 Write-Host "[portable] version=$version"
 
-foreach ($p in @($mainExe, $serverExe, $internalDir)) {
+foreach ($p in @($mainExe, $serverExe, $serverPkg, $internalDir)) {
     if (-not (Test-Path $p)) {
         throw "Missing build artifact: $p. Run 'npm run tauri -- build --bundles nsis' first."
     }
@@ -66,6 +68,7 @@ Write-Host "[portable] copying runtime files..."
 Copy-Item $mainExe (Join-Path $stageDir "Tarkov Price Overlay.exe")
 # Rename the triple-suffixed externalBin to the runtime name the app spawns.
 Copy-Item $serverExe (Join-Path $stageDir "tarkov-server.exe")
+Copy-Item $serverPkg (Join-Path $stageDir "tarkov-server.pkg")
 Copy-Item -Recurse $internalDir $stageDir
 # Third-party notices (MIT license texts etc.) - also bundled into the installer via tauri.conf.json resources
 Copy-Item (Join-Path $root "THIRD_PARTY_NOTICES.txt") (Join-Path $stageDir "THIRD_PARTY_NOTICES.txt")

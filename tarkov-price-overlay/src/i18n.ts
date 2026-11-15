@@ -557,6 +557,7 @@ export const T = {
       "로컬 서버에 연결할 수 없어요 — 자동 복구 중입니다. 잠시 후 다시 F2를 눌러주세요.",
     sidecarDead:
       "조회 서버를 복구하지 못했어요. 트레이 아이콘 우클릭 → 종료 후 앱을 다시 실행해 주세요.",
+    sidecarBlocked: "Windows 스마트 앱 컨트롤이 시세 엔진(tarkov-server.exe)을 막았어요 — 서명 없는 새 버전이라 아직 평판이 없어서예요. 앱을 다시 실행해도 같아요. 평판이 쌓이면 풀릴 수 있고, 그동안은 이전 버전을 쓰거나 Windows 보안 › 앱 및 브라우저 컨트롤 › 스마트 앱 컨트롤 설정을 확인해 주세요.",
     sidecarMissing: "시세 엔진 파일(tarkov-server.exe)이 없어요 — 백신이 격리했을 가능성이 커요. Windows 보안 › 보호 기록(또는 쓰는 백신)에서 복원·허용한 뒤 앱을 다시 실행하거나, 다시 설치해 주세요.",
     connErrorAvHint: "계속 이러면 백신이 시세 엔진(tarkov-server.exe)을 막고 있을 수 있어요 — 예외에 추가한 뒤 앱을 다시 실행해 보세요.",
     connStarting: "시세 엔진이 아직 켜지는 중이에요(첫 실행은 1분까지 걸릴 수 있어요) — 잠시 뒤 다시 F2 를 눌러 주세요.",
@@ -1166,6 +1167,7 @@ export const T = {
       "Can't reach the local server — auto-recovering. Try F2 again in a few seconds.",
     sidecarDead:
       "The lookup server could not be recovered. Right-click the tray icon → Exit, then start the app again.",
+    sidecarBlocked: "Windows Smart App Control blocked the price engine (tarkov-server.exe) — this new version is unsigned and has no reputation yet. Restarting the app won't help. It may clear once reputation builds; meanwhile use the previous version or check Windows Security › App & browser control › Smart App Control settings.",
     sidecarMissing: "The price engine file (tarkov-server.exe) is missing — most likely quarantined by your antivirus. Restore/allow it in Windows Security › Protection history (or your antivirus), then restart the app — or reinstall.",
     connErrorAvHint: "If this keeps happening, your antivirus may be blocking the price engine (tarkov-server.exe) — add an exception and restart the app.",
     connStarting: "The price engine is still starting (the first launch can take up to a minute) — press F2 again in a moment.",
@@ -1775,6 +1777,7 @@ export const T = {
       "Нет связи с локальным сервером — авто-восстановление. Повторите F2 через несколько секунд.",
     sidecarDead:
       "Не удалось восстановить сервер запросов. ПКМ по значку в трее → Выход, затем запустите приложение снова.",
+    sidecarBlocked: "Smart App Control в Windows заблокировал движок цен (tarkov-server.exe) — новая версия не подписана и ещё не набрала репутацию. Перезапуск приложения не поможет. Блокировка может пропасть, когда репутация накопится; пока используйте предыдущую версию или проверьте «Безопасность Windows › Управление приложениями и браузером › Параметры Smart App Control».",
     sidecarMissing: "Файл движка цен (tarkov-server.exe) отсутствует — скорее всего, его поместил в карантин антивирус. Восстановите или разрешите его в «Безопасность Windows › Журнал защиты» (или в вашем антивирусе) и перезапустите приложение — или переустановите его.",
     connErrorAvHint: "Если это повторяется, антивирус может блокировать движок цен (tarkov-server.exe) — добавьте исключение и перезапустите приложение.",
     connStarting: "Движок цен ещё запускается (первый запуск может занять до минуты) — нажмите F2 ещё раз чуть позже.",
@@ -2373,6 +2376,7 @@ export const T = {
     devReplyOk: "知道了",
     connError: "无法连接本地服务器——正在自动恢复。请稍后再按 F2。",
     sidecarDead: "查询服务器无法恢复。请右键点击托盘图标 → 退出，然后重新启动程序。",
+    sidecarBlocked: "Windows 智能应用控制拦截了价格引擎（tarkov-server.exe）——新版本没有签名，还没有积累信誉。重新启动应用也一样。信誉积累后可能会解除；在此之前请使用上一个版本，或查看「Windows 安全中心 › 应用和浏览器控制 › 智能应用控制设置」。",
     sidecarMissing: "价格引擎文件（tarkov-server.exe）不见了——很可能被杀毒软件隔离。请在「Windows 安全中心 › 保护历史记录」（或你的杀毒软件）中还原/允许它，然后重新启动应用，或重新安装。",
     connErrorAvHint: "如果一直这样，可能是杀毒软件在拦截价格引擎（tarkov-server.exe）——请添加例外后重新启动应用。",
     connStarting: "价格引擎还在启动中（首次启动最多需要一分钟）——请稍后再按 F2。",

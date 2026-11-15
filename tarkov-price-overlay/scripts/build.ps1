@@ -110,6 +110,9 @@ if ($SkipPython) {
 
     # 2) PyInstaller bundle
     Write-Host "[build] running PyInstaller..."
+    # 11-15 Smart App Control fix: pin the build timestamp so tarkov-server.exe (bootloader only, spec append_pkg=False)
+    # keeps the SAME hash across releases and keeps its reputation. Do not change this value.
+    $env:SOURCE_DATE_EPOCH = "1767225600"
     $distPython = "$root\dist-python"
     Remove-DirWithRetry $distPython
     & $venvPython -m PyInstaller "$root\tarkov-server.spec" `
@@ -130,6 +133,10 @@ if ($SkipPython) {
 
     # Tauri requires a platform suffix on externalBin entries.
     Rename-Item "$staged\tarkov-server.exe" "tarkov-server-$platform.exe"
+    # The python code lives beside the exe (spec append_pkg=False) - tauri.conf.json ships it as a resource next to tarkov-server.exe.
+    if (-not (Test-Path "$staged\tarkov-server.pkg")) {
+        throw "PyInstaller did not produce tarkov-server.pkg (spec append_pkg=False). Check the build log above."
+    }
 
     # Record the input hash so the next build can skip PyInstaller when
     # nothing python-side changed.

@@ -1136,6 +1136,11 @@ const SIDECAR_MAX_RESTARTS: u32 = 5;
 /// 다시 실행해도 소용없다 → 띄우기가 '파일 없음'으로 실패하면 바로 웹뷰에 알린다(실행당 한 번). 재시도는 그대로.
 static SIDECAR_MISSING_SENT: AtomicBool = AtomicBool::new(false);
 
+/// 11-15 releases 이슈 #5: Windows 11 스마트 앱 컨트롤이 서명 없는 새 tarkov-server.exe 를 막으면 띄우기가
+/// os error 4551("An Application Control policy has blocked this file")로 실패하고, 화면은 '엔진 시작 중'에 멈춰 있었다.
+/// 재시도해도 같으니 바로 웹뷰에 알린다(실행당 한 번). 재시도는 그대로.
+static SIDECAR_BLOCKED_SENT: AtomicBool = AtomicBool::new(false);
+
 /// 11-11 받아 둔 업데이트를 다음 실행 때 설치할지 — 게임(EscapeFromTarkov.exe)이 켜져 있으면 설치·재시작하지 않는다.
 /// 앞 창 종류(foreground_kind)는 게임이 맨 앞일 때만 잡혀서, 게임을 켜 둔 채 다른 창을 보고 있으면 놓친다 → 프로세스 목록으로 본다.
 #[tauri::command]
@@ -1264,14 +1269,23 @@ fn sidecar_missing_state() -> bool {
     SIDECAR_MISSING_SENT.load(Ordering::SeqCst)
 }
 
+#[tauri::command]
+fn sidecar_blocked_state() -> bool {
+    SIDECAR_BLOCKED_SENT.load(Ordering::SeqCst)
+}
+
+fn sidecar_blocked(err: &str) -> bool {
+    err.contains("os error 4551") || err.contains("Application Control policy")
+}
+
 fn sidecar_missing(err: &str) -> bool {
     if err.contains("os error 2") || err.contains("os error 3") {
         return true;
     }
+    // 11-15: 파이썬 코드 묶음이 exe 옆 tarkov-server.pkg 로 나뉘었다(spec append_pkg=False) — 백신이 둘 중 하나만 치워도 못 뜬다
     std::env::current_exe()
         .ok()
-        .and_then(|p| p.parent().map(|d| d.join("tarkov-server.exe")))
-        .map(|f| !f.exists())
+        .and_then(|p| p.parent().map(|d| !d.join("tarkov-server.exe").exists() || !d.join("tarkov-server.pkg").exists()))
         .unwrap_or(false)
 }
 
@@ -1348,6 +1362,10 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
             // fresh PyInstaller exes. Retry within the same budget instead
             // of giving up on the very failure mode we built this for.
             let why = format!("spawn failed: {e}");
+            if sidecar_blocked(&why) && !SIDECAR_BLOCKED_SENT.swap(true, Ordering::SeqCst) {
+                eprintln!("[sidecar] blocked by Windows application control (Smart App Control?) - telling the webview");
+                let _ = app.emit("sidecar-blocked", ());
+            }
             if sidecar_missing(&why) && !SIDECAR_MISSING_SENT.swap(true, Ordering::SeqCst) {
                 eprintln!("[sidecar] executable missing - telling the webview (likely AV quarantine)");
                 let _ = app.emit("sidecar-missing", ());
@@ -1359,6 +1377,7 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     println!("[sidecar] tarkov-server spawned (attempt {attempt})");
     // 11-09 검토: 첫 시도만 '파일 없음'(백신이 검사 중 잠깐 치움)이고 재시도가 성공하면 플래그를 풀어 웹뷰가 잘못 안내하지 않게
     SIDECAR_MISSING_SENT.store(false, Ordering::SeqCst);
+    SIDECAR_BLOCKED_SENT.store(false, Ordering::SeqCst);
     if let Some(state) = app.try_state::<SidecarChild>() {
         *state.0.lock().unwrap() = Some(child);
     }
@@ -1530,6 +1549,7 @@ pub fn run() {
             register_lookup_hotkey,
             register_toggle_hotkey,
             sidecar_missing_state,
+            sidecar_blocked_state,
             register_lookup_mouse,
             register_toggle_mouse,
             set_hotkey_passthrough,
