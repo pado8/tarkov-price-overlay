@@ -7205,6 +7205,8 @@ function App() {
                 // 11-04: 위키 대신 우리 가이드로. 가이드에 아이템별 페이지는 없으므로 아이템을 다루는 목록
                 // 페이지로 보내고 검색칸을 채운다(?q= — 한글·영문 이름 모두 걸림). 가이드가 다루지 않는
                 // 아이템만 위키로 남긴다.
+                // 11-16: 가이드에 아이템 사전(/guide/item/?id=)이 생겨, 목록 페이지에 없는 아이템은 위키 대신 사전으로.
+                // 위키는 아이템 id 를 모를 때만 남는다(사전은 id 로 찾는다).
                 if (!result.item_name) return null;
                 // 원본 번역에 제어 문자가 섞인 이름이 있다(예: "CPU \bfan 쿨러") — 가이드 검색이 안 걸리므로 빼고 넘긴다
                 const q = encodeURIComponent(result.item_name.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim());
@@ -7223,6 +7225,23 @@ function App() {
                       title={t.guideLink}
                       aria-label={t.guideLink}
                       onClick={() => openGuide(region.lang, guidePath)}
+                    >
+                      <Icon name="book" />
+                    </button>
+                  );
+                }
+                if (result.item_id) {
+                  const dictPath = `item/?id=${encodeURIComponent(result.item_id)}`;
+                  return (
+                    <button
+                      className="wiki-btn"
+                      data-href={guideUrl(region.lang, dictPath)}
+                      title={t.dictLink}
+                      aria-label={t.dictLink}
+                      onClick={() => {
+                        stat("dic"); // 11-16 하루 요약: 아이템 사전을 연 횟수(가이드 전체 gd 에도 같이 센다)
+                        openGuide(region.lang, dictPath);
+                      }}
                     >
                       <Icon name="book" />
                     </button>
