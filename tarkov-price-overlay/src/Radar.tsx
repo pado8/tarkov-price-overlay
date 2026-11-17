@@ -193,7 +193,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   });
   const pickWideCap = (px: number) => {
     const max = fitSize ?? px;
-    const v = px >= max ? 0 : Math.max(WIDE_MAP_CAP_MIN, px);
+    const v = px >= max - 9 ? 0 : Math.max(WIDE_MAP_CAP_MIN, px); // 막대는 10px 단위라 최대값에 딱 닿지 않는다 — 한 칸 안이면 최대(0)
     setWideCap(v);
     try {
       localStorage.setItem(WIDE_MAP_CAP_KEY, String(v));
@@ -631,7 +631,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {fill ? (
         <div className="radar-maprow">
           <div className="radar-leftcol">
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={wideSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} onSize={pickWideCap} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={wideSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} onSize={pickWideCap} sizeRange={[WIDE_MAP_CAP_MIN, fitSize ?? wideSize]} />
             <div className="radar-under">{controls}</div>
           </div>
           <div className="radar-side">
@@ -645,7 +645,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       ) : (
         <>
           <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere}
-            onSize={(px) => { const v = Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, px)); if (v !== size) onSize(v); }} />
+            onSize={(px) => { const v = Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, px)); if (v !== size) onSize(v); }} sizeRange={[RADAR_SIZE_MIN, RADAR_SIZE_MAX]} />
           {toolbar}
           {targetList}
           {moreControls}
