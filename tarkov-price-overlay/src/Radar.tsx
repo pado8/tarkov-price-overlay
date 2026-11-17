@@ -81,6 +81,8 @@ export const RADAR_SIZE_KEY = "tarkov.radar.size";
 export const RADAR_SIZE_MIN = 160;
 export const RADAR_SIZE_MAX = 600;
 export const RADAR_SIZE_DEFAULT = 240;
+const WIDE_MAP_CAP_KEY = "tarkov.wideMode.mapCap"; // 나란히 보기에서 − 로 줄인 지도 높이(0·없음 = 패널에 맞춰 최대)
+const WIDE_MAP_CAP_MIN = 200;
 // 미니맵 모드(11-05 피드백 '진짜 미니맵처럼 게임 위에') — 정사각형 지도만. 크기·켜짐·지도 불투명도는 따로 저장
 export const RADAR_MINI_KEY = "tarkov.radar.mini";
 export const RADAR_MINI_SIZE_KEY = "tarkov.radar.miniSize";
@@ -180,6 +182,24 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   const radarRef = useRef<HTMLDivElement>(null);
   const siteSeen = useRef(false); // 11-10 사이트 스토리 체크 줄 노출 지표(ssh)는 패널을 연 동안 한 번만
   const [fitSize, setFitSize] = useState<number | null>(null);
+  // 11-17 나란히 보기 지도 크기 −/＋: 패널에 맞는 크기(fitSize)가 최대, 사용자가 줄인 높이(px)를 따로 기억한다(0 = 최대)
+  const [wideCap, setWideCap] = useState<number>(() => {
+    try {
+      const n = parseInt(localStorage.getItem(WIDE_MAP_CAP_KEY) ?? "", 10);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const pickWideCap = (px: number) => {
+    const max = fitSize ?? px;
+    const v = px >= max ? 0 : Math.max(WIDE_MAP_CAP_MIN, px);
+    setWideCap(v);
+    try {
+      localStorage.setItem(WIDE_MAP_CAP_KEY, String(v));
+    } catch {}
+  };
+  const wideSize = Math.min(fitSize ?? size, wideCap > 0 ? wideCap : Infinity);
   // 11-09 통계: 파티 방이 안 쓰이는 게 '몰라서'인지 — 지도를 열 때 파티 버튼이 창 안에 보였나(pbv) / 화면 밖이었나(pbo), 누름(pbc)
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -197,10 +217,21 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     const wrap = el.querySelector(".radar-mapwrap") as HTMLElement | null;
     if (!wrap) return;
     const top = el.getBoundingClientRect().top;
+    // 11-17: 지도 아래 줄(도구·칩·상자 묶음·층)·계획/준비 패널·아래 버튼 줄은 왼쪽 열 안에 있다 — 예전엔 el 의 바로 아래 자식만 재서
+    // 열이 넘쳐도(높이가 정해진 줄 상자 밖으로) 모르고, 지도 아래 버튼 줄이 39px(준비 화면을 열면 192px) 패널 밖으로 잘렸다(실측).
     let bottom = top;
-    for (const c of Array.from(el.children)) bottom = Math.max(bottom, (c as HTMLElement).getBoundingClientRect().bottom);
+    const parts = [...Array.from(el.children), ...Array.from(el.querySelectorAll(".radar-leftcol > *, .radar-mapblock > *, .radar-side"))];
+    for (const c of parts) bottom = Math.max(bottom, (c as HTMLElement).getBoundingClientRect().bottom);
     const extra = bottom - top - wrap.offsetHeight; // 지도 칸을 뺀 나머지 내용 높이
-    const want = Math.max(160, Math.floor(el.clientHeight - extra - 2));
+    // 쓸 수 있는 높이 = 패널 안쪽 아래 끝까지(el 이 패널보다 길게 잡혀도 패널 밖은 안 보인다)
+    let avail = el.clientHeight;
+    const pane = el.closest(".wide-pane") as HTMLElement | null;
+    if (pane) {
+      const cs = getComputedStyle(pane);
+      const inner = pane.getBoundingClientRect().bottom - parseFloat(cs.paddingBottom || "0") - parseFloat(cs.borderBottomWidth || "0");
+      avail = Math.min(avail, inner - top);
+    }
+    const want = Math.max(160, Math.floor(avail - extra - 2));
     setFitSize((cur) => (cur != null && Math.abs(cur - want) <= 1 ? cur : want));
   };
   useLayoutEffect(measureFit);
@@ -211,6 +242,9 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     ro.observe(el);
     const under = el.querySelector(".radar-under");
     if (under) ro.observe(under);
+    // 계획·준비 패널·상자 묶음 줄을 열고 닫으면 지도 블록 높이가 바뀐다 — 그때도 다시 잰다
+    const block = el.querySelector(".radar-mapblock");
+    if (block) ro.observe(block);
     return () => ro.disconnect();
   });
   // 이 맵에 있는 친구(위치가 있는 사람만) — 지도에 그린다. 다른 맵 친구는 파티 패널 목록에만
@@ -597,7 +631,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       {fill ? (
         <div className="radar-maprow">
           <div className="radar-leftcol">
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={fitSize ?? size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={wideSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} onSize={pickWideCap} />
             <div className="radar-under">{controls}</div>
           </div>
           <div className="radar-side">
