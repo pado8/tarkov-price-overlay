@@ -31,3 +31,54 @@ export function boxMismatch(boxHeight: number, monitorWidth: number, monitorHeig
   const expected = baseHeight * captureScale(monitorWidth, monitorHeight);
   return Math.abs(boxHeight - expected) / expected > 0.2;
 }
+
+// ── 11-17 캡처 상자를 게임 모니터에 다시 맞추기 ─────────────────────────────────────────────────────────
+// 통계(11-17, 7일): 실패율 중앙이 1080p·1440p 4.8~4.9% 인데 울트라와이드는 3440×1440 16.9%·2560×1080 21.4%·3840×1080 33.5%
+// (못 찾음 위주) — 상자가 필요한 크기보다 1.34배·1.33배·2배 큰 순서 그대로다. 기본 상자는 '저장된 상자가 없을 때만'
+// 주 모니터 크기로 계산하는데(App.tsx applyMonitorScaling), 11-07 에 배율을 세로 기준으로 고친 것은 새 설치에만 닿았고
+// 그 전에 설치한 울트라와이드 사용자는 가로 기준으로 부풀린 상자를 그대로 쓴다. 게임을 주 모니터가 아닌 모니터에서 돌리거나
+// 전체 화면에서 더 낮은 해상도로 돌리는 사람(4K 모니터에 1440p 등)도 같은 어긋남이 생긴다.
+// → 사용자가 손대지 않은 기본 상자(기본값 × 어떤 배율 그대로)이고 지금 게임 모니터의 기본값과 다르면 그 모니터 기준으로 다시 계산한다.
+//   직접 조정한 상자는 건드리지 않는다. 윈도우 화면 배율(125%·150%)은 상자·툴팁 크기와 무관했다(1440p@125 실기기 확인).
+
+/** 캡처 상자를 이루는 8개 값(물리 픽셀) */
+export type BoxGeo = {
+  offsetX: number; offsetY: number; width: number; height: number;
+  groundOffsetX: number; groundOffsetY: number; groundWidth: number; groundHeight: number;
+};
+const GEO_KEYS = ["offsetX", "offsetY", "width", "height", "groundOffsetX", "groundOffsetY", "groundWidth", "groundHeight"] as const;
+
+/** base 에 배율을 곱한 상자(App.tsx scaleRegionForMonitor 와 같은 반올림). */
+export function scaleGeo(base: BoxGeo, scale: number): BoxGeo {
+  const out = {} as BoxGeo;
+  for (const k of GEO_KEYS) out[k] = Math.round(base[k] * scale);
+  return out;
+}
+
+/** 상자가 '기본값 × 배율' 그대로면 그 배율, 사용자가 하나라도 조정했으면 null. 반올림 차이로 값마다 ±1 은 허용. */
+export function defaultScaleOf(geo: BoxGeo, base: BoxGeo): number | null {
+  if (!(geo.width > 0 && base.width > 0)) return null;
+  const s = geo.width / base.width;
+  if (s < 0.999) return null; // 기본값은 1 아래로 안 줄인다 → 그보다 작으면 직접 줄인 것
+  for (const k of GEO_KEYS) if (Math.abs(geo[k] - base[k] * s) > 1) return null;
+  return s;
+}
+
+/** 지금 게임 모니터(monW×monH)에 맞는 상자. 다시 맞출 필요가 없거나(이미 맞음·직접 조정한 상자·크기 모름) 하면 null.
+ *  배율 차이가 3% 안이면(반올림 수준) 그대로 둔다. */
+export function refitBox(geo: BoxGeo, base: BoxGeo, monW: number, monH: number): BoxGeo | null {
+  if (!(monW > 0 && monH > 0)) return null;
+  const cur = defaultScaleOf(geo, base);
+  if (cur == null) return null;
+  const want = captureScale(monW, monH);
+  if (Math.abs(cur - want) / want <= 0.03) return null;
+  return scaleGeo(base, want);
+}
+
+/** 같은 모니터에서 연달아 n 번(기본 2) 어긋났을 때만 다시 맞춘다 — 다른 모니터에서 한 번 잘못 누른 것으로 상자가 바뀌지 않게.
+ *  prev = 직전 조회의 "가로x세로"(어긋났을 때만, 아니면 null). 돌려주는 값: [다시 맞출지, 다음에 넘길 prev] */
+export function refitStreak(prev: string | null, monW: number, monH: number, mismatched: boolean): [boolean, string | null] {
+  if (!mismatched) return [false, null];
+  const key = `${monW}x${monH}`;
+  return prev === key ? [true, null] : [false, key];
+}

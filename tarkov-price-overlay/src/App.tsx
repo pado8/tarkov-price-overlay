@@ -19,7 +19,7 @@ import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
-import { chooseHelpMode, captureScale, boxMismatch, type HelpMode } from "./captureHelp";
+import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, type HelpMode } from "./captureHelp";
 import { loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
@@ -1548,6 +1548,7 @@ function App() {
   const toggleAtRef = useRef(-1e12); // 마지막 Shift+F2(숨기기 토글) 시각 — 같은 키면 그 누름도 게임 스크린샷을 만든다
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
+  const refitPrevRef = useRef<string | null>(null); // 11-17 캡처 상자 다시 맞추기 — 직전 조회가 어긋났던 모니터("가로x세로")
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
   const secStyle = (k: SectionKey) => ({ order: Math.max(0, region.sectionOrder.indexOf(k)) + 1 });
   const moveSection = (k: SectionKey, dir: -1 | 1) =>
@@ -4818,6 +4819,16 @@ function App() {
             }
             dailySample("mh", data.mon[1]);
             dailySample("bxh", r.height);
+            // 11-17 손대지 않은 기본 상자인데 이 게임 모니터의 기본값과 다르면 다시 맞춘다(captureHelp.refitBox — 울트라와이드 옛 상자·
+            // 주 모니터가 아닌 모니터·전체 화면 낮은 해상도). 같은 모니터에서 두 번 연속일 때만. 다음 조회부터 새 상자를 쓴다.
+            const fit = refitBox(r, DEFAULT_REGION, data.mon[0], data.mon[1]);
+            const [apply, next] = refitStreak(refitPrevRef.current, data.mon[0], data.mon[1], fit != null);
+            refitPrevRef.current = next;
+            if (apply && fit) {
+              log(`React: capture box refit ${r.width}x${r.height} -> ${fit.width}x${fit.height} (monitor ${data.mon[0]}x${data.mon[1]})`);
+              dailyAdd("bxa"); // 하루 요약: 상자를 자동으로 다시 맞춘 횟수
+              setRegion((prev) => ({ ...prev, ...fit }));
+            }
           }
           if (data.item_name == null) {
             // "share_" = 게임 스크린샷 키와 공유 중인 누름 — 인벤토리 밖에서 누른 게 대부분이라
