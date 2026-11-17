@@ -3178,7 +3178,7 @@ function App() {
           await win.setMinSize(new LogicalSize(WIDE_MIN_W, WIDE_MIN_H)).catch(() => {});
           // 11-07 나란히에서만 최대화 허용 — 모니터 위로 끌어 올리는 Windows 스냅이 '모니터 채우기'가 된다(아래 save 가 받음).
           // 보통 모드는 tauri.conf maximizable=false(최대화되면 내용 높이 로직이 되돌려 커졌다 줄어드는 현상)
-          await win.setMaximizable(true).catch(() => {});
+          await invoke("set_maximizable_keep_visible", { maximizable: true }).catch(() => {}); // 11-17 F2 로 띄운 창이 숨던 것 — 셸이 다시 보이게 한다
           const saved = await savedWideRect();
           if (dead) return;
           if (saved) {
@@ -3197,7 +3197,7 @@ function App() {
           const raw = localStorage.getItem(WIDE_PREV_POS_KEY);
           localStorage.removeItem(WIDE_PREV_POS_KEY);
           await win.setMinSize(null).catch(() => {}); // 일반 카드 창은 내용 높이(100px~)까지 줄어든다
-          await win.setMaximizable(false).catch(() => {});
+          await invoke("set_maximizable_keep_visible", { maximizable: false }).catch(() => {});
           dprHoldRef.current = null; // 배율 왕복 멈춤이 남아 있으면 내용 크기로 못 돌아간다
           dprFlipsRef.current = [];
           applyRef.current?.(); // 내용 크기로 되돌린다

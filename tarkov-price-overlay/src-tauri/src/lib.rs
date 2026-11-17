@@ -164,6 +164,39 @@ fn show_overlay_passive(app: tauri::AppHandle, label: Option<String>) {
     }
 }
 
+/// 11-17 나란히 보기 전환의 최대화 허용 바꾸기 — 바꾸는 동안 창이 숨겨지면 포커스 없이 다시 보이게 한다.
+/// F2(조회 키)는 창을 SW_SHOWNOACTIVATE 로 직접 띄워서(reveal_overlay_no_activate) tao 는 창이 여전히 '숨김'인 줄 안다.
+/// 그 상태에서 tao 의 창 플래그(최대화 허용)를 바꾸면 tao 가 자기 플래그로 스타일을 다시 계산하면서 창을 숨긴다
+/// (실측: F2 로 띄운 뒤 나란히 보기를 켜거나 끄면 IsWindowVisible false — 사용자에겐 '최소화된 것처럼' 사라짐).
+#[tauri::command]
+fn set_maximizable_keep_visible(app: tauri::AppHandle, maximizable: bool) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let was = os_window_visible(&window);
+    let _ = window.set_maximizable(maximizable);
+    if was && !os_window_visible(&window) {
+        reveal_overlay_no_activate(&window);
+        println!("[window] maximizable={} hid the window — shown again (no activate)", maximizable);
+    }
+}
+
+/// 윈도우가 아는 '보임' 상태(tao 가 아는 값과 다를 수 있다).
+#[cfg(windows)]
+fn os_window_visible(window: &tauri::WebviewWindow) -> bool {
+    #[link(name = "user32")]
+    extern "system" {
+        fn IsWindowVisible(hwnd: isize) -> i32;
+    }
+    match window.hwnd() {
+        Ok(hwnd) => unsafe { IsWindowVisible(hwnd.0 as isize) != 0 },
+        Err(_) => window.is_visible().unwrap_or(false),
+    }
+}
+
+#[cfg(not(windows))]
+fn os_window_visible(window: &tauri::WebviewWindow) -> bool {
+    window.is_visible().unwrap_or(false)
+}
+
 /// Holds the spawned Python sidecar so we can kill it on app exit.
 struct SidecarChild(Mutex<Option<CommandChild>>);
 
@@ -1570,7 +1603,8 @@ pub fn run() {
             resolve_install_id,
             exit_app,
             relaunch_as_admin,
-            show_overlay_passive
+            show_overlay_passive,
+            set_maximizable_keep_visible
         ])
         .setup(|app| {
             // Mouse-button hotkey poller — needs the AppHandle for emits and
