@@ -745,7 +745,9 @@ fn recover_window_position(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn hide_to_tray(app: tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
-        let _ = window.hide();
+        // 11-17 본 창도 hide_window_hard 로 — 한 번 숨긴 뒤 F2(포커스 없이 보이기, SW_SHOWNOACTIVATE)로 띄운 창은 tao 가
+        // '숨김'으로 알고 있어 window.hide() 가 아무 일도 안 했다(실측: 두 번째 숨김 뒤에도 IsWindowVisible true, 미니맵 창과 같은 원인).
+        hide_window_hard(&window);
         println!("[tray] window hidden to tray");
     }
     // Also hide the capture-region preview rectangles. They live in
@@ -1683,7 +1685,7 @@ pub fn run() {
             if !quitting {
                 api.prevent_exit();
                 if let Some(window) = app_handle.get_webview_window("main") {
-                    let _ = window.hide();
+                    hide_window_hard(&window); // 11-17 hide_to_tray 와 같은 이유
                 }
                 // Hide preview rectangles too (same reason as hide_to_tray:
                 // they're independent windows that survive main-window hide).

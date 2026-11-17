@@ -11,6 +11,7 @@ import { Icon } from "./Icon";
 import { stat } from "./statBus";
 import { RaidPrep } from "./RaidPrep";
 import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, planExit, planWarnings, PLAN_REACH_M, type LootPlan, type SpawnGroup } from "./LootPlan";
+import { remapDone } from "./planDone";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
@@ -363,6 +364,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     });
   const [planId, setPlanIdState] = useState<string | null>(() => localStorage.getItem(PLAN_SEL_KEY) || null);
   const setPlanId = (id: string | null) => {
+    if (id !== planId) setPlanDone(new Set()); // 11-17 다른 계획으로 바꾸면 '지남' 표시를 비운다 — 순번만 기억해 새 계획의 같은 순번이 지난 것으로 보였다
     setPlanIdState(id);
     try {
       localStorage.setItem(PLAN_SEL_KEY, id ?? "");
@@ -1089,7 +1091,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           mapName={doc.name}
           raidMin={doc.raid_min ?? null}
           side={data.map_source === "log" ? data.raid_side ?? null : null}
-          targets={data.targets || []}
+          targets={(data.targets || []).filter((x) => x.kind !== "quest" || !hiddenQuests.has(x.task ?? x.name))} // 11-17 숨긴 퀘스트는 준비 화면·챙길 것에서도 뺀다
           bosses={doc.bosses ?? []}
           mines={doc.hazards.filter((h) => h.type === "minefield").length}
           snipers={doc.hazards.filter((h) => h.type === "sniper").length}
@@ -1117,7 +1119,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             upPlans((o) => [...o, np]);
             setPlanId(np.id);
           }}
-          onChange={(np) => upPlans((o) => o.map((x) => (x.id === np.id ? np : x)))}
+          onChange={(np) => {
+            // 11-17 정류장을 지우거나 순서를 바꾸면 '지남' 표시도 그 정류장을 따라간다(순번만 기억해 옆 정류장으로 옮겨 붙었다)
+            if (plan && np.id === plan.id && np.stops !== plan.stops && planDone.size) setPlanDone(remapDone(plan.stops, np.stops, planDone));
+            upPlans((o) => o.map((x) => (x.id === np.id ? np : x)));
+          }}
           onDelete={(id) => {
             upPlans((o) => o.filter((x) => x.id !== id));
             setPlanId(null);

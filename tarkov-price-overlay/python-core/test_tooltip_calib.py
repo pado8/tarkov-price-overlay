@@ -109,5 +109,29 @@ t0 = time.perf_counter()
 main._wait_port_free(port, max_sec=1.2)
 eq("포트가 비면 바로", time.perf_counter() - t0 < 0.3, True)
 
+# 11-17 기록 창이 다 찬 뒤에는 내용이 바뀔 때만 파일을 쓴다 — 전에는 조회마다 다시 썼다
+main._tw.update(loaded=True, off=False, hist="", n_off=0, probe_hits=0)
+main._tw.pop("saved_hist", None)
+saves = []
+real_save = main._tw_save
+
+
+def counting_save():
+    saves.append(main._tw["hist"])
+    real_save()
+
+
+main._tw_save = counting_save
+for _ in range(main.TW_WINDOW):
+    main._tw_learn("present", True, "primary")
+n_fill = len(saves)
+for _ in range(30):
+    main._tw_learn("present", True, "primary")
+eq("기록이 그대로면 30번 조회에도 더 쓰지 않음", len(saves) - n_fill, 0)
+main._tw_learn("waited_none", True, "primary")
+main._tw_learn("present", True, "primary")
+eq("내용이 바뀌면 다시 씀", len(saves) - n_fill >= 1, True)
+main._tw_save = real_save
+
 print("\n" + ("전부 통과" if not fails else f"실패 {fails}"))
 raise SystemExit(1 if fails else 0)

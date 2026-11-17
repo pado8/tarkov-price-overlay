@@ -90,5 +90,16 @@ wait_bg()
 eq("⑥ 뒤에서 받기 실패 → 디스크 사본으로 계속", d["maps"]["customs"]["n"], 4)
 eq("⑥ 실패해도 사본은 그대로", radar._doc(P)["maps"]["customs"]["n"], 4)
 
+# ⑦ 11-17 빈 응답(data 없음)은 기억하지 않는다 — 전에는 6시간 동안 '자료 없음'으로 굳었다
+P2 = "regular/empty_then_ok"
+empty = [True]
+real_get = tj._get
+tj._get = lambda path: ({} if empty[0] else {"data": {"ok": 1}})
+restart()
+eq("⑦ 빈 응답은 None", radar._doc(P2), None)
+empty[0] = False
+eq("⑦ 다음 호출에 다시 받아 온다(굳지 않음)", radar._doc(P2), {"ok": 1})
+tj._get = real_get
+
 print("\n" + ("전부 통과" if not fails else f"실패 {fails}"))
 raise SystemExit(1 if fails else 0)

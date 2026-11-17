@@ -886,6 +886,7 @@ def _tw_save() -> None:
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps({"calib": TW_CALIB_VERSION, "off": _tw["off"], "hist": _tw["hist"], "ts": int(time.time())}),
                      encoding="utf-8")
+        _tw["saved_hist"] = _tw["hist"]
     except Exception as e:  # noqa: BLE001
         print(f"[tooltip] calib save failed: {e!r}")
 
@@ -917,7 +918,8 @@ def _tw_learn(tip_state: str, found: bool, attempt: str | None) -> None:
             _tw["n_off"] = 0
             print(f"[tooltip] detector missed {miss}/{n} recent lookups on this PC - using a fixed {TOOLTIP_OFF_FIXED_SEC}s wait instead")
             _tw_save()
-        elif n % 6 == 0:
+        elif n % 6 == 0 and h != _tw.get("saved_hist"):
+            # 11-17 기록 창(12개)이 다 차면 n 이 늘 12 라 조회마다 파일을 다시 썼다 — 내용이 바뀌었을 때만
             _tw_save()
 
 

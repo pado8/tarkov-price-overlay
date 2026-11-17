@@ -2018,6 +2018,7 @@ function App() {
   const [paneSize, setPaneSize] = useState(400); // 오른쪽 지도 패널의 지도 높이(패널 높이에서 머리글·칩·안내 줄을 뺀 값)
   // 맵 수동 선택은 이번 실행 동안만(다음 레이드는 로그로 다시 감지)
   const radarMapRef = useRef<string | null>(null);
+  const radarManualFallbackRef = useRef<string | null>(null); // 11-17 새 스크린샷이 풀어 버린 수동 맵 — 로그로 맵을 못 찾으면 되돌린다
   const [radarStory, setRadarStory] = useState<string>(() => {
     try {
       return localStorage.getItem(RADAR_STORY_KEY) ?? "auto"; // 기본 = 로그 추정(자동)
@@ -2916,8 +2917,20 @@ function App() {
   const loadRadar = async () => {
     setRadarLoading(true);
     try {
-      const res = await fetch(radarUrl(true));
-      if (res.ok) setRadarData((await res.json()) as RadarState);
+      let res = await fetch(radarUrl(true));
+      let data = res.ok ? ((await res.json()) as RadarState) : null;
+      // 11-17 게임 폴더·로그를 못 읽는 PC(통계: 설치의 3.7%)는 맵을 로그로 알 수 없어 직접 골라야 하는데, 새 스크린샷마다
+      // 수동 선택을 풀어 버려 찍을 때마다 다시 골라야 했다 → 풀고 받았는데 맵이 없으면 방금 풀었던 맵으로 한 번 다시 받는다.
+      // 로그로 맵이 잡히는 PC 는 예전 그대로(새 스크린샷 = 로그 맵).
+      if (data && !radarMapRef.current && radarManualFallbackRef.current) {
+        if (data.map) radarManualFallbackRef.current = null;
+        else {
+          radarMapRef.current = radarManualFallbackRef.current;
+          res = await fetch(radarUrl(true));
+          data = res.ok ? ((await res.json()) as RadarState) : data;
+        }
+      }
+      if (data) setRadarData(data);
     } catch (e) {
       log(`radar: load failed ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -3347,6 +3360,7 @@ function App() {
         if (lt != null && lt !== radarLoadingTsRef.current) {
           radarLoadingTsRef.current = lt;
           radarMapRef.current = null; // 새 레이드 — 수동 선택은 풀고 로그 맵으로
+          radarManualFallbackRef.current = null; // 로그로 맵이 잡히는 PC — 되돌릴 수동 맵 없음
           log(`radar: map loading ${d.loading!.map}`);
           prefetchMap(d.loading!.map, region.lang);
           dailyAdd("lp"); // 11-10 통계: 로딩 화면에서 맵을 미리 알아내 지도를 받아 둠(1.3.1 기능)
@@ -3358,7 +3372,8 @@ function App() {
           radarLastShotRef.current = id;
           // 앱을 켠 직후의 첫 확인은 기준만 잡는다 — 지난 스크린샷으로 지도가 튀어나오지 않게
           if (!first && d.shot && d.shot.age <= RADAR_POPUP_MAX_AGE_SEC) {
-            radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지
+            if (radarMapRef.current) radarManualFallbackRef.current = radarMapRef.current;
+            radarMapRef.current = null; // 새 레이드일 수 있으니 수동 선택은 풀고 로그로 다시 감지(못 찾으면 loadRadar 가 되돌린다)
             log(`radar: new screenshot ${id}`);
             const act = shotAction({
               wideMode: wideModeRef.current,
@@ -3879,6 +3894,10 @@ function App() {
       setUpdateError(msg);
       setUpdatePhase("error");
       reportEvent("update_apply", "error");
+      // 11-17 여기까지 오면 prepare_quit 이 이미 엔진을 끄고 종료 표시·단축키 감시를 멈춘 상태다 — 그대로 두면 조회가 안 되고
+      // 창 닫기가 트레이로 숨지 않고 진짜 종료가 된다(되돌리는 길이 없음). 실패를 알리고 앱을 새로 켠다.
+      await message(`${t.updateError}: ${msg}`, { title: t.updateStartTitle, kind: "error" }).catch(() => {});
+      await relaunch().catch(() => {});
     }
   };
 
@@ -6276,6 +6295,13 @@ function App() {
               onToggle={(v) => {
                 reportEvent("help", v ? "mapshare:on" : "mapshare:off"); // 11-10 통계: 설정에서 바꾼 것
                 setMapShareOn(v);
+                // 11-17 설정에서 직접 정했으면 묻는 창을 더 띄우지 않는다 — 안 그러면 창이 남아 '싫어요'가 방금 고른 값을 뒤집었다
+                if (!mapShareAsked) {
+                  setMapShareAsked(true);
+                  try {
+                    localStorage.setItem(MAP_SHARE_ASKED_KEY, "1");
+                  } catch {}
+                }
               }}
             />
             <div className="settings-section-header">
@@ -7170,7 +7196,8 @@ function App() {
             <div className="hint-sub">{t.hintFirstLoad}</div>
           </div>
         )}
-        {!showSettings && !radarActive && tourStep === null && status === "error" && (
+        {/* 11-17: 오류는 둘러보기 중에도 보인다 — 첫 실행(둘러보기가 떠 있는 때)에 엔진 파일 없음·차단이 나면 화면에 아무것도 안 떴다 */}
+        {!showSettings && !radarActive && status === "error" && (
           <div className="error">
             <Icon name="warn" /> {error}{" "}
             {(error === t.sidecarMissing || error === t.sidecarDead || error.startsWith(t.connError)) && (
@@ -7187,7 +7214,8 @@ function App() {
             </button>
           </div>
         )}
-        {!showSettings && !radarActive && tourStep === null && status === "success" && result && (
+        {/* 11-17: 못 찾은 조회는 둘러보기 중에도 보인다(찾으면 둘러보기가 끝난다) — 처음 눌러 본 조회가 실패하면 아무 반응이 없었다 */}
+        {!showSettings && !radarActive && (tourStep === null || result?.item_name == null) && status === "success" && result && (
           <div className="result">
             <div className="item-row">
               {result.icon && (

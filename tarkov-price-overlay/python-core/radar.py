@@ -551,8 +551,9 @@ def _doc(path: str):
         except Exception as e:  # noqa: BLE001 — 깨진 사본이면 네트워크로
             log.warning("mapdata load failed (%s): %r", path, e)
     doc = _doc_fetch(path)
-    with _data_lock:
-        _data[path] = (now, doc)
+    if doc is not None:  # 11-17 빈 응답은 기억하지 않는다 — 6시간 동안 '자료 없음'으로 굳어 지도가 비었다(앱을 다시 켜야 풀림)
+        with _data_lock:
+            _data[path] = (now, doc)
     return doc
 
 
