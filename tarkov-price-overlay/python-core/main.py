@@ -92,7 +92,8 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Tarkov Price Overlay Core", lifespan=lifespan)
+# 자동 문서(/docs·/redoc·/openapi.json)는 끈다 — /docs 는 외부 CDN 스크립트를 이 서버 출처에서 실행한다.
+app = FastAPI(title="Tarkov Price Overlay Core", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 # Only the app's own webview may read responses. The sidecar binds to
 # 127.0.0.1, but *any* web page the user has open in a browser can still POST
@@ -161,6 +162,38 @@ class _ProgressCORS:
 
 
 app.add_middleware(_ProgressCORS)
+
+
+class _LocalHostOnly:
+    """Host 가 이 PC 주소가 아닌 요청은 받지 않는다(DNS 리바인딩 방어).
+
+    서버는 127.0.0.1 에만 열려 있지만, 브라우저가 연 남의 도메인이 127.0.0.1 로 다시 풀리면 그 페이지의 요청은
+    '같은 출처'가 되어 CORS 가 걸리지 않는다 — 그러면 /lookup 의 화면 글자 인식 결과까지 읽힌다. 그런 요청은 Host 에
+    그 도메인이 그대로 실려 오므로 여기서 걸러진다. 앱 웹뷰·가이드 사이트·우리 시험은 모두 127.0.0.1:8765 로 부른다.
+    Host 가 아예 없는 호출(시험용 직접 호출)은 브라우저가 만들 수 없으므로 그대로 둔다."""
+
+    _OK = ("127.0.0.1", "localhost", "[::1]")
+
+    def __init__(self, app):  # noqa: D107
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http":
+            host = ""
+            for k, v in scope.get("headers") or []:
+                if k == b"host":
+                    host = v.decode("latin-1").strip().lower()
+                    break
+            name = host.rsplit(":", 1)[0] if host and not host.endswith("]") else host
+            if host and name not in self._OK:
+                await send({"type": "http.response.start", "status": 400,
+                            "headers": [(b"content-type", b"text/plain; charset=utf-8")]})
+                await send({"type": "http.response.body", "body": b"bad host"})
+                return
+        return await self.app(scope, receive, send)
+
+
+app.add_middleware(_LocalHostOnly)
 
 
 def _reject_foreign_origin(request: Request) -> None:
@@ -633,7 +666,7 @@ class CatalogActiveRequest(BaseModel):
     game_mode: str
 
 
-@app.post("/catalog/active")
+@app.post("/catalog/active", dependencies=[Depends(_reject_foreign_origin)])
 def catalog_active_ep(req: CatalogActiveRequest) -> dict:
     """1.3.1 — 앱이 지금 쓰는 (게임 언어, 모드)를 알린다(시작·설정 변경 때). 이 조합만 10분마다 갱신된다."""
     from tarkov_api import mark_active
@@ -1276,7 +1309,9 @@ def _lookup_superseded(client_seq: int | None) -> bool:
         return client_seq < _lookup_seq
 
 
-@app.post("/lookup", response_model=LookupResponse)
+# 출처 검사: 조회는 화면을 캡처해 읽는다. 남의 페이지가 본문 형식 없는 POST(사전 요청 없음)로 이걸 돌리거나
+# client_seq 를 큰 값으로 올려 이후 조회를 전부 '대체됨'으로 만들지 못하게 한다.
+@app.post("/lookup", response_model=LookupResponse, dependencies=[Depends(_reject_foreign_origin)])
 def lookup(req: CaptureRequest) -> LookupResponse:
     # Register this press as early as possible (before the blocking cursor
     # query) so an in-flight older lookup notices it on its next loop check.
