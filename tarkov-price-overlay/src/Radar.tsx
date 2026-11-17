@@ -108,6 +108,21 @@ export function loadRadarSize(): number {
   return RADAR_SIZE_DEFAULT;
 }
 
+// 11-17 카드 지도 가로(px). 0·없음 = 카드 폭을 꽉 채움(예전 그대로). 카드는 지도 가로 + 30 까지 넓어진다
+export const RADAR_WIDTH_KEY = "tarkov.radar.width";
+export const RADAR_WIDTH_MIN = 200;
+export const RADAR_WIDTH_MAX = 730; // 카드 최대 폭(760) − 여백
+export function loadRadarWidth(): number {
+  try {
+    const n = parseInt(localStorage.getItem(RADAR_WIDTH_KEY) ?? "", 10);
+    if (Number.isFinite(n) && n > 0) return Math.max(RADAR_WIDTH_MIN, Math.min(RADAR_WIDTH_MAX, n));
+  } catch {}
+  return 0;
+}
+const WIDE_MAP_CAPW_KEY = "tarkov.wideMode.mapCapW"; // 나란히 보기에서 줄인 지도 가로(0·없음 = 목록 열을 뺀 나머지 전부)
+const WIDE_MAP_CAPW_MIN = 240;
+const WIDE_SIDE_W = 300 + 12; // 오른쪽 목록 열 기본 폭 + 간격(App.css .radar-side·.radar-maprow)
+
 const STALE_SEC = 15 * 60;
 const COLORS: Record<string, string> = {
   extract: "var(--success)",
@@ -147,6 +162,8 @@ type Props = {
   onClose: () => void;
   size: number; // 지도 높이(px)
   onSize: (px: number) => void;
+  width?: number; // 카드 지도 가로(px, 0 = 카드 폭) — 11-17
+  onWidth?: (px: number) => void;
   fill?: boolean; // 패널이 크기를 정한다 — 크기 슬라이더 숨김
   highlightKey?: string | null; // 시세로 조회한 열쇠 — 지도에서 여는 문 강조
   story: string; // 지도에 띄울 스토리 챕터 id("" = 안 띄움)
@@ -168,7 +185,7 @@ const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 
 // 11-07 레이드 진영 자동: 이 레이드(raid_ts)에 칩을 이미 맞췄는가 — 지도를 다시 열면 패널이 새로 만들어지므로 모듈에 둔다
 let sideAppliedFor: string | null = null;
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party, onMiniClose }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, width = 0, onWidth, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party, onMiniClose }: Props) {
   const [showParty, setShowParty] = useState(false);
   // 11-11 파티 창을 열면 그 창이 다 보이게 카드를 필요한 만큼만 스크롤(작은 창·안내 상자가 있으면 아래가 걸쳤다 — 실측 32px).
   // 나란히 모드에선 이미 보이는 자리라 그대로
@@ -200,6 +217,33 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     } catch {}
   };
   const wideSize = Math.min(fitSize ?? size, wideCap > 0 ? wideCap : Infinity);
+  // 나란히 보기 지도 가로: 최대 = 목록 열(300)을 뺀 나머지(fitW), 줄이면 그만큼 목록 열이 넓어진다
+  const [fitW, setFitW] = useState<number | null>(null);
+  const [wideCapW, setWideCapW] = useState<number>(() => {
+    try {
+      const n = parseInt(localStorage.getItem(WIDE_MAP_CAPW_KEY) ?? "", 10);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const pickWideCapW = (px: number) => {
+    const max = fitW ?? px;
+    const v = px >= max - 4 ? 0 : Math.max(WIDE_MAP_CAPW_MIN, px);
+    setWideCapW(v);
+    try {
+      localStorage.setItem(WIDE_MAP_CAPW_KEY, String(v));
+    } catch {}
+  };
+  const resetWideMap = () => {
+    setWideCap(0);
+    setWideCapW(0);
+    try {
+      localStorage.setItem(WIDE_MAP_CAP_KEY, "0");
+      localStorage.setItem(WIDE_MAP_CAPW_KEY, "0");
+    } catch {}
+  };
+  const leftW = wideCapW > 0 ? Math.min(wideCapW, fitW ?? wideCapW) : null;
   // 11-09 통계: 파티 방이 안 쓰이는 게 '몰라서'인지 — 지도를 열 때 파티 버튼이 창 안에 보였나(pbv) / 화면 밖이었나(pbo), 누름(pbc)
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -233,6 +277,13 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     }
     const want = Math.max(160, Math.floor(avail - extra - 2));
     setFitSize((cur) => (cur != null && Math.abs(cur - want) <= 1 ? cur : want));
+    // 지도 가로 최대: 가로 배치면 줄 폭 − 목록 열, 세로 배치(목록이 지도 밑)면 줄 폭 전부
+    const row = el.querySelector(".radar-maprow") as HTMLElement | null;
+    if (row) {
+      const vertical = getComputedStyle(row).flexDirection === "column";
+      const wMax = Math.max(WIDE_MAP_CAPW_MIN, Math.floor(row.clientWidth - (vertical ? 0 : WIDE_SIDE_W)));
+      setFitW((cur) => (cur != null && Math.abs(cur - wMax) <= 1 ? cur : wMax));
+    }
   };
   useLayoutEffect(measureFit);
   useEffect(() => {
@@ -629,9 +680,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         </div>
       )}
       {fill ? (
-        <div className="radar-maprow">
-          <div className="radar-leftcol">
-            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={wideSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} onSize={pickWideCap} sizeRange={[WIDE_MAP_CAP_MIN, fitSize ?? wideSize]} />
+        <div className={`radar-maprow${leftW != null ? " capw" : ""}`}>
+          <div className="radar-leftcol" style={leftW != null ? { flex: "0 0 auto", width: leftW } : undefined}>
+            <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={wideSize} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere}
+              onSize={pickWideCap} sizeRange={[WIDE_MAP_CAP_MIN, fitSize ?? wideSize]} onWidth={pickWideCapW} widthRange={[WIDE_MAP_CAPW_MIN, fitW ?? WIDE_MAP_CAPW_MIN]} onSizeReset={resetWideMap} />
             <div className="radar-under">{controls}</div>
           </div>
           <div className="radar-side">
@@ -645,7 +697,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
       ) : (
         <>
           <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere}
-            onSize={(px) => { const v = Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, px)); if (v !== size) onSize(v); }} sizeRange={[RADAR_SIZE_MIN, RADAR_SIZE_MAX]} />
+            onSize={(px) => { const v = Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, px)); if (v !== size) onSize(v); }} sizeRange={[RADAR_SIZE_MIN, RADAR_SIZE_MAX]}
+            width={width || undefined} widthRange={[RADAR_WIDTH_MIN, RADAR_WIDTH_MAX]}
+            onWidth={onWidth ? (px) => { const v = Math.max(RADAR_WIDTH_MIN, Math.min(RADAR_WIDTH_MAX, px)); if (v !== width) onWidth(v); } : undefined}
+            onSizeReset={() => { onWidth?.(0); onSize(RADAR_SIZE_DEFAULT); }} />
           {toolbar}
           {targetList}
           {moreControls}

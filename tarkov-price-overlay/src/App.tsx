@@ -13,7 +13,7 @@ import { setStatSink, stat } from "./statBus";
 import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
 import { diag, diagBlock } from "./diagLog";
-import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
+import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_WIDTH_KEY, loadRadarWidth, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { prefetchMap } from "./RadarMap";
 import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
@@ -1953,6 +1953,7 @@ function App() {
   const [radarShowScav, setRadarShowScav] = useState<boolean>(() => localStorage.getItem(RADAR_SCAV_KEY) === "true");
   // 지도 높이(px). 패널 슬라이더로 바꾸고, 열려 있는 동안 카드 폭을 여기에 맞춘다(Radar.tsx)
   const [radarSize, setRadarSize] = useState<number>(loadRadarSize);
+  const [radarWidth, setRadarWidth] = useState<number>(loadRadarWidth); // 11-17 카드 지도 가로(0 = 카드 폭)
   // 미니맵 모드(11-05 피드백): 카드 머리글·목록·칩 없이 정사각형 지도만 — 크기·지도 불투명도는 따로 저장
   const [radarMini, setRadarMini] = useState<boolean>(() => localStorage.getItem(RADAR_MINI_KEY) === "1");
   const [miniSize, setMiniSize] = useState<number>(loadMiniSize);
@@ -3259,7 +3260,7 @@ function App() {
           // 11-07 사용자: 모니터 맨 위로 끌어 최대화하면 커졌다 바로 줄어듦 → 최대화는 '이 모니터 채우기'로 받고 최대화 상태는 푼다
           if (await win.isMaximized().catch(() => false)) {
             log("wide: maximized → fill monitor");
-            await win.unmaximize().catch(() => {});
+            await invoke("unmaximize_keep_visible").catch(() => {}); // 11-17 F2 로 띄운 창이 숨지 않게(셸이 다시 보이게 한다)
             await resetWideRect();
             return;
           }
@@ -5223,7 +5224,7 @@ function App() {
   // 지도가 열려 있으면 카드 폭을 지도 크기 + 카드 안쪽 여백(14×2 + 테두리 2)에 맞춰 넓힌다(사용자가 더 넓혔으면 그대로)
   // 설정이 열려 있으면 최소 360px — 긴 라벨·셀렉트·버튼 묶음이 좁은 카드에서 서로 밀어내지 않게(11-02 점검)
   // 미니맵 모드는 지도 크기 그대로(카드 기본 폭·사용자가 넓힌 폭 무시 — '어느 선 이하로 안 줄어든다' 피드백)
-  const cardW = miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? radarSize + 30 : 0, showSettings ? 360 : 0))}px`;
+  const cardW = miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? (radarWidth > 0 ? radarWidth : radarSize) + 30 : 0, showSettings ? 360 : 0))}px`;
   const stacked = wideMode && wideStacked(wideMapSide, portrait);
   return (
     <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${stacked ? " stack" : ""}${stacked && wideMapOnTop(wideMapSide) ? " map-top" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}
@@ -7164,6 +7165,13 @@ function App() {
               setRadarSize(px);
               try {
                 localStorage.setItem(RADAR_SIZE_KEY, String(px));
+              } catch {}
+            }}
+            width={radarWidth}
+            onWidth={(px) => {
+              setRadarWidth(px);
+              try {
+                localStorage.setItem(RADAR_WIDTH_KEY, String(px));
               } catch {}
             }}
           />

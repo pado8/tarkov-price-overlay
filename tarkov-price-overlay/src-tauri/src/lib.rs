@@ -179,6 +179,19 @@ fn set_maximizable_keep_visible(app: tauri::AppHandle, maximizable: bool) {
     }
 }
 
+/// 11-17 나란히 보기에서 화면 위로 끌어 최대화된 창을 푼다 — set_maximizable 과 같은 이유로 F2 로 띄운 창이 숨지 않게.
+/// (tao 는 플래그가 하나라도 바뀌면 apply_diff 끝에서 자기가 아는 보임 상태를 다시 적용한다 — 모르는 '보임'이면 SW_HIDE)
+#[tauri::command]
+fn unmaximize_keep_visible(app: tauri::AppHandle) {
+    let Some(window) = app.get_webview_window("main") else { return };
+    let was = os_window_visible(&window);
+    let _ = window.unmaximize();
+    if was && !os_window_visible(&window) {
+        reveal_overlay_no_activate(&window);
+        println!("[window] unmaximize hid the window — shown again (no activate)");
+    }
+}
+
 /// 윈도우가 아는 '보임' 상태(tao 가 아는 값과 다를 수 있다).
 #[cfg(windows)]
 fn os_window_visible(window: &tauri::WebviewWindow) -> bool {
@@ -1604,7 +1617,8 @@ pub fn run() {
             exit_app,
             relaunch_as_admin,
             show_overlay_passive,
-            set_maximizable_keep_visible
+            set_maximizable_keep_visible,
+            unmaximize_keep_visible
         ])
         .setup(|app| {
             // Mouse-button hotkey poller — needs the AppHandle for emits and

@@ -1896,10 +1896,20 @@ html, body, #root {
 .radar-mapwrap.drag { cursor: grabbing; }
 .radar-mapsvg { width: 100%; height: 100%; display: block; }
 .radar-maptools { position: absolute; top: 4px; right: 4px; display: flex; gap: 3px; }
-/* 11-17 지도 크기 막대 — 지도 왼쪽 위에 고정(지도가 커지고 작아져도 커서 밑에서 안 움직인다) */
-.radar-sizeedit { position: absolute; top: 4px; left: 4px; z-index: 6; max-width: calc(100% - 8px); box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 4px 8px; background: rgba(0, 0, 0, 0.82); border: 1px solid var(--gold-bright); border-radius: 6px; font-size: var(--card-fs-xs); color: var(--text-primary); cursor: default; }
-.radar-sizeedit input[type="range"] { flex: 1 1 90px; width: 150px; min-width: 70px; max-width: 150px; }
+/* 11-17 지도 크기 편집 — 점선 테두리 + 손잡이(오른쪽·아래·모서리) + 왼쪽 위 '가로 × 세로' 표시. 평소엔 손잡이가 없다(잘못 누름 방지) */
+.radar-mapwrap.editing { outline: 2px dashed var(--gold-bright); outline-offset: -2px; }
+.radar-sizeedit { position: absolute; top: 4px; left: 4px; z-index: 8; max-width: calc(100% - 8px); box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 3px 6px 3px 8px; background: rgba(0, 0, 0, 0.82); border: 1px solid var(--gold-bright); border-radius: 6px; font-size: var(--card-fs-xs); color: var(--text-primary); cursor: default; }
+.radar-sizeedit .radar-size-val { font-variant-numeric: tabular-nums; color: var(--gold-bright); font-weight: 700; margin-right: 2px; }
 .radar-sizeedit button { font-size: var(--card-fs-xs); padding: 2px 10px; background: rgba(60, 48, 10, 0.9); color: var(--gold-bright); border: 1px solid var(--gold-bright); border-radius: 4px; cursor: pointer; }
+.radar-sizeedit button.ghost { background: transparent; color: var(--text-primary); border-color: var(--border-default); }
+.radar-rh { position: absolute; z-index: 7; touch-action: none; background: var(--gold-bright); border: 1px solid rgba(0, 0, 0, 0.7); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15); }
+.radar-rh::before { content: ""; position: absolute; inset: -8px; } /* 잡기 쉬운 넓은 손잡이 영역 */
+.radar-rh.r { top: 50%; right: 2px; width: 6px; height: 42px; margin-top: -21px; border-radius: 3px; cursor: ew-resize; }
+.radar-rh.b { left: 50%; bottom: 2px; height: 6px; width: 42px; margin-left: -21px; border-radius: 3px; cursor: ns-resize; }
+.radar-rh.rb { right: 2px; bottom: 2px; width: 14px; height: 14px; border-radius: 3px; cursor: nwse-resize; }
+.radar-rh:hover { background: var(--gold-light, #ffe08a); }
+/* 나란히 보기에서 지도 가로를 줄이면 목록 열이 그만큼 넓어진다 */
+.radar-maprow.capw .radar-side { flex: 1 1 300px; }
 .radar-maptools button { font-size: var(--card-fs-xs); padding: 2px 7px; background: rgba(0, 0, 0, 0.65); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; }
 .radar-maptools button:hover { border-color: var(--gold-bright); }
 .radar-maptools button.on { border-color: var(--gold-bright); color: var(--gold-bright); background: rgba(60, 48, 10, 0.85); }
