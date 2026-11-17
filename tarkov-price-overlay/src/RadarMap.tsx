@@ -94,6 +94,9 @@ type Props = {
   mini?: boolean; // 미니맵 모드 — 정사각형 지도만(칩·층·안내 줄 없음), 도구 버튼은 마우스를 올렸을 때만(CSS)
   mapAlpha?: number; // 지도 그림·바탕 불투명도 0~1(표식은 그대로) — 11-05 피드백 '맵도 0~100'
   friends?: Friend[]; // 파티 방 친구 중 이 맵에 있는 사람(위치 있는 것만) — 11-05
+  // 11-17 카드 지도 크기 −/＋(지도 위 버튼 줄). 1.3.3 에서 지도 아래 줄이 늘어 기존 '크기' 칸이 창 밖으로 밀렸다(사용자 게임 안 확인).
+  // 값 범위는 부르는 쪽(Radar.tsx)이 자른다. 없으면 버튼을 그리지 않는다(나란히·미니맵).
+  onSize?: (px: number) => void;
 };
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
@@ -311,7 +314,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends, onSize }: Props) {
   // 친구 경과 시간·반짝임·흐림 — 그릴 때마다 지금 시각으로 계산하고, 친구가 있으면 1초마다 다시 그린다
   // (시각을 상태로 들고 있으면 처음 그린 시각에 멈춘 채 시작해 '12초 전'이 '8초 전'으로 나왔다 — 11-05 시험에서 발견)
   const [, setTick] = useState(0);
@@ -1001,6 +1004,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         )}
         {!doc && <div className="radar-mapmsg">{err ? t.radarMapError : t.radarMapLoading}</div>}
         <div className="radar-maptools">
+          {onSize && !mini && (
+            <>
+              <button type="button" onClick={() => { stat("msz"); onSize(size - 40); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarMapSmaller} aria-label={t.radarMapSmaller} data-tool="size-down">−</button>
+              <button type="button" onClick={() => { stat("msz"); onSize(size + 40); }} onDoubleClick={(e) => e.stopPropagation()} title={t.radarMapBigger} aria-label={t.radarMapBigger} data-tool="size-up">＋</button>
+            </>
+          )}
           <button type="button" className={hold ? "on" : undefined} aria-pressed={hold} onClick={() => { stat("mth"); toggleHold(); }} onDoubleClick={(e) => e.stopPropagation()} title={hold ? t.radarMapHoldOn : t.radarMapHoldOff} aria-label={t.radarMapHold}><Icon name="lock" /></button>
           {view && <button type="button" onClick={() => { stat("mtc"); centerMe(); }} title={t.radarMapMe}><Icon name="target" /> {t.radarMapMe}</button>}
           <button type="button" onClick={() => { stat("mtf"); fit(); }} title={t.radarMapFit}>{t.radarMapFit}</button>

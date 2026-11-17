@@ -610,7 +610,8 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
         </div>
       ) : (
         <>
-          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere} />
+          <RadarMap data={data} lang={lang} t={t} showScav={showScav} onToggleScav={onToggleScav} layers={layers} onToggleLayer={toggleLayer} hiddenQuests={hiddenSet} size={size} fixed={fixed} highlightKey={highlightKey} bigMe={bigMe} mapAlpha={mapAlpha / 100} friends={friendsHere}
+            onSize={(px) => { const v = Math.max(RADAR_SIZE_MIN, Math.min(RADAR_SIZE_MAX, px)); if (v !== size) onSize(v); }} />
           {toolbar}
           {targetList}
           {moreControls}
