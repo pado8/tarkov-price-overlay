@@ -2217,7 +2217,9 @@ function App() {
       log("React: sidecar-dead received — restart budget exhausted");
       sidecarDeadRef.current = true;
       // 이유(spawn failed: … / unexpected exit code=…)를 짧은 태그로. 경로·개인정보 없음.
-      const why = String(e.payload ?? "").toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, 50);
+      // 11-18 셸이 엔진의 마지막 오류 이름·번호를 '|' 뒤에 붙인다(예: unexpected exit code=1|OSError_10048) — 그 부분도 담는다
+      const [head, tag] = String(e.payload ?? "").split("|");
+      const why = head.toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, 50) + (tag ? "|" + tag.replace(/[^A-Za-z0-9_]+/g, "").slice(0, 40) : "");
       reportEvent("sidecar_fail", `dead:${why || "unknown"}`);
     });
     const onMissing = async () => {

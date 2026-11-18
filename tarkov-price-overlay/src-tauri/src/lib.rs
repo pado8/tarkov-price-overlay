@@ -1344,6 +1344,41 @@ fn is_quitting(app: &tauri::AppHandle) -> bool {
         .unwrap_or(true)
 }
 
+/// 11-18 통계: 1.3.2 에서 엔진이 '종료 코드 1'로 거듭 꺼지는 사람이 늘었는데(27명) 이유가 안 보였다.
+/// 엔진 오류 출력의 한 줄에서 **오류 이름과 번호만** 뽑는다(예: "OSError: [WinError 10048] ..." → "OSError_10048",
+/// uvicorn "ERROR: [Errno 10048] error while attempting to bind ..." → "bind_10048"). 경로·사용자 이름·메시지 문장은 담지 않는다.
+/// 오류 줄이 아니면 None.
+fn sidecar_err_tag(line: &str) -> Option<String> {
+    let line = line.trim();
+    if line.is_empty() {
+        return None;
+    }
+    // [Errno 10048] / [WinError 5] / [Errno 2] 의 번호
+    let errno = ["[WinError ", "[Errno "].iter().find_map(|k| {
+        let i = line.find(k)? + k.len();
+        let n: String = line[i..].chars().take_while(|c| c.is_ascii_digit()).collect();
+        if n.is_empty() { None } else { Some(n) }
+    });
+    let head = line.split(':').next().unwrap_or("").trim();
+    let class_like = !head.is_empty()
+        && head.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.')
+        && (head.ends_with("Error") || head.ends_with("Exception") || head.ends_with("Exit") || head.ends_with("Interrupt"));
+    let name = if class_like {
+        head.rsplit('.').next().unwrap_or(head).to_string() // 모듈 경로(a.b.ErrorName)는 뺀다
+    } else if head == "ERROR" && line.contains("bind") {
+        "bind".to_string()
+    } else if head == "ERROR" {
+        "uvicorn_error".to_string()
+    } else {
+        return None;
+    };
+    let tag = match errno {
+        Some(n) => format!("{name}_{n}"),
+        None => name,
+    };
+    Some(tag.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_').take(40).collect())
+}
+
 /// Schedule a sidecar respawn 2s out, respecting the consecutive-failure
 /// budget. Shared by every failure path (unexpected exit, channel closed
 /// without Terminated, spawn error) so none of them silently gives up while
@@ -1452,13 +1487,20 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     tauri::async_runtime::spawn(async move {
         let mut saw_terminated = false;
         let mut exit_code: Option<i32> = None;
+        let mut last_err: Option<String> = None; // 엔진 오류 출력의 마지막 오류 이름(sidecar_err_tag)
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
                     println!("[sidecar/out] {}", String::from_utf8_lossy(&line));
                 }
                 CommandEvent::Stderr(line) => {
-                    eprintln!("[sidecar/err] {}", String::from_utf8_lossy(&line));
+                    let text = String::from_utf8_lossy(&line);
+                    eprintln!("[sidecar/err] {}", text);
+                    for l in text.lines() {
+                        if let Some(tag) = sidecar_err_tag(l) {
+                            last_err = Some(tag);
+                        }
+                    }
                 }
                 CommandEvent::Error(e) => {
                     eprintln!("[sidecar] command event error: {e}");
@@ -1480,7 +1522,7 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         } else {
             attempt + 1
         };
-        let why = if saw_terminated {
+        let mut why = if saw_terminated {
             match exit_code {
                 Some(c) => format!("unexpected exit code={c}"),
                 None => "unexpected exit".to_string(),
@@ -1488,6 +1530,9 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         } else {
             "event channel closed without Terminated".to_string()
         };
+        if let Some(tag) = &last_err {
+            why = format!("{why}|{tag}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>
+        }
         schedule_sidecar_restart(app, next, &why);
     });
 }
@@ -1769,5 +1814,35 @@ mod proc_usage_tests {
         assert!(v["procs"].as_u64().unwrap_or(0) >= 1, "{v}");
         assert!(v["app_mem_mb"].as_u64().unwrap_or(0) > 0, "{v}");
         println!("proc_usage = {v}");
+    }
+}
+
+#[cfg(test)]
+mod sidecar_err_tag_tests {
+    use super::sidecar_err_tag;
+
+    #[test]
+    fn python_exception_name_and_number_only() {
+        assert_eq!(sidecar_err_tag("OSError: [WinError 10048] 각 소켓 주소는 하나만 사용할 수 있습니다"), Some("OSError_10048".into()));
+        assert_eq!(sidecar_err_tag("PermissionError: [Errno 13] Permission denied: 'C:\\Users\\홍길동\\AppData\\x.json'"), Some("PermissionError_13".into()));
+        assert_eq!(sidecar_err_tag("ModuleNotFoundError: No module named 'cv2'"), Some("ModuleNotFoundError".into()));
+        assert_eq!(sidecar_err_tag("torch.cuda.OutOfMemoryError: CUDA out of memory"), Some("OutOfMemoryError".into()));
+        assert_eq!(sidecar_err_tag("MemoryError"), Some("MemoryError".into()));
+    }
+
+    #[test]
+    fn uvicorn_bind_error() {
+        assert_eq!(
+            sidecar_err_tag("ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8765): 각 소켓 주소는"),
+            Some("bind_10048".into())
+        );
+    }
+
+    #[test]
+    fn not_an_error_line() {
+        assert_eq!(sidecar_err_tag("INFO:     127.0.0.1:1 - \"GET /health HTTP/1.1\" 200 OK"), None);
+        assert_eq!(sidecar_err_tag("  File \"C:\\Users\\someone\\main.py\", line 3, in <module>"), None);
+        assert_eq!(sidecar_err_tag("Traceback (most recent call last):"), None);
+        assert_eq!(sidecar_err_tag(""), None);
     }
 }
