@@ -350,6 +350,15 @@ eq("리저브 그림 = svgBounds", r.map_image_meta("reserve")["bounds"] == _td[
 eq("세관 그림 = bounds(svgBounds 없음)", r.map_image_meta("customs")["bounds"] == _td["customs"]["bounds"], True)
 eq("연구소(타일) 그림 = bounds", r.map_image_meta("the-lab")["bounds"] == _td["the-lab"]["bounds"], True)
 
+# 루팅 상자 종류·이름표(11-18): 지도 아이콘은 종류로 고르고, 이름표는 그 맵에 나온 종류만 붙인다
+_orig_doc = r._doc
+r._doc = lambda path: {"lootContainers": {"c1": {"normalizedName": "safe", "name": "c1 Name"}, "c2": {"normalizedName": "drawer", "name": "c2 Name"}}} if path == "regular/maps" else {}
+_ld = r.compact_map_features({"normalizedName": "x", "lootContainers": [{"position": {"x": 1, "y": 0, "z": 1}, "lootContainer": "c1"}, {"position": {"x": 2, "y": 0, "z": 2}, "lootContainer": "zz"}]}, {})
+eq("상자: 묶음·종류 칸", [c[3:] for c in _ld["loot"]], [["v", "safe"], ["b", ""]])
+r.annotate_loot(_ld, {"c1 Name": "금고", "c2 Name": "서랍"}, {})
+eq("상자: 이 맵에 나온 종류만 이름표", _ld["loot_names"], {"safe": "금고"})
+r._doc = _orig_doc
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

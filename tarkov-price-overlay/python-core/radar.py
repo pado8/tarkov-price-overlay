@@ -1101,8 +1101,11 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
              for lk in m.get("locks") or [] if ok(lk.get("position"))]
     containers = [note(pt(c["position"])) for c in m.get("lootContainers") or [] if ok(c.get("position"))]
     ctn = (_doc("regular/maps") or {}).get("lootContainers") or {}  # 상자 id → 종류 이름
-    loot = [[*pt(c["position"]), loot_group((ctn.get(c.get("lootContainer")) or {}).get("normalizedName"))]
-            for c in m.get("lootContainers") or [] if ok(c.get("position"))]
+    loot = []  # [x, y, z, 묶음, 종류] — 종류는 지도 아이콘과 이름표에 쓴다
+    for c in m.get("lootContainers") or []:
+        if ok(c.get("position")):
+            kind = (ctn.get(c.get("lootContainer")) or {}).get("normalizedName") or ""
+            loot.append([*pt(c["position"]), loot_group(kind), kind])
     spawns = []
     for s in m.get("spawns") or []:
         if not ok(s.get("position")):
@@ -1337,6 +1340,19 @@ def annotate_locks(doc: dict, lang: str) -> None:
             lk["loot"] = cnt
 
 
+def annotate_loot(doc: dict, loc: dict, loc_en: dict) -> None:
+    """이 맵에 나오는 상자 종류의 이름표(loot_names: {종류: 이름})를 붙인다. 이름을 못 찾은 종류는 화면이 묶음 이름을 쓴다."""
+    kinds = {c[4] for c in doc.get("loot") or [] if c[4]}
+    names: dict = {}
+    for c in ((_doc("regular/maps") or {}).get("lootContainers") or {}).values():
+        kind = c.get("normalizedName")
+        if kind in kinds and kind not in names:
+            name = _loc(loc, c.get("name")) or _loc(loc_en, c.get("name"))
+            if name:
+                names[kind] = name
+    doc["loot_names"] = names
+
+
 def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     """전체 지도용 정적 좌표 문서(맵·언어별 캐시). 없는 맵이면 None."""
     slug = EVENT_MAPS.get(slug, slug)
@@ -1352,6 +1368,7 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
     doc = compact_map_features(m, loc_maps, _doc("regular/maps_en") or {})
     annotate_locks(doc, lang)
+    annotate_loot(doc, loc_maps, _doc("regular/maps_en") or {})
     doc["zones"] = map_labels.zone_labels(m, lang)  # 구역 이름표(스폰 구역 코드에 붙인 우리 이름)
     with _data_lock:
         _map_cache[key] = (time.time(), doc)

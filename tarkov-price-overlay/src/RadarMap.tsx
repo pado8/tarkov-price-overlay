@@ -12,6 +12,7 @@ import { stat } from "./statBus";
 import { RaidPrep } from "./RaidPrep";
 import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, planExit, planWarnings, PLAN_REACH_M, type LootPlan, type SpawnGroup } from "./LootPlan";
 import { remapDone } from "./planDone";
+import { LOOT_GROUP_ICON, LOOT_ICON_PATH, lootBadgeSize, lootIconOf, lootInDrawOrder, type LootRow } from "./lootIcons";
 
 const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
@@ -67,7 +68,8 @@ export type MapDoc = {
   zones?: { name: string; p: Pt }[]; // 구역 이름표
   raid_min?: number | null; // 이 맵 레이드 길이(분)
   spawn_groups?: SpawnGroup[]; // 플레이어 스폰 무리(루팅 계획을 붙이는 단위)
-  loot?: [number, number, number, string][]; // 루팅 상자: 마지막 = 묶음(w 무기·탄 t 기술 m 의료 v 귀중품 c 은닉처 b 가방·상자 d 시체)
+  loot?: LootRow[]; // 루팅 상자: 묶음(w 무기·탄 t 기술 m 의료 v 귀중품 c 은닉처 b 가방·상자 d 시체) + 종류
+  loot_names?: Record<string, string>; // 상자 종류 → 지금 언어의 이름
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
   bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
   weapons: Pt[];
@@ -113,9 +115,11 @@ const PLAN_ON = false;
 // 11-18 내 라벨(지도에 내가 다는 이름표)도 1.3.3 에서 뺀다(사용자 결정) — 버튼을 숨기고 저장된 라벨을 읽지 않는다(지우지는 않음).
 // 구역 이름표(한·영·러)는 그대로. 다음 업데이트에서 true 로 바꾸면 돌아온다.
 const LABEL_ON = false;
-// 11-18 루팅 상자 층과 잠긴 문의 '문 근처 상자' 수를 뺀다(사용자 결정) — 층 버튼·묶음 줄·지도 위 점·문 이름의 상자 수·문 흰 테두리를 숨긴다.
-// 열쇠 이름은 그대로. 이 PC 에 저장된 묶음 선택은 지우지 않는다.
+// 11-18 루팅 상자 층은 아이콘을 완성해 다음 버전에 낸다(사용자 결정) — 그 전까지 층 버튼·묶음 줄·지도 위 아이콘을 숨긴다.
+// 이 PC 에 저장된 묶음 선택은 지우지 않는다.
 const LOOT_ON = false;
+// 11-18 잠긴 문의 '문 근처 상자' 수는 방 안 파밍 종류를 정확히 가릴 근거가 생기기 전까지 내지 않는다(사용자 결정). 열쇠 이름은 그대로.
+const LOCK_LOOT_ON = false;
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -200,6 +204,13 @@ export const LOOT_ORDER = ["w", "t", "m", "v", "c", "b", "d"] as const;
 export const LOOT_COLOR: Record<string, string> = { w: "#ff8a65", t: "#4fc3f7", m: "#81c784", v: "#ffd54f", c: "#b39ddb", b: "#bcaaa4", d: "#90a4ae" };
 const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, c: true, b: false, d: false }; // 흔한 가방·상자·시체는 기본 끔(시내 1,282개)
 const lootName = (g: string, t: Strings): string => t[`radarLoot_${g}`] ?? t.radarLayerLoot;
+const LOOT_INK = "#11151b"; // 아이콘 안 그림 색(묶음 색이 모두 밝다)
+const LootChipIcon = ({ g }: { g: string }) => (
+  <svg className="radar-lootbadge" width={14} height={14} viewBox="0 0 24 24" aria-hidden="true">
+    <rect width={24} height={24} rx={6} fill={LOOT_COLOR[g]} />
+    <path d={LOOT_ICON_PATH[LOOT_GROUP_ICON[g]]} transform="translate(3 3) scale(0.75)" fill={LOOT_INK} fillRule="evenodd" />
+  </svg>
+);
 
 export function loadJson<T>(key: string, fallback: T): T {
   try {
@@ -934,14 +945,25 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             )}
             {plan && plan.stops.length > 0 && <PlanOverlay plan={plan} done={planDone} me={planMe} exit={planEx} warns={planWarn} toScreen={toScreen} />}
             {LOOT_ON && layers.loot &&
-              (doc.loot ?? []).map((x, i) => {
+              lootInDrawOrder(doc.loot ?? []).map((x, i) => {
                 if (!lootG[x[3]]) return null;
-                const lootR = v && v.s < 0.5 ? 1.5 : 2.6; // 멀리서 보면 작게(1m 가 0.5px 보다 작을 때)
+                const size = lootBadgeSize(v?.s ?? 1); // 멀리서 보면 점, 가까이 볼수록 큰 아이콘
                 const s = toScreen(x[0], x[2]);
-                return (
-                  <g key={`lt${i}`} onClick={() => pick({ name: lootName(x[3], t), p: [x[0], x[1], x[2]] })} opacity={op(x[0], x[1], x[2])}>
+                if (s.x < -size || s.y < -size || s.x > box.w + size || s.y > box.h + size) return null; // 화면 밖은 그리지 않는다(시내 1,282개)
+                const name = (x[4] && doc.loot_names?.[x[4]]) || lootName(x[3], t);
+                const color = LOOT_COLOR[x[3]] ?? "#bbb";
+                const onPick = () => pick({ name, p: [x[0], x[1], x[2]] });
+                if (!size) return (
+                  <g key={`lt${i}`} onClick={onPick} opacity={op(x[0], x[1], x[2])}>
                     <circle cx={s.x} cy={s.y} r={6} fill="transparent" />
-                    <rect x={s.x - lootR} y={s.y - lootR} width={lootR * 2} height={lootR * 2} rx={1} fill={LOOT_COLOR[x[3]] ?? "#bbb"} stroke="#000" strokeWidth={lootR < 2 ? 0.3 : 0.6} />
+                    <rect x={s.x - 1.5} y={s.y - 1.5} width={3} height={3} rx={1} fill={color} stroke="#000" strokeWidth={0.3} />
+                  </g>
+                );
+                return (
+                  <g key={`lt${i}`} className="radar-lootmark" data-loot={x[4] || x[3]} onClick={onPick} opacity={op(x[0], x[1], x[2])} transform={`translate(${s.x - size / 2} ${s.y - size / 2})`}>
+                    <rect x={-2} y={-2} width={size + 4} height={size + 4} fill="transparent" />
+                    <rect width={size} height={size} rx={size * 0.24} fill={color} stroke="#0b0e12" strokeWidth={0.8} />
+                    <path d={LOOT_ICON_PATH[lootIconOf(x[4], x[3])]} transform={`translate(${size * 0.12} ${size * 0.12}) scale(${(size * 0.76) / 24})`} fill={LOOT_INK} fillRule="evenodd" />
                   </g>
                 );
               })}
@@ -950,8 +972,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 const own = !!x.key && myKeys.includes(x.key);
                 if (myKeysOnly && !own) return null;
                 const s = toScreen(x.p[0], x.p[2]);
-                const lootTxt = LOOT_ON ? lockLootText(x.loot, t) : "";
-                const nearLoot = LOOT_ON && !!x.loot;
+                const lootTxt = LOCK_LOOT_ON ? lockLootText(x.loot, t) : "";
+                const nearLoot = LOCK_LOOT_ON && !!x.loot;
                 // 이름: 잠긴 문 · 열쇠 이름 · 문 근처 상자(10m 안 어림)
                 const nm = `${t.radarLayerLocks}${x.type && x.type !== "door" ? " · " + x.type : ""}${x.kn ? ` · 🔑 ${x.kn}` : ""}${lootTxt ? ` · ${t.radarLockLoot}: ${lootTxt}` : ""}`;
                 return (
@@ -1130,7 +1152,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             if (!n) return null;
             return (
               <button key={g} type="button" className={`radar-chip${lootG[g] ? " on" : ""}`} aria-pressed={!!lootG[g]} onClick={() => toggleLoot(g)} data-chip={`loot-${g}`}>
-                <span className="radar-sw" style={{ background: LOOT_COLOR[g] }} /> {lootName(g, t)} {n}
+                <LootChipIcon g={g} /> {lootName(g, t)} {n}
               </button>
             );
           })}

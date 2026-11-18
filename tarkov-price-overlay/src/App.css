@@ -2010,6 +2010,9 @@ html, body, #root {
 .radar-planrow input.mins { flex: 0 0 110px; }
 .radar-planstops button { padding: 0 5px; margin-left: 2px; }
 .radar-lootrow .radar-chip { font-size: 11px; }
+.radar-lootbadge { flex: none; vertical-align: -3px; }
+.radar-chip:not(.on) .radar-lootbadge { opacity: 0.35; }
+.radar-lootmark { cursor: pointer; }
 .quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
 .quest-sub { color: var(--text-muted); }
 .price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }
