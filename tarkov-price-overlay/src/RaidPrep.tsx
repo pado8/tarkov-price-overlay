@@ -24,9 +24,10 @@ type Props = {
   planId: string | null;
   planKeys: { name: string; own: boolean }[];
   onPickPlan: (id: string) => void;
+  showPlans?: boolean; // 11-18 루팅 계획을 뺀 판(1.3.3)에서는 계획 칸을 숨긴다
 };
 
-export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, snipers, plans, planId, planKeys, onPickPlan }: Props) {
+export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, snipers, plans, planId, planKeys, onPickPlan, showPlans = true }: Props) {
   const quests = targets.filter((x) => x.kind === "quest");
   // 묶는 열쇠는 task(내부 id), 보여 주는 건 퀘스트 이름(11-13 실앱: id 가 그대로 보였다)
   const byTask = new Map<string, { name: string; n: number; keys: Set<string> }>();
@@ -94,7 +95,7 @@ export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, sn
           {snipers > 0 ? ` · ⌖ ${t.radarPrepSnipers.replace("{n}", String(snipers))}` : ""}
         </p>
       </section>
-      <section>
+      {showPlans && <section>
         <h4>{t.radarPlan} {plans.length > 0 && <i>{plans.length}</i>}</h4>
         {plans.length === 0 ? <p className="dim">{t.radarPrepNoPlan}</p> : (
           <div className="radar-prep-plans">
@@ -105,7 +106,7 @@ export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, sn
             ))}
           </div>
         )}
-      </section>
+      </section>}
       {bring.length > 0 && (
         <section>
           <h4>{t.radarPrepBring}</h4>

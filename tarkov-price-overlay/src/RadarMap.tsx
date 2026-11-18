@@ -104,7 +104,12 @@ type Props = {
   onWidth?: (px: number) => void;
   widthRange?: [number, number];
   onSizeReset?: () => void; // '원래대로' — 카드 폭·패널에 맞춤
+  extraTools?: React.ReactNode; // 11-18 도구 줄 끝에 붙일 버튼(파티·미니맵 모드)
 };
+
+// 11-18 루팅 계획은 1.3.3 에서 뺀다(사용자 결정) — 버튼·지도 위 경로·스폰 자동 표시·'계획에 추가'·레이드 준비의 계획 칸을 숨긴다.
+// 코드와 이 PC 에 저장된 계획은 그대로 — 다음 업데이트에서 true 로 바꾸면 돌아온다.
+const PLAN_ON = false;
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -321,7 +326,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
   return null;
 }
 
-export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends, onSize, sizeRange, width, onWidth, widthRange, onSizeReset }: Props) {
+export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends, onSize, sizeRange, width, onWidth, widthRange, onSizeReset, extraTools }: Props) {
   // 친구 경과 시간·반짝임·흐림 — 그릴 때마다 지금 시각으로 계산하고, 친구가 있으면 1초마다 다시 그린다
   // (시각을 상태로 들고 있으면 처음 그린 시각에 멈춘 채 시작해 '12초 전'이 '8초 전'으로 나왔다 — 11-05 시험에서 발견)
   const [, setTick] = useState(0);
@@ -504,7 +509,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
 
   const me = data.shot;
   const myY = me?.y ?? 0;
-  const plan = plans.find((p) => p.id === planId && p.map === slug) ?? null;
+  const plan = PLAN_ON ? plans.find((p) => p.id === planId && p.map === slug) ?? null : null;
   const hereGroup = me && data.map_source === "log" ? nearestGroup(doc?.spawn_groups, me.x, me.z) : null;
   // 레이드가 바뀌면 지난 지점을 비우고, 그 레이드의 첫 위치가 스폰 무리 근처면 거기 붙여 둔 계획을 띄운다
   const raidKey = `${slug ?? ""}|${data.raid_ts ?? ""}`;
@@ -1082,14 +1087,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {raidLeft != null && !mini && <div className="radar-raidleft" title={t.radarRaidLeftHint}>⏱ {Math.max(1, Math.round(raidLeft / 60))}{t.radarMinShort}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
       </div>
-      {!mini && doc && slug && (
+      {!mini && ((doc && slug) || extraTools) && (
         <div className="radar-xtools">
+          {doc && slug && (<>
           <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
-          <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>
+          {PLAN_ON && <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>}
           <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} title={t.radarLabelHint} data-tool="label">{t.radarLabelShort}</button>
           {onSize && (
             <button type="button" className={sizeEdit ? "on" : undefined} aria-pressed={sizeEdit} onClick={() => { if (!sizeEdit) stat("msz"); setSizeEdit((o) => !o); }} title={t.radarMapSizeHint} data-tool="size">{t.radarMapSize}</button>
           )}
+          </>)}
+          {extraTools}
         </div>
       )}
       {!mini && <div className="radar-layers">
@@ -1168,13 +1176,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           bosses={doc.bosses ?? []}
           mines={doc.hazards.filter((h) => h.type === "minefield").length}
           snipers={doc.hazards.filter((h) => h.type === "sniper").length}
-          plans={plans.filter((p) => p.map === slug)}
+          plans={PLAN_ON ? plans.filter((p) => p.map === slug) : []}
           planId={plan?.id ?? null}
           planKeys={planKeys}
           onPickPlan={(id) => setPlanId(id)}
+          showPlans={PLAN_ON}
         />
       )}
-      {planOpen && !mini && slug && (
+      {PLAN_ON && planOpen && !mini && slug && (
         <PlanPanel
           t={t}
           plans={plans.filter((p) => p.map === slug)}

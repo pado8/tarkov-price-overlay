@@ -1949,9 +1949,11 @@ html, body, #root {
 .radar-sw.loot { background: #ffd54f; }
 .radar-sw.trail { background: #9be564; }
 .radar-sw.names { background: #e8e2d0; }
-.radar-xtools { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
-.radar-xtools button { background: rgba(255, 255, 255, 0.06); color: var(--text-primary); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 6px; padding: 2px 9px; font-size: 12px; cursor: pointer; white-space: nowrap; }
-.radar-xtools button.on { border-color: var(--gold-light); color: var(--gold-light); }
+/* 11-18 지도 아래 도구 줄 — 지도 관련 버튼(레이드 준비·내 라벨·지도 크기·파티·미니맵 모드)을 한 줄에, 모두 파티 버튼 모양으로 */
+.radar-xtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 2px; }
+.radar-xtools button { align-self: center; font-size: var(--card-fs-xs); padding: 3px 9px; background: rgba(0, 0, 0, 0.35); color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 4px; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.radar-xtools button:hover { border-color: var(--gold-bright); color: var(--gold-bright); }
+.radar-xtools button.on { border-color: var(--gold-bright); color: var(--gold-bright); }
 .setup-check { margin: 6px 0; font-size: 12px; }
 .setup-check ul { list-style: none; margin: 6px 0 0; padding: 0; }
 .setup-check li { margin: 4px 0; }
