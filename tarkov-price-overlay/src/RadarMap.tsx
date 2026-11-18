@@ -76,8 +76,8 @@ export type MapDoc = {
   switches: Pt[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; loot: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
-export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, loot: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -944,7 +944,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               </g>
             )}
             {plan && plan.stops.length > 0 && <PlanOverlay plan={plan} done={planDone} me={planMe} exit={planEx} warns={planWarn} toScreen={toScreen} />}
-            {LOOT_ON && layers.loot &&
+            {LOOT_ON &&
               lootInDrawOrder(doc.loot ?? []).map((x, i) => {
                 if (!lootG[x[3]]) return null;
                 const size = lootBadgeSize(v?.s ?? 1); // 멀리서 보면 점, 가까이 볼수록 큰 아이콘
@@ -1142,16 +1142,15 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {layers.locks && myKeys.length > 0 && chip(myKeysOnly, "mykeys", t.radarMyKeysOnly.replace("{n}", String(myKeys.length)), () => setMyKeysOnly((o) => !o))}
         {trailMemo.pts.length > 1 && chip(layers.trail, "trail", t.radarLayerTrail, () => onToggleLayer("trail"))}
         {((doc?.zones?.length ?? 0) > 0 || (slug && (myLabels[slug]?.length ?? 0) > 0)) && chip(layers.names, "names", t.radarLayerNames, () => onToggleLayer("names"))}
-        {LOOT_ON && (doc?.loot?.length ?? 0) > 0 && chip(layers.loot, "loot", t.radarLayerLoot, () => { if (!layers.loot) stat("lto"); onToggleLayer("loot"); })}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>}
-      {LOOT_ON && !mini && layers.loot && (doc?.loot?.length ?? 0) > 0 && (
+      {LOOT_ON && !mini && (doc?.loot?.length ?? 0) > 0 && (
         <div className="radar-layers radar-lootrow">
           {LOOT_ORDER.map((g) => {
             const n = doc!.loot!.reduce((a, x) => a + (x[3] === g ? 1 : 0), 0);
             if (!n) return null;
             return (
-              <button key={g} type="button" className={`radar-chip${lootG[g] ? " on" : ""}`} aria-pressed={!!lootG[g]} onClick={() => toggleLoot(g)} data-chip={`loot-${g}`}>
+              <button key={g} type="button" className={`radar-chip${lootG[g] ? " on" : ""}`} aria-pressed={!!lootG[g]} onClick={() => { stat("lto"); toggleLoot(g); }} data-chip={`loot-${g}`}>
                 <LootChipIcon g={g} /> {lootName(g, t)} {n}
               </button>
             );
