@@ -16,7 +16,9 @@ test("엔진의 상자 종류 전부에 전용 아이콘이 있다", () => {
 });
 
 test("묶음 대표 아이콘과 모르는 종류", () => {
-  for (const g of "wtmvcbd") assert.ok(icons.LOOT_ICON_PATH[icons.LOOT_GROUP_ICON[g]], g);
+  const groups = new Set([...table.matchAll(/"[a-z-]+": "([a-z])"/g)].map((m) => m[1]));
+  assert.equal(groups.size, 10);
+  for (const g of groups) assert.ok(icons.LOOT_ICON_PATH[icons.LOOT_GROUP_ICON[g]], g);
   assert.equal(icons.lootIconOf("safe", "b"), "safe");
   assert.equal(icons.lootIconOf("새 상자", "m"), "medbag");
   assert.equal(icons.lootIconOf(undefined, "없는 묶음"), "crate");

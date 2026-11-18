@@ -355,6 +355,7 @@ _orig_doc = r._doc
 r._doc = lambda path: {"lootContainers": {"c1": {"normalizedName": "safe", "name": "c1 Name"}, "c2": {"normalizedName": "drawer", "name": "c2 Name"}}} if path == "regular/maps" else {}
 _ld = r.compact_map_features({"normalizedName": "x", "lootContainers": [{"position": {"x": 1, "y": 0, "z": 1}, "lootContainer": "c1"}, {"position": {"x": 2, "y": 0, "z": 2}, "lootContainer": "zz"}]}, {})
 eq("상자: 묶음·종류 칸", [c[3:] for c in _ld["loot"]], [["v", "safe"], ["b", ""]])
+eq("상자: 돈·귀중품을 나눈 묶음", [r.loot_group(k) for k in ("cash-register", "jacket", "plastic-suitcase", "drawer")], ["v", "j", "s", "f"])
 r.annotate_loot(_ld, {"c1 Name": "금고", "c2 Name": "서랍"}, {})
 eq("상자: 이 맵에 나온 종류만 이름표", _ld["loot_names"], {"safe": "금고"})
 r._doc = _orig_doc

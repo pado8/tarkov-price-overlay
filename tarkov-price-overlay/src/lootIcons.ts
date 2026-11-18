@@ -37,7 +37,7 @@ export const LOOT_KIND_ICON: Record<string, string> = {
 };
 
 // 묶음 버튼과, 종류를 모르는 상자에 쓰는 대표 아이콘
-export const LOOT_GROUP_ICON: Record<string, string> = { w: "weapon", t: "tool", m: "medbag", v: "safe", c: "cache", b: "duffle", d: "body" };
+export const LOOT_GROUP_ICON: Record<string, string> = { w: "weapon", t: "tool", m: "medbag", v: "safe", j: "jacket", s: "suitcase", f: "drawer", c: "cache", b: "duffle", d: "body" };
 
 export const lootIconOf = (kind: string | undefined, group: string): string =>
   (kind && LOOT_KIND_ICON[kind]) || LOOT_GROUP_ICON[group] || "crate";
@@ -46,7 +46,7 @@ export const lootIconOf = (kind: string | undefined, group: string): string =>
 export const lootBadgeSize = (s: number): number => (s < 0.5 ? 0 : s < 1.2 ? 11 : s < 2.5 ? 15 : 19);
 
 // 겹칠 때 값진 묶음이 위로 오게 그리는 순서(뒤에 그린 것이 위)
-const DRAW_RANK: Record<string, number> = { d: 0, b: 1, t: 2, m: 3, c: 4, w: 5, v: 6 };
+const DRAW_RANK: Record<string, number> = { d: 0, b: 1, f: 2, t: 3, m: 4, s: 5, j: 6, c: 7, w: 8, v: 9 };
 const drawOrder = new WeakMap<LootRow[], LootRow[]>();
 export function lootInDrawOrder(rows: LootRow[]): LootRow[] {
   let sorted = drawOrder.get(rows);

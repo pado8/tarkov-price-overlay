@@ -980,13 +980,14 @@ def _cluster_pts(pts: list, th: float) -> list:
 
 
 # 루팅 상자 종류 → 묶음 한 글자(11-13 지도 기능 계획 4단계, 지도 '루팅 상자' 층의 묶음 필터).
-#   w 무기·탄 · t 기술·공구 · m 의료 · v 돈·귀중품 · c 은닉처 · b 가방·상자 · d 시체. 모르는 종류는 b.
+#   w 무기·탄 · t 기술·공구 · m 의료 · v 금고·현금 · j 재킷 · s 캐리어 · f 서랍 · c 은닉처 · b 가방·상자 · d 시체. 모르는 종류는 b.
 # 바닥 아이템(lootLoose)은 뿌리가 SPT 서버 자료라 지도에 내지 않는다(11-13 사용자 결정).
 LOOT_GROUPS: dict = {
     "weapon-box": "w", "grenade-box": "w", "wooden-ammo-box": "w",
     "toolbox": "t", "technical-supply-crate": "t", "pc-block": "t",
     "medbag": "m", "medcase": "m", "medical-supply-crate": "m",
-    "safe": "v", "cash-register": "v", "drawer": "v", "jacket": "v", "plastic-suitcase": "v", "bank-safe": "v", "bank-cash-register": "v",
+    "safe": "v", "cash-register": "v", "bank-safe": "v", "bank-cash-register": "v",
+    "jacket": "j", "plastic-suitcase": "s", "drawer": "f",
     "buried-barrel-cache": "c", "ground-cache": "c", "shturmans-stash": "c",
     "duffle-bag": "b", "wooden-crate": "b", "ration-supply-crate": "b",
     "dead-scav": "d", "pmc-body": "d", "civilian-body": "d", "scav-body": "d", "lab-technician-body": "d",

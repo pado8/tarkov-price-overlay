@@ -68,7 +68,7 @@ export type MapDoc = {
   zones?: { name: string; p: Pt }[]; // 구역 이름표
   raid_min?: number | null; // 이 맵 레이드 길이(분)
   spawn_groups?: SpawnGroup[]; // 플레이어 스폰 무리(루팅 계획을 붙이는 단위)
-  loot?: LootRow[]; // 루팅 상자: 묶음(w 무기·탄 t 기술 m 의료 v 귀중품 c 은닉처 b 가방·상자 d 시체) + 종류
+  loot?: LootRow[]; // 루팅 상자: 묶음(w 무기·탄 t 기술 m 의료 v 금고·현금 j 재킷 s 캐리어 f 서랍 c 은닉처 b 가방·상자 d 시체) + 종류
   loot_names?: Record<string, string>; // 상자 종류 → 지금 언어의 이름
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
   bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
@@ -200,9 +200,9 @@ type MyLabel = { p: [number, number]; text: string };
 export const MY_KEYS_KEY = "tarkov.radar.myKeys"; // 내가 가진 열쇠(아이템 id 목록) — 잠긴 문 층의 '내 열쇠만'·계획의 필요한 열쇠 표시
 const lockLootText = (l: Record<string, number> | undefined, t: Strings): string =>
   l ? LOOT_ORDER.filter((g) => l[g]).map((g) => `${lootName(g, t)} ${l[g]}`).join(", ") : ""; // 마지막으로 띄운 루팅 계획 id
-export const LOOT_ORDER = ["w", "t", "m", "v", "c", "b", "d"] as const;
-export const LOOT_COLOR: Record<string, string> = { w: "#ff8a65", t: "#4fc3f7", m: "#81c784", v: "#ffd54f", c: "#b39ddb", b: "#bcaaa4", d: "#90a4ae" };
-const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, c: true, b: false, d: false }; // 흔한 가방·상자·시체는 기본 끔(시내 1,282개)
+export const LOOT_ORDER = ["w", "t", "m", "v", "j", "s", "f", "c", "b", "d"] as const;
+export const LOOT_COLOR: Record<string, string> = { w: "#ff8a65", t: "#4fc3f7", m: "#81c784", v: "#ffd54f", j: "#f48fb1", s: "#4db6ac", f: "#d4e157", c: "#b39ddb", b: "#bcaaa4", d: "#90a4ae" };
+const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, j: true, s: true, f: false, c: true, b: false, d: false }; // 흔한 서랍·가방·상자·시체는 기본 끔(시내 1,282개)
 const lootName = (g: string, t: Strings): string => t[`radarLoot_${g}`] ?? t.radarLayerLoot;
 const LOOT_INK = "#11151b"; // 아이콘 안 그림 색(묶음 색이 모두 밝다)
 const LootChipIcon = ({ g }: { g: string }) => (
@@ -357,7 +357,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const slug = data.map?.id ?? null;
   const { doc, err } = useMapDoc(slug, lang);
   const [showImg, setShowImg] = useState<boolean>(() => localStorage.getItem(IMG_KEY) !== "0");
-  const [lootG, setLootG] = useState<Record<string, boolean>>(() => loadJson(LOOT_KEY, LOOT_DEFAULT));
+  const [lootG, setLootG] = useState<Record<string, boolean>>(() => ({ ...LOOT_DEFAULT, ...loadJson(LOOT_KEY, LOOT_DEFAULT) })); // 새로 생긴 묶음은 기본값으로
   // 루팅 계획(11-13): 이 PC 에만 저장. planId = 지금 띄운 계획, planDone = 이번 레이드에 지난 지점
   const [plans, setPlans] = useState<LootPlan[]>(loadPlans);
   const [planOpen, setPlanOpen] = useState(false);
