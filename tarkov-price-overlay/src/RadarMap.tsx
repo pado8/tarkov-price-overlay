@@ -113,6 +113,9 @@ const PLAN_ON = false;
 // 11-18 내 라벨(지도에 내가 다는 이름표)도 1.3.3 에서 뺀다(사용자 결정) — 버튼을 숨기고 저장된 라벨을 읽지 않는다(지우지는 않음).
 // 구역 이름표(한·영·러)는 그대로. 다음 업데이트에서 true 로 바꾸면 돌아온다.
 const LABEL_ON = false;
+// 11-18 루팅 상자 층과 잠긴 문의 '문 근처 상자' 수를 뺀다(사용자 결정) — 층 버튼·묶음 줄·지도 위 점·문 이름의 상자 수·문 흰 테두리를 숨긴다.
+// 열쇠 이름은 그대로. 이 PC 에 저장된 묶음 선택은 지우지 않는다.
+const LOOT_ON = false;
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -930,7 +933,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               </g>
             )}
             {plan && plan.stops.length > 0 && <PlanOverlay plan={plan} done={planDone} me={planMe} exit={planEx} warns={planWarn} toScreen={toScreen} />}
-            {layers.loot &&
+            {LOOT_ON && layers.loot &&
               (doc.loot ?? []).map((x, i) => {
                 if (!lootG[x[3]]) return null;
                 const lootR = v && v.s < 0.5 ? 1.5 : 2.6; // 멀리서 보면 작게(1m 가 0.5px 보다 작을 때)
@@ -947,13 +950,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 const own = !!x.key && myKeys.includes(x.key);
                 if (myKeysOnly && !own) return null;
                 const s = toScreen(x.p[0], x.p[2]);
-                const lootTxt = lockLootText(x.loot, t);
+                const lootTxt = LOOT_ON ? lockLootText(x.loot, t) : "";
+                const nearLoot = LOOT_ON && !!x.loot;
                 // 이름: 잠긴 문 · 열쇠 이름 · 문 근처 상자(10m 안 어림)
                 const nm = `${t.radarLayerLocks}${x.type && x.type !== "door" ? " · " + x.type : ""}${x.kn ? ` · 🔑 ${x.kn}` : ""}${lootTxt ? ` · ${t.radarLockLoot}: ${lootTxt}` : ""}`;
                 return (
                   <g key={`lk${i}`} onClick={() => pick({ name: nm, p: x.p, keyId: x.key ?? undefined })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                     <circle cx={s.x} cy={s.y} r={8} fill="transparent" />
-                    <rect x={s.x - 3} y={s.y - 3} width={6} height={6} fill={own ? "#7dff9a" : "#c08cff"} stroke={x.loot ? "#fff" : "#000"} strokeWidth={x.loot ? 1 : 0.7} transform={`rotate(45 ${s.x} ${s.y})`} />
+                    <rect x={s.x - 3} y={s.y - 3} width={6} height={6} fill={own ? "#7dff9a" : "#c08cff"} stroke={nearLoot ? "#fff" : "#000"} strokeWidth={nearLoot ? 1 : 0.7} transform={`rotate(45 ${s.x} ${s.y})`} />
                   </g>
                 );
               })}
@@ -1116,10 +1120,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {layers.locks && myKeys.length > 0 && chip(myKeysOnly, "mykeys", t.radarMyKeysOnly.replace("{n}", String(myKeys.length)), () => setMyKeysOnly((o) => !o))}
         {trailMemo.pts.length > 1 && chip(layers.trail, "trail", t.radarLayerTrail, () => onToggleLayer("trail"))}
         {((doc?.zones?.length ?? 0) > 0 || (slug && (myLabels[slug]?.length ?? 0) > 0)) && chip(layers.names, "names", t.radarLayerNames, () => onToggleLayer("names"))}
-        {(doc?.loot?.length ?? 0) > 0 && chip(layers.loot, "loot", t.radarLayerLoot, () => { if (!layers.loot) stat("lto"); onToggleLayer("loot"); })}
+        {LOOT_ON && (doc?.loot?.length ?? 0) > 0 && chip(layers.loot, "loot", t.radarLayerLoot, () => { if (!layers.loot) stat("lto"); onToggleLayer("loot"); })}
         {doc?.img && chip(showImg, "img", t.radarLayerImg, toggleImg)}
       </div>}
-      {!mini && layers.loot && (doc?.loot?.length ?? 0) > 0 && (
+      {LOOT_ON && !mini && layers.loot && (doc?.loot?.length ?? 0) > 0 && (
         <div className="radar-layers radar-lootrow">
           {LOOT_ORDER.map((g) => {
             const n = doc!.loot!.reduce((a, x) => a + (x[3] === g ? 1 : 0), 0);
