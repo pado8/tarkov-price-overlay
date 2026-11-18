@@ -202,7 +202,7 @@ const lockLootText = (l: Record<string, number> | undefined, t: Strings): string
   l ? LOOT_ORDER.filter((g) => l[g]).map((g) => `${lootName(g, t)} ${l[g]}`).join(", ") : ""; // 마지막으로 띄운 루팅 계획 id
 export const LOOT_ORDER = ["w", "t", "m", "v", "j", "s", "f", "c", "b", "d"] as const;
 export const LOOT_COLOR: Record<string, string> = { w: "#ff8a65", t: "#4fc3f7", m: "#81c784", v: "#ffd54f", j: "#f48fb1", s: "#4db6ac", f: "#d4e157", c: "#b39ddb", b: "#bcaaa4", d: "#90a4ae" };
-const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, j: true, s: true, f: false, c: true, b: false, d: false }; // 흔한 서랍·가방·상자·시체는 기본 끔(시내 1,282개)
+const LOOT_DEFAULT: Record<string, boolean> = { w: true, t: true, m: true, v: true, j: true, s: true, f: true, c: true, b: true, d: true }; // 처음엔 전부 켬, 사용자가 고른 것은 LOOT_KEY 에 저장
 const lootName = (g: string, t: Strings): string => t[`radarLoot_${g}`] ?? t.radarLayerLoot;
 const LOOT_INK = "#11151b"; // 아이콘 안 그림 색(묶음 색이 모두 밝다)
 const LootChipIcon = ({ g }: { g: string }) => (
