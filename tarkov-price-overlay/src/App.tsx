@@ -20,7 +20,7 @@ import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetc
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
 import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, type HelpMode } from "./captureHelp";
-import { loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
+import { fitWideRect, loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
 import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
@@ -1991,6 +1991,14 @@ function App() {
     } catch {}
   };
   const [wideMode, setWideMode] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
+  // 11-18 나란히 보기를 켜고 끌 때(앱을 나란히로 시작할 때 포함) 창 크기가 바뀔 때까지 내용을 감춘다 — 감추지 않으면 창이 아직
+  // 작은 카드 크기(세로가 더 김)일 때 한 프레임이 '세로 모니터용 위아래 배치'로 그려졌다가 바뀌어 번쩍였다(사용자 지적·감시 기록).
+  const [wideSettling, setWideSettling] = useState<boolean>(() => localStorage.getItem(WIDE_KEY) === "1");
+  useEffect(() => {
+    if (!wideSettling) return;
+    const t = window.setTimeout(() => setWideSettling(false), 2500); // 안전장치: 어떤 경로로든 감춤이 남지 않게
+    return () => window.clearTimeout(t);
+  }, [wideSettling]);
   const [wideMapSide, setWideMapSide] = useState<WideMapSide>(() => loadWideMapSide(localStorage));
   const wideModeRef = useRef(wideMode);
   wideModeRef.current = wideMode;
@@ -3148,6 +3156,28 @@ function App() {
   useEffect(() => {
     const win = getCurrentWindow();
     let dead = false;
+    const before = [window.innerWidth, window.innerHeight];
+    // 창 크기가 실제로 바뀐 뒤(크기 변경 이벤트 — 안 오면 0.6초) 두 프레임 더 기다려 배치 계산이 끝나면 보인다
+    const settle = async () => {
+      await new Promise<void>((resolve) => {
+        let done = false;
+        const fin = () => {
+          if (done) return;
+          done = true;
+          window.clearTimeout(timer);
+          window.removeEventListener("resize", onResize);
+          resolve();
+        };
+        const onResize = () => {
+          if (window.innerWidth !== before[0] || window.innerHeight !== before[1]) fin();
+        };
+        const timer = window.setTimeout(fin, 600);
+        window.addEventListener("resize", onResize);
+        onResize();
+      });
+      await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+      if (!dead) setWideSettling(false);
+    };
     (async () => {
       try {
         if (wideMode) {
@@ -3194,6 +3224,7 @@ function App() {
             log(`wide: on (monitor ${mon?.name ?? "?"} ${mon?.size.width}x${mon?.size.height})`);
           }
           void loadRadar();
+          await settle();
         } else {
           const raw = localStorage.getItem(WIDE_PREV_POS_KEY);
           localStorage.removeItem(WIDE_PREV_POS_KEY);
@@ -3207,9 +3238,11 @@ function App() {
             if (Number.isFinite(x) && Number.isFinite(y)) await win.setPosition(new PhysicalPosition(x, y));
           }
           log("wide: off");
+          await settle();
         }
       } catch (e) {
         log(`wide: failed ${e instanceof Error ? e.message : String(e)}`);
+        if (!dead) setWideSettling(false);
       }
     })();
     return () => {
@@ -3227,16 +3260,15 @@ function App() {
       const r = JSON.parse(localStorage.getItem(WIDE_RECT_KEY) || "null");
       if (!r || ![r.x, r.y, r.w, r.h].every(Number.isFinite) || r.w < 200 || r.h < 150) return null;
       const mons = await availableMonitors();
-      const m = mons.find((m) => r.x >= m.position.x && r.x < m.position.x + m.size.width && r.y >= m.position.y && r.y < m.position.y + m.size.height);
-      if (!m) return null;
-      // 그 모니터의 작업 영역(작업표시줄 제외) 안으로 맞춘다 — 창을 모니터 끝 너머로 끌어 저장하면(11-05 실측: 1920 모니터에 폭 1951)
-      // 오른쪽 아래 크기 손잡이가 화면 밖으로 나가 다시 줄일 방법이 없었다
-      const wa = m.workArea ?? { position: m.position, size: m.size };
-      const ax = wa.position.x, ay = wa.position.y, aw = wa.size.width, ah = wa.size.height;
-      const x = Math.max(ax, Math.min(r.x, ax + aw - 200));
-      const y = Math.max(ay, Math.min(r.y, ay + ah - 150));
-      const w = Math.max(200, Math.min(r.w, ax + aw - x));
-      const h = Math.max(150, Math.min(r.h, ay + ah - y));
+      // 모니터 작업 영역(작업표시줄 제외) 안으로 맞춘다 — 창을 모니터 끝 너머로 끌어 저장하면(11-05 실측: 1920 모니터에 폭 1951)
+      // 오른쪽 아래 크기 손잡이가 화면 밖으로 나가 다시 줄일 방법이 없었다. 기준 모니터·맞추는 법은 fitWideRect(11-18)
+      const areas = mons.map((m) => {
+        const wa = m.workArea ?? { position: m.position, size: m.size };
+        return { x: wa.position.x, y: wa.position.y, w: wa.size.width, h: wa.size.height };
+      });
+      const fit = fitWideRect(r, areas);
+      if (!fit) return null;
+      const { x, y, w, h } = fit;
       if (x !== r.x || y !== r.y || w !== r.w || h !== r.h) {
         log(`wide: saved rect ${r.w}x${r.h} @ ${r.x},${r.y} → clamped ${w}x${h} @ ${x},${y}`);
         localStorage.setItem(WIDE_RECT_KEY, JSON.stringify({ x, y, w, h }));
@@ -3332,6 +3364,7 @@ function App() {
     return () => ro.disconnect();
   }, [wideMode]);
   const toggleWide = () => {
+    setWideSettling(true);
     setWideMode((v) => {
       try {
         localStorage.setItem(WIDE_KEY, v ? "0" : "1");
@@ -5227,7 +5260,7 @@ function App() {
   const cardW = miniOn ? `${miniSize}px` : `${Math.min(CARD_W_MAX, Math.max(cardWidth ?? Math.round((280 * region.fontSize) / FONT_DEFAULT), radarActive && !showSettings ? (radarWidth > 0 ? radarWidth : radarSize) + 30 : 0, showSettings ? 360 : 0))}px`;
   const stacked = wideMode && wideStacked(wideMapSide, portrait);
   return (
-    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${stacked ? " stack" : ""}${stacked && wideMapOnTop(wideMapSide) ? " map-top" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}`}
+    <div className={`overlay${wideMode ? " wide" : ""}${wideMode && wideMapSide === "left" ? " map-left" : ""}${stacked ? " stack" : ""}${stacked && wideMapOnTop(wideMapSide) ? " map-top" : ""}${wideMode && portrait ? " portrait" : ""}${pipActive ? " pip" : ""}${dodging ? " dodge" : ""}${wideSettling ? " settling" : ""}`}
       // 세로 창 + 지도 위(피드백 #62): 카드를 대상 목록 띠 왼쪽에 놓는 데 쓰는 값(App.css .map-top.portrait)
       style={wideMode ? ({ ["--wide-card-w" as string]: cardW, ["--side-h" as string]: sideH ? `${sideH}px` : undefined } as React.CSSProperties) : undefined}
     >

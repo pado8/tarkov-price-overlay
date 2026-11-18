@@ -2017,6 +2017,8 @@ html, body, #root {
 /* 11-18 가로 배치: 지도 패널은 남는 폭만 쓰고(내용 폭 기준이면 지도 가로를 바꿀 때 패널이 시세 카드를 밀어 22px 씩 떨렸다 — 실측),
    시세 카드는 줄어들지 않는다. 위아래 배치(.stack)는 이미 1 1 0 */
 .overlay.wide:not(.stack) .wide-pane { flex: 1 1 0; }
+/* 11-18 나란히 보기를 켜고 끄는 동안(창 크기가 바뀔 때까지) 내용을 감춘다 — 작은 창에서 잘못된 배치가 한 프레임 번쩍이던 것 */
+.overlay.settling { visibility: hidden; }
 .overlay.wide:not(.stack) > .card:not(.wide-pane) { flex-shrink: 0; }
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
