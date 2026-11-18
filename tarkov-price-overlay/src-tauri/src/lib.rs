@@ -97,6 +97,68 @@ fn apply_click_through(window: &tauri::WebviewWindow, ignore: bool) -> bool {
     true
 }
 
+/// 11-18 커서가 지금 작업 표시줄(보조 모니터·미리보기 창 포함) 위에 있는가. 숨겨진 카드를 작업 표시줄 클릭으로 다시 띄울 때,
+/// 다른 창이 닫히면서 Windows 가 오버레이에 포커스를 넘겨 준 경우와 구별한다.
+#[tauri::command]
+fn cursor_on_taskbar() -> bool {
+    #[cfg(windows)]
+    unsafe {
+        #[repr(C)]
+        #[derive(Clone, Copy)]
+        struct Point {
+            x: i32,
+            y: i32,
+        }
+        #[link(name = "user32")]
+        extern "system" {
+            fn GetCursorPos(point: *mut Point) -> i32;
+            fn WindowFromPoint(point: Point) -> isize;
+            fn GetAncestor(hwnd: isize, flags: u32) -> isize;
+            fn GetClassNameW(hwnd: isize, name: *mut u16, max: i32) -> i32;
+        }
+        const GA_ROOT: u32 = 2;
+        let mut point = Point { x: 0, y: 0 };
+        if GetCursorPos(&mut point) == 0 {
+            return false;
+        }
+        let root = GetAncestor(WindowFromPoint(point), GA_ROOT);
+        if root == 0 {
+            return false;
+        }
+        let mut buf = [0u16; 64];
+        let n = GetClassNameW(root, buf.as_mut_ptr(), buf.len() as i32);
+        let class = String::from_utf16_lossy(&buf[..n.max(0) as usize]);
+        matches!(
+            class.as_str(),
+            "Shell_TrayWnd" | "Shell_SecondaryTrayWnd" | "TaskListThumbnailWnd" | "XamlExplorerHostIslandWindow"
+        )
+    }
+    #[cfg(not(windows))]
+    false
+}
+
+/// 11-18 지금 앞 창이 이 앱의 창인가. 작업표시줄 미리보기를 누르면 포커스 신호가 오지 않을 때가 있어 앞 창이 바뀌는 순간을 직접 본다.
+#[tauri::command]
+fn overlay_foreground() -> bool {
+    #[cfg(windows)]
+    unsafe {
+        #[link(name = "user32")]
+        extern "system" {
+            fn GetForegroundWindow() -> isize;
+            fn GetWindowThreadProcessId(hwnd: isize, pid: *mut u32) -> u32;
+        }
+        #[link(name = "kernel32")]
+        extern "system" {
+            fn GetCurrentProcessId() -> u32;
+        }
+        let mut pid: u32 = 0;
+        GetWindowThreadProcessId(GetForegroundWindow(), &mut pid);
+        pid == GetCurrentProcessId()
+    }
+    #[cfg(not(windows))]
+    false
+}
+
 /// 진단 기록용(11-06): 지금 앞 창이 게임인가·오버레이인가·그 밖인가. 다른 프로그램 이름은 돌려주지 않는다(개인정보).
 #[tauri::command]
 fn get_foreground_kind() -> String {
@@ -805,6 +867,31 @@ fn hide_to_tray(app: tauri::AppHandle) {
         }
     }
     notify_minimized_to_tray(&app);
+}
+
+/// 11-18 '작업표시줄에 표시'가 켜져 있을 때의 창 내리기 — 카드만 숨기고 작업표시줄 버튼은 남긴다(누르면 카드가 다시 뜬다).
+/// 창을 잠깐 최소화했다가 활성화 없이 되돌려 키보드 포커스를 아래 창(게임)에 돌려준다.
+#[tauri::command]
+fn hide_to_taskbar(app: tauri::AppHandle) {
+    for label in ["preview-primary", "preview-ground", "preview-anchor", "minimap"] {
+        if let Some(w) = app.get_webview_window(label) {
+            hide_window_hard(&w);
+        }
+    }
+    if let Some(window) = app.get_webview_window("main") {
+        #[cfg(windows)]
+        if let Ok(hwnd) = window.hwnd() {
+            #[link(name = "user32")]
+            extern "system" {
+                fn ShowWindow(hwnd: isize, n_cmd_show: i32) -> i32;
+            }
+            const SW_MINIMIZE: i32 = 6;
+            unsafe {
+                ShowWindow(hwnd.0 as isize, SW_MINIMIZE);
+            }
+        }
+        reveal_overlay_no_activate(&window);
+    }
 }
 
 /// Show + position a preview-rect window (preview-primary / preview-ground).
@@ -1638,6 +1725,9 @@ pub fn run() {
             set_click_through,
             set_show_in_taskbar,
             get_foreground_kind,
+            cursor_on_taskbar,
+            overlay_foreground,
+            hide_to_taskbar,
             log_msg,
             register_lookup_hotkey,
             register_toggle_hotkey,

@@ -3447,7 +3447,46 @@ function App() {
   }, [cardVisible]);
   useEffect(() => {
     const win = getCurrentWindow();
-    const unFocus = win.onFocusChanged(({ payload }) => diag(payload ? "focus:on" : "focus:off"));
+    // 11-18 숨겨진 카드를 작업 표시줄 클릭으로 다시 띄운다. 창이 앞에 있었으면 클릭이 최소화로 들어오므로 그 경우도 본다.
+    // 커서 위치까지 확인한다 — 다른 창이 닫힐 때 Windows 가 넘겨 준 포커스로 카드가 튀어나오면 안 된다.
+    // 미리보기 창은 누르는 순간 닫혀 포커스가 올 때 커서 아래에 없다 — 숨겨진 동안 커서가 작업 표시줄 쪽에 있던 시각을 기억해 둔다.
+    // 미리보기를 누를 때는 포커스 신호가 안 올 때도 있어 이 앱이 앞 창이 되는 순간도 함께 본다.
+    let onTaskbarAt = 0;
+    let wasForeground: boolean | null = null;
+    const taskbarIv = IS_MAIN_WINDOW
+      ? window.setInterval(() => {
+          if (cardVisibleRef.current) {
+            wasForeground = null;
+            return;
+          }
+          Promise.all([invoke<boolean>("cursor_on_taskbar"), invoke<boolean>("overlay_foreground")])
+            .then(([on, fg]) => {
+              if (on) onTaskbarAt = Date.now();
+              const cameToFront = fg && wasForeground === false;
+              wasForeground = fg;
+              if (cameToFront) void revealFromTaskbar();
+            })
+            .catch(() => {});
+        }, 250)
+      : 0;
+    const revealFromTaskbar = async () => {
+      if (!IS_MAIN_WINDOW || cardVisibleRef.current) return;
+      const onTaskbar = await invoke<boolean>("cursor_on_taskbar").catch(() => false);
+      if (!onTaskbar && Date.now() - onTaskbarAt > 900) return;
+      log("taskbar: show card");
+      dailyAdd("tbc");
+      await invoke("show_overlay_passive").catch(() => {}); // 최소화됐으면 활성화 없이 되돌린다
+      showCard();
+      scheduleHideRef.current?.();
+    };
+    const unFocus = win.onFocusChanged(({ payload }) => {
+      diag(payload ? "focus:on" : "focus:off");
+      if (payload) void revealFromTaskbar();
+    });
+    const unMinimized = win.onResized(() => {
+      if (cardVisibleRef.current) return;
+      win.isMinimized().then((min) => { if (min) void revealFromTaskbar(); }).catch(() => {});
+    });
     let lastFg = "";
     const iv = window.setInterval(() => {
       invoke<string>("get_foreground_kind")
@@ -3462,7 +3501,9 @@ function App() {
     }, 700);
     return () => {
       window.clearInterval(iv);
+      window.clearInterval(taskbarIv);
       unFocus.then((f) => f()).catch(() => {});
+      unMinimized.then((f) => f()).catch(() => {});
     };
   }, []);
   // 11-09 사용 시간(하루 요약 up = 앱이 켜져 있던 분, gm = 그중 게임이 맨 앞이던 분) — 본 창만, 1분마다 1
@@ -5402,7 +5443,7 @@ function App() {
             ) : (
               <button
                 className="settings-btn"
-                aria-label={t.hideToTrayTitle}
+                aria-label={showInTaskbar ? t.hideToTaskbarTitle : t.hideToTrayTitle}
                 onClick={() => {
                   // Tear down React state before invoking the native hide so
                   // the preview-rect polling loop (which checks cardVisible
@@ -5414,9 +5455,15 @@ function App() {
                   setCardVisible(false);
                   setShowSettings(false);
                   setCaptureModalOpen(false);
-                  hideToTray();
+                  // 11-18 '작업표시줄에 표시'를 따른다 — 켜져 있으면 작업표시줄에 남기고, 꺼져 있으면 트레이로
+                  if (showInTaskbar) {
+                    dailyAdd("tbm");
+                    window.setTimeout(() => invoke("hide_to_taskbar").catch(() => {}), 180); // 카드가 투명해진 뒤에
+                  } else {
+                    hideToTray();
+                  }
                 }}
-                title={t.hideToTrayTitle}
+                title={showInTaskbar ? t.hideToTaskbarTitle : t.hideToTrayTitle}
                 data-tour="hide"
               >
                 {/* 창 내리기(트레이) — 빨간 ✕ 는 '종료'로 읽혀서 최소화 기호 + 다른 버튼과 같은 금색으로(11-02 사용자 요청) */}
