@@ -110,6 +110,9 @@ type Props = {
 // 11-18 루팅 계획은 1.3.3 에서 뺀다(사용자 결정) — 버튼·지도 위 경로·스폰 자동 표시·'계획에 추가'·레이드 준비의 계획 칸을 숨긴다.
 // 코드와 이 PC 에 저장된 계획은 그대로 — 다음 업데이트에서 true 로 바꾸면 돌아온다.
 const PLAN_ON = false;
+// 11-18 내 라벨(지도에 내가 다는 이름표)도 1.3.3 에서 뺀다(사용자 결정) — 버튼을 숨기고 저장된 라벨을 읽지 않는다(지우지는 않음).
+// 구역 이름표(한·영·러)는 그대로. 다음 업데이트에서 true 로 바꾸면 돌아온다.
+const LABEL_ON = false;
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -346,7 +349,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [planOpen, setPlanOpen] = useState(false);
   const [prepOpen, setPrepOpen] = useState(false);
   // 내 라벨(11-13): 🏷 를 켜고 지도를 누르면 그 자리에 이름을 단다. 이 PC 에만 저장
-  const [myLabels, setMyLabels] = useState<Record<string, MyLabel[]>>(() => loadJson<Record<string, MyLabel[]>>(MY_LABELS_KEY, {}));
+  const [myLabels, setMyLabels] = useState<Record<string, MyLabel[]>>(() => (LABEL_ON ? loadJson<Record<string, MyLabel[]>>(MY_LABELS_KEY, {}) : {}));
   const [labelMode, setLabelMode] = useState(false);
   const [sizeEdit, setSizeEdit] = useState(false); // 지도 크기 손잡이를 띄운 중
   // 손잡이 끌기: 시작 위치·크기를 기억하고, 움직이는 동안 화면 그리기마다 한 번만 적용한다
@@ -1092,7 +1095,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           {doc && slug && (<>
           <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
           {PLAN_ON && <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>}
-          <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} title={t.radarLabelHint} data-tool="label">{t.radarLabelShort}</button>
+          {LABEL_ON && <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} title={t.radarLabelHint} data-tool="label">{t.radarLabelShort}</button>}
           {onSize && (
             <button type="button" className={sizeEdit ? "on" : undefined} aria-pressed={sizeEdit} onClick={() => { if (!sizeEdit) stat("msz"); setSizeEdit((o) => !o); }} title={t.radarMapSizeHint} data-tool="size">{t.radarMapSize}</button>
           )}
