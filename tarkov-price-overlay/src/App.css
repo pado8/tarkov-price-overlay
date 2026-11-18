@@ -2014,6 +2014,10 @@ html, body, #root {
 
 /* Side-by-side mode keeps the card's saved width and gives the rest to the map. */
 .overlay.wide.map-left:not(.stack) { flex-direction: row-reverse; }
+/* 11-18 가로 배치: 지도 패널은 남는 폭만 쓰고(내용 폭 기준이면 지도 가로를 바꿀 때 패널이 시세 카드를 밀어 22px 씩 떨렸다 — 실측),
+   시세 카드는 줄어들지 않는다. 위아래 배치(.stack)는 이미 1 1 0 */
+.overlay.wide:not(.stack) .wide-pane { flex: 1 1 0; }
+.overlay.wide:not(.stack) > .card:not(.wide-pane) { flex-shrink: 0; }
 .wide-pane { flex: 1 1 auto; min-width: 0; height: calc(100vh - 24px); max-height: none; overflow: hidden; display: flex; flex-direction: column; }
 .wide-pane .radar { flex: 1; min-height: 0; }
 .wide-pane .radar-mapblock { flex: 1; min-height: 0; }
