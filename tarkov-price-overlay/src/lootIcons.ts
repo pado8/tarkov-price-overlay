@@ -18,7 +18,7 @@ export const LOOT_ICON_PATH: Record<string, string> = {
   suitcase: "M9 6V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V6h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM10.5 3.5V6h3V3.5zM8 9v10h1.5V9zM14.5 9v10H16V9z",
   barrel: "M7 2h10l1.5 3h-13zM5 6.5h14v4H5zM5 12h14v5.5H5zM5.5 19h13L17 22H7z",
   cache: "M5 4h14v10H5zM10 6v2h4V6zM2 16h20v2H2zM5 19.5h4V21H5zM11 19.5h4V21h-4zM17 19.5h3V21h-3z",
-  stash: "M12 2l3 6.6 7 .8-5.2 4.7 1.5 7L12 17.5 5.7 21l1.5-7L2 9.4l7-.8z",
+  stash: "M3 8h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM8 13h8v7H8zM12 15a1.3 1.3 0 0 0-.7 2.4V19h1.4v-1.6A1.3 1.3 0 0 0 12 15zM8.6 13V7a3.4 3.4 0 0 1 6.8 0v6h-1.8V7a1.6 1.6 0 0 0-3.2 0v6z",
   duffle: "M8 7a4 4 0 0 1 8 0h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3zM10 7h4a2 2 0 0 0-4 0zM6 10v7h1.5v-7zM16.5 10v7H18v-7z",
   crate: "M3 3h18v18H3zM5.5 5.5v1.6l11.4 11.4h1.6v-1.6L7.1 5.5z",
   ration: "M4 3h2v6h1.5V3h2v6H11V3h2v7a3.5 3.5 0 0 1-3 3.46V21H7v-7.54A3.5 3.5 0 0 1 4 10zM16 3c3 0 5 3 5 8v2h-2v8h-3z",
