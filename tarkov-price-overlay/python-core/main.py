@@ -1396,7 +1396,7 @@ def _foreground_window_mode(cursor_x: int, cursor_y: int) -> str | None:
 
 def _scan_for_tooltip(
     cursor_x: int, cursor_y: int, mon_h: int, lang: str, game_mode: str, corrections: dict[str, str],
-    rescue_pool: list[str], mag: float, client_seq: int | None,
+    rescue_pool: list[str], mag: float, client_seq: int | None, skip_box: tuple[int, int, int, int] | None = None,
 ) -> tuple[str, dict, dict[str, int | str]]:
     """11-19 상자가 전부 빗나갔을 때 커서 주변을 넓게 찍어 툴팁 패널을 직접 찾아 읽는다(UI 배율·해상도로 툴팁이 상자 밖에 뜬 경우).
     패널처럼 보여도 아이템 이름과 맞아야만 결과로 쓴다. 돌려주는 값: (읽은 글자, 시세, 응답의 scan)."""
@@ -1409,6 +1409,17 @@ def _scan_for_tooltip(
     panels = find_tooltips(wide, mon_h, (cursor_x - sx, cursor_y - sy))
     info: dict[str, int | str] = {"found": len(panels)}
     print(f"[scan] {len(panels)} tooltip panel(s) near cursor in {sw}x{sh}")
+    if skip_box:
+        # 이미 읽은 캡처 칸과 절반 넘게 겹치는 패널은 빼고 본다 — 그 칸이 읽은 게 바로 그 툴팁이다
+        bx, by, bw, bh = skip_box
+
+        def _inside(p: dict) -> float:
+            ix = max(0, min(sx + p["x"] + p["w"], bx + bw) - max(sx + p["x"], bx))
+            iy = max(0, min(sy + p["y"] + p["h"], by + bh) - max(sy + p["y"], by))
+            return ix * iy / float(p["w"] * p["h"])
+
+        panels = [p for p in panels if _inside(p) <= 0.5]
+        info["found"] = len(panels)
     for p in panels[:SCAN_MAX_PANELS]:
         if _lookup_superseded(client_seq):
             break
@@ -1626,6 +1637,26 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if price.get("name") is not None:
             attempt_used = label
             break
+
+    # 11-19 툴팁 우선(사용자 결정): 캡처 칸 안에 툴팁이 없다고 판정됐는데(waited_none) 칸이 무언가를 읽어 아이템을 찾았다면, 칸이
+    # 인벤토리 칸의 짧은 이름(Pevko·PACA 등)을 읽었을 수 있다(실기: Y 오프셋 200 에서 아래 칸 이름으로 검색). 커서 옆에 툴팁 패널이
+    # 따로 있으면 그걸 읽어 결과를 바꾼다. 판정이 툴팁을 본 조회(present·waited_ok)·판정을 끈 PC(off)·바닥·가운데 상자는 그대로.
+    if (price.get("name") is not None and tip_state == "waited_none" and attempt_used in ("primary", "mirror")
+            and mon_wh and can_clamp and not _lookup_superseded(req.client_seq)):
+        used = next((a[1:] for a in attempts if a[0] == attempt_used), None)
+        try:
+            alt_text, alt_price, alt_info = _scan_for_tooltip(
+                cursor_x, cursor_y, mon_wh[1], lang, game_mode, req.corrections, rescue_pool, ocr_mag, req.client_seq,
+                skip_box=used,
+            )
+        except Exception as e:  # noqa: BLE001 — 찾기가 실패하면 칸이 읽은 결과 그대로
+            print(f"[scan] prefer-tooltip check failed: {e}")
+            alt_price = {"name": None}
+        if alt_price.get("name") is not None:
+            print(f"[scan] box read {price.get('name')!r} from a grid cell - tooltip next to the cursor says {alt_price.get('name')!r}")
+            alt_info["over"] = 1  # 칸 글자 대신 툴팁으로 바꾼 조회(통계 sco)
+            scan_info = alt_info
+            return _tw(_build_response(alt_text, alt_price, game_mode, attempt="scan", lang=req.lang))
 
     # 11-19 공유 키 + 툴팁 판정 없음(shared_lite)은 가운데 상자가 빠져 위 반복에서 넓은 범위 찾기가 돌지 않았다 — 그런데 판정은
     # 캡처 상자 안만 보므로, 상자가 툴팁을 놓친 공유 키 사용자는 늘 여기로 와서 고칠 길이 없었다(실기: 이 PC F5 공유). 커서 주변에서
