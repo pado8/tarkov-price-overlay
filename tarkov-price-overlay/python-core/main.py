@@ -1640,8 +1640,9 @@ def lookup(req: CaptureRequest) -> LookupResponse:
 
     # 11-19 툴팁 우선(사용자 결정): 캡처 칸 안에 툴팁이 없다고 판정됐는데(waited_none) 칸이 무언가를 읽어 아이템을 찾았다면, 칸이
     # 인벤토리 칸의 짧은 이름(Pevko·PACA 등)을 읽었을 수 있다(실기: Y 오프셋 200 에서 아래 칸 이름으로 검색). 커서 옆에 툴팁 패널이
-    # 따로 있으면 그걸 읽어 결과를 바꾼다. 판정이 툴팁을 본 조회(present·waited_ok)·판정을 끈 PC(off)·바닥·가운데 상자는 그대로.
-    if (price.get("name") is not None and tip_state == "waited_none" and attempt_used in ("primary", "mirror")
+    # 따로 있으면 그걸 읽어 결과를 바꾼다. 판정이 툴팁을 본 조회(present·waited_ok)·바닥·가운데 상자는 그대로. 판정을 끈 PC(off)도
+    # 한다 — 실기: 판정이 꺼진 PC 에서 미러 칸이 장비 칸 글자 '칼집 MP-153'을 읽음(그런 PC 는 성공 조회마다 판정 30ms 정도 더).
+    if (price.get("name") is not None and tip_state in ("waited_none", "off") and attempt_used in ("primary", "mirror")
             and mon_wh and can_clamp and not _lookup_superseded(req.client_seq)):
         used = next((a[1:] for a in attempts if a[0] == attempt_used), None)
         try:
