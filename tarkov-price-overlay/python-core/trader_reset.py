@@ -19,6 +19,8 @@ MAX_AGE_SEC = 6 * 3600     # 지켜보는 상인이 없어도 이보다 오래�
 BUCKET_SEC = 120           # 주소 끝 숫자 단위(캐시 피하기)
 # 알림 기본 대상 — 물건을 사는 주요 상인(펜스·등대지기·BTR 등은 뺌)
 DEFAULT_KEYS = ("prapor", "therapist", "skier", "peacekeeper", "mechanic", "ragman", "jaeger")
+# 11-19 사용자: 고르는 목록에도 물건을 다시 채우는 상인만 — 등대지기·라디오 방송국·레프·보예보다·생존자·타란·BTR 조종수·케르만은 뺀다
+LISTED_KEYS = DEFAULT_KEYS + ("fence",)
 
 
 def parse_iso(s) -> Optional[float]:
@@ -112,6 +114,7 @@ class TraderResets:
                 except Exception:  # noqa: BLE001
                     self._name_cache[nk] = {}
             rows = parse_rows((c or {}).get("doc") or {}, self._name_cache.get(nk))
+        rows = [r for r in rows if r["key"] in LISTED_KEYS]
         others = [r for r in rows if keys and r["key"] not in keys]
         rows = [r for r in rows if not keys or r["key"] in keys]
         return {"traders": [{"key": r["key"], "name": r["name"], "reset": r["reset"]} for r in rows],
