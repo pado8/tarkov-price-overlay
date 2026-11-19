@@ -1916,6 +1916,13 @@ html, body, #root {
 .radar-mapscale { position: absolute; left: 6px; bottom: 4px; font-size: var(--card-fs-xxs); color: var(--text-muted); pointer-events: none; }
 .radar-layers { display: flex; flex-wrap: wrap; gap: 3px 4px; }
 /* 레이어 칩: 켜짐 = 색 점 + 밝은 글자, 꺼짐 = 흐리게 + 취소선(체크박스보다 좁아 미니맵 아래 한 줄에 들어간다) */
+/* 11-08 가격 알람 — 카드의 🔔 한 줄과 설정의 목록 */
+.alarm-line { font-size: 0.92em; color: var(--text-secondary); margin: 1px 0 4px; }
+.alarm-edit { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.alarm-edit input { width: 90px; font-variant-numeric: tabular-nums; }
+.alarm-list { margin: 2px 0 6px; }
+.alarm-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 0.92em; }
+.alarm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
 /* 11-16 상인 재입고 알림 띠(창 위쪽 가운데, 8초) + 설정의 상인 고르기 */
 .rst-toast { position: fixed; top: 6px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none; max-width: calc(100vw - 24px);
   background: rgba(20, 20, 20, 0.96); border: 1px solid var(--gold-bright); border-radius: 8px; padding: 5px 12px; color: var(--gold-bright);

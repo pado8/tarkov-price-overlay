@@ -1313,6 +1313,47 @@ def _lookup_superseded(client_seq: int | None) -> bool:
         return client_seq < _lookup_seq
 
 
+def _catalog_by_id(lang: str, game_mode: str) -> dict[str, dict]:
+    """메모리에 있는 시세 목록(이름 → 항목)을 id → 항목으로. 없으면 빈 사전(네트워크로 받지 않는다)."""
+    import tarkov_api as T
+
+    with T._price_cache_lock:
+        by_name = T._price_cache.get((lang, game_mode)) or {}
+    out: dict[str, dict] = {}
+    for e in by_name.values():
+        iid = e.get("id")
+        if iid and iid not in out:
+            out[iid] = e
+    return out
+
+
+class PricesRequest(BaseModel):
+    ids: list[str]
+    lang: str = "ko"
+    game_mode: str = "regular"
+
+
+@app.post("/prices", dependencies=[Depends(_reject_foreign_origin)])
+def prices_ep(req: PricesRequest) -> dict:
+    """가격 알람(11-08) — 메모리의 시세 목록에서 아이템들의 지금 플리가만(네트워크 호출 없음, 목록은 10분마다 갱신된다)."""
+    lang = req.lang if req.lang in ("ko", "en", "ru") else "ko"
+    game_mode = req.game_mode if req.game_mode in ("regular", "pve", "pvp-season") else "regular"
+    try:
+        from tarkov_api import mark_active
+
+        mark_active(lang, game_mode)
+    except Exception:  # noqa: BLE001
+        pass
+    cat = _catalog_by_id(lang, game_mode)
+    out = {}
+    for iid in req.ids[:200]:
+        e = cat.get(iid)
+        if e:
+            out[iid] = {"name": e.get("name"), "flea": e.get("flea"), "low": e.get("flea_last_low"),
+                        "trader": max([s.get("price") or 0 for s in (e.get("sell_for") or [])] + [0]) or None}
+    return {"prices": out, "catalog_ready": bool(cat)}
+
+
 @app.get("/traders/resets")
 def traders_resets(game_mode: str = "regular", lang: str = "en", keys: str = "") -> dict:
     """11-16 상인 재입고 알림 — 고른 상인(keys, 쉼표)의 다음 초기화 시각. 자료·받는 때는 trader_reset.py(주기 폴링 없음, 우리 서버 0)."""

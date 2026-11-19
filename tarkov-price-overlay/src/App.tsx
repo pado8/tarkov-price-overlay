@@ -26,6 +26,8 @@ import { cmpVersion } from "./version";
 import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { loadAlarms, saveAlarms, upsertAlarm, removeAlarm, evaluate, type Alarm } from "./priceAlarm";
+import { AlarmLine, AlarmList } from "./AlarmPanels";
 import { loadLead, loadTraders, minutesLeft, notifyKey, planAlerts, refetchInSec, RST_LEAD_KEY, RST_LEADS, RST_ON_KEY, RST_TRADERS_KEY, type ResetRow } from "./traderReset";
 import "./App.css";
 
@@ -1095,6 +1097,7 @@ const SECTION_KEYS = [
 ] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
 
+const ALARM_ON_KEY = "tarkov.priceAlarmOn"; // 11-08 가격 알람(기본 꺼짐) — 알람 목록은 priceAlarm.ts
 // 11-19 넓은 범위 찾기로 자동 조정한 상자의 값 — 지금 상자가 이것과 같으면 사용자가 손댄 상자가 아니므로 다시 조정해도 된다
 const SCAN_FIT_KEY = "tarkov.capture.scanFit";
 const scanFitText = (b: PrimaryBox) => `${b.offsetX},${b.offsetY},${b.width},${b.height}`;
@@ -1579,6 +1582,69 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
+  // 11-08 가격 알람(기본 꺼짐) — 켜져 있고 지금 모드 알람이 있으면 5분마다 사이드카의 메모리 시세로 판정, 넘는 순간 윈도우 알림 한 번
+  // (사이드카 /prices 는 이미 받아 둔 시세 목록만 본다 — 네트워크 호출 없음)
+  const [alarmOn, setAlarmOn] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(ALARM_ON_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [alarms, setAlarms] = useState<Alarm[]>(loadAlarms);
+  const alarmsRef = useRef(alarms);
+  alarmsRef.current = alarms;
+  const putAlarms = (list: Alarm[]) => {
+    setAlarms(list);
+    saveAlarms(list);
+  };
+  const modeAlarmIds = alarms.filter((a) => a.mode === region.gameMode).map((a) => a.id).sort().join(",");
+  useEffect(() => {
+    try {
+      localStorage.setItem(ALARM_ON_KEY, alarmOn ? "1" : "0");
+    } catch {}
+    if (!alarmOn || !modeAlarmIds) return;
+    let dead = false;
+    const mode = region.gameMode;
+    dailyAdd("pao"); // 하루 요약: 알람을 건 채 쓴 세션
+    const tick = async () => {
+      try {
+        const ids = alarmsRef.current.filter((a) => a.mode === mode).map((a) => a.id);
+        if (!ids.length) return;
+        const res = await fetch(`${PYTHON_API}/prices`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids, lang: getGameLang(region), game_mode: mode }),
+        });
+        const j = (await res.json()) as { prices: Record<string, { flea: number | null }>; catalog_ready: boolean };
+        if (dead || !j.catalog_ready) return;
+        const prices: Record<string, number | null> = {};
+        for (const [k, v] of Object.entries(j.prices ?? {})) prices[k] = v.flea;
+        const { next, fired } = evaluate(alarmsRef.current, mode, prices, Date.now());
+        putAlarms(next);
+        if (!fired.length) return;
+        let ok = await isPermissionGranted().catch(() => false);
+        if (!ok) ok = (await requestPermission().catch(() => "denied")) === "granted";
+        for (const a of fired) {
+          const body = (a.dir === "above" ? T[region.lang].alarmFiredAbove : T[region.lang].alarmFiredBelow)
+            .replace("{name}", a.name)
+            .replace("{p}", `${(a.last ?? 0).toLocaleString()} ₽`)
+            .replace("{t}", `${a.price.toLocaleString()} ₽`);
+          log(`React: alarm ${a.id} ${a.dir} ${a.price} now=${a.last}`);
+          dailyAdd("paf"); // 하루 요약: 가격 알람이 뜬 횟수
+          if (ok) sendNotification({ title: T[region.lang].alarmFiredTitle, body });
+        }
+      } catch {}
+    };
+    const first = window.setTimeout(() => void tick(), 15000);
+    const id = window.setInterval(() => void tick(), 5 * 60 * 1000);
+    return () => {
+      dead = true;
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alarmOn, modeAlarmIds, region.gameMode]);
   // 11-16 상인 재입고 알림(기본 꺼짐) — 고른 상인의 초기화 n분 전에 윈도우 알림 + (창이 보이면) 화면 띠.
   // 시각은 사이드카가 tarkov.dev 에서 받는다. 주기 폴링 없음: 시작 때 한 번 + 가장 이른 초기화 1분 뒤, 값이 그대로면 2·4·8·10분(traderReset.ts)
   const [rstOn, setRstOn] = useState<boolean>(() => {
@@ -6328,6 +6394,21 @@ function App() {
                 onChange={(e) => setSoundOn(e.target.checked)}
               />
             </div>
+            <div className="settings-row" title={t.subAlarm}>
+              <label>{t.alarmOn}</label>
+              <input type="checkbox" checked={alarmOn} onChange={(e) => setAlarmOn(e.target.checked)} />
+            </div>
+            <div className="settings-sub">{t.subAlarm}</div>
+            {alarmOn && (
+              <AlarmList
+                alarms={alarms.filter((a) => a.mode === region.gameMode)}
+                t={t}
+                onDelete={(a) => putAlarms(removeAlarm(alarms, a.id, a.mode))}
+                onSet={(a, dir, price) =>
+                  putAlarms(upsertAlarm(alarms, { id: a.id, name: a.name, mode: a.mode, dir, price }, a.last ?? null))
+                }
+              />
+            )}
             <div className="settings-row" title={t.subTraderRst}>
               <label>{t.traderRstOn}</label>
               <input type="checkbox" checked={rstOn} onChange={(e) => setRstOn(e.target.checked)} />
@@ -7744,6 +7825,22 @@ function App() {
               return (
                 <div className="prices">
                   {staleNote(result, t)}
+                  {/* 11-08 가격 알람 — 플리 거래되는 아이템만 */}
+                  {alarmOn && result.item_id && !result.no_flea && (
+                    <AlarmLine
+                      key={`${result.item_id}-${region.gameMode}`}
+                      alarm={alarms.find((a) => a.id === result.item_id && a.mode === region.gameMode) ?? null}
+                      current={result.flea_price ?? null}
+                      t={t}
+                      onSet={(dir, price) => {
+                        dailyAdd("pas"); // 하루 요약: 카드에서 알람을 건 횟수
+                        putAlarms(
+                          upsertAlarm(alarms, { id: result.item_id!, name: result.item_name ?? result.item_id!, mode: region.gameMode, dir, price }, result.flea_price ?? null)
+                        );
+                      }}
+                      onDelete={() => putAlarms(removeAlarm(alarms, result.item_id!, region.gameMode))}
+                    />
+                  )}
                   {noMarketPrice ? (
                     <div className="no-market-note">
                       {/* 플리 금지가 아닌데 시세가 비었으면 새 아이템이거나 거래가 적은 것 — '거래 불가'로 단정하지 않는다 */}
