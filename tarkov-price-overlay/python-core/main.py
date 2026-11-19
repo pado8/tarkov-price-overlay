@@ -1627,6 +1627,20 @@ def lookup(req: CaptureRequest) -> LookupResponse:
             attempt_used = label
             break
 
+    # 11-19 공유 키 + 툴팁 판정 없음(shared_lite)은 가운데 상자가 빠져 위 반복에서 넓은 범위 찾기가 돌지 않았다 — 그런데 판정은
+    # 캡처 상자 안만 보므로, 상자가 툴팁을 놓친 공유 키 사용자는 늘 여기로 와서 고칠 길이 없었다(실기: 이 PC F5 공유). 커서 주변에서
+    # 툴팁 패널만 찾아 읽는다 — 레이드 스크린샷 누름은 패널이 거의 안 잡혀(실측 오탐 3~7%) 캡처 한 번·판정 30ms 정도만 더 든다.
+    if price.get("name") is None and shared_lite and mon_wh and can_clamp and not _lookup_superseded(req.client_seq):
+        try:
+            scan_text, scan_price, scan_info = _scan_for_tooltip(
+                cursor_x, cursor_y, mon_wh[1], lang, game_mode, req.corrections, rescue_pool, ocr_mag, req.client_seq,
+            )
+        except Exception as e:  # noqa: BLE001
+            print(f"[scan] failed: {e}")
+            scan_text, scan_price = "", {"name": None}
+        if scan_price.get("name") is not None:
+            return _tw(_build_response(scan_text, scan_price, game_mode, attempt="scan", lang=req.lang))
+
     # Zoom-out rescue: production telemetry says 78% of failed lookups read
     # NOTHING at all ("empty") — the capture box missed the tooltip entirely
     # (UI-scale / resolution offsets slightly off). When every attempt came
