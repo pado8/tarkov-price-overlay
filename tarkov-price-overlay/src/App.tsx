@@ -25,6 +25,8 @@ import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
 import { MINI_LABEL, type MiniPayload } from "./MiniWindow";
 import { sellAdvice, stillNeeded, WEAK_ALTERNATIVES, type AdviceQuest, type AdviceHideout } from "./sellAdvice";
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { loadLead, loadTraders, minutesLeft, notifyKey, planAlerts, refetchInSec, RST_LEAD_KEY, RST_LEADS, RST_ON_KEY, RST_TRADERS_KEY, type ResetRow } from "./traderReset";
 import "./App.css";
 
 declare const __APP_VERSION__: string;
@@ -1577,6 +1579,83 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
+  // 11-16 상인 재입고 알림(기본 꺼짐) — 고른 상인의 초기화 n분 전에 윈도우 알림 + (창이 보이면) 화면 띠.
+  // 시각은 사이드카가 tarkov.dev 에서 받는다. 주기 폴링 없음: 시작 때 한 번 + 가장 이른 초기화 1분 뒤, 값이 그대로면 2·4·8·10분(traderReset.ts)
+  const [rstOn, setRstOn] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(RST_ON_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [rstLead, setRstLead] = useState<number>(() => loadLead(localStorage));
+  const [rstTraders, setRstTraders] = useState<string[]>(() => loadTraders(localStorage));
+  const [rstList, setRstList] = useState<ResetRow[]>([]); // 설정의 상인 고르기용(고른 것 + 안 고른 것)
+  const [rstToast, setRstToast] = useState<string | null>(null);
+  const rstNotifiedRef = useRef<Set<string>>(new Set());
+  const rstKeys = [...rstTraders].sort().join(",");
+  useEffect(() => {
+    try {
+      localStorage.setItem(RST_ON_KEY, rstOn ? "1" : "0");
+      localStorage.setItem(RST_LEAD_KEY, String(rstLead));
+      localStorage.setItem(RST_TRADERS_KEY, JSON.stringify(rstTraders));
+    } catch {}
+    if (!rstOn || !rstKeys) return;
+    let dead = false;
+    let alertTimer = 0;
+    let fetchTimer = 0;
+    let toastTimer = 0;
+    let tries = 0;
+    const lang = region.lang;
+    dailyAdd("rsto"); // 하루 요약: 재입고 알림을 켠 채 쓴 세션
+    const fire = async (r: ResetRow) => {
+      rstNotifiedRef.current.add(notifyKey(r));
+      const body = T[lang].traderRstBody.replace("{name}", r.name).replace("{m}", String(minutesLeft(r, Date.now() / 1000)));
+      log(`React: trader reset alert ${r.key} in ${Math.round(r.reset - Date.now() / 1000)}s`);
+      dailyAdd("rst"); // 하루 요약: 재입고 알림이 뜬 횟수
+      setRstToast(body);
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => setRstToast(null), 8000);
+      let ok = await isPermissionGranted().catch(() => false);
+      if (!ok) ok = (await requestPermission().catch(() => "denied")) === "granted";
+      if (ok) sendNotification({ title: T[lang].traderRstTitle, body });
+    };
+    const run = async () => {
+      let rows: ResetRow[] = [];
+      let stale = false;
+      try {
+        const q = new URLSearchParams({ game_mode: region.gameMode, lang: dataLang(lang), keys: rstKeys });
+        const res = await fetch(`${PYTHON_API}/traders/resets?${q.toString()}`);
+        if (res.ok) {
+          const j = (await res.json()) as { traders?: ResetRow[]; others?: ResetRow[]; stale?: boolean };
+          rows = j.traders ?? [];
+          stale = !!j.stale;
+          if (!dead) setRstList([...rows, ...(j.others ?? [])]);
+        }
+      } catch {}
+      if (dead) return;
+      const tick = () => {
+        if (dead) return;
+        const p = planAlerts(rows, Date.now() / 1000, rstLead, rstNotifiedRef.current);
+        for (const r of p.fire) void fire(r);
+        window.clearTimeout(alertTimer);
+        if (p.nextInSec !== null) alertTimer = window.setTimeout(tick, (p.nextInSec + 1) * 1000);
+      };
+      tick();
+      tries = stale || !rows.length ? tries + 1 : 0;
+      fetchTimer = window.setTimeout(() => void run(), refetchInSec(rows, Date.now() / 1000, tries - 1) * 1000);
+    };
+    const first = window.setTimeout(() => void run(), 6000); // 사이드카가 뜰 시간
+    return () => {
+      dead = true;
+      window.clearTimeout(first);
+      window.clearTimeout(alertTimer);
+      window.clearTimeout(fetchTimer);
+      window.clearTimeout(toastTimer);
+      setRstToast(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rstOn, rstLead, rstKeys, region.gameMode, region.lang]);
   const resetCaptureBox = async (part: "primary" | "ground") => {
     const s = await gameMonitorScale();
     setRegion((r) => ({ ...r, ...resetGeo(r, DEFAULT_REGION, s, part) }));
@@ -5386,6 +5465,8 @@ function App() {
       // 세로 창 + 지도 위(피드백 #62): 카드를 대상 목록 띠 왼쪽에 놓는 데 쓰는 값(App.css .map-top.portrait)
       style={wideMode ? ({ ["--wide-card-w" as string]: cardW, ["--side-h" as string]: sideH ? `${sideH}px` : undefined } as React.CSSProperties) : undefined}
     >
+      {/* 11-16 상인 재입고 알림 띠 — 창이 보일 때만 의미가 있다(숨겨져 있으면 윈도우 알림만). 클릭은 통과 */}
+      {rstToast && <div className="rst-toast">{rstToast}</div>}
       {hoverTip && (
         <div
           className="hover-fullname"
@@ -6247,6 +6328,38 @@ function App() {
                 onChange={(e) => setSoundOn(e.target.checked)}
               />
             </div>
+            <div className="settings-row" title={t.subTraderRst}>
+              <label>{t.traderRstOn}</label>
+              <input type="checkbox" checked={rstOn} onChange={(e) => setRstOn(e.target.checked)} />
+            </div>
+            <div className="settings-sub">{t.subTraderRst}</div>
+            {rstOn && (
+              <>
+                <div className="settings-row">
+                  <label htmlFor="rst-lead">{t.traderRstLead}</label>
+                  <select id="rst-lead" value={rstLead} onChange={(e) => setRstLead(Number(e.target.value))}>
+                    {RST_LEADS.map((m) => (
+                      <option key={m} value={m}>{t.traderRstLeadMin.replace("{m}", String(m))}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rst-traders">
+                  {(rstList.length ? rstList : rstTraders.map((k) => ({ key: k, name: k, reset: 0 })))
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((r) => (
+                      <button
+                        key={r.key}
+                        type="button"
+                        className={`radar-chip${rstTraders.includes(r.key) ? " on" : ""}`}
+                        onClick={() => setRstTraders((cur) => (cur.includes(r.key) ? cur.filter((k) => k !== r.key) : [...cur, r.key]))}
+                      >
+                        {r.name}
+                      </button>
+                    ))}
+                </div>
+              </>
+            )}
             <div className="settings-row" title={t.autoHideHint}>
               <label>{t.autoHideToggle}</label>
               <input

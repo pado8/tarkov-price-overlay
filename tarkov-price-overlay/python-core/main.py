@@ -1313,6 +1313,16 @@ def _lookup_superseded(client_seq: int | None) -> bool:
         return client_seq < _lookup_seq
 
 
+@app.get("/traders/resets")
+def traders_resets(game_mode: str = "regular", lang: str = "en", keys: str = "") -> dict:
+    """11-16 상인 재입고 알림 — 고른 상인(keys, 쉼표)의 다음 초기화 시각. 자료·받는 때는 trader_reset.py(주기 폴링 없음, 우리 서버 0)."""
+    import trader_reset
+
+    ks = {k for k in (keys or "").split(",") if re.fullmatch(r"[a-z0-9-]{1,40}", k)} or set(trader_reset.DEFAULT_KEYS)
+    return trader_reset.get_service().get("pve" if game_mode == "pve" else "regular",
+                                          lang if lang in ("ko", "en", "ru", "zh") else "en", ks)
+
+
 SCAN_HALF_W, SCAN_HALF_H = 900, 300  # 넓은 범위 찾기: 커서 좌우·상하로 볼 거리(1440p 기준)
 SCAN_MAX_PANELS = 2  # 후보를 읽어 보는 최대 수 — 실패한 조회의 OCR 이 너무 늘지 않게
 
