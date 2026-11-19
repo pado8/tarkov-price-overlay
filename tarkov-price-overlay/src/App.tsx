@@ -379,8 +379,7 @@ type StatsEvent =
   | "hotkey"
   | "hotkey_fail"
   // 지도 사용 횟수만(detail 없음). 좌표·맵·파일명은 절대 보내지 않는다
-  | "radar_open"
-  | "radar_shot"
+  | "radar_open" // 11-19 스크린샷으로 뜬 지도(옛 radar_shot)는 하루 요약 rsh 로 옮김
   // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
   | "install_mode" // 세션당 1회. detail = portable | installer
   | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
@@ -3220,7 +3219,8 @@ function App() {
     }
   };
   // 카드 위에 지도를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
-  // report=false: 같은 키 + 못 읽음으로 여는 경우 — 그 누름의 스크린샷이 감지될 때 radar_shot 이 한 번 따로 집계되므로 중복 보고하지 않는다
+  // report=false: 같은 키 + 못 읽음으로 여는 경우 — 그 누름의 스크린샷이 감지될 때 rsh 가 한 번 따로 집계되므로 중복 보고하지 않는다
+  // 11-19 스크린샷으로 지도가 뜬 횟수는 이벤트(radar_shot, 30일 이벤트 행의 약 24%) 대신 하루 요약 rsh 로 — Neon 저장 한도
   const openRadar = async (fromScreenshot: boolean, report = true) => {
     try {
       const win = getCurrentWindow();
@@ -3230,7 +3230,10 @@ function App() {
     setShowSettings(false);
     setHistoryVisible(false);
     setRadarActive(true);
-    if (report) reportEvent(fromScreenshot ? "radar_shot" : "radar_open");
+    if (report) {
+      if (fromScreenshot) dailyAdd("rsh");
+      else reportEvent("radar_open");
+    }
     await loadRadar();
     if (fromScreenshot) scheduleHide();
   };
@@ -3695,7 +3698,7 @@ function App() {
             } else if (act === "refresh") {
               // 나란히 모드(지도가 오른쪽에 늘 있음) 또는 같은 키로 방금 누른 스크린샷(조회 결과가 화면을 정함) — 데이터만 갱신
               if (wideModeRef.current) showCard();
-              reportEvent("radar_shot");
+              dailyAdd("rsh"); // 11-19 이벤트 radar_shot 대신 하루 요약
               void loadRadar();
             } else {
               void openRadar(true);
