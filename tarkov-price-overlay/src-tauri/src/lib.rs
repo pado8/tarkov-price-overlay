@@ -11,6 +11,8 @@ use tauri::{Emitter, Manager, RunEvent};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+
+mod update_cache;
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize, Clone)]
@@ -1892,6 +1894,7 @@ pub fn run() {
                 .build(),
         )
         .manage(SidecarChild(Mutex::new(None)))
+        .manage(update_cache::SavedUpdate::default())
         .manage(IsQuitting(AtomicBool::new(false)))
         .manage(TrayNotifShown(AtomicBool::new(false)))
         .manage(ShowInTaskbar(AtomicBool::new(true)))
@@ -1920,6 +1923,10 @@ pub fn run() {
             sidecar_missing_state,
             sidecar_blocked_state,
             sidecar_port_busy_state,
+            update_cache::update_download,
+            update_cache::update_install_saved,
+            update_cache::update_saved_version,
+            update_cache::update_clear_saved,
             register_lookup_mouse,
             register_toggle_mouse,
             set_hotkey_passthrough,
@@ -1943,6 +1950,8 @@ pub fn run() {
             unmaximize_keep_visible
         ])
         .setup(|app| {
+            // 11-19 지금 버전의 받아 둔 설치 파일은 이미 설치된 것 — 지운다(update_cache.rs)
+            update_cache::clear_installed(app.handle(), env!("CARGO_PKG_VERSION"));
             // Mouse-button hotkey poller — needs the AppHandle for emits and
             // shares the MouseHotkeys Arc so register_*_mouse takes effect
             // without restarting the thread.

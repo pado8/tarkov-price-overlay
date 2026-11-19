@@ -20,6 +20,9 @@ tauri-plugin-global-shortcut = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-updater = "2"
+# 11-19 받아 둔 업데이트 파일을 디스크에 두고 설치 직전 서명을 다시 검증(update_cache.rs) — 업데이터 플러그인과 같은 판
+minisign-verify = "0.2"
+base64 = "0.22"
 tauri-plugin-process = "2"
 tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }

@@ -235,7 +235,18 @@ const APP_STARTED_AT = Date.now();
 // 11-11 받아 둔 업데이트 → 다음 실행 때 설치. 통계: 1.3.1 뒤 업데이트 안 한 70곳 중 34곳이 이미 받아 뒀는데 설치 안 됨 —
 // 받은 파일은 메모리에만 있고 설치는 트레이 '종료'·'지금 적용'에서만 됐다(창 X 는 트레이로 숨김, PC 종료는 설치 없이 끝).
 // 받기를 마치면 버전을 남겨 두고, 다음 실행 직후(게임이 꺼져 있을 때만) 같은 버전이면 받아서 바로 설치·재시작한다.
-const UPDATE_PENDING_KEY = "tarkov.update.pendingInstall"; // {"v":"1.3.2","at":ms}
+const UPDATE_PENDING_KEY = "tarkov.update.pendingInstall"; // {"v":"1.3.2","at":ms,"from":"1.3.1"}
+// 11-19 받은 설치 파일은 이제 디스크(앱 데이터 updates\setup-<버전>.bin)에 두고 설치 직전 서명을 다시 검증한다(Rust update_cache.rs).
+// 예전엔 메모리에만 있어 다음 실행 설치가 291MB 를 처음부터 다시 받았다. from = 받을 때의 앱 버전 → 새 버전 첫 실행에
+// update_apply=installed_from:<옛 버전> 을 보낸다(업데이트가 실제로 깔렸는지).
+function updateErrorKind(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("sig")) return "sig";
+  if (m.includes("timed out") || m.includes("timeout")) return "timeout";
+  const http = /status:?\s*(\d{3})/.exec(m);
+  if (http) return `http_${http[1]}`;
+  return "net";
+}
 const NEXT_LAUNCH_WINDOW_MS = 3 * 60 * 1000; // 켠 뒤 이 안에 확인이 끝났을 때만(오래 켜 둔 앱이 갑자기 재시작하지 않게)
 function readPendingUpdate(): string | null {
   try {
@@ -2287,6 +2298,13 @@ function App() {
   useEffect(() => {
     const v = readPendingUpdate();
     if (v && cmpVersion(APP_VERSION, v) >= 0) {
+      // 11-19 통계: 받아 둔 업데이트가 실제로 깔렸는지 — 받을 때의 앱 버전(from)과 함께 한 번
+      let from = "";
+      try {
+        const j = JSON.parse(localStorage.getItem(UPDATE_PENDING_KEY) || "null");
+        if (j && typeof j.from === "string") from = j.from.slice(0, 16);
+      } catch {}
+      if (from) reportEvent("update_apply", `installed_from:${from}`);
       try {
         localStorage.removeItem(UPDATE_PENDING_KEY);
       } catch {}
@@ -4114,10 +4132,11 @@ function App() {
     // Block only while an install is genuinely in progress. "error" must
     // NOT block: otherwise one failed download froze update checks forever
     // (4h ticks + the manual button all silently no-oped until restart).
+    // 11-19 받아 둔(downloaded) 상태에서도 확인한다 — 같은 날 새 버전이 또 나오면(1.3.3·1.3.4) 옛 버전을 깔고 다시
+    // 업데이트하던 이중 업데이트를 막는다. 같은 버전이면 아래에서 아무것도 하지 않는다.
     if (
       updateCheckingRef.current ||
       updatePhaseRef.current === "downloading" ||
-      updatePhaseRef.current === "downloaded" || // 받아 둔 게 있으면 닫을 때 설치 — 다시 확인하지 않는다
       updatePhaseRef.current === "ready"
     )
       return;
@@ -4133,6 +4152,7 @@ function App() {
       const update = await checkForAppUpdate();
       setUpdateCheckedAt(Date.now());
       if (update) {
+        if (updatePhaseRef.current === "downloaded" && pendingUpdateRef.current?.version === update.version) return; // 이미 받아 둔 그 버전
         pendingUpdateRef.current = update;
         setUpdateInfo({ version: update.version, notes: update.body ?? null });
         setUpdatePhase("idle");
@@ -4148,7 +4168,7 @@ function App() {
             !(await invoke<boolean>("game_running").catch(() => true));
           if (nextLaunch) {
             log(`update: installing ${update.version} on launch (downloaded last session)`);
-            void runInstall(false, true);
+            void installSavedOnLaunch(update);
           } else {
             void downloadUpdateQuietly(update);
           }
@@ -4158,11 +4178,12 @@ function App() {
         setUpdateInfo(null);
         log(`update: up to date (${APP_VERSION})`);
         reportUpdateCheck("none");
+        invoke("update_clear_saved").catch(() => {}); // 받아 둔 옛 파일이 남아 있으면 지운다
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       log(`update: check failed — ${msg}`);
-      reportUpdateCheck("error");
+      reportUpdateCheck(`error:${updateErrorKind(msg)}`); // 11-19 error → error:<net|timeout|http_N|sig>
       setUpdateError(msg);
       // Keep any previously-seen updateInfo: a transient network failure on
       // a periodic re-check must not erase a valid update banner for 4h.
@@ -4184,24 +4205,19 @@ function App() {
     setUpdatePhase("downloading");
     setUpdateProgress(0);
     setUpdateError(null);
-    let downloaded = 0;
-    let total = 0;
+    // 11-19 받기는 Rust(update_download)가 디스크에 저장까지 한다. 진행률은 update-progress 이벤트
+    const unProgress = listen<{ d: number; t: number | null }>("update-progress", (e) => {
+      const { d, t: total } = e.payload;
+      if (total && total > 0) setUpdateProgress(Math.min(100, Math.round((d / total) * 100)));
+    });
     try {
-      await update.download((event) => {
-        if (event.event === "Started") {
-          total = event.data.contentLength ?? 0;
-        } else if (event.event === "Progress") {
-          downloaded += event.data.chunkLength;
-          if (total > 0) setUpdateProgress(Math.min(100, Math.round((downloaded / total) * 100)));
-        } else if (event.event === "Finished") {
-          setUpdateProgress(100);
-        }
-      });
+      const fresh = await invoke<boolean>("update_download", { version: update.version });
+      setUpdateProgress(100);
       setUpdatePhase("downloaded");
-      log(`update: ${update.version} downloaded — installs on tray quit, Apply now, or next launch`);
-      reportEvent("update_apply", "downloaded");
+      log(`update: ${update.version} ${fresh ? "downloaded" : "already on disk"} — installs on tray quit, Apply now, or next launch`);
+      reportEvent("update_apply", fresh ? "downloaded" : "downloaded_reuse");
       try {
-        localStorage.setItem(UPDATE_PENDING_KEY, JSON.stringify({ v: update.version, at: Date.now() }));
+        localStorage.setItem(UPDATE_PENDING_KEY, JSON.stringify({ v: update.version, at: Date.now(), from: APP_VERSION }));
       } catch {}
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -4209,6 +4225,31 @@ function App() {
       setUpdateError(msg);
       setUpdatePhase("error");
       reportEvent("update_apply", "error");
+    } finally {
+      unProgress.then((f) => f()).catch(() => {});
+    }
+  };
+
+  // 11-19 다음 실행 설치: 디스크에 받아 둔 파일이 있으면 다시 받지 않고(서명 재검증) 바로 설치한다. 없으면 예전처럼 받아서 설치.
+  const installSavedOnLaunch = async (update: Update) => {
+    const saved = await invoke<string | null>("update_saved_version").catch(() => null);
+    if (saved !== update.version) return runInstall(false, true);
+    reportEvent("update_apply", "install_next_launch");
+    setUpdatePhase("ready");
+    try {
+      await invoke("update_download", { version: update.version }); // 디스크 파일 검증만(같으면 받지 않음)
+      await invoke("prepare_quit").catch(() => {});
+      await invoke("update_install_saved");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      log(`update: install from disk failed — ${msg}`);
+      setUpdateError(msg);
+      setUpdatePhase("error");
+      reportEvent("update_apply", "error");
+      try {
+        localStorage.removeItem(UPDATE_PENDING_KEY);
+      } catch {}
+      await relaunch().catch(() => {}); // prepare_quit 뒤라 엔진이 꺼졌다 — 새로 켠다(applyDownloadedUpdate 와 같은 이유)
     }
   };
 
@@ -4221,7 +4262,7 @@ function App() {
     reportEvent("update_apply", "install_now");
     try {
       await invoke("prepare_quit").catch(() => {});
-      await update.install();
+      await invoke("update_install_saved"); // 11-19 디스크 파일·서명 재검증(update_cache.rs)
       await relaunch();
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -4333,7 +4374,7 @@ function App() {
         reportEvent("update_apply", "install_quit");
         try {
           await invoke("prepare_quit").catch(() => {});
-          await update.install();
+          await invoke("update_install_saved"); // 11-19 디스크 파일·서명 재검증
         } catch (e) {
           log(`update: install on quit failed — ${String(e)}`);
         }
