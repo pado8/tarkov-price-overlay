@@ -480,6 +480,7 @@ def fetch_catalog(lang: str, game_mode: str) -> tuple[list[dict], dict, list[dic
         out.append({
             "id": it.get("id") or iid,
             "name": loc(it.get("name")),
+            "normalizedName": it.get("normalizedName"),  # 11-19 가이드 상세 주소용
             "shortName": loc(it.get("shortName")),
             "width": it.get("width"),
             "height": it.get("height"),

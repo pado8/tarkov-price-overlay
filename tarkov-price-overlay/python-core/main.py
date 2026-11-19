@@ -378,6 +378,7 @@ class LookupResponse(BaseModel):
     icon: str | None = None  # gridImageLink (webp URL)
     wiki: str | None = None  # Fandom wiki page (card link button) — 가이드가 다루지 않는 아이템의 대체 링크
     is_key: bool = False  # 11-04 열쇠면 카드 버튼이 가이드 열쇠 페이지로
+    slug: str | None = None  # 11-19 tarkov.dev normalizedName — 카드 책 버튼이 가이드 열쇠 상세(/guide/key/<slug>/)로 바로 간다
     guide_page: str | None = None  # 11-04 'keys'|'items'|'usage'(11-06) — 가이드 목록 페이지에 이 아이템 행이 있음(없으면 위키)
     # 11-06 거래 불가 아이템 쓰임새(data/item_usage.json 손글 표) — [{ko,en,ru,zh}], 앱이 화면 언어로 고른다
     usage: list[dict[str, str]] = []
@@ -515,6 +516,7 @@ def _build_response(
         icon=None if "unknown-item" in (price.get("icon") or "") else price.get("icon"),
         wiki=price.get("wiki"),
         is_key=bool(price.get("is_key")),
+        slug=price.get("slug") or None,
         # 쓰임새 표에 있는 아이템은 가이드 색인(하루 캐시)을 기다리지 않고 /guide/untradeable/ 로 — 같은 표로 만드는 페이지라 행이 늘 있다
         guide_page=guide_index.page_for(price.get("id")) or ("usage" if item_usage.in_table(price.get("id")) else None),
         usage=usage[0],

@@ -186,6 +186,7 @@ query AllItems($lang: LanguageCode, $gameMode: GameMode) {
   items(lang: $lang, gameMode: $gameMode) {
     id
     name
+    normalizedName
     shortName
     width
     height
@@ -933,6 +934,8 @@ def _build_cache_entry(item: dict, hideout_idx: dict[str, list[dict]]) -> dict:
         "wiki": item.get("wikiLink"),
         # 11-04 가이드 연결: 열쇠면 카드 버튼이 가이드 열쇠 페이지로 간다
         "is_key": "keys" in (item.get("types") or []),
+        # 11-19 가이드 상세 주소용 슬러그(tarkov.dev normalizedName — 가이드 열쇠 페이지 /guide/key/<slug>/ 가 같은 값을 쓴다)
+        "slug": item.get("normalizedName"),
         # 11-04: 플리 금지 아이템(이벤트·화폐·보관함 등). 시세가 비었을 때 카드가 '거래 불가'와 '아직 시세 없음(새 아이템·거래 적음)'을 가른다
         "no_flea": "noFlea" in (item.get("types") or []),
         "base_price": item.get("basePrice"),  # 11-05 플리 수수료 계산용

@@ -942,6 +942,7 @@ type LookupResult = {
   /** Fandom wiki page. Null for items the catalog has no page for. 가이드가 다루지 않는 아이템의 대체 링크 */
   wiki: string | null;
   is_key?: boolean; // 11-04 열쇠 → 가이드 열쇠 페이지
+  slug?: string | null; // 11-19 tarkov.dev normalizedName — 가이드 열쇠 상세 주소
   guide_page?: "keys" | "items" | "usage" | null; // 11-04 가이드 목록 페이지에 이 아이템 행이 있음(사이드카 guide_index) · 11-06 usage=/guide/untradeable/
   // 11-06 거래 불가 아이템 쓰임새(사이드카 data/item_usage.json) — 한 줄마다 네 언어, 화면 언어로 고른다
   usage?: { ko: string; en: string; ru: string; zh: string }[];
@@ -7640,9 +7641,13 @@ function App() {
                 const q = encodeURIComponent(result.item_name.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim());
                 // 가이드가 빌드 때 내보낸 '행이 있는 아이템' 목록(item-pages.json)으로만 판단한다 —
                 // 필요 아이템 페이지는 택일 목표를 빼고 모으므로 퀘스트에 쓰인다고 다 있지 않다(11-04 실측: 이스크라)
+                // 11-19 통계: 앱에서 가이드로 가는 사람이 가장 많이 찾는 것이 열쇠 → 목록 검색(?q=) 대신 상세로 바로.
+                // 열쇠는 열쇠 상세(/guide/key/<slug>/ — 여는 곳·퀘스트·구하는 곳), 목록 행이 있는 아이템은 아이템 사전 상세.
+                // 슬러그를 모르면(옛 시세 목록) 예전처럼 목록 검색. ?q= 가 사이트 검색 통계에 섞이던 것도 줄어든다.
+                const slug = result.slug && /^[a-z0-9-]{1,120}$/.test(result.slug) ? result.slug : null;
                 const guidePath =
-                  result.guide_page === "keys" ? `keys/?q=${q}`
-                  : result.guide_page === "items" ? `items/?q=${q}`
+                  result.guide_page === "keys" ? (slug ? `key/${slug}/` : `keys/?q=${q}`)
+                  : result.guide_page === "items" ? (result.item_id ? `item/?id=${encodeURIComponent(result.item_id)}` : `items/?q=${q}`)
                   : result.guide_page === "usage" && result.item_id ? `untradeable/#u-${result.item_id}`
                   : null;
                 if (guidePath) {
@@ -7652,7 +7657,10 @@ function App() {
                       data-href={guideUrl(region.lang, guidePath)}
                       title={t.guideLink}
                       aria-label={t.guideLink}
-                      onClick={() => openGuide(region.lang, guidePath)}
+                      onClick={() => {
+                        if (guidePath.startsWith("key/")) stat("gdk"); // 11-19 하루 요약: 카드에서 열쇠 상세를 연 횟수
+                        openGuide(region.lang, guidePath);
+                      }}
                     >
                       <Icon name="book" />
                     </button>
