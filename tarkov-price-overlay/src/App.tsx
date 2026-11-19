@@ -40,6 +40,23 @@ const UPDATE_AUTO_INSTALL_KEY = "tarkov.autoInstallUpdate";
 // 11-04 첫 설정 도움: 한 번이라도 F2 로 아이템을 읽은 적 있음 / 도움 상자를 닫은 시각
 const EVER_OK_KEY = "tarkov.everReadItem";
 const CAPTURE_HELP_DISMISS_KEY = "tarkov.captureHelpDismissedAt";
+// 11-19 도움 상자에서 누른 뒤 아직 회복 못 한 행동(설치 단위) — {"n":횟수,"last":"capture"|"autoscale"|"manual"}.
+// 통계: 캡처·배율 버튼 누름의 절반이 설치 3곳에서 나왔고 회복은 2~6회뿐(배율 자동 1인 평균 6.5회). 세션마다 0 으로 돌아가
+// 껐다 켜면 같은 버튼을 또 권했다 → 앱을 다시 켜도 기억하고, 3번이 넘으면 캡처 버튼 대신 툴팁 안내·설명서만 보인다
+const HELP_ACTIONS_KEY = "tarkov.captureHelp.actions";
+function loadHelpActions(): { n: number; last: string } {
+  try {
+    const j = JSON.parse(localStorage.getItem(HELP_ACTIONS_KEY) || "null");
+    if (j && typeof j.n === "number" && typeof j.last === "string") return { n: Math.max(0, Math.min(99, j.n)), last: j.last };
+  } catch {}
+  return { n: 0, last: "" };
+}
+function saveHelpActions(v: { n: number; last: string }): void {
+  try {
+    if (v.n > 0) localStorage.setItem(HELP_ACTIONS_KEY, JSON.stringify(v));
+    else localStorage.removeItem(HELP_ACTIONS_KEY);
+  } catch {}
+}
 // One-shot dismiss for the "run as administrator" diagnostic banner. We
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
@@ -367,6 +384,7 @@ type StatsEvent =
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
   | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | shown_tip:<연속실패수>(11-07 툴팁 안내) | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공) · 11-19 관리자 안내 admin:shown | admin:first | admin:relaunch
   //          11-07 시작 카드·사용 설명서: start:shown | start:manual | start:got_it | start:done(첫 조회 성공) | manual:settings
+  //          11-19 도움 상자의 설명서 manual:help · 회복 recovered:<capture|autoscale|manual|tip|none>(예전 recovered)
   | "daily" // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
   | "donate"; // 11-06 후원 창 사용: open:<탭> | tab:<탭> | paypal_open | copy:<탭> (탭 = kakao|paypal). 금액·결제 정보 없음
 // Telemetry is BATCHED to spare the stats DB's serverless compute budget.
@@ -1775,7 +1793,14 @@ function App() {
   const recentF2Ref = useRef<boolean[]>([]); // 최근 F2 결과(true = 읽음), 최대 10개
   const recentFailKindsRef = useRef<string[]>([]); // 최근 실패 종류(empty/junk/no_match), 최대 10개
   const sessionOkRef = useRef(0); // 이번 세션 성공 수
-  const helpActionsRef = useRef(0); // 상자의 캡처 맞추기·자동 조정을 누른 뒤 아직 회복 못 한 횟수
+  const helpActionsRef = useRef(loadHelpActions().n); // 상자의 캡처 맞추기·자동 조정을 누른 뒤 아직 회복 못 한 횟수(11-19 설치 단위로 기억)
+  const helpLastRef = useRef(loadHelpActions().last); // 그중 마지막 행동 — 회복 이벤트 recovered:<행동>
+  const helpModeRef = useRef<HelpMode | null>(null); // 지금 떠 있는 도움 상자 모드(행동 없이 회복하면 tip/none 구분)
+  const noteHelpAction = (what: "capture" | "autoscale" | "manual") => {
+    if (what !== "manual") helpActionsRef.current += 1;
+    helpLastRef.current = what;
+    saveHelpActions({ n: helpActionsRef.current, last: what });
+  };
   const helpShownRef = useRef(false); // 이번 세션에 상자를 띄운 적 있음 → 다음 성공을 'recovered' 로 보고
   const trackF2Outcome = (ok: boolean, failKind?: string) => {
     noteFirstOutcome(ok);
@@ -1790,8 +1815,12 @@ function App() {
       } catch {}
       if (helpShownRef.current) {
         helpShownRef.current = false;
-        reportEvent("help", "recovered");
+        // 11-19 회복 직전 행동: capture·autoscale·manual(상자에서 누른 것) · tip(툴팁 안내만 보고) · none(캡처 안내만 보고 아무것도 안 누름)
+        const how = helpLastRef.current || (helpModeRef.current === "tip" ? "tip" : "none");
+        reportEvent("help", `recovered:${how}`);
       }
+      helpLastRef.current = "";
+      saveHelpActions({ n: 0, last: "" });
       setCaptureHelp(null);
       return;
     }
@@ -1812,6 +1841,7 @@ function App() {
         helpShownRef.current = true;
         reportEvent("help", `${mode === "tip" ? "shown_tip" : "shown"}:${streak}`);
       }
+      helpModeRef.current = mode;
       return { streak, scaled: h?.scaled ?? false, mode };
     });
   };
@@ -7743,29 +7773,45 @@ function App() {
                 </div>
                 {captureHelp.scaled && <div className="capture-help-done">{t.captureHelpScaled}</div>}
                 <div className="capture-help-actions">
-                  <button
-                    className="reset-btn update-btn"
-                    onClick={() => {
-                      reportEvent("help", "capture");
-                      helpActionsRef.current += 1;
-                      setShowSettings(true);
-                      setCaptureModalOpen(true);
-                    }}
-                  >
-                    {t.captureHelpOpen}
-                  </button>
+                  {/* 11-19 회복 없이 상자 버튼을 3번 넘게 눌렀으면(툴팁 안내 모드) 같은 버튼을 또 권하지 않는다 */}
+                  {!(captureHelp.mode === "tip" && helpActionsRef.current >= 3) && (
+                    <>
+                      <button
+                        className="reset-btn update-btn"
+                        onClick={() => {
+                          reportEvent("help", "capture");
+                          noteHelpAction("capture");
+                          setShowSettings(true);
+                          setCaptureModalOpen(true);
+                        }}
+                      >
+                        {t.captureHelpOpen}
+                      </button>
+                      <button
+                        className="reset-btn"
+                        onClick={async () => {
+                          reportEvent("help", "autoscale");
+                          noteHelpAction("autoscale");
+                          const r = await applyMonitorScaling(true);
+                          if (r) setRegion(r);
+                          setCaptureHelp((h) => (h ? { ...h, scaled: true } : h));
+                        }}
+                        title={t.autoScaleHint}
+                      >
+                        {t.autoScaleToMonitor}
+                      </button>
+                    </>
+                  )}
+                  {/* 11-19 통계: 설명서는 막혔을 때 찾는다(설정의 설명서 버튼 79명 vs 시작 카드 6명) → '계속 못 읽음' 절로 바로 */}
                   <button
                     className="reset-btn"
-                    onClick={async () => {
-                      reportEvent("help", "autoscale");
-                      helpActionsRef.current += 1;
-                      const r = await applyMonitorScaling(true);
-                      if (r) setRegion(r);
-                      setCaptureHelp((h) => (h ? { ...h, scaled: true } : h));
+                    onClick={() => {
+                      reportEvent("help", "manual:help");
+                      noteHelpAction("manual");
+                      openGuide(region.lang, "manual/#f-read");
                     }}
-                    title={t.autoScaleHint}
                   >
-                    {t.autoScaleToMonitor}
+                    {t.captureHelpManual}
                   </button>
                   <button
                     className="settings-btn"

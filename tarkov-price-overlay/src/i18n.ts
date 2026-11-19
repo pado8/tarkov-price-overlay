@@ -487,6 +487,7 @@ export const T = {
     captureHelpTitle: "아이템 이름을 계속 못 읽고 있어요",
     captureHelpBody:
       "F2를 누를 때 아이템 이름이 캡처 영역(빨간 상자) 안에 들어와야 읽을 수 있어요. 해상도·배율이 1920×1080·100%가 아니면 먼저 '해상도 자동 조정'을 눌러 보고, 그래도 안 되면 '캡처 영역 맞추기'에서 빨간 상자를 아이템 이름 위로 옮겨 주세요. (지금 화면 {res})",
+    captureHelpManual: "📖 계속 못 읽을 때",
     captureHelpOpen: "캡처 영역 맞추기",
     captureHelpScaled: "해상도에 맞춰 조정했어요 — 아이템에 마우스를 올리고 다시 F2를 눌러 보세요.",
     tipHelpTitle: "툴팁이 뜬 뒤에 눌러 주세요",
@@ -1133,6 +1134,7 @@ export const T = {
     captureHelpTitle: "Item names keep failing to read",
     captureHelpBody:
       "When you press F2, the item name has to fall inside the capture region (the red box). If your resolution or scaling is not 1920×1080 at 100%, try Auto-scale to monitor first; if it still fails, open Adjust capture region and move the red box over the item name. (Current screen {res})",
+    captureHelpManual: "📖 Still not reading?",
     captureHelpOpen: "Adjust capture region",
     captureHelpScaled: "Adjusted to your resolution — hover an item and press F2 again.",
     tipHelpTitle: "Press after the tooltip appears",
@@ -1779,6 +1781,7 @@ export const T = {
     captureHelpTitle: "Названия предметов не распознаются",
     captureHelpBody:
       "При нажатии F2 название предмета должно попадать в область захвата (красная рамка). Если разрешение или масштаб не 1920×1080 и 100%, сначала нажмите «Автоподбор разрешения»; если не помогло — откройте «Настроить область захвата» и сдвиньте рамку на название. (Сейчас экран {res})",
+    captureHelpManual: "📖 Если не распознаёт",
     captureHelpOpen: "Настроить область захвата",
     captureHelpScaled: "Подобрано под ваше разрешение — наведите на предмет и снова нажмите F2.",
     tipHelpTitle: "Нажимайте, когда появится подсказка",
@@ -2418,6 +2421,7 @@ export const T = {
     portableOpenFolder: "打开文件夹",
     captureHelpTitle: "物品名称一直读取失败",
     captureHelpBody: "按 F2 时，物品名称必须落在捕获区域（红框）内。如果你的分辨率或缩放不是 1920×1080 / 100%，请先试试“根据显示器自动缩放”；仍然失败的话，打开“调整捕获区域”，把红框移到物品名称上。（当前屏幕 {res}）",
+    captureHelpManual: "📖 一直识别不了？",
     captureHelpOpen: "调整捕获区域",
     captureHelpScaled: "已按你的分辨率调整——请把鼠标悬停在物品上，再按一次 F2。",
     tipHelpTitle: "请等提示框出现后再按",
