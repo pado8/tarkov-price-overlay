@@ -367,7 +367,8 @@ class LookupResponse(BaseModel):
     mon: list[int] | None = None
     # 11-19 넓은 범위 툴팁 찾기 결과(상자가 전부 빗나간 조회에서만). found = 커서 근처 툴팁 패널 수, 찾아서 읽었으면 dx·dy·w·h =
     # 커서 기준 패널 위치(물리 픽셀). 앱이 하루 요약(scn·scp·sch)과 캡처 상자 자동 조정에 쓴다.
-    scan: dict[str, int] | None = None
+    # 실패했으면 blk(넓은 캡처가 새까맣다 = 전용 전체 화면 등으로 게임 화면을 못 찍음)·wm(앞 창이 모니터를 꽉 채우면 full, 아니면 win)도 담는다.
+    scan: dict[str, int | str] | None = None
     item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
@@ -1316,10 +1317,34 @@ SCAN_HALF_W, SCAN_HALF_H = 900, 300  # 넓은 범위 찾기: 커서 좌우·상�
 SCAN_MAX_PANELS = 2  # 후보를 읽어 보는 최대 수 — 실패한 조회의 OCR 이 너무 늘지 않게
 
 
+def _foreground_window_mode(cursor_x: int, cursor_y: int) -> str | None:
+    """앞 창이 커서가 있는 모니터를 꽉 채우면 'full'(전체 화면·테두리 없는 창), 아니면 'win'(창 모드). 모르면 None.
+    실패 원인 통계용(11-19) — 창 이름·프로세스는 보지 않는다."""
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        hwnd = ctypes.windll.user32.GetForegroundWindow()
+        rect = wintypes.RECT()
+        if not hwnd or not ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+            return None
+        with mss.mss() as sct:
+            for m in sct.monitors[1:]:
+                if m["left"] <= cursor_x < m["left"] + m["width"] and m["top"] <= cursor_y < m["top"] + m["height"]:
+                    full = (rect.left <= m["left"] and rect.top <= m["top"]
+                            and rect.right >= m["left"] + m["width"] and rect.bottom >= m["top"] + m["height"])
+                    return "full" if full else "win"
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def _scan_for_tooltip(
     cursor_x: int, cursor_y: int, mon_h: int, lang: str, game_mode: str, corrections: dict[str, str],
     rescue_pool: list[str], mag: float, client_seq: int | None,
-) -> tuple[str, dict, dict[str, int]]:
+) -> tuple[str, dict, dict[str, int | str]]:
     """11-19 상자가 전부 빗나갔을 때 커서 주변을 넓게 찍어 툴팁 패널을 직접 찾아 읽는다(UI 배율·해상도로 툴팁이 상자 밖에 뜬 경우).
     패널처럼 보여도 아이템 이름과 맞아야만 결과로 쓴다. 돌려주는 값: (읽은 글자, 시세, 응답의 scan)."""
     from tooltip_detect import find_tooltips
@@ -1327,8 +1352,9 @@ def _scan_for_tooltip(
     s = mon_h / 1440
     hw, hh = int(SCAN_HALF_W * s), int(SCAN_HALF_H * s)
     sx, sy, sw, sh = _clamp_to_monitor(cursor_x - hw, cursor_y - hh, hw * 2, hh * 2, cursor_x, cursor_y)
-    panels = find_tooltips(capture_region(sx, sy, sw, sh), mon_h, (cursor_x - sx, cursor_y - sy))
-    info = {"found": len(panels)}
+    wide = capture_region(sx, sy, sw, sh)
+    panels = find_tooltips(wide, mon_h, (cursor_x - sx, cursor_y - sy))
+    info: dict[str, int | str] = {"found": len(panels)}
     print(f"[scan] {len(panels)} tooltip panel(s) near cursor in {sw}x{sh}")
     for p in panels[:SCAN_MAX_PANELS]:
         if _lookup_superseded(client_seq):
@@ -1340,6 +1366,11 @@ def _scan_for_tooltip(
         if price.get("name") is not None:
             info.update(dx=px - cursor_x, dy=py - cursor_y, w=p["w"], h=p["h"])
             return text, price, info
+    # 실패 원인 통계(11-19): 넓은 캡처가 새까만지, 게임이 창 모드인지
+    info["blk"] = int(wide is not None and wide.size > 0 and int(wide[..., :3].max()) < 8)
+    wm = _foreground_window_mode(cursor_x, cursor_y)
+    if wm:
+        info["wm"] = wm
     return "", {"name": None}, info
 
 

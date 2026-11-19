@@ -19,7 +19,7 @@ import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
-import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, defaultScaleOf, nextScanStreak, scanFitBox, type HelpMode, type PrimaryBox, type ScanStreak } from "./captureHelp";
+import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, defaultScaleOf, nextScanStreak, scanFitBox, resetGeo, type HelpMode, type PrimaryBox, type ScanStreak } from "./captureHelp";
 import { fitWideRect, loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
@@ -924,7 +924,7 @@ type LookupResult = {
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
   tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
   mon?: number[] | null; // 11-10 조회 때 커서가 있는 모니터 [가로, 세로](물리 픽셀) — 상자 어긋남 통계(bxm·bxf)
-  scan?: { found: number; dx?: number; dy?: number; w?: number; h?: number } | null; // 11-19 상자가 빗나갔을 때 커서 주변에서 툴팁을 찾은 결과
+  scan?: { found: number; dx?: number; dy?: number; w?: number; h?: number; blk?: number; wm?: string } | null; // 11-19 상자가 빗나갔을 때 커서 주변에서 툴팁을 찾은 결과·실패 원인
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -1101,6 +1101,22 @@ function loadScanFit(): string | null {
 }
 function saveScanFit(b: PrimaryBox): void {
   try { localStorage.setItem(SCAN_FIT_KEY, scanFitText(b)); } catch { /* 저장 못 해도 이번 조정은 유지 */ }
+}
+// 11-19 마지막 조회 때 게임 모니터 크기 — '초기화' 버튼이 이 모니터 배율의 기본값으로 되돌린다
+const LAST_MON_KEY = "tarkov.capture.lastMon";
+function saveLastMon(w: number, h: number): void {
+  try { localStorage.setItem(LAST_MON_KEY, `${w}x${h}`); } catch { /* 없으면 주 모니터로 */ }
+}
+async function gameMonitorScale(): Promise<number> {
+  try {
+    const m = /^(\d+)x(\d+)$/.exec(localStorage.getItem(LAST_MON_KEY) ?? "");
+    if (m) return captureScale(+m[1], +m[2]);
+  } catch { /* 아래로 */ }
+  try {
+    const mon = await primaryMonitor();
+    if (mon) return captureScale(mon.size.width, mon.size.height);
+  } catch { /* 아래로 */ }
+  return 1;
 }
 
 const DEFAULT_REGION: Region = {
@@ -1561,6 +1577,10 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
+  const resetCaptureBox = async (part: "primary" | "ground") => {
+    const s = await gameMonitorScale();
+    setRegion((r) => ({ ...r, ...resetGeo(r, DEFAULT_REGION, s, part) }));
+  };
   const refitPrevRef = useRef<string | null>(null); // 11-17 캡처 상자 다시 맞추기 — 직전 조회가 어긋났던 모니터("가로x세로")
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
   const secStyle = (k: SectionKey) => ({ order: Math.max(0, region.sectionOrder.indexOf(k)) + 1 });
@@ -4935,6 +4955,11 @@ function App() {
             }
             dailySample("mh", data.mon[1]);
             dailySample("bxh", r.height);
+          }
+          // 11-19 공유 키(스크린샷 키와 같은 키) 사용자도 상자를 다시 맞춘다 — 예전엔 위 통계와 같은 조건에 묶여 빠져 있었다.
+          // 다시 맞출지는 상자와 게임 모니터 크기만 보므로 인벤토리 밖 누름이어도 판단이 같다.
+          if (Array.isArray(data.mon) && data.mon.length === 2) {
+            saveLastMon(data.mon[0], data.mon[1]);
             // 11-17 손대지 않은 기본 상자인데 이 게임 모니터의 기본값과 다르면 다시 맞춘다(captureHelp.refitBox — 울트라와이드 옛 상자·
             // 주 모니터가 아닌 모니터·전체 화면 낮은 해상도). 같은 모니터에서 두 번 연속일 때만. 다음 조회부터 새 상자를 쓴다.
             const fit = refitBox(r, DEFAULT_REGION, data.mon[0], data.mon[1]);
@@ -4975,6 +5000,17 @@ function App() {
             reportEvent("lookup_nomatch", pfx + nomatchCategory(data.raw_text));
             // 스크린샷 키 공유 중엔 인벤토리 밖 누름이 대부분이라 도움 판단에서 뺀다
             if (!hotkeyPassthroughRef.current) trackF2Outcome(false, nomatchCategory(data.raw_text));
+            // 11-19 실패 원인(하루 요약): 툴팁 판정 fwp 있음 · fwn 끝내 없음 · fwo 판정 꺼짐 / fbk 넓은 캡처가 새까맣다 /
+            // fwm 게임이 창 모드 · ffm 모니터를 꽉 채운 창. 빈 화면 반복 실패가 '툴팁 없는 곳에서 누름'인지 '화면을 못 찍음'인지 가른다.
+            if (!hotkeyPassthroughRef.current) {
+              const tw = data.tooltip_wait;
+              if (tw === "present" || tw === "waited_ok") dailyAdd("fwp");
+              else if (tw === "waited_none") dailyAdd("fwn");
+              else if (tw === "off") dailyAdd("fwo");
+              if (data.scan?.blk) dailyAdd("fbk");
+              if (data.scan?.wm === "win") dailyAdd("fwm");
+              else if (data.scan?.wm === "full") dailyAdd("ffm");
+            }
           } else if (data.flea_price == null && data.trader_price == null) {
             // Matched but untradeable / no market price — send the public
             // catalog id so the dashboard shows WHICH items (e.g. new patch
@@ -7110,15 +7146,7 @@ function App() {
                 <div className="capture-modal-actions">
                   <button
                     className="reset-btn"
-                    onClick={() =>
-                      setRegion((r) => ({
-                        ...r,
-                        offsetX: DEFAULT_REGION.offsetX,
-                        offsetY: DEFAULT_REGION.offsetY,
-                        width: DEFAULT_REGION.width,
-                        height: DEFAULT_REGION.height,
-                      }))
-                    }
+                    onClick={() => void resetCaptureBox("primary")}
                   >
                     {t.reset}
                   </button>
@@ -7176,15 +7204,7 @@ function App() {
                 <div className="capture-modal-actions">
                   <button
                     className="reset-btn"
-                    onClick={() =>
-                      setRegion((r) => ({
-                        ...r,
-                        groundOffsetX: DEFAULT_REGION.groundOffsetX,
-                        groundOffsetY: DEFAULT_REGION.groundOffsetY,
-                        groundWidth: DEFAULT_REGION.groundWidth,
-                        groundHeight: DEFAULT_REGION.groundHeight,
-                      }))
-                    }
+                    onClick={() => void resetCaptureBox("ground")}
                   >
                     {t.reset}
                   </button>

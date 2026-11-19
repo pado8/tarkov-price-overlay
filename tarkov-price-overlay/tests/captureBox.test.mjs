@@ -7,7 +7,7 @@ const source = await readFile(new URL("../src/captureHelp.ts", import.meta.url),
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2020 },
 });
-const { captureScale, scaleGeo, defaultScaleOf, refitBox, refitStreak, nextScanStreak, scanFitBox } = await import(
+const { captureScale, scaleGeo, defaultScaleOf, refitBox, refitStreak, nextScanStreak, scanFitBox, resetGeo } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 
@@ -104,4 +104,23 @@ test("no move with fewer than three hits, scattered hits, or a tooltip already i
   assert.equal(scanFitBox(BOX, [HIT, HIT, { ...HIT, dy: 200 }]), null);
   assert.equal(scanFitBox(BOX, [HIT, HIT, { ...HIT, dx: 300 }]), null);
   assert.equal(scanFitBox({ offsetX: 10, offsetY: -100, width: 400, height: 110 }, [HIT, HIT, HIT]), null);
+});
+
+// 11-19 '초기화' 버튼
+test("reset brings back the game monitor's default, and refit works again afterwards", () => {
+  const d1440 = newDefault(2560, 1440);
+  const before = { ...d1440, offsetY: d1440.offsetY + 30 }; // 위쪽 상자만 손댐
+  const after = resetGeo(before, BASE, captureScale(2560, 1440), "primary");
+  assert.deepEqual(after, d1440);
+  assert.equal(defaultScaleOf(after, BASE), 4 / 3);
+  // 옛 초기화(1920 기본값을 위쪽에만)는 직접 조정한 상자로 분류됐다
+  assert.equal(defaultScaleOf({ ...d1440, offsetX: 10, offsetY: -75, width: 300, height: 70 }, BASE), null);
+});
+
+test("reset keeps the other box when the user adjusted it, and moves it along when untouched", () => {
+  const old = newDefault(1920, 1080);
+  const custom = { ...old, groundWidth: 333 };
+  assert.equal(resetGeo(custom, BASE, 2, "primary").groundWidth, 333);
+  assert.deepEqual(resetGeo(old, BASE, 2, "primary"), scaleGeo(BASE, 2));
+  assert.deepEqual(resetGeo(old, BASE, 2, "ground"), scaleGeo(BASE, 2));
 });

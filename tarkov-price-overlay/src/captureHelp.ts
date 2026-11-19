@@ -75,6 +75,29 @@ export function refitBox(geo: BoxGeo, base: BoxGeo, monW: number, monH: number):
   return scaleGeo(base, want);
 }
 
+// ── 11-19 '초기화' 버튼 ───────────────────────────────────────────────────────
+// 예전엔 초기화가 1920x1080 기본값(300x70)을 그대로 넣고 다른 쪽 상자는 그대로 둬서, 1440p 이상에선 상자가 작아지고 두 상자의 배율이
+// 달라져 '직접 조정한 상자'로 분류됐다 → 그 뒤 자동 맞춤이 영영 막혔다. 이제 게임 모니터 배율의 기본값으로 되돌리고, 다른 쪽 상자도
+// 손대지 않은 기본값이면 같은 배율로 함께 맞춘다(직접 조정한 쪽은 그대로).
+const PRIMARY_KEYS = ["offsetX", "offsetY", "width", "height"] as const;
+const GROUND_KEYS = ["groundOffsetX", "groundOffsetY", "groundWidth", "groundHeight"] as const;
+
+function partIsDefault(geo: BoxGeo, base: BoxGeo, keys: readonly (keyof BoxGeo)[]): boolean {
+  const s = geo[keys[2]] / base[keys[2]];
+  if (!(s >= 0.999)) return false;
+  return keys.every((k) => Math.abs(geo[k] - base[k] * s) <= 1);
+}
+
+/** part 상자를 scale 배율 기본값으로 되돌린 상자. */
+export function resetGeo(geo: BoxGeo, base: BoxGeo, scale: number, part: "primary" | "ground"): BoxGeo {
+  const want = scaleGeo(base, scale);
+  const out = { ...geo };
+  const [mine, other] = part === "primary" ? [PRIMARY_KEYS, GROUND_KEYS] : [GROUND_KEYS, PRIMARY_KEYS];
+  for (const k of mine) out[k] = want[k];
+  if (partIsDefault(geo, base, other)) for (const k of other) out[k] = want[k];
+  return out;
+}
+
 // ── 11-19 넓은 범위에서 찾은 툴팁 위치로 캡처 상자 조정 ─────────────────────────
 // 상자가 빗나가 사이드카가 커서 주변에서 툴팁을 직접 찾아 읽은 조회(attempt "scan")가 같은 모니터에서 3번 이어지면, 그 위치를 덮도록
 // 상자를 옮긴다. 다른 상자로 읽힌 조회가 끼면 처음부터 센다. 직접 조정한 상자는 건드리지 않는다(App.tsx 가 확인).
