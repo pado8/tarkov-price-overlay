@@ -1427,38 +1427,49 @@ class RadarService:
         self._exfil_lock = threading.Lock()
         self._exfil_seen: set[str] = set()
         self._exfil_busy = False
+        self._exfil_queue: list[tuple] = []  # 11-19 읽는 중에 들어온 스크린샷 — 건너뛰지 않고 차례로
         self._my_exits: Optional[dict] = None  # {"slug", "raid", "names": set[str]}
         self._load_settings()
 
-    def _start_exfil_check(self, path: Path, slug: str, raid: Optional[float], lang: str = "en") -> None:
+    def _start_exfil_check(self, path: Path, slug: str, raid: Optional[float], lang: str = "en", hinted: bool = False) -> None:
+        """hinted = 게임에서 O(탈출구 목록)를 누른 직후 찍은 사진 → 띠 판정 없이 바로 목록으로 읽는다(11-19 사용자).
+        11-19 실기: 한 장 읽는 데 1.5~2초인데 예전엔 읽는 중에 찍은 사진을 건너뛰어, 레이드 시작에 연달아 찍으면 목록 사진을 놓쳤다
+        → 줄을 세워 차례로 읽는다(최대 20장)."""
         with self._exfil_lock:
-            if self._exfil_busy or path.name in self._exfil_seen:
+            if path.name in self._exfil_seen:
                 return
             self._exfil_seen.add(path.name)
+            if len(self._exfil_queue) < 20:
+                self._exfil_queue.append((path, slug, raid, lang, hinted))
+            if self._exfil_busy:
+                return
             self._exfil_busy = True
 
         def run() -> None:
-            try:
-                if not exfil_banner(path):
-                    return
-                got = match_exfils(read_exfil_lines(path, lang), exfil_names(slug))
-                log.info(f"[radar] 탈출구 목록 사진 {path.name}: {slug} 맞춤 {sorted(got)}")
-                if len(got) < 2:
-                    return  # 탈출구 안 '머무르십시오' 띠(하나만 보임) 등 — 목록으로 안 봄
+            while True:
                 with self._exfil_lock:
-                    cur = self._my_exits
-                    if cur and cur["slug"] == slug and cur["raid"] == raid:
-                        cur["names"] |= got
-                    else:
-                        self._my_exits = {"slug": slug, "raid": raid, "names": set(got)}
-            except Exception as e:  # noqa: BLE001 — 사진·OCR 문제는 지도 전체를 막지 않는다
-                log.warning(f"[radar] 탈출구 목록 읽기 실패: {e!r}")
-                # 게임이 아직 PNG 를 쓰는 중(잘린 파일)일 수 있다 — 본 목록에서 빼 다음 확인 때 다시 읽는다(앱이 0.4초마다 묻는다)
-                with self._exfil_lock:
-                    self._exfil_seen.discard(path.name)
-            finally:
-                with self._exfil_lock:
-                    self._exfil_busy = False
+                    if not self._exfil_queue:
+                        self._exfil_busy = False
+                        return
+                    path_, slug_, raid_, lang_, hinted_ = self._exfil_queue.pop(0)
+                try:
+                    if not hinted_ and not exfil_banner(path_):
+                        continue
+                    got = match_exfils(read_exfil_lines(path_, lang_), exfil_names(slug_))
+                    log.info(f"[radar] 탈출구 목록 사진 {path_.name}{' (O 키 뒤)' if hinted_ else ''}: {slug_} 맞춤 {sorted(got)}")
+                    if len(got) < 2:
+                        continue  # 탈출구 안 '머무르십시오' 띠(하나만 보임) 등 — 목록으로 안 봄
+                    with self._exfil_lock:
+                        cur = self._my_exits
+                        if cur and cur["slug"] == slug_ and cur["raid"] == raid_:
+                            cur["names"] |= got
+                        else:
+                            self._my_exits = {"slug": slug_, "raid": raid_, "names": set(got)}
+                except Exception as e:  # noqa: BLE001 — 사진·OCR 문제는 지도 전체를 막지 않는다
+                    log.warning(f"[radar] 탈출구 목록 읽기 실패: {e!r}")
+                    # 게임이 아직 PNG 를 쓰는 중(잘린 파일)일 수 있다 — 본 목록에서 빼 다음 확인 때 다시 읽는다(앱이 0.4초마다 묻는다)
+                    with self._exfil_lock:
+                        self._exfil_seen.discard(path_.name)
 
         threading.Thread(target=run, daemon=True, name="exfil-ocr").start()
 
@@ -1581,7 +1592,8 @@ class RadarService:
         return {"map": mp, "locks": out}
 
     def state(self, lang: str = "ko", game_mode: str = "regular", map_override: Optional[str] = None,
-              full: bool = False, story: Optional[str] = None, game_lang: Optional[str] = None) -> dict:
+              full: bool = False, story: Optional[str] = None, game_lang: Optional[str] = None,
+              o_at: Optional[float] = None) -> dict:
         """lang = 앱 UI 언어(이름·문구), game_lang = 게임 클라이언트 언어(탈출구 목록 사진 OCR 에 — 11-09, 없으면 lang)."""
         with self._lock:
             folder = self._folder_override or screenshots_dir()
@@ -1644,7 +1656,9 @@ class RadarService:
             if slug in EVENT_MAPS:  # 이벤트 변형은 데이터가 비어 있어 일반 맵으로(이름·대상·지도 전부)
                 slug = EVENT_MAPS[slug]
             if shot and slug and folder:
-                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, game_lang or lang)  # 탈출구 목록 사진이면 백그라운드 OCR
+                # 11-19 O(탈출구 목록)를 누르고 15초 안에 찍은 사진은 띠 판정 없이 목록으로
+                hinted = bool(o_at) and -1.0 <= shot["ts"] - float(o_at) <= 15.0
+                self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, game_lang or lang, hinted)  # 탈출구 목록 사진이면 백그라운드 OCR
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC  # 레이드 시작 전(pre_raid)은 앱이 full 로 받는다
             if not (full or fresh or map_override):

@@ -1923,10 +1923,11 @@ html, body, #root {
 .alarm-list { margin: 2px 0 6px; }
 .alarm-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 0.92em; }
 .alarm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
-/* 11-16 상인 재입고 알림 띠(창 위쪽 가운데, 8초) + 설정의 상인 고르기 */
-.rst-toast { position: fixed; top: 6px; left: 50%; transform: translateX(-50%); z-index: 30; pointer-events: none; max-width: calc(100vw - 24px);
-  background: rgba(20, 20, 20, 0.96); border: 1px solid var(--gold-bright); border-radius: 8px; padding: 5px 12px; color: var(--gold-bright);
-  font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); }
+/* 11-16 상인 재입고 알림 — 설정의 상인 고르기 */
+/* 11-16 상인 재입고 알림 띠 — 11-19 실기: 작고 나란히 보기에서 잘 안 보였다 → 더 크게·맨 위·금색 바탕으로(15초) */
+.rst-toast { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; max-width: calc(100vw - 24px);
+  background: var(--gold-bright); color: #141414; border: 2px solid #141414; border-radius: 10px; padding: 10px 22px;
+  font-size: 18px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75); }
 .rst-traders { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
 .rst-chip { font: inherit; font-size: var(--card-fs-xs); padding: 2px 8px; border-radius: 999px; cursor: pointer; border: 1px dashed var(--border-default); background: transparent; color: var(--text-muted); }
 .rst-chip.on { border: 1px solid var(--gold-bright); background: rgba(212, 175, 55, 0.18); color: var(--text-primary); font-weight: 700; }

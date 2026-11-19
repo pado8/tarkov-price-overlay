@@ -424,6 +424,27 @@ fn parse_poll_key(accelerator: &str) -> Option<PollKey> {
     Some(pk)
 }
 
+/// 11-19 게임 안 O 키(탈출구 목록 보기) — 게임이 맨 앞일 때 누르면 'game-key-o' 이벤트(유닉스 초). 화면이 지도 상태
+/// 요청에 실어 보내면 엔진이 그 뒤 15초 안의 스크린샷을 탈출구 목록 사진으로 읽는다(띠 판정 없이). 키를 읽기만 한다.
+fn start_o_key_watch(app: tauri::AppHandle) {
+    const VK_O: u16 = 0x4F;
+    thread::spawn(move || {
+        let mut was_down = false;
+        loop {
+            thread::sleep(Duration::from_millis(60));
+            let down = async_key(VK_O) & 0x8000 != 0;
+            if down && !was_down && get_foreground_kind() == "game" {
+                let at = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs_f64())
+                    .unwrap_or(0.0);
+                let _ = app.emit("game-key-o", at);
+            }
+            was_down = down;
+        }
+    });
+}
+
 #[cfg(windows)]
 fn async_key(vk: u16) -> u16 {
     #[link(name = "user32")]
@@ -1952,6 +1973,7 @@ pub fn run() {
         .setup(|app| {
             // 11-19 지금 버전의 받아 둔 설치 파일은 이미 설치된 것 — 지운다(update_cache.rs)
             update_cache::clear_installed(app.handle(), env!("CARGO_PKG_VERSION"));
+            start_o_key_watch(app.handle().clone());
             // Mouse-button hotkey poller — needs the AppHandle for emits and
             // shares the MouseHotkeys Arc so register_*_mouse takes effect
             // without restarting the thread.

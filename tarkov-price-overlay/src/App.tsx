@@ -1616,6 +1616,18 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
+  // 11-19 사용자: '내 탈출구만' 인식이 잘 안 됨 → 게임에서 O(탈출구 목록)를 누른 시각을 받아 그 뒤 스크린샷을 목록으로 읽게 한다
+  const gameKeyOAtRef = useRef(0);
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    const un = listen<number>("game-key-o", (e) => {
+      gameKeyOAtRef.current = e.payload;
+      dailyAdd("gko"); // 하루 요약: 게임에서 O 를 누른 횟수(탈출구 목록 보기)
+    });
+    return () => {
+      un.then((f) => f()).catch(() => {});
+    };
+  }, []);
   const [scanMoved, setScanMoved] = useState<PrimaryBox | null>(null); // 11-19 자동으로 옮기기 전 상자 — 카드의 '되돌리기'
   // 11-08 가격 알람(기본 꺼짐) — 켜져 있고 지금 모드 알람이 있으면 5분마다 사이드카의 메모리 시세로 판정, 넘는 순간 윈도우 알림 한 번
   // (사이드카 /prices 는 이미 받아 둔 시세 목록만 본다 — 네트워크 호출 없음)
@@ -1717,7 +1729,7 @@ function App() {
       dailyAdd("rst"); // 하루 요약: 재입고 알림이 뜬 횟수
       setRstToast(body);
       window.clearTimeout(toastTimer);
-      toastTimer = window.setTimeout(() => setRstToast(null), 8000);
+      toastTimer = window.setTimeout(() => setRstToast(null), 15000); // 11-19 실기: 8초는 짧고 작아 놓쳤다
       let ok = await isPermissionGranted().catch(() => false);
       if (!ok) ok = (await requestPermission().catch(() => "denied")) === "granted";
       if (ok) sendNotification({ title: T[lang].traderRstTitle, body });
@@ -3119,7 +3131,8 @@ function App() {
 
   // ── 지도 ───────────────────────────────────────────────────────────
   const radarUrl = (full: boolean) => {
-    const q = new URLSearchParams({ lang: dataLang(region.lang), game_mode: region.gameMode, glang: getGameLang(region) }); // glang = 탈출구 목록 OCR 언어(11-09)
+    const q = new URLSearchParams({ lang: dataLang(region.lang), game_mode: region.gameMode, glang: getGameLang(region) });
+    if (gameKeyOAtRef.current) q.set("oat", gameKeyOAtRef.current.toFixed(1)); // 11-19 O 키 뒤 스크린샷 = 탈출구 목록 // glang = 탈출구 목록 OCR 언어(11-09)
     if (full) q.set("full", "true");
     if (radarMapRef.current) q.set("map", radarMapRef.current);
     if (radarStoryRef.current) q.set("story", radarStoryRef.current);
