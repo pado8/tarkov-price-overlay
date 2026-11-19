@@ -1409,6 +1409,12 @@ fn sidecar_blocked_state() -> bool {
     SIDECAR_BLOCKED_SENT.load(Ordering::SeqCst)
 }
 
+/// 11-19 다른 프로그램이 엔진 포트를 잡고 있어 기다리는 중인가 — 앱 시작 때 바로 걸리면 웹뷰가 이벤트를 못 듣는다.
+#[tauri::command]
+fn sidecar_port_busy_state() -> bool {
+    SIDECAR_PORT_BUSY_SENT.load(Ordering::SeqCst)
+}
+
 fn sidecar_blocked(err: &str) -> bool {
     err.contains("os error 4551") || err.contains("Application Control policy")
 }
@@ -1636,6 +1642,31 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
     });
 }
 
+/// 11-19 엔진 포트를 다른 프로그램이 잡고 있으면 엔진을 띄우지 않는다. 띄워도 모델(8~10초·약 800MB)을 다 올린 뒤에야 포트를
+/// 못 열어 꺼지고, 예전엔 그걸 재시도 5번(약 62초) 되풀이했다. 대신 웹뷰에 알리고 5초마다 포트만 확인하다가 비면 띄운다.
+/// 재시도 횟수는 쓰지 않는다(다른 프로그램이 오래 잡고 있어도 놓는 순간 살아나게).
+const PORT_WAIT_SECS: u64 = 5;
+
+fn wait_port_then_spawn(app: tauri::AppHandle, attempt: u32) {
+    if !SIDECAR_PORT_BUSY_SENT.swap(true, Ordering::SeqCst) {
+        let _ = app.emit("sidecar-port-busy", ());
+    }
+    eprintln!("[sidecar] port {SIDECAR_PORT} is held by another program - waiting for it instead of starting the engine");
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_secs(PORT_WAIT_SECS));
+        if is_quitting(&app) {
+            return;
+        }
+        if !matches!(sidecar_port_owner(), PortOwner::Other) {
+            println!("[sidecar] port {SIDECAR_PORT} is free again - starting the engine");
+            SIDECAR_PORT_BUSY_SENT.store(false, Ordering::SeqCst);
+            let _ = app.emit("sidecar-port-free", ());
+            spawn_and_watch_sidecar(app, attempt);
+            return;
+        }
+    });
+}
+
 /// Spawn the Python sidecar and babysit it. If it dies while the app is NOT
 /// quitting (crash/OOM/AV kill), respawn after 2s so lookups self-heal instead
 /// of failing with "Failed to fetch" until an app restart — the most common
@@ -1643,6 +1674,10 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
 /// attempt counter (transient crash, not a crash loop).
 fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     clear_stale_sidecar();
+    if matches!(sidecar_port_owner(), PortOwner::Other) {
+        wait_port_then_spawn(app, attempt);
+        return;
+    }
     let cmd = match app.shell().sidecar("tarkov-server") {
         Ok(c) => c,
         Err(e) => {
@@ -1765,6 +1800,11 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
                 _ => "",
             };
             why = format!("{why}|{tag}{owner}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>[_other|_own]
+            if owner == "_other" {
+                // 띄우는 사이 다른 프로그램이 포트를 잡았다 — 재시도로 모델을 또 올리지 않고 포트가 빌 때까지 기다린다
+                wait_port_then_spawn(app, next);
+                return;
+            }
         }
         schedule_sidecar_restart(app, next, &why);
     });
@@ -1879,6 +1919,7 @@ pub fn run() {
             register_toggle_hotkey,
             sidecar_missing_state,
             sidecar_blocked_state,
+            sidecar_port_busy_state,
             register_lookup_mouse,
             register_toggle_mouse,
             set_hotkey_passthrough,

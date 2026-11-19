@@ -2431,9 +2431,21 @@ function App() {
       setStatus("error");
     };
     const unBlocked = listen("sidecar-blocked", () => void onBlocked());
-    const unPortBusy = listen("sidecar-port-busy", () => {
+    // 11-19 다른 프로그램이 포트를 잡으면 엔진은 재시도하지 않고 포트가 빌 때까지 기다린다(lib.rs wait_port_then_spawn).
+    // 하루 요약 spw = 포트 대기에 들어간 세션(엔진이 못 뜬 원인 중 '다른 프로그램' 몫)
+    let portWaitCounted = false;
+    const onPortBusy = () => {
       log("React: sidecar-port-busy — another program holds the engine port");
       sidecarPortBusyRef.current = true;
+      if (!portWaitCounted) {
+        portWaitCounted = true;
+        dailyAdd("spw");
+      }
+    };
+    const unPortBusy = listen("sidecar-port-busy", onPortBusy);
+    const unPortFree = listen("sidecar-port-free", () => {
+      log("React: sidecar-port-free — engine starting");
+      sidecarPortBusyRef.current = false;
     });
     const unRestart = listen("sidecar-restart", () => dailyAdd("sr")); // 11-09 조용한 재시작 횟수(하루 요약 sr)
     // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
@@ -2448,6 +2460,11 @@ function App() {
           if (b) void onBlocked();
         })
         .catch(() => {});
+      invoke<boolean>("sidecar_port_busy_state")
+        .then((b) => {
+          if (b) onPortBusy();
+        })
+        .catch(() => {});
     };
     ask();
     const again = window.setTimeout(ask, 3000);
@@ -2456,6 +2473,7 @@ function App() {
       unMissing.then((fn) => fn());
       unBlocked.then((fn) => fn());
       unPortBusy.then((fn) => fn());
+      unPortFree.then((fn) => fn());
       unRestart.then((fn) => fn());
       window.clearTimeout(again);
     };
