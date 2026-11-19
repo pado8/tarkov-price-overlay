@@ -1701,14 +1701,15 @@ function App() {
       localStorage.setItem(RST_LEAD_KEY, String(rstLead));
       localStorage.setItem(RST_TRADERS_KEY, JSON.stringify(rstTraders));
     } catch {}
-    if (!rstOn || !rstKeys) return;
+    // 11-19 실기: 상인을 전부 끄면 목록도 안 받아 칩이 하나도 안 보였다(다시 켤 길이 없음) → 전부 꺼도 목록은 받는다(알림은 없음)
+    if (!rstOn) return;
     let dead = false;
     let alertTimer = 0;
     let fetchTimer = 0;
     let toastTimer = 0;
     let tries = 0;
     const lang = region.lang;
-    dailyAdd("rsto"); // 하루 요약: 재입고 알림을 켠 채 쓴 세션
+    if (rstKeys) dailyAdd("rsto"); // 하루 요약: 재입고 알림을 켠 채 쓴 세션(고른 상인이 있을 때만)
     const fire = async (r: ResetRow) => {
       rstNotifiedRef.current.add(notifyKey(r));
       const body = T[lang].traderRstBody.replace("{name}", r.name).replace("{m}", String(minutesLeft(r, Date.now() / 1000)));
@@ -1725,7 +1726,7 @@ function App() {
       let rows: ResetRow[] = [];
       let stale = false;
       try {
-        const q = new URLSearchParams({ game_mode: region.gameMode, lang: dataLang(lang), keys: rstKeys });
+        const q = new URLSearchParams({ game_mode: region.gameMode, lang: dataLang(lang), keys: rstKeys || "none" });
         const res = await fetch(`${PYTHON_API}/traders/resets?${q.toString()}`);
         if (res.ok) {
           const j = (await res.json()) as { traders?: ResetRow[]; others?: ResetRow[]; stale?: boolean };
