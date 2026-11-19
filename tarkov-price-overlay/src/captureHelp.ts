@@ -75,6 +75,55 @@ export function refitBox(geo: BoxGeo, base: BoxGeo, monW: number, monH: number):
   return scaleGeo(base, want);
 }
 
+// ── 11-19 넓은 범위에서 찾은 툴팁 위치로 캡처 상자 조정 ─────────────────────────
+// 상자가 빗나가 사이드카가 커서 주변에서 툴팁을 직접 찾아 읽은 조회(attempt "scan")가 같은 모니터에서 3번 이어지면, 그 위치를 덮도록
+// 상자를 옮긴다. 다른 상자로 읽힌 조회가 끼면 처음부터 센다. 직접 조정한 상자는 건드리지 않는다(App.tsx 가 확인).
+
+/** 커서 기준 툴팁 패널 위치(물리 픽셀) */
+export type ScanHit = { dx: number; dy: number; w: number; h: number };
+export type ScanStreak = { mon: string; hits: ScanHit[] };
+export type PrimaryBox = Pick<BoxGeo, "offsetX" | "offsetY" | "width" | "height">;
+export const SCAN_STREAK_N = 3;
+
+/** 아이템을 읽은 조회마다 부른다. hit = 넓은 범위 찾기로 읽은 위치, 다른 상자로 읽었으면 null. */
+export function nextScanStreak(prev: ScanStreak | null, mon: string, hit: ScanHit | null): ScanStreak | null {
+  if (!hit) return null;
+  const hits = prev && prev.mon === mon ? [...prev.hits, hit].slice(-SCAN_STREAK_N) : [hit];
+  return { mon, hits };
+}
+
+function median(v: number[]): number {
+  const s = [...v].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)];
+}
+
+/** 3번의 위치가 서로 맞고 지금 상자 밖이면 새 상자. 위치가 들쭉날쭉하거나 이미 상자 안(위치가 아니라 글자 인식 문제)이면 null.
+ *  왼쪽에 뜬 툴팁은 오른쪽으로 뒤집어 본다 — 사이드카가 상자를 커서 좌우 대칭(mirror)으로 함께 읽는다. */
+export function scanFitBox(geo: PrimaryBox, hits: ScanHit[]): PrimaryBox | null {
+  if (hits.length < SCAN_STREAK_N) return null;
+  const rows = hits.map((p) => {
+    const left = p.dx + p.w / 2 < 0 ? -(p.dx + p.w) : p.dx;
+    return { left, right: left + p.w, cy: p.dy + p.h / 2, h: p.h };
+  });
+  const h = median(rows.map((p) => p.h));
+  const cy = median(rows.map((p) => p.cy));
+  const left = median(rows.map((p) => p.left));
+  if (rows.some((p) => Math.abs(p.h - h) > h * 0.5 || Math.abs(p.cy - cy) > h * 0.75 || Math.abs(p.left - left) > h * 1.5)) return null;
+  const inside = rows.every((p) => p.left >= geo.offsetX && p.right <= geo.offsetX + geo.width
+    && p.cy - p.h / 2 >= geo.offsetY && p.cy + p.h / 2 <= geo.offsetY + geo.height);
+  if (inside) return null;
+  const pad = Math.round(h * 0.25);
+  const minLeft = Math.min(...rows.map((p) => p.left));
+  const maxRight = Math.max(...rows.map((p) => p.right));
+  const height = Math.max(Math.round(h * 1.6), Math.max(...rows.map((p) => p.h)) + pad * 2);
+  return {
+    offsetX: Math.round(minLeft) - pad,
+    offsetY: Math.round(cy - height / 2),
+    width: Math.max(geo.width, Math.round(maxRight - minLeft) + pad * 2),
+    height,
+  };
+}
+
 /** 같은 모니터에서 연달아 n 번(기본 2) 어긋났을 때만 다시 맞춘다 — 다른 모니터에서 한 번 잘못 누른 것으로 상자가 바뀌지 않게.
  *  prev = 직전 조회의 "가로x세로"(어긋났을 때만, 아니면 null). 돌려주는 값: [다시 맞출지, 다음에 넘길 prev] */
 export function refitStreak(prev: string | null, monW: number, monH: number, mismatched: boolean): [boolean, string | null] {

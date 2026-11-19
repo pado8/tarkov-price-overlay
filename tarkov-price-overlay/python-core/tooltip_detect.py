@@ -110,6 +110,63 @@ def find_panel(image: np.ndarray | None, need_border: bool = True) -> dict | Non
     return best
 
 
+# 11-19 넓은 범위에서 툴팁 찾기(main.py _scan_for_tooltip): 상자가 전부 빗나간 조회에서 커서 주변을 넓게 찍어 툴팁 패널을 직접 찾는다.
+# 넓게 보면 무기 칸·안내 패널도 어둡게 잡히므로 find_panel 보다 조건이 빡빡하다 — 네 면 중 3면 이상 테두리, 툴팁 높이, 커서 근처.
+# 크기는 모두 1440p 기준 값 × (화면 높이 / 1440). 확대·축소로 1px 테두리가 뭉개져도 잡히게 패널 바깥 1~3px 를 본다.
+SCAN_H_MIN, SCAN_H_MAX = 24, 130  # 패널 높이(1440p 한 줄 58, 두 줄 79 · 무기 칸은 167 이라 걸러진다)
+SCAN_W_MIN, SCAN_W_MAX = 60, 1400
+SCAN_NEAR = 220  # 커서에서 패널까지 최단 거리 상한 — 툴팁은 커서 바로 옆에 뜬다
+SCAN_SIDES_MIN = 3
+
+
+def _scan_line_ok(s: np.ndarray) -> bool:
+    if s.size < 8:
+        return False
+    med = float(np.median(s))
+    return 40 <= med <= 125 and float((np.abs(s.astype(np.int16) - med) <= 22).mean()) >= 0.7
+
+
+def _scan_sides(g: np.ndarray, x: int, y: int, w: int, h: int) -> int:
+    """패널 바깥 1~3px 안에 고른 회색 선이 있는 면의 수."""
+    H, W = g.shape[:2]
+    n = int(any(y - d >= 0 and _scan_line_ok(g[y - d, x:x + w]) for d in (1, 2, 3)))
+    n += any(y + h - 1 + d < H and _scan_line_ok(g[y + h - 1 + d, x:x + w]) for d in (1, 2, 3))
+    n += any(x - d >= 0 and _scan_line_ok(g[y:y + h, x - d]) for d in (1, 2, 3))
+    n += any(x + w - 1 + d < W and _scan_line_ok(g[y:y + h, x + w - 1 + d]) for d in (1, 2, 3))
+    return n
+
+
+def find_tooltips(image: np.ndarray | None, screen_h: int, cursor: tuple[int, int]) -> list[dict]:
+    """넓은 캡처에서 툴팁 패널 후보를 커서에 가까운 순서로. cursor 는 이미지 안 좌표, screen_h 는 게임 모니터 세로."""
+    if image is None or cv2 is None or image.size == 0 or screen_h <= 0:
+        return []
+    s = screen_h / 1440
+    g = _gray(image)
+    H, W = g.shape[:2]
+    n, _lab, st, _ = cv2.connectedComponentsWithStats((g < DARK_MAX).astype(np.uint8), 8)
+    found = []
+    for i in range(1, n):
+        x, y, w, h, area = (int(v) for v in st[i])
+        if not (SCAN_H_MIN * s <= h <= SCAN_H_MAX * s and SCAN_W_MIN * s <= w <= SCAN_W_MAX * s) or w < 1.6 * h:
+            continue
+        if x <= 0 or y <= 0 or x + w >= W or y + h >= H or area / float(w * h) < 0.55:
+            continue
+        gap_x = max(x - cursor[0], cursor[0] - (x + w), 0)
+        gap_y = max(y - cursor[1], cursor[1] - (y + h), 0)
+        dist = float(np.hypot(gap_x, gap_y))
+        if dist > SCAN_NEAR * s:
+            continue
+        inner = g[y:y + h, x:x + w]
+        darkpx = inner[inner < DARK_MAX]
+        if darkpx.size == 0 or float(np.median(darkpx)) > PURE_MED_MAX:
+            continue
+        if not TIP_BRIGHT_FRAC_MIN <= float((inner > TIP_BRIGHT_MIN).mean()) <= 0.45:
+            continue
+        if _scan_sides(g, x, y, w, h) >= SCAN_SIDES_MIN:
+            found.append({"x": x, "y": y, "w": w, "h": h, "dist": dist})
+    return sorted(found, key=lambda p: p["dist"])
+
+
 def has_tooltip(image: np.ndarray | None) -> bool:
     """인벤토리 툴팁이 캡처에 있나. 판정 불가(cv2 없음·빈 이미지)는 True — 기다리지 않고 지금처럼 읽게."""
     if image is None or cv2 is None or getattr(image, "size", 0) == 0:

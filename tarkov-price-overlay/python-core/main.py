@@ -365,6 +365,9 @@ class LookupResponse(BaseModel):
     # 11-10 통계: 조회 때 커서가 있는 모니터 크기 [가로, 세로](물리 픽셀). 앱이 저장된 캡처 상자가 이 모니터에 맞는지 하루 요약에
     # 센다(bxm·bxf) — 4K@150 실패 가설(상자는 첫 실행 때 주 모니터 바탕화면 기준인데 게임은 다른 해상도·모니터) 판정용
     mon: list[int] | None = None
+    # 11-19 넓은 범위 툴팁 찾기 결과(상자가 전부 빗나간 조회에서만). found = 커서 근처 툴팁 패널 수, 찾아서 읽었으면 dx·dy·w·h =
+    # 커서 기준 패널 위치(물리 픽셀). 앱이 하루 요약(scn·scp·sch)과 캡처 상자 자동 조정에 쓴다.
+    scan: dict[str, int] | None = None
     item_id: str | None = None  # tarkov.dev catalog id (public); used for telemetry
     item_name: str | None
     short_name: str | None = None
@@ -1309,6 +1312,37 @@ def _lookup_superseded(client_seq: int | None) -> bool:
         return client_seq < _lookup_seq
 
 
+SCAN_HALF_W, SCAN_HALF_H = 900, 300  # 넓은 범위 찾기: 커서 좌우·상하로 볼 거리(1440p 기준)
+SCAN_MAX_PANELS = 2  # 후보를 읽어 보는 최대 수 — 실패한 조회의 OCR 이 너무 늘지 않게
+
+
+def _scan_for_tooltip(
+    cursor_x: int, cursor_y: int, mon_h: int, lang: str, game_mode: str, corrections: dict[str, str],
+    rescue_pool: list[str], mag: float, client_seq: int | None,
+) -> tuple[str, dict, dict[str, int]]:
+    """11-19 상자가 전부 빗나갔을 때 커서 주변을 넓게 찍어 툴팁 패널을 직접 찾아 읽는다(UI 배율·해상도로 툴팁이 상자 밖에 뜬 경우).
+    패널처럼 보여도 아이템 이름과 맞아야만 결과로 쓴다. 돌려주는 값: (읽은 글자, 시세, 응답의 scan)."""
+    from tooltip_detect import find_tooltips
+
+    s = mon_h / 1440
+    hw, hh = int(SCAN_HALF_W * s), int(SCAN_HALF_H * s)
+    sx, sy, sw, sh = _clamp_to_monitor(cursor_x - hw, cursor_y - hh, hw * 2, hh * 2, cursor_x, cursor_y)
+    panels = find_tooltips(capture_region(sx, sy, sw, sh), mon_h, (cursor_x - sx, cursor_y - sy))
+    info = {"found": len(panels)}
+    print(f"[scan] {len(panels)} tooltip panel(s) near cursor in {sw}x{sh}")
+    for p in panels[:SCAN_MAX_PANELS]:
+        if _lookup_superseded(client_seq):
+            break
+        px, py = sx + p["x"], sy + p["y"]
+        text, price = _capture_and_lookup(
+            px, py, p["w"], p["h"], lang, game_mode, "scan", corrections, rescue_pool=rescue_pool, mag=mag,
+        )
+        if price.get("name") is not None:
+            info.update(dx=px - cursor_x, dy=py - cursor_y, w=p["w"], h=p["h"])
+            return text, price, info
+    return "", {"name": None}, info
+
+
 # 출처 검사: 조회는 화면을 캡처해 읽는다. 남의 페이지가 본문 형식 없는 POST(사전 요청 없음)로 이걸 돌리거나
 # client_seq 를 큰 값으로 올려 이후 조회를 전부 '대체됨'으로 만들지 못하게 한다.
 @app.post("/lookup", response_model=LookupResponse, dependencies=[Depends(_reject_foreign_origin)])
@@ -1460,9 +1494,12 @@ def lookup(req: CaptureRequest) -> LookupResponse:
     # 상자 크기가 아니라 모니터로 정한다: 상자가 4K 인데 게임이 1440p 인 경우(어긋남 가설) 1.0 은 손해라서.
     ocr_mag = 1.0 if mon_wh and mon_wh[1] >= 2000 else 1.5
 
+    scan_info: dict[str, int] | None = None
+
     def _tw(resp: LookupResponse) -> LookupResponse:
         resp.tooltip_wait = tip_state
         resp.mon = list(mon_wh) if mon_wh else None
+        resp.scan = scan_info
         d = getattr(_tm, "d", None) or {}
         resp.timing = {"w": tip_ms, **{k: round(d.get(k, 0.0) * 1000) for k in ("c", "o", "m")}, "a": int(d.get("a", 0))}
         _tw_learn(tip_state, resp.item_name is not None, resp.attempt)
@@ -1482,6 +1519,19 @@ def lookup(req: CaptureRequest) -> LookupResponse:
         if _lookup_superseded(req.client_seq):
             print(f"[lookup] superseded before {label} (seq {req.client_seq}) - aborting")
             return _build_response(best_text, {"name": None}, game_mode, attempt="superseded", lang=req.lang)
+        # 11-19 커서 주변 상자가 전부 빗나갔다 → 커서 주변에서 툴팁 패널을 직접 찾는다. 가운데 상자보다 먼저 본다: 가운데 상자는 인벤토리가
+        # 열려 있으면 화면 가운데의 칸 글자를 읽어 엉뚱한 아이템을 내놓는다(실제 화면 재현: 배터리 툴팁인데 Tri-Zip 군장).
+        # 공유 키의 스크린샷용 누름(shared_lite)은 가운데 상자가 빠져 있어 여기 오지 않는다.
+        if label == "center" and mon_wh:
+            try:
+                scan_text, scan_price, scan_info = _scan_for_tooltip(
+                    cursor_x, cursor_y, mon_wh[1], lang, game_mode, req.corrections, rescue_pool, ocr_mag, req.client_seq,
+                )
+            except Exception as e:  # noqa: BLE001 — 찾기가 실패해도 다음 단계는 그대로 돈다
+                print(f"[scan] failed: {e}")
+                scan_text, scan_price = "", {"name": None}
+            if scan_price.get("name") is not None:
+                return _tw(_build_response(scan_text, scan_price, game_mode, attempt="scan", lang=req.lang))
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections,
             rescue_pool=rescue_pool, mag=ocr_mag,

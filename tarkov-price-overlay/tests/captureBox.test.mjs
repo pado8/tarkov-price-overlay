@@ -7,7 +7,7 @@ const source = await readFile(new URL("../src/captureHelp.ts", import.meta.url),
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2020 },
 });
-const { captureScale, scaleGeo, defaultScaleOf, refitBox, refitStreak } = await import(
+const { captureScale, scaleGeo, defaultScaleOf, refitBox, refitStreak, nextScanStreak, scanFitBox } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 
@@ -71,4 +71,37 @@ test("a refit needs two lookups in a row on the same mismatched monitor", () => 
   assert.deepEqual([apply, prev], [false, "3440x1440"]);
   [apply, prev] = refitStreak(prev, 3440, 1440, false);
   assert.deepEqual([apply, prev], [false, null]);
+});
+
+// 11-19 넓은 범위 찾기로 읽은 툴팁 위치로 상자 옮기기
+const BOX = { offsetX: 13, offsetY: 150, width: 400, height: 93 }; // 툴팁과 동떨어진 상자
+const HIT = { dx: 18, dy: -74, w: 265, h: 58 };
+
+test("three scanned hits on one monitor build a streak, any other read resets it", () => {
+  let s = nextScanStreak(null, "2560x1440", HIT);
+  s = nextScanStreak(s, "2560x1440", HIT);
+  assert.equal(s.hits.length, 2);
+  assert.equal(nextScanStreak(s, "2560x1440", null), null);
+  assert.equal(nextScanStreak(s, "3840x2160", HIT).hits.length, 1);
+  s = nextScanStreak(nextScanStreak(s, "2560x1440", HIT), "2560x1440", HIT);
+  assert.equal(s.hits.length, 3);
+});
+
+test("the moved box covers the tooltip that was outside it", () => {
+  const b = scanFitBox(BOX, [HIT, { ...HIT, w: 229, dx: 18 }, { ...HIT, w: 398, h: 79, dy: -95 }]);
+  assert.ok(b);
+  assert.ok(b.offsetX <= HIT.dx && b.offsetX + b.width >= HIT.dx + 398);
+  assert.ok(b.offsetY <= -95 && b.offsetY + b.height >= HIT.dy + HIT.h);
+});
+
+test("a tooltip on the left of the cursor is mirrored to the right", () => {
+  const left = { ...HIT, dx: -(18 + 265) };
+  assert.deepEqual(scanFitBox(BOX, [left, left, left]), scanFitBox(BOX, [HIT, HIT, HIT]));
+});
+
+test("no move with fewer than three hits, scattered hits, or a tooltip already inside", () => {
+  assert.equal(scanFitBox(BOX, [HIT, HIT]), null);
+  assert.equal(scanFitBox(BOX, [HIT, HIT, { ...HIT, dy: 200 }]), null);
+  assert.equal(scanFitBox(BOX, [HIT, HIT, { ...HIT, dx: 300 }]), null);
+  assert.equal(scanFitBox({ offsetX: 10, offsetY: -100, width: 400, height: 110 }, [HIT, HIT, HIT]), null);
 });

@@ -19,7 +19,7 @@ import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareAsk, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
-import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, type HelpMode } from "./captureHelp";
+import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, defaultScaleOf, nextScanStreak, scanFitBox, type HelpMode, type PrimaryBox, type ScanStreak } from "./captureHelp";
 import { fitWideRect, loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
@@ -924,6 +924,7 @@ type LookupResult = {
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
   tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
   mon?: number[] | null; // 11-10 조회 때 커서가 있는 모니터 [가로, 세로](물리 픽셀) — 상자 어긋남 통계(bxm·bxf)
+  scan?: { found: number; dx?: number; dy?: number; w?: number; h?: number } | null; // 11-19 상자가 빗나갔을 때 커서 주변에서 툴팁을 찾은 결과
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -1091,6 +1092,16 @@ const SECTION_KEYS = [
   "slotLine",
 ] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
+
+// 11-19 넓은 범위 찾기로 자동 조정한 상자의 값 — 지금 상자가 이것과 같으면 사용자가 손댄 상자가 아니므로 다시 조정해도 된다
+const SCAN_FIT_KEY = "tarkov.capture.scanFit";
+const scanFitText = (b: PrimaryBox) => `${b.offsetX},${b.offsetY},${b.width},${b.height}`;
+function loadScanFit(): string | null {
+  try { return localStorage.getItem(SCAN_FIT_KEY); } catch { return null; }
+}
+function saveScanFit(b: PrimaryBox): void {
+  try { localStorage.setItem(SCAN_FIT_KEY, scanFitText(b)); } catch { /* 저장 못 해도 이번 조정은 유지 */ }
+}
 
 const DEFAULT_REGION: Region = {
   offsetX: 10,
@@ -1549,6 +1560,7 @@ function App() {
   const toggleAtRef = useRef(-1e12); // 마지막 Shift+F2(숨기기 토글) 시각 — 같은 키면 그 누름도 게임 스크린샷을 만든다
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
+  const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
   const refitPrevRef = useRef<string | null>(null); // 11-17 캡처 상자 다시 맞추기 — 직전 조회가 어긋났던 모니터("가로x세로")
   // 피드백 #51: 카드 블록 CSS order (시세 줄은 order 0으로 항상 위)
   const secStyle = (k: SectionKey) => ({ order: Math.max(0, region.sectionOrder.indexOf(k)) + 1 });
@@ -4932,6 +4944,28 @@ function App() {
               log(`React: capture box refit ${r.width}x${r.height} -> ${fit.width}x${fit.height} (monitor ${data.mon[0]}x${data.mon[1]})`);
               dailyAdd("bxa"); // 하루 요약: 상자를 자동으로 다시 맞춘 횟수
               setRegion((prev) => ({ ...prev, ...fit }));
+            }
+          }
+          // 11-19 넓은 범위 찾기(하루 요약): scn 실행 · scp 툴팁을 찾음 · sch 찾아서 읽음 · sca 상자 자동 조정.
+          // scn 과 scp 의 차이 = 커서 근처에 툴팁이 없던 실패(툴팁 없는 곳에서 누름·검은 화면 캡처), scp 와 sch 의 차이 = 툴팁은 있는데 못 읽음.
+          if (data.scan) {
+            dailyAdd("scn");
+            if (data.scan.found > 0) dailyAdd("scp");
+            if (data.attempt === "scan") dailyAdd("sch");
+          }
+          if (data.item_name != null && Array.isArray(data.mon) && data.mon.length === 2) {
+            const s = data.attempt === "scan" ? data.scan : null;
+            const hit = s && s.dx != null && s.dy != null && s.w != null && s.h != null ? { dx: s.dx, dy: s.dy, w: s.w, h: s.h } : null;
+            const streak = nextScanStreak(scanStreakRef.current, `${data.mon[0]}x${data.mon[1]}`, hit);
+            scanStreakRef.current = streak;
+            const untouched = defaultScaleOf(r, DEFAULT_REGION) != null || loadScanFit() === scanFitText(r);
+            const box = streak && untouched ? scanFitBox(r, streak.hits) : null;
+            if (box) {
+              log(`React: capture box moved to scanned tooltip ${r.offsetX},${r.offsetY} ${r.width}x${r.height} -> ${box.offsetX},${box.offsetY} ${box.width}x${box.height}`);
+              dailyAdd("sca");
+              saveScanFit(box);
+              scanStreakRef.current = null;
+              setRegion((prev) => ({ ...prev, ...box }));
             }
           }
           if (data.item_name == null) {
