@@ -44,6 +44,10 @@ const CAPTURE_HELP_DISMISS_KEY = "tarkov.captureHelpDismissedAt";
 // remember it forever per machine so users who already moved to elevated
 // shortcuts never see it again. Clearing localStorage brings it back.
 const ADMIN_BANNER_DISMISS_KEY = "tarkov.adminBannerDismissed";
+// 11-19 이번 실행에 조회 키(F2)가 한 번이라도 앱에 닿았나 — 게임이 관리자 권한으로 돌면 일반 권한 앱엔 키가 안 온다
+let f2Reached = false;
+// 게임이 앞에 있던 분(이번 실행) — 이만큼 지나도 F2 가 없으면 관리자 안내를 다른 배너보다 먼저 띄운다
+const ADMIN_FIRST_AFTER_GM_MIN = 2;
 // Server-driven announcement (editable live via /announcement-admin, no app
 // release). Shown at most once per local day, and again whenever the content
 // changes. ANNOUNCE_SEEN_KEY stores {id, date} of the last time we showed it.
@@ -361,7 +365,7 @@ type StatsEvent =
   | "sidecar_fail" // 사이드카가 끝내 안 뜸. detail = probe_refused|probe_timeout|probe_http_<n>|dead:<이유>
   | "display" // 실행당 1회. detail = <가로>x<세로>@<배율%> (물리 픽셀, 예 2560x1440@125)
   | "config" // 실행당 1~2회. detail = k=v;k=v (언어·모드·지도·나란히·단축키·공유·자동숨김·퀘스트표시 / 퀘스트연동)
-  | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | shown_tip:<연속실패수>(11-07 툴팁 안내) | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공)
+  | "help" // 11-04 첫 설정 도움 상자: shown:<연속실패수> | shown_tip:<연속실패수>(11-07 툴팁 안내) | capture | autoscale | dismiss | recovered(표시 뒤 첫 성공) · 11-19 관리자 안내 admin:shown | admin:first | admin:relaunch
   //          11-07 시작 카드·사용 설명서: start:shown | start:manual | start:got_it | start:done(첫 조회 성공) | manual:settings
   | "daily" // 사용자당 하루 1행(날짜 바뀐 뒤 첫 플러시). detail = hist=;man=;wide=;pin=;fb=;don=;lat=(중앙값ms);n=
   | "donate"; // 11-06 후원 창 사용: open:<탭> | tab:<탭> | paypal_open | copy:<탭> (탭 = kakao|paypal). 금액·결제 정보 없음
@@ -1846,6 +1850,10 @@ function App() {
   const [adminDismissed, setAdminDismissed] = useState<boolean>(
     () => localStorage.getItem(ADMIN_BANNER_DISMISS_KEY) === "true"
   );
+  // 11-19 통계: 첫날 인식 성공 = 일반 권한만 77% · 관리자로 다시 켠 사람 93%. 관리자 안내는 통계 안내·업데이트 뒤 순서라
+  // 첫 실행에 늦게 보였다 → 게임이 앞에 있었는데 F2 가 한 번도 안 왔으면(키가 앱에 안 닿는 정황) 맨 앞으로
+  const [adminFirst, setAdminFirst] = useState(false);
+  const adminShownRef = useRef(false);
   // Server-driven announcement to show on launch (null = nothing to show).
   const [remoteAnnounce, setRemoteAnnounce] =
     useState<RemoteAnnouncement | null>(null);
@@ -3711,9 +3719,14 @@ function App() {
   // 11-09 사용 시간(하루 요약 up = 앱이 켜져 있던 분, gm = 그중 게임이 맨 앞이던 분) — 본 창만, 1분마다 1
   useEffect(() => {
     if (!IS_MAIN_WINDOW) return;
+    let gmMin = 0;
     const iv = window.setInterval(() => {
       dailyAdd("up");
-      if (fgKindRef.current === "game") dailyAdd("gm");
+      if (fgKindRef.current === "game") {
+        dailyAdd("gm");
+        gmMin++;
+        if (gmMin >= ADMIN_FIRST_AFTER_GM_MIN && !f2Reached) setAdminFirst(true);
+      }
     }, 60_000);
     return () => window.clearInterval(iv);
   }, []);
@@ -5001,6 +5014,8 @@ function App() {
         const atPress = pressView({ passthrough: hotkeyPassthroughRef.current, mapShown: radarActiveRef.current, wideMode: wideModeRef.current });
         if (atPress.reveal) await reveal();
         diag("f2");
+        f2Reached = true;
+        setAdminFirst(false); // 키가 앱에 닿았다 = 관리자 권한 문제가 아니다 → 안내는 원래 순서로
         if (pipActiveRef.current) miniReturnRef.current = true; // 작은 지도에서 누른 조회 — 카드를 다 보면 작은 지도로
         if (!hotkeyPassthroughRef.current) setRadarActive(false);
         else sharedPressAtRef.current = performance.now();
@@ -5759,7 +5774,10 @@ function App() {
         {/* 배너는 한 번에 하나만(11-02 점검): 통계 안내 > 업데이트 > 관리자 권한 > 서버 공지.
             첫 실행에 넷이 같이 떠 카드가 배너로 가득 차던 것 — 하나를 닫으면 다음 것이 보인다 */}
         {(() => {
-          const banner = !statsNoticeShown
+          const adminNeeded = !!adminInfo && adminInfo.is_admin === false && !adminDismissed;
+          const banner = adminFirst && adminNeeded
+            ? "admin"
+            : !statsNoticeShown
             ? "consent"
             : isPortable && installedCopy && !installedCopyDismissed
               ? "installed"
@@ -5767,11 +5785,16 @@ function App() {
                 ? "switched"
             : updateInfo && updateInfo.version !== dismissedUpdate
               ? "update"
-              : adminInfo && adminInfo.is_admin === false && !adminDismissed
+              : adminNeeded
                 ? "admin"
                 : announcementText
                   ? "announce"
                   : null;
+          // 하루 요약 대신 도움 이벤트(help): admin:shown = 순서대로 보임 · admin:first = 게임 중 F2 0회라 맨 앞으로 · admin:relaunch = 다시 켜기 누름
+          if (banner === "admin" && !adminShownRef.current) {
+            adminShownRef.current = true;
+            reportEvent("help", adminFirst ? "admin:first" : "admin:shown");
+          }
           return (
         <>
         {banner === "consent" && (
@@ -5974,6 +5997,7 @@ function App() {
             <button
               className="settings-btn"
               onClick={() => {
+                reportEvent("help", "admin:relaunch");
                 invoke("relaunch_as_admin").catch((e) =>
                   log(`relaunch_as_admin failed: ${e}`)
                 );
