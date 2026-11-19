@@ -19,7 +19,7 @@ import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
 import { viewAfterLookup, shotAction, nomatchCategory, pressView } from "./lookupOutcome";
-import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, defaultScaleOf, nextScanStreak, scanFitBox, resetGeo, type HelpMode, type PrimaryBox, type ScanStreak } from "./captureHelp";
+import { chooseHelpMode, captureScale, boxMismatch, refitBox, refitStreak, defaultScaleOf, nextScanStreak, scanFitBox, resetGeo, SCAN_STREAK_N, SCAN_STREAK_USER, type HelpMode, type PrimaryBox, type ScanStreak } from "./captureHelp";
 import { fitWideRect, loadWideMapSide, saveWideMapSide, wideMapOnTop, wideSideCode, wideStacked, type WideMapSide } from "./wideLayout";
 import { snapToWorkArea } from "./miniSnap";
 import { cmpVersion } from "./version";
@@ -956,7 +956,7 @@ type LookupResult = {
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
   tooltip_wait?: string | null; // 11-08 F2 툴팁 대기 결과(사이드카) — 'waited_none' 인데 성공 = 판정이 놓쳐 0.6초 손해
   mon?: number[] | null; // 11-10 조회 때 커서가 있는 모니터 [가로, 세로](물리 픽셀) — 상자 어긋남 통계(bxm·bxf)
-  scan?: { found: number; dx?: number; dy?: number; w?: number; h?: number; blk?: number; wm?: string } | null; // 11-19 상자가 빗나갔을 때 커서 주변에서 툴팁을 찾은 결과·실패 원인
+  scan?: { found: number; dx?: number; dy?: number; w?: number; h?: number; blk?: number; wm?: string; over?: number } | null; // 11-19 상자가 빗나갔을 때 커서 주변에서 툴팁을 찾은 결과·실패 원인
   item_name: string | null;
   short_name: string | null;
   width: number | null;
@@ -1135,6 +1135,11 @@ function loadScanFit(): string | null {
 }
 function saveScanFit(b: PrimaryBox): void {
   try { localStorage.setItem(SCAN_FIT_KEY, scanFitText(b)); } catch { /* 저장 못 해도 이번 조정은 유지 */ }
+}
+// 11-19 '되돌리기'로 돌아간 상자 — 이 상자 그대로면 다시 자동으로 옮기지 않는다(사용자가 고른 것)
+const SCAN_FIT_OFF_KEY = "tarkov.capture.scanFitOff";
+function loadScanFitOff(): string | null {
+  try { return localStorage.getItem(SCAN_FIT_OFF_KEY); } catch { return null; }
 }
 // 11-19 마지막 조회 때 게임 모니터 크기 — '초기화' 버튼이 이 모니터 배율의 기본값으로 되돌린다
 const LAST_MON_KEY = "tarkov.capture.lastMon";
@@ -1611,6 +1616,7 @@ function App() {
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
+  const [scanMoved, setScanMoved] = useState<PrimaryBox | null>(null); // 11-19 자동으로 옮기기 전 상자 — 카드의 '되돌리기'
   // 11-08 가격 알람(기본 꺼짐) — 켜져 있고 지금 모드 알람이 있으면 5분마다 사이드카의 메모리 시세로 판정, 넘는 순간 윈도우 알림 한 번
   // (사이드카 /prices 는 이미 받아 둔 시세 목록만 본다 — 네트워크 호출 없음)
   const [alarmOn, setAlarmOn] = useState<boolean>(() => {
@@ -5221,6 +5227,7 @@ function App() {
             dailyAdd("scn");
             if (data.scan.found > 0) dailyAdd("scp");
             if (data.attempt === "scan") dailyAdd("sch");
+            if (data.scan.over) dailyAdd("sco"); // 캡처 칸이 칸 글자를 읽었는데 커서 옆 툴팁으로 바꾼 조회
           }
           if (data.item_name != null && Array.isArray(data.mon) && data.mon.length === 2) {
             const s = data.attempt === "scan" ? data.scan : null;
@@ -5228,8 +5235,12 @@ function App() {
             const streak = nextScanStreak(scanStreakRef.current, `${data.mon[0]}x${data.mon[1]}`, hit);
             scanStreakRef.current = streak;
             const untouched = defaultScaleOf(r, DEFAULT_REGION) != null || loadScanFit() === scanFitText(r);
-            const box = streak && untouched ? scanFitBox(r, streak.hits) : null;
+            // 11-19 사용자 결정: 직접 바꾼 상자도 툴팁을 칸 밖에서 5번 연속 찾으면 옮긴다(기본 상자는 3번). '되돌리기'로 돌아간 상자는 그대로 둔다
+            const kept = loadScanFitOff() === scanFitText(r);
+            const box = streak && !kept ? scanFitBox(r, streak.hits, untouched ? SCAN_STREAK_N : SCAN_STREAK_USER) : null;
             if (box) {
+              if (!untouched) dailyAdd("scm"); // 직접 바꾼 상자를 옮긴 횟수
+              setScanMoved({ offsetX: r.offsetX, offsetY: r.offsetY, width: r.width, height: r.height });
               log(`React: capture box moved to scanned tooltip ${r.offsetX},${r.offsetY} ${r.width}x${r.height} -> ${box.offsetX},${box.offsetY} ${box.width}x${box.height}`);
               dailyAdd("sca");
               saveScanFit(box);
@@ -7891,6 +7902,28 @@ function App() {
                     <Icon name="x" />
                   </button>
                 </div>
+              </div>
+            )}
+            {/* 11-19 캡처 영역을 툴팁 자리로 자동으로 옮겼으면 한 줄 + 되돌리기 */}
+            {scanMoved && (
+              <div className="hint scan-moved">
+                {t.scanMovedText}{" "}
+                <button
+                  className="link-btn"
+                  onClick={() => {
+                    dailyAdd("scu"); // 자동 조정을 되돌린 횟수
+                    try {
+                      localStorage.setItem(SCAN_FIT_OFF_KEY, scanFitText(scanMoved));
+                      localStorage.removeItem(SCAN_FIT_KEY);
+                    } catch {}
+                    scanStreakRef.current = null;
+                    setRegion((prev) => ({ ...prev, ...scanMoved }));
+                    setScanMoved(null);
+                  }}
+                >
+                  {t.scanMovedUndo}
+                </button>{" "}
+                <button className="link-btn" onClick={() => setScanMoved(null)}>{t.dismiss}</button>
               </div>
             )}
             {/* 조회한 아이템이 열쇠고 지금 맵에서 여는 문이 있으면 — 몇 곳·가장 가까운 거리, 지도에서 금색으로 강조 */}

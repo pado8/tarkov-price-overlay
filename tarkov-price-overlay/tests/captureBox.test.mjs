@@ -84,7 +84,18 @@ test("three scanned hits on one monitor build a streak, any other read resets it
   assert.equal(nextScanStreak(s, "2560x1440", null), null);
   assert.equal(nextScanStreak(s, "3840x2160", HIT).hits.length, 1);
   s = nextScanStreak(nextScanStreak(s, "2560x1440", HIT), "2560x1440", HIT);
-  assert.equal(s.hits.length, 3);
+  assert.equal(s.hits.length, 4);
+  for (let i = 0; i < 4; i++) s = nextScanStreak(s, "2560x1440", HIT);
+  assert.equal(s.hits.length, 5, "keeps at most five");
+});
+
+test("a box the user adjusted needs five hits, a default box three", () => {
+  const far = { dx: 60, dy: -300, w: 265, h: 58 };
+  assert.ok(scanFitBox(BOX, [far, far, far]));
+  assert.equal(scanFitBox(BOX, [far, far, far], 5), null);
+  assert.equal(scanFitBox(BOX, [far, far, far, far], 5), null);
+  assert.ok(scanFitBox(BOX, [far, far, far, far, far], 5));
+  assert.deepEqual(scanFitBox(BOX, [{ ...far, dy: 400 }, far, far, far, far, far], 5), scanFitBox(BOX, [far, far, far, far, far], 5), "uses only the last five");
 });
 
 test("the moved box covers the tooltip that was outside it", () => {
