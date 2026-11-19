@@ -1639,6 +1639,7 @@ function App() {
     }
   });
   const [alarms, setAlarms] = useState<Alarm[]>(loadAlarms);
+  const alarmBandTimerRef = useRef(0); // 11-20 가격 알람 화면 띠를 내리는 타이머(띠는 재입고 알림과 같은 rstToast)
   const alarmsRef = useRef(alarms);
   alarmsRef.current = alarms;
   const putAlarms = (list: Alarm[]) => {
@@ -1672,6 +1673,7 @@ function App() {
         if (!fired.length) return;
         let ok = await isPermissionGranted().catch(() => false);
         if (!ok) ok = (await requestPermission().catch(() => "denied")) === "granted";
+        const bodies: string[] = [];
         for (const a of fired) {
           const body = (a.dir === "above" ? T[region.lang].alarmFiredAbove : T[region.lang].alarmFiredBelow)
             .replace("{name}", a.name)
@@ -1679,7 +1681,14 @@ function App() {
             .replace("{t}", `${a.price.toLocaleString()} ₽`);
           log(`React: alarm ${a.id} ${a.dir} ${a.price} now=${a.last}`);
           dailyAdd("paf"); // 하루 요약: 가격 알람이 뜬 횟수
+          bodies.push(body);
           if (ok) sendNotification({ title: T[region.lang].alarmFiredTitle, body });
+        }
+        // 11-20 실기: 윈도우 알림만 쓰면 게임 중엔 윈도우 '방해 금지'에 가려 안 보인다 → 재입고 알림처럼 화면 띠도 띄운다
+        if (!dead) {
+          setRstToast(`🔔 ${bodies.join(" · ")}`);
+          window.clearTimeout(alarmBandTimerRef.current);
+          alarmBandTimerRef.current = window.setTimeout(() => setRstToast(null), 15000);
         }
       } catch {}
     };

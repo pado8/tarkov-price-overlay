@@ -31,11 +31,12 @@ export function saveAlarms(list: Alarm[]) {
   } catch {}
 }
 
-/** 같은 아이템·모드의 알람은 하나만(새로 정하면 바꾼다). 지금 가격이 이미 기준을 넘었으면 바로 울리지 않게 꺼 둔 채로 시작. */
+/** 같은 아이템·모드의 알람은 하나만(새로 정하면 바꾼다). 늘 켠 채로 시작한다.
+ * 11-20 실기: 예전엔 지금 가격이 이미 기준을 넘었으면 꺼 둔 채로 시작해, 반대쪽으로 갔다 다시 넘을 때까지 안 울렸다
+ * → '걸었는데 안 뜬다'. 이제 이미 넘었으면 첫 확인 때 한 번 울리고, 그 뒤로는 평소처럼 넘는 순간만. */
 export function upsertAlarm(list: Alarm[], a: Omit<Alarm, "armed">, current?: number | null): Alarm[] {
   const rest = list.filter((x) => !(x.id === a.id && x.mode === a.mode));
-  const armed = current == null || !(current > 0) ? true : !hit({ ...a, armed: true }, current);
-  return [...rest, { ...a, armed, last: current ?? null }];
+  return [...rest, { ...a, armed: true, last: current ?? null }];
 }
 
 export function removeAlarm(list: Alarm[], id: string, mode: string): Alarm[] {

@@ -24,9 +24,12 @@ test("an alarm fires once when the flea price crosses it, and re-arms after it c
   assert.equal(r.fired.length, 1, "fires again after dropping back below");
 });
 
-test("an alarm set when the price is already past it does not fire right away", () => {
+test("an alarm set when the price is already past it fires once on the first check, then waits for a new cross", () => {
   const list = upsertAlarm([], A, 120000);
-  assert.equal(evaluate(list, "regular", { battery: 121000 }, 1).fired.length, 0);
+  let r = evaluate(list, "regular", { battery: 121000 }, 1);
+  assert.equal(r.fired.length, 1);
+  r = evaluate(r.next, "regular", { battery: 122000 }, 2);
+  assert.equal(r.fired.length, 0, "no repeat while still above");
 });
 
 test("below alarms, other game modes and missing prices", () => {
