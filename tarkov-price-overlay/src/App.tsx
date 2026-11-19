@@ -166,14 +166,10 @@ const TOUR: TourStep[] = [
   { id: "drag", sel: '[data-tour="drag"]' },
   { id: "hist", sel: '[data-tour="hist"]' },
   { id: "map", sel: '[data-tour="map"]' },
-  { id: "layers", sel: ".radar-layers", open: "map" },
-  // '내 탈출구만' 칩은 탈출구 목록이 찍힌 스크린샷이 있어야 생긴다 → 없으면 칩 줄을 짚는다(sel 은 '||' 앞부터 차례로)
-  { id: "myexits", sel: '[data-chip="mine"]||.radar-layers', open: "map" },
-  { id: "maptools", sel: ".radar-maptools", open: "map" },
+  // 11-19 통계: 15단계 중 지도 안 3단계(칩·내 탈출구·도구)와 나란히 3단계를 각각 하나로 — 끝까지 본 사람 42%
+  { id: "mapin", sel: ".radar-layers", open: "map" },
   { id: "party", sel: ".radar-party-btn", open: "map" },
-  { id: "wide", sel: '[data-tour="wide"]' },
-  { id: "widepane", sel: ".wide-pane", open: "wide" },
-  { id: "wideresize", sel: ".wide-resize-handle", open: "wide" },
+  { id: "wideall", sel: ".wide-pane", open: "wide" },
   { id: "gear", sel: '[data-tour="gear"]' },
   { id: "hide", sel: '[data-tour="hide"]' },
   { id: "end", sel: null },
@@ -1938,6 +1934,22 @@ function App() {
   };
   const endTourRef = useRef(endTour);
   endTourRef.current = endTour;
+  // 11-19 통계: 둘러보기 35% 가 첫 조회 성공으로 닫혀(tour:lookup) 지도·파티·나란히 단계를 못 봤다 → 닫지 않고 멈춘 뒤
+  // 결과 카드 위에 '잘 읽었어요 — 이어서 볼까요?'를 둔다. 값 = 멈춘 단계(이어 보기는 F2 단계 다음부터)
+  const [tourPaused, setTourPaused] = useState<number | null>(null);
+  const pauseTour = () => {
+    const at = tourStepRef.current;
+    if (at === null) return;
+    try {
+      localStorage.setItem(TOUR_DONE_KEY, "1"); // 다음 실행에 처음부터 다시 뜨지 않게(이어 보기는 이번 실행에서만)
+    } catch {}
+    reportEvent("help", `tour:lookup:${at}`); // 어느 단계에서 성공해 멈췄는지(예전 tour:lookup 과 앞부분이 같다)
+    tourStepRef.current = null;
+    setTourStep(null);
+    setTourPaused(at);
+  };
+  const pauseTourRef = useRef(pauseTour);
+  pauseTourRef.current = pauseTour;
   const tourOpenedRef = useRef({ map: false, wide: false }); // 둘러보기가 연 화면(끝나거나 다른 단계로 가면 이것만 닫는다)
   useEffect(() => {
     if (tourStep === 0 && startCard) reportEvent("help", "tour:shown");
@@ -5131,7 +5143,7 @@ function App() {
             setStatus("success");
             if (data.item_name != null) {
               markStartDoneRef.current("done");
-              endTourRef.current("lookup");
+              pauseTourRef.current();
             }
           } else {
             setStatus(view.status);
@@ -7538,6 +7550,36 @@ function App() {
             </div>
           );
         })()}
+        {!showSettings && tourStep === null && tourPaused !== null && (
+          <div className="tour tour-resume" role="status">
+            <div className="tour-title">{t.tourResumeTitle}</div>
+            <div className="tour-body">{t.tourResumeBody}</div>
+            <div className="tour-actions">
+              <button
+                className="reset-btn"
+                onClick={() => {
+                  reportEvent("help", "tour:lookup_stop");
+                  setTourPaused(null);
+                }}
+              >
+                {t.tourResumeNo}
+              </button>
+              <button
+                className="reset-btn tour-next"
+                onClick={() => {
+                  reportEvent("help", "tour:resume");
+                  const f2 = TOUR.findIndex((s) => s.id === "f2");
+                  const at = Math.max(tourPaused, f2 + 1);
+                  setTourPaused(null);
+                  tourStepRef.current = at;
+                  setTourStep(at);
+                }}
+              >
+                {t.tourResumeYes}
+              </button>
+            </div>
+          </div>
+        )}
         {!showSettings && radarActive && (
           <RadarPanel
             party={party}
