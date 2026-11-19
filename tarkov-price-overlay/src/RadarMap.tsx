@@ -121,6 +121,9 @@ const LABEL_ON = false;
 const LOOT_ON = false;
 // 11-18 잠긴 문의 '문 근처 상자' 수는 방 안 파밍 종류를 정확히 가릴 근거가 생기기 전까지 내지 않는다(사용자 결정). 열쇠 이름은 그대로.
 const LOCK_LOOT_ON = false;
+// 11-20 사용자: 공개판 레이드 준비는 사이트 레이드 준비(할 퀘스트 고르기·챙길 것)와 달라 혼란 → 공개판에서는 뺀다.
+// 퀘스트 고르기가 들어간 레이드 준비는 다른 판에서 이 값을 켜서 쓴다.
+const PREP_ON = false;
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -1158,7 +1161,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       {!mini && ((doc && slug) || extraTools) && (
         <div className="radar-xtools">
           {doc && slug && (<>
-          <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>
+          {PREP_ON && <button type="button" className={prepOpen ? "on" : undefined} aria-pressed={prepOpen} onClick={() => { if (!prepOpen) stat("rpo"); setPrepOpen((o) => !o); }} title={t.radarPrepHint} data-tool="prep">{t.radarPrep}</button>}
           {PLAN_ON && <button type="button" className={planOpen ? "on" : undefined} aria-pressed={planOpen} onClick={() => { if (!planOpen) stat("plo"); setPlanOpen((o) => !o); }} title={t.radarPlanHint} data-tool="plan">{t.radarPlan}</button>}
           {LABEL_ON && <button type="button" className={labelMode ? "on" : undefined} aria-pressed={labelMode} onClick={() => { setLabelMode((o) => !o); setLabelDraft(null); }} title={t.radarLabelHint} data-tool="label">{t.radarLabelShort}</button>}
           {onSize && (
@@ -1234,7 +1237,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           )}
         </div>
       )}
-      {prepOpen && !mini && slug && doc && (
+      {PREP_ON && prepOpen && !mini && slug && doc && (
         <RaidPrep
           t={t}
           mapName={doc.name}
