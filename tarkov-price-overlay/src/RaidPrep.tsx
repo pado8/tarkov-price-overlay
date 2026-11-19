@@ -1,5 +1,5 @@
 // 레이드 준비 화면(11-13): 고른 맵 하나에 대해 '들어가기 전에 볼 것'을 한 화면에 모은다.
-// 퀘스트 목표·필요한 열쇠 · 탈출구와 조건 · 보스 확률 · 위험 구역 · 내 루팅 계획 · 챙길 것.
+// 퀘스트 목표·필요한 열쇠 · 챙길 것 · 탈출구와 조건 · 보스 확률 · 위험 구역 · 내 루팅 계획(11-19 사이트와 같은 순서).
 // 새 자료를 받지 않는다 — 지도 문서(doc)와 레이더 응답(targets), 이 PC 의 계획·내 열쇠만 쓴다.
 import type { RadarTarget } from "./Radar";
 import type { LootPlan } from "./LootPlan";
@@ -77,6 +77,13 @@ export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, sn
           </ul>
         )}
       </section>
+      {/* 11-19 사이트 출정 준비물과 같은 순서: 할 퀘스트 → 챙길 것 → 탈출구 → 위험 */}
+      {bring.length > 0 && (
+        <section>
+          <h4>{t.radarPrepBring}</h4>
+          <ul>{bring.map((x, i) => <li key={i}>{x}</li>)}</ul>
+        </section>
+      )}
       <section>
         <h4>{t.radarPrepExits} <i>{exits.length}</i></h4>
         {open.length > 0 && <p>{t.radarPrepExitsOpen}: {open.map((x) => x.name).join(", ")}</p>}
@@ -107,12 +114,6 @@ export function RaidPrep({ t, mapName, raidMin, side, targets, bosses, mines, sn
           </div>
         )}
       </section>}
-      {bring.length > 0 && (
-        <section>
-          <h4>{t.radarPrepBring}</h4>
-          <ul>{bring.map((x, i) => <li key={i}>{x}</li>)}</ul>
-        </section>
-      )}
     </div>
   );
 }
