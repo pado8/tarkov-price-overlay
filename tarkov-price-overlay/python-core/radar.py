@@ -1048,6 +1048,7 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
     def note(p):
         xs.append(p[0]); zs.append(p[2]); return p
 
+    sw_pos = {w.get("id"): note(pt(w["position"])) for w in m.get("switches") or [] if ok(w.get("position")) and w.get("id")}
     extracts = []
     slug = m.get("normalizedName") or ""
     seen_ex: set[str] = set()
@@ -1059,11 +1060,16 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
             continue  # 개편 때 없어진 탈출구 · PMC/스캐브 중복
         if wkey:
             seen_ex.add(wkey)
-        extracts.append({"name": _disp_name(loc_maps, loc_en, e.get("name")), "en": _loc(loc_en or {}, e.get("name"), e.get("name")),
-                         "p": note(pt(e["position"])),
-                         "faction": wfac or e.get("faction") or "shared",
-                         "switch": "lever" in extract_conditions.conditions(m.get("normalizedName") or "", e)[0],
-                         "outline": outline(e.get("outline"))})
+        ex_item = {"name": _disp_name(loc_maps, loc_en, e.get("name")), "en": _loc(loc_en or {}, e.get("name"), e.get("name")),
+                   "p": note(pt(e["position"])),
+                   "faction": wfac or e.get("faction") or "shared",
+                   "switch": "lever" in extract_conditions.conditions(m.get("normalizedName") or "", e)[0],
+                   "outline": outline(e.get("outline"))}
+        # 레버·전원 탈출구: 눌러야 하는 스위치 좌표를 순서대로 붙인다(지도에서 탈출구를 누르면 강조) — 11-09
+        steps = [{"id": sid, "kind": kind, "p": sw_pos[sid]} for sid, kind in extract_conditions.switches_for(slug, e.get("name") or "") if sid in sw_pos]
+        if steps:
+            ex_item["sw"] = steps
+        extracts.append(ex_item)
     transits = []
     for t in m.get("transits") or []:
         if not ok(t.get("position")):
@@ -1116,7 +1122,7 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
         code = "b" if "boss" in cats else "n" if "sniper" in cats else "p" if "pmc" in sides else "s" if "scav" in sides else "o"
         spawns.append(note(pt(s["position"])) + [code])
     weapons = [note(pt(w["position"])) for w in m.get("stationaryWeapons") or [] if ok(w.get("position"))]
-    switches = [note(pt(w["position"])) for w in m.get("switches") or [] if ok(w.get("position"))]
+    switches = [{"id": i, "p": p} for i, p in sw_pos.items()]
     # 지도 그림(tarkov.dev SVG, CC BY-NC-SA 4.0) — 좌표 변환값은 data/td_maps.json(scripts/td_maps.py). bounds 는 좌표만의 경계(그림 경계는 img.bounds, '전체' 보기가 합친다)
     img = map_image_meta(slug)
     bounds = {"minx": min(xs), "maxx": max(xs), "minz": min(zs), "maxz": max(zs)} if xs else None

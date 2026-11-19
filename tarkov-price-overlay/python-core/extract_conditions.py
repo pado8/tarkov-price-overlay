@@ -121,6 +121,27 @@ def _render(f: dict) -> str:
 # 예전과 같은 모양 — 키 = "<맵>:<탈출구 내부 이름>", 값 = (태그, 설명). 호출하는 쪽(conditions·가이드)은 그대로
 COND: dict[str, tuple[frozenset, str]] = {k: (frozenset(f["tags"]), _render(f)) for k, f in FACTS.items()}
 
+# 레버·전원 탈출구 → 눌러야 하는 스위치(순서대로). (스위치 id = tarkov.dev maps.switches 의 id, 종류 = lever·power·button·console·urinal·pump)
+# tarkov.dev 의 extract.switches 는 못 쓴다(세관 28개 전부·연구소 6개 전부에 같은 스위치가 붙어 있음, 리저브·인터체인지는 비어 있음).
+# 대신 스위치의 위치·이름·activatedBy(연구소 호출 버튼은 그 전원 스위치가 켜야 활성)로 짝을 맞췄다(11-09). 지도에서 탈출구를 누르면 강조.
+SWITCHES: dict[str, list[tuple[str, str]]] = {
+    "customs:ex_customs_pmc_zb1013": [("ae4bdfc1fc5b30100701158b56ae4d20840e0550", "lever")],
+    "reserve:EXFIL_Bunker": [("2c4a9ff1d031afefbd0965b189f58e3834cdb367", "lever")],
+    "reserve:EXFIL_Bunker_D2": [("9cad024bc31223f02f7296c3cb1834c5f6fa2fe2", "power"), ("fa1f22e776e4724582eb1dbb18ae864a9303cc5a", "button")],
+    "interchange:ex_interchange_pmc_saferoom": [("b6ebc39ee29cb6659334df309194b696bbfef555", "power"), ("5173fd12df8e7445613e130233e235a94d94b70d", "urinal"), ("42d13e53ae13417e3ee1dab2606e9b2fa4ff6147", "button")],
+    "the-lab:lab_Elevator_Cargo": [("c39cf1e7caac3b830c00b539ee12dfddeb061e2b", "power"), ("8e6aa12e37d1b09a56e1ae19ab203832b0e78df9", "button")],
+    "the-lab:lab_Elevator_Med": [("014e9122e0fad99bcff6f93161712c3c6e1a2a75", "power"), ("d1d16f043cea7be35b2729c5e1e1dd648c6dee13", "button")],
+    "the-lab:lab_Elevator_Main": [("911ef57b76415c1d42fdba3b5c8fdb587dd229a7", "power"), ("72848c177c54e2913e7d0259f23fba929d14ebf5", "button")],
+    "the-lab:lab_Hangar_Gate": [("40ec0101fbf68e6d1b762a72080b9b9b9c91f6f1", "console")],
+    "the-lab:lab_Parking_Gate": [("07fe694c3915c1363b5fa1faa604c68fe5849aba", "console")],
+    "the-lab:lab_Under_Storage_Collector": [("a948c3ba250ffcaaa508230d0b3392bf09cb6964", "pump")],
+}
+
+
+def switches_for(map_name: str, ex_name: str) -> list[tuple[str, str]]:
+    """[(스위치 id, 종류)] 순서대로. 없으면 []."""
+    return list(SWITCHES.get(f"{MAP_BASE.get(map_name, map_name)}:{ex_name}", ()))
+
 
 def _item_id(ti: dict | None) -> str | None:
     if not ti:

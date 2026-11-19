@@ -360,6 +360,30 @@ r.annotate_loot(_ld, {"c1 Name": "금고", "c2 Name": "서랍"}, {})
 eq("상자: 이 맵에 나온 종류만 이름표", _ld["loot_names"], {"safe": "금고"})
 r._doc = _orig_doc
 
+
+# ── 11-09 레버·전원 탈출구 → 스위치 표(extract_conditions.SWITCHES) — 지도에서 탈출구를 누르면 강조
+import extract_conditions as ec
+
+eq("스위치 표 10개 탈출구", len(ec.SWITCHES), 10)
+eq("세관 ZB-1013 = 레버 1개", [k for _, k in ec.switches_for("customs", "ex_customs_pmc_zb1013")], ["lever"])
+eq("리저브 D-2 = 전원 → 버튼 순서", [k for _, k in ec.switches_for("reserve", "EXFIL_Bunker_D2")], ["power", "button"])
+eq("인터체인지 대피실 = 전원 → 소변기 → 버튼", [k for _, k in ec.switches_for("interchange", "ex_interchange_pmc_saferoom")], ["power", "urinal", "button"])
+eq("연구소 승강기 3곳 = 전원 → 호출 버튼", all([k for _, k in ec.switches_for("the-lab", n)] == ["power", "button"] for n in ("lab_Elevator_Cargo", "lab_Elevator_Med", "lab_Elevator_Main")), True)
+eq("변형 맵(어두운 연구소)도 본 맵 표", ec.switches_for("the-lab-dark", "lab_Hangar_Gate"), ec.switches_for("the-lab", "lab_Hangar_Gate"))
+eq("스위치 없는 탈출구 = 빈 목록", ec.switches_for("customs", "ex_customs_scav_gasstation"), [])
+eq("스위치 id 는 40자 hex", all(len(sid) == 40 and all(c in "0123456789abcdef" for c in sid) for steps in ec.SWITCHES.values() for sid, _ in steps), True)
+# compact_map_features: 스위치 좌표가 탈출구에 붙고(sw), 표에 없는 스위치 id 는 조용히 빠진다
+_sw = [{"id": sid, "position": {"x": 1.0 + i, "y": 0.0, "z": 2.0}, "name": "s"} for i, (sid, _) in enumerate(ec.SWITCHES["reserve:EXFIL_Bunker_D2"])]
+_m = {"normalizedName": "reserve", "name": "Reserve", "switches": _sw, "extracts": [
+    {"name": "EXFIL_Bunker_D2", "faction": "pmc", "position": {"x": 0, "y": 0, "z": 0}},
+    {"name": "EXFIL_Bunker", "faction": "pmc", "position": {"x": 5, "y": 0, "z": 5}}]}
+_doc = r.compact_map_features(_m, {}, {})
+_ex = {e["name"]: e for e in _doc["extracts"]}
+eq("D-2 에 스위치 2개(순서대로)", [w["kind"] for w in _ex["EXFIL_Bunker_D2"].get("sw") or []], ["power", "button"])
+eq("D-2 스위치 좌표", [round(w["p"][0]) for w in _ex["EXFIL_Bunker_D2"]["sw"]], [1, 2])
+eq("벙커 문은 스위치 좌표가 문서에 없으면 sw 없음", "sw" in _ex["EXFIL_Bunker"], False)
+eq("switches 는 id 와 좌표", sorted(_doc["switches"][0].keys()), ["id", "p"])
+
 print(f"\n{'전부 통과' if not fails else str(fails) + '건 실패'}")
 import sys as _sys
 _sys.exit(1 if fails else 0)

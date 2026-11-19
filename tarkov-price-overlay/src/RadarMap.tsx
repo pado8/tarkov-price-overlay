@@ -49,6 +49,7 @@ const Q_OTHER_FLOOR = 0.3; // 11-06 보고 있는 층이 아닌 퀘스트 — �
 export const SCAV_COLOR = "#f0f0f0"; // 스캐브 탈출구 — 회색(#9a9a9a)은 어두운 지도 그림 위에서 묻혀 밝은 흰색으로
 
 type Pt = [number, number, number]; // x, y, z
+export type SwitchStep = { id: string; kind: string; p: Pt }; // kind = lever·power·button·console·urinal·pump
 export type MapDoc = {
   slug: string;
   name: string;
@@ -60,7 +61,7 @@ export type MapDoc = {
     base: string | null; // SVG 바탕 그룹 id(지상)
     layers: { name: string; g: string; ext: { h: [number, number]; b: number[][] }[] }[]; // 층: 그룹 id + 높이·구역(x1,z1,x2,z2)
   } | null;
-  extracts: { name: string; en?: string; p: Pt; faction: string; switch: boolean; outline: [number, number][] }[]; // en = 영어 원문(내 탈출구 맞춤, 11-06)
+  extracts: { name: string; en?: string; p: Pt; faction: string; switch: boolean; outline: [number, number][]; sw?: SwitchStep[] }[]; // en = 영어 원문(내 탈출구 맞춤, 11-06) · sw = 열려면 눌러야 하는 스위치(순서대로, 11-09)
   transits: { name: string; p: Pt; outline: [number, number][] }[];
   hazards: { name: string; type: string; p: Pt | null; outline: [number, number][] }[];
   locks: { p: Pt; type: string; key?: string | null; kn?: string; loot?: Record<string, number> }[]; // key = 여는 열쇠 아이템 id
@@ -73,7 +74,7 @@ export type MapDoc = {
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
   bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
   weapons: Pt[];
-  switches: Pt[];
+  switches: { id: string; p: Pt }[];
 };
 
 export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
@@ -174,6 +175,11 @@ function fitViewOf(doc: MapDoc | null, showImg: boolean, box: { w: number; h: nu
   }
   const spanM = Math.max(b.maxx - b.minx, b.maxz - b.minz, 50) * 1.08;
   return { cx: (b.minx + b.maxx) / 2, cz: (b.minz + b.maxz) / 2, s: Math.min(box.w, box.h) / spanM };
+}
+
+/** 스위치 종류 → 짧은 이름(11-09 레버·전원 탈출구) */
+function swKind(kind: string, t: { [k: string]: string }): string {
+  return kind === "power" ? t.radarSwPower : kind === "button" ? t.radarSwButton : kind === "console" ? t.radarSwConsole : kind === "urinal" ? t.radarSwUrinal : kind === "pump" ? t.radarSwPump : t.radarSwLever;
 }
 
 /** 맵별 90° 회전 설정(↻로 돌린 값) */
@@ -498,7 +504,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [box, setBox] = useState({ w: 300, h: size });
   // 보기: null = 내 위치 중심(기억한 배율) · 값 = 끌거나 '전체'로 옮긴 중심과 축척(px/m)
   const [view, setView] = useState<{ cx: number; cz: number; s: number } | null>(null);
-  const [sel, setSel] = useState<{ name: string; p: Pt; keyId?: string; labelIdx?: number } | null>(null);
+  const [sel, setSel] = useState<{ name: string; p: Pt; keyId?: string; labelIdx?: number; sw?: SwitchStep[] } | null>(null);
   const dragRef = useRef<{ x: number; y: number; cx: number; cz: number; moved: boolean } | null>(null);
   const movedRef = useRef(false); // 끌고 난 뒤 따라오는 click 은 선택으로 치지 않는다
   const [dragging, setDragging] = useState(false);
@@ -701,9 +707,25 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     dragRef.current = null;
     setDragging(false);
   };
-  const pick = (s: { name: string; p: Pt; keyId?: string; labelIdx?: number } | null) => {
+  // 여러 점이 다 보이게 중심·축척 맞추기(스위치 탈출구). 로그 맵이면 내 위치도 함께
+  const fitTo = (pts: [number, number][], withMe = true) => {
+    const all = pts.slice();
+    if (withMe && me && data.map_source !== "manual") all.push([me.x, me.z]);
+    if (!all.length) return;
+    const xs = all.map((p) => p[0]);
+    const zs = all.map((p) => p[1]);
+    const [x0, x1, z0, z1] = [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+    const spanM = Math.max(x1 - x0, z1 - z0, 80) * 1.35;
+    setView({ cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, s: Math.min(box.w, box.h) / spanM });
+  };
+  const pick = (s: { name: string; p: Pt; keyId?: string; labelIdx?: number; sw?: SwitchStep[] } | null) => {
     if (movedRef.current) return; // 끌기 끝의 click
     setSel(s);
+    // 레버·전원 탈출구를 누르면 탈출구와 스위치가 한 화면에 들어오게(세관 ZB-1013 의 레버는 150m 넘게 떨어져 있다)
+    if (s?.sw?.length) {
+      stat("sws"); // 하루 요약: 스위치 탈출구를 눌러 스위치를 본 횟수
+      fitTo([[s.p[0], s.p[2]], ...s.sw.map((w) => [w.p[0], w.p[2]] as [number, number])], false);
+    }
   };
   const onSvgClick = (e: React.MouseEvent) => {
     if (labelMode && v && !movedRef.current) {
@@ -911,7 +933,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   const s = toScreen(x.p[0], x.p[2]);
                   const c = x.faction === "scav" ? SCAV_COLOR : "#6fbf73";
                   return (
-                    <g key={`ex${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                    <g key={`ex${i}`} onClick={() => pick({ name: x.name, p: x.p, sw: x.sw })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                       {x.outline.length >= 3 && <polygon points={poly(x.outline)} fill="rgba(111,191,115,0.15)" stroke={c} strokeWidth={1} />}
                       <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                       <circle cx={s.x} cy={s.y} r={4} fill={c} stroke="#000" strokeWidth={0.8} />
@@ -964,6 +986,23 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     <rect x={-2} y={-2} width={size + 4} height={size + 4} fill="transparent" />
                     <rect width={size} height={size} rx={size * 0.24} fill={color} stroke="#0b0e12" strokeWidth={0.8} />
                     <path d={LOOT_ICON_PATH[lootIconOf(x[4], x[3])]} transform={`translate(${size * 0.12} ${size * 0.12}) scale(${(size * 0.76) / 24})`} fill={LOOT_INK} fillRule="evenodd" />
+                  </g>
+                );
+              })}
+            {/* 11-09 고른 탈출구가 레버·전원 식이면 눌러야 하는 스위치를 순서 번호로 강조 + 탈출구까지 점선 */}
+            {sel?.sw &&
+              sel.sw.map((w, i) => {
+                const a = toScreen(sel.p[0], sel.p[2]);
+                const b = toScreen(w.p[0], w.p[2]);
+                const many = sel.sw!.length > 1;
+                return (
+                  <g key={`sw${i}`} onClick={() => pick({ name: `${swKind(w.kind, t)} → ${sel.name}`, p: w.p, sw: sel.sw })} opacity={op(w.p[0], w.p[1], w.p[2])}>
+                    <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#ffa726" strokeWidth={1.3} strokeDasharray="4 3" opacity={0.75} />
+                    <circle cx={b.x} cy={b.y} r={9} fill="#ffa726" stroke="#3a2000" strokeWidth={1.4} className="radar-keyring" />
+                    <text x={b.x} y={b.y + 4} textAnchor="middle" fontSize={many ? 11 : 12} fontWeight={700} fill="#1c1200">{many ? i + 1 : "⚡"}</text>
+                    <text x={b.x + 12} y={b.y + 4} fontSize={10} fontWeight={700} fill="#ffa726" stroke="rgba(0,0,0,0.85)" strokeWidth={2.6} paintOrder="stroke">
+                      {swKind(w.kind, t)}
+                    </text>
                   </g>
                 );
               })}
@@ -1173,6 +1212,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       {sel && !mini && (
         <div className="radar-mapsel">
           <b>{sel.name}</b>
+          {sel.sw && sel.sw.length > 0 && <> · ⚡ {sel.sw.map((w, i) => (sel.sw!.length > 1 ? `${i + 1} ` : "") + swKind(w.kind, t)).join(" → ")}</>}
           {me && <> · {Math.round(dist(sel.p))}m</>}
           {me && Math.abs(sel.p[1] - myY) >= 2.5 && <> · {sel.p[1] > myY ? "▲" : "▼"}{Math.round(Math.abs(sel.p[1] - myY))}m</>}
           {sel.labelIdx != null && slug && <button type="button" className="radar-planadd" onClick={() => { saveLabels({ ...myLabels, [slug]: (myLabels[slug] ?? []).filter((_, k) => k !== sel.labelIdx) }); setSel(null); }}>{t.radarLabelDel}</button>}
