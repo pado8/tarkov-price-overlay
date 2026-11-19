@@ -225,9 +225,10 @@ function readPendingUpdate(): string | null {
   }
 }
 const SIDECAR_STARTING_MS = 45_000;
-function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number, blocked = false): string {
+function sidecarErrorText(s: (typeof T)[Lang], dead: boolean, missing: boolean, fails: number, blocked = false, portBusy = false): string {
   if (blocked) return s.sidecarBlocked;
   if (missing) return s.sidecarMissing;
+  if (portBusy) return s.sidecarPortBusy;
   if (dead) return s.sidecarDead;
   if (Date.now() - APP_STARTED_AT < SIDECAR_STARTING_MS) return s.connStarting;
   return fails >= 3 ? `${s.connError} ${s.connErrorAvHint}` : s.connError;
@@ -2211,6 +2212,7 @@ function App() {
   const sidecarMissingRef = useRef(false);
   // 11-15 releases 이슈 #5: Windows 스마트 앱 컨트롤이 서명 없는 새 시세 엔진을 막음(os error 4551) — 다시 실행해도 같으니 바로 알린다
   const sidecarBlockedRef = useRef(false);
+  const sidecarPortBusyRef = useRef(false); // 11-19 다른 프로그램이 포트 8765 를 잡아 엔진을 못 띄움
   const connFailRef = useRef(0); // 연결 실패 연속 횟수(조회 성공하면 0)
   useEffect(() => {
     const un = listen<string>("sidecar-dead", (e) => {
@@ -2252,6 +2254,10 @@ function App() {
       setStatus("error");
     };
     const unBlocked = listen("sidecar-blocked", () => void onBlocked());
+    const unPortBusy = listen("sidecar-port-busy", () => {
+      log("React: sidecar-port-busy — another program holds the engine port");
+      sidecarPortBusyRef.current = true;
+    });
     const unRestart = listen("sidecar-restart", () => dailyAdd("sr")); // 11-09 조용한 재시작 횟수(하루 요약 sr)
     // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
     const ask = () => {
@@ -2272,6 +2278,7 @@ function App() {
       un.then((fn) => fn());
       unMissing.then((fn) => fn());
       unBlocked.then((fn) => fn());
+      unPortBusy.then((fn) => fn());
       unRestart.then((fn) => fn());
       window.clearTimeout(again);
     };
@@ -4853,6 +4860,7 @@ function App() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
           connFailRef.current = 0;
+          sidecarPortBusyRef.current = false;
           sidecarBlockedRef.current = false;
           sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
           if (seq !== lookupSeqRef.current) {
@@ -4969,7 +4977,7 @@ function App() {
             e instanceof Error && e.name === "AbortError"
               ? T[r.lang].timeout
               : e instanceof TypeError
-                ? sidecarErrorText(T[r.lang], sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current, sidecarBlockedRef.current)
+                ? sidecarErrorText(T[r.lang], sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current, sidecarBlockedRef.current, sidecarPortBusyRef.current)
                 : msg
           );
           setStatus("error");
@@ -5092,6 +5100,7 @@ function App() {
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       connFailRef.current = 0;
+      sidecarPortBusyRef.current = false;
       sidecarBlockedRef.current = false;
       sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
       const data: LookupResult = await res.json();
@@ -5126,7 +5135,7 @@ function App() {
         e instanceof Error && e.name === "AbortError"
           ? t.timeoutShort
           : e instanceof TypeError
-            ? sidecarErrorText(t, sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current)
+            ? sidecarErrorText(t, sidecarDeadRef.current, sidecarMissingRef.current, connFailRef.current, sidecarBlockedRef.current, sidecarPortBusyRef.current)
             : msg
       );
       setStatus("error");

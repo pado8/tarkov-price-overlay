@@ -1466,6 +1466,136 @@ fn sidecar_err_tag(line: &str) -> Option<String> {
     Some(tag.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '_').take(40).collect())
 }
 
+/// 11-19 통계: 1.3.3·1.3.4 의 엔진 '종료 코드 1'은 전부 포트 8765 충돌(bind_10048)이었다. 재현 결과 앱만 비정상 종료되면
+/// 엔진이 혼자 남아 포트를 계속 잡고, 다시 켠 앱의 새 엔진은 5번 실패한 뒤 포기했다.
+/// 포트 주인이 남은 우리 엔진이면 끄고 새로 띄우고, 다른 프로그램이면 건드리지 않고 사용자에게 알린다.
+const SIDECAR_PORT: u16 = 8765;
+static SIDECAR_PORT_BUSY_SENT: AtomicBool = AtomicBool::new(false);
+
+enum PortOwner {
+    Free,
+    OwnEngine(u32),
+    Other,
+}
+
+#[cfg(windows)]
+fn sidecar_port_owner() -> PortOwner {
+    use windows_sys::Win32::Foundation::{CloseHandle, NO_ERROR};
+    use windows_sys::Win32::NetworkManagement::IpHelper::{
+        GetExtendedTcpTable, MIB_TCPTABLE_OWNER_PID, TCP_TABLE_OWNER_PID_LISTENER,
+    };
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+    };
+    const AF_INET: u32 = 2;
+    unsafe {
+        let mut size = 0u32;
+        GetExtendedTcpTable(std::ptr::null_mut(), &mut size, 0, AF_INET, TCP_TABLE_OWNER_PID_LISTENER, 0);
+        // u32 정렬을 지키려고 u32 버퍼를 쓴다
+        let mut buf = vec![0u32; (size as usize).div_ceil(4) + 1];
+        if GetExtendedTcpTable(buf.as_mut_ptr().cast(), &mut size, 0, AF_INET, TCP_TABLE_OWNER_PID_LISTENER, 0) != NO_ERROR {
+            return PortOwner::Free;
+        }
+        let table = &*(buf.as_ptr() as *const MIB_TCPTABLE_OWNER_PID);
+        let rows = std::slice::from_raw_parts(table.table.as_ptr(), table.dwNumEntries as usize);
+        let Some(row) = rows.iter().find(|r| u16::from_be(r.dwLocalPort as u16) == SIDECAR_PORT) else {
+            return PortOwner::Free;
+        };
+        let pid = row.dwOwningPid;
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        if process.is_null() {
+            return PortOwner::Other;
+        }
+        let mut name = [0u16; 520];
+        let mut len = name.len() as u32;
+        let ok = QueryFullProcessImageNameW(process, 0, name.as_mut_ptr(), &mut len);
+        CloseHandle(process);
+        if ok == 0 {
+            return PortOwner::Other;
+        }
+        let path = String::from_utf16_lossy(&name[..len as usize]).to_ascii_lowercase();
+        let file = path.rsplit('\\').next().unwrap_or("");
+        if file.starts_with("tarkov-server") {
+            PortOwner::OwnEngine(pid)
+        } else {
+            PortOwner::Other
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn sidecar_port_owner() -> PortOwner {
+    PortOwner::Free
+}
+
+/// 지난 실행에서 혼자 남은 우리 엔진을 끈다. 두 번째 실행은 single-instance 가 먼저 끝내므로 지금 쓰는 엔진을 끄지 않는다.
+#[cfg(windows)]
+fn clear_stale_sidecar() {
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::System::Threading::{
+        OpenProcess, TerminateProcess, WaitForSingleObject, PROCESS_SYNCHRONIZE, PROCESS_TERMINATE,
+    };
+    let PortOwner::OwnEngine(pid) = sidecar_port_owner() else {
+        return;
+    };
+    unsafe {
+        let process = OpenProcess(PROCESS_TERMINATE | PROCESS_SYNCHRONIZE, 0, pid);
+        if process.is_null() {
+            eprintln!("[sidecar] stale engine holds the port but cannot be closed");
+            return;
+        }
+        if TerminateProcess(process, 0) != 0 {
+            WaitForSingleObject(process, 2000);
+            println!("[sidecar] closed a stale engine left by a previous run");
+        }
+        CloseHandle(process);
+    }
+}
+
+#[cfg(not(windows))]
+fn clear_stale_sidecar() {}
+
+/// 앱이 어떤 식으로 끝나도 엔진이 함께 꺼지게 작업 개체에 넣는다. 실패해도 시작 때 clear_stale_sidecar 가 정리한다.
+#[cfg(windows)]
+fn tie_sidecar_to_app(pid: u32) {
+    use std::sync::OnceLock;
+    use windows_sys::Win32::Foundation::CloseHandle;
+    use windows_sys::Win32::System::JobObjects::{
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation, SetInformationJobObject,
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    };
+    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SET_QUOTA, PROCESS_TERMINATE};
+    static JOB: OnceLock<usize> = OnceLock::new();
+    unsafe {
+        let job = *JOB.get_or_init(|| {
+            let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+            if job.is_null() {
+                return 0;
+            }
+            let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+            info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                (&info as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION).cast(),
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            );
+            job as usize // 앱이 끝날 때까지 닫지 않는다 — 닫히는 순간 엔진이 함께 꺼진다
+        });
+        if job == 0 {
+            return;
+        }
+        let process = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, 0, pid);
+        if !process.is_null() {
+            AssignProcessToJobObject(job as _, process);
+            CloseHandle(process);
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn tie_sidecar_to_app(_pid: u32) {}
+
 /// Schedule a sidecar respawn 2s out, respecting the consecutive-failure
 /// budget. Shared by every failure path (unexpected exit, channel closed
 /// without Terminated, spawn error) so none of them silently gives up while
@@ -1512,6 +1642,7 @@ fn schedule_sidecar_restart(app: tauri::AppHandle, next: u32, why: &str) {
 /// user-reported connection error. A sidecar that survived 60s+ resets the
 /// attempt counter (transient crash, not a crash loop).
 fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
+    clear_stale_sidecar();
     let cmd = match app.shell().sidecar("tarkov-server") {
         Ok(c) => c,
         Err(e) => {
@@ -1545,6 +1676,7 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         }
     };
     println!("[sidecar] tarkov-server spawned (attempt {attempt})");
+    tie_sidecar_to_app(child.pid());
     // 11-09 검토: 첫 시도만 '파일 없음'(백신이 검사 중 잠깐 치움)이고 재시도가 성공하면 플래그를 풀어 웹뷰가 잘못 안내하지 않게
     SIDECAR_MISSING_SENT.store(false, Ordering::SeqCst);
     SIDECAR_BLOCKED_SENT.store(false, Ordering::SeqCst);
@@ -1617,8 +1749,22 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         } else {
             "event channel closed without Terminated".to_string()
         };
+        if next == 1 {
+            SIDECAR_PORT_BUSY_SENT.store(false, Ordering::SeqCst);
+        }
         if let Some(tag) = &last_err {
-            why = format!("{why}|{tag}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>
+            // 포트 충돌이면 주인 종류만 붙인다(프로그램 이름·경로는 보내지 않는다)
+            let owner = match (tag.as_str(), sidecar_port_owner()) {
+                ("bind_10048", PortOwner::Other) => {
+                    if !SIDECAR_PORT_BUSY_SENT.swap(true, Ordering::SeqCst) {
+                        let _ = app.emit("sidecar-port-busy", ());
+                    }
+                    "_other"
+                }
+                ("bind_10048", PortOwner::OwnEngine(_)) => "_own",
+                _ => "",
+            };
+            why = format!("{why}|{tag}{owner}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>[_other|_own]
         }
         schedule_sidecar_restart(app, next, &why);
     });
