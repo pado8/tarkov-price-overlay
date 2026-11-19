@@ -2241,6 +2241,3 @@ html, body, #root {
 .mapshare-closed label { opacity: 0.6; }
 .mapshare-closed-note { color: var(--text-secondary); font-size: var(--card-fs-xs); }
 /* 지도 자료 보내기 — 처음 지도를 열 때 한 번 묻는 창(MapShare.tsx) */
-.mapshare-ask { margin: 6px 0; padding: 9px 11px; border: 1px solid var(--gold-bright); border-radius: 6px; background: rgba(28, 26, 18, 0.92); }
-.mapshare-ask-text { white-space: pre-line; font-size: var(--card-fs-sm); line-height: 1.5; color: var(--text-primary); }
-.mapshare-ask-btns { display: flex; gap: 6px; margin-top: 7px; justify-content: flex-end; }

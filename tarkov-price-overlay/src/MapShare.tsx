@@ -1,5 +1,5 @@
 // 지도 자료 보내기(선택·기본 꺼짐). 사용자가 켠 경우에만 사이드카 /mapshare/send 를 부른다.
-// 앱을 켜면 카드 맨 위에서 한 번 묻고(MapShareAsk), 설정엔 체크 한 줄(MapShareSettings) — 내용·형식은 python-core/map_share.py.
+// 11-19 앱 실행 때 묻던 창(MapShareAsk)은 없앴다(사용자: 이미 켠 사람만 계속, 새로 켜는 건 설정 체크로만). 설정엔 체크 한 줄(MapShareSettings) — 내용·형식은 python-core/map_share.py.
 // 11-11 닫힘: 서버가 받기를 멈추면(Worker vars.CLOSED) 묻는 창을 띄우지 않고 설정에 '지금은 받지 않아요' — 켬 값은 사용자 것이라 그대로.
 import { useEffect, useRef } from "react";
 import { stat } from "./statBus";
@@ -44,20 +44,7 @@ export async function fetchMapShareClosed(): Promise<boolean> {
   }
 }
 
-/** 한 번 묻는 창 — 좋아요 = 켬, 싫어요 = 꺼진 채. 어느 쪽이든 다시 묻지 않고 설정 체크로 바꾼다 */
-export function MapShareAsk({ t, onAnswer }: { t: Strings; onAnswer: (yes: boolean) => void }) {
-  return (
-    <div className="mapshare-ask" role="dialog" aria-label={t.mapShareOn}>
-      <div className="mapshare-ask-text">{t.mapShareAskText}</div>
-      <div className="mapshare-ask-btns">
-        <button type="button" className="reset-btn" onClick={() => onAnswer(true)}>{t.mapShareYes}</button>
-        <button type="button" className="reset-btn" onClick={() => onAnswer(false)}>{t.mapShareNo}</button>
-      </div>
-    </div>
-  );
-}
-
-/** 켜져 있으면 켠 뒤 90초, 이후 1시간마다 자동 보내기(사이드카가 12시간 간격·새 줄만).
+/** 켜져 있으면 켠 뒤 90초, 이후 1시간마다 자동 보내기(사이드카가 24시간 간격·새 줄만 — 11-19 하루 한 번).
  *  onClosed(closed, first) — 보내기 응답으로 안 닫힘/열림(first = 닫힘을 이 PC 가 처음 받음) */
 export function useMapShareAuto(on: boolean, onClosed?: (closed: boolean, first: boolean) => void): void {
   const onClosedRef = useRef(onClosed);

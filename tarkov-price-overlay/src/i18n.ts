@@ -645,9 +645,6 @@ export const T = {
     copyrightLine4: "게임 자료·좌표·아이템 그림: tarkov.dev · 일부 데이터(거래 불가 아이템 쓰임새·조립 예시): Escape from Tarkov Wiki (CC BY-NC-SA) · 스토리 위치: szepiz/tarkov-quest-data (CC0, 감사합니다)",
     copyrightLine5: "Escape from Tarkov 와 게임 안 이름·그림은 Battlestate Games 의 것이며, 이 앱은 Battlestate Games 와 관련이 없습니다 · 오픈소스 고지: THIRD_PARTY_NOTICES.txt",
     mapShareOn: "지도 자료 보내기 — 스크린샷 좌표 숫자만(사진 X), 지도 개선용",
-    mapShareAskText: "지도 기능 개발·개선을 위해 스크린샷 좌표(사진 X, 숫자만)가 필요합니다. 설정에서 언제든 끌 수 있어요.\n지도 개선에 큰 도움이 됩니다. 감사합니다.",
-    mapShareYes: "좋아요",
-    mapShareNo: "싫어요",
     mapShareClosed: "지금은 받지 않아요",
   },
   en: {
@@ -1288,9 +1285,6 @@ export const T = {
     copyrightLine4: "Game data, coordinates and item images: tarkov.dev · some data (uses of untradeable items, example builds): Escape from Tarkov Wiki (CC BY-NC-SA) · story positions: szepiz/tarkov-quest-data (CC0, thank you)",
     copyrightLine5: "Escape from Tarkov and all in-game names and images belong to Battlestate Games; this app is not affiliated with Battlestate Games · open-source notices: THIRD_PARTY_NOTICES.txt",
     mapShareOn: "Send map data — screenshot coordinate numbers only (no images), to improve the map",
-    mapShareAskText: "To develop and improve the map features, we need screenshot coordinates (numbers only, no images). You can turn this off anytime in Settings.\nIt helps the map a lot — thank you!",
-    mapShareYes: "Sure",
-    mapShareNo: "No thanks",
     mapShareClosed: "not collecting right now",
   },
   ru: {
@@ -1931,9 +1925,6 @@ export const T = {
     copyrightLine4: "Игровые данные, координаты и изображения предметов: tarkov.dev · часть данных (применение непродаваемых предметов, примеры сборок): Escape from Tarkov Wiki (CC BY-NC-SA) · позиции сюжета: szepiz/tarkov-quest-data (CC0, спасибо)",
     copyrightLine5: "Escape from Tarkov и все внутриигровые названия и изображения принадлежат Battlestate Games; приложение не связано с Battlestate Games · уведомления об открытом ПО: THIRD_PARTY_NOTICES.txt",
     mapShareOn: "Отправлять данные для карты — только координаты из скриншотов (без изображений)",
-    mapShareAskText: "Для разработки и улучшения карты нужны координаты из скриншотов (только числа, без изображений). Отключить можно в любой момент в настройках.\nЭто очень поможет карте — спасибо!",
-    mapShareYes: "Да",
-    mapShareNo: "Нет",
     mapShareClosed: "сейчас не принимаем",
   },
   zh: {
@@ -2561,9 +2552,6 @@ export const T = {
     copyrightLine4: "游戏数据、坐标与物品图片：tarkov.dev · 部分数据（不可交易物品用途、改装示例）：Escape from Tarkov Wiki（CC BY-NC-SA）· 剧情位置：szepiz/tarkov-quest-data（CC0，感谢）",
     copyrightLine5: "Escape from Tarkov 及游戏内所有名称与图片归 Battlestate Games 所有；本应用与 Battlestate Games 无关 · 开源声明：THIRD_PARTY_NOTICES.txt",
     mapShareOn: "发送地图数据 — 仅截图坐标数字（不含图片），用于改进地图",
-    mapShareAskText: "为了开发和改进地图功能，需要截图坐标（仅数字，不含图片）。随时可在设置中关闭。\n这对改进地图帮助很大，谢谢！",
-    mapShareYes: "好的",
-    mapShareNo: "不要",
     mapShareClosed: "目前暂不接收",
   },
 } as const;
