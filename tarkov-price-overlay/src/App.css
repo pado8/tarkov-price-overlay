@@ -1928,6 +1928,9 @@ html, body, #root {
   background: rgba(20, 20, 20, 0.96); border: 1px solid var(--gold-bright); border-radius: 8px; padding: 5px 12px; color: var(--gold-bright);
   font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6); }
 .rst-traders { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
+.rst-chip { font: inherit; font-size: var(--card-fs-xs); padding: 2px 8px; border-radius: 999px; cursor: pointer; border: 1px dashed var(--border-default); background: transparent; color: var(--text-muted); }
+.rst-chip.on { border: 1px solid var(--gold-bright); background: rgba(212, 175, 55, 0.18); color: var(--text-primary); font-weight: 700; }
+.rst-chip:hover { border-color: var(--gold-bright); }
 .radar-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: var(--card-fs-xs); padding: 1px 7px; border: 1px solid var(--border-default); border-radius: 999px; background: rgba(0, 0, 0, 0.35); color: var(--text-primary); cursor: pointer; }
 .radar-chip:not(.on) { color: var(--text-disabled); border-color: var(--border-subtle); } /* 꺼짐 = 흐리게만(취소선은 글자를 읽기 어렵게 했다) */
 .radar-chip:not(.on) .radar-sw { opacity: 0.35; }

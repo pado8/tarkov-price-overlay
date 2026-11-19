@@ -6542,20 +6542,27 @@ function App() {
                     ))}
                   </select>
                 </div>
+                {/* 11-19 실기: 꺼진 칩이 흐리기만 해서 사라진 것처럼 보였다 → 🔔 받음 / 🔕 안 받음으로 켜짐·꺼짐이 보이게 */}
+                <div className="settings-sub">{t.traderRstPickHint}</div>
                 <div className="rst-traders">
                   {(rstList.length ? rstList : rstTraders.map((k) => ({ key: k, name: k, reset: 0 })))
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name))
-                    .map((r) => (
-                      <button
-                        key={r.key}
-                        type="button"
-                        className={`radar-chip${rstTraders.includes(r.key) ? " on" : ""}`}
-                        onClick={() => setRstTraders((cur) => (cur.includes(r.key) ? cur.filter((k) => k !== r.key) : [...cur, r.key]))}
-                      >
-                        {r.name}
-                      </button>
-                    ))}
+                    .map((r) => {
+                      const on = rstTraders.includes(r.key);
+                      return (
+                        <button
+                          key={r.key}
+                          type="button"
+                          className={`rst-chip${on ? " on" : ""}`}
+                          aria-pressed={on}
+                          title={on ? t.traderRstChipOn : t.traderRstChipOff}
+                          onClick={() => setRstTraders((cur) => (cur.includes(r.key) ? cur.filter((k) => k !== r.key) : [...cur, r.key]))}
+                        >
+                          {on ? "🔔" : "🔕"} {r.name}
+                        </button>
+                      );
+                    })}
                 </div>
               </>
             )}
