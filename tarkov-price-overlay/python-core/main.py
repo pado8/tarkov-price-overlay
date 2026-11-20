@@ -120,6 +120,31 @@ app.add_middleware(
 # 사용자 데이터는 받는 쪽(사이트 JS)이 브라우저 안에서만 쓰고 어디에도 보내지 않는다.
 _SITE_ORIGIN_RE = re.compile(r"^(https://tarkov\.aquapado\.com|http://127\.0\.0\.1:8099)$")
 
+# 11-20 사이트 연동 횟수(하루 요약 syh 찾음·syc 진행 읽음·syw 보냄): 운영 가이드 사이트 출처 요청만 메모리에서 센다
+# (로컬 시험 출처·앱 자신·거절된 요청은 안 셈). 앱이 지도 상태(/radar)·조회(/lookup) 응답으로 받아 가면 0 으로 돌린다 — 새 호출 없음.
+_SITE_COUNT_ORIGIN = "https://tarkov.aquapado.com"
+_site_counts: dict[str, int] = {}
+_site_counts_lock = threading.Lock()
+
+
+def _count_site(request: Request, key: str) -> None:
+    if request.headers.get("origin") == _SITE_COUNT_ORIGIN:
+        with _site_counts_lock:
+            _site_counts[key] = _site_counts.get(key, 0) + 1
+
+
+def _take_site_counts(request: Request) -> dict[str, int] | None:
+    """앱 자신의 요청(Origin 없음·앱 출처)에만 넘기고 비운다. 사이트 출처 요청에는 주지 않는다."""
+    origin = request.headers.get("origin")
+    if origin and (_SITE_ORIGIN_RE.match(origin) or not _allowed_origin.match(origin)):
+        return None
+    with _site_counts_lock:
+        if not _site_counts:
+            return None
+        out = dict(_site_counts)
+        _site_counts.clear()
+    return out
+
 
 class _ProgressCORS:
     """CORSMiddleware 바깥에서 /progress 의 프리플라이트를 가로채고 응답에 출처 헤더를 더한다."""
@@ -425,6 +450,8 @@ class LookupResponse(BaseModel):
     # The frontend prefixes its nomatch telemetry with "wide_" so the
     # dashboard can separate rescue-path reads from normal ones.
     attempt: str | None = None
+    # 11-20 사이트 연동 횟수(syh·syc·syw) — 앱이 하루 요약에 더한다(_take_site_counts)
+    site: dict[str, int] | None = None
 
 
 def _flea_fee_rates_for(game_mode: str) -> list[float] | None:
@@ -661,7 +688,8 @@ def _build_response(
 
 
 @app.get("/health")
-def health() -> dict:
+def health(request: Request) -> dict:
+    _count_site(request, "syh")
     # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story,
     # 11-13 story_progress = GET /progress 의 story.started — 게임 로그로 추정한 진행 중 스토리 챕터)
     return {"status": "ok", "features": ["story_sync", "story_progress"]}
@@ -1441,7 +1469,15 @@ def _scan_for_tooltip(
 # 출처 검사: 조회는 화면을 캡처해 읽는다. 남의 페이지가 본문 형식 없는 POST(사전 요청 없음)로 이걸 돌리거나
 # client_seq 를 큰 값으로 올려 이후 조회를 전부 '대체됨'으로 만들지 못하게 한다.
 @app.post("/lookup", response_model=LookupResponse, dependencies=[Depends(_reject_foreign_origin)])
-def lookup(req: CaptureRequest) -> LookupResponse:
+def lookup(req: CaptureRequest, request: Request) -> LookupResponse:
+    r = _lookup_impl(req)
+    sc = _take_site_counts(request)
+    if sc and isinstance(r, LookupResponse):
+        r.site = sc
+    return r
+
+
+def _lookup_impl(req: CaptureRequest) -> LookupResponse:
     # Register this press as early as possible (before the blocking cursor
     # query) so an in-flight older lookup notices it on its next loop check.
     # Done even for the override_text fast-path below, so a manual lookup also
@@ -1756,13 +1792,15 @@ def hideout_stations(lang: str = "en") -> list:
 
 
 @app.get("/radar")
-def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
+def radar_state(request: Request, lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
                 story: str | None = None, glang: str | None = None, oat: float | None = None) -> dict:
     """레이더(미니맵 1단계): 가장 최근 좌표 스크린샷 + 게임 로그로 판정한 맵 + 그 맵의 탈출구·트랜짓·
     진행 중 퀘스트 목표까지의 거리·상대 각도·높이 차. 게임 메모리는 읽지 않는다(radar.py 참고).
     앱이 1초마다 부르므로 지도 데이터는 스크린샷이 새로울 때나 사용자가 직접 열 때(full)만 받는다."""
-    return get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full, story=story or None,
-                             game_lang=glang or None, o_at=oat)  # oat = 게임에서 O 를 누른 시각(11-19, 탈출구 목록 사진 판정)
+    out = get_radar().state(lang=lang, game_mode=game_mode, map_override=map or None, full=full, story=story or None,
+                            game_lang=glang or None, o_at=oat)  # oat = 게임에서 O 를 누른 시각(11-19, 탈출구 목록 사진 판정)
+    sc = _take_site_counts(request)
+    return {**out, "site": sc} if sc else out
 
 
 @app.get("/radar/keylocks")
@@ -1896,9 +1934,10 @@ def sync_hideout(req: HideoutSyncRequest) -> dict:
 
 
 @app.get("/progress")
-def progress(game_mode: str | None = None) -> dict:
+def progress(request: Request, game_mode: str | None = None) -> dict:
     """가이드 사이트용 진행도 요약 — 게임 로그에서 읽은 퀘스트 상태(모드별) + 앱 설정의 은신처 단계.
     읽기 전용이고 화면 내용은 전혀 들어 있지 않다. CORS 는 _ProgressCORS 가 이 경로에만 붙인다."""
+    _count_site(request, "syc")
     tracker = get_tracker()
     # game_mode 없음·"auto" = 앱이 지금 쓰는 서버(사이트 첫 연동용). 앱이 아직 안 알려 줬으면 예전처럼 PVP.
     if game_mode in (None, "", "auto"):
@@ -1985,8 +2024,9 @@ def _reject_foreign_site_origin(request: Request) -> None:
 
 
 @app.post("/progress/promo", dependencies=[Depends(_reject_foreign_site_origin)])
-def progress_promo(req: PromoUsedRequest) -> dict:
+def progress_promo(req: PromoUsedRequest, request: Request) -> dict:
     """가이드가 보낸 '등록함' 코드 전체 목록으로 교체한다(체크 해제도 반영). 응답은 저장된 목록."""
+    _count_site(request, "syw")
     global _promo_used_cache
     now = int(time.time() * 1000)
     old = _load_promo_used()
@@ -2014,7 +2054,8 @@ class StorySiteRequest(BaseModel):
 
 
 @app.post("/progress/story", dependencies=[Depends(_reject_foreign_site_origin)])
-def progress_story(req: StorySiteRequest) -> dict:
+def progress_story(req: StorySiteRequest, request: Request) -> dict:
+    _count_site(request, "syw")
     import story_site
     from radar import story_doc
     doc = story_doc()

@@ -57,6 +57,7 @@ export type RadarTarget = {
 };
 
 export type RadarState = {
+  site?: Record<string, number> | null; // 11-20 사이트 연동 횟수(App takeSiteCounts)
   folder: string | null;
   shot: { id: string; ts: number; age: number; x: number; y: number; z: number; heading: number | null } | null;
   map: { id: string; name: string; rot?: number } | null; // rot = tarkov.dev 지도 기준 기본 회전

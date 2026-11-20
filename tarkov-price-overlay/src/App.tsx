@@ -620,6 +620,14 @@ function dailyAdd(key: string, n = 1): void {
   dailyAcc.c[key] = (dailyAcc.c[key] ?? 0) + n;
   persistDaily();
 }
+/** 11-20 하루 요약 syh·syc·syw: 엔진이 센 가이드 사이트 연동 요청 수(지도 상태·조회 응답에 실려 온다, 받으면 엔진은 0 으로). */
+function takeSiteCounts(s?: Record<string, number> | null): void {
+  if (!s) return;
+  for (const k of ["syh", "syc", "syw"] as const) {
+    const n = s[k];
+    if (typeof n === "number" && n > 0 && n < 100000) dailyAdd(k, Math.round(n));
+  }
+}
 /** 11-20 하루 요약 dop: 카드의 접힌 패널(구입처·교환·제작·은신처 필요)을 펼칠 때만. <details> 의 toggle 은 처음부터
  * 열린 채 그려질 때도 울려 제목 줄(summary) 클릭으로 센다 — 누르기 전에 닫혀 있었으면 펼치는 것. */
 function countDetailsOpen(e: { currentTarget: HTMLElement }): void {
@@ -972,6 +980,7 @@ type BuyOffer = {
 };
 
 type LookupResult = {
+  site?: Record<string, number> | null; // 11-20 사이트 연동 횟수(takeSiteCounts)
   raw_text: string;
   item_id: string | null;
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
@@ -3713,6 +3722,7 @@ function App() {
         const res = await fetch(radarUrl(false));
         if (!res.ok) return;
         const d = (await res.json()) as RadarState;
+        takeSiteCounts(d.site);
         // 지도 나란히 모드로 켜진 채 시작하면 사이드카가 뜨기 전에 첫 loadRadar 가 실패한다 → 응답이 오기 시작하면 한 번 받아 둔다
         if (wideModeRef.current && !radarDataRef.current && !radarLoading) void loadRadar();
         // 11-08 사용자 '맵 로딩할 때 어떤 맵인지 알아서 미리': 게임은 로딩 화면 시작(레이드 1~2분 전)에 맵을 로그에 쓴다.
@@ -5208,6 +5218,7 @@ function App() {
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
+          takeSiteCounts(data.site);
           connFailRef.current = 0;
           sidecarPortBusyRef.current = false;
           sidecarBlockedRef.current = false;
@@ -5497,6 +5508,7 @@ function App() {
       sidecarBlockedRef.current = false;
       sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
       const data: LookupResult = await res.json();
+      takeSiteCounts(data.site);
       if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won
       setResult(data);
       setStatus("success");
