@@ -88,8 +88,24 @@ try {
         -replace '("pubkey":\s*"[^"]+")', "`$1,`r`n      `"dangerousInsecureTransportProtocol`": true"
     [IO.File]::WriteAllText($tauriCfgPath, $newTauri, [Text.UTF8Encoding]::new($false))
 
+    # Official build check (11-20): derive this version's build key from the master key file
+    # (never printed or committed) and hand it to build.rs via TPO_BUILD_KEY; cleared after the build.
+    $buildKeyFile = Join-Path $env:USERPROFILE ".tarkov-build\build_master.key"
+    $hasBuildKey = Test-Path $buildKeyFile
+    if ($hasBuildKey) {
+        $hmac = [System.Security.Cryptography.HMACSHA256]::new([Convert]::FromBase64String((Get-Content -Raw $buildKeyFile).Trim()))
+        $env:TPO_BUILD_KEY = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes("tpo-build|$Version")))
+        $hmac.Dispose()
+    }
+    if (-not $hasBuildKey) {
+        Write-Warning "[test-build] official build key not found ($buildKeyFile) - this build will report as unverified"
+    }
     Write-Host "[test-build] running build.ps1..."
-    & "$root\scripts\build.ps1"
+    try {
+        & "$root\scripts\build.ps1"
+    } finally {
+        Remove-Item Env:TPO_BUILD_KEY -ErrorAction SilentlyContinue
+    }
 
     $installer = "$root\src-tauri\target\release\bundle\nsis\Tarkov Price Overlay_${Version}_x64-setup.exe"
     $sig = "$installer.sig"

@@ -472,12 +472,28 @@ function persistStatsQueue(): void {
 
 /** POST a batch. Resolves true only when the server accepted it, so the caller
  *  knows whether the events may be dropped from the queue. */
+// 11-20 공식 빌드 확인 표식(bp) — 공식 빌드가 넣은 키로 Rust 가 만든 짧은 값(키는 웹뷰로 오지 않는다).
+// UTC 날짜가 바뀔 때만 다시 계산한다. 빈 값이면(직접 빌드한 판 등) 묶음에 넣지 않는다. 헤더는 늘리지 않는다.
+let buildProofCache: { day: string; v: string } | null = null;
+async function buildProof(): Promise<string> {
+  const day = new Date().toISOString().slice(0, 10);
+  if (buildProofCache?.day === day) return buildProofCache.v;
+  let v = "";
+  try {
+    const r = await invoke<string>("build_proof", { installId: ensureInstallId() });
+    if (typeof r === "string") v = r;
+  } catch {}
+  buildProofCache = { day, v };
+  return v;
+}
+
 async function postStats(events: EventPayload[]): Promise<boolean> {
   try {
+    const bp = await buildProof();
     const r = await fetch(STATS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ events }),
+      body: JSON.stringify(bp ? { events, bp } : { events }),
       keepalive: true,
     });
     return r.ok;
@@ -2306,6 +2322,15 @@ function App() {
   }, [autoInstallUpdate]);
   // 서버 공지의 min_version 보다 낮은 버전이면 차단 화면(11-03 최소 버전 레버)
   const [forcedMinVersion, setForcedMinVersion] = useState<string | null>(null);
+  // 11-20 옛 버전 안내 칸: 공지 응답의 notice_below {version, ko, en, ru, zh} — 내 버전이 더 낮으면 조회 카드에 한 줄.
+  // 닫으면 그 조회에서만 숨고 다음 조회에 다시 보인다. 칸이 없으면 아무것도 안 한다(서버 쪽은 필요할 때 추가)
+  const [noticeBelow, setNoticeBelow] = useState<Partial<Record<Lang, string>> | null>(null);
+  const [noticeBelowClosed, setNoticeBelowClosed] = useState(false);
+  useEffect(() => {
+    if (!result || !noticeBelow) return;
+    setNoticeBelowClosed(false);
+    dailyAdd("nbs"); // 하루 요약: 옛 버전 안내가 조회 카드에 보인 횟수
+  }, [result, noticeBelow]);
   // update_check 텔레메트리 중복 방지 — 같은 결과는 세션에 한 번만
   const updateCheckReportedRef = useRef<string | null>(null);
   const updateBannerSeenRef = useRef<string | null>(null); // 11-11 banner_shown 은 버전당 세션 1번
@@ -2741,6 +2766,16 @@ function App() {
           setForcedMinVersion(a.min_version);
           log(`update: forced — ${APP_VERSION} < min ${a.min_version}`);
           reportEvent("update_apply", `blocked:${a.min_version.slice(0, 16)}`);
+        }
+        const nb = a.notice_below;
+        if (nb && typeof nb === "object" && typeof nb.version === "string" && /^\d+(\.\d+)*$/.test(nb.version)
+            && cmpVersion(APP_VERSION, nb.version) < 0) {
+          const msg: Partial<Record<Lang, string>> = {};
+          for (const l of ["ko", "en", "ru", "zh"] as const) if (typeof nb[l] === "string" && nb[l].trim()) msg[l] = nb[l].trim().slice(0, 300);
+          if (Object.keys(msg).length) {
+            setNoticeBelow(msg);
+            log(`update: notice_below ${nb.version} (> ${APP_VERSION})`);
+          }
         }
         // 11-08 개인 답장은 공지가 꺼져 있어도 온다
         if (a.replies) {
@@ -8059,6 +8094,22 @@ function App() {
                 (result.sell_for?.length ?? 0) === 0;
               return (
                 <div className="prices">
+                  {noticeBelow && !noticeBelowClosed && (
+                    <div className="notice-below" role="status">
+                      <span>{noticeBelow[region.lang] ?? noticeBelow.ko ?? noticeBelow.en ?? Object.values(noticeBelow)[0]}</span>
+                      <button
+                        type="button"
+                        className="notice-below-x"
+                        aria-label="✕"
+                        onClick={() => {
+                          setNoticeBelowClosed(true);
+                          dailyAdd("nbx"); // 하루 요약: 옛 버전 안내를 닫은 횟수
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                   {staleNote(result, t)}
                   {/* 11-08 가격 알람 — 플리 거래되는 아이템만 */}
                   {PRICE_ALARM_ON && alarmOn && result.item_id && !result.no_flea && (

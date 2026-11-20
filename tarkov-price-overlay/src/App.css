@@ -2032,6 +2032,10 @@ html, body, #root {
 .quest-warning.gunsmith .quest-trader { color: var(--gold-bright); }
 .quest-sub { color: var(--text-muted); }
 .price-stale { font-size: var(--card-fs-xs); color: var(--gold-bright); opacity: 0.9; margin-bottom: 2px; }
+/* 11-20 옛 버전 안내 칸(공지의 notice_below) — 조회 카드 맨 위 한 줄 */
+.notice-below { display: flex; align-items: flex-start; gap: 6px; font-size: var(--card-fs-xs); color: var(--gold-bright); border: 1px solid var(--gold-bright); border-radius: 4px; padding: 3px 6px; margin-bottom: 4px; }
+.notice-below > span { flex: 1; }
+.notice-below-x { background: none; border: none; color: inherit; cursor: pointer; padding: 0 2px; font-size: inherit; line-height: 1.2; }
 
 /* Side-by-side mode keeps the card's saved width and gives the rest to the map. */
 .overlay.wide.map-left:not(.stack) { flex-direction: row-reverse; }

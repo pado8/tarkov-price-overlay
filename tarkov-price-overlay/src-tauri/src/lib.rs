@@ -13,6 +13,7 @@ use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 
 mod update_cache;
+mod build_proof;
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize, Clone)]
@@ -1964,6 +1965,7 @@ pub fn run() {
             launch_installed_copy,
             open_folder,
             resolve_install_id,
+            build_proof::build_proof,
             exit_app,
             relaunch_as_admin,
             show_overlay_passive,
