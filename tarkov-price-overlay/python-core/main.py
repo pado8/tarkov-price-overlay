@@ -127,14 +127,16 @@ _site_counts: dict[str, int] = {}
 _site_counts_lock = threading.Lock()
 
 
-def _count_site(request: Request, key: str) -> None:
-    if request.headers.get("origin") == _SITE_COUNT_ORIGIN:
+def _count_site(request: Request | None, key: str) -> None:
+    if request is not None and request.headers.get("origin") == _SITE_COUNT_ORIGIN:
         with _site_counts_lock:
             _site_counts[key] = _site_counts.get(key, 0) + 1
 
 
-def _take_site_counts(request: Request) -> dict[str, int] | None:
-    """앱 자신의 요청(Origin 없음·앱 출처)에만 넘기고 비운다. 사이트 출처 요청에는 주지 않는다."""
+def _take_site_counts(request: Request | None) -> dict[str, int] | None:
+    """앱 자신의 요청(Origin 없음·앱 출처)에만 넘기고 비운다. 사이트 출처 요청에는 주지 않는다. 직접 호출(request 없음)은 안 건드림."""
+    if request is None:
+        return None
     origin = request.headers.get("origin")
     if origin and (_SITE_ORIGIN_RE.match(origin) or not _allowed_origin.match(origin)):
         return None
@@ -688,7 +690,7 @@ def _build_response(
 
 
 @app.get("/health")
-def health(request: Request) -> dict:
+def health(request: Request = None) -> dict:
     _count_site(request, "syh")
     # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story,
     # 11-13 story_progress = GET /progress 의 story.started — 게임 로그로 추정한 진행 중 스토리 챕터)
@@ -1469,7 +1471,7 @@ def _scan_for_tooltip(
 # 출처 검사: 조회는 화면을 캡처해 읽는다. 남의 페이지가 본문 형식 없는 POST(사전 요청 없음)로 이걸 돌리거나
 # client_seq 를 큰 값으로 올려 이후 조회를 전부 '대체됨'으로 만들지 못하게 한다.
 @app.post("/lookup", response_model=LookupResponse, dependencies=[Depends(_reject_foreign_origin)])
-def lookup(req: CaptureRequest, request: Request) -> LookupResponse:
+def lookup(req: CaptureRequest, request: Request = None) -> LookupResponse:
     r = _lookup_impl(req)
     sc = _take_site_counts(request)
     if sc and isinstance(r, LookupResponse):
@@ -1792,8 +1794,9 @@ def hideout_stations(lang: str = "en") -> list:
 
 
 @app.get("/radar")
-def radar_state(request: Request, lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
-                story: str | None = None, glang: str | None = None, oat: float | None = None) -> dict:
+def radar_state(lang: str = "ko", game_mode: str = "regular", map: str | None = None, full: bool = False,
+                story: str | None = None, glang: str | None = None, oat: float | None = None,
+                request: Request = None) -> dict:
     """레이더(미니맵 1단계): 가장 최근 좌표 스크린샷 + 게임 로그로 판정한 맵 + 그 맵의 탈출구·트랜짓·
     진행 중 퀘스트 목표까지의 거리·상대 각도·높이 차. 게임 메모리는 읽지 않는다(radar.py 참고).
     앱이 1초마다 부르므로 지도 데이터는 스크린샷이 새로울 때나 사용자가 직접 열 때(full)만 받는다."""
@@ -1934,7 +1937,7 @@ def sync_hideout(req: HideoutSyncRequest) -> dict:
 
 
 @app.get("/progress")
-def progress(request: Request, game_mode: str | None = None) -> dict:
+def progress(game_mode: str | None = None, request: Request = None) -> dict:
     """가이드 사이트용 진행도 요약 — 게임 로그에서 읽은 퀘스트 상태(모드별) + 앱 설정의 은신처 단계.
     읽기 전용이고 화면 내용은 전혀 들어 있지 않다. CORS 는 _ProgressCORS 가 이 경로에만 붙인다."""
     _count_site(request, "syc")
@@ -2024,7 +2027,7 @@ def _reject_foreign_site_origin(request: Request) -> None:
 
 
 @app.post("/progress/promo", dependencies=[Depends(_reject_foreign_site_origin)])
-def progress_promo(req: PromoUsedRequest, request: Request) -> dict:
+def progress_promo(req: PromoUsedRequest, request: Request = None) -> dict:
     """가이드가 보낸 '등록함' 코드 전체 목록으로 교체한다(체크 해제도 반영). 응답은 저장된 목록."""
     _count_site(request, "syw")
     global _promo_used_cache
@@ -2054,7 +2057,7 @@ class StorySiteRequest(BaseModel):
 
 
 @app.post("/progress/story", dependencies=[Depends(_reject_foreign_site_origin)])
-def progress_story(req: StorySiteRequest, request: Request) -> dict:
+def progress_story(req: StorySiteRequest, request: Request = None) -> dict:
     _count_site(request, "syw")
     import story_site
     from radar import story_doc
