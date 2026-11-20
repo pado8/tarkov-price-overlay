@@ -161,7 +161,7 @@ class _ProgressCORS:
         # 안 붙어 브라우저가 응답을 막았다(CORS MissingAllowOriginHeader) → 사이트가 '앱 없음'으로 보고 체크를 한 번도 안 보냄.
         path = scope.get("path")
         if scope.get("type") != "http" or path not in ("/progress", "/progress/promo", "/progress/story", "/health",
-                                                            "/backup/export", "/backup/import", "/backup/import/status"):
+                                                            "/backup/export", "/backup/import", "/backup/import/status", "/site/id"):
             return await self.app(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
         origin = headers.get("origin", "")
@@ -703,7 +703,10 @@ def health(request: Request = None) -> dict:
     _count_site(request, "syh")
     # features: 가이드 사이트가 이 앱이 받을 수 있는 연동을 알아보는 목록(11-10 story_sync = POST /progress/story,
     # 11-13 story_progress = GET /progress 의 story.started — 게임 로그로 추정한 진행 중 스토리 챕터)
-    return {"status": "ok", "features": ["story_sync", "story_progress"]}
+    import story_site
+
+    # 11-20 B4: story_sync(사이트 체크 → 앱 지도 숨김)는 스위치가 켜진 판에서만 알린다(공개 연동은 story_progress)
+    return {"status": "ok", "features": (["story_sync"] if story_site.sync_on() else []) + ["story_progress"]}
 
 
 class CatalogActiveRequest(BaseModel):
@@ -2215,6 +2218,27 @@ class BackupResolve(BaseModel):
     accept: bool
 
 
+def _read_install_id() -> str | None:
+    """앱(Rust)이 만든 이 PC 의 설치 번호 — %PROGRAMDATA%\\TarkovPriceOverlay\\install_id. 없거나 형식이 틀리면 None."""
+    from pathlib import Path
+
+    base = os.environ.get("ProgramData") or os.environ.get("PROGRAMDATA")
+    if not base:
+        return None
+    try:
+        v = (Path(base) / "TarkovPriceOverlay" / "install_id").read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    return v if re.fullmatch(r"[0-9a-fA-F-]{36}", v) else None
+
+
+@app.get("/site/id", dependencies=[Depends(_require_site_origin)])
+def site_id() -> dict:
+    """11-20 가이드 사이트가 같은 PC 앱의 설치 번호를 읽는다(사이트에서 한 일과 이 앱을 잇는 데 쓴다). 사이트 출처만."""
+    iid = _read_install_id()
+    return {"ok": bool(iid), "id": iid}
+
+
 @app.post("/backup/pending/resolve", dependencies=[Depends(_require_app_origin)])
 def backup_resolve(req: BackupResolve) -> dict:
     global _backup_pending, _backup_state
@@ -2232,9 +2256,11 @@ def progress_story(req: StorySiteRequest, request: Request = None) -> dict:
     import story_site
     from radar import story_doc
     doc = story_doc()
-    if req.clear:
+    if req.clear:  # 앱 '다시 보이기' — 스위치와 상관없이 늘 지울 수 있게
         story_site.clear()
         return {"ok": True, "done": 0, "hidden": 0}
+    if not story_site.sync_on():
+        raise HTTPException(status_code=403, detail="story_sync_off")
     known = {c.get("id") for c in doc.get("chapters") or []}
     saved = story_site.save(req.chapter, req.done, known)
     marks = {m.get("id") for m in doc.get("marks") or []}

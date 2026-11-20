@@ -18,6 +18,14 @@ MAX_DONE = 600
 RECENT_SEC = 7 * 24 * 3600  # '자동' 모드가 사이트가 보낸 챕터를 우선하는 기간
 _cache: Optional[dict] = None
 
+# 11-20 사용자 결정(B4): 사이트 체크 → 앱 지도에서 숨기기(story_sync)는 이 판에서 끈다. 코드는 그대로 두고 이 스위치만 본다
+# (/health 기능 목록·사이트 체크 받기·지도 반영). 앱의 '다시 보이기'(지우기)는 늘 된다.
+SYNC_ON = False
+
+
+def sync_on() -> bool:
+    return SYNC_ON
+
 
 def _path():
     from quest_tracker import _state_dir

@@ -1723,7 +1723,8 @@ class RadarService:
                     auto = story_auto_quests(game_mode) if story == "auto" else None
                     try:
                         import story_site
-                        s_done, s_ch = story_site.done_set(), story_site.recent_chapter()
+                        # 11-20 B4: 사이트 체크 반영(story_sync)이 꺼진 판에서는 저장된 체크·챕터도 쓰지 않는다
+                        s_done, s_ch = (story_site.done_set(), story_site.recent_chapter()) if story_site.sync_on() else (set(), None)
                     except Exception:  # noqa: BLE001
                         s_done, s_ch = set(), None
                     res["targets"] = sorted(res["targets"] + story_targets(story, slug, pose, loc_tasks, auto=auto, done=s_done, site_chapter=s_ch),

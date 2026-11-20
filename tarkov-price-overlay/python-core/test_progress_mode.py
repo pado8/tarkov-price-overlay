@@ -58,7 +58,11 @@ def _boom(gm="regular"):
 radar.story_auto_quests = _boom
 eq("추정 실패 → 빈 목록(응답은 그대로)", (main.progress(None)["ok"], main.progress(None)["story"]), (True, {"started": []}))
 radar.story_auto_quests = _real_auto
-eq("/health 기능 목록", main.health()["features"], ["story_sync", "story_progress"])
+import story_site as _ss
+eq("/health 기능 목록(11-20 B4: story_sync 꺼짐 = story_progress 만)", main.health()["features"], ["story_progress"])
+_ss.SYNC_ON = True
+eq("/health 기능 목록(스위치 켠 판)", main.health()["features"], ["story_sync", "story_progress"])
+_ss.SYNC_ON = False
 
 # 3) 사이트가 모드를 명시하면 그대로(연동된 뒤 사용자가 사이트에서 서버를 바꾼 경우)
 r = main.progress("regular")
