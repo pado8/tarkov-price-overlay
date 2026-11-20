@@ -427,7 +427,10 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     <select
       className="radar-map"
       value={data.map_source === "manual" && data.map ? data.map.id : ""}
-      onChange={(e) => onPickMap(e.target.value || null)}
+      onChange={(e) => {
+        if (e.target.value) stat("mpk"); // 11-20 하루 요약: 지도 맵을 직접 고른 횟수(자동으로 되돌리기는 안 셈)
+        onPickMap(e.target.value || null);
+      }}
       aria-label={t.radarPickMap}
     >
       <option value="">{data.map_source === "log" ? `${t.radarFromLog}: ${data.map?.name}` : t.radarPickMap}</option>
@@ -574,7 +577,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           {mapPicker}
           {/* 스토리(메인 퀘스트) 챕터 — 게임이 스토리 진행을 로그에 안 남겨 자동 감지가 안 된다 → 진행 중인 챕터를 직접 고른다 */}
           {(data.story_chapters?.length ?? 0) > 0 && (
-            <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => onPickStory(e.target.value)} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
+            <select className="radar-map" value={story === "all" || story === "auto" || data.story_chapters!.some((c) => c.id === story) ? story : ""} onChange={(e) => { stat("stc"); onPickStory(e.target.value); }} aria-label={t.radarStoryPick} title={t.radarStoryHint}>
               <option value="">{t.radarStoryOff}</option>
               <option value="auto">{t.radarStoryAuto}</option>
               {data.story_chapters!.map((c) => (

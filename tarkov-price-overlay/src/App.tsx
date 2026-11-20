@@ -604,6 +604,11 @@ function dailyAdd(key: string, n = 1): void {
   dailyAcc.c[key] = (dailyAcc.c[key] ?? 0) + n;
   persistDaily();
 }
+/** 11-20 하루 요약 dop: 카드의 접힌 패널(구입처·교환·제작·은신처 필요)을 펼칠 때만. <details> 의 toggle 은 처음부터
+ * 열린 채 그려질 때도 울려 제목 줄(summary) 클릭으로 센다 — 누르기 전에 닫혀 있었으면 펼치는 것. */
+function countDetailsOpen(e: { currentTarget: HTMLElement }): void {
+  if (!(e.currentTarget.parentElement as HTMLDetailsElement | null)?.open) dailyAdd("dop");
+}
 /** 성공 조회 응답 시간(ms). 하루 500개까지만 담는다(중앙값만 보내니 충분). */
 function dailyLat(ms: number): void {
   dailyRollover();
@@ -5356,6 +5361,7 @@ function App() {
   useEffect(() => {
     const unlisten = listen("hotkey-toggle", async () => {
       log("React: hotkey-toggle");
+      dailyAdd("tgl"); // 11-20 하루 요약: 카드 토글 단축키(마지막 결과 보이기·숨기기)
       toggleAtRef.current = performance.now();
       const win = getCurrentWindow();
       try {
@@ -8212,7 +8218,7 @@ ${t.fleaFeeHint}`}
                     result.buy_for &&
                     result.buy_for.length > 0 && (
                     <details className="all-traders" open={region.detailsOpenDefault} style={secStyle("buyFor")}>
-                      <summary>
+                      <summary onClick={countDetailsOpen}>
                         <Icon name="store" /> {t.buyFor} ({result.buy_for.length})
                       </summary>
                       <div className="trader-list">
@@ -8235,7 +8241,7 @@ ${t.fleaFeeHint}`}
                     result.barters_for &&
                     result.barters_for.length > 0 && (
                     <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersFor")}>
-                      <summary><Icon name="exchange" /> {t.barterFor} ({result.barters_for.length})</summary>
+                      <summary onClick={countDetailsOpen}><Icon name="exchange" /> {t.barterFor} ({result.barters_for.length})</summary>
                       <div className="trader-list">
                         {result.barters_for.map((b, idx) => (
                           <div key={idx} className="barter-row">
@@ -8282,7 +8288,7 @@ ${t.fleaFeeHint}`}
                     result.barters_using &&
                     result.barters_using.length > 0 && (
                     <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("bartersUsing")}>
-                      <summary>
+                      <summary onClick={countDetailsOpen}>
                         <Icon name="send" /> {t.barterUsing} ({result.barters_using.length})
                       </summary>
                       <div className="trader-list">
@@ -8349,7 +8355,7 @@ ${t.fleaFeeHint}`}
                       const hasLevels = Object.keys(hideoutLevels).length > 0;
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsFor")}>
-                          <summary>
+                          <summary onClick={countDetailsOpen}>
                             <Icon name="hammer" /> {t.craftFor} ({result.crafts_for.length})
                           </summary>
                           <div className="trader-list">
@@ -8407,7 +8413,7 @@ ${t.fleaFeeHint}`}
                       const craftsUsing = result.crafts_using;
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("craftsUsing")}>
-                          <summary>
+                          <summary onClick={countDetailsOpen}>
                             <Icon name="flask" /> {t.craftUsing} ({craftsUsing.length})
                           </summary>
                           <div className="trader-list">
@@ -8496,7 +8502,7 @@ ${t.fleaFeeHint}`}
                         : `${total}`;
                       return (
                         <details className="all-traders barters" open={region.detailsOpenDefault} style={secStyle("hideoutNeeds")}>
-                          <summary>
+                          <summary onClick={countDetailsOpen}>
                             <Icon name="hideout" /> {t.hideoutNeed} ({countLabel})
                           </summary>
                           <div className="trader-list">
@@ -8742,11 +8748,13 @@ ${t.fleaFeeHint}`}
                                   }
                                   onClick={
                                     togglable
-                                      ? () =>
+                                      ? () => {
+                                          if (!q.manual) dailyAdd("qmd"); // 11-20 하루 요약: 퀘스트 줄을 눌러 손으로 달성 표시(되돌리기는 안 셈)
                                           toggleManualQuestDone(
                                             questDisplayMode,
                                             q.id as string
-                                          )
+                                          );
+                                        }
                                       : undefined
                                   }
                                 >

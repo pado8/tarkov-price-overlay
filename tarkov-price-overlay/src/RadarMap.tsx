@@ -124,6 +124,11 @@ const LOCK_LOOT_ON = false;
 // 11-20 사용자: 공개판 레이드 준비는 사이트 레이드 준비(할 퀘스트 고르기·챙길 것)와 달라 혼란 → 공개판에서는 뺀다.
 // 퀘스트 고르기가 들어간 레이드 준비는 다른 판에서 이 값을 켜서 쓴다.
 const PREP_ON = false;
+// 11-20 통계: 지도 표시 칩을 켠 횟수를 칩마다(하루 요약). 합계 mly 는 예전 값과 비교하려고 그대로 둔다
+const CHIP_STAT: Record<string, string> = {
+  pmc: "mlp", scav: "mls", transit: "mlt", quest: "mlq", hazard: "mlh", spawn: "mlb",
+  lock: "mlk", mykeys: "mlm", trail: "mlr", names: "mln", img: "mli",
+};
 const FRIEND_DIM_MS = 5 * 60 * 1000; // 5분 넘으면 흐리게
 const FRIEND_HIDE_MS = 30 * 60 * 1000; // 30분 넘으면 숨김
 const FRIEND_FLASH_MS = 2000; // 새 위치는 2초 반짝임
@@ -866,7 +871,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   })();
   const scaleM = v ? [10, 25, 50, 100, 200, 500].find((m) => m * v.s >= 40) ?? 1000 : 0;
   const chip = (on: boolean, k: string, text: string, onClick: () => void) => (
-    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => { stat(k === "mine" ? "mxt" : "mly"); onClick(); }} data-chip={k}>
+    <button type="button" className={`radar-chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => {
+      stat(k === "mine" ? "mxt" : "mly");
+      if (!on && CHIP_STAT[k]) stat(CHIP_STAT[k]); // 11-20 하루 요약: 칩별로 켤 때만(끌 때는 안 셈)
+      onClick();
+    }} data-chip={k}>
       <span className={`radar-sw ${k}`} /> {text}
     </button>
   );
