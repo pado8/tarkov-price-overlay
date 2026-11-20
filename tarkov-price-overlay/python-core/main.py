@@ -184,7 +184,10 @@ class _ProgressCORS:
 
         async def send_with_cors(message):
             if message["type"] == "http.response.start" and allowed:
-                message = {**message, "headers": list(message.get("headers") or []) + cors}
+                # 11-20 localhost:8099 는 앱 출처 규칙(CORSMiddleware)에도 맞아 안쪽에서 이미 출처 헤더가 붙는다 → 두 번 보내면
+                # 브라우저가 응답을 막는다(MultipleAllowOriginValues). 안쪽 access-control-* 를 지우고 이쪽 것만 붙인다.
+                inner = [(k, v) for k, v in (message.get("headers") or []) if not k.lower().startswith(b"access-control-")]
+                message = {**message, "headers": inner + cors}
             await send(message)
 
         return await self.app(scope, receive, send_with_cors)
