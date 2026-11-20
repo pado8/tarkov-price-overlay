@@ -6,6 +6,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { check as checkForAppUpdate, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openFolderDialog, message, ask } from "@tauri-apps/plugin-dialog";
+import { readBackupData, applyBackupData, restorableCount, planProgress, BACKUP_MAX_BYTES, type PendingRestore, type ProgressBackup } from "./backup";
 import { QRCodeSVG } from "qrcode.react";
 import { T, dataLang, type Lang, type GameLang, type GameMode } from "./i18n";
 import { useParty } from "./party";
@@ -384,6 +385,7 @@ type StatsEvent =
   | "radar_open" // 11-19 스크린샷으로 뜬 지도(옛 radar_shot)는 하루 요약 rsh 로 옮김
   // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
   | "install_mode" // 세션당 1회. detail = portable | installer
+  | "backup_restore" // 11-20 데이터 백업 복원 수락. detail = from:<백업한 PC 의 설치 번호>
   | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
   | "update_apply" // detail = downloaded | install_now | install_quit | install_next_launch | banner_shown | banner_dismiss | error | blocked:<min>
   // 11-03 2차 계측(v1.2.6). 전부 실행당 1회 또는 하루 1회라 행 수 영향은 하루 수백.
@@ -646,6 +648,11 @@ function countLookupMeta(d: { match_kind?: string | null; price_age_sec?: number
 function takeSiteCounts(s?: Record<string, number> | null): void {
   if (!s) return;
   for (const k of ["syh", "syc", "syw"] as const) {
+    const n = s[k];
+    if (typeof n === "number" && n > 0 && n < 100000) dailyAdd(k, Math.round(n));
+  }
+  // 11-20 데이터 백업: bkx 사이트에 내보냄 · bki 복원 요청 받음(엔진이 사이트 요청을 세어 같은 길로 넘긴다)
+  for (const k of ["bkx", "bki"] as const) {
     const n = s[k];
     if (typeof n === "number" && n > 0 && n < 100000) dailyAdd(k, Math.round(n));
   }
@@ -2841,6 +2848,111 @@ function App() {
       })
       .catch(() => dailyAdd("anf")); // 11-20 하루 요약: 공지 받기 실패
   }, []);
+
+  // 11-20 데이터 백업(1.3.6): 백업 대상(src/backup.ts 허용 목록)이 바뀌면 5초 안에 엔진에 스냅샷을 올리고(로컬, 외부 요청 0),
+  // 사이트가 보낸 복원이 기다리고 있으면 확인 창을 띄운다. 수락 = 허용 키만 덮어쓰고 다시 불러오기(설치 번호는 그대로).
+  useEffect(() => {
+    if (!IS_MAIN_WINDOW) return;
+    let last = "";
+    let asking = false;
+    let dead = false;
+    const tick = async () => {
+      if (dead || asking) return;
+      try {
+        let pending: PendingRestore | null = null;
+        const data = readBackupData(localStorage);
+        const body = JSON.stringify({ app_version: APP_VERSION, install_id: ensureInstallId(), data });
+        if (body !== last && body.length < BACKUP_MAX_BYTES) {
+          const r = await fetch(`${PYTHON_API}/backup/snapshot`, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+          if (!r.ok) return;
+          last = body;
+          pending = ((await r.json()) as { pending?: PendingRestore | null }).pending ?? null;
+        } else {
+          const r = await fetch(`${PYTHON_API}/backup/pending`);
+          if (!r.ok) return;
+          pending = ((await r.json()) as { pending?: PendingRestore | null }).pending ?? null;
+        }
+        if (!pending || dead) return;
+        asking = true;
+        const L = T[region.lang];
+        // 진행도 백업이면 이 PC 의 같은 모드 진행도(게임 기록·프로모)와 비교해 더할 것만 고른다
+        let own: ProgressBackup | null = null;
+        if (pending.progress?.mode) {
+          own = await fetch(`${PYTHON_API}/progress?game_mode=${encodeURIComponent(pending.progress.mode)}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+        }
+        let manualNow: Record<string, string[]> = {};
+        try {
+          manualNow = JSON.parse(localStorage.getItem(MANUAL_QUEST_DONE_KEY) ?? "{}") || {};
+        } catch {}
+        const plan = planProgress(pending.progress, own, manualNow);
+        const nSet = restorableCount(pending.data);
+        const parts = [
+          nSet ? L.backupItemSettings.replace("{n}", String(nSet)) : "",
+          plan.hideout ? L.backupItemHideout.replace("{n}", String(Object.keys(plan.hideout).length)) : "",
+          plan.questsAdd.length ? L.backupItemQuests.replace("{n}", String(plan.questsAdd.length)) : "",
+          plan.faction ? L.backupItemFaction : "",
+          plan.promoAdd.length ? L.backupItemPromo.replace("{n}", String(plan.promoAdd.length)) : "",
+        ].filter(Boolean);
+        const when = pending.saved_at ? new Date(pending.saved_at).toLocaleString() : "?";
+        const yes = await ask(
+          L.backupAskBody.replace("{when}", when).replace("{ver}", pending.app_version || "?").replace("{items}", parts.join(" · ") || "—"),
+          { title: L.backupAskTitle, kind: "warning", okLabel: L.backupAskOk, cancelLabel: L.backupAskCancel }
+        ).catch(() => false);
+        await fetch(`${PYTHON_API}/backup/pending/resolve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accept: !!yes }),
+        }).catch(() => {});
+        if (!yes) {
+          dailyAdd("bkr"); // 하루 요약: 복원 거절
+          log("backup: restore rejected");
+          asking = false;
+          return;
+        }
+        const n = applyBackupData(localStorage, pending.data ?? {});
+        // 진행도 백업: 은신처(설정 백업에 은신처가 없을 때만) · 진영(직접 고른 것만) · 퀘스트(직접 체크로 더함) · 프로모(합침)
+        if (plan.hideout && !(pending.data && typeof pending.data["tarkov.hideoutLevels"] === "string")) {
+          try {
+            localStorage.setItem(HIDEOUT_LEVELS_KEY, JSON.stringify(plan.hideout));
+          } catch {}
+        }
+        if (plan.faction) {
+          try {
+            const reg = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
+            if (reg && typeof reg === "object") localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...reg, faction: plan.faction }));
+          } catch {}
+        }
+        if (plan.mode && plan.questsAdd.length) {
+          try {
+            const cur = JSON.parse(localStorage.getItem(MANUAL_QUEST_DONE_KEY) ?? "{}") || {};
+            cur[plan.mode] = [...new Set([...(cur[plan.mode] ?? []), ...plan.questsAdd])];
+            localStorage.setItem(MANUAL_QUEST_DONE_KEY, JSON.stringify(cur));
+          } catch {}
+        }
+        if (plan.promoAdd.length) {
+          const used = [...new Set([...((own?.promo_used as string[] | undefined) ?? []), ...plan.promoAdd])];
+          await fetch(`${PYTHON_API}/progress/promo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ used }) }).catch(() => {});
+        }
+        dailyAdd("bka"); // 하루 요약: 복원 수락
+        const from = typeof pending.install_id === "string" && /^[0-9a-fA-F-]{36}$/.test(pending.install_id) ? pending.install_id : "";
+        if (from) reportEvent("backup_restore", `from:${from}`); // 통계가 옛 PC 와 새 PC 를 같은 사람으로 묶는다(설치 번호는 바꾸지 않음)
+        log(`backup: restored ${n} keys · hideout ${plan.hideout ? Object.keys(plan.hideout).length : 0} · quests +${plan.questsAdd.length} · promo +${plan.promoAdd.length} — reloading`);
+        window.setTimeout(() => window.location.reload(), 300);
+      } catch {
+        // 엔진이 아직 안 떴거나 재시작 중 — 다음 틱에
+      }
+    };
+    const first = window.setTimeout(() => void tick(), 4000);
+    const iv = window.setInterval(() => void tick(), 5000);
+    return () => {
+      dead = true;
+      window.clearTimeout(first);
+      window.clearInterval(iv);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [region.lang]);
 
   // Live capture-region preview: while the user is editing offsets, two
   // small transparent windows (red = primary, yellow = ground) show on the

@@ -159,7 +159,8 @@ class _ProgressCORS:
         # 11-11 /health 추가: 사이트 스토리 페이지가 GET /health 의 features 로 연동 가능 여부를 보는데, 여기 없어서 출처 헤더가
         # 안 붙어 브라우저가 응답을 막았다(CORS MissingAllowOriginHeader) → 사이트가 '앱 없음'으로 보고 체크를 한 번도 안 보냄.
         path = scope.get("path")
-        if scope.get("type") != "http" or path not in ("/progress", "/progress/promo", "/progress/story", "/health"):
+        if scope.get("type") != "http" or path not in ("/progress", "/progress/promo", "/progress/story", "/health",
+                                                            "/backup/export", "/backup/import", "/backup/import/status"):
             return await self.app(scope, receive, send)
         headers = {k.decode().lower(): v.decode() for k, v in scope.get("headers") or []}
         origin = headers.get("origin", "")
@@ -2063,6 +2064,161 @@ class StorySiteRequest(BaseModel):
     game_mode: str | None = None
     lang: str | None = None
     clear: bool = False  # 앱 지도 패널의 '다시 보이기'
+
+
+# ── 11-20 데이터 백업(1.3.6, 설계 메모장/백업기능-설계-261120.md) ─────────────────────────────────────────────
+# 사이트(구글 로그인)가 같은 PC 앱의 데이터를 백업·복원한다. 엔진은 앱과 사이트 사이에서 메모리에만 들고 있는다(디스크·외부 요청 없음).
+#   사이트 출처만: GET /backup/export · POST /backup/import · GET /backup/import/status
+#   앱 출처만:     POST /backup/snapshot · GET /backup/pending · POST /backup/pending/resolve
+# 무엇을 백업하는지(허용 목록)는 앱(src/backup.ts)이 정한다 — 앱이 올린 것만 내보내고, 복원도 앱이 허용 목록으로 걸러 적용한다.
+_BACKUP_MAX = 200 * 1024
+_BACKUP_MAX_KEYS = 400
+_backup_lock = threading.Lock()
+_backup_snapshot: dict | None = None  # {"app_version", "install_id", "at", "data"}
+_backup_pending: dict | None = None  # 사이트가 보낸 복원 1개 {"saved_at", "app_version", "install_id", "data"}
+_backup_state = "none"  # none | pending | applied | rejected
+
+
+def _require_site_origin(request: Request) -> None:
+    origin = request.headers.get("origin") or ""
+    if not _SITE_ORIGIN_RE.match(origin):
+        raise HTTPException(status_code=403, detail="forbidden_origin")
+
+
+def _require_app_origin(request: Request) -> None:
+    """앱 웹뷰(tauri.localhost) 또는 Origin 없는 로컬 호출만. 사이트·남의 출처는 막는다."""
+    origin = request.headers.get("origin")
+    if origin and not _allowed_origin.match(origin):
+        raise HTTPException(status_code=403, detail="forbidden_origin")
+
+
+def _backup_data(raw) -> dict[str, str] | None:
+    if not isinstance(raw, dict) or len(raw) > _BACKUP_MAX_KEYS:
+        return None
+    out = {}
+    for k, v in raw.items():
+        if not isinstance(k, str) or not isinstance(v, str) or len(k) > 80:
+            return None
+        out[k] = v
+    return out
+
+
+def _backup_progress(raw) -> dict | None:
+    """진행도 백업에서 복원에 쓰는 칸만 남긴다(모드·완료 퀘스트·은신처·진영·프로모). 형식이 틀리면 None."""
+    if not isinstance(raw, dict):
+        return None
+    lst = lambda v, n: [x for x in v if isinstance(x, str) and 0 < len(x) <= 64][:n] if isinstance(v, list) else []
+    hid = raw.get("hideout")
+    return {
+        "mode": raw.get("mode") if raw.get("mode") in ("pvp", "pve", "season") else None,
+        "completed": lst(raw.get("completed"), 3000),
+        "hideout": {str(k)[:64]: v for k, v in hid.items() if isinstance(v, int)} if isinstance(hid, dict) else {},
+        "faction": raw.get("faction") if raw.get("faction") in ("BEAR", "USEC") else None,
+        "faction_source": raw.get("faction_source") if raw.get("faction_source") in ("manual", "auto") else None,
+        "promo_used": lst(raw.get("promo_used"), 200),
+    }
+
+
+async def _read_json_capped(request: Request):
+    cl = request.headers.get("content-length")
+    if cl and cl.isdigit() and int(cl) > _BACKUP_MAX:
+        raise HTTPException(status_code=413, detail="too_large")
+    body = b""
+    async for chunk in request.stream():
+        body += chunk
+        if len(body) > _BACKUP_MAX:
+            raise HTTPException(status_code=413, detail="too_large")
+    try:
+        return json.loads(body.decode("utf-8") or "null")
+    except (ValueError, UnicodeDecodeError):
+        raise HTTPException(status_code=400, detail="bad_json") from None
+
+
+def _pending_view() -> dict | None:
+    p = _backup_pending
+    return dict(p) if p else None
+
+
+@app.get("/backup/export", dependencies=[Depends(_require_site_origin)])
+def backup_export(request: Request = None) -> dict:
+    with _backup_lock:
+        snap = _backup_snapshot
+    if not snap:
+        return {"ok": False, "reason": "not_ready"}
+    _count_site(request, "bkx")
+    return {"ok": True, "v": 1, **snap}
+
+
+@app.post("/backup/import", dependencies=[Depends(_require_site_origin)])
+async def backup_import(request: Request) -> dict:
+    global _backup_pending, _backup_state
+    j = await _read_json_capped(request)
+    if not isinstance(j, dict) or j.get("v") != 1:
+        raise HTTPException(status_code=400, detail="bad_backup")
+    # data = 설정 백업(1.3.6~), progress = 진행도 백업(/progress 응답 그대로 — 1.3.6 전 사이트 백업은 이것만). 하나는 있어야 한다.
+    data = _backup_data(j.get("data")) if j.get("data") is not None else None
+    if j.get("data") is not None and data is None:
+        raise HTTPException(status_code=400, detail="bad_backup")
+    prog = _backup_progress(j.get("progress"))
+    if data is None and prog is None:
+        raise HTTPException(status_code=400, detail="bad_backup")
+    iid = j.get("install_id")
+    with _backup_lock:
+        _backup_pending = {
+            "saved_at": j.get("saved_at") if isinstance(j.get("saved_at"), (int, float)) else None,
+            "app_version": str(j.get("app_version") or "")[:16],
+            "install_id": iid if isinstance(iid, str) and re.fullmatch(r"[0-9a-fA-F-]{36}", iid) else None,
+            "data": data,
+            "progress": prog,
+        }
+        _backup_state = "pending"
+    _count_site(request, "bki")
+    return {"ok": True, "pending": True}
+
+
+@app.get("/backup/import/status", dependencies=[Depends(_require_site_origin)])
+def backup_import_status() -> dict:
+    with _backup_lock:
+        return {"state": _backup_state}
+
+
+@app.post("/backup/snapshot", dependencies=[Depends(_require_app_origin)])
+async def backup_snapshot(request: Request) -> dict:
+    global _backup_snapshot
+    j = await _read_json_capped(request)
+    data = _backup_data(j.get("data")) if isinstance(j, dict) else None
+    if data is None:
+        raise HTTPException(status_code=400, detail="bad_snapshot")
+    iid = j.get("install_id")
+    with _backup_lock:
+        _backup_snapshot = {
+            "app_version": str(j.get("app_version") or "")[:16],
+            "install_id": iid if isinstance(iid, str) and len(iid) <= 64 else None,
+            "at": int(time.time() * 1000),
+            "data": data,
+        }
+        return {"ok": True, "pending": _pending_view()}
+
+
+@app.get("/backup/pending", dependencies=[Depends(_require_app_origin)])
+def backup_pending() -> dict:
+    with _backup_lock:
+        return {"pending": _pending_view()}
+
+
+class BackupResolve(BaseModel):
+    accept: bool
+
+
+@app.post("/backup/pending/resolve", dependencies=[Depends(_require_app_origin)])
+def backup_resolve(req: BackupResolve) -> dict:
+    global _backup_pending, _backup_state
+    with _backup_lock:
+        if not _backup_pending:
+            return {"ok": False, "reason": "none"}
+        _backup_pending = None
+        _backup_state = "applied" if req.accept else "rejected"
+        return {"ok": True, "state": _backup_state}
 
 
 @app.post("/progress/story", dependencies=[Depends(_reject_foreign_site_origin)])
