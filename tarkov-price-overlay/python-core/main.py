@@ -118,7 +118,8 @@ app.add_middleware(
 # 자동으로 걸러 준다. 전역 CORS를 넓히면 /lookup(화면 OCR 결과)까지 사이트가 읽을 수 있게 되므로, 아래 미들웨어가
 # /progress 경로의 GET·OPTIONS 에만 사이트 출처 헤더를 붙인다(브라우저 로컬 네트워크 접근 프리플라이트 포함).
 # 사용자 데이터는 받는 쪽(사이트 JS)이 브라우저 안에서만 쓰고 어디에도 보내지 않는다.
-_SITE_ORIGIN_RE = re.compile(r"^(https://tarkov\.aquapado\.com|http://127\.0\.0\.1:8099)$")
+# 11-20 http://localhost:8099 추가 — 구글 로그인 로컬 시험은 localhost 에서만 된다(데이터 백업 사이트 시험)
+_SITE_ORIGIN_RE = re.compile(r"^(https://tarkov\.aquapado\.com|http://127\.0\.0\.1:8099|http://localhost:8099)$")
 
 # 11-20 사이트 연동 횟수(하루 요약 syh 찾음·syc 진행 읽음·syw 보냄): 운영 가이드 사이트 출처 요청만 메모리에서 센다
 # (로컬 시험 출처·앱 자신·거절된 요청은 안 셈). 앱이 지도 상태(/radar)·조회(/lookup) 응답으로 받아 가면 0 으로 돌린다 — 새 호출 없음.
@@ -2086,9 +2087,10 @@ def _require_site_origin(request: Request) -> None:
 
 
 def _require_app_origin(request: Request) -> None:
-    """앱 웹뷰(tauri.localhost) 또는 Origin 없는 로컬 호출만. 사이트·남의 출처는 막는다."""
+    """앱 웹뷰(tauri.localhost) 또는 Origin 없는 로컬 호출만. 사이트·남의 출처는 막는다.
+    앱 출처 규칙(_ALLOWED_ORIGIN_RE)은 개발용 localhost:<포트> 도 받으므로, 사이트 시험 출처(localhost:8099)는 따로 막는다."""
     origin = request.headers.get("origin")
-    if origin and not _allowed_origin.match(origin):
+    if origin and (not _allowed_origin.match(origin) or _SITE_ORIGIN_RE.match(origin)):
         raise HTTPException(status_code=403, detail="forbidden_origin")
 
 
