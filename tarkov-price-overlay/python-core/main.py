@@ -2218,6 +2218,11 @@ class BackupResolve(BaseModel):
     accept: bool
 
 
+# 11-21 사용자 결정: /site/id 는 쓰는 곳(사이트 연동 설계)이 정해질 때까지 끈다 — 꺼져 있으면 없는 경로처럼 404.
+# 사이트 페이지 안의 다른 스크립트가 설치 번호를 읽지 못하게. 켜는 판에서만 True.
+SITE_ID_ON = False
+
+
 def _read_install_id() -> str | None:
     """앱(Rust)이 만든 이 PC 의 설치 번호 — %PROGRAMDATA%\\TarkovPriceOverlay\\install_id. 없거나 형식이 틀리면 None."""
     from pathlib import Path
@@ -2235,6 +2240,8 @@ def _read_install_id() -> str | None:
 @app.get("/site/id", dependencies=[Depends(_require_site_origin)])
 def site_id() -> dict:
     """11-20 가이드 사이트가 같은 PC 앱의 설치 번호를 읽는다(사이트에서 한 일과 이 앱을 잇는 데 쓴다). 사이트 출처만."""
+    if not SITE_ID_ON:
+        raise HTTPException(status_code=404, detail="Not Found")
     iid = _read_install_id()
     return {"ok": bool(iid), "id": iid}
 
