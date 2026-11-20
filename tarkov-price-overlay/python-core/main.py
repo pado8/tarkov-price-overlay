@@ -454,6 +454,9 @@ class LookupResponse(BaseModel):
     attempt: str | None = None
     # 11-20 사이트 연동 횟수(syh·syc·syw) — 앱이 하루 요약에 더한다(_take_site_counts)
     site: dict[str, int] | None = None
+    # 11-20 계측: 매칭 방식(c 정확·f 정규화·p 퍼지·k 앞부분, tarkov_api._cache_lookup) · 조회 때 시세 목록이 있었는지
+    match_kind: str | None = None
+    catalog_ready: bool | None = None
 
 
 def _flea_fee_rates_for(game_mode: str) -> list[float] | None:
@@ -685,6 +688,7 @@ def _build_response(
         ammo_pack_round_id=price.get("ammo_pack_round_id"),
         ammo_pack_round_name=price.get("ammo_pack_round_name"),
         matched_from=price.get("matched_from"),
+        match_kind=price.get("match_kind"),
         attempt=attempt,
     )
 
@@ -1473,6 +1477,11 @@ def _scan_for_tooltip(
 @app.post("/lookup", response_model=LookupResponse, dependencies=[Depends(_reject_foreign_origin)])
 def lookup(req: CaptureRequest, request: Request = None) -> LookupResponse:
     r = _lookup_impl(req)
+    if isinstance(r, LookupResponse):
+        try:
+            r.catalog_ready = bool(has_price_cache(req.lang, req.game_mode))
+        except Exception:  # noqa: BLE001 — 계측이 조회를 막지 않게
+            pass
     sc = _take_site_counts(request)
     if sc and isinstance(r, LookupResponse):
         r.site = sc

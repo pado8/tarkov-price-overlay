@@ -17,7 +17,15 @@ type PartyApi = ReturnType<typeof useParty>;
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 // 카드(App.tsx guideUrl)와 같은 규칙: UI 언어별 가이드 + src=app(GA4 앱발 방문 표식)
 const guideQuestUrl = (lang: string, slug: string) =>
-  `${GUIDE_URL}${lang === "ko" ? "" : `${lang}/`}quest/${slug}/?src=app`;
+  `${GUIDE_URL}${lang === "ko" ? "" : `${lang}/`}quest/${slug}/?src=app&utm_source=overlay&utm_medium=app&utm_content=map_quest`;
+// 11-20 하루 요약: 지도를 열었는데 빈 상태(세션당 1번) — rnf 스크린샷 폴더 없음 · rns 스크린샷 없음 · rnm 맵 모름 · rde 지도 자료 오류
+const emptySeen = new Set<string>();
+function statEmpty(k: string): void {
+  if (emptySeen.has(k)) return;
+  emptySeen.add(k);
+  stat(k);
+}
+const emptyKey = (d: RadarState) => (!d.folder ? "rnf" : !d.shot && !d.pre_raid ? "rns" : "rnm");
 const PYTHON_API = "http://127.0.0.1:8765";
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
 type HiddenQuest = { id: string; name: string };
@@ -381,6 +389,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
     // 지도만 남긴 미니맵 — 상태 안내도 지도 자리 안에서 한 줄로. 도구(옮기기·작게·크게·펼치기)는 마우스를 올렸을 때만(CSS)
     const ready = !!(data && data.folder && (data.shot || data.pre_raid) && data.map);
     const msg = !data ? (loading ? t.hintLoading : t.radarNoShot) : !data.folder ? t.radarNoFolder : !data.shot && !data.pre_raid ? t.radarNoShot : t.radarNoMap;
+    if (data && !ready) statEmpty(emptyKey(data));
     const step = (d: number) => onMiniSize?.(Math.max(RADAR_MINI_MIN, Math.min(RADAR_MINI_MAX, miniSize + d)));
     return (
       <div className="radar radar-mini" style={{ width: miniSize }}>
@@ -640,6 +649,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
   // 전엔 이 세 경우에 패널이 옵션을 만들기 전에 끝나 머리글과 안내 한 줄만 보였다.
   const noMapHint = !data.folder ? t.radarNoFolder : !data.shot && !data.pre_raid ? t.radarNoShot : !data.map ? t.radarNoMap : null;
   if (noMapHint) {
+    statEmpty(emptyKey(data));
     return (
       <div className="radar" ref={radarRef}>
         {header}
@@ -700,6 +710,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
 }
 
 function error(data: RadarState, t: Strings) {
+  if (data.error) statEmpty("rde");
   return data.error ? <div className="radar-warn">{t.radarDataError}</div> : null;
 }
 

@@ -224,9 +224,11 @@ const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
 function guideBase(lang: string): string {
   return GUIDE_URL + (lang === "ko" ? "" : `${lang}/`);
 }
+// 11-20 GA4 채널 분리: src=app(콘솔이 셈)은 그대로 두고 utm 을 더한다. utm_content = 버튼(경로 첫 부분: key·item·quest·hideout·manual…)
+const appUtm = (content: string) => `utm_source=overlay&utm_medium=app&utm_content=${encodeURIComponent(content || "home")}`;
 function guideUrl(lang: string, path: string): string {
   const [p, hash] = path.split("#");
-  return `${guideBase(lang)}${p}${p.includes("?") ? "&" : "?"}src=app${hash ? "#" + hash : ""}`;
+  return `${guideBase(lang)}${p}${p.includes("?") ? "&" : "?"}src=app&${appUtm(p.split(/[/?]/)[0])}${hash ? "#" + hash : ""}`;
 }
 // 사이드카 연결 실패 문구(F2·이름 조회 공통). 파일 없음(백신 격리 추정) > 복구 포기 > 켜지는 중(시작 45초 안) > 자동 복구 중(3번 연속이면 백신 한 줄 덧붙임)
 // 11-09 통계: 시세 엔진이 24초 안에 못 뜨는 PC(sidecar_fail probe_refused, 14일 16명)에선 첫 조회가 '연결 실패 — 자동 복구 중'으로
@@ -286,7 +288,7 @@ function getRemoteAnnouncementText(lang: Lang, a: RemoteAnnouncement): string {
   }
 }
 const openStatusPage = (lang: Lang) => {
-  openUrl(`${STATUS_PAGE_URL}?lang=${lang}`).catch((e) => {
+  openUrl(`${STATUS_PAGE_URL}?lang=${lang}&src=app&${appUtm("status")}`).catch((e) => {
     log(`status: openUrl failed — ${String(e)}`);
   });
 };
@@ -575,7 +577,11 @@ try {
     if (p && typeof p.d === "string" && p.c && Array.isArray(p.lat)) dailyAcc = p;
   }
 } catch {}
+// 11-20 본 창이 아닌 창(미니맵·미리보기)도 main.tsx 가 App 모듈을 불러와 옛 사본(dailyAcc)을 쥔다 — 거기서 저장하면
+// 본 창이 그 사이 센 값을 덮어쓴다(그 반대도). 그런 창은 저장하지 않고 dailyAdd 를 본 창으로 넘긴다(mini-snapped 와 같은 길).
+const isOtherWindow = () => typeof window !== "undefined" && !!new URLSearchParams(window.location.search).get("window");
 const persistDaily = () => {
+  if (isOtherWindow()) return;
   try {
     localStorage.setItem(DAILY_KEY, JSON.stringify(dailyAcc));
   } catch {}
@@ -616,9 +622,25 @@ function dailyRollover(): void {
 }
 /** 기능 사용 1회. key 는 짧게(hist·man·wide·pin·fb·don). */
 function dailyAdd(key: string, n = 1): void {
+  if (isOtherWindow()) {
+    void emitTo("main", "daily-add", { k: key, n }).catch(() => {});
+    return;
+  }
   dailyRollover();
   dailyAcc.c[key] = (dailyAcc.c[key] ?? 0) + n;
   persistDaily();
+}
+/** 11-20 하루 요약(계측 빈틈): 조회 실패 종류 — AbortError=120·30초 시간 초과, TypeError=엔진 연결 안 됨, 그 밖=엔진 HTTP 오류 */
+function lookupFailKey(e: unknown): string {
+  return e instanceof Error && e.name === "AbortError" ? "fto" : e instanceof TypeError ? "fcr" : "fhe";
+}
+/** 11-20 하루 요약: 조회 응답의 매칭 방식(mqc 정확·mqf 정규화·mqp 퍼지·mqk 앞부분) · 3시간 넘은 시세 pst · 디스크 시세 pdk · 시세 목록 없음 nct */
+function countLookupMeta(d: { match_kind?: string | null; price_age_sec?: number | null; price_source?: string | null; catalog_ready?: boolean | null }): void {
+  const mk = { c: "mqc", f: "mqf", p: "mqp", k: "mqk" }[d.match_kind ?? ""];
+  if (mk) dailyAdd(mk);
+  if (typeof d.price_age_sec === "number" && d.price_age_sec >= 3 * 3600) dailyAdd("pst");
+  if (d.price_source === "disk") dailyAdd("pdk");
+  if (d.catalog_ready === false) dailyAdd("nct");
 }
 /** 11-20 하루 요약 syh·syc·syw: 엔진이 센 가이드 사이트 연동 요청 수(지도 상태·조회 응답에 실려 온다, 받으면 엔진은 0 으로). */
 function takeSiteCounts(s?: Record<string, number> | null): void {
@@ -981,6 +1003,8 @@ type BuyOffer = {
 
 type LookupResult = {
   site?: Record<string, number> | null; // 11-20 사이트 연동 횟수(takeSiteCounts)
+  match_kind?: string | null; // 11-20 c 정확 · f 정규화 · p 퍼지 · k 앞부분(countLookupMeta)
+  catalog_ready?: boolean | null; // 11-20 조회 때 시세 목록이 있었는지
   raw_text: string;
   item_id: string | null;
   timing?: LookupTiming | null; // 11-09 단계별 시간(ms): w 툴팁 대기·c 캡처·o OCR·m 매칭·a 읽은 상자 수
@@ -1953,6 +1977,7 @@ function App() {
   // 첫 실행에 늦게 보였다 → 게임이 앞에 있었는데 F2 가 한 번도 안 왔으면(키가 앱에 안 닿는 정황) 맨 앞으로
   const [adminFirst, setAdminFirst] = useState(false);
   const adminShownRef = useRef(false);
+  const announceShownRef = useRef(false); // 11-20 하루 요약 ans: 공지 배너가 실제로 보임(anl·anx 의 분모)
   // Server-driven announcement to show on launch (null = nothing to show).
   const [remoteAnnounce, setRemoteAnnounce] =
     useState<RemoteAnnouncement | null>(null);
@@ -2516,8 +2541,10 @@ function App() {
       // 이유(spawn failed: … / unexpected exit code=…)를 짧은 태그로. 경로·개인정보 없음.
       // 11-18 셸이 엔진의 마지막 오류 이름·번호를 '|' 뒤에 붙인다(예: unexpected exit code=1|OSError_10048) — 그 부분도 담는다
       const [head, tag] = String(e.payload ?? "").split("|");
-      const why = head.toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, 50) + (tag ? "|" + tag.replace(/[^A-Za-z0-9_]+/g, "").slice(0, 40) : "");
-      reportEvent("sidecar_fail", `dead:${why || "unknown"}`);
+      // 11-20 서버는 64자를 넘는 detail 을 통째로 버린다 → 'dead:' + 앞부분 + '|태그' 를 64자 안에. 꼬리 태그를 살리고 앞부분을 줄인다
+      const tagPart = tag ? "|" + tag.replace(/[^A-Za-z0-9_]+/g, "").slice(0, 40) : "";
+      const why = head.toLowerCase().replace(/[^a-z0-9_:=\-]+/g, "_").slice(0, Math.max(8, 64 - 5 - tagPart.length)) + tagPart;
+      reportEvent("sidecar_fail", `dead:${why || "unknown"}`.slice(0, 64));
     });
     const onMissing = async () => {
       if (sidecarMissingRef.current) return;
@@ -2726,16 +2753,18 @@ function App() {
         setIsPortable(v);
         isPortableRef.current = v;
         log(`portable: ${v}`);
-        reportEvent("install_mode", v ? "portable" : "installer");
+        if (!v) reportEvent("install_mode", "installer");
         if (v) {
+          // 11-20 포터블인데 설치판도 있는 PC 는 portable_dup(세션당 1회 그대로 — 설치판 찾기가 끝난 뒤 한 번만 보낸다)
           invoke<string | null>("find_installed_copy")
             .then((p) => {
+              reportEvent("install_mode", p ? "portable_dup" : "portable");
               if (p) {
                 log(`portable: installed copy found — ${p}`);
                 setInstalledCopy(p);
               }
             })
-            .catch(() => {});
+            .catch(() => reportEvent("install_mode", "portable"));
         } else {
           // 설치판 첫 실행: 포터블에서 전환해 왔는지(표시 파일은 Rust 가 읽고 바로 지운다 — 한 번만)
           invoke<{ portable_dir?: string; from_version?: string; start_menu_shortcut?: boolean; desktop_shortcut?: boolean } | null>(
@@ -2810,7 +2839,7 @@ function App() {
         );
         setRemoteAnnounce({ id: a.id, ko: a.ko ?? "", en: a.en ?? "", ru: a.ru ?? "", zh: a.zh ?? "" });
       })
-      .catch(() => {});
+      .catch(() => dailyAdd("anf")); // 11-20 하루 요약: 공지 받기 실패
   }, []);
 
   // Live capture-region preview: while the user is editing offsets, two
@@ -3482,10 +3511,17 @@ function App() {
       } catch {}
     });
     const snapped = listen("mini-snapped", () => dailyAdd("msn")); // 미니맵 창이 모서리에 붙음(본 창 미니맵과 같은 키)
+    // 11-20 미니맵 창(RadarMap 의 stat 등)이 센 하루 요약 — 본 창의 dailyAcc 에 더한다
+    const dadd = listen<{ k: string; n?: number }>("daily-add", (e) => {
+      const k = e.payload?.k;
+      const n = e.payload?.n ?? 1;
+      if (typeof k === "string" && /^[a-z0-9:_]{1,24}$/.test(k) && Number.isFinite(n) && n > 0 && n < 1e7) dailyAdd(k, n);
+    });
     return () => {
       ready.then((f) => f());
       close.then((f) => f());
       snapped.then((f) => f());
+      dadd.then((f) => f());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -4289,7 +4325,7 @@ function App() {
       log(`update: background download failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
-      reportEvent("update_apply", "error");
+      reportEvent("update_apply", `error:dl:${updateErrorKind(msg)}`); // 11-20 단계(dl 받기·inst 설치)·종류
     } finally {
       unProgress.then((f) => f()).catch(() => {});
     }
@@ -4310,7 +4346,7 @@ function App() {
       log(`update: install from disk failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
-      reportEvent("update_apply", "error");
+      reportEvent("update_apply", `error:inst:${updateErrorKind(msg)}`);
       try {
         localStorage.removeItem(UPDATE_PENDING_KEY);
       } catch {}
@@ -4334,7 +4370,7 @@ function App() {
       log(`update: install failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
-      reportEvent("update_apply", "error");
+      reportEvent("update_apply", `error:inst:${updateErrorKind(msg)}`);
       // 11-17 여기까지 오면 prepare_quit 이 이미 엔진을 끄고 종료 표시·단축키 감시를 멈춘 상태다 — 그대로 두면 조회가 안 되고
       // 창 닫기가 트레이로 숨지 않고 진짜 종료가 된다(되돌리는 길이 없음). 실패를 알리고 앱을 새로 켠다.
       await message(`${t.updateError}: ${msg}`, { title: t.updateStartTitle, kind: "error" }).catch(() => {});
@@ -4390,7 +4426,7 @@ function App() {
       log(`update: install failed — ${msg}`);
       setUpdateError(msg);
       setUpdatePhase("error");
-      reportEvent("update_apply", portableSwitch ? "portable_switch_error" : "error");
+      reportEvent("update_apply", portableSwitch ? "portable_switch_error" : `error:inst:${updateErrorKind(msg)}`);
       // 다음 실행 설치가 실패했으면 표시를 지운다 — 켤 때마다 같은 실패를 되풀이하지 않게(배너 '지금 설치'는 그대로)
       if (nextLaunch) {
         try {
@@ -4414,6 +4450,7 @@ function App() {
     }).catch(() => false);
     if (!yes) {
       log("portable switch: cancelled");
+      reportEvent("update_apply", "portable_switch_cancel"); // 11-20 확인 창에서 취소
       return;
     }
     reportEvent("update_apply", "portable_switch_click");
@@ -4495,7 +4532,7 @@ function App() {
     }
     // UI 언어별 가이드(en/ru 앱이 한국어 가이드를 열던 것, 11-04) + src=app 표식
     stat("gd");
-    openUrl(`${guideBase(region.lang)}items/?src=app${hash}`).catch((e) => {
+    openUrl(`${guideBase(region.lang)}items/?src=app&${appUtm("sync")}${hash}`).catch((e) => {
       log(`guide: openUrl failed — ${String(e)}`);
     });
   };
@@ -5219,6 +5256,7 @@ function App() {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data: LookupResult = await res.json();
           takeSiteCounts(data.site);
+          countLookupMeta(data);
           connFailRef.current = 0;
           sidecarPortBusyRef.current = false;
           sidecarBlockedRef.current = false;
@@ -5389,6 +5427,7 @@ function App() {
           // before this, cp949-500s and connection errors were reported as
           // plain "lookup" and the dashboard's ok/fail split was wrong.
           reportEvent("lookup", "fetch_error");
+          dailyAdd(lookupFailKey(e)); // 11-20 하루 요약: fto 시간 초과 · fcr 엔진 연결 안 됨 · fhe 엔진 HTTP 오류
         } finally {
           clearTimeout(timeoutId);
           // Only the CURRENT generation may end the in-flight state and
@@ -5509,6 +5548,7 @@ function App() {
       sidecarMissingRef.current = false; // 11-09 검토: 첫 시도만 '파일 없음'(백신 검사 중)이고 재시도로 뜬 경우 안내가 영구히 남던 것
       const data: LookupResult = await res.json();
       takeSiteCounts(data.site);
+      countLookupMeta(data);
       if (seq !== lookupSeqRef.current) return; // stale — a newer lookup won
       setResult(data);
       setStatus("success");
@@ -5546,6 +5586,7 @@ function App() {
       setStatus("error");
       if (loadSoundOn()) playDing(false);
       reportEvent("lookup", "fetch_error");
+      dailyAdd(lookupFailKey(e));
     } finally {
       clearTimeout(timeoutId);
       if (seq === lookupSeqRef.current) {
@@ -5948,6 +5989,10 @@ function App() {
                   ? "announce"
                   : null;
           // 하루 요약 대신 도움 이벤트(help): admin:shown = 순서대로 보임 · admin:first = 게임 중 F2 0회라 맨 앞으로 · admin:relaunch = 다시 켜기 누름
+          if (banner === "announce" && !announceShownRef.current) {
+            announceShownRef.current = true;
+            dailyAdd("ans");
+          }
           if (banner === "admin" && !adminShownRef.current) {
             adminShownRef.current = true;
             reportEvent("help", adminFirst ? "admin:first" : "admin:shown");
@@ -6351,9 +6396,10 @@ function App() {
                       e.preventDefault();
                       compressImage(blob)
                         .then(setFeedbackImage)
-                        .catch((err) =>
-                          log(`feedback: image paste failed — ${String(err)}`)
-                        );
+                        .catch((err) => {
+                          log(`feedback: image paste failed — ${String(err)}`);
+                          dailyAdd("fbf"); // 11-20 하루 요약: 사진 첨부 실패
+                        });
                     }
                   }}
                   placeholder={t.feedbackPlaceholder}
@@ -6385,9 +6431,10 @@ function App() {
                           if (f)
                             compressImage(f)
                               .then(setFeedbackImage)
-                              .catch((err) =>
-                                log(`feedback: image pick failed — ${String(err)}`)
-                              );
+                              .catch((err) => {
+                                log(`feedback: image pick failed — ${String(err)}`);
+                                dailyAdd("fbf");
+                              });
                           e.target.value = "";
                         }}
                       />
@@ -6426,6 +6473,7 @@ function App() {
                       const msg = feedbackText.trim();
                       if (!msg) {
                         setFeedbackStatus("empty");
+                        dailyAdd("fbz"); // 11-20 하루 요약: 빈 글로 보내기를 누름
                         return;
                       }
                       setFeedbackStatus("sending");
@@ -6446,6 +6494,7 @@ function App() {
                       } catch (err) {
                         log(`feedback: submit failed — ${String(err)}`);
                         setFeedbackStatus("error");
+                        dailyAdd("fbe"); // 11-20 하루 요약: 피드백 보내기 실패
                       }
                     }}
                   >

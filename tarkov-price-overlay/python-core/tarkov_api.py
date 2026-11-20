@@ -1534,7 +1534,7 @@ def _cache_lookup(
     # Exact hit
     entry = cache.get(item_name)
     if entry:
-        return {**entry, "matched_from": matched_from}
+        return {**entry, "matched_from": matched_from, "match_kind": "c"}  # 11-20 계측: 정확
 
     # Canonical confusion-fold match (0↔O, 1/i↔l, 5↔S, 8↔B, …) BEFORE fuzzy:
     # an unambiguous fold hit is a *certain* identification of a pure
@@ -1555,7 +1555,7 @@ def _cache_lookup(
         entry = canon_map.get(_canon(item_name))
         if entry is not None:
             print(f"[cache] canon: {item_name!r} -> {entry['name']!r}")
-            return {**entry, "matched_from": matched_from or item_name}
+            return {**entry, "matched_from": matched_from or item_name, "match_kind": "f"}  # 정규화
 
     # Fuzzy match against cached names. Re-use the pre-built names list
     # populated by _refresh_one() so we don't rebuild list(cache.keys())
@@ -1581,7 +1581,7 @@ def _cache_lookup(
         entry = cache.get(hit)
         if entry is not None:
             print(f"[cache] fuzzy: {item_name!r} -> {hit!r}")
-            return {**entry, "matched_from": matched_from or item_name}
+            return {**entry, "matched_from": matched_from or item_name, "match_kind": "p"}  # 퍼지
 
     # Prefix fallback for long item names that don't fit the user's capture
     # box. When the box is narrow, OCR catches only the start of the item
@@ -1609,7 +1609,7 @@ def _cache_lookup(
             entry = cache.get(hit)
             if entry is not None:
                 print(f"[cache] prefix: {item_name!r} -> {hit!r}")
-                return {**entry, "matched_from": matched_from or item_name}
+                return {**entry, "matched_from": matched_from or item_name, "match_kind": "k"}  # 앞부분
 
     # Cache populated but no name matches. Return None (not an empty result)
     # so the caller falls through to the cold-path GraphQL query — that's how
