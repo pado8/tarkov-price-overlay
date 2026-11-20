@@ -1132,6 +1132,8 @@ const SECTION_KEYS = [
 type SectionKey = (typeof SECTION_KEYS)[number];
 
 const ALARM_ON_KEY = "tarkov.priceAlarmOn"; // 11-08 가격 알람(기본 꺼짐) — 알람 목록은 priceAlarm.ts
+// 11-20 사용자: 이 판에서는 가격 알람을 뺀다(설정 줄·카드 🔔·판정 모두 숨김, 코드는 그대로). 다른 판에서 이 값을 켜서 쓴다.
+const PRICE_ALARM_ON = false;
 // 11-19 넓은 범위 찾기로 자동 조정한 상자의 값 — 지금 상자가 이것과 같으면 사용자가 손댄 상자가 아니므로 다시 조정해도 된다
 const SCAN_FIT_KEY = "tarkov.capture.scanFit";
 const scanFitText = (b: PrimaryBox) => `${b.offsetX},${b.offsetY},${b.width},${b.height}`;
@@ -1637,6 +1639,7 @@ function App() {
   // 11-08 가격 알람(기본 꺼짐) — 켜져 있고 지금 모드 알람이 있으면 5분마다 사이드카의 메모리 시세로 판정, 넘는 순간 윈도우 알림 한 번
   // (사이드카 /prices 는 이미 받아 둔 시세 목록만 본다 — 네트워크 호출 없음)
   const [alarmOn, setAlarmOn] = useState<boolean>(() => {
+    if (!PRICE_ALARM_ON) return false;
     try {
       return localStorage.getItem(ALARM_ON_KEY) === "1";
     } catch {
@@ -1653,6 +1656,7 @@ function App() {
   };
   const modeAlarmIds = alarms.filter((a) => a.mode === region.gameMode).map((a) => a.id).sort().join(",");
   useEffect(() => {
+    if (!PRICE_ALARM_ON) return; // 꺼진 판에서는 저장값도 건드리지 않는다(같은 PC 의 다른 판과 저장소를 같이 쓴다)
     try {
       localStorage.setItem(ALARM_ON_KEY, alarmOn ? "1" : "0");
     } catch {}
@@ -6541,12 +6545,14 @@ function App() {
                 onChange={(e) => setSoundOn(e.target.checked)}
               />
             </div>
+            {PRICE_ALARM_ON && (<>
             <div className="settings-row" title={t.subAlarm}>
               <label>{t.alarmOn}</label>
               <input type="checkbox" checked={alarmOn} onChange={(e) => setAlarmOn(e.target.checked)} />
             </div>
             <div className="settings-sub">{t.subAlarm}</div>
-            {alarmOn && (
+            </>)}
+            {PRICE_ALARM_ON && alarmOn && (
               <AlarmList
                 alarms={alarms.filter((a) => a.mode === region.gameMode)}
                 t={t}
@@ -8055,7 +8061,7 @@ function App() {
                 <div className="prices">
                   {staleNote(result, t)}
                   {/* 11-08 가격 알람 — 플리 거래되는 아이템만 */}
-                  {alarmOn && result.item_id && !result.no_flea && (
+                  {PRICE_ALARM_ON && alarmOn && result.item_id && !result.no_flea && (
                     <AlarmLine
                       key={`${result.item_id}-${region.gameMode}`}
                       alarm={alarms.find((a) => a.id === result.item_id && a.mode === region.gameMode) ?? null}
