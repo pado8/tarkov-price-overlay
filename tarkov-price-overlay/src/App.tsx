@@ -1187,6 +1187,7 @@ const SECTION_KEYS = [
 ] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
 
+const BACKUP_DONE_KEY = "tarkov.backup.justRestored"; // 11-20 복원 뒤 다시 불러온 화면에 보여 줄 한 줄(보여 주면 지움, 백업 대상 아님)
 const ALARM_ON_KEY = "tarkov.priceAlarmOn"; // 11-08 가격 알람(기본 꺼짐) — 알람 목록은 priceAlarm.ts
 // 11-20 사용자: 이 판에서는 가격 알람을 뺀다(설정 줄·카드 🔔·판정 모두 숨김, 코드는 그대로). 다른 판에서 이 값을 켜서 쓴다.
 const PRICE_ALARM_ON = false;
@@ -2855,6 +2856,19 @@ function App() {
     if (!IS_MAIN_WINDOW) return;
     let last = "";
     let asking = false;
+    // 11-20 사용자 시험 '앱에선 반응이 없어 된 건지 모르겠다' → 결과를 화면 띠(재입고 알림과 같은 자리)로 한 줄 알린다.
+    // 수락은 다시 불러온 뒤에 보여야 하므로 바뀐 것 요약을 잠깐 저장해 두고(백업 대상 아님), 켜질 때 꺼내 보여 주고 지운다.
+    const showBackupBand = (text: string) => {
+      setRstToast(text);
+      window.setTimeout(() => setRstToast((cur) => (cur === text ? null : cur)), 12000);
+    };
+    try {
+      const done = localStorage.getItem(BACKUP_DONE_KEY);
+      if (done) {
+        localStorage.removeItem(BACKUP_DONE_KEY);
+        showBackupBand(T[region.lang].backupDoneToast.replace("{items}", done));
+      }
+    } catch {}
     let dead = false;
     const tick = async () => {
       if (dead || asking) return;
@@ -2908,6 +2922,7 @@ function App() {
         if (!yes) {
           dailyAdd("bkr"); // 하루 요약: 복원 거절
           log("backup: restore rejected");
+          showBackupBand(L.backupRejectedToast);
           asking = false;
           return;
         }
@@ -2939,6 +2954,9 @@ function App() {
         const from = typeof pending.install_id === "string" && /^[0-9a-fA-F-]{36}$/.test(pending.install_id) ? pending.install_id : "";
         if (from) reportEvent("backup_restore", `from:${from}`); // 통계가 옛 PC 와 새 PC 를 같은 사람으로 묶는다(설치 번호는 바꾸지 않음)
         log(`backup: restored ${n} keys · hideout ${plan.hideout ? Object.keys(plan.hideout).length : 0} · quests +${plan.questsAdd.length} · promo +${plan.promoAdd.length} — reloading`);
+        try {
+          localStorage.setItem(BACKUP_DONE_KEY, parts.join(" · ") || "—");
+        } catch {}
         window.setTimeout(() => window.location.reload(), 300);
       } catch {
         // 엔진이 아직 안 떴거나 재시작 중 — 다음 틱에
