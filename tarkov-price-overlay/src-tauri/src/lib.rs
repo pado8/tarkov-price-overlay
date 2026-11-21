@@ -1220,6 +1220,27 @@ fn resolve_install_id(candidate: String) -> String {
     id
 }
 
+/// 11-22 데이터 백업 복원을 수락하면 백업한 PC 의 설치 번호를 이 PC 가 이어받는다(사용자 결정 — 같은 사람이 PC 를 바꿔도
+/// 통계에서 한 사람으로 남게). 형식(UUID 36자)이 맞을 때만 `install_id` 파일을 덮어쓴다. 성공하면 true.
+#[tauri::command]
+fn adopt_install_id(id: String) -> bool {
+    let id = id.trim();
+    let ok = id.len() == 36
+        && id.as_bytes().iter().enumerate().all(|(i, &b)| match i {
+            8 | 13 | 18 | 23 => b == b'-',
+            _ => b.is_ascii_hexdigit(),
+        });
+    if !ok {
+        return false;
+    }
+    let Some(program_data) = std::env::var_os("ProgramData") else {
+        return false;
+    };
+    let dir = std::path::Path::new(&program_data).join("TarkovPriceOverlay");
+    let _ = std::fs::create_dir_all(&dir);
+    std::fs::write(dir.join("install_id"), id).is_ok()
+}
+
 /// 종료 준비만(quitting 플래그 + 마우스 훅 정지 + 사이드카 kill). 11-03: 받아 둔
 /// 업데이트를 종료 때 설치할 때 설치 프로그램이 프로세스를 끝내기 전에 사이드카를
 /// 먼저 정리하려고 exit_app 에서 분리했다.
@@ -1965,6 +1986,7 @@ pub fn run() {
             launch_installed_copy,
             open_folder,
             resolve_install_id,
+            adopt_install_id,
             build_proof::build_proof,
             exit_app,
             relaunch_as_admin,

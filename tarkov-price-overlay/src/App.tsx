@@ -385,7 +385,7 @@ type StatsEvent =
   | "radar_open" // 11-19 스크린샷으로 뜬 지도(옛 radar_shot)는 하루 요약 rsh 로 옮김
   // 11-03 업데이트 보급 계측 — 구버전 잔존이 '안 누름'인지 '포터블'인지 가르기 위해
   | "install_mode" // 세션당 1회. detail = portable | installer
-  | "backup_restore" // 11-20 데이터 백업 복원 수락. detail = from:<백업한 PC 의 설치 번호>
+  | "backup_restore" // 11-20 데이터 백업 복원 수락. 11-22~ 번호를 이어받으면 새 번호로 detail = prev:<바꾸기 전 이 PC 번호>, 못 이어받으면 from:<백업한 PC 번호>
   | "update_check" // 확인 결과. detail = available:<ver> | none | error (세션 안에서 결과가 바뀔 때만)
   | "update_apply" // detail = downloaded | install_now | install_quit | install_next_launch | banner_shown | banner_dismiss | error | blocked:<min>
   // 11-03 2차 계측(v1.2.6). 전부 실행당 1회 또는 하루 1회라 행 수 영향은 하루 수백.
@@ -2905,12 +2905,16 @@ function App() {
         } catch {}
         const plan = planProgress(pending.progress, own, manualNow);
         const nSet = restorableCount(pending.data);
+        // 11-22 설치 번호 이어받기: 백업에 형식이 맞는 번호가 있고 이 PC 번호와 다를 때만
+        const from = typeof pending.install_id === "string" && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(pending.install_id) ? pending.install_id.toLowerCase() : "";
+        const takeId = !!from && from !== ensureInstallId().toLowerCase();
         const parts = [
           nSet ? L.backupItemSettings.replace("{n}", String(nSet)) : "",
           plan.hideout ? L.backupItemHideout.replace("{n}", String(Object.keys(plan.hideout).length)) : "",
           plan.questsAdd.length ? L.backupItemQuests.replace("{n}", String(plan.questsAdd.length)) : "",
           plan.faction ? L.backupItemFaction : "",
           plan.promoAdd.length ? L.backupItemPromo.replace("{n}", String(plan.promoAdd.length)) : "",
+          takeId ? L.backupItemId : "",
         ].filter(Boolean);
         const when = pending.saved_at ? new Date(pending.saved_at).toLocaleString() : "?";
         const yes = await ask(
@@ -2954,8 +2958,23 @@ function App() {
           await fetch(`${PYTHON_API}/progress/promo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ used }) }).catch(() => {});
         }
         dailyAdd("bka"); // 하루 요약: 복원 수락
-        const from = typeof pending.install_id === "string" && /^[0-9a-fA-F-]{36}$/.test(pending.install_id) ? pending.install_id : "";
-        if (from) reportEvent("backup_restore", `from:${from}`); // 통계가 옛 PC 와 새 PC 를 같은 사람으로 묶는다(설치 번호는 바꾸지 않음)
+        // 11-22 설치 번호 이어받기(사용자 결정): 파일(%PROGRAMDATA%)과 localStorage 를 백업의 번호로 바꾸고, 복원 이벤트는
+        // 바뀐 번호로 보내며 detail 에 바꾸기 전 번호를 남긴다(prev:, 통계가 복원 전 며칠치를 같은 사람으로 묶음). 큐에 이미 쌓인
+        // 이벤트는 옛 번호 그대로 나간다(쌓을 때 번호가 박힘). 못 바꾸면(형식·파일 쓰기 실패) 예전처럼 from: 만 보낸다.
+        let took = false;
+        const prev = ensureInstallId();
+        if (takeId) {
+          took = await invoke<boolean>("adopt_install_id", { id: from }).catch(() => false);
+          if (took) {
+            cachedInstallId = from;
+            try {
+              localStorage.setItem(INSTALL_ID_KEY, from);
+            } catch {}
+            buildProofCache = null; // 공식 빌드 확인값은 번호로 계산 — 새 번호로 다시
+          }
+        }
+        if (took) reportEvent("backup_restore", `prev:${prev}`);
+        else if (from) reportEvent("backup_restore", `from:${from}`);
         log(`backup: restored ${n} keys · hideout ${plan.hideout ? Object.keys(plan.hideout).length : 0} · quests +${plan.questsAdd.length} · promo +${plan.promoAdd.length} — reloading`);
         try {
           localStorage.setItem(BACKUP_DONE_KEY, parts.join(" · ") || "—");
