@@ -14,6 +14,7 @@ use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 
 mod update_cache;
 mod build_proof;
+mod run_marker;
 use tauri_plugin_shell::ShellExt;
 
 #[derive(Serialize, Clone)]
@@ -282,6 +283,14 @@ struct SidecarChild(Mutex<Option<CommandChild>>);
 /// `exit_app` command). The window-close path checks this flag and, if
 /// false, prevents the exit and hides to tray instead.
 struct IsQuitting(AtomicBool);
+
+/// 11-22 앞 실행이 비정상으로 끝났으면 그 설명(run_marker.rs) — 화면이 한 번 꺼내 하루 요약 ucx 로 센다
+struct UncleanPrev(Mutex<Option<String>>);
+
+#[tauri::command]
+fn take_unclean_exit(state: tauri::State<'_, UncleanPrev>) -> Option<String> {
+    state.0.lock().ok().and_then(|mut g| g.take())
+}
 
 /// Tracks whether we've already shown the "minimized to tray" notification
 /// this session. We only show it on the very first hide-to-tray so users
@@ -1246,6 +1255,7 @@ fn adopt_install_id(id: String) -> bool {
 /// 먼저 정리하려고 exit_app 에서 분리했다.
 #[tauri::command]
 fn prepare_quit(app: tauri::AppHandle) {
+    run_marker::end(); // 11-22 정상 종료 — 업데이트 설치 프로그램이 프로세스를 끝내기 전에도 여기를 지난다
     if let Some(state) = app.try_state::<IsQuitting>() {
         state.0.store(true, Ordering::SeqCst);
     }
@@ -1953,6 +1963,7 @@ pub fn run() {
             proc_usage,
             game_running,
             prepare_quit,
+            take_unclean_exit,
             get_cursor_position,
             set_click_through,
             set_show_in_taskbar,
@@ -1995,6 +2006,8 @@ pub fn run() {
             unmaximize_keep_visible
         ])
         .setup(|app| {
+            // 11-22 비정상 종료 계측: 앞 실행의 표시가 남았는지 보고 새 표시를 쓴다(run_marker.rs)
+            app.manage(UncleanPrev(Mutex::new(run_marker::begin(env!("CARGO_PKG_VERSION")))));
             // 11-19 지금 버전의 받아 둔 설치 파일은 이미 설치된 것 — 지운다(update_cache.rs)
             update_cache::clear_installed(app.handle(), env!("CARGO_PKG_VERSION"));
             start_o_key_watch(app.handle().clone());
@@ -2123,6 +2136,7 @@ pub fn run() {
             }
         }
         RunEvent::Exit => {
+            run_marker::end();
             if let Some(state) = app_handle.try_state::<MouseHotkeyStop>() {
                 state.0.store(true, Ordering::SeqCst);
             }

@@ -2734,6 +2734,15 @@ function App() {
     void (async () => {
       await initInstallId();
       reportEvent("launch");
+      // 11-22 앞 실행이 비정상으로 끝났으면(충돌·강제 종료 — 그사이 재부팅은 제외) 하루 요약 ucx 로 한 번 센다(run_marker.rs, 서버 호출 없음)
+      invoke<string | null>("take_unclean_exit")
+        .then((d) => {
+          if (d) {
+            dailyAdd("ucx");
+            console.log(`[run] unclean exit before this launch: ${d}`);
+          }
+        })
+        .catch(() => {});
       // Hotkey binding at session start (default / custom_key / custom_mouse).
       // Read straight from storage so it reflects the persisted choice, not a
       // mid-session edit. Lets the dashboard split the "never looked up" cohort

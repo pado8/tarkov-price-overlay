@@ -33,4 +33,10 @@ device_query = "2"
 
 # 1.2.7 포터블→설치판: 설치판 위치(제거 정보 InstallLocation)를 UTF-16 그대로 읽기. 이미 트리에 있는 버전이라 새로 받는 크레이트 없음
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_System_Registry", "Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading", "Win32_System_ProcessStatus", "Win32_System_JobObjects", "Win32_NetworkManagement_IpHelper", "Win32_Networking_WinSock", "Win32_Security"] }
+windows-sys = { version = "0.59", features = ["Win32_System_Registry", "Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading", "Win32_System_ProcessStatus", "Win32_System_JobObjects", "Win32_NetworkManagement_IpHelper", "Win32_Networking_WinSock", "Win32_Security", "Win32_System_SystemInformation"] }
+
+# 11-22 앱 본체 충돌(0xc000001d·0xc0000374, 피드백 63·64) — tauri#15408: tao 가 윈도우 이벤트 루프 실행기를 원자적이지 않은 Rc 로
+# 들고 있어 여러 스레드가 AppHandle·창을 동시에 복제하면 개수가 깨져 죽는다. upstream 수정이 없어(tao#1290 닫힘) 같은 판(0.35.2)
+# 사본에서 Rc → Arc 만 바꿔 쓴다(vendor/tao-0.35.2, 바꾼 곳은 'tarkov-price-overlay 패치' 주석). tauri 를 올릴 때 이 사본도 같은 판으로 다시 만들 것.
+[patch.crates-io]
+tao = { path = "vendor/tao-0.35.2" }
