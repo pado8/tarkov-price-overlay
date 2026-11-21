@@ -9,6 +9,41 @@ import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
 import { Icon } from "./Icon";
 import { stat } from "./statBus";
+
+// 11-22 지도 글자 크기 배율(%) — 피드백 #65-1 '4K 모니터에서 지도 글자가 너무 작다'. 이름표·지역명·파티원 이름에만 곱한다(점·아이콘은 그대로).
+// 본 창·미니맵 창이 같은 값을 쓰도록 localStorage 에 두고, 다른 창은 storage 이벤트, 같은 창은 아래 이벤트로 바로 따라온다.
+export const MAP_TEXT_SCALE_KEY = "tarkov.radar.textScale";
+const MAP_TEXT_SCALE_EVENT = "tarkov-map-text-scale";
+export const loadMapTextScale = (): number => {
+  try {
+    const n = Number(localStorage.getItem(MAP_TEXT_SCALE_KEY));
+    return Number.isFinite(n) && n >= 80 && n <= 200 ? Math.round(n) : 100;
+  } catch {
+    return 100;
+  }
+};
+export const saveMapTextScale = (v: number) => {
+  try {
+    localStorage.setItem(MAP_TEXT_SCALE_KEY, String(Math.min(200, Math.max(80, Math.round(v)))));
+  } catch {}
+  window.dispatchEvent(new Event(MAP_TEXT_SCALE_EVENT));
+};
+function useMapTextScale(): number {
+  const [v, setV] = useState(loadMapTextScale);
+  useEffect(() => {
+    const on = (e: Event) => {
+      if (e instanceof StorageEvent && e.key !== MAP_TEXT_SCALE_KEY) return;
+      setV(loadMapTextScale());
+    };
+    window.addEventListener("storage", on);
+    window.addEventListener(MAP_TEXT_SCALE_EVENT, on);
+    return () => {
+      window.removeEventListener("storage", on);
+      window.removeEventListener(MAP_TEXT_SCALE_EVENT, on);
+    };
+  }, []);
+  return v / 100;
+}
 import { RaidPrep } from "./RaidPrep";
 import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, planExit, planWarnings, PLAN_REACH_M, type LootPlan, type SpawnGroup } from "./LootPlan";
 import { remapDone } from "./planDone";
@@ -358,6 +393,7 @@ function hazardPt(h: MapDoc["hazards"][number]): Pt | null {
 }
 
 export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onToggleLayer, hiddenQuests, size, fixed, highlightKey, bigMe, mini, mapAlpha = 1, friends, onSize, sizeRange, width, onWidth, widthRange, onSizeReset, extraTools }: Props) {
+  const ts = useMapTextScale(); // 11-22 지도 글자 배율(1 = 100%)
   // 친구 경과 시간·반짝임·흐림 — 그릴 때마다 지금 시각으로 계산하고, 친구가 있으면 1초마다 다시 그린다
   // (시각을 상태로 들고 있으면 처음 그린 시각에 멈춘 채 시작해 '12초 전'이 '8초 전'으로 나왔다 — 11-05 시험에서 발견)
   const [, setTick] = useState(0);
@@ -824,16 +860,16 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       .forEach((c) => {
         const s = toScreen(c.p[0], c.p[2]);
         if (s.x < 0 || s.y < 0 || s.x > box.w || s.y > box.h) return; // 점이 화면 밖이면 이름표도 생략(가장자리에 글자만 잘려 들어오지 않게)
-        const w = c.text.length * 5.4;
+        const w = c.text.length * 5.4 * ts; // 글자 배율만큼 이름표 상자도 넓고 높게(겹침 판정)
         // 자리 후보: 오른쪽 → 왼쪽 → 아래(가운데) → 위(가운데). 먼저 놓인 이름표·도구 영역과 안 겹치고 화면 안에 드는 첫 자리.
         // 한 자리만 보고 포기하면 점이 몰린 곳(시내 동쪽 등)의 이름표가 통째로 빠진다
         const spots: [number, number][] = [
-          [s.x + c.off, s.y + 3], [s.x - c.off - w, s.y + 3], [s.x - w / 2, s.y + c.off + 9], [s.x - w / 2, s.y - c.off - 3],
+          [s.x + c.off, s.y + 3 * ts], [s.x - c.off - w, s.y + 3 * ts], [s.x - w / 2, s.y + c.off + 9 * ts], [s.x - w / 2, s.y - c.off - 3 * ts],
           // 대각선(점이 몰린 곳에서 마지막 수단)
-          [s.x + c.off, s.y - c.off - 4], [s.x + c.off, s.y + c.off + 9], [s.x - c.off - w, s.y - c.off - 4], [s.x - c.off - w, s.y + c.off + 9],
+          [s.x + c.off, s.y - c.off - 4 * ts], [s.x + c.off, s.y + c.off + 9 * ts], [s.x - c.off - w, s.y - c.off - 4 * ts], [s.x - c.off - w, s.y + c.off + 9 * ts],
         ];
         for (const [lx, ly] of spots) {
-          const b = { x1: lx, y1: ly - 9, x2: lx + w, y2: ly + 2 };
+          const b = { x1: lx, y1: ly - 9 * ts, x2: lx + w, y2: ly + 2 * ts };
           if (b.x1 < 2 || b.x2 > box.w - 2 || b.y1 < 2 || b.y2 > box.h - 2) continue;
           if (boxes.some((o) => b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) continue;
           boxes.push(b);
@@ -885,7 +921,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       <div
         ref={wrapRef}
         className={`radar-mapwrap${dragging ? " drag" : ""}${sizeEdit && !mini ? " editing" : ""}`}
-        style={{ height: size, ...(mini ? { width: size } : width ? { width } : {}), ["--map-alpha" as string]: String(mapAlpha) } as React.CSSProperties}
+        style={{ height: size, ...(mini ? { width: size } : width ? { width } : {}), ["--map-alpha" as string]: String(mapAlpha), ["--map-ts" as string]: String(ts) } as React.CSSProperties}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -1012,7 +1048,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#ffa726" strokeWidth={1.3} strokeDasharray="4 3" opacity={0.75} />
                     <circle cx={b.x} cy={b.y} r={9} fill="#ffa726" stroke="#3a2000" strokeWidth={1.4} className="radar-keyring" />
                     <text x={b.x} y={b.y + 4} textAnchor="middle" fontSize={many ? 11 : 12} fontWeight={700} fill="#1c1200">{many ? i + 1 : "⚡"}</text>
-                    <text x={b.x + 12} y={b.y + 4} fontSize={10} fontWeight={700} fill="#ffa726" stroke="rgba(0,0,0,0.85)" strokeWidth={2.6} paintOrder="stroke">
+                    <text x={b.x + 12} y={b.y + 4} fontSize={10 * ts} fontWeight={700} fill="#ffa726" stroke="rgba(0,0,0,0.85)" strokeWidth={2.6} paintOrder="stroke">
                       {swKind(w.kind, t)}
                     </text>
                   </g>

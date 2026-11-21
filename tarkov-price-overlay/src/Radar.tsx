@@ -185,6 +185,8 @@ type Props = {
   onMiniSize?: (px: number) => void;
   mapAlpha?: number; // 0~100
   onMapAlpha?: (v: number) => void;
+  textScale?: number; // 11-22 지도 글자 크기 80~200(%)
+  onTextScale?: (v: number) => void;
   dragRegion?: boolean; // 미니맵 옮기기 손잡이를 창 끌기 영역으로(고정 모드면 false)
   onMiniClose?: () => void; // 나란히 보기와 함께 띄운 미니맵 창(MiniWindow.tsx) — '펼치기' 대신 ✕(큰 지도는 이미 옆에 있다)
   party?: PartyApi; // 파티 방(친구 위치 공유) — 없으면 버튼도 없음
@@ -196,7 +198,7 @@ const FIXED_KEY = "tarkov.radar.fixed"; // "1" = 지도 고정(내 화살표가 
 // 11-07 레이드 진영 자동: 이 레이드(raid_ts)에 칩을 이미 맞췄는가 — 지도를 다시 열면 패널이 새로 만들어지므로 모듈에 둔다
 let sideAppliedFor: string | null = null;
 
-export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, width = 0, onWidth, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, dragRegion, party, onMiniClose }: Props) {
+export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onPickMap, onClose, size, onSize, width = 0, onWidth, fill, highlightKey, story, onPickStory, mini, onMini, miniSize = RADAR_MINI_DEFAULT, onMiniSize, mapAlpha = 100, onMapAlpha, textScale = 100, onTextScale, dragRegion, party, onMiniClose }: Props) {
   const [showParty, setShowParty] = useState(false);
   // 11-11 파티 창을 열면 그 창이 다 보이게 카드를 필요한 만큼만 스크롤(작은 창·안내 상자가 있으면 아래가 걸쳤다 — 실측 32px).
   // 나란히 모드에선 이미 보이는 자리라 그대로
@@ -616,6 +618,13 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
             <span>{t.radarMapOpacity}</span>
             <input type="range" min={0} max={100} step={5} value={mapAlpha} onChange={(e) => onMapAlpha(Number(e.target.value))} aria-label={t.radarMapOpacity} />
             <span className="radar-size-val">{mapAlpha}%</span>
+          </label>
+        )}
+        {onTextScale && (
+          <label className="radar-size" title={t.radarTextScaleHint}>
+            <span>{t.radarTextScale}</span>
+            <input type="range" min={80} max={200} step={10} value={textScale} onChange={(e) => onTextScale(Number(e.target.value))} aria-label={t.radarTextScale} />
+            <span className="radar-size-val">{textScale}%</span>
           </label>
         )}
         {/* 긴 사용법 안내는 접어 둔다 — 칩·슬라이더·맵 선택과 함께 한 화면에 있으면 하단이 복잡하다(11-02 점검) */}

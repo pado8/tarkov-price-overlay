@@ -15,7 +15,7 @@ import { holdStep, HOLD_START, type HoldState } from "./cursorHold";
 import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./factionQuests";
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_WIDTH_KEY, loadRadarWidth, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
-import { prefetchMap } from "./RadarMap";
+import { prefetchMap, loadMapTextScale, saveMapTextScale } from "./RadarMap";
 import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
@@ -2296,6 +2296,19 @@ function App() {
     try {
       localStorage.setItem(RADAR_MINI_SIZE_KEY, String(px));
     } catch {}
+  };
+  // 11-22 지도 글자 크기(피드백 #65-1). 끌면 onChange 가 연달아 오므로 하루 요약 mtz 는 1.5초 묶음당 한 번만 센다
+  const [mapTextScale, setMapTextScale] = useState<number>(loadMapTextScale);
+  const mtzTimerRef = useRef<number | null>(null);
+  const pickMapTextScale = (v: number) => {
+    setMapTextScale(v);
+    saveMapTextScale(v);
+    if (mtzTimerRef.current == null) {
+      mtzTimerRef.current = window.setTimeout(() => {
+        mtzTimerRef.current = null;
+        dailyAdd("mtz");
+      }, 1500);
+    }
   };
   const pickMapAlpha = (v: number) => {
     setMapAlpha(v);
@@ -4820,7 +4833,7 @@ function App() {
         // 11-12 ws=지도 나란히 보기 0(꺼짐)·L/R(지도 왼쪽/오른쪽, 외부 PR #2) — 켠 사람 수와 왼쪽을 고르는 비율
         // 11-15 T/B(지도 위/아래, 피드백 #62) 추가 — 고른 값 그대로(왼쪽·오른쪽인데 세로 창이라 쌓인 경우는 L/R)
         const ws = localStorage.getItem(WIDE_KEY) === "1" ? wideSideCode(loadWideMapSide(localStorage)) : "0";
-        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};mww=${localStorage.getItem(MINI_WITH_WIDE_KEY) === "1" ? 1 : 0}`);
+        reportEvent("config", `qs=${data.enabled ? 1 : 0};qp=${data.effective_path_valid ? 1 : 0};qn=${Number(data.quest_count) || 0};ac=${loadAutoCheckUpdate() ? 1 : 0};ai=${autoInstallRef.current ? 1 : 0};ws=${ws};msn=${localStorage.getItem(MINI_SNAP_KEY) === "0" ? 0 : 1};mww=${localStorage.getItem(MINI_WITH_WIDE_KEY) === "1" ? 1 : 0};mts=${loadMapTextScale()}`);
       }
       // Keep the user-set path field in sync with the server's view.
       setQuestPathInput(data.install_path ?? "");
@@ -7936,6 +7949,8 @@ function App() {
             onMiniSize={pickMiniSize}
             mapAlpha={mapAlpha}
             onMapAlpha={pickMapAlpha}
+            textScale={mapTextScale}
+            onTextScale={pickMapTextScale}
             dragRegion={!pinned}
             highlightKey={keyLocks ? result?.item_id ?? null : null}
             onSize={(px) => {
@@ -9205,6 +9220,8 @@ ${t.fleaFeeHint}`}
             loading={radarLoading}
             mapAlpha={mapAlpha}
             onMapAlpha={pickMapAlpha}
+            textScale={mapTextScale}
+            onTextScale={pickMapTextScale}
             t={t}
             lang={region.lang}
             showScav={radarShowScav}

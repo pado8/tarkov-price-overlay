@@ -1947,7 +1947,7 @@ html, body, #root {
 .radar-floors { align-items: center; }
 .radar-floors .radar-kind { margin-right: 2px; }
 .radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: var(--card-fs-xs); font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
-.radar-maplabel { font-size: 9px; fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
+.radar-maplabel { font-size: calc(9px * var(--map-ts, 1)); fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
 /* 지도 이름표(탈출구·퀘스트 이름)도 지도 불투명도를 따른다 — 11-05 '지도 그림만 투명해지고 글씨는 그대로' 피드백. 점·화살표 표식은 그대로 */
 .radar-mapwrap .radar-maplabel { opacity: var(--map-alpha, 1); }
 .radar-mapsel { font-size: var(--card-fs-sm); color: var(--text-primary); }
@@ -1980,7 +1980,7 @@ html, body, #root {
 .setup-check .fx { margin: 2px 0 0 16px; opacity: 0.85; }
 .safety-note { margin: 6px 0; font-size: 12px; line-height: 1.6; }
 .safety-note .dim { opacity: 0.7; margin-top: 4px; }
-.radar-zonename { font-size: 10px; font-weight: 700; fill: rgba(232, 226, 208, 0.82); paint-order: stroke; stroke: rgba(0, 0, 0, 0.8); stroke-width: 2.6px; letter-spacing: 0.5px; pointer-events: none; }
+.radar-zonename { font-size: calc(10px * var(--map-ts, 1)); font-weight: 700; fill: rgba(232, 226, 208, 0.82); paint-order: stroke; stroke: rgba(0, 0, 0, 0.8); stroke-width: 2.6px; letter-spacing: 0.5px; pointer-events: none; }
 .radar-zonename.mine { fill: #ffe082; pointer-events: auto; cursor: pointer; }
 .radar-mapwrap .radar-zonename { opacity: var(--map-alpha, 1); }
 .radar-labelrow { display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 12px; color: #ffe082; }
@@ -2153,7 +2153,7 @@ html, body, #root {
 .overlay.pip > .card { max-height: none !important; height: auto; }
 
 /* 파티 방 친구 점(11-05) — 배정 색 원 + 방향 + 이름·경과 시간. 새 위치는 2초 반짝 */
-.radar-friendlabel { font-size: 10px; font-weight: 700; paint-order: stroke; stroke: rgba(0, 0, 0, 0.9); stroke-width: 2.8px; pointer-events: none; }
+.radar-friendlabel { font-size: calc(10px * var(--map-ts, 1)); font-weight: 700; paint-order: stroke; stroke: rgba(0, 0, 0, 0.9); stroke-width: 2.8px; pointer-events: none; }
 .radar-friend { cursor: pointer; }
 .radar-friend.flash .radar-friend-dot { animation: radar-friend-flash 0.5s ease-in-out 4; }
 @keyframes radar-friend-flash { 0%, 100% { r: 5.5px; stroke: #000; } 50% { r: 9px; stroke: #fff; } }
