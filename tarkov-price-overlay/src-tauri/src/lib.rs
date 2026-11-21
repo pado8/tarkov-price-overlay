@@ -284,12 +284,18 @@ struct SidecarChild(Mutex<Option<CommandChild>>);
 /// false, prevents the exit and hides to tray instead.
 struct IsQuitting(AtomicBool);
 
-/// 11-22 앞 실행이 비정상으로 끝났으면 그 설명(run_marker.rs) — 화면이 한 번 꺼내 하루 요약 ucx 로 센다
-struct UncleanPrev(Mutex<Option<String>>);
+/// 11-22 앞 실행이 비정상으로 끝났으면 그 설명(run_marker.rs) — 화면이 한 번 꺼내 하루 요약 ucx 로 센다.
+/// 관리 상태(app.manage)로 두면 안 된다: Tauri 는 설정 파일의 창을 setup 보다 먼저 만들고, 창을 만드는 동안 화면의
+/// 첫 호출이 처리돼 '상태 미등록'으로 실패했다(실앱 확인). setup 과 이 명령 중 먼저 오는 쪽에서 딱 한 번 판정한다.
+static UNCLEAN_PREV: std::sync::OnceLock<Mutex<Option<String>>> = std::sync::OnceLock::new();
+
+fn unclean_prev() -> &'static Mutex<Option<String>> {
+    UNCLEAN_PREV.get_or_init(|| Mutex::new(run_marker::begin(env!("CARGO_PKG_VERSION"))))
+}
 
 #[tauri::command]
-fn take_unclean_exit(state: tauri::State<'_, UncleanPrev>) -> Option<String> {
-    state.0.lock().ok().and_then(|mut g| g.take())
+fn take_unclean_exit() -> Option<String> {
+    unclean_prev().lock().ok().and_then(|mut g| g.take())
 }
 
 /// Tracks whether we've already shown the "minimized to tray" notification
@@ -2007,7 +2013,7 @@ pub fn run() {
         ])
         .setup(|app| {
             // 11-22 비정상 종료 계측: 앞 실행의 표시가 남았는지 보고 새 표시를 쓴다(run_marker.rs)
-            app.manage(UncleanPrev(Mutex::new(run_marker::begin(env!("CARGO_PKG_VERSION")))));
+            let _ = unclean_prev(); // 화면이 아직 안 불렀으면 여기서 판정·새 표시(위 UNCLEAN_PREV 설명)
             // 11-19 지금 버전의 받아 둔 설치 파일은 이미 설치된 것 — 지운다(update_cache.rs)
             update_cache::clear_installed(app.handle(), env!("CARGO_PKG_VERSION"));
             start_o_key_watch(app.handle().clone());
