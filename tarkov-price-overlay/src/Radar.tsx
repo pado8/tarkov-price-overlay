@@ -15,6 +15,8 @@ import { stat } from "./statBus";
 type PartyApi = ReturnType<typeof useParty>;
 
 const GUIDE_URL = "https://tarkov.aquapado.com/guide/";
+// 11-22 사용자 '겹친 기능 점검': 지도 아래 '설치 점검'·'이 앱이 읽는 것'은 설정 맨 위와 같은 화면이라 숨긴다(지도 사용법·출처는 그대로)
+const MAP_SETUP_HELP_ON = false;
 // 카드(App.tsx guideUrl)와 같은 규칙: UI 언어별 가이드 + src=app(GA4 앱발 방문 표식)
 const guideQuestUrl = (lang: string, slug: string) =>
   `${GUIDE_URL}${lang === "ko" ? "" : `${lang}/`}quest/${slug}/?src=app&utm_source=overlay&utm_medium=app&utm_content=map_quest`;
@@ -622,6 +624,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <div className="radar-note">{t.radarMapNote}</div>
           <div className="radar-note">{t.radarMyExitsNote}</div>
         </details>
+        {MAP_SETUP_HELP_ON && (<>
         <details className="radar-help">
           <summary>{t.setupTitle}</summary>
           <SetupCheck t={t} />
@@ -630,6 +633,7 @@ export function RadarPanel({ data, loading, t, lang, showScav, onToggleScav, onP
           <summary>{t.safetyTitle}</summary>
           <SafetyNote t={t} />
         </details>
+        </>)}
       </>
   );
   const controls = (
