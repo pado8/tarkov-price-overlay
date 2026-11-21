@@ -3,6 +3,17 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { MiniWindow } from "./MiniWindow";
 
+// 11-21 앱 창은 브라우저가 아니다 — F5·Ctrl+R·Ctrl+F5 로 화면이 새로고침되면 상태가 날아가고(조회 번호 초기화 → 조회가
+// '밀린 조회'로 버려짐) 진행 중인 일이 끊긴다. 조회 키가 F5 이고 키를 가로채지 않는 방식이면 창에 포커스가 있을 때 새로고침이
+// 되던 것. 기본 동작만 막고 전파는 그대로 둔다(단축키 녹화·다른 키 처리는 그대로).
+window.addEventListener(
+  "keydown",
+  (e) => {
+    if (e.key === "F5" || ((e.ctrlKey || e.metaKey) && (e.key === "r" || e.key === "R"))) e.preventDefault();
+  },
+  true
+);
+
 // Capture-region preview windows are tiny secondary webviews loaded with
 // ?window=preview-primary / preview-ground / preview-anchor. They render
 // nothing but a colored marker that fills the (transparent) window —

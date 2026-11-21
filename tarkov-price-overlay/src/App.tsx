@@ -2524,7 +2524,10 @@ function App() {
   // retry could overwrite a fresher result. The flag keeps auto-hide from
   // firing mid-lookup (a settings-close used to schedule a hide DURING a
   // slow OCR fetch and the result arrived on a hidden card).
-  const lookupSeqRef = useRef(0);
+  // 11-21 실기: 앱 화면이 새로고침되면(F5·백업 복원 뒤 다시 불러오기 등) 0 부터 다시 세어, 엔진이 기억하는 더 큰 번호보다
+  // 작아진 뒤의 조회가 전부 '밀린 조회'(superseded)로 버려졌다 → F2 를 눌러도 아무 반응 없음. 지금 시각(ms)에서 시작해
+  // 다시 불러와도 번호가 늘 앞의 것보다 크게 한다(엔진은 큰 정수를 그대로 비교).
+  const lookupSeqRef = useRef(Date.now());
   const lookupInFlightRef = useRef(false);
   // Abort handle of the lookup in flight. A new press ABORTS the old request
   // (not just ignores its result): without this, spamming F2 stacked real
