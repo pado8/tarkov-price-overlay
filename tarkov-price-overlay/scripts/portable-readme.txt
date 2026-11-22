@@ -25,12 +25,14 @@ Tarkov Price Overlay (Portable v{VERSION})
    지우고 새로 푸는 것을 권장합니다. (설정은 폴더 밖에 저장되어 안전)
 
 [개인정보 / 통계]
-앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 조회한 아이템 종류(공개 아이템 ID), 버전, 국가, 해상도·주요 설정, 조회 실패 유형)만 수집합니다.
+앱 개선을 위해 익명 사용 통계(앱 실행/F2 사용 횟수, 조회한 아이템 종류(공개 아이템 ID), 버전, 국가, 해상도·주요 설정, 조회 실패 유형, 앱 비정상 종료 횟수, 가이드 사이트 연동 횟수)만 수집합니다.
 검색어·화면 내용·게임 내 위치·개인정보·IP는 절대 수집하지 않습니다.
 설정에서 언제든 끌 수 있습니다. (오픈소스라 수집 코드를 직접 확인 가능)
-지도 자료 보내기(선택·기본 꺼짐): 앱을 켜면 한 번 묻고, 켜면 스크린샷 파일
+지도 자료 보내기(선택·기본 꺼짐): 설정에서 켠 경우에만 스크린샷 파일
 이름의 맵·위치·방향 숫자만 하루 한 번쯤 보냅니다(지도 개선용). 사진·날짜·시각·설치 ID 는
 보내지 않고 무작위 익명 ID 로만 구분합니다. 설정 체크로 언제든 끌 수 있습니다.
+데이터 백업(선택): 가이드 사이트 '내 오버레이 데이터 백업'에서 직접 백업·복원할 때만 이 PC 의 앱과
+설정·진행도를 주고받습니다. 앱은 혼자서 백업을 내보내지 않고, 복원은 앱 확인 창에서 수락해야 적용됩니다.
 데이터 출처: tarkov.dev(게임 자료·좌표, 지도 그림 SVG CC BY-NC-SA 4.0) · 타일 지도: 연구소·미궁 © Tarkov.dev, 쇄빙선 © TarkovBOT.eu · 일부 데이터: Escape from Tarkov Wiki (CC BY-NC-SA) · 오픈소스 고지: THIRD_PARTY_NOTICES.txt(이 폴더)
 
 [전체화면(Fullscreen) 모드에서 F2가 안 먹는 경우]
@@ -71,13 +73,17 @@ extracting fresh is recommended. (Your settings live outside the folder.)
 [Privacy / Stats]
 To improve the app, only anonymous usage stats are collected (app launches,
 F2 lookup counts, version, country, elevation (admin/non-admin), lookup-failure
-category). Searched item names, screen captures,
+category, abnormal exit count, guide site link count). Searched item names, screen captures,
 personal info, and IP are never collected. Turn it off anytime in Settings.
 (Open source — you can inspect the collection code yourself.)
-Send map data (optional, off by default): asked once when you launch the
-app; when on, only the map/position/facing numbers from screenshot file names
+Send map data (optional, off by default): only if you turn it on in
+Settings, the map/position/facing numbers from screenshot file names
 are sent about once a day to improve the map. No images, dates, times or
 install ID — only a random anonymous ID. Untick it in Settings anytime.
+Data backup (optional): settings and progress are exchanged with this PC's app
+only when you back up or restore yourself on the guide site ('My overlay data
+backup'). The app never exports a backup on its own, and a restore applies only
+after you accept it in the app's confirmation window.
 Data: tarkov.dev (game data & coordinates, map images SVG CC BY-NC-SA 4.0) · tile maps: The Lab & The Labyrinth © Tarkov.dev, Icebreaker © TarkovBOT.eu · some data: Escape from Tarkov Wiki (CC BY-NC-SA) · open-source notices: THIRD_PARTY_NOTICES.txt (this folder)
 
 [F2 not working in fullscreen mode?]
