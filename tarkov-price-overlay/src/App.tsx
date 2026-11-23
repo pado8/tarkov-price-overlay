@@ -16,6 +16,7 @@ import { effectiveFaction, filterFactionQuests, type FactionSetting } from "./fa
 import { diag, diagBlock } from "./diagLog";
 import { RadarPanel, type RadarState, RADAR_SIZE_KEY, loadRadarSize, RADAR_WIDTH_KEY, loadRadarWidth, RADAR_MINI_KEY, RADAR_MINI_SIZE_KEY, RADAR_MAP_ALPHA_KEY, RADAR_PIP_POS_KEY, loadMiniSize, loadMapAlpha } from "./Radar";
 import { prefetchMap, loadMapTextScale, saveMapTextScale } from "./RadarMap";
+import { buildProofFor, setPartyIdent } from "./buildIdent";
 import { SetupCheck, SafetyNote } from "./SetupCheck";
 import { MAP_SHARE_ASKED_KEY, MAP_SHARE_KEY, MapShareSettings, fetchMapShareClosed, loadMapShareAsked, loadMapShareOn, useMapShareAuto } from "./MapShare";
 import { Icon } from "./Icon";
@@ -478,17 +479,8 @@ function persistStatsQueue(): void {
  *  knows whether the events may be dropped from the queue. */
 // 11-20 공식 빌드 확인 표식(bp) — 공식 빌드가 넣은 키로 Rust 가 만든 짧은 값(키는 웹뷰로 오지 않는다).
 // UTC 날짜가 바뀔 때만 다시 계산한다. 빈 값이면(직접 빌드한 판 등) 묶음에 넣지 않는다. 헤더는 늘리지 않는다.
-let buildProofCache: { day: string; v: string } | null = null;
 async function buildProof(): Promise<string> {
-  const day = new Date().toISOString().slice(0, 10);
-  if (buildProofCache?.day === day) return buildProofCache.v;
-  let v = "";
-  try {
-    const r = await invoke<string>("build_proof", { installId: ensureInstallId() });
-    if (typeof r === "string") v = r;
-  } catch {}
-  buildProofCache = { day, v };
-  return v;
+  return buildProofFor(ensureInstallId()); // 11-23 공용 모듈(buildIdent.ts) — 번호·UTC 날짜별로 캐시
 }
 
 async function postStats(events: EventPayload[]): Promise<boolean> {
@@ -825,6 +817,27 @@ const submitFeedback = async (
 
 
 const PYTHON_API = "http://127.0.0.1:8765";
+
+// 11-23 공식 빌드 확인 표식(bp)을 서버 기능에 붙인다(통계 세션 넘김 — 지금은 서버가 기록만, 막기는 나중 판).
+// 파티 = 입장 주소 · 엔진 = 사이트 연동(/health)·백업 내보내기·지도 자료 보내기. 키는 Rust 에만 있어 엔진(Python)은 직접 못 만든다 →
+// 시작 때와 30분마다 앱이 계산해 넘긴다(같은 PC 안 요청). 지도 자료는 설치 번호를 보내지 않으므로 익명 ID 로 계산한 값을 따로 준다.
+async function refreshBuildIdent(): Promise<void> {
+  const iid = ensureInstallId();
+  const bp = await buildProofFor(iid);
+  setPartyIdent(iid, APP_VERSION, bp);
+  if (!IS_MAIN_WINDOW) return;
+  try {
+    const anon = ((await (await fetch(`${PYTHON_API}/mapshare/anon`)).json()) as { anon_id?: string }).anon_id ?? "";
+    const bpAnon = anon ? await buildProofFor(anon) : "";
+    await fetch(`${PYTHON_API}/app/ident`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ iid, ver: APP_VERSION, bp, anon, bp_anon: bpAnon }),
+    });
+  } catch {
+    // 엔진이 아직 안 떴으면 다음 차례에
+  }
+}
 const RADAR_POLL_MS = 400; // 새 스크린샷(지도·파티 위치) 확인 주기 — 피드백 #56
 
 // 시세 나이 배지 — 사이드카가 네트워크 대신 디스크 스냅샷을 쓰고 있거나(패치 당일 등) 카탈로그가 3시간 넘게 못 갱신됐을 때만
@@ -2743,6 +2756,10 @@ function App() {
           }
         })
         .catch(() => {});
+      // 11-23 공식 빌드 확인 표식: 지금 · 엔진이 늦게 뜰 때를 위해 15초 뒤 · 그 뒤 30분마다(UTC 날짜가 바뀌면 새 값)
+      void refreshBuildIdent();
+      window.setTimeout(() => void refreshBuildIdent(), 15000);
+      window.setInterval(() => void refreshBuildIdent(), 30 * 60 * 1000);
       // Hotkey binding at session start (default / custom_key / custom_mouse).
       // Read straight from storage so it reflects the persisted choice, not a
       // mid-session edit. Lets the dashboard split the "never looked up" cohort
@@ -2992,7 +3009,6 @@ function App() {
             try {
               localStorage.setItem(INSTALL_ID_KEY, from);
             } catch {}
-            buildProofCache = null; // 공식 빌드 확인값은 번호로 계산 — 새 번호로 다시
           }
         }
         if (took) reportEvent("backup_restore", `prev:${prev}`);

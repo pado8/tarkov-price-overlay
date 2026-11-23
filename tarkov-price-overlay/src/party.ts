@@ -2,6 +2,7 @@
 // 게임 메모리는 읽지 않는다: 각자 게임에서 스크린샷을 찍을 때(radar.py 가 파일명 좌표를 읽은 순간) 그 위치만 방으로 보낸다.
 // 웹소켓은 WebView 에서 바로 연다(사이드카·Rust 변경 없음). 프로토콜은 ops/party-worker/README.md.
 import { useCallback, useEffect, useRef, useState } from "react";
+import { partyIdentQuery } from "./buildIdent";
 
 export const PARTY_URL = "wss://aquapado-party.aquapado.workers.dev"; // localStorage tarkov.party.url 로 바꿀 수 있다(로컬 시험용)
 const K = {
@@ -126,7 +127,8 @@ export function useParty({ onCount, onHello }: Opts = {}) {
     connectedNameRef.current = nm;
     let ws: WebSocket;
     try {
-      ws = new WebSocket(`${base}/room/${c}?name=${encodeURIComponent(nm)}&mid=${encodeURIComponent(memberId())}`);
+      // 11-23 공식 빌드 확인 표식(buildIdent.ts — App 이 시작 때·30분마다 채움). 아직 비어 있으면 없이 들어간다
+      ws = new WebSocket(`${base}/room/${c}?name=${encodeURIComponent(nm)}&mid=${encodeURIComponent(memberId())}${partyIdentQuery()}`);
     } catch {
       setStatus("error");
       return;

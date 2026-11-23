@@ -84,6 +84,19 @@ mod tests {
         assert_eq!(proof_for(&key_v, "11111111-2222-3333-4444-555555555555", "2026-11-21"), "Tea6AlBDV7b8YNPQwxYZJO");
     }
 
+    /// 서버 확인 함수(ops/lib/build-proof.mjs checkBuild)와 맞춰 보기 — 시험 원본 키로 오늘 표식을 찍는다.
+    /// `TPO_TEST_MASTER_HEX`·`TPO_TEST_VER`·`TPO_TEST_ID` 를 주고 `cargo test print_for_env -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn print_for_env() {
+        let master = hex(&std::env::var("TPO_TEST_MASTER_HEX").expect("TPO_TEST_MASTER_HEX"));
+        let ver = std::env::var("TPO_TEST_VER").expect("TPO_TEST_VER");
+        let id = std::env::var("TPO_TEST_ID").expect("TPO_TEST_ID");
+        let key_v = hmac_sha256(&master, format!("tpo-build|{ver}").as_bytes());
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
+        println!("BP={}", proof_for(&key_v, &id, &utc_day(now)));
+    }
+
     #[test]
     fn utc_days() {
         assert_eq!(utc_day(0), "1970-01-01");

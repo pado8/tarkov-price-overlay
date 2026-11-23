@@ -58,6 +58,15 @@ def load_state() -> dict:
     return s
 
 
+def anon_id() -> str:
+    """11-23 지금 익명 ID — 상태 파일이 없으면 load_state 가 부를 때마다 새 ID 를 만들므로, 처음 만들 때 저장까지 한다
+    (앱이 이 ID 로 공식 빌드 확인 표식을 계산해 두고, 보낼 때 같은 ID 여야 붙는다)."""
+    s = load_state()
+    if not _state_path().exists():
+        save_state(s)
+    return s["anon_id"]
+
+
 def save_state(s: dict) -> None:
     p = _state_path()
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -165,7 +174,8 @@ def _http(method: str, url: str, body: Optional[bytes]) -> tuple[int, dict]:
             return e.code, {}
 
 
-def send(force: bool = False, lines: Optional[list[str]] = None, http: Http = _http, now: Optional[float] = None) -> dict:
+def send(force: bool = False, lines: Optional[list[str]] = None, http: Http = _http, now: Optional[float] = None,
+         ver: str = "", bp: str = "") -> dict:
     """새 줄만 보낸다. force=False(자동)면 MIN_INTERVAL_SEC 안에는 건너뛴다.
     서버가 닫혀 있으면(closed) 자동은 GET /status 만 — 아직 닫힘이면 건너뛰고, 열렸으면 표시를 지우고 보낸다(reopened)."""
     now = time.time() if now is None else now
@@ -198,7 +208,8 @@ def send(force: bool = False, lines: Optional[list[str]] = None, http: Http = _h
             s["last_result"] = {"at": now, "ok": True, "sent": 0}
             save_state(s)
         return {"ok": True, "sent": 0, **({"reopened": True} if reopened else {})}
-    body = json.dumps({"v": 2, "id": s["anon_id"], "shots": new}, ensure_ascii=False).encode("utf-8")
+    # 11-23 ver·bp = 공식 빌드 확인(익명 ID 로 계산한 표식, 앱이 엔진에 넘김). 서버는 지금 기록만 한다
+    body = json.dumps({"v": 2, "id": s["anon_id"], "shots": new, "ver": ver, "bp": bp}, ensure_ascii=False).encode("utf-8")
     try:
         status, j = http("POST", SHARE_URL, body)
     except Exception as e:  # noqa: BLE001 — 네트워크 실패는 다음 번에 다시

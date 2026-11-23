@@ -79,10 +79,14 @@ def http_ok(method, url, body):
 r = M.send(force=True, lines=lines, http=http_ok, now=T0)
 eq("④ 보냄 2", r, {"ok": True, "sent": 2})
 body = calls[-1][2]
-eq("④ 본문 키", sorted(body), ["id", "shots", "v"])
+eq("④ 본문 키(11-23 ver·bp = 공식 빌드 확인)", sorted(body), ["bp", "id", "shots", "v", "ver"])
+eq("④ 표식 없이 보내면 빈 값", (body["ver"], body["bp"]), ("", ""))
 eq("④ 익명 ID·v2", (body["id"], body["v"]), (pv["anon_id"], 2))
 eq("④ 설치 ID 같은 값 없음", "install" in json.dumps(body), False)
 eq("④ 다시 보내면 0(이미 보냄)", M.send(force=True, lines=lines, http=http_ok, now=T0 + 10), {"ok": True, "sent": 0})
+_lines2 = lines + ["2026-11-23[12-00]_0.0, 0.0, 0.0_0.0, 0.0, 0.0, 1.0_0.00 (0)|customs"]
+M.send(force=True, lines=_lines2, http=http_ok, now=T0 + 20, ver="1.3.7", bp="abcdefghijklmnopqrstuv")
+eq("④ 표식을 주면 본문에 그대로", (calls[-1][2]["ver"], calls[-1][2]["bp"]), ("1.3.7", "abcdefghijklmnopqrstuv"))
 more = lines + ["customs_preset|1.0, 1.0, 1.0_0, 0, 0, 1"]
 eq("⑤ 자동은 24시간 안이면 건너뜀(1시간 뒤)", M.send(lines=more, http=http_ok, now=T0 + 3600)["skipped"], "interval")
 eq("⑤ 자동은 24시간 안이면 건너뜀(23시간 59분 뒤)", M.send(lines=more, http=http_ok, now=T0 + 10 + 24 * 3600 - 60)["skipped"], "interval")

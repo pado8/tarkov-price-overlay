@@ -698,6 +698,17 @@ def _build_response(
     )
 
 
+# 11-23 공식 빌드 확인 표식 — 키는 앱(Rust)에만 있어 앱이 계산해 넘긴다(POST /app/ident, 시작 때·30분마다).
+# 사이트 연동(/health 사이트 출처)·백업 내보내기·지도 자료 보내기에 붙인다. 지금 서버는 기록만 한다.
+_app_ident: dict[str, str] = {}
+_app_ident_lock = threading.Lock()
+
+
+def _ident() -> dict[str, str]:
+    with _app_ident_lock:
+        return dict(_app_ident)
+
+
 @app.get("/health")
 def health(request: Request = None) -> dict:
     _count_site(request, "syh")
@@ -706,7 +717,14 @@ def health(request: Request = None) -> dict:
     import story_site
 
     # 11-20 B4: story_sync(사이트 체크 → 앱 지도 숨김)는 스위치가 켜진 판에서만 알린다(공개 연동은 story_progress)
-    return {"status": "ok", "features": (["story_sync"] if story_site.sync_on() else []) + ["story_progress"]}
+    out = {"status": "ok", "features": (["story_sync"] if story_site.sync_on() else []) + ["story_progress"]}
+    origin = request.headers.get("origin") if request is not None else None
+    if origin and _SITE_ORIGIN_RE.match(origin):
+        # 11-23 사이트 연동 확인용(사이트가 서버 /v1/verify 에 묻는다) — 사이트 출처에만
+        idn = _ident()
+        out.update({"iid": idn.get("iid", ""), "ver": idn.get("ver", ""), "bp": idn.get("bp", "")})
+    return out
+
 
 
 class CatalogActiveRequest(BaseModel):
@@ -2154,7 +2172,10 @@ def backup_export(request: Request = None) -> dict:
     if not snap:
         return {"ok": False, "reason": "not_ready"}
     _count_site(request, "bkx")
-    return {"ok": True, "v": 1, **snap}
+    idn = _ident()
+    # 11-23 공식 빌드 확인 표식(사이트가 백업 저장 때 같이 보냄) — 스냅샷의 설치 번호와 같은 번호로 만든 값일 때만
+    bp = idn.get("bp", "") if idn.get("iid") and idn.get("iid") == snap.get("install_id") else ""
+    return {"ok": True, "v": 1, **snap, "bp": bp}
 
 
 @app.post("/backup/import", dependencies=[Depends(_require_site_origin)])
@@ -2331,11 +2352,39 @@ class MapShareSend(BaseModel):
     force: bool = False  # True = 설정의 '지금 보내기'(간격 무시)
 
 
+class AppIdent(BaseModel):
+    iid: str = ""
+    ver: str = ""
+    bp: str = ""
+    anon: str = ""
+    bp_anon: str = ""
+
+
+@app.post("/app/ident", dependencies=[Depends(_require_app_origin)])
+def app_ident(req: AppIdent) -> dict:
+    clean = {k: str(getattr(req, k) or "")[:64] for k in ("iid", "ver", "bp", "anon", "bp_anon")}
+    with _app_ident_lock:
+        _app_ident.clear()
+        _app_ident.update(clean)
+    return {"ok": True}
+
+
+@app.get("/mapshare/anon", dependencies=[Depends(_require_app_origin)])
+def mapshare_anon() -> dict:
+    """11-23 지도 자료 익명 ID — 앱이 이 ID 로 공식 빌드 확인 표식을 계산해 /app/ident 로 돌려준다."""
+    import map_share
+
+    return {"anon_id": map_share.anon_id()}
+
+
 @app.post("/mapshare/send", dependencies=[Depends(_reject_foreign_origin)])
 def mapshare_send(req: MapShareSend) -> dict:
     import map_share
 
-    return map_share.send(force=req.force)
+    idn = _ident()
+    # 11-23 공식 빌드 확인 표식 — 익명 ID 로 계산한 값(지금 익명 ID 와 같을 때만, '내 자료 지우기'로 바뀌면 다음 갱신 때까지 빈 값)
+    anon_ok = idn.get("anon") and idn.get("anon") == map_share.load_state().get("anon_id")
+    return map_share.send(force=req.force, ver=idn.get("ver", ""), bp=idn.get("bp_anon", "") if anon_ok else "")
 
 
 @app.post("/mapshare/forget", dependencies=[Depends(_reject_foreign_origin)])
