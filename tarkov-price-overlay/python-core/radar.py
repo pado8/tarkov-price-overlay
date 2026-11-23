@@ -621,6 +621,39 @@ def quest_key_names(jmode: str, lang: str, tasks: dict) -> dict:
 # build_targets·story_targets·map_image_meta 가 전부 이 표를 쓴다(11-03 리뷰: 세 곳 표가 달라 the-lab-dark 에서 상인 퀘스트가 빠졌음).
 MAP_BASE = {"night-factory": "factory", "infected-factory": "factory", "ground-zero-21": "ground-zero",
             "the-lab-dark": "the-lab", "infected-lab": "the-lab"}
+# 11-23 점검: 지도 퀘스트 모드를 로그에서 읽을지 — '가장 새 로그 폴더에 LIVE_LOG_SEC 안에 바뀐 파일이 있다' = 지금 켜진 게임.
+# 게임이 켜져 있으면 output·network-messages 로그가 계속 바뀐다(이 PC 실측: 0분 전). 전엔 '폴더가 12시간 안 또는 이번 맵을 로그에서 읽음'이라
+# 게임을 끈 뒤 설정을 다른 모드로 바꿔도 지난 모드를 따랐고, 손 '진행 중' 표시도 그 모드 칸에 들어갔다.
+# 지도 폴링(0.4초)마다 돌므로 파일 시각은 10초 캐시, 모드 구간은 application 로그 크기가 그대로면 다시 안 읽는다
+# (전엔 매번 로그를 통째로 다시 읽어 폴링 한 번에 2~10ms — 11-08 에 줄인 대기 CPU 와 같은 크기).
+LIVE_LOG_SEC = 30 * 60
+_QM_CACHE: dict = {}  # 폴더 → (확인 시각, 마지막 기록 시각, 모드, application 로그 크기)
+
+
+def _live_log_mode(qt, newest: Path) -> Optional[str]:
+    """가장 새 로그 폴더가 지금 켜진 게임이면 그 폴더의 마지막 모드(pvp·pve·season·mixed 등), 아니면 None."""
+    now = time.time()
+    key = str(newest)
+    hit = _QM_CACHE.get(key)
+    if hit and now - hit[0] < 10:
+        last_write, mode = hit[1], hit[2]
+    else:
+        try:
+            files = [f for f in newest.iterdir() if f.is_file()]
+            last_write = max((f.stat().st_mtime for f in files), default=0.0)
+            size = sum(f.stat().st_size for f in files if "application_" in f.name)
+        except OSError:
+            return None
+        if hit and hit[3] == size:
+            mode = hit[2]
+        else:
+            segs = qt._mode_segments(newest)
+            mode = segs[-1][1] if segs else None
+        _QM_CACHE.clear()  # 가장 새 폴더 하나만 들고 있는다
+        _QM_CACHE[key] = (now, last_write, mode, size)
+    return mode if now - last_write < LIVE_LOG_SEC else None
+
+
 # 이벤트 변형(오염된 공장·연구소): tarkov.dev 에 맵 항목만 있고 탈출구 등 데이터가 비어 있다(11-04 확인: 탈출구 0).
 # 같은 맵을 쓰는 이벤트라 지도 선택 목록에서는 빼고, 로그·수동 선택으로 들어오면 일반 맵 데이터로 통째로 대신한다.
 EVENT_MAPS = {"infected-factory": "factory", "infected-lab": "the-lab"}
@@ -820,14 +853,15 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 if cand:  # 후보 위치 여러 곳 → 가장 가까운 곳 하나
                     pts.append(min(cand, key=lambda p: math.hypot(p["x"] - px, p["z"] - pz)))
             # 같은 목표의 점이 3m 안에 붙어 있으면 먼저 놓은 것 하나만(반올림 비교는 0.3m 차이도 경계에 걸리면 두 점으로 남겼다)
-            kept: list[tuple[float, float]] = []
+            # 높이가 2m 넘게 다르면 다른 층 목표로 보고 둘 다 둔다
+            kept: list[tuple[float, float, float]] = []
             for p in pts:
                 if not isinstance(p, dict) or p.get("x") is None or p.get("z") is None:
                     continue
-                qx, qz = float(p["x"]), float(p["z"])
-                if any(math.hypot(qx - a, qz - b) < 3.0 for a, b in kept):
+                qx, qz, qy = float(p["x"]), float(p["z"]), float(p.get("y") or 0.0)
+                if any(math.hypot(qx - a, qz - b) < 3.0 and abs(qy - c) < 2.0 for a, b, c in kept):
                     continue
-                kept.append((qx, qz))
+                kept.append((qx, qz, qy))
                 add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid,
                     slug=t.get("normalizedName") or None,  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
                     keys=keys or None)  # 목표에 필요한 열쇠 이름(대체 열쇠는 " / " 로)
@@ -1667,18 +1701,15 @@ class RadarService:
                 hinted = bool(o_at) and -1.0 <= shot["ts"] - float(o_at) <= 15.0
                 self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, game_lang or lang, hinted)  # 탈출구 목록 사진이면 백그라운드 OCR
             # 11-23 지도 퀘스트는 '지금 하는 게임의 모드'를 따른다(디시 댓글 '사이트에선 되는데 앱은 진행 중 퀘스트를 못 찾는다' — 이 PC 로그
-            # 377개 측정: 원인은 설정 모드 ≠ 실제로 하는 모드, 시즌 포함). 가장 새 로그 폴더가 지금 세션(로그에서 이번 맵을 읽었거나 12시간 안)이면
-            # 그 폴더의 마지막 모드 구간, 아니면 앱 설정. 시세 등 다른 것은 그대로 설정 모드.
+            # 377개 측정: 원인은 설정 모드 ≠ 실제로 하는 모드, 시즌 포함). 가장 새 로그 폴더가 지금 켜진 게임이면 그 폴더의 마지막 모드 구간,
+            # 아니면 앱 설정. 시세 등 다른 것은 그대로 설정 모드.
             qmode, qsrc = game_mode, "setting"
             try:
                 import quest_tracker as qt
                 if folders:
-                    newest = Path(folders[-1])
-                    segs = qt._mode_segments(newest)
-                    if segs and (source == "log" or qt._folder_age_sec(newest) < 12 * 3600):
-                        m = segs[-1][1]
-                        if m in ("pvp", "pve", "season"):
-                            qmode, qsrc = {"pvp": "regular", "pve": "pve", "season": "pvp-season"}[m], "log"
+                    m = _live_log_mode(qt, Path(folders[-1]))
+                    if m in ("pvp", "pve", "season"):
+                        qmode, qsrc = {"pvp": "regular", "pve": "pve", "season": "pvp-season"}[m], "log"
             except Exception:  # noqa: BLE001 — 못 읽으면 설정 모드
                 pass
             res["setting_mode"] = game_mode  # 앱이 보낸 설정 모드(지도 퀘스트 모드와 비교해 안내)

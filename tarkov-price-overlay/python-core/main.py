@@ -1153,7 +1153,10 @@ def _capture_and_lookup(
     # Everything read here is a candidate for the end-of-request cold rescue
     # (single deferred network try for brand-new patch items — see
     # _cold_rescue). Collected BEFORE matching so no-match strings are kept.
-    nospace_hit = any(unwrap_nospace_item(s) for s in (text, *fragments))
+    # 11-23 점검: '공간 부족' / '(이름)' 이 두 조각으로 갈라지고 앞에 다른 글자 조각이 있으면 어느 후보도 문구로 시작하지 않아
+    # 진짜 공간 부족 조회까지 버렸다 → 뒤쪽 조각을 이어 붙인 것도 후보로(문구로 시작해야 걸리므로 일반 이름에는 영향 없음)
+    nospace_cands = (text, *fragments, *(" ".join(fragments[i:]) for i in range(1, len(fragments))))
+    nospace_hit = any(unwrap_nospace_item(s) for s in nospace_cands)
     if rescue_pool is not None and not (nospace_only and not nospace_hit):
         if text:
             rescue_pool.append(text)
@@ -1180,7 +1183,7 @@ def _capture_and_lookup(
     # whole tooltip is usually one OCR fragment (that retry needs len>1), and
     # only adopted when the inner text resolves — so it can't hurt normal names.
     if price.get("name") is None:
-        for src in (text, *fragments):
+        for src in nospace_cands:
             inner = unwrap_nospace_item(src)
             if not inner:
                 continue
