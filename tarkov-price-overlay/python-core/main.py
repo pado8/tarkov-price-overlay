@@ -717,7 +717,8 @@ def health(request: Request = None) -> dict:
     import story_site
 
     # 11-20 B4: story_sync(사이트 체크 → 앱 지도 숨김)는 스위치가 켜진 판에서만 알린다(공개 연동은 story_progress)
-    out = {"status": "ok", "features": (["story_sync"] if story_site.sync_on() else []) + ["story_progress"]}
+    # 11-23 app = 고정 표식 — 가이드 사이트가 후보 포트(8765·18765·28765)에서 다른 프로그램(AnkiConnect 등)과 우리 엔진을 가른다
+    out = {"status": "ok", "app": "tarkov-price-overlay", "features": (["story_sync"] if story_site.sync_on() else []) + ["story_progress"]}
     origin = request.headers.get("origin") if request is not None else None
     if origin and _SITE_ORIGIN_RE.match(origin):
         # 11-23 사이트 연동 확인용(사이트가 서버 /v1/verify 에 묻는다) — 사이트 출처에만
