@@ -890,6 +890,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const showEx = (x: { faction: string; en?: string }) => (mineOn ? !!x.en && mine!.has(x.en) : showExtract(x.faction));
 
   // 이름표 자리 잡기: 가까운 것부터 놓고, 먼저 놓인 이름표·내 마커와 겹치거나 화면 밖이면 생략
+  const floorName = (g: string | null) => {
+    if (!g) return t.radarFloorBase;
+    const l = doc?.img?.layers.find((x) => x.g === g);
+    const n = l?.name ?? g;
+    return lang === "ko" ? FLOOR_KO[n] ?? n : n;
+  };
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
   const zoneShown = new Set<number>(); // 11-23 겹치지 않아 그릴 지역명(구역 이름표) 번호
   if (doc && v) {
@@ -902,6 +908,20 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       const s = toScreen(me.x, me.z);
       boxes.push({ x1: s.x - 6, y1: s.y - 7, x2: s.x + 6, y2: s.y + 6 }); // 내 화살표 자리(바로 옆 탈출구의 이름표까지 막지 않게 작게)
     }
+    // 11-24 실화면: 다른 층 퀘스트의 층 칩('지상'·'2층', 점 오른쪽 위)이 이름표 앞 글자를 덮고, 보스 배지(☠ 원)가 지역명 가운데를 덮었다
+    // → 둘 다 그리는 자리를 미리 막는다(아래 렌더와 같은 위치·크기 — 층 칩은 글자 배율을 안 따른다)
+    if (layers.quests)
+      questTargets.forEach((q) => {
+        if (!qOtherFloor(q)) return;
+        const s = toScreen(q.x!, q.z!);
+        boxes.push({ x1: s.x + 6, y1: s.y - 15, x2: s.x + 8 + textW(floorName(qFloorOf(q)), 10, 6.2), y2: s.y - 2 });
+      });
+    if (layers.spawns)
+      (doc.bosses ?? []).forEach((z) => {
+        const [cx, cz] = bossCenter(z.pts);
+        const badges = z.anywhere || bossIsArea(z.pts) ? [toScreen(cx, cz)] : z.pts.map((q) => toScreen(q[0], q[1]));
+        badges.forEach((b) => boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 }));
+      });
     // 11-23 지역명도 겹침 판정에 넣는다 — 전엔 판정 밖이라 이름표와 겹쳐 그려졌다(지도 글자를 키우면 더 심함).
     // 지역명은 자리가 고정이라 비켜 갈 수 없다 → 퀘스트·열쇠 문 이름표(우선순위 0 이하)를 먼저 놓고(점검: 점이 긴 지역명 안에 있으면
     // 자리 후보가 다 막혀 퀘스트 이름표가 사라졌다), 그다음 지역명(놓인 것과 겹치면 뺌), 나머지 이름표는 비어 있는 자리로 비켜 간다.
@@ -972,12 +992,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 층: 자동이면 내 높이·위치로, 아니면 고른 층. 그림은 사이드카가 그 층만 켠 SVG 변형으로 준다(?layer=)
   const floorAuto = doc?.img && me ? autoFloor(doc.img.layers, me.x, me.y, me.z) : null;
   const floorNow = floor === "auto" ? floorAuto : floor === "base" ? null : floor;
-  const floorName = (g: string | null) => {
-    if (!g) return t.radarFloorBase;
-    const l = doc?.img?.layers.find((x) => x.g === g);
-    const n = l?.name ?? g;
-    return lang === "ko" ? FLOOR_KO[n] ?? n : n;
-  };
   const imgLayer = (() => {
     const im = doc?.img;
     if (!im || !v || !showImg) return null;
