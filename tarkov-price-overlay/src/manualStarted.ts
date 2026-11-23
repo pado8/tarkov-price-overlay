@@ -58,15 +58,30 @@ export function pruneManualStarted(resolved?: Record<string, string[]> | null): 
   if (changed) save(all);
 }
 
-/** 엔진에 지금 목록을 넘긴다(엔진은 메모리에만 들고 있어 시작 때·바뀔 때·몇 분마다). */
-export async function syncManualStarted(): Promise<void> {
-  try {
-    await fetch(`${PYTHON_API}/quests/manual-started`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ by_mode: loadManualStarted() }),
-    });
-  } catch {}
+/** 엔진에 지금 목록을 넘긴다(엔진은 메모리에만 들고 있어 시작 때·바뀔 때·몇 분마다).
+ *  11-23 점검: 한 번에 하나씩만 보낸다 — 빠르게 두 번 누르면 먼저 보낸 옛 목록이 나중에 처리돼 엔진 목록을 덮을 수 있었다.
+ *  보내는 중에 또 불리면 끝난 뒤 그때의 최신 목록으로 한 번 더 보낸다. */
+let syncing: Promise<void> | null = null;
+let syncAgain = false;
+export function syncManualStarted(): Promise<void> {
+  if (syncing) {
+    syncAgain = true;
+    return syncing;
+  }
+  syncing = (async () => {
+    do {
+      syncAgain = false;
+      try {
+        await fetch(`${PYTHON_API}/quests/manual-started`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ by_mode: loadManualStarted() }),
+        });
+      } catch {}
+    } while (syncAgain);
+    syncing = null;
+  })();
+  return syncing;
 }
 
 /** 바뀔 때 알림(같은 창 = 자체 이벤트, 다른 창 = storage). 해제 함수를 돌려준다. */

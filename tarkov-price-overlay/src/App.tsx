@@ -839,6 +839,16 @@ async function refreshBuildIdent(): Promise<void> {
     // 엔진이 아직 안 떴으면 다음 차례에
   }
 }
+// 11-23 점검: 엔진은 표식·손 '진행 중' 표시를 메모리에만 들고 있어, 엔진만 다시 뜨면(충돌 뒤 재시작·포트를 바꿔 다시 뜸·
+// 포트가 풀려 늦게 뜸) 다음 주기(표식 30분·손 표시 3분)까지 비었다 → 그런 알림을 받으면 엔진이 뜰 즈음 두 번 다시 보낸다(같은 PC 안 요청).
+function resendEngineState(): void {
+  for (const ms of [12000, 35000]) {
+    window.setTimeout(() => {
+      void refreshBuildIdent();
+      void syncManualStarted();
+    }, ms);
+  }
+}
 const RADAR_POLL_MS = 400; // 새 스크린샷(지도·파티 위치) 확인 주기 — 피드백 #56
 
 // 시세 나이 배지 — 사이드카가 네트워크 대신 디스크 스냅샷을 쓰고 있거나(패치 당일 등) 카탈로그가 3시간 넘게 못 갱신됐을 때만
@@ -875,7 +885,8 @@ async function fetchWithRetryOnce(
     if (e instanceof Error && e.name === "AbortError") throw e;
     log(`fetch failed, retrying once in 1.5s: ${String(e)}`);
     await new Promise((r) => setTimeout(r, 1500));
-    return fetch(url, init);
+    // 11-23 점검: 엔진이 그 사이 다른 포트로 다시 떴을 수 있다 — 엔진 주소면 지금 포트로 바꿔 다시
+    return fetch(url.replace(/^http:\/\/127\.0\.0\.1:\d+/, PYTHON_API), init);
   }
 }
 
@@ -2629,8 +2640,13 @@ function App() {
     const unPortFree = listen("sidecar-port-free", () => {
       log("React: sidecar-port-free — engine starting");
       sidecarPortBusyRef.current = false;
+      resendEngineState();
     });
-    const unRestart = listen("sidecar-restart", () => dailyAdd("sr")); // 11-09 조용한 재시작 횟수(하루 요약 sr)
+    const unRestart = listen("sidecar-restart", () => {
+      dailyAdd("sr"); // 11-09 조용한 재시작 횟수(하루 요약 sr)
+      resendEngineState();
+    });
+    const unEnginePort = listen("engine-port", () => resendEngineState()); // 11-23 다른 포트로 다시 뜸
     // 사이드카는 웹뷰가 듣기 전에 띄우므로 첫 실패 이벤트는 지나간다 → 뜰 때 한 번, 잠시 뒤 한 번 더 묻는다
     const ask = () => {
       invoke<boolean>("sidecar_missing_state")
@@ -2658,6 +2674,7 @@ function App() {
       unPortBusy.then((fn) => fn());
       unPortFree.then((fn) => fn());
       unRestart.then((fn) => fn());
+      unEnginePort.then((fn) => fn());
       window.clearTimeout(again);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2766,7 +2783,9 @@ function App() {
       void syncManualStarted();
       window.setTimeout(() => void syncManualStarted(), 15000);
       window.setInterval(() => void syncManualStarted(), 3 * 60 * 1000);
-      window.setInterval(() => void refreshBuildIdent(), 30 * 60 * 1000);
+      // 11-23 점검: 30분 → 5분 — bp 는 UTC 날짜별 값이라 자정(한국 09:00) 뒤 최대 30분 동안 엔진이 어제 값을 들고 있었다
+      // (같은 PC 안 요청 두 번, 계산은 날짜별 캐시라 서버·외부 사용량 영향 없음)
+      window.setInterval(() => void refreshBuildIdent(), 5 * 60 * 1000);
       // Hotkey binding at session start (default / custom_key / custom_mouse).
       // Read straight from storage so it reflects the persisted choice, not a
       // mid-session edit. Lets the dashboard split the "never looked up" cohort
@@ -3482,13 +3501,14 @@ function App() {
     if (showSettings) void loadRadarFolder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSettings]);
-  // 11-23 손으로 '진행 중' 표시가 바뀌면 엔진에 넘긴 뒤 지도를 다시 받아 바로 보이게
+  // 11-23 손으로 '진행 중' 표시가 바뀌면 엔진에 넘긴 뒤 지도를 다시 받아 바로 보이게.
+  // 리스너는 한 번만 거는데 loadRadar 는 그때의 언어·게임 모드를 붙잡으므로 ref 로 최신 것을 부른다(점검: 설정을 바꾼 뒤 표시하면 옛 언어·모드로 덮었다)
+  const loadRadarRef = useRef<() => Promise<void>>(async () => {});
   useEffect(
     () =>
       onManualStartedChange(() => {
-        void syncManualStarted().then(() => void loadRadar());
+        void syncManualStarted().then(() => void loadRadarRef.current());
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
   const loadRadar = async () => {
@@ -3514,6 +3534,7 @@ function App() {
       setRadarLoading(false);
     }
   };
+  loadRadarRef.current = loadRadar;
   // 카드 위에 지도를 띄운다 — F2 카드와 같은 방식(포커스 안 뺏기, 자동 숨김)
   // report=false: 같은 키 + 못 읽음으로 여는 경우 — 그 누름의 스크린샷이 감지될 때 rsh 가 한 번 따로 집계되므로 중복 보고하지 않는다
   // 11-19 스크린샷으로 지도가 뜬 횟수는 이벤트(radar_shot, 30일 이벤트 행의 약 24%) 대신 하루 요약 rsh 로 — Neon 저장 한도

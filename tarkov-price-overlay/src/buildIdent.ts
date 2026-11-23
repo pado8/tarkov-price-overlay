@@ -13,7 +13,9 @@ export async function buildProofFor(id: string): Promise<string> {
   try {
     const r = await invoke<string>("build_proof", { installId: id });
     if (typeof r === "string") v = r;
-  } catch {}
+  } catch {
+    return ""; // 11-23 점검: 일시 실패는 캐시하지 않는다(전엔 그날 하루 내내 빈 값) — 키 없는 빌드의 정상 빈 값만 캐시
+  }
   cache.set(id, { day, v });
   return v;
 }

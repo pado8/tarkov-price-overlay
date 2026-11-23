@@ -827,11 +827,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       : null;
   // 11-23 하루 요약: 진행 중 0개 안내(qn0 진짜 0개 · qnm 다른 모드 안내) · 지도 퀘스트가 로그 모드를 따름(qml) — 맵·모드가 바뀔 때 한 번
   const qnKind = questNote ? (questNote === t.radarQuestNoneActive ? "qn0" : data.active_quests === 0 ? "qnm" : "") : "";
+  // 미니맵은 이 안내를 그리지 않으므로 세지 않는다(점검: 본 창 지도와 미니맵이 같이 떠 있으면 두 번 셌다)
   useEffect(() => {
-    if (qnKind) stat(qnKind);
+    if (qnKind && !mini) stat(qnKind);
   }, [qnKind, data.map?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (questModeNote) stat("qml");
+    if (questModeNote && !mini) stat("qml");
   }, [!!questModeNote, data.quest_mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 11-23 손으로 '진행 중' 표시 — 로그가 생기기 전에 받은 퀘스트를 직접 고른다(이 맵에 목표가 있고 아직 안 끝낸 퀘스트).
@@ -840,22 +841,27 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   const [pickList, setPickList] = useState<null | "loading" | { id: string; name: string; started: boolean; manual: boolean }[]>(null);
   const [manualAll, setManualAll] = useState(loadManualStarted);
   const qmKey = questModeKey(data.quest_mode ?? data.setting_mode);
-  const manualHere = (manualAll[qmKey] ?? []).length;
+  // 체크 표시는 이 PC 에 저장된 목록 기준(점검: 엔진 값으로 그려 엔진이 다시 떠 목록이 빈 동안 빈칸으로 보이는데 누르면 해제됐다)
+  const mineHere = new Set(manualAll[qmKey] ?? []);
+  const manualHere = mineHere.size;
   useEffect(() => onManualStartedChange(() => setManualAll(loadManualStarted())), []);
   useEffect(() => {
     pruneManualStarted(data.manual_resolved);
   }, [JSON.stringify(data.manual_resolved ?? null)]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pickSeq = useRef(0);
   const loadPick = async () => {
     const slug = data.map?.id;
     if (!slug) return;
+    const seq = ++pickSeq.current; // 마지막 요청의 답만 쓴다(빠르게 눌렀거나 맵이 바뀐 뒤 늦게 온 옛 답이 덮지 않게)
     setPickList("loading");
+    let list: { id: string; name: string; started: boolean; manual: boolean }[] = [];
     try {
-      const q = new URLSearchParams({ game_mode: data.quest_mode ?? data.setting_mode ?? "regular", map: slug, lang });
-      const j = (await (await fetch(`${PYTHON_API}/quests/candidates?${q}`)).json()) as { quests?: { id: string; name: string; started: boolean; manual: boolean }[] };
-      setPickList(j.quests ?? []);
-    } catch {
-      setPickList([]);
-    }
+      // 지도 이름표와 같은 언어로(중국어는 퀘스트 자료가 없어 지도도 영어를 쓴다)
+      const q = new URLSearchParams({ game_mode: data.quest_mode ?? data.setting_mode ?? "regular", map: slug, lang: lang === "zh" ? "en" : lang });
+      const j = (await (await fetch(`${PYTHON_API}/quests/candidates?${q}`)).json()) as { quests?: typeof list };
+      list = j.quests ?? [];
+    } catch {}
+    if (seq === pickSeq.current) setPickList(list);
   };
   useEffect(() => {
     if (pickOpen) void loadPick();
@@ -897,18 +903,21 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       boxes.push({ x1: s.x - 6, y1: s.y - 7, x2: s.x + 6, y2: s.y + 6 }); // 내 화살표 자리(바로 옆 탈출구의 이름표까지 막지 않게 작게)
     }
     // 11-23 지역명도 겹침 판정에 넣는다 — 전엔 판정 밖이라 이름표와 겹쳐 그려졌다(지도 글자를 키우면 더 심함).
-    // 지역명은 자리가 고정이라 먼저 놓고(도구 자리·다른 지역명과 겹치면 뺌), 이름표는 아래에서 비어 있는 자리 후보로 비켜 간다.
-    if (layers.names && v.s >= ZONE_NAME_MIN_S) {
+    // 지역명은 자리가 고정이라 비켜 갈 수 없다 → 퀘스트·열쇠 문 이름표(우선순위 0 이하)를 먼저 놓고(점검: 점이 긴 지역명 안에 있으면
+    // 자리 후보가 다 막혀 퀘스트 이름표가 사라졌다), 그다음 지역명(놓인 것과 겹치면 뺌), 나머지 이름표는 비어 있는 자리로 비켜 간다.
+    // 미니맵은 도구 버튼이 마우스를 올릴 때만 보이므로 지역명은 그 자리(boxes[0])에 막히지 않게.
+    const placeZones = () => {
+      if (!layers.names || v.s < ZONE_NAME_MIN_S) return;
       (doc.zones ?? []).forEach((z, i) => {
         const s = toScreen(z.p[0], z.p[2]);
         const w = textW(z.name, 10, 6.2) * ts;
         const b = { x1: s.x - w / 2, y1: s.y - 11 * ts, x2: s.x + w / 2, y2: s.y + 4 * ts }; // 굵은 글자 테두리·아래로 내려오는 부분까지
         if (b.x2 < 0 || b.x1 > box.w || b.y2 < 0 || b.y1 > box.h) return;
-        if (boxes.some((o) => b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) return;
+        if (boxes.some((o, k) => !(mini && k === 0) && b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) return;
         boxes.push(b);
         zoneShown.add(i);
       });
-    }
+    };
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
     if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
@@ -920,10 +929,15 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     });
     // 퀘스트는 이름만(목표 문장은 길어서 다른 이름표를 다 밀어낸다 — 점을 누르면 전문)
     if (layers.quests) questTargets.forEach((q, i) => cands.push({ key: `q${i}`, text: q.name, p: [q.x!, q.y ?? myY, q.z!], off: 6, pr: 0 }));
+    let zonesPlaced = false;
     cands
       .map((c) => ({ ...c, d: dist(c.p) }))
       .sort((a, b) => a.pr - b.pr || a.d - b.d)
       .forEach((c) => {
+        if (!zonesPlaced && c.pr > 0) {
+          zonesPlaced = true;
+          placeZones();
+        }
         const s = toScreen(c.p[0], c.p[2]);
         if (s.x < 0 || s.y < 0 || s.x > box.w || s.y > box.h) return; // 점이 화면 밖이면 이름표도 생략(가장자리에 글자만 잘려 들어오지 않게)
         const w = textW(c.text, 9, 5.4) * ts; // 글자 배율만큼 이름표 상자도 넓고 높게(겹침 판정) · 11-23 한글은 글자 크기만큼 넓게
@@ -943,6 +957,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           break;
         }
       });
+    if (!zonesPlaced) placeZones(); // 이름표가 모두 우선순위 0 이하였거나 하나도 없을 때
   }
   const label = (key: string) => {
     const l = labels.get(key);
@@ -1331,12 +1346,12 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   <label key={q.id} className="radar-pick-row">
                     <input
                       type="checkbox"
-                      checked={q.started || q.manual}
-                      disabled={q.started && !q.manual}
+                      checked={q.started || mineHere.has(q.id)}
+                      disabled={q.started && !mineHere.has(q.id)}
                       onChange={() => toggleManualStarted(qmKey, q.id)}
                     />
                     <span>{q.name}</span>
-                    {q.started && !q.manual && <span className="radar-note"> · {t.radarManualFromLog}</span>}
+                    {q.started && !mineHere.has(q.id) && <span className="radar-note"> · {t.radarManualFromLog}</span>}
                   </label>
                 ))
               )}

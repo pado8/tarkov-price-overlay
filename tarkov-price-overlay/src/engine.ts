@@ -16,13 +16,21 @@ function apply(p: unknown): void {
 }
 
 /** 화면을 그리기 전에 한 번 — 엔진이 다른 포트로 다시 뜨면(포트를 다른 프로그램이 잡음) Rust 가 'engine-port' 로 알린다.
- *  알림을 먼저 듣고 나서 지금 값을 물어 그 사이 바뀐 것을 놓치지 않는다. 1.5초 안에 답이 없으면 기본 포트로 그린다. */
+ *  알림을 먼저 듣고 나서 지금 값을 물어 그 사이 바뀐 것을 놓치지 않는다. 1.5초 안에 답이 없으면 기본 포트로 먼저 그린다.
+ *  11-23 점검: 늦게 온 답도 반영한다(전엔 버려서 그 창이 엔진이 다시 뜰 때까지 기본 포트에 남았다). 다만 그 사이 알림을
+ *  받았으면 알림 값이 더 새것이라 답은 버린다. 알림 등록이 멈춰도 화면은 그린다. */
 export async function initEnginePort(): Promise<void> {
-  try {
-    await listen<number>("engine-port", (e) => apply(e.payload));
-  } catch {}
-  try {
-    const p = await Promise.race([invoke<number>("engine_port"), new Promise<null>((r) => setTimeout(() => r(null), 1500))]);
-    apply(p);
-  } catch {}
+  let notified = false;
+  const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+  const listening = listen<number>("engine-port", (e) => {
+    notified = true;
+    apply(e.payload);
+  }).catch(() => {});
+  await Promise.race([listening, wait(1500)]);
+  const asked = invoke<number>("engine_port")
+    .then((p) => {
+      if (!notified) apply(p);
+    })
+    .catch(() => {});
+  await Promise.race([asked, wait(1500)]);
 }
