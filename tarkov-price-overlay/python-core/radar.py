@@ -803,25 +803,31 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 alts = [a for a in alts if a]
                 if alts:
                     keys.append(" / ".join(alts))
-            pts = [z.get("position") for z in o.get("zones") or [] if z.get("map") in ids]
+            # 11-23 인게임: 같은 구역이 대표 맵·변형 맵(그라운드 제로↔21+, 공장↔야간 공장)에 0.3~1m 다른 좌표로 한 벌씩 적혀 있어
+            # 둘 다 읽으면 점이 두 개씩 겹쳐 찍혔다 → 지금 맵 구역을 먼저 놓고 아래에서 3m 안 사본을 버린다
+            # (대표 맵에만 있는 떨어진 위치는 남긴다 — 그라운드 제로 '미심쩍은 하청업체' 차량 등은 21+ 자료에 한 곳이 빠져 있다)
+            zs = o.get("zones") or []
+            pts = [z.get("position") for z in zs if z.get("map") == mid] + \
+                  [z.get("position") for z in zs if z.get("map") in ids and z.get("map") != mid]
             # 탈출 목표('차량 탈출구 이용하기' 등)는 구역 좌표가 없다 → exitName(탈출구 내부 이름)이 이 맵 탈출구와 맞으면 그 자리에
             # (11-04 인게임: 그라운드 제로 '불타는 바퀴' = Sandbox_VExit 가 진행 중인데 지도에 안 보였다. 데이터에 앞 공백 섞인 이름도 있음)
             exit_name = (o.get("exitName") or "").strip() if o.get("type") == "extract" else ""
             if exit_name and (not o.get("maps") or ids & set(o.get("maps") or [])):
                 pts += [ex.get("position") for ex in m.get("extracts") or [] if (ex.get("name") or "").strip() == exit_name]
-            for pl in o.get("possibleLocations") or []:
-                if pl.get("map") in ids:
-                    cand = [p for p in pl.get("positions") or [] if isinstance(p, dict)]
-                    if cand:  # 후보 위치 여러 곳 → 가장 가까운 곳 하나
-                        pts.append(min(cand, key=lambda p: math.hypot(p["x"] - px, p["z"] - pz)))
-            seen = set()
+            pls = o.get("possibleLocations") or []
+            for pl in [x for x in pls if x.get("map") == mid] + [x for x in pls if x.get("map") in ids and x.get("map") != mid]:
+                cand = [p for p in pl.get("positions") or [] if isinstance(p, dict)]
+                if cand:  # 후보 위치 여러 곳 → 가장 가까운 곳 하나
+                    pts.append(min(cand, key=lambda p: math.hypot(p["x"] - px, p["z"] - pz)))
+            # 같은 목표의 점이 3m 안에 붙어 있으면 먼저 놓은 것 하나만(반올림 비교는 0.3m 차이도 경계에 걸리면 두 점으로 남겼다)
+            kept: list[tuple[float, float]] = []
             for p in pts:
-                if not isinstance(p, dict):
+                if not isinstance(p, dict) or p.get("x") is None or p.get("z") is None:
                     continue
-                k = (round(p.get("x", 0)), round(p.get("z", 0)))
-                if k in seen:
+                qx, qz = float(p["x"]), float(p["z"])
+                if any(math.hypot(qx - a, qz - b) < 3.0 for a, b in kept):
                     continue
-                seen.add(k)
+                kept.append((qx, qz))
                 add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid,
                     slug=t.get("normalizedName") or None,  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
                     keys=keys or None)  # 목표에 필요한 열쇠 이름(대체 열쇠는 " / " 로)
