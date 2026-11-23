@@ -897,7 +897,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     return lang === "ko" ? FLOOR_KO[n] ?? n : n;
   };
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
-  const zoneShown = new Set<number>(); // 11-23 겹치지 않아 그릴 지역명(구역 이름표) 번호
+  const zoneShown = new Map<number, number>(); // 11-23 겹치지 않아 그릴 지역명(구역 이름표) 번호 → 세로 비킴(px)
   if (doc && v) {
     // 도구 버튼(오른쪽 위)·축척/방향 표시(아래 줄) 자리는 미리 막아 이름표가 그 밑에 깔리지 않게
     const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [
@@ -922,6 +922,19 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         const badges = z.anywhere || bossIsArea(z.pts) ? [toScreen(cx, cz)] : z.pts.map((q) => toScreen(q[0], q[1]));
         badges.forEach((b) => boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 }));
       });
+    // 11-24 실화면: 퀘스트 점(원)·내 라벨도 다른 이름표가 덮었다('도 로 폐쇄' · 'Pnwd 21' 이 '가택 연금'과 겹침) → 같이 막는다.
+    // 퀘스트 자기 이름표의 자리 후보는 점에서 off(6px) 밖이라 반지름 5 상자에 걸리지 않는다.
+    if (layers.quests)
+      questTargets.forEach((q) => {
+        const s = toScreen(q.x!, q.z!);
+        boxes.push({ x1: s.x - 5, y1: s.y - 5, x2: s.x + 5, y2: s.y + 5 });
+      });
+    if (layers.names && slug)
+      (myLabels[slug] ?? []).forEach((l) => {
+        const s = toScreen(l.p[0], l.p[1]);
+        const w = textW(l.text, 10, 6.2) * ts;
+        boxes.push({ x1: s.x - w / 2, y1: s.y - 5 - 11 * ts, x2: s.x + w / 2, y2: s.y + 3 });
+      });
     // 11-23 지역명도 겹침 판정에 넣는다 — 전엔 판정 밖이라 이름표와 겹쳐 그려졌다(지도 글자를 키우면 더 심함).
     // 지역명은 자리가 고정이라 비켜 갈 수 없다 → 퀘스트·열쇠 문 이름표(우선순위 0 이하)를 먼저 놓고(점검: 점이 긴 지역명 안에 있으면
     // 자리 후보가 다 막혀 퀘스트 이름표가 사라졌다), 그다음 지역명(놓인 것과 겹치면 뺌), 나머지 이름표는 비어 있는 자리로 비켜 간다.
@@ -931,11 +944,17 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       (doc.zones ?? []).forEach((z, i) => {
         const s = toScreen(z.p[0], z.p[2]);
         const w = textW(z.name, 10, 6.2) * ts;
-        const b = { x1: s.x - w / 2, y1: s.y - 11 * ts, x2: s.x + w / 2, y2: s.y + 4 * ts }; // 굵은 글자 테두리·아래로 내려오는 부분까지
-        if (b.x2 < 0 || b.x1 > box.w || b.y2 < 0 || b.y1 > box.h) return;
-        if (boxes.some((o, k) => !(mini && k === 0) && b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) return;
-        boxes.push(b);
-        zoneShown.add(i);
+        // 11-24 실화면: 지역명 한가운데에 보스 배지가 있으면 통째로 빠져 리저브는 지역명이 하나도 안 남았다 →
+        // 제자리가 막히면 위·아래로 한 줄(배지 지름 + 글자 높이)씩 비켜 본다. 지역명은 '이 근처'라 조금 옮겨도 뜻이 같다.
+        const step = 15 * ts + 6;
+        for (const dy of [0, -step, step]) {
+          const b = { x1: s.x - w / 2, y1: s.y + dy - 11 * ts, x2: s.x + w / 2, y2: s.y + dy + 4 * ts }; // 굵은 글자 테두리·아래로 내려오는 부분까지
+          if (b.x2 < 0 || b.x1 > box.w || b.y2 < 0 || b.y1 > box.h) continue;
+          if (boxes.some((o, k) => !(mini && k === 0) && b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) continue;
+          boxes.push(b);
+          zoneShown.set(i, dy);
+          break;
+        }
       });
     };
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
@@ -1087,9 +1106,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {layers.names &&
               v && v.s >= ZONE_NAME_MIN_S &&
               (doc.zones ?? []).map((z, i) => {
-                if (!zoneShown.has(i)) return null; // 11-23 이름표와 겹치는 지역명은 뺀다(위 이름표 자리 잡기)
+                const dy = zoneShown.get(i);
+                if (dy === undefined) return null; // 11-23 이름표와 겹치는 지역명은 뺀다(위 이름표 자리 잡기) · 11-24 막히면 위·아래로 비킴
                 const s = toScreen(z.p[0], z.p[2]);
-                return <text key={`zn${i}`} x={s.x} y={s.y} textAnchor="middle" className="radar-zonename">{z.name}</text>;
+                return <text key={`zn${i}`} x={s.x} y={s.y + dy} textAnchor="middle" className="radar-zonename">{z.name}</text>;
               })}
             {layers.names &&
               slug &&
