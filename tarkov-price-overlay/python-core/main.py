@@ -1103,7 +1103,10 @@ def _capture_and_lookup(
     corrections: dict[str, str],
     rescue_pool: list[str] | None = None,
     mag: float = 1.5,
+    nospace_only: bool = False,
 ) -> tuple[str, dict]:
+    """nospace_only(11-23, 가운데 상자): '공간 부족 (아이템)' 문구에서 꺼낸 이름일 때만 결과로 받는다 — 그 밖의 글자는 화면 가운데
+    인벤토리 칸의 짧은 이름일 수 있어(실기 재현: 빈 곳에서 F2 → 칸 글자 'Tri-Zip' 으로 Camelbak Tri-Zip 군장) 버리고 구제 후보에도 안 넣는다."""
     import time
 
     t0 = time.perf_counter()
@@ -1140,10 +1143,14 @@ def _capture_and_lookup(
     # Everything read here is a candidate for the end-of-request cold rescue
     # (single deferred network try for brand-new patch items — see
     # _cold_rescue). Collected BEFORE matching so no-match strings are kept.
-    if rescue_pool is not None:
+    nospace_hit = any(unwrap_nospace_item(s) for s in (text, *fragments))
+    if rescue_pool is not None and not (nospace_only and not nospace_hit):
         if text:
             rescue_pool.append(text)
         rescue_pool.extend(f for f in fragments if f)
+    if nospace_only and not nospace_hit:
+        print(f"[lookup] OCR({label}) no inventory-full label - ignoring {text!r} (could be a grid cell name)")
+        return text, {"name": None}
 
     # Primary attempt: fuzzy-match the joined OCR text. This works whenever
     # the capture box is tight around the tooltip — EasyOCR returns a few
@@ -1702,9 +1709,11 @@ def _lookup_impl(req: CaptureRequest) -> LookupResponse:
                 return _tw(_build_response(scan_text, scan_price, game_mode, attempt="scan", lang=req.lang))
         text, price = _capture_and_lookup(
             ax, ay, aw, ah, lang, game_mode, label, req.corrections,
-            rescue_pool=rescue_pool, mag=ocr_mag,
+            rescue_pool=rescue_pool, mag=ocr_mag, nospace_only=(label == "center"),
         )
-        if len(text.strip()) > len(best_text):
+        # 11-23 가운데 상자가 못 맞춘 글자(인벤토리 칸 이름일 수 있음)는 '읽은 글자'로 치지 않는다 — 치면 넓은 상자 재시도(not best_text)가
+        # 막히고 실패가 '오독'으로 잡혔다(빈 화면 조사 11-23)
+        if (label != "center" or price.get("name") is not None) and len(text.strip()) > len(best_text):
             best_text = text.strip()
             attempt_used = label
         if price.get("name") is not None:
