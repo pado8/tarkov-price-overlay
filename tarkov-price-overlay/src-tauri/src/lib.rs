@@ -1548,9 +1548,31 @@ fn sidecar_port() -> u16 {
     SIDECAR_PORT.load(Ordering::SeqCst)
 }
 
-/// 후보 중 쓸 수 있는 첫 포트(비었거나 남은 우리 엔진). 모두 다른 프로그램이 잡고 있으면 None.
+/// 11-23 점검: 엔진이 붙지 못한 포트(비트 = SIDECAR_PORTS 순서). 주인이 안 보이는 실패도 있어서다 — Windows 예약 포트 범위
+/// (Hyper-V·WSL, bind_10013)나 끌 수 없는 옛 엔진(관리자 실행 때 남은 것) — 이번 실행 동안은 다음 후보를 먼저 쓴다.
+static SIDECAR_PORT_BAD: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+
+fn port_bit(port: u16) -> u8 {
+    SIDECAR_PORTS.iter().position(|&p| p == port).map_or(0, |i| 1 << i)
+}
+
+/// 후보 중 쓸 수 있는 첫 포트(비었거나 남은 우리 엔진). 못 붙었던 포트는 뒤로 미루고, 그것밖에 없으면 그거라도 다시 쓴다.
+/// 모두 다른 프로그램이 잡고 있으면 None.
 fn pick_sidecar_port() -> Option<u16> {
-    SIDECAR_PORTS.into_iter().find(|&p| !matches!(sidecar_port_owner_of(p), PortOwner::Other))
+    let usable: Vec<u16> = SIDECAR_PORTS
+        .into_iter()
+        .filter(|&p| !matches!(sidecar_port_owner_of(p), PortOwner::Other))
+        .collect();
+    choose_port(&usable, SIDECAR_PORT_BAD.load(Ordering::SeqCst))
+}
+
+fn port_is_bad(port: u16) -> bool {
+    SIDECAR_PORT_BAD.load(Ordering::SeqCst) & port_bit(port) != 0
+}
+
+/// 쓸 수 있는 후보(순서대로) 중 못 붙었던 적 없는 첫 포트, 없으면 첫 후보
+fn choose_port(usable: &[u16], bad: u8) -> Option<u16> {
+    usable.iter().copied().find(|&p| bad & port_bit(p) == 0).or_else(|| usable.first().copied())
 }
 
 /// 고른 포트를 기억하고, 바뀌었으면 화면에 알린다.
@@ -1893,26 +1915,31 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
         }
         if let Some(tag) = &last_err {
             // 포트 충돌이면 주인 종류만 붙인다(프로그램 이름·경로는 보내지 않는다)
-            let owner = match (tag.as_str(), sidecar_port_owner()) {
-                ("bind_10048", PortOwner::Other) => {
-                    if !SIDECAR_PORT_BUSY_SENT.swap(true, Ordering::SeqCst) {
-                        let _ = app.emit("sidecar-port-busy", ());
-                    }
-                    "_other"
-                }
-                ("bind_10048", PortOwner::OwnEngine(_)) => "_own",
+            let bind = tag.starts_with("bind_");
+            let owner = match (bind, sidecar_port_owner()) {
+                (true, PortOwner::Other) => "_other",
+                (true, PortOwner::OwnEngine(_)) => "_own",
                 _ => "",
             };
             why = format!("{why}|{tag}{owner}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>[_other|_own]
-            if owner == "_other" {
-                // 띄우는 사이 다른 프로그램이 포트를 잡았다 — 11-23 다음 후보 포트가 비어 있으면 바로 그 포트로, 다 차 있으면 빌 때까지 기다린다
-                if pick_sidecar_port().is_some() {
-                    SIDECAR_PORT_BUSY_SENT.store(false, Ordering::SeqCst);
-                    spawn_and_watch_sidecar(app, next);
-                } else {
-                    wait_port_then_spawn(app, next);
+            if bind {
+                // 11-23 이 포트에 못 붙었다 — 띄우는 사이 다른 프로그램이 잡음(10048)·Windows 예약 범위(10013, 주인이 안 보임)·
+                // 끌 수 없는 옛 엔진. 전엔 10048+다른 프로그램만 다음 후보로 넘겨 나머지는 같은 포트만 5번 다시 하다 포기했다.
+                // 다음 후보가 있으면 바로 그 포트로, 모두 다른 프로그램이 잡고 있으면 빌 때까지 기다린다(그때만 'busy' 안내 —
+                // 다음 후보로 넘어갈 때 보내면 엔진이 뜨는 동안 '세 포트 모두 사용 중' 안내가 틀리게 남았다).
+                let failed = sidecar_port();
+                SIDECAR_PORT_BAD.fetch_or(port_bit(failed), Ordering::SeqCst);
+                match pick_sidecar_port() {
+                    Some(p) if !port_is_bad(p) => {
+                        spawn_and_watch_sidecar(app, next);
+                        return;
+                    }
+                    None => {
+                        wait_port_then_spawn(app, next);
+                        return;
+                    }
+                    _ => {} // 남은 후보가 모두 못 붙었던 포트 — 보통 재시도(간격을 두고)
                 }
-                return;
             }
         }
         schedule_sidecar_restart(app, next, &why);
@@ -2215,6 +2242,32 @@ mod proc_usage_tests {
         assert!(v["procs"].as_u64().unwrap_or(0) >= 1, "{v}");
         assert!(v["app_mem_mb"].as_u64().unwrap_or(0) > 0, "{v}");
         println!("proc_usage = {v}");
+    }
+}
+
+#[cfg(test)]
+mod sidecar_port_tests {
+    use super::{choose_port, port_bit, sidecar_err_tag};
+
+    // 11-23 점검: Windows 예약 포트 범위(Hyper-V·WSL)에 걸리면 uvicorn 이 10013 으로 실패한다 — 이것도 bind_ 로 잡혀야 다음 후보로 넘어간다
+    #[test]
+    fn excluded_range_bind_error_is_tagged() {
+        let line = "ERROR:    [Errno 10013] error while attempting to bind on address ('127.0.0.1', 8765): 액세스 권한에 의해 숨겨진 소켓에 액세스를 시도했습니다";
+        assert_eq!(sidecar_err_tag(line), Some("bind_10013".into()));
+    }
+
+    #[test]
+    fn failed_ports_go_last() {
+        let all = [8765, 18765, 28765];
+        assert_eq!(choose_port(&all, 0), Some(8765));
+        assert_eq!(choose_port(&all, port_bit(8765)), Some(18765));
+        assert_eq!(choose_port(&all, port_bit(8765) | port_bit(18765)), Some(28765));
+        // 모두 못 붙었던 포트면 첫 후보라도 다시(간격 두고 재시도하는 쪽에서 쓴다)
+        assert_eq!(choose_port(&all, port_bit(8765) | port_bit(18765) | port_bit(28765)), Some(8765));
+        // 다른 프로그램이 잡은 포트는 이미 빠진 목록이 들어온다
+        assert_eq!(choose_port(&[18765, 28765], port_bit(18765)), Some(28765));
+        assert_eq!(choose_port(&[], 0), None);
+        assert_eq!(port_bit(1234), 0);
     }
 }
 
