@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { PYTHON_API, enginePort, DEFAULT_ENGINE_PORT } from "./engine";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow, PhysicalPosition, PhysicalSize, LogicalSize, primaryMonitor, currentMonitor, availableMonitors, Window as TauriWindow } from "@tauri-apps/api/window";
@@ -816,7 +817,6 @@ const submitFeedback = async (
 };
 
 
-const PYTHON_API = "http://127.0.0.1:8765";
 
 // 11-23 공식 빌드 확인 표식(bp)을 서버 기능에 붙인다(통계 세션 넘김 — 지금은 서버가 기록만, 막기는 나중 판).
 // 파티 = 입장 주소 · 엔진 = 사이트 연동(/health)·백업 내보내기·지도 자료 보내기. 키는 Rust 에만 있어 엔진(Python)은 직접 못 만든다 →
@@ -2756,6 +2756,8 @@ function App() {
           }
         })
         .catch(() => {});
+      // 11-23 엔진이 기본 포트가 아닌 포트로 떴다(8765 를 다른 프로그램이 씀 — 깃허브 이슈 #3) → 하루 요약 epo
+      if (enginePort !== DEFAULT_ENGINE_PORT) dailyAdd("epo");
       // 11-23 공식 빌드 확인 표식: 지금 · 엔진이 늦게 뜰 때를 위해 15초 뒤 · 그 뒤 30분마다(UTC 날짜가 바뀌면 새 값)
       void refreshBuildIdent();
       window.setTimeout(() => void refreshBuildIdent(), 15000);

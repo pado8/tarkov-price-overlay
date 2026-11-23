@@ -1,8 +1,8 @@
 // 설치 점검 + 안전 안내(11-13). 점검은 사이드카 /diag/setup 이 이 PC 의 폴더·설정만 보고 돌려준다(밖으로 보내지 않음).
 import { useState } from "react";
+import { PYTHON_API } from "./engine";
 import { stat } from "./statBus";
 
-const PYTHON_API = "http://127.0.0.1:8765";
 type Strings = { [k: string]: string };
 type Item = { id: string; ok: boolean | null; n?: number; age_min?: number | null; wrong_tool?: boolean; steam?: boolean; mode?: number | null };
 

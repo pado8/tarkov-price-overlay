@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { MiniWindow } from "./MiniWindow";
+import { initEnginePort } from "./engine";
 
 // 11-21 앱 창은 브라우저가 아니다 — F5·Ctrl+R·Ctrl+F5 로 화면이 새로고침되면 상태가 날아가고(조회 번호 초기화 → 조회가
 // '밀린 조회'로 버려짐) 진행 중인 일이 끊긴다. 조회 키가 F5 이고 키를 가로채지 않는 방식이면 창에 포커스가 있을 때 새로고침이
@@ -108,11 +109,14 @@ if (previewMode === "preview-primary" || previewMode === "preview-ground") {
   document.documentElement.style.background = "transparent";
   document.body.style.background = "transparent";
   document.body.style.margin = "0";
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<MiniWindow />);
+  // 11-23 엔진 포트를 먼저 받는다(src/engine.ts — 8765 를 다른 프로그램이 쓰면 18765·28765)
+  void initEnginePort().finally(() => ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(<MiniWindow />));
 } else {
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
+  void initEnginePort().finally(() =>
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    ),
   );
 }

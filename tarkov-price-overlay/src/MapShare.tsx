@@ -2,9 +2,9 @@
 // 11-19 앱 실행 때 묻던 창(MapShareAsk)은 없앴다(사용자: 이미 켠 사람만 계속, 새로 켜는 건 설정 체크로만). 설정엔 체크 한 줄(MapShareSettings) — 내용·형식은 python-core/map_share.py.
 // 11-11 닫힘: 서버가 받기를 멈추면(Worker vars.CLOSED) 묻는 창을 띄우지 않고 설정에 '지금은 받지 않아요' — 켬 값은 사용자 것이라 그대로.
 import { useEffect, useRef } from "react";
+import { PYTHON_API } from "./engine";
 import { stat } from "./statBus";
 
-const PYTHON_API = "http://127.0.0.1:8765";
 export const MAP_SHARE_KEY = "tarkov.mapShare.on"; // "1" = 켬
 export const MAP_SHARE_ASKED_KEY = "tarkov.mapShare.asked"; // "1" = 묻는 창에 답함(다시 안 물음)
 const FIRST_DELAY_MS = 90 * 1000; // 켠 뒤 첫 보내기(게임 시작과 겹치지 않게)

@@ -1536,8 +1536,43 @@ fn sidecar_err_tag(line: &str) -> Option<String> {
 /// 11-19 통계: 1.3.3·1.3.4 의 엔진 '종료 코드 1'은 전부 포트 8765 충돌(bind_10048)이었다. 재현 결과 앱만 비정상 종료되면
 /// 엔진이 혼자 남아 포트를 계속 잡고, 다시 켠 앱의 새 엔진은 5번 실패한 뒤 포기했다.
 /// 포트 주인이 남은 우리 엔진이면 끄고 새로 띄우고, 다른 프로그램이면 건드리지 않고 사용자에게 알린다.
-const SIDECAR_PORT: u16 = 8765;
+/// 11-23 엔진 포트 후보(깃허브 이슈 #3: Anki 확장 AnkiConnect 가 8765 를 기본으로 써서 엔진이 끝내 못 떴다). 앞에서부터
+/// 비어 있거나 남은 우리 엔진이 잡은 첫 포트를 쓰고, 엔진에는 TPO_ENGINE_PORT 로 넘긴다. 화면은 engine_port 명령·'engine-port'
+/// 알림으로 받는다(src/engine.ts). 가이드 사이트도 같은 순서로 찾으니 바꾸면 사이트 세션에 알릴 것.
+const SIDECAR_PORTS: [u16; 3] = [8765, 18765, 28765];
+static SIDECAR_PORT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(8765);
+static SIDECAR_PORT_CHOSEN: AtomicBool = AtomicBool::new(false);
 static SIDECAR_PORT_BUSY_SENT: AtomicBool = AtomicBool::new(false);
+
+fn sidecar_port() -> u16 {
+    SIDECAR_PORT.load(Ordering::SeqCst)
+}
+
+/// 후보 중 쓸 수 있는 첫 포트(비었거나 남은 우리 엔진). 모두 다른 프로그램이 잡고 있으면 None.
+fn pick_sidecar_port() -> Option<u16> {
+    SIDECAR_PORTS.into_iter().find(|&p| !matches!(sidecar_port_owner_of(p), PortOwner::Other))
+}
+
+/// 고른 포트를 기억하고, 바뀌었으면 화면에 알린다.
+fn set_sidecar_port(app: &tauri::AppHandle, port: u16) {
+    SIDECAR_PORT_CHOSEN.store(true, Ordering::SeqCst);
+    if SIDECAR_PORT.swap(port, Ordering::SeqCst) != port {
+        println!("[sidecar] engine port -> {port}");
+        let _ = app.emit("engine-port", port);
+    }
+}
+
+/// 화면이 쓰는 엔진 포트. 창이 setup(엔진 실행)보다 먼저 만들어져 화면이 먼저 물을 수 있으므로, 아직 안 골랐으면 여기서 고른다
+/// (엔진 실행 때 같은 규칙으로 다시 고르니 결과가 같다 — 다르면 'engine-port' 알림으로 고쳐진다).
+#[tauri::command]
+fn engine_port() -> u16 {
+    if !SIDECAR_PORT_CHOSEN.swap(true, Ordering::SeqCst) {
+        if let Some(p) = pick_sidecar_port() {
+            SIDECAR_PORT.store(p, Ordering::SeqCst);
+        }
+    }
+    sidecar_port()
+}
 
 enum PortOwner {
     Free,
@@ -1545,8 +1580,12 @@ enum PortOwner {
     Other,
 }
 
-#[cfg(windows)]
 fn sidecar_port_owner() -> PortOwner {
+    sidecar_port_owner_of(sidecar_port())
+}
+
+#[cfg(windows)]
+fn sidecar_port_owner_of(port: u16) -> PortOwner {
     use windows_sys::Win32::Foundation::{CloseHandle, NO_ERROR};
     use windows_sys::Win32::NetworkManagement::IpHelper::{
         GetExtendedTcpTable, MIB_TCPTABLE_OWNER_PID, TCP_TABLE_OWNER_PID_LISTENER,
@@ -1565,7 +1604,7 @@ fn sidecar_port_owner() -> PortOwner {
         }
         let table = &*(buf.as_ptr() as *const MIB_TCPTABLE_OWNER_PID);
         let rows = std::slice::from_raw_parts(table.table.as_ptr(), table.dwNumEntries as usize);
-        let Some(row) = rows.iter().find(|r| u16::from_be(r.dwLocalPort as u16) == SIDECAR_PORT) else {
+        let Some(row) = rows.iter().find(|r| u16::from_be(r.dwLocalPort as u16) == port) else {
             return PortOwner::Free;
         };
         let pid = row.dwOwningPid;
@@ -1591,7 +1630,7 @@ fn sidecar_port_owner() -> PortOwner {
 }
 
 #[cfg(not(windows))]
-fn sidecar_port_owner() -> PortOwner {
+fn sidecar_port_owner_of(_port: u16) -> PortOwner {
     PortOwner::Free
 }
 
@@ -1602,20 +1641,23 @@ fn clear_stale_sidecar() {
     use windows_sys::Win32::System::Threading::{
         OpenProcess, TerminateProcess, WaitForSingleObject, PROCESS_SYNCHRONIZE, PROCESS_TERMINATE,
     };
-    let PortOwner::OwnEngine(pid) = sidecar_port_owner() else {
-        return;
-    };
-    unsafe {
-        let process = OpenProcess(PROCESS_TERMINATE | PROCESS_SYNCHRONIZE, 0, pid);
-        if process.is_null() {
-            eprintln!("[sidecar] stale engine holds the port but cannot be closed");
-            return;
+    // 11-23 후보 포트 모두 — 지난 실행의 엔진이 다른 후보 포트에 남아 있을 수 있다
+    for port in SIDECAR_PORTS {
+        let PortOwner::OwnEngine(pid) = sidecar_port_owner_of(port) else {
+            continue;
+        };
+        unsafe {
+            let process = OpenProcess(PROCESS_TERMINATE | PROCESS_SYNCHRONIZE, 0, pid);
+            if process.is_null() {
+                eprintln!("[sidecar] stale engine holds port {port} but cannot be closed");
+                continue;
+            }
+            if TerminateProcess(process, 0) != 0 {
+                WaitForSingleObject(process, 2000);
+                println!("[sidecar] closed a stale engine left by a previous run (port {port})");
+            }
+            CloseHandle(process);
         }
-        if TerminateProcess(process, 0) != 0 {
-            WaitForSingleObject(process, 2000);
-            println!("[sidecar] closed a stale engine left by a previous run");
-        }
-        CloseHandle(process);
     }
 }
 
@@ -1712,14 +1754,14 @@ fn wait_port_then_spawn(app: tauri::AppHandle, attempt: u32) {
     if !SIDECAR_PORT_BUSY_SENT.swap(true, Ordering::SeqCst) {
         let _ = app.emit("sidecar-port-busy", ());
     }
-    eprintln!("[sidecar] port {SIDECAR_PORT} is held by another program - waiting for it instead of starting the engine");
+    eprintln!("[sidecar] ports {SIDECAR_PORTS:?} are all held by other programs - waiting instead of starting the engine");
     thread::spawn(move || loop {
         thread::sleep(Duration::from_secs(PORT_WAIT_SECS));
         if is_quitting(&app) {
             return;
         }
-        if !matches!(sidecar_port_owner(), PortOwner::Other) {
-            println!("[sidecar] port {SIDECAR_PORT} is free again - starting the engine");
+        if pick_sidecar_port().is_some() {
+            println!("[sidecar] an engine port is free again - starting the engine");
             SIDECAR_PORT_BUSY_SENT.store(false, Ordering::SeqCst);
             let _ = app.emit("sidecar-port-free", ());
             spawn_and_watch_sidecar(app, attempt);
@@ -1735,12 +1777,13 @@ fn wait_port_then_spawn(app: tauri::AppHandle, attempt: u32) {
 /// attempt counter (transient crash, not a crash loop).
 fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
     clear_stale_sidecar();
-    if matches!(sidecar_port_owner(), PortOwner::Other) {
+    let Some(port) = pick_sidecar_port() else {
         wait_port_then_spawn(app, attempt);
         return;
-    }
+    };
+    set_sidecar_port(&app, port);
     let cmd = match app.shell().sidecar("tarkov-server") {
-        Ok(c) => c,
+        Ok(c) => c.env("TPO_ENGINE_PORT", port.to_string()),
         Err(e) => {
             // Config-level failure (bad externalBin) — retrying won't help,
             // but it shares the budget so a fluke still gets another shot.
@@ -1862,8 +1905,13 @@ fn spawn_and_watch_sidecar(app: tauri::AppHandle, attempt: u32) {
             };
             why = format!("{why}|{tag}{owner}"); // 텔레메트리 sidecar_fail dead:<이유>|<오류 이름_번호>[_other|_own]
             if owner == "_other" {
-                // 띄우는 사이 다른 프로그램이 포트를 잡았다 — 재시도로 모델을 또 올리지 않고 포트가 빌 때까지 기다린다
-                wait_port_then_spawn(app, next);
+                // 띄우는 사이 다른 프로그램이 포트를 잡았다 — 11-23 다음 후보 포트가 비어 있으면 바로 그 포트로, 다 차 있으면 빌 때까지 기다린다
+                if pick_sidecar_port().is_some() {
+                    SIDECAR_PORT_BUSY_SENT.store(false, Ordering::SeqCst);
+                    spawn_and_watch_sidecar(app, next);
+                } else {
+                    wait_port_then_spawn(app, next);
+                }
                 return;
             }
         }
@@ -1983,6 +2031,7 @@ pub fn run() {
             sidecar_missing_state,
             sidecar_blocked_state,
             sidecar_port_busy_state,
+            engine_port,
             update_cache::update_download,
             update_cache::update_install_saved,
             update_cache::update_saved_version,

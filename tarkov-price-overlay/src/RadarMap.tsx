@@ -5,6 +5,7 @@
 // 좌표계: 게임 x → 오른쪽, 게임 z → 위. 북쪽이 어디인지는 보장하지 않으므로(맵마다 다름) 사용자가 90°씩 돌릴 수 있고,
 // '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { PYTHON_API } from "./engine";
 import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
 import { Icon } from "./Icon";
@@ -49,7 +50,6 @@ import { PlanOverlay, PlanPanel, loadPlans, savePlans, newPlanId, nearestGroup, 
 import { remapDone } from "./planDone";
 import { LOOT_GROUP_ICON, LOOT_ICON_PATH, lootBadgeSize, lootIconOf, lootInDrawOrder, type LootRow } from "./lootIcons";
 
-const PYTHON_API = "http://127.0.0.1:8765";
 const ROT_KEY = "tarkov.radar.mapRot.v2"; // {[slug]: 0|90|180|270} — v2: 기본 회전이 tarkov.dev 지도 방향으로 바뀌어 옛 수동 회전은 버린다
 export const LAYER_KEY = "tarkov.radar.mapLayers";
 const IMG_KEY = "tarkov.radar.mapImg"; // "0" = 지도 그림 끔

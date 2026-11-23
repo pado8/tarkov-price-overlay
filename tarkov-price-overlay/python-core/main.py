@@ -2496,5 +2496,12 @@ def _wait_port_free(port: int, max_sec: float = 8.0) -> None:
 if __name__ == "__main__":
     import uvicorn
 
-    _wait_port_free(8765)
-    uvicorn.run(app, host="127.0.0.1", port=8765)
+    # 11-23 포트는 앱(Rust)이 후보 8765·18765·28765 중 비어 있는 것으로 골라 넘긴다(깃허브 이슈 #3 AnkiConnect). 없으면 8765
+    try:
+        port = int(os.environ.get("TPO_ENGINE_PORT") or 8765)
+    except ValueError:
+        port = 8765
+    if not 1024 <= port <= 65535:
+        port = 8765
+    _wait_port_free(port)
+    uvicorn.run(app, host="127.0.0.1", port=port)

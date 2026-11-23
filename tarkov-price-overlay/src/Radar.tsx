@@ -1,6 +1,7 @@
 // 지도 패널(RadarMap + 대상 목록). 데이터는 사이드카 /radar(radar.py)가 계산한다 —
 // 게임 스크린샷 파일명의 좌표·방향 + 게임 로그로 판정한 맵 + tarkov.dev 좌표.
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { PYTHON_API } from "./engine";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { Strings as LiteralStrings } from "./i18n";
@@ -28,7 +29,6 @@ function statEmpty(k: string): void {
   stat(k);
 }
 const emptyKey = (d: RadarState) => (!d.folder ? "rnf" : !d.shot && !d.pre_raid ? "rns" : "rnm");
-const PYTHON_API = "http://127.0.0.1:8765";
 const HIDDEN_Q_KEY = "tarkov.radar.hiddenQuests"; // 사용자가 목록에서 ✕ 로 숨긴 퀘스트 [{id, name}] — 맵과 무관하게 유지, 복원 전까지
 type HiddenQuest = { id: string; name: string };
 function loadHidden(): HiddenQuest[] {
