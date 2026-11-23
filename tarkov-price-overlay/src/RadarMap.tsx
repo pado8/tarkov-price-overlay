@@ -240,6 +240,8 @@ function loadMapRot(slug: string | null | undefined, fallback = 0): number {
 // 루팅 상자 층(11-13): 묶음별 켜고 끄기 — 기억은 LOOT_KEY
 export const LOOT_KEY = "tarkov.radar.lootGroups";
 // 이번 레이드 이동 자취(11-13): 스크린샷을 찍을 때마다 내 위치를 쌓는다. 지도 패널을 닫았다 열어도 남게 모듈에 둔다(앱을 끄면 사라짐)
+// 11-23 이름표 겹침 판정용 글자 폭 어림 — 한글·한자(U+2E80~)는 글자 크기만큼, 그 밖(영문·키릴)은 좁게. 전엔 모두 5.4px 로 쳐서 한글 이름표가 좁게 잡혔다
+const textW = (text: string, wide: number, narrow: number) => [...text].reduce((a, ch) => a + (ch.charCodeAt(0) >= 0x2e80 ? wide : narrow), 0);
 const ZONE_NAME_MIN_S = 0.3; // 화면 1m 가 이 px 보다 작게 축소되면 구역 이름표를 숨긴다(작은 지도 전체 보기에서 글자가 겹침)
 const TRAIL_MIN_M = 3;
 const trailMemo: { key: string; pts: [number, number][] } = { key: "", pts: [] };
@@ -833,6 +835,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
 
   // 이름표 자리 잡기: 가까운 것부터 놓고, 먼저 놓인 이름표·내 마커와 겹치거나 화면 밖이면 생략
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
+  const zoneShown = new Set<number>(); // 11-23 겹치지 않아 그릴 지역명(구역 이름표) 번호
   if (doc && v) {
     // 도구 버튼(오른쪽 위)·축척/방향 표시(아래 줄) 자리는 미리 막아 이름표가 그 밑에 깔리지 않게
     const boxes: { x1: number; y1: number; x2: number; y2: number }[] = [
@@ -842,6 +845,19 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (me) {
       const s = toScreen(me.x, me.z);
       boxes.push({ x1: s.x - 6, y1: s.y - 7, x2: s.x + 6, y2: s.y + 6 }); // 내 화살표 자리(바로 옆 탈출구의 이름표까지 막지 않게 작게)
+    }
+    // 11-23 지역명도 겹침 판정에 넣는다 — 전엔 판정 밖이라 이름표와 겹쳐 그려졌다(지도 글자를 키우면 더 심함).
+    // 지역명은 자리가 고정이라 먼저 놓고(도구 자리·다른 지역명과 겹치면 뺌), 이름표는 아래에서 비어 있는 자리 후보로 비켜 간다.
+    if (layers.names && v.s >= ZONE_NAME_MIN_S) {
+      (doc.zones ?? []).forEach((z, i) => {
+        const s = toScreen(z.p[0], z.p[2]);
+        const w = textW(z.name, 10, 6.2) * ts;
+        const b = { x1: s.x - w / 2, y1: s.y - 11 * ts, x2: s.x + w / 2, y2: s.y + 4 * ts }; // 굵은 글자 테두리·아래로 내려오는 부분까지
+        if (b.x2 < 0 || b.x1 > box.w || b.y2 < 0 || b.y1 > box.h) return;
+        if (boxes.some((o) => b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) return;
+        boxes.push(b);
+        zoneShown.add(i);
+      });
     }
     // 우선순위: 퀘스트 0 → PMC 탈출구 1 → 스캐브 탈출구 2 → 트랜짓 3, 같은 종류끼리는 가까운 순
     const cands: { key: string; text: string; p: Pt; off: number; pr: number }[] = [];
@@ -860,7 +876,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       .forEach((c) => {
         const s = toScreen(c.p[0], c.p[2]);
         if (s.x < 0 || s.y < 0 || s.x > box.w || s.y > box.h) return; // 점이 화면 밖이면 이름표도 생략(가장자리에 글자만 잘려 들어오지 않게)
-        const w = c.text.length * 5.4 * ts; // 글자 배율만큼 이름표 상자도 넓고 높게(겹침 판정)
+        const w = textW(c.text, 9, 5.4) * ts; // 글자 배율만큼 이름표 상자도 넓고 높게(겹침 판정) · 11-23 한글은 글자 크기만큼 넓게
         // 자리 후보: 오른쪽 → 왼쪽 → 아래(가운데) → 위(가운데). 먼저 놓인 이름표·도구 영역과 안 겹치고 화면 안에 드는 첫 자리.
         // 한 자리만 보고 포기하면 점이 몰린 곳(시내 동쪽 등)의 이름표가 통째로 빠진다
         const spots: [number, number][] = [
@@ -992,6 +1008,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {layers.names &&
               v && v.s >= ZONE_NAME_MIN_S &&
               (doc.zones ?? []).map((z, i) => {
+                if (!zoneShown.has(i)) return null; // 11-23 이름표와 겹치는 지역명은 뺀다(위 이름표 자리 잡기)
                 const s = toScreen(z.p[0], z.p[2]);
                 return <text key={`zn${i}`} x={s.x} y={s.y} textAnchor="middle" className="radar-zonename">{z.name}</text>;
               })}
