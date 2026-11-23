@@ -77,6 +77,7 @@ export type RadarState = {
   light?: boolean;
   error?: string;
   active_quests?: number;
+  active_quests_other?: Record<string, number>; // 11-23 진행 중 퀘스트가 0개일 때 다른 모드(pvp·pve·season)의 진행 중 수
   my_exits?: string[]; // 11-06 이번 레이드 내 탈출구(탈출구 목록 사진 OCR, 영어 원문)
   raid_side?: "pmc" | "scav"; // 11-07 이번 레이드 진영(로그의 레이드 프로필 = 본 프로필이면 PMC)
   raid_ts?: number; // 이번 레이드 맵 로딩 시각 — 레이드가 바뀌었는지 알 때

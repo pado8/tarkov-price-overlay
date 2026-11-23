@@ -1738,6 +1738,18 @@ class RadarService:
                         r["dist"], r["rel"], r["dy"] = None, None, None
                     res["targets"].sort(key=lambda r: (r.get("kind") != "quest", r.get("name") or ""))
                 res["active_quests"] = len(active)
+                # 11-23 디시 댓글('사이트에선 퀘스트가 자동으로 맞는데 앱은 진행 중 퀘스트를 못 찾는다'): 사이트는 사이트에서 고른 모드로
+                # 읽고 앱 지도는 앱 설정의 게임 모드로만 센다 — 설정이 실제로 하는 모드와 다르면 0개. 0개면 다른 모드의 진행 중 퀘스트 수를
+                # 같이 보내 앱이 '그 모드로 바꿔 주세요'라고 짚게 한다(설정은 바꾸지 않는다).
+                if not active:
+                    try:
+                        import quest_tracker as qt
+                        cur = qt._normalize_request_mode(game_mode)
+                        trk = qt.get_tracker()
+                        other = {m: sum(1 for s in trk.all_status(m).values() if s == "started") for m in qt.MODES if m != cur}
+                        res["active_quests_other"] = {m: n for m, n in other.items() if n}
+                    except Exception:  # noqa: BLE001 — 안내 한 줄용이라 실패해도 지도는 그대로
+                        pass
             return res
 
 

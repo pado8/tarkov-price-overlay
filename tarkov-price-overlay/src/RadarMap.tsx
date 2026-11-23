@@ -802,13 +802,20 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 퀘스트가 하나도 안 찍힐 때 이유 한 줄(11-04 댓글 "연동해도 지도에 퀘스트가 안 뜬다") — 지도 퀘스트는 게임 로그 추적기의
   // '진행 중'만 쓰고, 사이트 연동과는 별개라 0개면 왜인지 알 길이 없었다. active_quests 는 좌표 스크린샷 + 맵 감지 때만 온다.
   const questAll = (data.targets || []).filter((x) => x.kind === "quest" && x.x != null && x.z != null).length;
+  // 11-23 지금 모드엔 진행 중 퀘스트가 없지만 다른 모드에 있으면 그 모드를 짚는다(가장 많은 모드 하나)
+  const otherModeNote = (): string | null => {
+    const o = Object.entries(data.active_quests_other ?? {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1])[0];
+    if (!o) return null;
+    const label = o[0] === "pve" ? t.gameModePve : o[0] === "season" ? t.gameModeSeason : t.gameModePvp;
+    return t.radarQuestOtherMode.replace(/\{mode\}/g, label).replace("{n}", String(o[1]));
+  };
   const questNote =
     !layers.quests || questTargets.length > 0 || data.active_quests == null
       ? null
       : questAll > 0
         ? t.radarQuestAllHidden
         : data.active_quests === 0
-          ? t.radarQuestNoneActive
+          ? otherModeNote() ?? t.radarQuestNoneActive
           : t.radarQuestNoneHere.replace("{n}", String(data.active_quests));
 
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
