@@ -916,19 +916,27 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         const s = toScreen(q.x!, q.z!);
         boxes.push({ x1: s.x + 6, y1: s.y - 15, x2: s.x + 8 + textW(floorName(qFloorOf(q)), 10, 6.2), y2: s.y - 2 });
       });
+    // 보스 배지는 이름표만 피한다 — 지역명은 배지 위에 그린다(렌더도 배지 다음). 피하게 했더니 배지가 세로로 몰린 시내
+    // '클리모프 거리'·'경찰서'는 위·아래로 옮겨도 못 벗어나 통째로 빠졌다. 글자에 검은 테두리가 있어 배지 위에서도 읽힌다.
+    const zoneIgnores = new Set<number>();
     if (layers.spawns)
       (doc.bosses ?? []).forEach((z) => {
         const [cx, cz] = bossCenter(z.pts);
         const badges = z.anywhere || bossIsArea(z.pts) ? [toScreen(cx, cz)] : z.pts.map((q) => toScreen(q[0], q[1]));
-        badges.forEach((b) => boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 }));
+        badges.forEach((b) => {
+          zoneIgnores.add(boxes.length);
+          boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
+        });
       });
-    // 11-24 실화면: 퀘스트 점(원)·내 라벨도 다른 이름표가 덮었다('도 로 폐쇄' · 'Pnwd 21' 이 '가택 연금'과 겹침) → 같이 막는다.
-    // 퀘스트 자기 이름표의 자리 후보는 점에서 off(6px) 밖이라 반지름 5 상자에 걸리지 않는다.
-    if (layers.quests)
-      questTargets.forEach((q) => {
-        const s = toScreen(q.x!, q.z!);
-        boxes.push({ x1: s.x - 5, y1: s.y - 5, x2: s.x + 5, y2: s.y + 5 });
-      });
+    // 11-24 실화면: 퀘스트 점(원)·내 라벨도 다른 이름표가 덮었다('도 로 폐쇄') → 같이 막는다. 단 퀘스트 점은 퀘스트 이름표를 다 놓은
+    // 뒤에 막는다(처음부터 막았더니 점이 몰린 곳에서 맵마다 퀘스트 이름표가 하나씩 빠졌다 — 이름표가 없어지는 게 점에 걸치는 것보다 손해).
+    const blockQuestDots = () => {
+      if (layers.quests)
+        questTargets.forEach((q) => {
+          const s = toScreen(q.x!, q.z!);
+          boxes.push({ x1: s.x - 5, y1: s.y - 5, x2: s.x + 5, y2: s.y + 5 });
+        });
+    };
     if (layers.names && slug)
       (myLabels[slug] ?? []).forEach((l) => {
         const s = toScreen(l.p[0], l.p[1]);
@@ -950,7 +958,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         for (const dy of [0, -step, step]) {
           const b = { x1: s.x - w / 2, y1: s.y + dy - 11 * ts, x2: s.x + w / 2, y2: s.y + dy + 4 * ts }; // 굵은 글자 테두리·아래로 내려오는 부분까지
           if (b.x2 < 0 || b.x1 > box.w || b.y2 < 0 || b.y1 > box.h) continue;
-          if (boxes.some((o, k) => !(mini && k === 0) && b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) continue;
+          if (boxes.some((o, k) => !(mini && k === 0) && !zoneIgnores.has(k) && b.x1 < o.x2 && b.x2 > o.x1 && b.y1 < o.y2 && b.y2 > o.y1)) continue;
           boxes.push(b);
           zoneShown.set(i, dy);
           break;
@@ -975,6 +983,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       .forEach((c) => {
         if (!zonesPlaced && c.pr > 0) {
           zonesPlaced = true;
+          blockQuestDots();
           placeZones();
         }
         const s = toScreen(c.p[0], c.p[2]);
@@ -996,7 +1005,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           break;
         }
       });
-    if (!zonesPlaced) placeZones(); // 이름표가 모두 우선순위 0 이하였거나 하나도 없을 때
+    if (!zonesPlaced) {
+      blockQuestDots();
+      placeZones(); // 이름표가 모두 우선순위 0 이하였거나 하나도 없을 때
+    }
   }
   const label = (key: string) => {
     const l = labels.get(key);
@@ -1104,14 +1116,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   );
                 })}
             {layers.names &&
-              v && v.s >= ZONE_NAME_MIN_S &&
-              (doc.zones ?? []).map((z, i) => {
-                const dy = zoneShown.get(i);
-                if (dy === undefined) return null; // 11-23 이름표와 겹치는 지역명은 뺀다(위 이름표 자리 잡기) · 11-24 막히면 위·아래로 비킴
-                const s = toScreen(z.p[0], z.p[2]);
-                return <text key={`zn${i}`} x={s.x} y={s.y + dy} textAnchor="middle" className="radar-zonename">{z.name}</text>;
-              })}
-            {layers.names &&
               slug &&
               (myLabels[slug] ?? []).map((l, i) => {
                 const s = toScreen(l.p[0], l.p[1]);
@@ -1210,6 +1214,15 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     {label(`bz${i}`)}
                   </g>
                 );
+              })}
+            {/* 11-24 지역명은 보스 배지 위에(배지를 피하지 않는다 — 위 자리 잡기 참고), 열쇠 문·퀘스트 점보다는 아래 */}
+            {layers.names &&
+              v && v.s >= ZONE_NAME_MIN_S &&
+              (doc.zones ?? []).map((z, i) => {
+                const dy = zoneShown.get(i);
+                if (dy === undefined) return null; // 11-23 이름표와 겹치는 지역명은 뺀다(위 이름표 자리 잡기) · 11-24 막히면 위·아래로 비킴
+                const s = toScreen(z.p[0], z.p[2]);
+                return <text key={`zn${i}`} x={s.x} y={s.y + dy} textAnchor="middle" className="radar-zonename">{z.name}</text>;
               })}
             {highlightKey &&
               doc.locks.map((x, i) => {
