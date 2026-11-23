@@ -1720,11 +1720,28 @@ class RadarService:
                 # 레이드 시작 전엔 내 위치가 없다 — 원점 기준으로 계산하고 거리·방향·높이 차는 뺀다(지도는 좌표 x·z 로 찍는다)
                 pose = shot or {"x": 0.0, "y": 0.0, "z": 0.0, "heading": None}
                 active: set[str] = set()
+                st: dict = {}
                 try:
                     import quest_tracker as qt
                     st = qt.get_tracker().all_status(game_mode)  # 'regular'·'pve'·'pvp-season' 그대로 받는다
                     active = {qid for qid, s in st.items() if s == "started"}
                 except Exception:
+                    pass
+                # 11-23 손으로 '진행 중' 표시한 퀘스트(manual_quests.py)를 더한다. 로그에 완료·실패가 온 것은 빼고 앱에 알려 지우게 한다
+                try:
+                    import manual_quests
+                    import quest_tracker as qt
+
+                    mk = qt._normalize_request_mode(game_mode)
+                    man = manual_quests.get(mk)
+                    resolved = {q for q in man if st.get(q) in ("completed", "failed")}
+                    live = man - resolved
+                    if resolved:
+                        res["manual_resolved"] = {mk: sorted(resolved)}
+                    if live:
+                        res["manual_started"] = sorted(live)
+                    active |= live
+                except Exception:  # noqa: BLE001
                     pass
                 try:
                     tasks_doc = _doc(f"{jmode}/tasks") or {}
@@ -1771,6 +1788,34 @@ class RadarService:
                     except Exception:  # noqa: BLE001 — 안내 한 줄용이라 실패해도 지도는 그대로
                         pass
             return res
+
+
+def quest_candidates(lang: str, game_mode: str, slug: str) -> list[dict]:
+    """11-23 이 맵에 목표 자리가 있고 아직 끝내지 않은 퀘스트(손으로 '진행 중' 표시 고르기용). 지도 목표와 같은 규칙(build_targets)으로
+    거르고 퀘스트마다 한 줄 — [{id, name, started(로그), manual(손 표시)}], 이름순. 스토리 목표는 따로라 넣지 않는다."""
+    import manual_quests
+    import quest_tracker as qt
+
+    jmode = _mode_doc(game_mode)
+    try:
+        st = qt.get_tracker().all_status(game_mode)
+    except Exception:  # noqa: BLE001
+        st = {}
+    man = manual_quests.get(qt._normalize_request_mode(game_mode))
+    maps_doc = (_doc("regular/maps") or {}).get("maps") or {}
+    loc_maps = _doc(f"regular/maps_{lang}") or _doc("regular/maps_en") or {}
+    tasks = all_tasks(_doc(f"{jmode}/tasks") or {})
+    loc_tasks = _doc(f"{jmode}/tasks_{lang}") or {}
+    if lang == "ko":
+        loc_tasks = quest_ko.overlay(loc_tasks)
+    open_ids = {tid for tid in tasks if st.get(tid) not in ("completed", "failed")}
+    pts = build_targets(maps_doc, slug, loc_maps, tasks, loc_tasks, open_ids, {"x": 0.0, "y": 0.0, "z": 0.0, "heading": None})
+    out: dict[str, dict] = {}
+    for p in pts:
+        tid = p.get("task")
+        if p.get("kind") == "quest" and tid and tid not in out:
+            out[tid] = {"id": tid, "name": p.get("name") or tid, "started": st.get(tid) == "started", "manual": tid in man}
+    return sorted(out.values(), key=lambda r: r["name"])
 
 
 _service: Optional[RadarService] = None

@@ -7,7 +7,7 @@ export const BACKUP_KEYS: readonly string[] = [
   "tarkov.captureRegion", "tarkov.capture.scanFitOff", "tarkov.previewAnchorMode",
   "tarkov.hotkey", "tarkov.toggleHotkey", "tarkov.hotkeyPassthrough",
   "tarkov.cardWidth", "tarkov.cardHeight", "tarkov.settingsHeight",
-  "tarkov.history", "tarkov.pinned", "tarkov.questDisplayMode", "tarkov.manualQuestDone",
+  "tarkov.history", "tarkov.pinned", "tarkov.questDisplayMode", "tarkov.manualQuestDone", "tarkov.manualQuestStarted",
   "tarkov.hideoutLevels", "tarkov.hideoutMgmtLevel",
   "tarkov.soundOn", "tarkov.showInTaskbar", "tarkov.hoverDodge", "tarkov.hoverDodgeMod", "tarkov.dodgeAnyWindow",
   "tarkov.autoCheckUpdate", "tarkov.autoInstallUpdate",

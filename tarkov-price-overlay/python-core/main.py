@@ -511,6 +511,15 @@ def _build_response(
         pvp_status = {}
         pve_status = {}
         season_status = {}
+    # 11-23 손으로 '진행 중' 표시한 퀘스트 — 로그에 아무 상태도 없을 때만 진행 중으로(완료·실패 기록이 있으면 로그가 이긴다)
+    try:
+        import manual_quests
+
+        for m, stx in (("pvp", pvp_status), ("pve", pve_status), ("season", season_status)):
+            for q in manual_quests.get(m):
+                stx.setdefault(q, "started")
+    except Exception:  # noqa: BLE001
+        pass
     qf = faction.quest_factions()
     faction_by_mode = {"pvp": faction.detect(pvp_status, qf), "pve": faction.detect(pve_status, qf), "season": faction.detect(season_status, qf)}
     if game_mode == "pve":
@@ -1992,7 +2001,15 @@ def progress(game_mode: str | None = None, request: Request = None) -> dict:
         mode, mode_source = (_load_app_mode() or "pvp"), "app"
     else:
         mode, mode_source = _normalize_request_mode(game_mode), "request"
-    st = tracker.all_status(mode)
+    st = dict(tracker.all_status(mode))
+    # 11-23 손으로 '진행 중' 표시한 퀘스트도 진행 중으로(로그에 상태가 없을 때만). started_manual 에 따로 알린다
+    import manual_quests
+
+    from quest_tracker import _normalize_request_mode as _qt_mode
+
+    manual_live = sorted(q for q in manual_quests.get(_qt_mode(mode)) if q not in st)
+    for q in manual_live:
+        st[q] = "started"
     by = {"completed": [], "started": [], "failed": []}
     for qid, status in st.items():
         if status in by:
@@ -2010,6 +2027,7 @@ def progress(game_mode: str | None = None, request: Request = None) -> dict:
         "mode": mode,
         "mode_source": mode_source,
         "app_mode": _load_app_mode(),
+        "started_manual": manual_live,
         # 11-06 PMC 진영('BEAR'|'USEC'|None) — 가이드가 반대 진영 전용 퀘스트를 거르는 데 쓴다. 앱 설정에서 직접 고른 진영이
         # 있으면 그것(manual), 없으면 이 모드의 진영 전용 퀘스트(34개) 기록으로 추정(auto), 근거 없으면 None.
         "faction": _load_app_faction() or faction.detect(st),
@@ -2385,6 +2403,29 @@ def mapshare_anon() -> dict:
     import map_share
 
     return {"anon_id": map_share.anon_id()}
+
+
+class ManualStarted(BaseModel):
+    by_mode: dict = {}
+
+
+@app.post("/quests/manual-started", dependencies=[Depends(_require_app_origin)])
+def quests_manual_started(req: ManualStarted) -> dict:
+    """11-23 앱이 손으로 '진행 중' 표시한 퀘스트(모드별)를 넘긴다 — 지도·카드·사이트 연동이 게임 로그의 진행 중에 더한다(manual_quests.py)."""
+    import manual_quests
+
+    manual_quests.set_all(req.by_mode)
+    return {"ok": True}
+
+
+@app.get("/quests/candidates", dependencies=[Depends(_require_app_origin)])
+def quests_candidates(game_mode: str = "regular", map: str = "", lang: str = "ko") -> dict:
+    """11-23 이 맵에 목표가 있고 아직 끝내지 않은 퀘스트 — 손으로 '진행 중' 표시 고르기 목록."""
+    import radar
+
+    if not map:
+        return {"quests": []}
+    return {"quests": radar.quest_candidates(lang, game_mode, map)}
 
 
 @app.post("/mapshare/send", dependencies=[Depends(_reject_foreign_origin)])

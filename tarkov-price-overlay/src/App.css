@@ -1947,6 +1947,10 @@ html, body, #root {
 .radar-floors { align-items: center; }
 .radar-floors .radar-kind { margin-right: 2px; }
 .radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: var(--card-fs-xs); font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
+.radar-manual { margin-top: 4px; }
+.radar-pick-list { max-height: 220px; overflow-y: auto; margin-top: 4px; padding: 4px 6px; background: rgba(0, 0, 0, 0.25); border-radius: 6px; }
+.radar-pick-row { display: flex; align-items: center; gap: 6px; font-size: var(--card-fs-sm); padding: 2px 0; cursor: pointer; }
+.radar-pick-row input:disabled + span { opacity: 0.7; }
 .radar-maplabel { font-size: calc(9px * var(--map-ts, 1)); fill: var(--text-secondary); paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 2.5px; pointer-events: none; }
 /* 지도 이름표(탈출구·퀘스트 이름)도 지도 불투명도를 따른다 — 11-05 '지도 그림만 투명해지고 글씨는 그대로' 피드백. 점·화살표 표식은 그대로 */
 .radar-mapwrap .radar-maplabel { opacity: var(--map-alpha, 1); }

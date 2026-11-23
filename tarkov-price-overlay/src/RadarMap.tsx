@@ -5,6 +5,7 @@
 // 좌표계: 게임 x → 오른쪽, 게임 z → 위. 북쪽이 어디인지는 보장하지 않으므로(맵마다 다름) 사용자가 90°씩 돌릴 수 있고,
 // '고정' 을 끄면 바라보는 쪽이 위가 되게 지도가 돈다.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { loadManualStarted, toggleManualStarted, pruneManualStarted, onManualStartedChange, questModeKey } from "./manualStarted";
 import { PYTHON_API } from "./engine";
 import type { RadarState, RadarTarget } from "./Radar";
 import type { Friend } from "./party";
@@ -833,6 +834,33 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (questModeNote) stat("qml");
   }, [!!questModeNote, data.quest_mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 11-23 손으로 '진행 중' 표시 — 로그가 생기기 전에 받은 퀘스트를 직접 고른다(이 맵에 목표가 있고 아직 안 끝낸 퀘스트).
+  // 로그에 완료·실패가 오면 엔진이 manual_resolved 로 알려 지운다.
+  const [pickOpen, setPickOpen] = useState(false);
+  const [pickList, setPickList] = useState<null | "loading" | { id: string; name: string; started: boolean; manual: boolean }[]>(null);
+  const [manualAll, setManualAll] = useState(loadManualStarted);
+  const qmKey = questModeKey(data.quest_mode ?? data.setting_mode);
+  const manualHere = (manualAll[qmKey] ?? []).length;
+  useEffect(() => onManualStartedChange(() => setManualAll(loadManualStarted())), []);
+  useEffect(() => {
+    pruneManualStarted(data.manual_resolved);
+  }, [JSON.stringify(data.manual_resolved ?? null)]); // eslint-disable-line react-hooks/exhaustive-deps
+  const loadPick = async () => {
+    const slug = data.map?.id;
+    if (!slug) return;
+    setPickList("loading");
+    try {
+      const q = new URLSearchParams({ game_mode: data.quest_mode ?? data.setting_mode ?? "regular", map: slug, lang });
+      const j = (await (await fetch(`${PYTHON_API}/quests/candidates?${q}`)).json()) as { quests?: { id: string; name: string; started: boolean; manual: boolean }[] };
+      setPickList(j.quests ?? []);
+    } catch {
+      setPickList([]);
+    }
+  };
+  useEffect(() => {
+    if (pickOpen) void loadPick();
+  }, [pickOpen, data.map?.id, qmKey, manualAll]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
   const showExtract = (faction: string) => (faction === "scav" ? showScav : layers.pmc);
   // 11-06 내 탈출구: 탈출구 목록(O)을 연 채 찍은 스크린샷에서 사이드카가 읽은 이번 레이드 탈출구(영어 원문). '내 탈출구만' 칩이
@@ -1285,6 +1313,37 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       )}
       {!mini && questNote && <div className="radar-note">{questNote}</div>}
       {!mini && questModeNote && <div className="radar-note">{questModeNote}</div>}
+      {!mini && layers.quests && data.map?.id && (
+        <div className="radar-manual">
+          <button type="button" className="radar-mini-btn" onClick={() => setPickOpen((v) => !v)} aria-expanded={pickOpen} title={t.radarManualHint}>
+            {t.radarManualBtn}
+            {manualHere ? ` · ${manualHere}` : ""} {pickOpen ? "▴" : "▾"}
+          </button>
+          {pickOpen && (
+            <div className="radar-pick-list">
+              <div className="radar-note">{t.radarManualHint}</div>
+              {pickList === "loading" || pickList == null ? (
+                <div className="radar-note">…</div>
+              ) : pickList.length === 0 ? (
+                <div className="radar-note">{t.radarManualNone}</div>
+              ) : (
+                pickList.map((q) => (
+                  <label key={q.id} className="radar-pick-row">
+                    <input
+                      type="checkbox"
+                      checked={q.started || q.manual}
+                      disabled={q.started && !q.manual}
+                      onChange={() => toggleManualStarted(qmKey, q.id)}
+                    />
+                    <span>{q.name}</span>
+                    {q.started && !q.manual && <span className="radar-note"> · {t.radarManualFromLog}</span>}
+                  </label>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
       {!mini && doc?.img && showImg && doc.img.layers.length > 0 && (
         <div className="radar-layers radar-floors">
           <span className="radar-kind">{t.radarFloor}</span>

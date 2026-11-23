@@ -80,7 +80,9 @@ export type RadarState = {
   active_quests_other?: Record<string, number>;
   quest_mode?: string; // 11-23 지도 퀘스트를 센 모드(regular·pve·pvp-season) — 지금 하는 게임 모드(로그)를 따른다
   quest_mode_source?: "log" | "setting";
-  setting_mode?: string; // 11-23 진행 중 퀘스트가 0개일 때 다른 모드(pvp·pve·season)의 진행 중 수
+  setting_mode?: string;
+  manual_started?: string[]; // 11-23 손으로 '진행 중' 표시해 지도에 더한 퀘스트
+  manual_resolved?: Record<string, string[]>; // 11-23 로그에 완료·실패가 와 손 표시를 지울 퀘스트(모드별) // 11-23 진행 중 퀘스트가 0개일 때 다른 모드(pvp·pve·season)의 진행 중 수
   my_exits?: string[]; // 11-06 이번 레이드 내 탈출구(탈출구 목록 사진 OCR, 영어 원문)
   raid_side?: "pmc" | "scav"; // 11-07 이번 레이드 진영(로그의 레이드 프로필 = 본 프로필이면 PMC)
   raid_ts?: number; // 이번 레이드 맵 로딩 시각 — 레이드가 바뀌었는지 알 때

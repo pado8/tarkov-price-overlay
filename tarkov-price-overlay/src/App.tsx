@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { syncManualStarted, onManualStartedChange } from "./manualStarted";
 import { PYTHON_API, enginePort, DEFAULT_ENGINE_PORT } from "./engine";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -2761,6 +2762,10 @@ function App() {
       // 11-23 공식 빌드 확인 표식: 지금 · 엔진이 늦게 뜰 때를 위해 15초 뒤 · 그 뒤 30분마다(UTC 날짜가 바뀌면 새 값)
       void refreshBuildIdent();
       window.setTimeout(() => void refreshBuildIdent(), 15000);
+      // 11-23 손으로 '진행 중' 표시한 퀘스트를 엔진에(엔진은 메모리에만 들고 있어 다시 켜지면 비므로 3분마다도)
+      void syncManualStarted();
+      window.setTimeout(() => void syncManualStarted(), 15000);
+      window.setInterval(() => void syncManualStarted(), 3 * 60 * 1000);
       window.setInterval(() => void refreshBuildIdent(), 30 * 60 * 1000);
       // Hotkey binding at session start (default / custom_key / custom_mouse).
       // Read straight from storage so it reflects the persisted choice, not a
@@ -3477,6 +3482,15 @@ function App() {
     if (showSettings) void loadRadarFolder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSettings]);
+  // 11-23 손으로 '진행 중' 표시가 바뀌면 엔진에 넘긴 뒤 지도를 다시 받아 바로 보이게
+  useEffect(
+    () =>
+      onManualStartedChange(() => {
+        void syncManualStarted().then(() => void loadRadar());
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
   const loadRadar = async () => {
     setRadarLoading(true);
     try {
