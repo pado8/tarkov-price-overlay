@@ -1616,6 +1616,7 @@ class RadarService:
             source = "manual" if slug else None
             raid_ts: Optional[float] = None  # 이번 레이드 로딩 시각(로그) — 내 탈출구 기억 열쇠
             pre_raid = False  # 11-08 새 레이드 로딩 중·첫 스크린샷 전 — 맵만 알고 내 위치는 아직 모른다
+            folders: list = []
             try:
                 import quest_tracker as qt
                 tr = qt.get_tracker()
@@ -1659,6 +1660,25 @@ class RadarService:
                 # 11-19 O(탈출구 목록)를 누르고 15초 안에 찍은 사진은 띠 판정 없이 목록으로
                 hinted = bool(o_at) and -1.0 <= shot["ts"] - float(o_at) <= 15.0
                 self._start_exfil_check(Path(folder) / shot["name"], slug, raid_ts, game_lang or lang, hinted)  # 탈출구 목록 사진이면 백그라운드 OCR
+            # 11-23 지도 퀘스트는 '지금 하는 게임의 모드'를 따른다(디시 댓글 '사이트에선 되는데 앱은 진행 중 퀘스트를 못 찾는다' — 이 PC 로그
+            # 377개 측정: 원인은 설정 모드 ≠ 실제로 하는 모드, 시즌 포함). 가장 새 로그 폴더가 지금 세션(로그에서 이번 맵을 읽었거나 12시간 안)이면
+            # 그 폴더의 마지막 모드 구간, 아니면 앱 설정. 시세 등 다른 것은 그대로 설정 모드.
+            qmode, qsrc = game_mode, "setting"
+            try:
+                import quest_tracker as qt
+                if folders:
+                    newest = Path(folders[-1])
+                    segs = qt._mode_segments(newest)
+                    if segs and (source == "log" or qt._folder_age_sec(newest) < 12 * 3600):
+                        m = segs[-1][1]
+                        if m in ("pvp", "pve", "season"):
+                            qmode, qsrc = {"pvp": "regular", "pve": "pve", "season": "pvp-season"}[m], "log"
+            except Exception:  # noqa: BLE001 — 못 읽으면 설정 모드
+                pass
+            res["setting_mode"] = game_mode  # 앱이 보낸 설정 모드(지도 퀘스트 모드와 비교해 안내)
+            res["quest_mode"] = qmode
+            res["quest_mode_source"] = qsrc
+            game_mode = qmode  # 아래 퀘스트 계산(진행 중·스토리·열쇠)은 이 모드로
             jmode = _mode_doc(game_mode)
             fresh = bool(shot) and (time.time() - shot["ts"]) < self.FRESH_SEC  # 레이드 시작 전(pre_raid)은 앱이 full 로 받는다
             if not (full or fresh or map_override):

@@ -818,6 +818,21 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
           ? otherModeNote() ?? t.radarQuestNoneActive
           : t.radarQuestNoneHere.replace("{n}", String(data.active_quests));
 
+  // 11-23 지도 퀘스트가 설정과 다른 모드(게임 로그로 읽은 지금 하는 모드)를 따르면 한 줄로 알린다
+  const qmLabel = (m?: string) => (m === "pve" ? t.gameModePve : m === "pvp-season" ? t.gameModeSeason : t.gameModePvp);
+  const questModeNote =
+    layers.quests && data.quest_mode_source === "log" && data.quest_mode && data.quest_mode !== data.setting_mode
+      ? t.radarQuestModeFromLog.replace("{mode}", qmLabel(data.quest_mode))
+      : null;
+  // 11-23 하루 요약: 진행 중 0개 안내(qn0 진짜 0개 · qnm 다른 모드 안내) · 지도 퀘스트가 로그 모드를 따름(qml) — 맵·모드가 바뀔 때 한 번
+  const qnKind = questNote ? (questNote === t.radarQuestNoneActive ? "qn0" : data.active_quests === 0 ? "qnm" : "") : "";
+  useEffect(() => {
+    if (qnKind) stat(qnKind);
+  }, [qnKind, data.map?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (questModeNote) stat("qml");
+  }, [!!questModeNote, data.quest_mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 탈출구 진영별 표시: scav 는 showScav, 나머지(pmc·shared)는 pmc 레이어
   const showExtract = (faction: string) => (faction === "scav" ? showScav : layers.pmc);
   // 11-06 내 탈출구: 탈출구 목록(O)을 연 채 찍은 스크린샷에서 사이드카가 읽은 이번 레이드 탈출구(영어 원문). '내 탈출구만' 칩이
@@ -1269,6 +1284,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         </div>
       )}
       {!mini && questNote && <div className="radar-note">{questNote}</div>}
+      {!mini && questModeNote && <div className="radar-note">{questModeNote}</div>}
       {!mini && doc?.img && showImg && doc.img.layers.length > 0 && (
         <div className="radar-layers radar-floors">
           <span className="radar-kind">{t.radarFloor}</span>
