@@ -925,14 +925,20 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
         z["bosses"].sort(key=lambda x: -x["chance"])
         if z.get("anywhere"):
             cx = sum(p[0] for p in z["pts"]) / len(z["pts"]); cz = sum(p[1] for p in z["pts"]) / len(z["pts"])
-            out.append({**z, "pts": [[round(cx, 1), round(cz, 1)]]})
+            out.append({**z, "pts": [[round(cx, 1), round(cz, 1)]], "main": True})
             continue
-        for grp in _cluster_pts(z["pts"], BOSS_CLUSTER_M):
-            out.append({**z, "pts": grp})
+        # main = 구역에서 점이 가장 많은 무리 — 지도는 이름표(보스·확률)를 이 무리에만 단다(무리마다 같은 글자가 반복되지 않게, 11-24)
+        groups = _cluster_pts(z["pts"], BOSS_CLUSTER_M)
+        big = max(range(len(groups)), key=lambda k: len(groups[k]))
+        for k, grp in enumerate(groups):
+            out.append({**z, "pts": grp, "main": k == big})
     return out
 
 
-BOSS_CLUSTER_M = 150.0  # 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로
+# 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로. 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 150m 로 묶으면
+# 건물 여러 채의 스폰 점이 한 상자가 돼 빈 땅까지 덮었다(삼림 폐허 마을 212×207m, 등대 정수장 339×253m, 해안선 기상 관측소 등 9곳이
+# 120m 넘음). 60m 면 건물·무리 단위로 나뉘어 120m 넘는 상자가 0(상자 52 → 79개). 점 자체는 게임 스폰 좌표 그대로.
+BOSS_CLUSTER_M = 60.0
 
 # tarkov.dev bosses[] 에 섞여 있지만 보스가 아닌 무리 — 보스 구역에 넣지 않는다(11-04 사용자 결정).
 # 'pmc' 로 시작하는 것(pmcBEAR·pmcUSEC·pmcBotBlackDiv)은 위에서 따로 뺀다.

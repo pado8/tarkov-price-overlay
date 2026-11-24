@@ -108,7 +108,7 @@ export type MapDoc = {
   loot?: LootRow[]; // 루팅 상자: 묶음(w 무기·탄 t 기술 m 의료 v 금고·현금 j 재킷 s 캐리어 f 서랍 c 은닉처 b 가방·상자 d 시체) + 종류
   loot_names?: Record<string, string>; // 상자 종류 → 지금 언어의 이름
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
-  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean }[]; // 보스 스폰 구역(구역별 합침). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나
+  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean }[]; // 보스 스폰 구역(구역별 합침, 60m 무리마다 하나). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나 · main = 이름표를 다는 무리
   weapons: Pt[];
   switches: { id: string; p: Pt }[];
 };
@@ -341,18 +341,6 @@ const BOSS_PAD = 14; // 윤곽 여유(m)
 const BOSS_ARC = 14; // 점마다 원을 몇 조각으로 근사할지
 function bossCenter(pts: [number, number][]): [number, number] {
   return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
-}
-/** 점들이 '면'으로 퍼져 있는가 — 주성분의 짧은 축 표준편차가 BOSS_MIN_SPREAD 이상. 한 줄로 늘어선 점(삼림 제재소 3점)은
- *  윤곽이 길쭉한 막대가 돼 구역처럼 보이지 않으므로 넓이를 모르는 것으로 보고 배지만 찍는다. */
-const BOSS_MIN_SPREAD = 8; // m
-function bossIsArea(pts: [number, number][]): boolean {
-  if (pts.length < 3) return false;
-  const [mx, mz] = bossCenter(pts);
-  let sxx = 0, szz = 0, sxz = 0;
-  for (const [x, z] of pts) { sxx += (x - mx) ** 2; szz += (z - mz) ** 2; sxz += (x - mx) * (z - mz); }
-  sxx /= pts.length; szz /= pts.length; sxz /= pts.length;
-  const minor = (sxx + szz) / 2 - Math.sqrt(((sxx - szz) / 2) ** 2 + sxz ** 2); // 공분산 행렬의 작은 고윳값
-  return Math.sqrt(Math.max(0, minor)) >= BOSS_MIN_SPREAD;
 }
 function bossHull(pts: [number, number][]): [number, number][] {
   const ring: [number, number][] = [];
@@ -922,11 +910,9 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (layers.spawns)
       (doc.bosses ?? []).forEach((z) => {
         const [cx, cz] = bossCenter(z.pts);
-        const badges = z.anywhere || bossIsArea(z.pts) ? [toScreen(cx, cz)] : z.pts.map((q) => toScreen(q[0], q[1]));
-        badges.forEach((b) => {
-          zoneIgnores.add(boxes.length);
-          boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
-        });
+        const b = toScreen(cx, cz);
+        zoneIgnores.add(boxes.length);
+        boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
       });
     // 11-24 실화면: 퀘스트 점(원)·내 라벨도 다른 이름표가 덮었다('도 로 폐쇄') → 같이 막는다. 단 퀘스트 점은 퀘스트 이름표를 다 놓은
     // 뒤에 막는다(처음부터 막았더니 점이 몰린 곳에서 맵마다 퀘스트 이름표가 하나씩 빠졌다 — 이름표가 없어지는 게 점에 걸치는 것보다 손해).
@@ -970,7 +956,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (highlightKey) doc.locks.forEach((x, i) => { if (x.key === highlightKey) cands.push({ key: `kl${i}`, text: `🔑 ${t.radarKeyDoor}`, p: x.p, off: 12, pr: -1 }); });
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
-    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
+    // 보스 이름표는 구역마다 한 번(main 무리) — 무리마다 달면 삼림 '제재소 · 슈트르만 60%'가 다섯 번 반복됐다(11-24)
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
     doc.extracts.forEach((x, i) => {
       if (showEx(x)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -1192,12 +1179,13 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               })}
             {layers.spawns &&
               (doc.bosses ?? []).map((z, i) => {
-                // 스폰 점이 면으로 퍼져 있으면(3개 이상·일렬 아님) 구역 넓이를 안다 → 점들을 둥글게 감싼 윤곽(bossHull) + 가운데 배지.
-                // 1~2개거나 한 줄이면 넓이를 모름(길쭉한 캡슐이 오해를 부름) → 윤곽 없이 점마다 배지. 맵 전역(anywhere)이면 점선 원 하나.
+                // 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 스폰 점(게임 좌표)을 60m 무리로 나눠(서버) 무리마다 점 둘레 BOSS_PAD 를
+                // 둥글게 감싼 작은 윤곽 + 가운데 배지 하나. 점 1개면 원, 2개면 짧은 캡슐(60m 안이라 길게 늘어지지 않는다).
+                // 맵 전역(anywhere)이면 점선 원 하나.
                 const [cx, cz] = bossCenter(z.pts);
                 const c = toScreen(cx, cz);
-                const shape = !z.anywhere && bossIsArea(z.pts);
-                const badges = shape || z.anywhere ? [c] : z.pts.map((q) => toScreen(q[0], q[1]));
+                const shape = !z.anywhere;
+                const badges = [c];
                 return (
                   <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
                     {z.anywhere ? (

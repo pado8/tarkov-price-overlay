@@ -225,14 +225,15 @@ bm = {"bosses": [
     {"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "ZoneMeteoStation", "name": "Weather Station", "chance": 1,
         "positions": [{"x": 459, "z": 56}, {"x": 373, "z": 76}, {"x": -582, "z": 110}, {"x": 460, "z": 92}, {"x": -575, "z": 129}]}]},
     {"mob": "bossSanitar", "spawnChance": 0.5, "spawnLocations": [{"spawnKey": "ZoneA", "name": "A", "chance": 1,
-        "positions": [{"x": 0, "z": 0}, {"x": 140, "z": 0}, {"x": 280, "z": 0}]}]},  # 140m 씩 이어진 사슬 = 한 무리
+        "positions": [{"x": 0, "z": 0}, {"x": 50, "z": 0}, {"x": 100, "z": 0}]}]},  # 50m 씩 이어진 사슬 = 한 무리(묶기 거리 60m)
 ], "spawns": []}
 bz = r.boss_zones(bm, {})
 ws = [z for z in bz if z["name"] == "Weather Station"]
-eq("갈라진 구역은 무리 2개", sorted(len(z["pts"]) for z in ws), [2, 3])
+eq("갈라진 구역은 건물 단위 무리로(60m)", sorted(len(z["pts"]) for z in ws), [1, 2, 2])
+eq("이름표 무리(main)는 구역마다 하나 = 점이 가장 많은 무리", sorted((len(z["pts"]), z["main"]) for z in ws), [(1, False), (2, False), (2, True)])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
-eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
-eq("150m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
+eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373], [459, 460]])
+eq("60m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
 
 # 저격 스캐브 자리 — 스폰 목록의 'Snipe' 구역도 저격수 표시로(해안선 요양원 북쪽, 11-03)
 sm = {"normalizedName": "", "hazards": [{"name": "ScavRole/Marksman", "hazardType": "sniper", "position": {"x": 0, "y": 0, "z": 0}, "outline": []}],
@@ -293,8 +294,8 @@ lh = {"normalizedName": "lighthouse",
                  {"zoneName": "Zone_Chalet", "position": {"x": -100, "y": 0, "z": -55}}],
       "bosses": [{"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "Zone_Chalet", "name": "Chalet", "chance": 1}]}]}
 lz = r.boss_zones(lh, {}, {})
-eq("등대 군즈 = 별장 + 정수장", sorted(z["name"] for z in lz), ["Chalet", "Water Treatment Plant"])
-eq("정수장 확률 = 보스 맵 확률", [z["bosses"][0]["chance"] for z in lz if z["name"] == "Water Treatment Plant"], [0.18])
+eq("등대 군즈 = 별장 + 정수장(103m 떨어진 두 점 = 상자 2개, 묶기 60m)", sorted(z["name"] for z in lz), ["Chalet", "Water Treatment Plant", "Water Treatment Plant"])
+eq("정수장 확률 = 보스 맵 확률", [z["bosses"][0]["chance"] for z in lz if z["name"] == "Water Treatment Plant"], [0.18, 0.18])
 eq("다른 맵엔 보충 안 함", [z["name"] for z in r.boss_zones({**lh, "normalizedName": "woods"}, {}, {})], ["Chalet"])
 eq("이벤트 맵은 일반 맵 데이터로", (r.EVENT_MAPS.get("infected-lab"), r.EVENT_MAPS.get("infected-factory")), ("the-lab", "factory"))
 # 11-04: 레이더(PmcBot)는 보스가 아니다 — 보스 구역에서 뺀다
