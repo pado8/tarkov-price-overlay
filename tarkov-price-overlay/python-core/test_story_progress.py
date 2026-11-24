@@ -67,7 +67,7 @@ s2 = sp.StoryProgress(cache)
 s2.scan([f1, f2, f3])
 eq("크기 같은 폴더는 캐시 사용", [e["id"] for e in s2.progress({CH: "tour"})["tour"]["entered"]], [A, B])
 
-# 4) 게임 버전이 바뀌면 옛 세션과 비교하지 않는다(패치로 하위 구성이 달라짐)
+# 4) 게임 버전이 바뀐 뒤 첫 묶음에 전에 없던 하위(B — 받았던 것)가 나오면 그 챕터를 처음부터 다시 센다(패치로 하위 구성이 달라짐)
 f4 = mk("log_2026.11.04_1-00-00_1.3.1.0.49000", [{CH: [B, C]}])
 s.scan([f4])
 p4 = s.progress({CH: "tour"})
@@ -88,6 +88,46 @@ prog = {"tour": {"all": [A, B, C, D], "missing": [D], "entered": [{"id": A, "at"
 eq("최근 2개 + 방금 시작은 빈 목록", sp.pick_auto(prog), {"tour": [B, C], "fresh": []})
 eq("지도 목표 있는 것만(C 는 없음) → A, B", sp.pick_auto(prog, has_marks={A, B}), {"tour": [A, B], "fresh": []})
 eq("recent=1", sp.pick_auto(prog, recent=1), {"tour": [C], "fresh": []})
+
+# 7) 11-24 한 번의 평가가 초 경계에 걸쳐 갈라짐(사용자 로그 바티야 26+6) → 한 묶음으로. 갈라진 앞 조각을 '받음'·뒤를 '리셋'으로 읽으면 안 된다
+def line(d, h, t, c=CH):
+    return L.format(d=d, h=h, t=t, c=c)
+
+
+split = "\n".join([line("2026-11-08", "02:53:14", A), line("2026-11-08", "02:53:14", B), "2026-11-08 02:53:14.990|x|Info|output|other",
+                   line("2026-11-08", "02:53:15", C)])
+eq("초 경계에 갈라진 평가 = 한 묶음", [(ts, {k: sorted(v) for k, v in s_.items()}) for ts, s_ in sp.parse_output_log(split)],
+   [("2026-11-08 02:53:14", {CH: sorted([A, B, C])})])
+g = tmp / "log_2026.11.08_1-00-00_1.3.0.0.48484"
+g.mkdir()
+(g / "2026.11.08_1-00-00_1.3.0.0.48484 output_000.log").write_text("\n".join([
+    line("2026-11-08", "01:40:00", A), line("2026-11-08", "01:40:00", B), line("2026-11-08", "01:40:00", C),  # 전체
+    line("2026-11-08", "01:41:59", A), line("2026-11-08", "01:41:59", B), line("2026-11-08", "01:42:00", C),  # 갈라진 전체
+    line("2026-11-08", "01:50:00", B), line("2026-11-08", "01:50:00", C)]), encoding="utf-8")                    # A 받음
+s7 = sp.StoryProgress(None)
+s7.scan([g])
+p7b = s7.progress({CH: "tour"})["tour"]
+eq("갈라진 묶음 뒤에도 진행 유지(A 받음 · 시작 시각 그대로)", ([e["id"] for e in p7b["entered"]], p7b["since"]), ([A], "2026-11-08 01:40:00"))
+
+# 8) 11-24 게임 패치 뒤에도 구성이 같으면 받은 기록을 잇는다(전엔 새 버전 세션만 봐서 패치 전에 받은 것이 지워졌다)
+h1 = mk("log_2026.11.09_1-00-00_1.3.0.0.48484", [{CH: [A, B, C]}, {CH: [B, C]}])  # A 받음
+h2 = mk("log_2026.11.10_1-00-00_1.3.0.2.48779", [{CH: [B, C]}, {CH: [C]}])       # 패치 · 구성 같음 → 이어서 B 받음
+s8 = sp.StoryProgress(None)
+s8.scan([h1, h2])
+p8 = s8.progress({CH: "tour"})["tour"]
+eq("패치 뒤 구성 같음 → 패치 전 기록 유지", ([e["id"] for e in p8["entered"]], p8["missing"], p8["since"][:10]), ([A, B], [C], "2026-11-09"))
+h3 = mk("log_2026.11.11_1-00-00_1.4.0.0.50000", [{CH: [C, D]}])                  # 다음 패치에서 새 하위 D 가 생김 → 다시 셈
+s8.scan([h3])
+p8b = s8.progress({CH: "tour"})["tour"]
+eq("패치 뒤 새 하위가 생기면 그 챕터만 다시 셈", ([e["id"] for e in p8b["entered"]], p8b["missing"], p8b["since"][:10]), ([], sorted([C, D]), "2026-11-11"))
+k1 = mk("log_2026.07.08_1-00-00_1.2.0.0.40000", [{CH2: [D]}])                   # 옛 버전에서만 나오고 끊긴 챕터(와이프 전·끝냄)
+k2 = mk("log_2026.11.12_1-00-00_1.3.0.2.48779", [{CH: [A, B]}])
+s9 = sp.StoryProgress(None)
+s9.scan([k1, k2])
+eq("가장 새 버전 세션에 안 나온 챕터는 뺌", sorted(s9.progress({CH: "tour", CH2: "batya"})), ["tour"])
+cache2 = tmp / "v2cache.json"
+cache2.write_text('{"folders": {"x": {"size": 1, "blocks": []}}}', encoding="utf-8")
+eq("판(v)이 다른 옛 캐시는 버림", sp.StoryProgress(cache2)._folders, {})
 
 print("\n" + ("전부 통과" if not fails else f"{fails}건 실패"))
 sys.exit(1 if fails else 0)

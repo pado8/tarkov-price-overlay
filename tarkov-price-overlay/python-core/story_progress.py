@@ -18,25 +18,39 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from pathlib import Path
 from typing import Optional
 
 log = logging.getLogger("story_progress")
 
 _LINE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.\d+\|.*Can't find condition for target ([0-9a-f]{24}) quest id: ([0-9a-f]{24})")
+_CACHE_V = 2  # 11-24 묶음을 '같은 초' → '앞 줄과 1초 안'으로 바꿈
 _FOLDER = re.compile(r"^log_(\d{4})\.(\d{2})\.(\d{2})_(\d{1,2})-(\d{1,2})-(\d{1,2})_(\S+)")
 
 
+def _sec(ts: str) -> float:
+    try:
+        return time.mktime(time.strptime(ts, "%Y-%m-%d %H:%M:%S"))
+    except (ValueError, OverflowError):
+        return 0.0
+
+
 def parse_output_log(text: str) -> list[tuple[str, dict[str, set[str]]]]:
-    """로그 본문 → [(묶음 시각, {챕터 id: {하위 id…}})…]. 같은 초에 찍힌 줄이 한 묶음(조건 평가 한 번)."""
+    """로그 본문 → [(묶음 시각, {챕터 id: {하위 id…}})…]. 조건 평가 한 번에 찍힌 줄이 한 묶음 — 앞 경고 줄과 1초 안이면 같은 묶음.
+    11-24 사용자 로그: 한 번의 평가가 초 경계에 걸쳐 둘로 갈라졌다(바티야 02:53:14 26개 + :15 6개 = 32, 보레아스 23:06:03 17 + :04 18 = 35).
+    같은 초만 묶으면 앞 조각을 '그새 받음', 뒤 조각을 '다시 안 받음(리셋)'으로 읽어 그 챕터 진행 기록이 지워졌다."""
     blocks: list[tuple[str, dict[str, set[str]]]] = []
+    last = -10.0
     for line in text.splitlines():
         m = _LINE.match(line)
         if not m:
             continue
         ts, target, chapter = m.group(1), m.group(2), m.group(3)
-        if not blocks or blocks[-1][0] != ts:
+        sec = _sec(ts)
+        if not blocks or sec - last > 1.0:
             blocks.append((ts, {}))
+        last = sec
         blocks[-1][1].setdefault(chapter, set()).add(target)
     return blocks
 
@@ -62,7 +76,9 @@ class StoryProgress:
         if not self._cache_path or not self._cache_path.exists():
             return
         try:
-            self._folders = json.loads(self._cache_path.read_text(encoding="utf-8")).get("folders") or {}
+            data = json.loads(self._cache_path.read_text(encoding="utf-8"))
+            # 묶는 방식이 바뀐 판의 캐시는 버리고 다시 읽는다(크기가 같은 옛 폴더도 새 방식으로)
+            self._folders = (data.get("folders") or {}) if data.get("v") == _CACHE_V else {}
         except Exception as e:  # noqa: BLE001
             log.warning(f"[story] 캐시 읽기 실패: {e}")
             self._folders = {}
@@ -72,7 +88,7 @@ class StoryProgress:
             return
         try:
             self._cache_path.parent.mkdir(parents=True, exist_ok=True)
-            self._cache_path.write_text(json.dumps({"folders": self._folders}, ensure_ascii=False), encoding="utf-8")
+            self._cache_path.write_text(json.dumps({"v": _CACHE_V, "folders": self._folders}, ensure_ascii=False), encoding="utf-8")
         except Exception as e:  # noqa: BLE001
             log.warning(f"[story] 캐시 저장 실패: {e}")
 
@@ -101,25 +117,43 @@ class StoryProgress:
 
     def progress(self, chapter_ids: dict[str, str]) -> dict[str, dict]:
         """chapter_ids = {챕터 퀘스트 id: 챕터 slug} → {slug: {"all": [...], "missing": [...], "entered": [{"id", "at"}…](받은 순), "since": 시작 시각}}.
-        최신 게임 버전의 세션만, 묶음 순서대로 본다. 경고가 한 번도 없는 챕터(시작 안 함)는 빼놓는다."""
+        모든 세션을 묶음 순서대로 본다(게임 버전이 바뀐 뒤 구성이 달라진 챕터만 다시 셈 — 아래). 경고가 한 번도 없는 챕터(시작 안 함)는 빼놓는다."""
         metas = {n: folder_meta(n) for n in self._folders}
         names = sorted(self._folders, key=lambda n: metas[n][0])
         if not names:
             return {}
-        latest_ver = metas[names[-1]][1]
         want = set(chapter_ids)
         ever: dict[str, set[str]] = {}
         entered_at: dict[str, dict[str, str]] = {}
         since: dict[str, str] = {}
         prev: dict[str, set[str]] = {}
+        # 11-24 게임 버전이 바뀌어도 이어서 본다 — 전엔 가장 새 버전 세션만 봐서 패치 전에 받은 하위 퀘스트가 사라졌다(사용자 로그:
+        # 11-15 패치 전에 받은 '우연한 목격자' 2개·'보레아스' 3개가 지워져 네 챕터 모두 '받은 것 없음'). 대신 버전이 바뀐 뒤 그 챕터의
+        # 첫 묶음에 전에 없던 하위가 나오면(패치로 구성이 달라졌거나 받은 것이 되살아남) 그 챕터만 처음부터 다시 센다.
+        ver_changed: set[str] = set()
+        cur_ver = None
+        latest_ver = metas[names[-1]][1]
+        seen_latest: set[str] = set()  # 가장 새 게임 버전 세션에서도 경고에 나온 챕터 — 이것만 낸다(7월 와이프 전처럼 오래전에만 나오고
+        # 끊긴 챕터는 끝냈거나 지난 기록이다. 이어서 세게 바꾸자 사용자 로그에서 그런 챕터 5개가 '진행 중'으로 되살아났다)
         for n in names:
-            if metas[n][1] != latest_ver:
-                continue
+            if metas[n][1] != cur_ver:
+                if cur_ver is not None:
+                    ver_changed = set(prev)
+                cur_ver = metas[n][1]
             for ts, sets in self._folders[n].get("blocks", []):
                 for ch, lst in sets.items():
                     if ch not in want:
                         continue
                     s = set(lst)
+                    if cur_ver == latest_ver:
+                        seen_latest.add(ch)
+                    if ch in ver_changed:
+                        ver_changed.discard(ch)
+                        if s - prev[ch]:
+                            entered_at[ch] = {}
+                            ever[ch] = set()
+                            since[ch] = ts
+                            del prev[ch]
                     if ch in prev:
                         if (s - prev[ch]) & set(entered_at.get(ch, {})):
                             # 받았다고 본 것이 다시 '안 받음'으로 → 리셋(와이프·프레스티지). 그 챕터 기록을 비운다
@@ -134,7 +168,7 @@ class StoryProgress:
                     prev[ch] = s
         out: dict[str, dict] = {}
         for qid, slug in chapter_ids.items():
-            if qid not in ever:
+            if qid not in ever or qid not in seen_latest:
                 continue
             ent = [{"id": i, "at": t} for i, t in sorted(entered_at.get(qid, {}).items(), key=lambda x: (x[1], x[0]))]
             out[slug] = {"all": sorted(ever[qid]), "missing": sorted(prev.get(qid, set())), "entered": ent, "since": since.get(qid)}
