@@ -138,16 +138,21 @@ class StoryProgress:
         latest_ver = next((metas[n][1] for n in reversed(names)
                            if any(ch in want for _ts, sets in self._folders[n].get("blocks", []) for ch in sets)), metas[names[-1]][1])
         seen_latest: set[str] = set()
+        last_seen: dict[str, str] = {}  # 챕터가 마지막으로 경고에 나온 묶음 시각
+        block_ts: list[str] = []  # 챕터 경고가 하나라도 든 묶음 시각(시간순)
         for n in names:
             if metas[n][1] != cur_ver:
                 if cur_ver is not None:
                     ver_changed = set(prev)
                 cur_ver = metas[n][1]
             for ts, sets in self._folders[n].get("blocks", []):
+                if any(ch in want for ch in sets):
+                    block_ts.append(ts)
                 for ch, lst in sets.items():
                     if ch not in want:
                         continue
                     s = set(lst)
+                    last_seen[ch] = ts
                     if cur_ver == latest_ver:
                         seen_latest.add(ch)
                     if ch in ver_changed:
@@ -171,10 +176,25 @@ class StoryProgress:
                     prev[ch] = s
         out: dict[str, dict] = {}
         for qid, slug in chapter_ids.items():
-            if qid not in ever or qid not in seen_latest:
+            if qid not in ever:
                 continue
+            missing = set(prev.get(qid, set()))
+            all_received = False
+            if qid not in seen_latest:
+                # 11-25 사용자 스크린샷 대조(여정): 하위를 다 받으면 그 챕터는 더 경고에 안 나온다(안 받은 게 없으니). 그래서 '남은 것이
+                # 1개 이하로 줄고 나서 끊겼고, 그 뒤에도 다른 챕터 경고는 계속 찍힘' = 마지막 하위까지 받음 → 진행 중으로 낸다.
+                # 남은 게 많은 채 끊긴 챕터(7월 와이프 전 티켓 82·들리지 않는 자 14 등)는 지난 기록이라 그대로 뺀다.
+                # 한계: 마지막 하위까지 끝내 챕터를 완료했는지는 로그로 알 수 없어 완료 뒤에도 진행 중으로 남는다.
+                after = next((t for t in block_ts if t > last_seen.get(qid, "")), None)
+                if len(missing) > 1 or after is None:
+                    continue
+                for i in sorted(missing):
+                    entered_at.setdefault(qid, {}).setdefault(i, after)
+                missing = set()
+                all_received = True
             ent = [{"id": i, "at": t} for i, t in sorted(entered_at.get(qid, {}).items(), key=lambda x: (x[1], x[0]))]
-            out[slug] = {"all": sorted(ever[qid]), "missing": sorted(prev.get(qid, set())), "entered": ent, "since": since.get(qid)}
+            out[slug] = {"all": sorted(ever[qid]), "missing": sorted(missing), "entered": ent, "since": since.get(qid),
+                         "all_received": all_received}
         return out
 
 
@@ -190,14 +210,15 @@ def get_progress(folders: list[Path], chapter_ids: dict[str, str], cache_path: O
     return _svc.progress(chapter_ids)
 
 
-def pick_auto(progress: dict[str, dict], recent: int = 2, has_marks: Optional[set[str]] = None) -> dict[str, list[str]]:
-    """'자동' 모드가 지도에 낼 (챕터 slug → 하위 퀘스트 id 목록). 시작했고(경고 있음) 아직 안 받은 것이 남은 챕터만(진행 중),
-    받은 것 중 최근 recent 개 — 완료/진행 중을 구분 못 하므로 최근 것이 진행 중일 가능성이 가장 높다.
+def pick_auto(progress: dict[str, dict], recent: int = 1, has_marks: Optional[set[str]] = None) -> dict[str, list[str]]:
+    """'자동' 모드가 지도에 낼 (챕터 slug → 하위 퀘스트 id 목록). 시작했고(경고 있음) 아직 안 받은 것이 남은 챕터와 마지막 하위까지 받은
+    챕터(all_received)만(진행 중), 받은 것 중 최근 recent 개 — 완료/진행 중을 구분 못 하므로 최근 것이 진행 중일 가능성이 가장 높다.
+    11-25 사용자 스크린샷 대조: 2개를 내면 끝낸 앞 단계(불타는 하늘 G바겐 플래시 드라이브)가 지금 단계와 같이 나왔다 → 기본 1개.
     has_marks 를 주면 지도 목표가 있는 하위 퀘스트만 센다(대화·건네주기 단계는 지도에 낼 게 없어 건너뛴다).
     받은 것이 없는 챕터(방금 시작)는 빈 목록으로 넣어 '시작함'은 알린다."""
     out: dict[str, list[str]] = {}
     for slug, p in progress.items():
-        if not p["missing"]:
+        if not p["missing"] and not p.get("all_received"):
             continue
         ids = [e["id"] for e in p["entered"]]
         if has_marks is not None:

@@ -85,9 +85,11 @@ eq("리셋 뒤엔 그 뒤 기록만", ([(e["id"], e["at"][:10]) for e in p7["tou
 prog = {"tour": {"all": [A, B, C, D], "missing": [D], "entered": [{"id": A, "at": "1"}, {"id": B, "at": "2"}, {"id": C, "at": "3"}], "since": "0"},
         "done": {"all": [A], "missing": [], "entered": [{"id": A, "at": "1"}], "since": "0"},
         "fresh": {"all": [A], "missing": [A], "entered": [], "since": "3"}}
-eq("최근 2개 + 방금 시작은 빈 목록", sp.pick_auto(prog), {"tour": [B, C], "fresh": []})
-eq("지도 목표 있는 것만(C 는 없음) → A, B", sp.pick_auto(prog, has_marks={A, B}), {"tour": [A, B], "fresh": []})
-eq("recent=1", sp.pick_auto(prog, recent=1), {"tour": [C], "fresh": []})
+eq("최근 2개 + 방금 시작은 빈 목록", sp.pick_auto(prog, recent=2), {"tour": [B, C], "fresh": []})
+eq("지도 목표 있는 것만(C 는 없음) → A, B", sp.pick_auto(prog, recent=2, has_marks={A, B}), {"tour": [A, B], "fresh": []})
+eq("기본은 최근 1개(11-25 끝낸 앞 단계가 같이 나오던 것)", sp.pick_auto(prog), {"tour": [C], "fresh": []})
+prog_all = {"tour": {"all": [A, B], "missing": [], "entered": [{"id": A, "at": "1"}, {"id": B, "at": "2"}], "since": "0", "all_received": True}}
+eq("다 받은 챕터(all_received)도 진행 중으로 냄", sp.pick_auto(prog_all), {"tour": [B]})
 
 # 7) 11-24 한 번의 평가가 초 경계에 걸쳐 갈라짐(사용자 로그 바티야 26+6) → 한 묶음으로. 갈라진 앞 조각을 '받음'·뒤를 '리셋'으로 읽으면 안 된다
 def line(d, h, t, c=CH):
@@ -120,7 +122,7 @@ h3 = mk("log_2026.11.11_1-00-00_1.4.0.0.50000", [{CH: [C, D]}])                 
 s8.scan([h3])
 p8b = s8.progress({CH: "tour"})["tour"]
 eq("패치 뒤 새 하위가 생기면 그 챕터만 다시 셈", ([e["id"] for e in p8b["entered"]], p8b["missing"], p8b["since"][:10]), ([], sorted([C, D]), "2026-11-11"))
-k1 = mk("log_2026.07.08_1-00-00_1.2.0.0.40000", [{CH2: [D]}])                   # 옛 버전에서만 나오고 끊긴 챕터(와이프 전·끝냄)
+k1 = mk("log_2026.07.08_1-00-00_1.2.0.0.40000", [{CH2: [D, A]}])                # 옛 버전에서만 나오고 많이 남은 채 끊긴 챕터(와이프 전)
 k2 = mk("log_2026.11.12_1-00-00_1.3.0.2.48779", [{CH: [A, B]}])
 s9 = sp.StoryProgress(None)
 s9.scan([k1, k2])
@@ -130,6 +132,20 @@ k3.mkdir()
 (k3 / "2026.11.25_16-03-28_1.3.5.0.48914 output_000.log").write_text("2026-11-25 16:03:30.000|x|Info|output|start", encoding="utf-8")
 s9.scan([k3])
 eq("새 버전에 아직 경고가 없으면 직전 버전 기준으로 냄", sorted(s9.progress({CH: "tour", CH2: "batya"})), ["tour"])
+# 10) 11-25 사용자 스크린샷(여정): 남은 하위가 1개로 줄고 경고가 끊겼는데 다른 챕터 경고는 계속 → 마지막 하위까지 받음 = 진행 중
+m1 = mk("log_2026.11.02_1-00-00_1.3.0.0.48484", [{CH: [A, B], CH2: [C, D]}, {CH: [B], CH2: [C, D]}])  # tour: A 받음, B 하나 남음
+m2 = mk("log_2026.11.04_1-00-00_1.3.0.0.48484", [{CH2: [C, D]}])                                    # tour 경고 끊김(B 도 받음)
+m3 = mk("log_2026.11.25_1-00-00_1.3.5.0.48914", [{CH2: [C, D]}])
+s10 = sp.StoryProgress(None)
+s10.scan([m1, m2, m3])
+p10 = s10.progress({CH: "tour", CH2: "batya"})
+eq("다 받고 끊긴 챕터 = 진행 중(남은 것 없음·마지막 하위까지 받음)",
+   ("tour" in p10, p10.get("tour", {}).get("missing"), [e["id"] for e in p10.get("tour", {}).get("entered", [])], p10.get("tour", {}).get("all_received")),
+   (True, [], [A, B], True))
+eq("다 받음 판정 뒤 지도 자동은 마지막 하위", sp.pick_auto(p10)["tour"], [B])
+s11 = sp.StoryProgress(None)
+s11.scan([mk("log_2026.11.02_2-00-00_1.3.0.0.48484", [{CH: [A, B]}, {CH: [B]}])])                # 뒤로 아무 경고도 없음
+eq("뒤에 다른 경고가 하나도 없으면 다 받음으로 보지 않음(아직 그 세션)", s11.progress({CH: "tour"})["tour"]["missing"], [B])
 cache2 = tmp / "v2cache.json"
 cache2.write_text('{"folders": {"x": {"size": 1, "blocks": []}}}', encoding="utf-8")
 eq("판(v)이 다른 옛 캐시는 버림", sp.StoryProgress(cache2)._folders, {})
