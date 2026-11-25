@@ -919,14 +919,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     // 보스 배지는 이름표만 피한다 — 지역명은 배지 위에 그린다(렌더도 배지 다음). 피하게 했더니 배지가 세로로 몰린 시내
     // '클리모프 거리'·'경찰서'는 위·아래로 옮겨도 못 벗어나 통째로 빠졌다. 글자에 검은 테두리가 있어 배지 위에서도 읽힌다.
     const zoneIgnores = new Set<number>();
-    if (layers.spawns)
-      [...(doc.bosses ?? []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
-        if (z.main === false) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다
-        const [cx, cz] = bossAt(z);
-        const b = toScreen(cx, cz);
-        zoneIgnores.add(boxes.length);
-        boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
-      });
+    // 보스 배지는 보스 층, 광신도 두건은 광신도 층이 켜져 있을 때 — 그리는 조건과 같게(보스 층을 끄고 광신도만 켜도 두건을 이름표가 덮지 않게)
+    [...(layers.spawns ? doc.bosses ?? [] : []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
+      if (z.main === false) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다
+      const [cx, cz] = bossAt(z);
+      const b = toScreen(cx, cz);
+      zoneIgnores.add(boxes.length);
+      boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
+    });
     // 11-24 실화면: 퀘스트 점(원)·내 라벨도 다른 이름표가 덮었다('도 로 폐쇄') → 같이 막는다. 단 퀘스트 점은 퀘스트 이름표를 다 놓은
     // 뒤에 막는다(처음부터 막았더니 점이 몰린 곳에서 맵마다 퀘스트 이름표가 하나씩 빠졌다 — 이름표가 없어지는 게 점에 걸치는 것보다 손해).
     const blockQuestDots = () => {
