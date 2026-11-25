@@ -268,7 +268,8 @@ r._BOSS_USER = {"maps": {"woods": [
     {"kind": "boss", "mobs": [], "pts": [[1, 1]]},
     {"kind": "boss", "mobs": [{"mob": "bossBully", "chance": 0.1}], "pts": []},
     {"kind": "boss", "mobs": [{"mob": "bossPartisan", "chance": 0.25}], "pts": [[0, 0], [100, 50]], "shape": "any", "main": False, "at": [1, 1]},
-    {"kind": "cult", "mobs": [{"mob": "sectantPriest", "chance": 0.2}], "zone": "Zone9", "pts": [[50, 50]], "shape": "hull"}]}}
+    {"kind": "cult", "mobs": [{"mob": "sectantPriest", "chance": 0.2}], "zone": "Zone9", "pts": [[50, 50]], "shape": "hull"},
+    {"kind": "cult", "mobs": [{"mob": "sectantWarrior", "chance": 0.1}], "pts": [], "shape": "any"}]}}
 _um = {"normalizedName": "woods", "spawns": [], "bosses": [{"mob": "bossKojaniy", "spawnChance": 1, "spawnLocations": [{"spawnKey": "ZoneWoodCutter", "name": "W", "chance": 1, "positions": [{"x": -2, "z": -75}]}]}]}
 _uz = r.boss_zones(_um, {"bossBully": "르샬라", "ZoneDorm": "기숙사"}, {})
 eq("사용자 구역: 그 맵은 게임 자료 대신 사용자 것만(보스·점이 빈 구역은 건너뜀)", len(_uz), 3)
@@ -277,7 +278,8 @@ eq("사용자 구역: 찍은 점 그대로 + 다각형·아이콘 자리·이름
     "anywhere": False, "main": True, "poly": True, "at": [5.0, 5.0], "label": "기숙사 뒤"})
 eq("사용자 구역: 3점 미만은 다각형 아님(둘레 윤곽), 아이콘 끔", (_uz[1].get("poly"), _uz[1]["main"]), (None, False))
 eq("사용자 구역: 맵 전역은 가운데 점 하나·아이콘 항상·아이콘 자리 무시", (_uz[2]["anywhere"], _uz[2]["pts"], _uz[2]["main"], _uz[2].get("at")), (True, [[50.0, 25.0]], True, None))
-eq("사용자 구역: 광신도는 따로 + 코드형 이름은 비움", [(z["name"], z["pts"], z["main"]) for z in r.boss_zones(_um, {}, {}, cult=True)], [("", [[50.0, 50.0]], True)])
+eq("사용자 구역: 광신도는 따로 + 코드형 이름은 비움 · 맵 전역은 점이 없어도 됨", [(z["name"], z["pts"], z["main"], z["anywhere"]) for z in r.boss_zones(_um, {}, {}, cult=True)],
+   [("", [[50.0, 50.0]], True, False), ("", [[0.0, 0.0]], True, True)])
 eq("사용자 구역: 파일에 없는 맵은 게임 자료 그대로", [z["pts"] for z in r.boss_zones({**_um, "normalizedName": "customs"}, {}, {})], [[[-2.0, -75.0]]])
 r._BOSS_USER = {}
 eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])

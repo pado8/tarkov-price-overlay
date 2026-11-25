@@ -999,16 +999,16 @@ def _user_boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict], cult: bool
             at = [round(float(z["at"][0]), 1), round(float(z["at"][1]), 1)] if z.get("at") else None
         except (TypeError, ValueError, IndexError, KeyError):
             continue
-        if not pts or not bosses:
+        anywhere = z.get("shape") == "any"  # 맵 전역 = 지도 왼쪽 위에 따로 표시 → 점이 없어도 된다
+        if not bosses or (not pts and not anywhere):
             continue
         bosses.sort(key=lambda x: -x["chance"])
         zk = z.get("zone") or ""
         name = (_loc(loc_maps, zk) or _loc(loc_en, zk) or zk) if zk else ""
         if re.search(r"\d", name) and " " not in name:
             name = ""
-        anywhere = z.get("shape") == "any"
         if anywhere:
-            pts = [[round(sum(p[0] for p in pts) / len(pts), 1), round(sum(p[1] for p in pts) / len(pts), 1)]]
+            pts = [[round(sum(p[0] for p in pts) / len(pts), 1), round(sum(p[1] for p in pts) / len(pts), 1)]] if pts else [[0.0, 0.0]]
         row = {"name": name, "pts": pts, "bosses": bosses, "anywhere": anywhere, "main": anywhere or z.get("main") is not False}
         if z.get("shape") == "poly" and len(pts) >= 3:
             row["poly"] = True

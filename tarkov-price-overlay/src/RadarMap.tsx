@@ -921,7 +921,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const zoneIgnores = new Set<number>();
     // 보스 배지는 보스 층, 광신도 두건은 광신도 층이 켜져 있을 때 — 그리는 조건과 같게(보스 층을 끄고 광신도만 켜도 두건을 이름표가 덮지 않게)
     [...(layers.spawns ? doc.bosses ?? [] : []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
-      if (z.main === false) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다
+      if (z.main === false || z.anywhere) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다 · 맵 전역은 지도 안에 없다(왼쪽 위 칩)
       const [cx, cz] = bossAt(z);
       const b = toScreen(cx, cz);
       zoneIgnores.add(boxes.length);
@@ -970,8 +970,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
     // 보스 이름표는 구역마다 한 번(main 무리) — 무리마다 달면 삼림 '제재소 · 슈트르만 60%'가 다섯 번 반복됐다(11-24)
-    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossAt(z); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
-    if (layers.cult) (doc.cultists ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossAt(z); cands.push({ key: `ct${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.6 }); });
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false || z.anywhere) return; const c = bossAt(z); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
+    if (layers.cult) (doc.cultists ?? []).forEach((z, i) => { if (z.main === false || z.anywhere) return; const c = bossAt(z); cands.push({ key: `ct${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.6 }); });
     doc.extracts.forEach((x, i) => {
       if (showEx(x)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -1195,18 +1195,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               (doc.bosses ?? []).map((z, i) => {
                 // 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 스폰 점(게임 좌표)을 60m 무리로 나눠(서버) 무리마다 점 둘레 BOSS_PAD 를
                 // 둥글게 감싼 작은 윤곽 + 가운데 배지 하나. 점 1개면 원, 2개면 짧은 캡슐(60m 안이라 길게 늘어지지 않는다).
-                // 맵 전역(anywhere)이면 점선 원 하나.
+                // 맵 전역(anywhere)은 정해진 자리가 없으니 지도 안에 안 그리고 지도 왼쪽 위 칩으로(11-25 사용자 '맵 전역은 왼쪽 위에') — 아래 radar-bossany
+                if (z.anywhere) return null;
                 const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
-                const shape = !z.anywhere;
                 const badges = z.main === false ? [] : [c]; // 11-25 배지는 구역마다 main 무리 하나(나머지 무리는 윤곽만)
                 return (
                   <g key={`bz${i}`} className="radar-bosszone" onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
-                    {z.anywhere ? (
-                      <circle cx={c.x} cy={c.y} r={14} fill="rgba(220,40,40,0.14)" stroke="#e53935" strokeWidth={1.2} strokeDasharray="3 2" />
-                    ) : shape ? (
-                      <polygon points={poly(bossShape(z))} fill="rgba(229,57,53,0.17)" stroke="#e53935" strokeWidth={1.2} strokeLinejoin="round" />
-                    ) : null}
+                    <polygon points={poly(bossShape(z))} fill="rgba(229,57,53,0.17)" stroke="#e53935" strokeWidth={1.2} strokeLinejoin="round" />
                     {badges.map((b, k) => (
                       <g key={k}>
                         <circle cx={b.x} cy={b.y} r={9} fill="#e53935" stroke="#3a0606" strokeWidth={1.4} />
@@ -1219,16 +1215,13 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               })}
             {layers.cult &&
               (doc.cultists ?? []).map((z, i) => {
-                // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)이면 점선 원
+                // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)은 왼쪽 위 칩
+                if (z.anywhere) return null;
                 const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
                 return (
                   <g key={`ct${i}`} className="radar-bosszone" onClick={() => pick({ name: `${t.radarLayerCult} · ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
-                    {z.anywhere ? (
-                      <circle cx={c.x} cy={c.y} r={14} fill="rgba(150,100,230,0.14)" stroke={CULT_COLOR} strokeWidth={1.2} strokeDasharray="3 2" />
-                    ) : (
-                      <polygon points={poly(bossShape(z))} fill="rgba(150,100,230,0.16)" stroke={CULT_COLOR} strokeWidth={1.2} strokeLinejoin="round" />
-                    )}
+                    <polygon points={poly(bossShape(z))} fill="rgba(150,100,230,0.16)" stroke={CULT_COLOR} strokeWidth={1.2} strokeLinejoin="round" />
                     {z.main !== false && (
                       <g transform={`translate(${c.x} ${c.y})`}>
                         <circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} />
@@ -1359,6 +1352,26 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
         {raidLeft != null && !mini && <div className="radar-raidleft" title={t.radarRaidLeftHint}>⏱ {Math.max(1, Math.round(raidLeft / 60))}{t.radarMinShort}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
+        {(() => {
+          // 맵 전역 보스·광신도(아무 스캐브 스폰·돌아다니는 파르티잔) = 지도 왼쪽 위 칩. 층 이름·남은 시간 표시 아래 줄에 쌓는다
+          const any = [...(layers.spawns ? (doc?.bosses ?? []).map((z) => ({ z, cult: false })) : []), ...(layers.cult ? (doc?.cultists ?? []).map((z) => ({ z, cult: true })) : [])].filter((x) => x.z.anywhere);
+          if (!any.length) return null;
+          const rows = (raidLeft != null && !mini ? 1 : 0) + (doc?.img && showImg && floorNow ? 1 : 0);
+          return (
+            <div className="radar-bossany radar-bosszone" style={{ top: 6 + rows * 24 }}>
+              {any.map((x, i) => (
+                <div key={i} className={x.cult ? "cult" : undefined} title={`${x.cult ? t.radarLayerCult + " · " : ""}${bossLabel(x.z, t)}`}>
+                  {x.cult ? (
+                    <svg viewBox="-11 -11 22 22" width={15} height={15}><circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} /><path d={HOOD_PATH} fill="#d9c6ff" /><path d={HOOD_FACE} fill="#0b0610" /><path d={HOOD_NECK} fill="#0b0610" /></svg>
+                  ) : (
+                    <span className="ic">☠</span>
+                  )}
+                  {bossText(x.z, 3)} · {t.radarBossAnywhere}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
       {!mini && ((doc && slug) || extraTools) && (
         <div className="radar-xtools">
