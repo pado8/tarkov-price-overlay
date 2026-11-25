@@ -114,8 +114,8 @@ export type MapDoc = {
   switches: { id: string; p: Pt }[];
 };
 
-// poly = 사용자가 찍은 점을 그대로 이은 다각형(없으면 점 둘레를 감싼 윤곽) · at = 아이콘 자리(없으면 점들의 가운데) — data/boss_user.json
-type BossZone = { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean; poly?: boolean; at?: [number, number] };
+// poly = 사용자가 찍은 점을 그대로 이은 다각형(없으면 점 둘레를 감싼 윤곽) · round = 그 다각형 모서리 둥글기(m) · at = 아이콘 자리(없으면 점들의 가운데) — data/boss_user.json
+type BossZone = { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean; poly?: boolean; round?: number; at?: [number, number] };
 export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; cult: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
 export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, cult: false, locks: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
@@ -346,7 +346,23 @@ function bossCenter(pts: [number, number][]): [number, number] {
   return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
 }
 const bossAt = (z: BossZone): [number, number] => z.at ?? bossCenter(z.pts);
-const bossShape = (z: BossZone): [number, number][] => (z.poly && z.pts.length >= 3 ? z.pts : bossHull(z.pts));
+const bossShape = (z: BossZone): [number, number][] => (z.poly && z.pts.length >= 3 ? (z.round ? roundPoly(z.pts, z.round) : z.pts) : bossHull(z.pts));
+/** 다각형 모서리를 반경 r(m)로 둥글게 — CSS border-radius 처럼 꼭짓점만 깎는다(변의 절반을 넘지 않게). 모서리마다 곡선을 6조각으로 근사한 점 목록 */
+function roundPoly(pts: [number, number][], r: number): [number, number][] {
+  const n = pts.length;
+  if (n < 3 || r <= 0) return pts;
+  const out: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const p = pts[i], a = pts[(i + n - 1) % n], b = pts[(i + 1) % n];
+    const la = Math.hypot(a[0] - p[0], a[1] - p[1]), lb = Math.hypot(b[0] - p[0], b[1] - p[1]);
+    const d = Math.min(r, la / 2, lb / 2);
+    if (!(d > 0)) { out.push(p); continue; }
+    const s: [number, number] = [p[0] + ((a[0] - p[0]) / la) * d, p[1] + ((a[1] - p[1]) / la) * d];
+    const e: [number, number] = [p[0] + ((b[0] - p[0]) / lb) * d, p[1] + ((b[1] - p[1]) / lb) * d];
+    for (let k = 0; k <= 6; k++) { const t = k / 6, u = 1 - t; out.push([u * u * s[0] + 2 * u * t * p[0] + t * t * e[0], u * u * s[1] + 2 * u * t * p[1] + t * t * e[1]]); }
+  }
+  return out;
+}
 function bossHull(pts: [number, number][]): [number, number][] {
   const ring: [number, number][] = [];
   for (const [x, z] of pts)

@@ -967,7 +967,7 @@ _BOSS_USER: Optional[dict] = None
 def boss_user_doc() -> dict:
     """사용자가 지도 QA 화면에서 직접 찍은 보스·광신도 구역 — data/boss_user.json (11-25 '보스 영역을 내가 수정할 수 있게').
     {maps: {맵: [{kind: boss|cult, mobs: [{mob, chance}], zone: 게임 구역 이름(번역 키), label: 직접 쓴 이름(한국어),
-    pts: [[x, z]…], shape: poly(찍은 점을 이은 모양)|hull(점 둘레를 감쌈)|any(맵 전역), main: 아이콘 여부, at: 아이콘 자리}]}}.
+    pts: [[x, z]…], shape: poly(찍은 점을 이은 모양)|round(같은 모양 + 모서리 둥글게, r = 반경 m)|hull(점 둘레를 감쌈)|any(맵 전역), main: 아이콘 여부, at: 아이콘 자리}]}}.
     이 파일에 든 맵은 게임 자료 계산(boss_zones 아래쪽) 대신 이것만 쓴다. 파일이 없으면 전부 게임 자료."""
     global _BOSS_USER
     if _BOSS_USER is None:
@@ -1010,8 +1010,13 @@ def _user_boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict], cult: bool
         if anywhere:
             pts = [[round(sum(p[0] for p in pts) / len(pts), 1), round(sum(p[1] for p in pts) / len(pts), 1)]] if pts else [[0.0, 0.0]]
         row = {"name": name, "pts": pts, "bosses": bosses, "anywhere": anywhere, "main": anywhere or z.get("main") is not False}
-        if z.get("shape") == "poly" and len(pts) >= 3:
+        if z.get("shape") in ("poly", "round") and len(pts) >= 3:
             row["poly"] = True
+            if z.get("shape") == "round":  # 모서리를 둥글게(반경 m, border-radius 처럼) — 11-25 사용자 '주변 14m 말고 찍은 모서리를 둥글게'
+                try:
+                    row["round"] = round(min(80.0, max(1.0, float(z.get("r") or 12))), 1)
+                except (TypeError, ValueError):
+                    row["round"] = 12.0
         if at and not anywhere:
             row["at"] = at
         if z.get("label"):
