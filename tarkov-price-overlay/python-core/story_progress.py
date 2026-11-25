@@ -132,9 +132,12 @@ class StoryProgress:
         # 첫 묶음에 전에 없던 하위가 나오면(패치로 구성이 달라졌거나 받은 것이 되살아남) 그 챕터만 처음부터 다시 센다.
         ver_changed: set[str] = set()
         cur_ver = None
-        latest_ver = metas[names[-1]][1]
-        seen_latest: set[str] = set()  # 가장 새 게임 버전 세션에서도 경고에 나온 챕터 — 이것만 낸다(7월 와이프 전처럼 오래전에만 나오고
-        # 끊긴 챕터는 끝냈거나 지난 기록이다. 이어서 세게 바꾸자 사용자 로그에서 그런 챕터 5개가 '진행 중'으로 되살아났다)
+        # 경고가 한 번이라도 있는 가장 새 게임 버전 세션에 나온 챕터만 낸다(7월 와이프 전처럼 오래전에만 나오고 끊긴 챕터는 끝냈거나
+        # 지난 기록이다. 이어서 세게 바꾸자 사용자 로그에서 그런 챕터 5개가 '진행 중'으로 되살아났다). '경고가 있는' 버전으로 보는 것은
+        # 11-25 실측: 1.3.5.0 패치 뒤 첫 접속은 경고가 1분 반 뒤에 찍혀 그 사이 추정이 통째로 비었기 때문
+        latest_ver = next((metas[n][1] for n in reversed(names)
+                           if any(ch in want for _ts, sets in self._folders[n].get("blocks", []) for ch in sets)), metas[names[-1]][1])
+        seen_latest: set[str] = set()
         for n in names:
             if metas[n][1] != cur_ver:
                 if cur_ver is not None:
