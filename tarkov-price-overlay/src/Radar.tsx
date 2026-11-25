@@ -60,6 +60,7 @@ export type RadarTarget = {
   slug?: string; // 가이드 퀘스트 페이지 slug(tarkov.dev normalizedName)
   keys?: string[]; // 목표에 필요한 열쇠(대체 열쇠는 ' / ')
   story?: string; // 스토리(메인 퀘스트) 목표면 챕터 id — 사용자가 고른 챕터만 온다
+  stale?: boolean; // 11-25 스토리 자동: 지금 단계의 목표 자료가 없어 앞 단계 목표를 낸 것(흐리게·'이전 단계일 수 있음')
   // 전체 지도용 게임 좌표(2단계)
   x?: number;
   y?: number;

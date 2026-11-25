@@ -90,6 +90,16 @@ eq("지도 목표 있는 것만(C 는 없음) → A, B", sp.pick_auto(prog, rece
 eq("기본은 최근 1개(11-25 끝낸 앞 단계가 같이 나오던 것)", sp.pick_auto(prog), {"tour": [C], "fresh": []})
 prog_all = {"tour": {"all": [A, B], "missing": [], "entered": [{"id": A, "at": "1"}, {"id": B, "at": "2"}], "since": "0", "all_received": True}}
 eq("다 받은 챕터(all_received)도 진행 중으로 냄", sp.pick_auto(prog_all), {"tour": [B]})
+# 11-25 우연스런 목격자: 가장 최근 하위(C)의 목표 자료가 없어 앞 단계(B)로 내려감 → 흐림 대상. 최근 것에 자료가 있거나 받은 게 없으면 아님
+eq("최근 하위에 목표 자료 없음 → 앞 단계로 내려간 챕터", sp.stale_chapters(prog, {A, B}), {"tour"})
+eq("최근 하위에 자료 있음 → 아님", sp.stale_chapters(prog, {A, B, C}), set())
+eq("앞 단계에도 자료가 없으면 아님(지도에 낼 게 없음)", sp.stale_chapters(prog, set()), set())
+same_ts = {"fs": {"entered": [{"id": A, "at": "1"}, {"id": B, "at": "2"}, {"id": C, "at": "2"}]}}
+eq("같은 시각에 함께 받은 목표 없는 단계는 아님(불타는 하늘)", sp.stale_chapters(same_ts, {A, B}), set())
+inf = {"tour": {"entered": [{"id": A, "at": "1"}, {"id": C, "at": "3", "inferred": True}]}}
+eq("'다 받음' 추정으로 넣은 마지막 하위는 근거 아님", sp.stale_chapters(inf, {A}), set())
+allr = {"tour": {"all_received": True, "entered": [{"id": A, "at": "1"}, {"id": C, "at": "2"}]}}
+eq("다 받은 챕터는 뒤 단계에 목표가 없어도 아님(여정 — 마무리 단계는 대화)", sp.stale_chapters(allr, {A}), set())
 
 # 7) 11-24 한 번의 평가가 초 경계에 걸쳐 갈라짐(사용자 로그 바티야 26+6) → 한 묶음으로. 갈라진 앞 조각을 '받음'·뒤를 '리셋'으로 읽으면 안 된다
 def line(d, h, t, c=CH):
@@ -143,6 +153,7 @@ eq("다 받고 끊긴 챕터 = 진행 중(남은 것 없음·마지막 하위까
    ("tour" in p10, p10.get("tour", {}).get("missing"), [e["id"] for e in p10.get("tour", {}).get("entered", [])], p10.get("tour", {}).get("all_received")),
    (True, [], [A, B], True))
 eq("다 받음 판정 뒤 지도 자동은 마지막 하위", sp.pick_auto(p10)["tour"], [B])
+eq("다 받고 끊긴 챕터의 추정 하위엔 inferred 표시", [e.get("inferred", False) for e in p10["tour"]["entered"]], [False, True])
 s11 = sp.StoryProgress(None)
 s11.scan([mk("log_2026.11.02_2-00-00_1.3.0.0.48484", [{CH: [A, B]}, {CH: [B]}])])                # 뒤로 아무 경고도 없음
 eq("뒤에 다른 경고가 하나도 없으면 다 받음으로 보지 않음(아직 그 세션)", s11.progress({CH: "tour"})["tour"]["missing"], [B])

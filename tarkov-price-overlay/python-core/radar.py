@@ -686,8 +686,13 @@ def story_chapters(loc_tasks: dict) -> list[dict]:
     return out
 
 
+_AUTO_STALE: set = set()  # 마지막 story_auto_quests 계산에서 '앞 단계로 내려간' 챕터(story_progress.stale_chapters)
+
+
 def story_auto_quests(game_mode: str = "regular") -> dict[str, list[str]]:
-    """'자동' 모드: 게임 출력 로그 경고로 추정한 (챕터 → 최근 받은 하위 퀘스트 id)(story_progress 참고). 로그를 못 읽으면 빈 dict."""
+    """'자동' 모드: 게임 출력 로그 경고로 추정한 (챕터 → 최근 받은 하위 퀘스트 id)(story_progress 참고). 로그를 못 읽으면 빈 dict.
+    11-25 가장 최근 하위의 목표 자료가 없어 앞 단계로 내려간 챕터는 _AUTO_STALE 에 남긴다(지도가 흐리게 낸다)."""
+    global _AUTO_STALE
     try:
         import quest_tracker as qt
         import story_progress
@@ -699,6 +704,7 @@ def story_auto_quests(game_mode: str = "regular") -> dict[str, list[str]]:
         ids = {c["questId"]: c["id"] for c in story_doc().get("chapters") or [] if c.get("questId")}
         prog = story_progress.get_progress(folders[-60:], ids, qt._state_dir() / "story_progress.json")
         has_marks = {m.get("quest") for m in story_doc().get("marks") or [] if m.get("quest")}
+        _AUTO_STALE = story_progress.stale_chapters(prog, has_marks)
         return story_progress.pick_auto(prog, has_marks=has_marks)
     except Exception as e:  # noqa: BLE001
         log.warning(f"[radar] 스토리 자동 추정 실패: {e}")
@@ -754,6 +760,8 @@ def story_targets(chapter: str, map_slug: str, pose: dict, loc_tasks: dict, auto
                    "dy": 0.0, "x": round(tx, 1), "y": round(py, 1), "z": round(tz, 1),
                    "objective": desc, "optional": False, "task": m["id"], "slug": None, "keys": None,
                    "story": m.get("chapter")}
+            if chapter == "auto" and m.get("chapter") in _AUTO_STALE:
+                tgt["stale"] = True  # 11-25 지금 단계의 목표 자료가 없어 앞 단계 목표 — 지도가 흐리게·'이전 단계일 수 있음'
             seen[key] = tgt
             out.append(tgt)
     return out

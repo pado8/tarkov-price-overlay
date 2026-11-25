@@ -188,11 +188,15 @@ class StoryProgress:
                 after = next((t for t in block_ts if t > last_seen.get(qid, "")), None)
                 if len(missing) > 1 or after is None:
                     continue
+                inferred = set(missing) - set(entered_at.get(qid, {}))
                 for i in sorted(missing):
                     entered_at.setdefault(qid, {}).setdefault(i, after)
                 missing = set()
                 all_received = True
-            ent = [{"id": i, "at": t} for i, t in sorted(entered_at.get(qid, {}).items(), key=lambda x: (x[1], x[0]))]
+            else:
+                inferred = set()
+            ent = [{"id": i, "at": t, **({"inferred": True} if i in inferred else {})}
+                   for i, t in sorted(entered_at.get(qid, {}).items(), key=lambda x: (x[1], x[0]))]
             out[slug] = {"all": sorted(ever[qid]), "missing": sorted(missing), "entered": ent, "since": since.get(qid),
                          "all_received": all_received}
         return out
@@ -208,6 +212,26 @@ def get_progress(folders: list[Path], chapter_ids: dict[str, str], cache_path: O
         _svc = StoryProgress(cache_path)
     _svc.scan(folders)
     return _svc.progress(chapter_ids)
+
+
+def stale_chapters(progress: dict[str, dict], has_marks: set[str]) -> set[str]:
+    """지도 자동이 '가장 최근에 받은 하위'의 목표 자료가 없어 그 앞 단계 목표로 내려간 챕터들.
+    11-25 사용자 스크린샷 대조(우연스런 목격자): 최근 하위 2개(11-12)가 목표 자료에 없어 앞 단계 '어디 살았는지'(11-09)가 나왔다 —
+    지금 단계가 아닐 수 있으니 화면이 흐리게·'이전 단계일 수 있음'으로 낸다."""
+    # 같은 시각에 함께 받은 단계(목표 있는 단계 + 대화·건네주기 단계)는 순서를 모르니 내려간 것으로 보지 않는다(불타는 하늘 11-03).
+    # '다 받음'으로 추정해 넣은 마지막 하위(inferred)는 받은 시각을 모르니 근거로 쓰지 않는다(여정 — 화면 목표와 맞았다).
+    # 마지막 하위까지 다 받은 챕터(all_received)는 빼놓는다 — 여정은 목표 있는 단계(11-02) 뒤에 목표 없는 단계 3개(11-03)를 받았는데도
+    # 화면 목표는 11-02 단계와 맞았다(마무리 단계는 대화·건네주기라 지도 목표가 없다). 스토리 자료엔 챕터별 하위 목록이 없어
+    # '원래 목표가 없는 단계'와 '자료가 빠진 단계'를 구별할 수 없다 — 사례 둘(여정·우연스런 목격자)에 맞춘 어림 규칙.
+    out: set[str] = set()
+    for slug, p in progress.items():
+        if p.get("all_received"):
+            continue
+        ent = [e for e in p.get("entered") or [] if not e.get("inferred")]
+        marked = [e["at"] for e in ent if e["id"] in has_marks]
+        if marked and any(e["at"] > max(marked) and e["id"] not in has_marks for e in ent):
+            out.add(slug)
+    return out
 
 
 def pick_auto(progress: dict[str, dict], recent: int = 1, has_marks: Optional[set[str]] = None) -> dict[str, list[str]]:

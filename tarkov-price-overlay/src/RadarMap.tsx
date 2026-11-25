@@ -1323,10 +1323,11 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                     key={`q${i}`}
                     onClick={() => {
                       if (other) setFloor(qf ?? "base"); // 다른 층 퀘스트를 누르면 그 층 지도로
-                      pick({ name: `${q.name}${other ? " · " + floorName(qf) : ""}${q.objective ? " · " + q.objective : ""}${q.keys?.length ? " · 🔑 " + q.keys.join(", ") : ""}`, p: [q.x!, q.y ?? myY, q.z!] });
+                      pick({ name: `${q.name}${q.stale ? ` (${t.radarStoryStale})` : ""}${other ? " · " + floorName(qf) : ""}${q.objective ? " · " + q.objective : ""}${q.keys?.length ? " · 🔑 " + q.keys.join(", ") : ""}`, p: [q.x!, q.y ?? myY, q.z!] });
                     }}
                   >
-                    <g opacity={other ? Q_OTHER_FLOOR : 1}>
+                    {/* 11-25 stale = 스토리 지금 단계의 목표 자료가 없어 앞 단계 목표를 낸 것 → 흐리게 */}
+                    <g opacity={(other ? Q_OTHER_FLOOR : 1) * (q.stale ? 0.5 : 1)}>
                       <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                       <circle cx={s.x} cy={s.y} r={5} fill={q.story ? "#d6a6ff" : "#f0c040"} stroke="#000" strokeWidth={0.8} />
                       {label(`q${i}`)}
