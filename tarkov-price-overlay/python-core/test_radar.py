@@ -6,6 +6,7 @@ import math
 import time
 
 import radar as r
+r._BOSS_USER = {}  # 사용자가 찍은 보스 구역 파일(data/boss_user.json)이 있어도 아래 시험은 게임 자료 계산만 본다
 
 fails = 0
 
@@ -259,6 +260,26 @@ eq("광신도는 보스 구역에 없음", sorted(b["name"] for z in r.boss_zone
 eq("광신도만 따로", [(b["name"], b["chance"]) for z in r.boss_zones(cm, {}, {}, cult=True) for b in z["bosses"]], [("sectantPriest", 0.2)])
 eq("파르티잔 = 맵 전역 점 하나(스폰 무게 중심)", [(z["anywhere"], z["pts"]) for z in r.boss_zones(cm, {}, {}) if z["bosses"][0]["name"] == "bossPartisan"], [(True, [[50.0, 25.0]])])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
+# 사용자가 지도 QA 화면에서 찍은 구역(boss_user.json) — 그 맵은 게임 자료 계산 대신 이것만
+r._BOSS_USER = {"maps": {"woods": [
+    {"kind": "boss", "mobs": [{"mob": "bossBully", "chance": 0.3}, {"mob": "bossKnight", "chance": 0.5}], "zone": "ZoneDorm", "label": "기숙사 뒤",
+     "pts": [[0, 0], [10, 0], [10, 10.04]], "shape": "poly", "main": True, "at": [5, 5]},
+    {"kind": "boss", "mobs": [{"mob": "bossBully", "chance": 0.1}], "pts": [[1, 1], [2, 2]], "shape": "poly", "main": False},
+    {"kind": "boss", "mobs": [], "pts": [[1, 1]]},
+    {"kind": "boss", "mobs": [{"mob": "bossBully", "chance": 0.1}], "pts": []},
+    {"kind": "boss", "mobs": [{"mob": "bossPartisan", "chance": 0.25}], "pts": [[0, 0], [100, 50]], "shape": "any", "main": False, "at": [1, 1]},
+    {"kind": "cult", "mobs": [{"mob": "sectantPriest", "chance": 0.2}], "zone": "Zone9", "pts": [[50, 50]], "shape": "hull"}]}}
+_um = {"normalizedName": "woods", "spawns": [], "bosses": [{"mob": "bossKojaniy", "spawnChance": 1, "spawnLocations": [{"spawnKey": "ZoneWoodCutter", "name": "W", "chance": 1, "positions": [{"x": -2, "z": -75}]}]}]}
+_uz = r.boss_zones(_um, {"bossBully": "르샬라", "ZoneDorm": "기숙사"}, {})
+eq("사용자 구역: 그 맵은 게임 자료 대신 사용자 것만(보스·점이 빈 구역은 건너뜀)", len(_uz), 3)
+eq("사용자 구역: 찍은 점 그대로 + 다각형·아이콘 자리·이름 키 번역·확률 큰 순", _uz[0],
+   {"name": "기숙사", "pts": [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]], "bosses": [{"name": "bossKnight", "chance": 0.5}, {"name": "르샬라", "chance": 0.3}],
+    "anywhere": False, "main": True, "poly": True, "at": [5.0, 5.0], "label": "기숙사 뒤"})
+eq("사용자 구역: 3점 미만은 다각형 아님(둘레 윤곽), 아이콘 끔", (_uz[1].get("poly"), _uz[1]["main"]), (None, False))
+eq("사용자 구역: 맵 전역은 가운데 점 하나·아이콘 항상·아이콘 자리 무시", (_uz[2]["anywhere"], _uz[2]["pts"], _uz[2]["main"], _uz[2].get("at")), (True, [[50.0, 25.0]], True, None))
+eq("사용자 구역: 광신도는 따로 + 코드형 이름은 비움", [(z["name"], z["pts"], z["main"]) for z in r.boss_zones(_um, {}, {}, cult=True)], [("", [[50.0, 50.0]], True)])
+eq("사용자 구역: 파일에 없는 맵은 게임 자료 그대로", [z["pts"] for z in r.boss_zones({**_um, "normalizedName": "customs"}, {}, {})], [[[-2.0, -75.0]]])
+r._BOSS_USER = {}
 eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
 eq("100m 안으로 이어진 220m 이하 사슬은 한 마을", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
 

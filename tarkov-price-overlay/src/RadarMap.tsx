@@ -114,7 +114,8 @@ export type MapDoc = {
   switches: { id: string; p: Pt }[];
 };
 
-type BossZone = { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean };
+// poly = 사용자가 찍은 점을 그대로 이은 다각형(없으면 점 둘레를 감싼 윤곽) · at = 아이콘 자리(없으면 점들의 가운데) — data/boss_user.json
+type BossZone = { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean; poly?: boolean; at?: [number, number] };
 export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; cult: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
 export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, cult: false, locks: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
@@ -344,6 +345,8 @@ const BOSS_ARC = 14; // 점마다 원을 몇 조각으로 근사할지
 function bossCenter(pts: [number, number][]): [number, number] {
   return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
 }
+const bossAt = (z: BossZone): [number, number] => z.at ?? bossCenter(z.pts);
+const bossShape = (z: BossZone): [number, number][] => (z.poly && z.pts.length >= 3 ? z.pts : bossHull(z.pts));
 function bossHull(pts: [number, number][]): [number, number][] {
   const ring: [number, number][] = [];
   for (const [x, z] of pts)
@@ -919,7 +922,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (layers.spawns)
       [...(doc.bosses ?? []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
         if (z.main === false) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다
-        const [cx, cz] = bossCenter(z.pts);
+        const [cx, cz] = bossAt(z);
         const b = toScreen(cx, cz);
         zoneIgnores.add(boxes.length);
         boxes.push({ x1: b.x - 10, y1: b.y - 10, x2: b.x + 10, y2: b.y + 10 });
@@ -967,8 +970,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     if (layers.transits) doc.transits.forEach((x, i) => cands.push({ key: `tr${i}`, text: x.name, p: x.p, off: 5, pr: 3 }));
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
     // 보스 이름표는 구역마다 한 번(main 무리) — 무리마다 달면 삼림 '제재소 · 슈트르만 60%'가 다섯 번 반복됐다(11-24)
-    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
-    if (layers.cult) (doc.cultists ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossCenter(z.pts); cands.push({ key: `ct${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.6 }); });
+    if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossAt(z); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
+    if (layers.cult) (doc.cultists ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossAt(z); cands.push({ key: `ct${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.6 }); });
     doc.extracts.forEach((x, i) => {
       if (showEx(x)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -1193,16 +1196,16 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 // 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 스폰 점(게임 좌표)을 60m 무리로 나눠(서버) 무리마다 점 둘레 BOSS_PAD 를
                 // 둥글게 감싼 작은 윤곽 + 가운데 배지 하나. 점 1개면 원, 2개면 짧은 캡슐(60m 안이라 길게 늘어지지 않는다).
                 // 맵 전역(anywhere)이면 점선 원 하나.
-                const [cx, cz] = bossCenter(z.pts);
+                const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
                 const shape = !z.anywhere;
                 const badges = z.main === false ? [] : [c]; // 11-25 배지는 구역마다 main 무리 하나(나머지 무리는 윤곽만)
                 return (
-                  <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
+                  <g key={`bz${i}`} className="radar-bosszone" onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
                     {z.anywhere ? (
                       <circle cx={c.x} cy={c.y} r={14} fill="rgba(220,40,40,0.14)" stroke="#e53935" strokeWidth={1.2} strokeDasharray="3 2" />
                     ) : shape ? (
-                      <polygon points={poly(bossHull(z.pts))} fill="rgba(229,57,53,0.17)" stroke="#e53935" strokeWidth={1.2} strokeLinejoin="round" />
+                      <polygon points={poly(bossShape(z))} fill="rgba(229,57,53,0.17)" stroke="#e53935" strokeWidth={1.2} strokeLinejoin="round" />
                     ) : null}
                     {badges.map((b, k) => (
                       <g key={k}>
@@ -1217,14 +1220,14 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
             {layers.cult &&
               (doc.cultists ?? []).map((z, i) => {
                 // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)이면 점선 원
-                const [cx, cz] = bossCenter(z.pts);
+                const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
                 return (
-                  <g key={`ct${i}`} onClick={() => pick({ name: `${t.radarLayerCult} · ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
+                  <g key={`ct${i}`} className="radar-bosszone" onClick={() => pick({ name: `${t.radarLayerCult} · ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
                     {z.anywhere ? (
                       <circle cx={c.x} cy={c.y} r={14} fill="rgba(150,100,230,0.14)" stroke={CULT_COLOR} strokeWidth={1.2} strokeDasharray="3 2" />
                     ) : (
-                      <polygon points={poly(bossHull(z.pts))} fill="rgba(150,100,230,0.16)" stroke={CULT_COLOR} strokeWidth={1.2} strokeLinejoin="round" />
+                      <polygon points={poly(bossShape(z))} fill="rgba(150,100,230,0.16)" stroke={CULT_COLOR} strokeWidth={1.2} strokeLinejoin="round" />
                     )}
                     {z.main !== false && (
                       <g transform={`translate(${c.x} ${c.y})`}>

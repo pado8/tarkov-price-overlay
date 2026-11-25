@@ -881,6 +881,9 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
         zn = s.get("zoneName")
         if zn and ok(s.get("position")):
             by_zone.setdefault(zn, []).append([round(float(s["position"]["x"]), 1), round(float(s["position"]["z"]), 1)])
+    user = _user_boss_zones(m, loc_maps, loc_en, cult)
+    if user is not None:  # 사용자가 직접 찍은 맵은 게임 자료 계산 대신 그것만 쓴다(11-25)
+        return user
     zones: dict = {}
     spots = BOSS_SPOTS.get(m.get("normalizedName") or "", {})
     for b in m.get("bosses") or []:
@@ -955,6 +958,65 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
             mains = {max(range(len(groups)), key=lambda k: len(groups[k]))}
         for k, grp in enumerate(groups):
             out.append({**z, "pts": grp, "main": k in mains})
+    return out
+
+
+_BOSS_USER: Optional[dict] = None
+
+
+def boss_user_doc() -> dict:
+    """사용자가 지도 QA 화면에서 직접 찍은 보스·광신도 구역 — data/boss_user.json (11-25 '보스 영역을 내가 수정할 수 있게').
+    {maps: {맵: [{kind: boss|cult, mobs: [{mob, chance}], zone: 게임 구역 이름(번역 키), label: 직접 쓴 이름(한국어),
+    pts: [[x, z]…], shape: poly(찍은 점을 이은 모양)|hull(점 둘레를 감쌈)|any(맵 전역), main: 아이콘 여부, at: 아이콘 자리}]}}.
+    이 파일에 든 맵은 게임 자료 계산(boss_zones 아래쪽) 대신 이것만 쓴다. 파일이 없으면 전부 게임 자료."""
+    global _BOSS_USER
+    if _BOSS_USER is None:
+        try:
+            base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+            _BOSS_USER = json.loads((base / "data" / "boss_user.json").read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            _BOSS_USER = {}
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"[radar] 보스 구역(사용자) 로드 실패: {e}")
+            _BOSS_USER = {}
+    return _BOSS_USER
+
+
+def _user_boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict], cult: bool) -> Optional[list]:
+    """boss_user.json 에 이 맵이 있으면 그 구역 목록(boss_zones 와 같은 모양), 없으면 None. 점·보스가 빈 구역은 건너뛴다.
+    poly = 찍은 점을 그대로 이은 다각형(3점부터), at = 아이콘 자리, label = 직접 쓴 이름(map_features 가 한국어일 때만 name 으로)."""
+    rows = (boss_user_doc().get("maps") or {}).get(m.get("normalizedName") or "")
+    if not isinstance(rows, list):
+        return None
+    out = []
+    for z in rows:
+        if not isinstance(z, dict) or (z.get("kind") == "cult") != cult:
+            continue
+        try:
+            pts = [[round(float(p[0]), 1), round(float(p[1]), 1)] for p in z.get("pts") or []]
+            bosses = [{"name": _loc(loc_maps, b["mob"]) or _loc(loc_en, b["mob"]) or b["mob"], "chance": round(float(b.get("chance") or 0), 2)}
+                      for b in z.get("mobs") or [] if b.get("mob")]
+            at = [round(float(z["at"][0]), 1), round(float(z["at"][1]), 1)] if z.get("at") else None
+        except (TypeError, ValueError, IndexError, KeyError):
+            continue
+        if not pts or not bosses:
+            continue
+        bosses.sort(key=lambda x: -x["chance"])
+        zk = z.get("zone") or ""
+        name = (_loc(loc_maps, zk) or _loc(loc_en, zk) or zk) if zk else ""
+        if re.search(r"\d", name) and " " not in name:
+            name = ""
+        anywhere = z.get("shape") == "any"
+        if anywhere:
+            pts = [[round(sum(p[0] for p in pts) / len(pts), 1), round(sum(p[1] for p in pts) / len(pts), 1)]]
+        row = {"name": name, "pts": pts, "bosses": bosses, "anywhere": anywhere, "main": anywhere or z.get("main") is not False}
+        if z.get("shape") == "poly" and len(pts) >= 3:
+            row["poly"] = True
+        if at and not anywhere:
+            row["at"] = at
+        if z.get("label"):
+            row["label"] = str(z["label"])[:40]
+        out.append(row)
     return out
 
 
@@ -1521,6 +1583,9 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     for z in (doc.get("bosses") or []) + (doc.get("cultists") or []):
         for x in z["bosses"]:
             x["name"] = fix.get(x["name"], x["name"])
+        label = z.pop("label", None)  # 사용자가 직접 쓴 구역 이름(한국어) — 다른 언어에선 게임 자료 이름 그대로
+        if label and lang == "ko":
+            z["name"] = label
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc
