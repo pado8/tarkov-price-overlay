@@ -2486,7 +2486,23 @@ def quests_status() -> dict:
         st["faction_by_mode"] = {m: faction.detect(tr.all_status(k), qf) for m, k in (("pvp", "regular"), ("pve", "pve"), ("season", "season"))}
     except Exception:  # noqa: BLE001
         st["faction_by_mode"] = {}
+    st["game_build"] = _game_build()
     return st
+
+
+def _game_build() -> int | None:
+    """11-25 가장 최근 게임 로그 폴더 이름의 끝 번호(log_2026.11.25_16-03-28_1.3.5.0.48914 → 48914).
+    앱이 하루 요약 gvb 로 보낸다 — 게임 패치 전후로 조회 실패·지도·퀘스트 로그를 나눠 보려고(11-24 게임 1.3.5.0 패치를 통계가 늦게 안 일)."""
+    try:
+        import quest_tracker as qt
+        inst = get_tracker()._effective_install_path()
+        folders = qt._list_log_folders(inst) if inst else []
+        if not folders:
+            return None
+        m = re.search(r"_\d+\.\d+\.\d+\.\d+\.(\d{3,7})$", folders[-1].name)
+        return int(m.group(1)) if m else None
+    except Exception:  # noqa: BLE001
+        return None
 
 
 @app.post("/quests/path", dependencies=[Depends(_reject_foreign_origin)])

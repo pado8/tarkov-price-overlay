@@ -690,6 +690,7 @@ function dailySample(key: string, v: number): void {
   persistDaily();
 }
 setStatSink(dailyAdd); // Radar 등 App 밖 컴포넌트가 하루 요약에 더할 수 있게(statBus.ts)
+let lastGameBuild = 0; // 11-25 하루 요약 gvb 를 같은 빌드로 되풀이해 넣지 않게
 
 // 11-09 화면 오류 횟수(하루 요약 err, 하루 50번까지) — 오류 내용은 보내지 않는다. 조용한 고장을 늦게 알던 것
 if (typeof window !== "undefined" && IS_MAIN_WINDOW) {
@@ -959,6 +960,7 @@ type QuestModeCounts = {
 
 type QuestStatus = {
   enabled: boolean;
+  game_build?: number | null; // 11-25 가장 최근 게임 로그 폴더의 빌드 번호(하루 요약 gvb)
   faction_by_mode?: Record<string, string | null>; // 11-06 설정 '진영: 자동 (USEC)' 표시용
   install_path: string | null;
   auto_detected_path: string | null;
@@ -4890,6 +4892,12 @@ function App() {
       if (!res.ok) return false;
       const data: QuestStatus = await res.json();
       setQuestStatus(data);
+      // 11-25 하루 요약 gvb: 게임 빌드 번호 — 처음 보일 때·바뀔 때만 한 번(하루 중앙값). 게임 패치 전후를 통계에서 나눠 보려고
+      const gb = data.game_build;
+      if (typeof gb === "number" && gb > 0 && gb < 10_000_000 && gb !== lastGameBuild) {
+        lastGameBuild = gb;
+        dailySample("gvb", gb);
+      }
       // 11-03 퀘스트 연동 켬 여부·경로 유효·퀘스트 수(세션당 1회) — 실제로 켜는 사람 수를 처음 재는 것
       if (!questCfgReportedRef.current) {
         questCfgReportedRef.current = true;
