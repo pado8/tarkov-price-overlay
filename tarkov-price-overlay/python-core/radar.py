@@ -872,8 +872,34 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
                 kept.append((qx, qz, qy))
                 add("quest", tname, p, objective=desc, optional=bool(o.get("optional")), task=tid,
                     slug=t.get("normalizedName") or None,  # 가이드 상세(/guide/quest/<slug>/) 바로가기용
-                    keys=keys or None)  # 목표에 필요한 열쇠 이름(대체 열쇠는 " / " 로)
+                    keys=keys or None,  # 목표에 필요한 열쇠 이름(대체 열쇠는 " / " 로)
+                    obj=o.get("id"))
+    out = _merge_same_task_spots(out)
     out.sort(key=lambda r: r["dist"])
+    return out
+
+
+def _merge_same_task_spots(targets: list[dict]) -> list[dict]:
+    """같은 퀘스트의 서로 다른 목표가 같은 자리(3m·높이 2m 안)에 있으면 점 하나로 — 목표 문구는 ' / ' 로 잇고 목표 id 는 objs 에.
+    11-25 사용자 '퀘스트 겹치는 버그가 아직': 세관 '써스티 - 배달'(은닉 장소 찾기 + 프로판 탱크 숨기기, 0m)·'화학 - 파트 4'(차량 찾기 +
+    마커 설치, 0m) 등 6쌍이 점 둘로 찍혀 이름표가 점 양옆에 하나씩 붙고 목록도 두 줄이었다(2ce1c4f1a 는 같은 목표의 사본만 합쳤다).
+    스토리 목표(story_targets)도 같은 자리는 한 점으로 잇는다. 숨기기(✕)는 퀘스트(task) 단위라 합쳐도 그대로 된다."""
+    out: list[dict] = []
+    for t in targets:
+        if t.get("kind") == "quest":
+            same = next((u for u in out if u.get("kind") == "quest" and u.get("task") == t.get("task")
+                         and math.hypot(u["x"] - t["x"], u["z"] - t["z"]) < 3.0 and abs(u["y"] - t["y"]) < 2.0), None)
+            if same is not None:
+                if t.get("objective") and t["objective"] not in (same.get("objective") or ""):
+                    same["objective"] = f"{same['objective']} / {t['objective']}" if same.get("objective") else t["objective"]
+                same["optional"] = bool(same.get("optional")) and bool(t.get("optional"))
+                if t.get("keys"):
+                    same["keys"] = list(dict.fromkeys((same.get("keys") or []) + t["keys"]))
+                same.setdefault("objs", [same.get("obj")] if same.get("obj") else [])
+                if t.get("obj") and t["obj"] not in same["objs"]:
+                    same["objs"].append(t["obj"])
+                continue
+        out.append(t)
     return out
 
 
