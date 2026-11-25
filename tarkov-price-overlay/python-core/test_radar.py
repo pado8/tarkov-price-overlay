@@ -7,6 +7,7 @@ import time
 
 import radar as r
 r._BOSS_USER = {}  # 사용자가 찍은 보스 구역 파일(data/boss_user.json)이 있어도 아래 시험은 게임 자료 계산만 본다
+r._MAP_USER = {}  # 탈출구·위험 구역 고침 기록(data/map_user.json)도 마찬가지
 
 fails = 0
 
@@ -260,6 +261,29 @@ eq("광신도는 보스 구역에 없음", sorted(b["name"] for z in r.boss_zone
 eq("광신도만 따로", [(b["name"], b["chance"]) for z in r.boss_zones(cm, {}, {}, cult=True) for b in z["bosses"]], [("sectantPriest", 0.2)])
 eq("파르티잔 = 맵 전역 점 하나(스폰 무게 중심)", [(z["anywhere"], z["pts"]) for z in r.boss_zones(cm, {}, {}) if z["bosses"][0]["name"] == "bossPartisan"], [(True, [[50.0, 25.0]])])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
+# 사용자가 고친 탈출구·환승·위험 구역(map_user.json) — 항목별 고침 기록
+def _ud():
+    return {"extracts": [{"name": "A 탈출구", "en": "Exit A", "p": [10.0, 2.0, 20.0], "faction": "pmc", "switch": False, "outline": [[9.0, 19.0], [11.0, 19.0], [11.0, 21.0]]},
+                         {"name": "B", "en": "Exit B", "p": [50.0, 0.0, 50.0], "faction": "scav", "switch": False, "outline": []},
+                         {"name": "B", "en": "Exit B", "p": [70.0, 0.0, 70.0], "faction": "scav", "switch": False, "outline": []}],
+            "transits": [{"name": "환승", "p": [5.4, 1.0, -5.6], "outline": []}],
+            "hazards": [{"name": "지뢰", "type": "minefield", "p": None, "outline": [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]},
+                        {"name": "저격수", "type": "sniper", "p": [100.2, 9.0, 200.7], "outline": []}]}
+r._MAP_USER = {}
+_u0 = r.apply_map_user(_ud(), "m", "ko")
+eq("고침 기록: 키 = 탈출구 영어 이름(같으면 #n)·그 밖은 종류+자리", [x["k"] for L in r.MAP_USER_LAYERS for x in _u0[L]], ["ex:Exit A", "ex:Exit B", "ex:Exit B#1", "tr:5,-6", "minefield:5,5", "sniper:100,201"])
+r._MAP_USER = {"maps": {"m": {"extracts": {"patch": {"ex:Exit A": {"p": [15, 30], "label": "내 이름"}, "ex:Exit B": {"hide": True}, "ex:Exit B#1": {"kind": "shared", "outline": [[1, 1], [2, 2], [3, 1]]}},
+                                           "add": [{"id": "n1", "kind": "scav", "label": "새 탈출구", "p": [1, 2], "y": 7}]},
+                              "hazards": {"patch": {"sniper:100,201": {"kind": "minefield", "p": [0, 0]}}, "add": [{"id": "n2", "kind": "sniper", "p": [3, 4]}, {"kind": "x"}]}}}}
+_u1 = r.apply_map_user(_ud(), "m", "ko")
+eq("고침 기록: 옮기면 윤곽도 같이·높이는 그대로·이름은 한국어만", (_u1["extracts"][0]["p"], _u1["extracts"][0]["outline"], _u1["extracts"][0]["name"], r.apply_map_user(_ud(), "m", "en")["extracts"][0]["name"]),
+   ([15.0, 2.0, 30.0], [[14.0, 29.0], [16.0, 29.0], [16.0, 31.0]], "내 이름", "A 탈출구"))
+eq("고침 기록: 숨김은 빠지고·종류·윤곽 바꿈·새 탈출구", [(x["k"], x["faction"], x["outline"], x["p"]) for x in _u1["extracts"][1:]],
+   [("ex:Exit B#1", "shared", [[1.0, 1.0], [2.0, 2.0], [3.0, 1.0]], [70.0, 0.0, 70.0]), ("add:n1", "scav", [], [1.0, 7.0, 2.0])])
+eq("고침 기록: 위험 구역 종류를 바꾸면 이름도 그 종류로·새 항목 이름은 같은 종류에서·망가진 추가는 건너뜀", [(x["type"], x["name"], x["p"]) for x in _u1["hazards"]],
+   [("minefield", "지뢰", None), ("minefield", "지뢰", [0.0, 9.0, 0.0]), ("sniper", "sniper", [3.0, 0.0, 4.0])])
+eq("고침 기록: 손대지 않은 층은 그대로", _u1["transits"], [{"name": "환승", "p": [5.4, 1.0, -5.6], "outline": [], "k": "tr:5,-6"}])
+r._MAP_USER = {}
 # 군즈: Knight 가 Big Pipe·Birdeye 를 데리고 나오는 맵에서만 무리 이름으로
 _gm = {"normalizedName": "x", "spawns": [], "bosses": [{"mob": "bossKnight", "spawnChance": 0.2, "escorts": [{"mob": "followerBigPipe"}, {"mob": "followerBirdEye"}],
        "spawnLocations": [{"spawnKey": "G", "name": "G", "chance": 1, "positions": [{"x": 1, "z": 1}]}]}]}

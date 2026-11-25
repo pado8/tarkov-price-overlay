@@ -1581,6 +1581,101 @@ def annotate_loot(doc: dict, loc: dict, loc_en: dict) -> None:
     doc["loot_names"] = names
 
 
+_MAP_USER: Optional[dict] = None
+MAP_USER_LAYERS = ("extracts", "transits", "hazards")
+
+
+def map_user_doc() -> dict:
+    """사용자가 지도 QA 화면에서 고친 탈출구·환승·위험 구역(지뢰·저격수·로그) — data/map_user.json (11-25 '탈출구나 위험지역 저격스나이퍼까지 전부 내가 수정').
+    {maps: {맵: {extracts|transits|hazards: {patch: {키: {p: [x, z], outline: [[x, z]…], hide, kind, label}}, add: [{id, kind, label, p, y, outline}]}}}}.
+    보스 구역(boss_user.json)과 달리 항목별 고침 기록이다 — 손대지 않은 항목은 게임 자료 그대로(자료가 갱신되면 따라간다)."""
+    global _MAP_USER
+    if _MAP_USER is None:
+        try:
+            base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
+            _MAP_USER = json.loads((base / "data" / "map_user.json").read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            _MAP_USER = {}
+        except Exception as e:  # noqa: BLE001
+            log.warning(f"[radar] 지도 고침 기록(사용자) 로드 실패: {e}")
+            _MAP_USER = {}
+    return _MAP_USER
+
+
+def _user_item_xz(it: dict) -> Optional[list]:
+    """항목의 자리 [x, z] — p 가 없으면(윤곽만 있는 위험 구역) 윤곽 가운데."""
+    p = it.get("p")
+    if p:
+        return [float(p[0]), float(p[2])]
+    ol = it.get("outline") or []
+    return [sum(q[0] for q in ol) / len(ol), sum(q[1] for q in ol) / len(ol)] if ol else None
+
+
+def _user_key(layer: str, it: dict, seen: dict) -> str:
+    """고침 기록을 붙일 키(언어와 무관): 탈출구 = 영어 이름, 그 밖 = 종류 + 원래 자리(m 단위 반올림). 같은 키가 또 나오면 #n."""
+    if layer == "extracts":
+        base = "ex:" + str(it.get("en") or it.get("name") or "")
+    else:
+        xz = _user_item_xz(it) or [0.0, 0.0]
+        base = f"{'tr' if layer == 'transits' else (it.get('type') or 'hz')}:{round(xz[0])},{round(xz[1])}"
+    n = seen.get(base, 0)
+    seen[base] = n + 1
+    return base if n == 0 else f"{base}#{n}"
+
+
+def apply_map_user(doc: dict, slug: str, lang: str) -> dict:
+    """지도 문서의 탈출구·환승·위험 구역에 키(k)를 붙이고 사용자 고침 기록을 덧씌운다: 옮김(p — 윤곽도 같이 옮김)·윤곽 다시 찍기·숨김·종류·이름(한국어 화면만)·새 항목."""
+    u = (map_user_doc().get("maps") or {}).get(slug) or {}
+    for layer in MAP_USER_LAYERS:
+        lu = u.get(layer) or {}
+        pa_all = lu.get("patch") or {}
+        seen: dict = {}
+        out = []
+        for it in doc.get(layer) or []:
+            it["k"] = _user_key(layer, it, seen)
+            pa = pa_all.get(it["k"])
+            if isinstance(pa, dict):
+                try:
+                    if pa.get("hide"):
+                        continue
+                    old = _user_item_xz(it)
+                    if pa.get("p") and old:
+                        nx, nz = float(pa["p"][0]), float(pa["p"][1])
+                        if pa.get("outline") is None and it.get("outline"):
+                            it["outline"] = [[round(q[0] + nx - old[0], 1), round(q[1] + nz - old[1], 1)] for q in it["outline"]]
+                        it["p"] = [round(nx, 1), (it.get("p") or [0, 0.0, 0])[1], round(nz, 1)]
+                    if pa.get("outline") is not None:
+                        it["outline"] = [[round(float(q[0]), 1), round(float(q[1]), 1)] for q in pa["outline"]]
+                    if pa.get("kind"):
+                        it["faction" if layer == "extracts" else "type"] = str(pa["kind"])
+                        if layer == "hazards":  # 종류를 바꾸면 이름도 그 종류의 것으로(같은 종류 항목이 있으면)
+                            same = next((x for x in doc.get(layer) or [] if x is not it and x.get("type") == pa["kind"]), None)
+                            if same:
+                                it["name"] = same["name"]
+                    if pa.get("label") and lang == "ko":
+                        it["name"] = str(pa["label"])[:60]
+                except (TypeError, ValueError, IndexError, KeyError):
+                    pass
+            out.append(it)
+        for a in lu.get("add") or []:
+            try:
+                kind = str(a.get("kind") or "")
+                p = [round(float(a["p"][0]), 1), round(float(a.get("y") or 0), 1), round(float(a["p"][1]), 1)]
+                ol = [[round(float(q[0]), 1), round(float(q[1]), 1)] for q in a.get("outline") or []]
+                same = next((x for x in out if layer == "hazards" and x.get("type") == kind), None)
+                name = str(a.get("label") or "")[:60] or (same["name"] if same else kind or layer)
+                it = {"name": name, "p": p, "outline": ol, "k": "add:" + str(a.get("id") or len(out))}
+                if layer == "extracts":
+                    it.update({"en": name, "faction": kind if kind in ("pmc", "scav", "shared") else "shared", "switch": False})
+                elif layer == "hazards":
+                    it["type"] = kind or "minefield"
+                out.append(it)
+            except (TypeError, ValueError, IndexError, KeyError):
+                continue
+        doc[layer] = out
+    return doc
+
+
 def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     """전체 지도용 정적 좌표 문서(맵·언어별 캐시). 없는 맵이면 None."""
     slug = EVENT_MAPS.get(slug, slug)
@@ -1599,6 +1694,7 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     annotate_loot(doc, loc_maps, _doc("regular/maps_en") or {})
     doc["zones"] = map_labels.zone_labels(m, lang)  # 구역 이름표(스폰 구역 코드에 붙인 우리 이름)
     # 언어 자료에 이름이 없는 보스(11-25 파르티잔 — ko·ru 자료에 없어 영어로 나옴)
+    apply_map_user(doc, slug, lang)  # 사용자가 고친 탈출구·환승·위험 구역(data/map_user.json)
     fix = BOSS_NAME_FALLBACK.get(lang) or {}
     for z in (doc.get("bosses") or []) + (doc.get("cultists") or []):
         for x in z["bosses"]:

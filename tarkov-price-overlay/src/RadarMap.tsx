@@ -1098,7 +1098,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   // 로그(11-04): 보스가 아니라 보스 구역에서 빼고 같은 조준점으로 — 색만 달리(노랑)
                   const c = x.type === "rogue" ? "#ffc94d" : "#f5f5f5";
                   return (
-                    <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
+                    <g key={`hz${i}`} className="radar-edhz" onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
                       <circle cx={s.x} cy={s.y} r={10} fill="transparent" />
                       <circle cx={s.x} cy={s.y} r={6} fill="rgba(0,0,0,0.35)" stroke={c} strokeWidth={1.2} />
                       <line x1={s.x - 9} y1={s.y} x2={s.x + 9} y2={s.y} stroke={c} strokeWidth={1.2} />
@@ -1109,7 +1109,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   );
                 }
                 return (
-                  <g key={`hz${i}`} onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
+                  <g key={`hz${i}`} className="radar-edhz" onClick={() => pick({ name: x.name, p })} opacity={op(p[0], p[1], p[2])}>
                     {x.outline.length >= 3 ? (
                       <polygon points={poly(x.outline)} fill="rgba(255,120,40,0.18)" stroke="#ff9f1c" strokeWidth={1} strokeDasharray="3 2" />
                     ) : (
@@ -1125,7 +1125,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               doc.transits.map((x, i) => {
                 const s = toScreen(x.p[0], x.p[2]);
                 return (
-                  <g key={`tr${i}`} onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                  <g key={`tr${i}`} className="radar-edtr" onClick={() => pick({ name: x.name, p: x.p })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                     {x.outline.length >= 3 && <polygon points={poly(x.outline)} fill="rgba(111,168,220,0.15)" stroke="#6fa8dc" strokeWidth={1} />}
                     <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                     <circle cx={s.x} cy={s.y} r={4} fill="#6fa8dc" stroke="#000" strokeWidth={0.8} />
@@ -1138,7 +1138,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                   const s = toScreen(x.p[0], x.p[2]);
                   const c = x.faction === "scav" ? SCAV_COLOR : "#6fbf73";
                   return (
-                    <g key={`ex${i}`} onClick={() => pick({ name: x.name, p: x.p, sw: x.sw })} opacity={op(x.p[0], x.p[1], x.p[2])}>
+                    <g key={`ex${i}`} className="radar-edex" onClick={() => pick({ name: x.name, p: x.p, sw: x.sw })} opacity={op(x.p[0], x.p[1], x.p[2])}>
                       {x.outline.length >= 3 && <polygon points={poly(x.outline)} fill="rgba(111,191,115,0.15)" stroke={c} strokeWidth={1} />}
                       <circle cx={s.x} cy={s.y} r={9} fill="transparent" />
                       <circle cx={s.x} cy={s.y} r={4} fill={c} stroke="#000" strokeWidth={0.8} />
