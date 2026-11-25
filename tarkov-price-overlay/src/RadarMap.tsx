@@ -896,6 +896,19 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const n = l?.name ?? g;
     return lang === "ko" ? FLOOR_KO[n] ?? n : n;
   };
+  // 층: 자동이면 내 높이·위치로, 아니면 고른 층. 그림은 사이드카가 그 층만 켠 SVG 변형으로 준다(?layer=). 이름표 자리 판정(왼쪽 위 층 이름 칸)에도 쓰여 여기서 정한다
+  const floorAuto = doc?.img && me ? autoFloor(doc.img.layers, me.x, me.y, me.z) : null;
+  const floorNow = floor === "auto" ? floorAuto : floor === "base" ? null : floor;
+  // 맵 전역 보스·광신도(정해진 자리 없음: 파르티잔·아무 스캐브 스폰)를 놓는 자리 = 지도(그림, 없으면 좌표 범위)의 화면상 왼쪽 맨 위 모서리 안쪽.
+  // 지도 안에 그리므로 지도와 같이 움직인다(11-25 사용자 '지도 안 왼쪽 맨위 검은 곳에' — 화면 틀에 고정한 칩은 뺌). i 번째는 아래로 한 줄씩
+  const anyZones = [...(layers.spawns ? (doc?.bosses ?? []).map((z) => ({ z, cult: false })) : []), ...(layers.cult ? (doc?.cultists ?? []).map((z) => ({ z, cult: true })) : [])].filter((x) => x.z.anywhere);
+  const anyAt = (() => {
+    if (!doc || !v || !anyZones.length) return null;
+    const bb: [number, number][] | null = doc.img && showImg ? doc.img.bounds : doc.bounds ? [[doc.bounds.minx, doc.bounds.minz], [doc.bounds.maxx, doc.bounds.maxz]] : null;
+    if (!bb) return null;
+    const c = [[bb[0][0], bb[0][1]], [bb[0][0], bb[1][1]], [bb[1][0], bb[0][1]], [bb[1][0], bb[1][1]]].map(([x, z]) => toScreen(x, z)).reduce((a, b) => (b.x + b.y < a.x + a.y ? b : a));
+    return (i: number) => ({ x: c.x + 16, y: c.y + 16 + i * 24 });
+  })();
   const labels = new Map<string, { text: string; lx: number; ly: number }>();
   const zoneShown = new Map<number, number>(); // 11-23 겹치지 않아 그릴 지역명(구역 이름표) 번호 → 세로 비킴(px)
   if (doc && v) {
@@ -904,6 +917,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
       { x1: box.w - 170, y1: 0, x2: box.w, y2: 30 },
       { x1: 0, y1: box.h - 20, x2: box.w, y2: box.h },
     ];
+    // 화면 틀 왼쪽 위에 얹힌 표시(남은 시간·층 이름)도 막는다 — 구석의 이름표·지역명이 그 밑에 깔리지 않게. 미니맵은 지도가 작아 막지 않는다(도구 자리와 같은 취급)
+    if (!mini && (raidLeft != null || (doc.img && showImg && floorNow))) boxes.push({ x1: 0, y1: 0, x2: 90, y2: 30 });
+    // 지도 안 왼쪽 위의 맵 전역 표시(아이콘 + 글) 자리
+    if (anyAt) anyZones.forEach((x, i) => { const p = anyAt(i); boxes.push({ x1: p.x - 12, y1: p.y - 11, x2: p.x + 16 + bossLabel(x.z, t, 3).length * 7, y2: p.y + 11 }); });
     if (me) {
       const s = toScreen(me.x, me.z);
       boxes.push({ x1: s.x - 6, y1: s.y - 7, x2: s.x + 6, y2: s.y + 6 }); // 내 화살표 자리(바로 옆 탈출구의 이름표까지 막지 않게 작게)
@@ -921,7 +938,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     const zoneIgnores = new Set<number>();
     // 보스 배지는 보스 층, 광신도 두건은 광신도 층이 켜져 있을 때 — 그리는 조건과 같게(보스 층을 끄고 광신도만 켜도 두건을 이름표가 덮지 않게)
     [...(layers.spawns ? doc.bosses ?? [] : []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
-      if (z.main === false || z.anywhere) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다 · 맵 전역은 지도 안에 없다(왼쪽 위 칩)
+      if (z.main === false || z.anywhere) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다 · 맵 전역은 위 anyAt 자리에서 따로 막는다
       const [cx, cz] = bossAt(z);
       const b = toScreen(cx, cz);
       zoneIgnores.add(boxes.length);
@@ -1021,9 +1038,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 지도 그림 ↔ 게임 좌표: tarkov.dev 사이트와 같은 식 — (x, z)를 coordinateRotation 만큼 돌린 뒤 px = t0·rx + t1, py = −t2·rz + t3.
   // 그림은 bounds 두 모서리의 투영 사각형을 꽉 채우므로 그림 픽셀 (u, v) → 투영 (pxmin+u, pymin+v) → 역변환 → 게임 좌표 → 화면.
   // 전부 아핀이라 그림을 SVG <image transform="matrix(…)"> 하나로 놓을 수 있다.
-  // 층: 자동이면 내 높이·위치로, 아니면 고른 층. 그림은 사이드카가 그 층만 켠 SVG 변형으로 준다(?layer=)
-  const floorAuto = doc?.img && me ? autoFloor(doc.img.layers, me.x, me.y, me.z) : null;
-  const floorNow = floor === "auto" ? floorAuto : floor === "base" ? null : floor;
   const imgLayer = (() => {
     const im = doc?.img;
     if (!im || !v || !showImg) return null;
@@ -1195,7 +1209,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               (doc.bosses ?? []).map((z, i) => {
                 // 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 스폰 점(게임 좌표)을 60m 무리로 나눠(서버) 무리마다 점 둘레 BOSS_PAD 를
                 // 둥글게 감싼 작은 윤곽 + 가운데 배지 하나. 점 1개면 원, 2개면 짧은 캡슐(60m 안이라 길게 늘어지지 않는다).
-                // 맵 전역(anywhere)은 정해진 자리가 없으니 지도 안에 안 그리고 지도 왼쪽 위 칩으로(11-25 사용자 '맵 전역은 왼쪽 위에') — 아래 radar-bossany
+                // 맵 전역(anywhere)은 정해진 자리가 없으니 지도 왼쪽 맨 위 모서리에 따로(11-25 사용자 '맵 전역은 왼쪽 위에') — 아래 anyAt
                 if (z.anywhere) return null;
                 const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
@@ -1215,7 +1229,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
               })}
             {layers.cult &&
               (doc.cultists ?? []).map((z, i) => {
-                // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)은 왼쪽 위 칩
+                // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)은 지도 왼쪽 맨 위 모서리(anyAt)
                 if (z.anywhere) return null;
                 const [cx, cz] = bossAt(z);
                 const c = toScreen(cx, cz);
@@ -1233,6 +1247,32 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                       </g>
                     )}
                     {label(`ct${i}`)}
+                  </g>
+                );
+              })}
+            {/* 맵 전역 보스·광신도 — 지도 왼쪽 맨 위 모서리에 아이콘(점선 테 = 정해진 자리 없음) + 이름 */}
+            {anyAt &&
+              anyZones.map((x, i) => {
+                const p = anyAt(i);
+                return (
+                  <g key={`any${i}`} className="radar-bosszone">
+                    <circle cx={p.x} cy={p.y} r={12.5} fill="none" stroke={x.cult ? CULT_COLOR : "#e53935"} strokeWidth={1.1} strokeDasharray="3 2" />
+                    {x.cult ? (
+                      <g transform={`translate(${p.x} ${p.y})`}>
+                        <circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} />
+                        <path d={HOOD_PATH} fill="#d9c6ff" />
+                        <path d={HOOD_FACE} fill="#0b0610" />
+                        <path d={HOOD_NECK} fill="#0b0610" />
+                        <circle cx={-1.35} cy={-0.4} r={0.7} fill="#ff4d4d" />
+                        <circle cx={1.35} cy={-0.4} r={0.7} fill="#ff4d4d" />
+                      </g>
+                    ) : (
+                      <g>
+                        <circle cx={p.x} cy={p.y} r={9} fill="#e53935" stroke="#3a0606" strokeWidth={1.4} />
+                        <text x={p.x} y={p.y + 4.3} textAnchor="middle" fontSize={12} fill="#1c0303" fontWeight={700}>☠</text>
+                      </g>
+                    )}
+                    <text x={p.x + 17} y={p.y + 3.5} className="radar-maplabel">{bossLabel(x.z, t, 3)}</text>
                   </g>
                 );
               })}
@@ -1352,26 +1392,6 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {doc?.img && showImg && <div className="radar-mapcredit">{doc.img.credit}</div>}
         {raidLeft != null && !mini && <div className="radar-raidleft" title={t.radarRaidLeftHint}>⏱ {Math.max(1, Math.round(raidLeft / 60))}{t.radarMinShort}</div>}
         {doc?.img && showImg && floorNow && <div className="radar-mapfloor">{floorName(floorNow)}</div>}
-        {(() => {
-          // 맵 전역 보스·광신도(아무 스캐브 스폰·돌아다니는 파르티잔) = 지도 왼쪽 위 칩. 층 이름·남은 시간 표시 아래 줄에 쌓는다
-          const any = [...(layers.spawns ? (doc?.bosses ?? []).map((z) => ({ z, cult: false })) : []), ...(layers.cult ? (doc?.cultists ?? []).map((z) => ({ z, cult: true })) : [])].filter((x) => x.z.anywhere);
-          if (!any.length) return null;
-          const rows = (raidLeft != null && !mini ? 1 : 0) + (doc?.img && showImg && floorNow ? 1 : 0);
-          return (
-            <div className="radar-bossany radar-bosszone" style={{ top: 6 + rows * 24 }}>
-              {any.map((x, i) => (
-                <div key={i} className={x.cult ? "cult" : undefined} title={`${x.cult ? t.radarLayerCult + " · " : ""}${bossLabel(x.z, t)}`}>
-                  {x.cult ? (
-                    <svg viewBox="-11 -11 22 22" width={15} height={15}><circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} /><path d={HOOD_PATH} fill="#d9c6ff" /><path d={HOOD_FACE} fill="#0b0610" /><path d={HOOD_NECK} fill="#0b0610" /></svg>
-                  ) : (
-                    <span className="ic">☠</span>
-                  )}
-                  {bossText(x.z, 3)} · {t.radarBossAnywhere}
-                </div>
-              ))}
-            </div>
-          );
-        })()}
       </div>
       {!mini && ((doc && slug) || extraTools) && (
         <div className="radar-xtools">

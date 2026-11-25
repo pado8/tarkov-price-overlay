@@ -1946,11 +1946,6 @@ html, body, #root {
 .radar-sw.img { background: #c9b48a; }
 .radar-floors { align-items: center; }
 .radar-floors .radar-kind { margin-right: 2px; }
-/* 11-25 맵 전역 보스·광신도 — 지도 왼쪽 위 칩(층 이름·남은 시간 아래 줄) */
-.radar-bossany { position: absolute; left: 6px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; pointer-events: none; }
-.radar-bossany > div { display: flex; align-items: center; gap: 4px; font-size: var(--card-fs-xs); font-weight: 700; color: #ffb3b0; background: rgba(0, 0, 0, 0.6); border: 1px dashed #e53935; border-radius: 4px; padding: 1px 6px 1px 3px; white-space: nowrap; }
-.radar-bossany > div.cult { color: #d9c6ff; border-color: #a97cf0; }
-.radar-bossany .ic { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: #e53935; color: #1c0303; font-size: 10px; line-height: 1; }
 .radar-mapfloor { position: absolute; left: 6px; top: 6px; font-size: var(--card-fs-xs); font-weight: 700; color: var(--gold-bright); background: rgba(0, 0, 0, 0.6); border-radius: 4px; padding: 1px 6px; pointer-events: none; }
 .radar-manual { margin-top: 4px; }
 .radar-pick-list { max-height: 220px; overflow-y: auto; margin-top: 4px; padding: 4px 6px; background: rgba(0, 0, 0, 0.25); border-radius: 6px; }
