@@ -869,8 +869,9 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
     return out
 
 
-def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
+def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: bool = False) -> list:
     """맵의 보스 스폰 구역(tarkov.dev bosses[].spawnLocations) → 구역별로 합친 목록.
+    cult=True 면 광신도(CULT_MOBS)만, 아니면 광신도를 뺀 보스만(11-25 사용자 '광신도는 보스로 하지 말고 따로').
     [{name: 구역 이름, pts: [[x, z]…], bosses: [{name, chance}]}]. PMC(pmcBEAR/pmcUSEC)는 보스가 아니라 뺀다.
     구역 좌표가 비어 있으면 spawns 에서 같은 zoneName 의 점들로 채운다(세관 기숙사·주유소). 그래도 없으면 그 구역은 생략."""
     def ok(p):
@@ -883,10 +884,11 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
     zones: dict = {}
     for b in m.get("bosses") or []:
         mob = b.get("mob") or ""
-        if not mob or mob.startswith("pmc") or mob in NON_BOSS_MOBS:
+        if not mob or mob.startswith("pmc") or mob in NON_BOSS_MOBS or (mob in CULT_MOBS) != cult:
             continue
         bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
         chance = float(b.get("spawnChance") or 0)
+        placed = False
         for sl in b.get("spawnLocations") or []:
             key = sl.get("spawnKey") or sl.get("name")
             if not key:
@@ -903,9 +905,18 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             if re.search(r"\d", zname) and " " not in zname:
                 zname = ""  # '2BDPort28' 같은 내부 코드(터미널·쇄빙선)는 이름으로 안 보여 준다 → 보스 이름만
             z = zones.setdefault(key, {"name": zname, "pts": pts, "bosses": [], "anywhere": anywhere})
+            placed = True
             if not any(x["name"] == bname for x in z["bosses"]):
                 z["bosses"].append({"name": bname, "chance": round(chance * float(sl.get("chance") or 1), 2)})
-    for map_slug, mob, en_name, keys in BOSS_EXTRA:
+        # 스폰 장소 목록 자체가 빈 보스(파르티잔 — 맵을 돌아다님) → '맵 전역' 표식 하나(11-25 사용자 'Partisan 은 없네?').
+        # 장소는 있는데 좌표만 없는 보스(터미널 타길라·쇄빙선 일부)는 정해진 자리에 나오므로 맵 전역으로 그리지 않는다(그대로 생략)
+        if not placed and not (b.get("spawnLocations") or []) and chance > 0 and not cult:
+            allp = [p for ps in by_zone.values() for p in ps]
+            if allp:
+                cx = sum(p[0] for p in allp) / len(allp); cz = sum(p[1] for p in allp) / len(allp)
+                z = zones.setdefault(f"roam:{mob}", {"name": "", "pts": [[round(cx, 1), round(cz, 1)]], "bosses": [], "anywhere": True})
+                z["bosses"].append({"name": bname, "chance": round(chance, 2)})
+    for map_slug, mob, en_name, keys in BOSS_EXTRA if not cult else ():
         if m.get("normalizedName") != map_slug:
             continue
         b = next((x for x in m.get("bosses") or [] if x.get("mob") == mob), None)
@@ -927,18 +938,37 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
             cx = sum(p[0] for p in z["pts"]) / len(z["pts"]); cz = sum(p[1] for p in z["pts"]) / len(z["pts"])
             out.append({**z, "pts": [[round(cx, 1), round(cz, 1)]], "main": True})
             continue
-        # main = 구역에서 점이 가장 많은 무리 — 지도는 이름표(보스·확률)를 이 무리에만 단다(무리마다 같은 글자가 반복되지 않게, 11-24)
-        groups = _cluster_pts(z["pts"], BOSS_CLUSTER_M)
+        # main = 구역에서 점이 가장 많은 무리 — 지도는 배지·이름표(보스·확률)를 이 무리에만 단다(무리마다 같은 표시가 반복되지 않게, 11-24·25)
+        groups = _village_groups(z["pts"])
         big = max(range(len(groups)), key=lambda k: len(groups[k]))
         for k, grp in enumerate(groups):
             out.append({**z, "pts": grp, "main": k == big})
     return out
 
 
-# 보스 구역 점 묶기 거리(m) — 이보다 멀리 떨어진 점 무리는 다른 상자로. 11-24 사용자 '보스 빨간 상자 위치를 세밀하게': 150m 로 묶으면
-# 건물 여러 채의 스폰 점이 한 상자가 돼 빈 땅까지 덮었다(삼림 폐허 마을 212×207m, 등대 정수장 339×253m, 해안선 기상 관측소 등 9곳이
-# 120m 넘음). 60m 면 건물·무리 단위로 나뉘어 120m 넘는 상자가 0(상자 52 → 79개). 점 자체는 게임 스폰 좌표 그대로.
+# 보스 구역 점 묶기(마을·구역 단위). 11-24 '보스 빨간 상자를 세밀하게' → 150m 를 60m 로 줄였더니 삼림에 배지가 15개(사용자 '왜 이렇게
+# 많냐', 11-25 '미터 기준이 아니라 마을 혹은 구역 느낌으로'). 그래서 BOSS_NEAR_M 로 이어지는 점을 한 마을로 묶고, 그 마을이 BOSS_WIDE_M
+# 보다 넓을 때만(여러 마을이 이어진 것) BOSS_CLUSTER_M 로 다시 나눈다. 배지·이름표는 구역마다 main 무리 하나 → 삼림 배지 15 → 2(상자 7),
+# 가장 큰 상자 180m(해안선). 점 자체는 게임 스폰 좌표 그대로. 지명 자료(tarkov.dev 사이트 maps.json labels)는 쓸 수 있는지 확인 전이라 안 씀.
+BOSS_NEAR_M = 100.0
+BOSS_WIDE_M = 220.0
 BOSS_CLUSTER_M = 60.0
+# 광신도(사제·전사) — 보스 구역에서 빼고 따로 낸다(doc.cultists, 지도 '광신도' 층·두건 표식)
+CULT_MOBS: set = {"sectantPriest", "sectantWarrior"}
+# 언어 자료(maps_ko·ru)에 이름이 빠진 보스 — 영어 이름 → 그 언어 이름
+BOSS_NAME_FALLBACK: dict = {"ko": {"Partisan": "파르티잔"}, "ru": {"Partisan": "Партизан"}}
+
+
+def _extent(g: list) -> float:
+    return max((math.hypot(a[0] - b[0], a[1] - b[1]) for a in g for b in g), default=0.0)
+
+
+def _village_groups(pts: list) -> list:
+    """BOSS_NEAR_M 로 이어지는 점 = 한 마을. 마을 너비가 BOSS_WIDE_M 를 넘으면 BOSS_CLUSTER_M 로 다시 나눈다."""
+    out = []
+    for g in _cluster_pts(pts, BOSS_NEAR_M):
+        out.extend(_cluster_pts(g, BOSS_CLUSTER_M) if _extent(g) > BOSS_WIDE_M else [g])
+    return out
 
 # tarkov.dev bosses[] 에 섞여 있지만 보스가 아닌 무리 — 보스 구역에 넣지 않는다(11-04 사용자 결정).
 # 'pmc' 로 시작하는 것(pmcBEAR·pmcUSEC·pmcBotBlackDiv)은 위에서 따로 뺀다.
@@ -1176,7 +1206,7 @@ def compact_map_features(m: dict, loc_maps: dict, loc_en: Optional[dict] = None)
             "rot": m.get("coordinateToCardinalRotation"), "bounds": bounds, "img": img,
             "extracts": extracts, "transits": transits, "hazards": hazards, "locks": locks,
             "containers": containers, "loot": loot, "spawn_groups": spawn_groups(m), "raid_min": m.get("raidDuration"), "spawns": spawns, "weapons": weapons, "switches": switches,
-            "bosses": boss_zones(m, loc_maps, loc_en)}
+            "bosses": boss_zones(m, loc_maps, loc_en), "cultists": boss_zones(m, loc_maps, loc_en, cult=True)}
 
 
 _TD_MAPS: Optional[dict] = None
@@ -1423,6 +1453,11 @@ def map_features(slug: str, lang: str = "ko") -> Optional[dict]:
     annotate_locks(doc, lang)
     annotate_loot(doc, loc_maps, _doc("regular/maps_en") or {})
     doc["zones"] = map_labels.zone_labels(m, lang)  # 구역 이름표(스폰 구역 코드에 붙인 우리 이름)
+    # 언어 자료에 이름이 없는 보스(11-25 파르티잔 — ko·ru 자료에 없어 영어로 나옴)
+    fix = BOSS_NAME_FALLBACK.get(lang) or {}
+    for z in (doc.get("bosses") or []) + (doc.get("cultists") or []):
+        for x in z["bosses"]:
+            x["name"] = fix.get(x["name"], x["name"])
     with _data_lock:
         _map_cache[key] = (time.time(), doc)
     return doc

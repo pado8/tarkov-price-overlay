@@ -1965,6 +1965,7 @@ html, body, #root {
 .radar-sw.quest { background: #f0c040; }
 .radar-sw.hazard { background: #ff9f1c; }
 .radar-sw.spawn { background: #ff4d4d; }
+.radar-sw.cult { background: #a97cf0; }
 .radar-sw.lock { background: #c08cff; }
 .radar-sw.loot { background: #ffd54f; }
 .radar-sw.trail { background: #9be564; }

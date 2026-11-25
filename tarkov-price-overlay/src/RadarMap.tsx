@@ -108,13 +108,15 @@ export type MapDoc = {
   loot?: LootRow[]; // 루팅 상자: 묶음(w 무기·탄 t 기술 m 의료 v 금고·현금 j 재킷 s 캐리어 f 서랍 c 은닉처 b 가방·상자 d 시체) + 종류
   loot_names?: Record<string, string>; // 상자 종류 → 지금 언어의 이름
   spawns: [number, number, number, string][]; // 마지막 = p(PMC) s(스캐브) b(보스) n(스나이퍼) o
-  bosses?: { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean }[]; // 보스 스폰 구역(구역별 합침, 60m 무리마다 하나). anywhere = 맵 전역(아무 스캐브 스폰) → 상자 없이 표식 하나 · main = 이름표를 다는 무리
+  bosses?: BossZone[]; // 보스 스폰 구역(구역별 합침, 마을 단위 무리마다 하나). anywhere = 맵 전역(아무 스캐브 스폰·돌아다니는 파르티잔) → 상자 없이 표식 하나 · main = 배지·이름표를 다는 무리
+  cultists?: BossZone[]; // 11-25 광신도(사제) — 보스와 따로, '광신도' 층·두건 표식
   weapons: Pt[];
   switches: { id: string; p: Pt }[];
 };
 
-export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
-export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, locks: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
+type BossZone = { name: string; pts: [number, number][]; bosses: { name: string; chance: number }[]; anywhere?: boolean; main?: boolean };
+export type Layers = { pmc: boolean; transits: boolean; quests: boolean; hazards: boolean; spawns: boolean; cult: boolean; locks: boolean; trail: boolean; names: boolean }; // 스캐브 탈출구는 showScav 로 켜고 끈다. 상태는 RadarPanel 이 갖고(목록·지도가 같은 필터) 여기엔 props 로 온다
+export const DEFAULT_LAYERS: Layers = { pmc: true, transits: true, quests: true, hazards: false, spawns: false, cult: false, locks: false, trail: true, names: true }; // 추가 3종(where am I 벤치마킹 10-28)은 기본 끔
 
 type Strings = { [k: string]: string };
 type Props = {
@@ -368,6 +370,9 @@ function bossText(z: NonNullable<MapDoc["bosses"]>[number], max = 9): string {
   return z.bosses.slice(0, max).map((b) => `${b.name} ${Math.round(b.chance * 100)}%`).join(", ");
 }
 // 이름표·팝업 문구: "구역 · 보스 n%" — 구역 이름이 없으면(내부 코드) 보스만, 맵 전역이면 '(맵 전역)' 덧붙임
+// 광신도 표식: 뾰족한 두건(로브 후드)을 뒤집어쓴 머리 — 얼굴은 어둡고 눈 두 점(11-25 사용자 '로브 모자를 뒤집어쓴 암살자의 머리 모양 느낌')
+const HOOD_PATH = "M0 -8.6 C2.4 -7.4 6.4 -4.6 6.9 0.6 L8.2 7.6 L-8.2 7.6 L-6.9 0.6 C-6.4 -4.6 -2.4 -7.4 0 -8.6 Z";
+const CULT_COLOR = "#a97cf0";
 function bossLabel(z: NonNullable<MapDoc["bosses"]>[number], t: Strings, max = 9): string {
   const body = `${z.name ? z.name + " · " : ""}${bossText(z, max)}`;
   return z.anywhere ? `${body} (${t.radarBossAnywhere})` : body;
@@ -863,7 +868,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
   // 루팅 계획 보조: 이번 레이드 내 탈출구 중 경로 끝에서 가장 가까운 것 + 지뢰밭·보스 구역 경고
   const planMe = me && data.map_source !== "manual" ? me : null;
   const planEx = plan && doc ? planExit(plan, doc.extracts, mine, planMe) : null;
-  const planWarn = plan && doc ? planWarnings(plan, planEx, doc.hazards, doc.bosses ?? []) : [];
+  const planWarn = plan && doc ? planWarnings(plan, planEx, doc.hazards, [...(doc.bosses ?? []), ...(doc.cultists ?? [])]) : [];
   const planKeys = (() => {
     if (!plan || !doc) return [];
     const m = new Map<string, { name: string; own: boolean }>();
@@ -908,7 +913,8 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     // '클리모프 거리'·'경찰서'는 위·아래로 옮겨도 못 벗어나 통째로 빠졌다. 글자에 검은 테두리가 있어 배지 위에서도 읽힌다.
     const zoneIgnores = new Set<number>();
     if (layers.spawns)
-      (doc.bosses ?? []).forEach((z) => {
+      [...(doc.bosses ?? []), ...(layers.cult ? doc.cultists ?? [] : [])].forEach((z) => {
+        if (z.main === false) return; // 배지가 없는 무리(윤곽만)는 지역명을 막지 않는다
         const [cx, cz] = bossCenter(z.pts);
         const b = toScreen(cx, cz);
         zoneIgnores.add(boxes.length);
@@ -958,6 +964,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
     // 위험 구역(지뢰·저격수)은 이름표를 안 단다 — 시내처럼 지뢰 구역이 수십 개면 '지뢰' 글자가 지도를 덮는다(점을 누르면 이름이 나온다)
     // 보스 이름표는 구역마다 한 번(main 무리) — 무리마다 달면 삼림 '제재소 · 슈트르만 60%'가 다섯 번 반복됐다(11-24)
     if (layers.spawns) (doc.bosses ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossCenter(z.pts); cands.push({ key: `bz${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.5 }); });
+    if (layers.cult) (doc.cultists ?? []).forEach((z, i) => { if (z.main === false) return; const c = bossCenter(z.pts); cands.push({ key: `ct${i}`, text: bossLabel(z, t, 1), p: [c[0], myY, c[1]], off: 12, pr: 0.6 }); });
     doc.extracts.forEach((x, i) => {
       if (showEx(x)) cands.push({ key: `ex${i}`, text: `${x.name}${x.switch ? " ⚡" : ""}`, p: x.p, off: 5, pr: x.faction === "scav" ? 2 : 1 });
     });
@@ -1185,7 +1192,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                 const [cx, cz] = bossCenter(z.pts);
                 const c = toScreen(cx, cz);
                 const shape = !z.anywhere;
-                const badges = [c];
+                const badges = z.main === false ? [] : [c]; // 11-25 배지는 구역마다 main 무리 하나(나머지 무리는 윤곽만)
                 return (
                   <g key={`bz${i}`} onClick={() => pick({ name: `☠ ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
                     {z.anywhere ? (
@@ -1200,6 +1207,31 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                       </g>
                     ))}
                     {label(`bz${i}`)}
+                  </g>
+                );
+              })}
+            {layers.cult &&
+              (doc.cultists ?? []).map((z, i) => {
+                // 11-25 광신도: 보랏빛 윤곽 + main 무리에만 두건 표식. 맵 전역(GZ21+·야간 공장 아무 스캐브 스폰)이면 점선 원
+                const [cx, cz] = bossCenter(z.pts);
+                const c = toScreen(cx, cz);
+                return (
+                  <g key={`ct${i}`} onClick={() => pick({ name: `${t.radarLayerCult} · ${bossLabel(z, t)}`, p: [cx, myY, cz] })}>
+                    {z.anywhere ? (
+                      <circle cx={c.x} cy={c.y} r={14} fill="rgba(150,100,230,0.14)" stroke={CULT_COLOR} strokeWidth={1.2} strokeDasharray="3 2" />
+                    ) : (
+                      <polygon points={poly(bossHull(z.pts))} fill="rgba(150,100,230,0.16)" stroke={CULT_COLOR} strokeWidth={1.2} strokeLinejoin="round" />
+                    )}
+                    {z.main !== false && (
+                      <g transform={`translate(${c.x} ${c.y})`}>
+                        <circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} />
+                        <path d={HOOD_PATH} fill="#d9c6ff" />
+                        <ellipse cx={0} cy={1.6} rx={3.3} ry={4} fill="#0b0610" />
+                        <circle cx={-1.3} cy={1} r={0.75} fill="#ff4d4d" />
+                        <circle cx={1.3} cy={1} r={0.75} fill="#ff4d4d" />
+                      </g>
+                    )}
+                    {label(`ct${i}`)}
                   </g>
                 );
               })}
@@ -1342,6 +1374,7 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
         {chip(layers.quests, "quest", t.radarLayerQuests, () => onToggleLayer("quests"))}
         {chip(layers.hazards, "hazard", t.radarLayerHazards, () => onToggleLayer("hazards"))}
         {chip(layers.spawns, "spawn", t.radarLayerSpawns, () => onToggleLayer("spawns"))}
+        {(doc?.cultists?.length ?? 0) > 0 && chip(layers.cult, "cult", t.radarLayerCult, () => onToggleLayer("cult"))}
         {chip(layers.locks, "lock", t.radarLayerLocks, () => onToggleLayer("locks"))}
         {layers.locks && myKeys.length > 0 && chip(myKeysOnly, "mykeys", t.radarMyKeysOnly.replace("{n}", String(myKeys.length)), () => setMyKeysOnly((o) => !o))}
         {trailMemo.pts.length > 1 && chip(layers.trail, "trail", t.radarLayerTrail, () => onToggleLayer("trail"))}

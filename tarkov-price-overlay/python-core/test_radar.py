@@ -225,15 +225,27 @@ bm = {"bosses": [
     {"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "ZoneMeteoStation", "name": "Weather Station", "chance": 1,
         "positions": [{"x": 459, "z": 56}, {"x": 373, "z": 76}, {"x": -582, "z": 110}, {"x": 460, "z": 92}, {"x": -575, "z": 129}]}]},
     {"mob": "bossSanitar", "spawnChance": 0.5, "spawnLocations": [{"spawnKey": "ZoneA", "name": "A", "chance": 1,
-        "positions": [{"x": 0, "z": 0}, {"x": 50, "z": 0}, {"x": 100, "z": 0}]}]},  # 50m 씩 이어진 사슬 = 한 무리(묶기 거리 60m)
+        "positions": [{"x": 0, "z": 0}, {"x": 90, "z": 0}, {"x": 180, "z": 0}]}]},  # 90m 씩 이어진 사슬(너비 180m) = 한 마을(묶기 100m·너비 220m 안)
 ], "spawns": []}
 bz = r.boss_zones(bm, {})
 ws = [z for z in bz if z["name"] == "Weather Station"]
-eq("갈라진 구역은 건물 단위 무리로(60m)", sorted(len(z["pts"]) for z in ws), [1, 2, 2])
-eq("이름표 무리(main)는 구역마다 하나 = 점이 가장 많은 무리", sorted((len(z["pts"]), z["main"]) for z in ws), [(1, False), (2, False), (2, True)])
+eq("갈라진 구역은 마을 단위 무리로(100m)", sorted(len(z["pts"]) for z in ws), [2, 3])
+eq("이름표 무리(main)는 구역마다 하나 = 점이 가장 많은 무리", sorted((len(z["pts"]), z["main"]) for z in ws), [(2, False), (3, True)])
+# 11-25 넓은 마을(220m 초과)은 60m 로 다시 나눔: 0·90·180·270 사슬(너비 270m) → 60m 로 4개
+wide = r.boss_zones({"bosses": [{"mob": "bossKojaniy", "spawnChance": 1, "spawnLocations": [{"spawnKey": "W", "name": "W", "chance": 1,
+    "positions": [{"x": 0, "z": 0}, {"x": 90, "z": 0}, {"x": 180, "z": 0}, {"x": 270, "z": 0}]}]}], "spawns": []}, {})
+eq("220m 넘게 이어진 마을은 60m 로 다시 나눔", len(wide), 4)
+# 11-25 광신도는 보스에서 빼고 cultists 로 · 자리 없는 보스(파르티잔)는 맵 전역 하나
+cm = {"bosses": [{"mob": "sectantPriest", "spawnChance": 0.2, "spawnLocations": [{"spawnKey": "C", "name": "C", "chance": 1, "positions": [{"x": 5, "z": 5}]}]},
+                 {"mob": "bossPartisan", "spawnChance": 0.25, "spawnLocations": []},
+                 {"mob": "bossBully", "spawnChance": 0.4, "spawnLocations": [{"spawnKey": "D", "name": "D", "chance": 1, "positions": [{"x": 0, "z": 0}]}]}],
+      "spawns": [{"zoneName": "D", "position": {"x": 0, "y": 0, "z": 0}}, {"zoneName": "E", "position": {"x": 100, "y": 0, "z": 50}}]}
+eq("광신도는 보스 구역에 없음", sorted(b["name"] for z in r.boss_zones(cm, {}, {}) for b in z["bosses"]), ["bossBully", "bossPartisan"])
+eq("광신도만 따로", [(b["name"], b["chance"]) for z in r.boss_zones(cm, {}, {}, cult=True) for b in z["bosses"]], [("sectantPriest", 0.2)])
+eq("파르티잔 = 맵 전역 점 하나(스폰 무게 중심)", [(z["anywhere"], z["pts"]) for z in r.boss_zones(cm, {}, {}) if z["bosses"][0]["name"] == "bossPartisan"], [(True, [[50.0, 25.0]])])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
-eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373], [459, 460]])
-eq("60m 안으로 이어진 사슬은 한 무리", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
+eq("먼 무리는 서로 안 섞임", sorted(sorted(p[0] for p in z["pts"]) for z in ws), [[-582, -575], [373, 459, 460]])
+eq("100m 안으로 이어진 220m 이하 사슬은 한 마을", [len(z["pts"]) for z in bz if z["name"] == "A"], [3])
 
 # 저격 스캐브 자리 — 스폰 목록의 'Snipe' 구역도 저격수 표시로(해안선 요양원 북쪽, 11-03)
 sm = {"normalizedName": "", "hazards": [{"name": "ScavRole/Marksman", "hazardType": "sniper", "position": {"x": 0, "y": 0, "z": 0}, "outline": []}],
@@ -285,7 +297,7 @@ am = {"bosses": [{"mob": "sectantPriest", "spawnChance": 0.2, "spawnLocations": 
         "positions": [{"x": 0, "z": 0}, {"x": 400, "z": 0}, {"x": 0, "z": 400}, {"x": 400, "z": 400}]}]},
     {"mob": "bossKilla", "spawnChance": 0.8, "spawnLocations": [{"spawnKey": "2BDPort28", "name": "2BDPort28", "chance": 1, "positions": [{"x": 10, "z": 10}]}]}], "spawns": []}
 az = r.boss_zones(am, {}, {"Any scav spawn": "Any scav spawn", "2BDPort28": "2BDPort28"})
-eq("맵 전역은 점 하나·anywhere", [(z["anywhere"], z["pts"]) for z in az if z["bosses"][0]["name"] == "sectantPriest"], [(True, [[200.0, 200.0]])])
+eq("맵 전역은 점 하나·anywhere(광신도는 cultists 쪽)", [(z["anywhere"], z["pts"]) for z in r.boss_zones(am, {}, {"Any scav spawn": "Any scav spawn"}, cult=True)], [(True, [[200.0, 200.0]])])
 eq("코드형 구역 이름은 비움", [z["name"] for z in az if z["bosses"][0]["name"] == "bossKilla"], [""])  # 11-04: 블랙 디비전은 보스 구역에서 빠져 킬라로
 # 11-04: 원본에 없는 스폰 장소 보충(등대 군즈 정수장) — 같은 보스의 맵 확률, 정수장 스폰 구역 점들
 lh = {"normalizedName": "lighthouse",
@@ -294,7 +306,7 @@ lh = {"normalizedName": "lighthouse",
                  {"zoneName": "Zone_Chalet", "position": {"x": -100, "y": 0, "z": -55}}],
       "bosses": [{"mob": "bossKnight", "spawnChance": 0.18, "spawnLocations": [{"spawnKey": "Zone_Chalet", "name": "Chalet", "chance": 1}]}]}
 lz = r.boss_zones(lh, {}, {})
-eq("등대 군즈 = 별장 + 정수장(103m 떨어진 두 점 = 상자 2개, 묶기 60m)", sorted(z["name"] for z in lz), ["Chalet", "Water Treatment Plant", "Water Treatment Plant"])
+eq("등대 군즈 = 별장 + 정수장(103m 떨어진 두 점 = 상자 2개, 묶기 100m)", sorted(z["name"] for z in lz), ["Chalet", "Water Treatment Plant", "Water Treatment Plant"])
 eq("정수장 확률 = 보스 맵 확률", [z["bosses"][0]["chance"] for z in lz if z["name"] == "Water Treatment Plant"], [0.18, 0.18])
 eq("다른 맵엔 보충 안 함", [z["name"] for z in r.boss_zones({**lh, "normalizedName": "woods"}, {}, {})], ["Chalet"])
 eq("이벤트 맵은 일반 맵 데이터로", (r.EVENT_MAPS.get("infected-lab"), r.EVENT_MAPS.get("infected-factory")), ("the-lab", "factory"))
