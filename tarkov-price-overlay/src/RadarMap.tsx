@@ -371,7 +371,11 @@ function bossText(z: NonNullable<MapDoc["bosses"]>[number], max = 9): string {
 }
 // 이름표·팝업 문구: "구역 · 보스 n%" — 구역 이름이 없으면(내부 코드) 보스만, 맵 전역이면 '(맵 전역)' 덧붙임
 // 광신도 표식: 뾰족한 두건(로브 후드)을 뒤집어쓴 머리 — 얼굴은 어둡고 눈 두 점(11-25 사용자 '로브 모자를 뒤집어쓴 암살자의 머리 모양 느낌')
-const HOOD_PATH = "M0 -8.6 C2.4 -7.4 6.4 -4.6 6.9 0.6 L8.2 7.6 L-8.2 7.6 L-6.9 0.6 C-6.4 -4.6 -2.4 -7.4 0 -8.6 Z";
+// 11-25 사용자 '모자가 너무 두꺼워서 로브 모자 같지 않다' → 천 테두리를 얇게(3.6 → 1), 끝은 뾰족하게 한쪽으로, 아래는 어깨로 흘러내리게.
+// HOOD_PATH = 두건 천, HOOD_FACE = 두건 안 그림자(얼굴), HOOD_NECK = 앞섶 트임
+const HOOD_PATH = "M1.2 -9.4 C3.4 -7.2 4.9 -4 4.8 -0.8 C4.7 1.2 4.2 2.6 3.6 3.6 C5.6 4.6 7.2 6 7.8 8 L-7.8 8 C-7.2 6 -5.6 4.6 -3.6 3.6 C-4.2 2.6 -4.7 1.2 -4.8 -0.8 C-4.9 -4.4 -2.6 -7.6 1.2 -9.4 Z";
+const HOOD_FACE = "M0.4 -7.6 C2.6 -5.6 3.9 -3 3.8 -0.6 C3.7 2 2.2 4.2 0 5.2 C-2.2 4.2 -3.7 2 -3.8 -0.6 C-3.9 -3.4 -2.2 -6 0.4 -7.6 Z";
+const HOOD_NECK = "M0 5.2 L-1.5 8 L1.5 8 Z";
 const CULT_COLOR = "#a97cf0";
 function bossLabel(z: NonNullable<MapDoc["bosses"]>[number], t: Strings, max = 9): string {
   const body = `${z.name ? z.name + " · " : ""}${bossText(z, max)}`;
@@ -1226,9 +1230,10 @@ export function RadarMap({ data, lang, t, showScav, onToggleScav, layers, onTogg
                       <g transform={`translate(${c.x} ${c.y})`}>
                         <circle r={10} fill="#24122f" stroke={CULT_COLOR} strokeWidth={1.4} />
                         <path d={HOOD_PATH} fill="#d9c6ff" />
-                        <ellipse cx={0} cy={1.6} rx={3.3} ry={4} fill="#0b0610" />
-                        <circle cx={-1.3} cy={1} r={0.75} fill="#ff4d4d" />
-                        <circle cx={1.3} cy={1} r={0.75} fill="#ff4d4d" />
+                        <path d={HOOD_FACE} fill="#0b0610" />
+                        <path d={HOOD_NECK} fill="#0b0610" />
+                        <circle cx={-1.35} cy={-0.4} r={0.7} fill="#ff4d4d" />
+                        <circle cx={1.35} cy={-0.4} r={0.7} fill="#ff4d4d" />
                       </g>
                     )}
                     {label(`ct${i}`)}

@@ -231,6 +231,21 @@ bz = r.boss_zones(bm, {})
 ws = [z for z in bz if z["name"] == "Weather Station"]
 eq("갈라진 구역은 마을 단위 무리로(100m)", sorted(len(z["pts"]) for z in ws), [2, 3])
 eq("이름표 무리(main)는 구역마다 하나 = 점이 가장 많은 무리", sorted((len(z["pts"]), z["main"]) for z in ws), [(2, False), (3, True)])
+# 11-25 기준점 표(BOSS_SPOTS): 구역 이름과 원본 점이 어긋난 구역은 게임 자료 기준점 반경 안의 점만 — 삼림 슈트르만 배지가 USEC 캠프에 붙던 것
+def _bz(slug, mob, key, pts):
+    return r.boss_zones({"normalizedName": slug, "spawns": [], "bosses": [{"mob": mob, "spawnChance": 1, "spawnLocations": [
+        {"spawnKey": key, "name": key, "chance": 1, "positions": [{"x": x, "z": z} for x, z in pts]}]}]}, {}, {}, cult=mob in r.CULT_MOBS)
+_wc = [(299, -566), (-273, -498), (-2, -75), (126, 5), (311, -538), (312, -490), (103, -152), (135, -174), (-302, -394), (-267, -489), (297, -434), (-299, -389)]
+eq("삼림 슈트르만 = 제재소 한 곳(USEC 캠프·벙커 점은 뺌)", [(z["pts"], z["main"]) for z in _bz("woods", "bossKojaniy", "ZoneWoodCutter", _wc)], [([[-2.0, -75.0]], True)])
+eq("기준점 표는 그 맵에만(다른 맵이면 12점 그대로)", sum(len(z["pts"]) for z in _bz("customs", "bossKojaniy", "ZoneWoodCutter", _wc)), 12)
+eq("반경 안에 점이 없으면 기준점에 배지(해안선 군즈 = 기상 관측소)", [(z["pts"], z["main"]) for z in _bz("shoreline", "bossKnight", "ZoneMeteoStation", [(459, 56), (373, 76), (-582, 110), (-575, 129)])], [([[-483.8, 248.8]], True)])
+eq("해안선 산차르 별장 = 600m 떨어진 2점은 뺌", [len(z["pts"]) for z in _bz("shoreline", "bossSanitar", "ZoneGreenHouses", [(128, 77), (161, 62), (122, 93), (109, 96), (-632, -240), (-655, -164)])], [4])
+_cs = _bz("customs", "bossBully", "ZoneScavBase", [(125, -146), (103, -115), (106, -114), (78, -108), (42, -144)])
+eq("세관 스캐브 기지 = 원본 5점 + 요새를 한 구역으로", [(len(z["pts"]), [202.7, -126.8] in z["pts"], z["main"]) for z in _cs], [(6, True, True)])
+_rb = _bz("reserve", "bossGluhar", "ZoneBarrack", [(226, 31), (23, -128)])
+eq("리저브 막사 = K 건물 쪽 1점 + 보탠 막사 자리, 배지는 둘 다", sorted((len(z["pts"]), z["main"]) for z in _rb), [(1, True), (2, True)])
+_bv = _bz("woods", "sectantPriest", "ZoneBrokenVill", [(-680, 106), (-690, 110), (-700, 120), (-84, -608), (-118, -729)])
+eq("r 없는 기준점 = 점은 그대로, 배지만 기준점 쪽 무리(점 적은 쪽이어도)", sorted((len(z["pts"]), z["main"]) for z in _bv), [(1, False), (1, True), (3, False)])
 # 11-25 넓은 마을(220m 초과)은 60m 로 다시 나눔: 0·90·180·270 사슬(너비 270m) → 60m 로 4개
 wide = r.boss_zones({"bosses": [{"mob": "bossKojaniy", "spawnChance": 1, "spawnLocations": [{"spawnKey": "W", "name": "W", "chance": 1,
     "positions": [{"x": 0, "z": 0}, {"x": 90, "z": 0}, {"x": 180, "z": 0}, {"x": 270, "z": 0}]}]}], "spawns": []}, {})

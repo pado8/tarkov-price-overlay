@@ -882,6 +882,7 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
         if zn and ok(s.get("position")):
             by_zone.setdefault(zn, []).append([round(float(s["position"]["x"]), 1), round(float(s["position"]["z"]), 1)])
     zones: dict = {}
+    spots = BOSS_SPOTS.get(m.get("normalizedName") or "", {})
     for b in m.get("bosses") or []:
         mob = b.get("mob") or ""
         if not mob or mob.startswith("pmc") or mob in NON_BOSS_MOBS or (mob in CULT_MOBS) != cult:
@@ -895,6 +896,8 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
                 continue
             pts = ([[round(float(p["x"]), 1), round(float(p["z"]), 1)] for p in sl.get("positions") or [] if ok(p)]
                    or by_zone.get(key) or [list(p) for p in BOSS_ANCHORS.get(m.get("normalizedName") or "", {}).get(key, [])])
+            if key in spots:
+                pts = _spot_pts(pts, spots[key])
             if not pts:
                 continue
             en_name = _loc(loc_en, sl.get("name")) or sl.get("name") or ""
@@ -938,12 +941,33 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
             cx = sum(p[0] for p in z["pts"]) / len(z["pts"]); cz = sum(p[1] for p in z["pts"]) / len(z["pts"])
             out.append({**z, "pts": [[round(cx, 1), round(cz, 1)]], "main": True})
             continue
-        # main = 구역에서 점이 가장 많은 무리 — 지도는 배지·이름표(보스·확률)를 이 무리에만 단다(무리마다 같은 표시가 반복되지 않게, 11-24·25)
+        # main = 지도가 배지·이름표(보스·확률)를 다는 무리(무리마다 같은 표시가 반복되지 않게, 11-24·25).
+        # 기준점이 있는 구역(BOSS_SPOTS)은 첫 기준점에 가장 가까운 무리 + 보탠 자리(add)가 든 무리, 없으면 점이 가장 많은 무리.
+        # (11-25 '점이 가장 많은 무리'만 쓰다가 삼림 슈트르만 배지가 USEC 캠프에, 해안선 군즈가 동쪽 마을 끝에 붙었다)
         groups = _village_groups(z["pts"])
-        big = max(range(len(groups)), key=lambda k: len(groups[k]))
+        spot = next((sp for k2, sp in spots.items() if zones.get(k2) is z), None)
+        if spot:
+            ax, az = spot["at"][0]
+            near = min(range(len(groups)), key=lambda k: min(math.hypot(p[0] - ax, p[1] - az) for p in groups[k]))
+            add = [[float(a), float(b)] for a, b in spot.get("add") or []]
+            mains = {near} | {k for k, g in enumerate(groups) if any(p in add for p in g)}
+        else:
+            mains = {max(range(len(groups)), key=lambda k: len(groups[k]))}
         for k, grp in enumerate(groups):
-            out.append({**z, "pts": grp, "main": k == big})
+            out.append({**z, "pts": grp, "main": k in mains})
     return out
+
+
+def _spot_pts(pts: list, spot: dict) -> list:
+    """기준점 표(BOSS_SPOTS)로 구역 점을 거른다: 반경 r 안의 점만 남기고(하나도 없으면 기준점 자체), add 자리를 보탠다. r 이 없으면 점은 그대로."""
+    at = [[float(a), float(b)] for a, b in spot["at"]]
+    r = spot.get("r")
+    if r is not None:
+        pts = [p for p in pts if any(math.hypot(p[0] - a[0], p[1] - a[1]) <= r for a in at)] or at
+    for a, b in spot.get("add") or []:
+        if [float(a), float(b)] not in pts:
+            pts = pts + [[float(a), float(b)]]
+    return pts
 
 
 # 보스 구역 점 묶기(마을·구역 단위). 11-24 '보스 빨간 상자를 세밀하게' → 150m 를 60m 로 줄였더니 삼림에 배지가 15개(사용자 '왜 이렇게
@@ -1023,7 +1047,46 @@ def rogue_spots(m: dict, loc_maps: dict, loc_en: Optional[dict] = None) -> list:
 # 기준점을 못 찾은 구역(해안선 ZoneGateTowerRight·ZoneForestSpawn, 터미널·쇄빙선 내부 코드)은 그대로 생략.
 BOSS_ANCHORS: dict = {
     "customs": {"ZoneDormitory": [(229.8, 145.3), (180.6, 167.1)], "ZoneGasStation": [(415.6, 37.1)]},
-    "shoreline": {"ZonePort": [(-335.9, 564.1)]},
+    # 11-25 부두 = 'Pier Boat' 탈출구(배, 물 위) → 퀘스트 '강 부두의 의료 컨테이너 표시' 자리(뭍, 77m 안쪽). 산차르 무리의 의료 컨테이너가 있는 곳
+    "shoreline": {"ZonePort": [(-305.4, 492.2)]},
+}
+
+# 구역 이름과 원본(tarkov.dev) 점이 어긋나는 구역 바로잡기(11-25 전 맵 보스 점검, 사용자 '제재소에 왜 슈트르만이 없어?').
+# 원본은 구역 이름 하나에 다른 장소의 점까지 섞여 있다(삼림 '제재소' 12점 중 제재소는 1점 — 나머지는 USEC 캠프·산 밑 벙커,
+# 해안선 '기상 관측소' 10점은 전부 관측소가 아님, 인터체인지 '중앙'은 몰 밖 주차장). 점 개수로는 진짜 자리를 고를 수 없어서
+# 그 장소의 게임 자료 기준점(퀘스트 구역·열쇠 문·탈출구 좌표)을 두고 반경 r 안의 점만 쓴다. 안에 점이 없으면 기준점에 배지만.
+#   at  = 기준점(첫 번째가 배지 자리 기준) · r = 그 구역으로 치는 반경(m, 없으면 점은 안 거르고 배지 자리만 정함) · add = 원본에 없어 보태는 자리
+# 근거는 전부 게임 자료 좌표 — 위키 문장은 쓰지 않는다(11-10). 게임 안 확인 전인 것은 '?'.
+BOSS_SPOTS: dict = {
+    "customs": {
+        # 스캐브 기지 = 퀘스트 '세관 스캐브 기지'(요새). 원본 5점은 그 서쪽 80~160m('레샬라 간이 숙소' 열쇠 문 둘레) → 요새까지 한 구역으로
+        "ZoneScavBase": {"r": 170, "at": [(202.7, -126.8)], "add": [(202.7, -126.8)]},
+    },
+    "woods": {
+        # 제재소 = 퀘스트 '제재소 가운데 오두막'. 원본 12점 중 여기만 제재소(USEC 임시 캠프 4 · 산 밑 벙커 4 · 저격 바위 쪽 3 은 뺌)
+        "ZoneWoodCutter": {"r": 120, "at": [(-6.2, -75.5)]},
+        # 폐허 마을 = 퀘스트 '두 번째 의식 장소'(북쪽 마을). 동쪽 창고 차고 17점은 그대로 두되(?) 배지는 마을에
+        "ZoneBrokenVill": {"at": [(-88.7, -717.6)]},
+    },
+    "shoreline": {
+        # 별장 = 퀘스트 '별장 옆 의료 컨테이너'. 600m 떨어진 2점(밀수꾼 기지 쪽)은 뺌
+        "ZoneGreenHouses": {"r": 120, "at": [(98.1, 97.0)]},
+        # 기상 관측소 = 퀘스트 '두 번째 신호 발신지'. 원본 10점(동쪽 마을 끝 8 · 서쪽 저지대 2)은 관측소에서 170m~1km → 전부 뺌
+        "ZoneMeteoStation": {"r": 120, "at": [(-483.8, 248.8)]},
+    },
+    "reserve": {
+        # 철도 창고 = 퀘스트 '기차 차고'·장갑 열차. 돔 2점·스캐브 랜드 탈출구 1점·북서쪽 1점은 뺌
+        "ZoneRailStrorage": {"r": 130, "at": [(130.4, -139.4)]},
+        # 막사: 원본 2점은 막사가 아님 — K 건물 쪽 1점(퀘스트 '글루하의 작업장' 25m)은 두고 동쪽 1점은 뺌.
+        # 막사 자리는 퀘스트 '동쪽 막사(블랙 폰)'·'사관학교 건물(블랙 비숍)' 좌표로 보탬(?)
+        "ZoneBarrack": {"r": 40, "at": [(45.5, -117.5)], "add": [(-167.4, 31.4), (-144.2, 6.2)]},
+    },
+    "interchange": {
+        # 몰 중앙 = Kiba Arms 문. 원본 2점은 몰 밖 주차장(지면 높이 y21, 몰 1층은 y27)
+        "ZoneCenterBot": {"r": 80, "at": [(-9.4, -33.7)]},
+        # IDEA = 퀘스트 'IDEA 9번 계산대'. 원본 10점 중 몰 서쪽 바깥(y21) 9점은 뺌
+        "ZoneIDEA": {"r": 100, "at": [(25.3, -242.5)]},
+    },
 }
 
 # 원본 bosses[].spawnLocations 에 아예 없는 스폰 장소. 근거 = 사용자 게임 안 확인(11-04 지적) — 위키 문장은 근거로 쓰지 않음(11-10).
