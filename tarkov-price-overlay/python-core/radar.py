@@ -869,6 +869,21 @@ def build_targets(maps_doc: dict, map_slug: str, loc_maps: dict, tasks: dict, lo
     return out
 
 
+GOONS_ESCORTS: set = {"followerBigPipe", "followerBirdEye"}
+
+
+def boss_name(m: dict, mob: str, loc_maps: dict, loc_en: Optional[dict] = None) -> str:
+    """보스 표시 이름. Knight 가 Big Pipe·Birdeye 를 데리고 나오는 맵(세관·삼림·해안선·등대)에서는 세 명 무리의 통칭 'Goons' 로 낸다
+    (11-25 사용자 '나이트는 군즈 — 보스 3마리 중 한 마리'. 게임 번역표엔 개별 이름만 있어 통칭은 여기서 붙이고, 언어별 이름은 BOSS_NAME_FALLBACK).
+    호위가 다른 맵(쇄빙선 — 로그만 데리고 나옴)에서는 Knight 그대로."""
+    if mob == "bossKnight":
+        b = next((x for x in m.get("bosses") or [] if x.get("mob") == mob), None)
+        esc = {(e.get("mob") if isinstance(e, dict) else e) for e in ((b or {}).get("escorts") or [])}
+        if GOONS_ESCORTS <= esc:
+            return "Goons"
+    return _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
+
+
 def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: bool = False) -> list:
     """맵의 보스 스폰 구역(tarkov.dev bosses[].spawnLocations) → 구역별로 합친 목록.
     cult=True 면 광신도(CULT_MOBS)만, 아니면 광신도를 뺀 보스만(11-25 사용자 '광신도는 보스로 하지 말고 따로').
@@ -890,7 +905,7 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
         mob = b.get("mob") or ""
         if not mob or mob.startswith("pmc") or mob in NON_BOSS_MOBS or (mob in CULT_MOBS) != cult:
             continue
-        bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
+        bname = boss_name(m, mob, loc_maps, loc_en)
         chance = float(b.get("spawnChance") or 0)
         placed = False
         for sl in b.get("spawnLocations") or []:
@@ -929,7 +944,7 @@ def boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict] = None, cult: boo
         pts = [p for k in keys for p in by_zone.get(k, [])]
         if not b or not pts:
             continue
-        bname = _loc(loc_maps, mob) or _loc(loc_en, mob) or mob
+        bname = boss_name(m, mob, loc_maps, loc_en)
         z = zones.setdefault(f"extra:{mob}:{en_name}", {"name": en_name, "pts": pts, "bosses": [], "anywhere": False})
         if not any(x["name"] == bname for x in z["bosses"]):
             z["bosses"].append({"name": bname, "chance": round(float(b.get("spawnChance") or 0), 2)})
@@ -994,7 +1009,7 @@ def _user_boss_zones(m: dict, loc_maps: dict, loc_en: Optional[dict], cult: bool
             continue
         try:
             pts = [[round(float(p[0]), 1), round(float(p[1]), 1)] for p in z.get("pts") or []]
-            bosses = [{"name": _loc(loc_maps, b["mob"]) or _loc(loc_en, b["mob"]) or b["mob"], "chance": round(float(b.get("chance") or 0), 2)}
+            bosses = [{"name": boss_name(m, b["mob"], loc_maps, loc_en), "chance": round(float(b.get("chance") or 0), 2)}
                       for b in z.get("mobs") or [] if b.get("mob")]
             at = [round(float(z["at"][0]), 1), round(float(z["at"][1]), 1)] if z.get("at") else None
         except (TypeError, ValueError, IndexError, KeyError):
@@ -1047,7 +1062,7 @@ BOSS_CLUSTER_M = 60.0
 # 광신도(사제·전사) — 보스 구역에서 빼고 따로 낸다(doc.cultists, 지도 '광신도' 층·두건 표식)
 CULT_MOBS: set = {"sectantPriest", "sectantWarrior"}
 # 언어 자료(maps_ko·ru)에 이름이 빠진 보스 — 영어 이름 → 그 언어 이름
-BOSS_NAME_FALLBACK: dict = {"ko": {"Partisan": "파르티잔"}, "ru": {"Partisan": "Партизан"}}
+BOSS_NAME_FALLBACK: dict = {"ko": {"Partisan": "파르티잔", "Goons": "군즈"}, "ru": {"Partisan": "Партизан"}}
 
 
 def _extent(g: list) -> float:

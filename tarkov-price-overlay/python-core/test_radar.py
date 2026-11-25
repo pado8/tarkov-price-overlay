@@ -260,6 +260,13 @@ eq("광신도는 보스 구역에 없음", sorted(b["name"] for z in r.boss_zone
 eq("광신도만 따로", [(b["name"], b["chance"]) for z in r.boss_zones(cm, {}, {}, cult=True) for b in z["bosses"]], [("sectantPriest", 0.2)])
 eq("파르티잔 = 맵 전역 점 하나(스폰 무게 중심)", [(z["anywhere"], z["pts"]) for z in r.boss_zones(cm, {}, {}) if z["bosses"][0]["name"] == "bossPartisan"], [(True, [[50.0, 25.0]])])
 eq("무리마다 보스·확률 그대로", all(z["bosses"] == [{"name": "bossKnight", "chance": 0.18}] for z in ws), True)
+# 군즈: Knight 가 Big Pipe·Birdeye 를 데리고 나오는 맵에서만 무리 이름으로
+_gm = {"normalizedName": "x", "spawns": [], "bosses": [{"mob": "bossKnight", "spawnChance": 0.2, "escorts": [{"mob": "followerBigPipe"}, {"mob": "followerBirdEye"}],
+       "spawnLocations": [{"spawnKey": "G", "name": "G", "chance": 1, "positions": [{"x": 1, "z": 1}]}]}]}
+eq("군즈: 호위가 Big Pipe·Birdeye 면 'Goons'", [b["name"] for z in r.boss_zones(_gm, {"bossKnight": "Knight"}, {}) for b in z["bosses"]], ["Goons"])
+_gm["bosses"][0]["escorts"] = [{"mob": "ExUsec"}]
+eq("군즈: 호위가 다르면(쇄빙선) Knight 그대로", [b["name"] for z in r.boss_zones(_gm, {"bossKnight": "Knight"}, {}) for b in z["bosses"]], ["Knight"])
+eq("군즈: 한국어 이름", r.BOSS_NAME_FALLBACK["ko"]["Goons"], "군즈")
 # 사용자가 지도 QA 화면에서 찍은 구역(boss_user.json) — 그 맵은 게임 자료 계산 대신 이것만
 r._BOSS_USER = {"maps": {"woods": [
     {"kind": "boss", "mobs": [{"mob": "bossBully", "chance": 0.3}, {"mob": "bossKnight", "chance": 0.5}], "zone": "ZoneDorm", "label": "기숙사 뒤",
