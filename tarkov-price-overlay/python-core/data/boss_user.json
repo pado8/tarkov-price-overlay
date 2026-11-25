@@ -1,0 +1,222 @@
+{
+ "version": 1,
+ "maps": {
+  "customs": [
+   {
+    "id": "z0",
+    "kind": "boss",
+    "mobs": [
+     {
+      "mob": "bossBully",
+      "chance": 0.2
+     }
+    ],
+    "zone": "ZoneDormitory",
+    "label": "",
+    "pts": [
+     [
+      229.4,
+      137.8
+     ],
+     [
+      233.0,
+      162.7
+     ],
+     [
+      180.1,
+      180.8
+     ],
+     [
+      175.9,
+      152.8
+     ]
+    ],
+    "shape": "hull",
+    "r": 12.0,
+    "main": true,
+    "at": null
+   },
+   {
+    "id": "z1",
+    "kind": "boss",
+    "mobs": [
+     {
+      "mob": "bossBully",
+      "chance": 0.2
+     }
+    ],
+    "zone": "ZoneGasStation",
+    "label": "",
+    "pts": [
+     [
+      432.1,
+      6.3
+     ],
+     [
+      376.5,
+      13.0
+     ],
+     [
+      383.5,
+      57.0
+     ],
+     [
+      437.1,
+      50.6
+     ]
+    ],
+    "shape": "poly",
+    "r": 12.0,
+    "main": true,
+    "at": null
+   },
+   {
+    "id": "z2",
+    "kind": "boss",
+    "mobs": [
+     {
+      "mob": "bossBully",
+      "chance": 0.2
+     }
+    ],
+    "zone": "ZoneScavBase",
+    "label": "",
+    "pts": [
+     [
+      222.8,
+      -157.0
+     ],
+     [
+      196.0,
+      -163.4
+     ],
+     [
+      183.1,
+      -98.9
+     ],
+     [
+      212.0,
+      -91.0
+     ]
+    ],
+    "shape": "round",
+    "r": 14.0,
+    "main": true,
+    "at": null
+   },
+   {
+    "id": "z3",
+    "kind": "boss",
+    "mobs": [
+     {
+      "mob": "bossPartisan",
+      "chance": 0.25
+     }
+    ],
+    "zone": "",
+    "label": "",
+    "pts": [
+     [
+      200.4,
+      -50.8
+     ]
+    ],
+    "shape": "any",
+    "r": 12.0,
+    "main": true,
+    "at": null
+   },
+   {
+    "id": "z4",
+    "kind": "cult",
+    "mobs": [
+     {
+      "mob": "sectantPriest",
+      "chance": 0.2
+     }
+    ],
+    "zone": "ZoneScavBase",
+    "label": "",
+    "pts": [
+     [
+      111.4,
+      -117.3
+     ],
+     [
+      138.0,
+      -162.1
+     ],
+     [
+      154.5,
+      -181.6
+     ],
+     [
+      248.3,
+      -167.6
+     ],
+     [
+      283.6,
+      -138.4
+     ],
+     [
+      301.2,
+      -83.9
+     ],
+     [
+      254.5,
+      -22.3
+     ],
+     [
+      90.6,
+      -47.0
+     ]
+    ],
+    "shape": "round",
+    "r": 27.0,
+    "main": true,
+    "at": [
+     279.5,
+     -90.2
+    ]
+   },
+   {
+    "id": "62ac134",
+    "kind": "boss",
+    "mobs": [
+     {
+      "mob": "bossKnight",
+      "chance": 0.2
+     }
+    ],
+    "zone": "",
+    "label": "",
+    "pts": [
+     [
+      244.4,
+      -144.6
+     ],
+     [
+      145.5,
+      -162.1
+     ],
+     [
+      123.4,
+      -71.6
+     ],
+     [
+      230.5,
+      -52.2
+     ]
+    ],
+    "shape": "round",
+    "r": 12.0,
+    "main": true,
+    "at": [
+     164.6,
+     -83.8
+    ]
+   }
+  ]
+ },
+ "saved": "2026-11-25T22:34:08"
+}
