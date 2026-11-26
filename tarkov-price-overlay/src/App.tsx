@@ -5684,8 +5684,13 @@ function App() {
           // Tag transport failures so they don't inflate the SUCCESS count:
           // before this, cp949-500s and connection errors were reported as
           // plain "lookup" and the dashboard's ok/fail split was wrong.
-          reportEvent("lookup", "fetch_error");
-          dailyAdd(lookupFailKey(e)); // 11-20 하루 요약: fto 시간 초과 · fcr 엔진 연결 안 됨 · fhe 엔진 HTTP 오류
+          // 11-26 통계(원본 11-19~26): 전송 실패 174건 중 152건은 엔진이 처음 대답하기 전(앱 켠 뒤 중앙 7초)에 누른 F2 —
+          // 화면엔 '켜지는 중'이 나가고 곧 성공한다. 진짜 끊김이 묻히지 않게 그건 하루 요약 fbt 로만 센다.
+          if (!sidecarReadyReportedRef.current) dailyAdd("fbt");
+          else {
+            reportEvent("lookup", "fetch_error");
+            dailyAdd(lookupFailKey(e)); // 11-20 하루 요약: fto 시간 초과 · fcr 엔진 연결 안 됨 · fhe 엔진 HTTP 오류
+          }
         } finally {
           clearTimeout(timeoutId);
           // Only the CURRENT generation may end the in-flight state and
@@ -5843,8 +5848,11 @@ function App() {
       );
       setStatus("error");
       if (loadSoundOn()) playDing(false);
-      reportEvent("lookup", "fetch_error");
-      dailyAdd(lookupFailKey(e));
+      if (!sidecarReadyReportedRef.current) dailyAdd("fbt"); // 11-26 엔진이 처음 대답하기 전 — 위 F2 조회와 같은 규칙
+      else {
+        reportEvent("lookup", "fetch_error");
+        dailyAdd(lookupFailKey(e));
+      }
     } finally {
       clearTimeout(timeoutId);
       if (seq === lookupSeqRef.current) {
