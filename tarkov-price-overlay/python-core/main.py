@@ -420,6 +420,8 @@ class LookupResponse(BaseModel):
     no_flea: bool | None = None  # 11-04 플리 금지 아이템(시세 없음일 때 '거래 불가' vs '아직 시세 없음'), 옛 스냅샷은 None
     catalog_refreshing: bool = False  # 11-04 못 찾음 뒤 아이템 목록을 새로 받는 중 → '몇 초 뒤 다시 F2'
     game_updated_hours: int | None = None  # 11-04 게임이 새 버전으로 바뀐 지 몇 시간(48시간 안일 때만)
+    # 11-26 지금 켜진 게임의 모드(regular·pve·pvp-season, 게임 로그) — 설정 모드와 다르면 카드가 '모드 바꿀까요' 안내. 모르면 None
+    live_game_mode: str | None = None
     base_price: int | None = None  # 11-05 게임 내부 기준가 — 플리 수수료 계산(카드 '플리 실수령')
     flea_fee_rates: list[float] | None = None  # 11-05 [Ti, Tr] 판매 수수료 계수(json.tarkov.dev fleaMarket), 모르면 None
     flea_price: int | None
@@ -573,6 +575,7 @@ def _build_response(
         flea_fee_rates=_flea_fee_rates_for(game_mode),
         catalog_refreshing=catalog_refreshing,
         game_updated_hours=game_updated_hours,
+        live_game_mode=_live_game_mode(),
         flea_price=price.get("flea"),
         flea_low_24h=price.get("flea_low_24h"),
         flea_high_24h=price.get("flea_high_24h"),
@@ -1316,6 +1319,26 @@ def _cold_rescue(
 # 있어야만 계산한다(로그를 지웠거나 새로 깔았으면 언제 바뀌었는지 모른다 → 안내 안 함). 48시간 안이면 시간을 돌려준다.
 _GAME_UPD_CACHE: dict = {"t": 0.0, "v": None}
 GAME_UPDATE_HINT_HOURS = 48
+
+
+def _live_game_mode() -> str | None:
+    """11-26 지금 켜진 게임의 모드 — 가장 새 로그 폴더에 30분 안 기록이 있을 때(radar._live_log_mode, 10초 캐시)의 마지막 모드를
+    시세 모드 이름(regular·pve·pvp-season)으로. 게임이 꺼져 있거나 모르면 None. 시세 카드의 '설정 모드와 다름' 안내용
+    (지도 퀘스트는 이미 이 모드를 따르지만 시세는 설정 모드 그대로라, 모드를 잘못 둔 채 엉뚱한 모드 시세를 보던 것)."""
+    try:
+        from pathlib import Path as _P
+
+        import quest_tracker as qt
+        import radar
+
+        inst = qt.get_tracker()._effective_install_path()
+        folders = qt._list_log_folders(inst) if inst else []
+        if not folders:
+            return None
+        m = radar._live_log_mode(qt, _P(folders[-1]))
+        return {"pvp": "regular", "pve": "pve", "season": "pvp-season"}.get(m or "")
+    except Exception:  # noqa: BLE001 — 안내일 뿐이라 못 읽으면 조용히 없음
+        return None
 
 
 def _recent_game_update_hours() -> int | None:

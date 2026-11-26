@@ -1087,6 +1087,7 @@ type LookupResult = {
   flea_fee_rates?: [number, number] | null;
   catalog_refreshing?: boolean;
   game_updated_hours?: number | null;
+  live_game_mode?: GameMode | null; // 11-26 지금 켜진 게임의 모드(게임 로그) — 설정 모드와 다르면 카드에 '모드 바꿀까요'
   price_source?: string | null;
   // Caliber for ammo / weapons. Drives auto-expansion of the Ammo Matrix
   // panel and pre-selects the relevant caliber. null for everything else.
@@ -1707,6 +1708,17 @@ function App() {
   const toggleAtRef = useRef(-1e12); // 마지막 Shift+F2(숨기기 토글) 시각 — 같은 키면 그 누름도 게임 스크린샷을 만든다
   const [error, setError] = useState<string>("");
   const [region, setRegion] = useState<Region>(loadRegion);
+  // 11-26 시세 카드 '설정 모드 ≠ 지금 하는 게임 모드' 안내 — 닫으면 이번 실행 동안 안 보임, 바꾸면 '바꿨어요' 한 줄
+  const [modeHintClosed, setModeHintClosed] = useState(false);
+  const [modeHintSwitched, setModeHintSwitched] = useState<GameMode | null>(null);
+  const modeHintCountedRef = useRef(false);
+  const modeMismatch = !!result?.live_game_mode && result.live_game_mode !== region.gameMode && !modeHintClosed;
+  useEffect(() => {
+    if (modeMismatch && !modeHintCountedRef.current) {
+      modeHintCountedRef.current = true;
+      dailyAdd("gmh"); // 하루 요약: 모드 다름 안내를 본 세션
+    }
+  }, [modeMismatch]);
   const scanStreakRef = useRef<ScanStreak | null>(null); // 11-19 넓은 범위 찾기로 연달아 읽은 툴팁 위치
   // 11-19 사용자: '내 탈출구만' 인식이 잘 안 됨 → 게임에서 O(탈출구 목록)를 누른 시각을 받아 그 뒤 스크린샷을 목록으로 읽게 한다
   const gameKeyOAtRef = useRef(0);
@@ -8440,6 +8452,43 @@ function App() {
                     </div>
                   )}
                   {staleNote(result, t)}
+                  {/* 11-26 설정의 게임 모드와 지금 하는 게임 모드(게임 로그)가 다르면 — 다른 모드 시세를 보고 있다 */}
+                  {modeMismatch && result.live_game_mode && (() => {
+                    const name = (g: GameMode) => (g === "pve" ? t.gameModePve : g === "pvp-season" ? t.gameModeSeason : t.gameModePvp);
+                    const live = result.live_game_mode;
+                    return (
+                      <div className="price-modehint">
+                        {t.modeMismatchHint.replace("{mode}", name(live)).replace("{setting}", name(region.gameMode))}{" "}
+                        <button
+                          type="button"
+                          className="reset-btn"
+                          onClick={() => {
+                            updateRegion("gameMode", live);
+                            setModeHintSwitched(live);
+                            dailyAdd("gms"); // 하루 요약: 안내에서 모드를 바꾼 횟수
+                          }}
+                        >
+                          {t.modeMismatchSwitch.replace("{mode}", name(live))}
+                        </button>
+                        <button
+                          type="button"
+                          className="price-modehint-x"
+                          aria-label="✕"
+                          onClick={() => {
+                            setModeHintClosed(true);
+                            dailyAdd("gmx"); // 하루 요약: 안내를 닫은 횟수
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })()}
+                  {modeHintSwitched && modeHintSwitched === region.gameMode && !modeMismatch && (
+                    <div className="price-modehint">
+                      {t.modeMismatchDone.replace("{mode}", modeHintSwitched === "pve" ? t.gameModePve : modeHintSwitched === "pvp-season" ? t.gameModeSeason : t.gameModePvp)}
+                    </div>
+                  )}
                   {/* 11-08 가격 알람 — 플리 거래되는 아이템만 */}
                   {PRICE_ALARM_ON && alarmOn && result.item_id && !result.no_flea && (
                     <AlarmLine
