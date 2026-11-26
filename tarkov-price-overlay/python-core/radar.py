@@ -131,6 +131,72 @@ def parse_preset_lines(text: str) -> list[tuple[float, str, str]]:
 # 맵을 불러온 뒤 이보다 오래 지난 스크린샷은 다른 레이드일 수 있어 맵을 '모름'으로 둔다
 MAX_RAID_AGE_SEC = 2 * 3600
 
+# ── 레이드 끝(11-26) ───────────────────────────────────────────────
+# 지도 제작 세션 조사: 은신처 로딩은 'scene preset path' 줄을 안 남겨, 레이드가 끝난 뒤 은신처·메뉴에서 찍은 스크린샷이
+# '직전 맵 로딩(2시간 안)'으로 지난 레이드 맵 좌표가 됐다(해안선 (7.62, 1.81, −2.35) 11-04 22:25 = 은신처 의료 시설, 그 레이드는
+# 22:22:37 /client/match/local/end 로 끝남). 은신처는 누구나 같은 구조라 여러 사람 점이 겹쳐 공유 지도에 가짜 언덕까지 생겼다.
+# 끝 = 그 로딩 뒤 처음 나오는 backend '/client/match/local/end'(PvE) · application 'GameStarted' 뒤 'PrepareSelectedProfileLocally'
+# (메뉴로 돌아옴) · 다음 맵 로딩. 끝 기록이 없으면(강제 종료 등) 예전처럼 로딩 뒤 2시간. 이 PC 레이드 889개 중 836개에 끝이 잡힘.
+RAID_END_SLACK_SEC = 3  # 끝과 같은 초에 찍힌 탈출 순간 스크린샷(해안선 11-21 04:17:31)은 레이드 안으로
+_MARK_TS_RE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
+# 메뉴 화면 고정 카메라 방향(좌표 스크린샷 이름에 붙는 쿼터니언) — 맵 11개에 걸쳐 들어온다(지도 제작 세션 11-26)
+MENU_CAM_Q = (0.41849, 0.37487, -0.19514, 0.80390)
+
+
+def parse_raid_marks(text: str) -> list[tuple[float, str]]:
+    """application·backend 로그 본문 → [(epoch 초, 'started'|'menu'|'end')] 레이드 끝 판정용 신호."""
+    out = []
+    for line in text.splitlines():
+        if "GameStarted" in line:
+            kind = "started"
+        elif "PrepareSelectedProfileLocally" in line:
+            kind = "menu"
+        elif "/client/match/local/end" in line:
+            kind = "end"
+        else:
+            continue
+        m = _MARK_TS_RE.match(line)
+        if not m:
+            continue
+        try:
+            out.append((time.mktime(time.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")), kind))
+        except ValueError:
+            continue
+    return out
+
+
+def raid_ends(events: list[tuple[float, str, str]], marks: list[tuple[float, str]]) -> dict[float, float]:
+    """맵 로딩 시각 → 그 레이드가 끝난 시각. 끝 = 로딩 뒤 처음 나오는 'end'·다음 로딩·('started' 뒤) 'menu', 없으면 로딩 + 2시간."""
+    seq = sorted([(e[0], "load") for e in events] + list(marks))
+    out: dict[float, float] = {}
+    for i, (t, k) in enumerate(seq):
+        if k != "load" or t in out:
+            continue
+        end, started = t + MAX_RAID_AGE_SEC, False
+        for t2, k2 in seq[i + 1:]:
+            if t2 - t > MAX_RAID_AGE_SEC:
+                break
+            if t2 <= t:
+                continue
+            if k2 == "started":
+                started = True
+            elif k2 in ("end", "load") or (k2 == "menu" and started):
+                end = t2
+                break
+        out[t] = end
+    return out
+
+
+def is_menu_camera(pose: Optional[dict]) -> bool:
+    """메뉴 화면 고정 카메라로 찍은 좌표 스크린샷인지(방향 쿼터니언이 MENU_CAM_Q)."""
+    if not pose:
+        return False
+    try:
+        q = (float(pose["qx"]), float(pose["qy"]), float(pose["qz"]), float(pose["qw"]))
+    except (KeyError, TypeError, ValueError):
+        return False
+    return all(abs(a - b) < 1e-4 for a, b in zip(q, MENU_CAM_Q))
+
 # ── 레이드 진영(PMC/스캐브, 11-07) ────────────────────────────────
 # 로그인 때 고른 본 캐릭터(PMC) 프로필이 'PrepareSelectedProfileLocally/CompleteSelectedProfile ProfileId:<id>'(옛 버전 'SelectProfile') 로,
 # 레이드 시작이 'NetworkGameCreate profileStatus: 'Profileid: <id>' 로 남는다. 스캐브 레이드는 스캐브 프로필(다른 id)로
@@ -204,13 +270,17 @@ def side_from_exits(map_slug: Optional[str], names: list[str]) -> Optional[str]:
     return None
 
 
-def map_event_at(events: list[tuple[float, str, str]], shot_ts: float) -> Optional[tuple[float, str, str]]:
-    """스크린샷 시각에 열려 있던 맵의 로딩 사건 (시각, preset, slug) — 시각 = 이번 레이드를 가르는 열쇠(내 탈출구 기억용)."""
+def map_event_at(events: list[tuple[float, str, str]], shot_ts: float,
+                 ends: Optional[dict[float, float]] = None) -> Optional[tuple[float, str, str]]:
+    """스크린샷 시각에 열려 있던 맵의 로딩 사건 (시각, preset, slug) — 시각 = 이번 레이드를 가르는 열쇠(내 탈출구 기억용).
+    11-26 ends(raid_ends 결과)를 주면 레이드가 끝난 뒤(끝 + 3초 넘어) 찍은 스크린샷은 None(은신처·메뉴)."""
     best = None
     for ev in events:
         if ev[0] <= shot_ts + 5 and (best is None or ev[0] >= best[0]):
             best = ev
     if not best or shot_ts - best[0] > MAX_RAID_AGE_SEC:
+        return None
+    if ends is not None and shot_ts > ends.get(best[0], best[0] + MAX_RAID_AGE_SEC) + RAID_END_SLACK_SEC:
         return None
     return best
 
@@ -231,9 +301,10 @@ def loading_after(events: list[tuple[float, str, str]], shot_ts: Optional[float]
     return last
 
 
-def map_at(events: list[tuple[float, str, str]], shot_ts: float) -> tuple[Optional[str], Optional[str]]:
-    """스크린샷 시각에 열려 있던 맵 (slug, preset). 스크린샷보다 늦은 로딩은 무시(5초 여유)."""
-    best = map_event_at(events, shot_ts)
+def map_at(events: list[tuple[float, str, str]], shot_ts: float,
+           ends: Optional[dict[float, float]] = None) -> tuple[Optional[str], Optional[str]]:
+    """스크린샷 시각에 열려 있던 맵 (slug, preset). 스크린샷보다 늦은 로딩은 무시(5초 여유). ends 를 주면 레이드 끝 뒤는 (None, None)."""
+    best = map_event_at(events, shot_ts, ends)
     if not best:
         return None, None
     return (best[2] or None), best[1]

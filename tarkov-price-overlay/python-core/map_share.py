@@ -115,10 +115,48 @@ def _events() -> list[tuple[float, str, str]]:
     return sorted(out)
 
 
-def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None) -> list[str]:
+def _marks() -> list[tuple[float, str]]:
+    """모든 로그 폴더의 레이드 끝 신호(radar.parse_raid_marks — application·backend 로그). 파일 크기가 같으면 캐시에서."""
+    import quest_tracker as qt
+
+    inst = qt.detect_install_path()
+    folders = qt._list_log_folders(inst) if inst else []
+    cpath = _state_dir() / "map_share_marks.json"
+    try:
+        cache = json.loads(cpath.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        cache = {}
+    fresh: dict = {}
+    out: list[tuple[float, str]] = []
+    for d in folders:
+        for lf in list(d.glob("*application*.log")) + list(d.glob("*backend*.log")):
+            try:
+                size = lf.stat().st_size
+            except OSError:
+                continue
+            hit = cache.get(str(lf))
+            if hit and hit[0] == size:
+                mk = hit[1]
+            else:
+                try:
+                    mk = [list(m) for m in radar.parse_raid_marks(lf.read_text(encoding="utf-8", errors="ignore"))]
+                except OSError:
+                    mk = []
+            fresh[str(lf)] = [size, mk]
+            out.extend((m[0], m[1]) for m in mk)
+    try:
+        cpath.write_text(json.dumps(fresh), encoding="utf-8")
+    except OSError:
+        pass
+    return sorted(out)
+
+
+def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None, marks: Optional[list] = None) -> list[str]:
     """스크린샷 폴더 → 보낼 줄 목록(정렬·중복 없음). 맵을 모르는 스크린샷(앞선 맵 로딩 기록이 없거나 2시간 넘음)은 뺀다.
     11-10: 1.3.1 첫 받기 1,807줄 중 135줄(7.5%)이 프리셋 칸이 빈 줄 — 여러 맵 좌표가 섞여 서버에서 맵을 정할 수 없어 지도에 못 쓴다.
-    프리셋 이름은 있는데 모르는 맵(새 맵·변형)은 그대로 보낸다."""
+    프리셋 이름은 있는데 모르는 맵(새 맵·변형)은 그대로 보낸다.
+    11-26 레이드가 끝난 뒤(은신처·메뉴) 찍은 스크린샷과 메뉴 고정 카메라 스크린샷은 뺀다(radar.raid_ends·is_menu_camera) —
+    은신처 좌표가 지난 레이드 맵으로 들어가 공유 지도에 가짜 언덕이 생겼다. events 만 넘기면(시험) 끝 판정 없이 예전대로."""
     shots_dir = shots_dir if shots_dir is not None else radar.screenshots_dir()
     if not shots_dir or not Path(shots_dir).is_dir():
         return []
@@ -129,6 +167,8 @@ def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None)
         m = radar.SHOT_RE.match(p.name)
         if not m:
             continue
+        if radar.is_menu_camera(radar.parse_shot_name(p.name)):
+            continue
         try:
             ts = p.stat().st_mtime
         except OSError:
@@ -136,10 +176,15 @@ def build_lines(shots_dir: Optional[Path] = None, events: Optional[list] = None)
         shots.append((ts, p.name[m.start("x"):m.end("qw")]))
     if not shots:
         return []
-    evs = events if events is not None else _events()
+    if events is None:
+        evs = _events()
+        marks = _marks() if marks is None else marks
+    else:
+        evs = events
+    ends = radar.raid_ends(evs, marks) if marks is not None else None
     out = set()
     for ts, coords in shots:
-        best = radar.map_event_at(evs, ts)
+        best = radar.map_event_at(evs, ts, ends)
         if not best or not best[1]:
             continue
         out.add(f"{best[1]}|{coords}")
