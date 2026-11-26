@@ -4388,10 +4388,13 @@ function App() {
     let mounted = true;
     let tries = 0;
     let timer: number | undefined;
+    const probeStartedAt = Date.now();
     const probe = async () => {
       const info = await fetchDiagnostics();
       if (!mounted) return;
       if (info) {
+        // 11-26 하루 요약 rdl: 24초(예전 '실패' 기준)를 넘겨 늦게라도 뜬 실행 — 시작이 느린 PC 수
+        if (tries >= 12) dailyAdd("rdl");
         // 11-10 통계: 앱 실행부터 시세 엔진 첫 응답까지(ms) — 1.3.0 에서 늘어난 사이드카 시작 실패(14.6%)가 '늦게 뜸'인지 가르기
         if (!sidecarReadyReportedRef.current) {
           sidecarReadyReportedRef.current = true;
@@ -4413,8 +4416,12 @@ function App() {
       // Sidecar not ready yet: a cold start loads the OCR models first and can
       // take well over 3s. Retry (every 2s, ~24s cap) so the admin-rights
       // banner and the elevation telemetry don't silently miss on cold boots.
-      if (++tries < 12) timer = window.setTimeout(probe, 2000);
-      else reportEvent("sidecar_fail", `probe_${lastDiagErr || "unknown"}`); // ~24초 안에 못 뜸
+      // 11-26 통계(원본 11-19~26): '24초 안에 못 뜸' 63건 중 76% 는 엔진이 조금 늦게 떠서 조회가 정상이었다 — 평소 시작이
+      // 18~22초인 PC 가 가끔 24초를 넘긴 것. 예전엔 여기서 묻기를 멈춰 '실패'로 기록되고, 그 실행의 관리자 권한 안내·권한 통계·
+      // rdy 가 빠졌다. 이제 24초 뒤에도 5초마다 계속 묻고, 2분까지 안 뜰 때만 실패로 기록한다.
+      tries++;
+      if (Date.now() - probeStartedAt < 120_000) timer = window.setTimeout(probe, tries < 12 ? 2000 : 5000);
+      else reportEvent("sidecar_fail", `probe_${lastDiagErr || "unknown"}`); // 2분 안에 못 뜸
     };
     probe();
     return () => {
