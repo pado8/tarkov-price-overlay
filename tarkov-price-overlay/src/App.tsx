@@ -977,6 +977,7 @@ type QuestStatus = {
   // 모드별 마지막 프레스티지 감지 시각(epoch 초, 0=없음). 사이드카가 감지하면
   // 그 모드 퀘스트 기록을 그 시각부터 새로 센다(자동 와이프 리셋).
   prestige_by_mode?: Record<string, number>;
+  ignore_before_by_mode?: Record<string, number>; // 11-26 피드백 진단 한 줄(프레스티지·와이프 리셋 기준 시각)
 };
 
 type HideoutCraft = {
@@ -2544,6 +2545,14 @@ function App() {
     } catch {
       head.push("게임 화면 설정: 사이드카 응답 없음");
     }
+    // 11-26 피드백 #66(프레스티지 뒤 옛 퀘스트가 지도에 남음): 모드별 프레스티지 감지 시각·옛 기록 무시 기준 시각
+    // — 감지가 됐는지(못 됐는지)를 제보만 보고 가르려고. 0 = 없음
+    try {
+      const day = (s?: number) => (s ? new Date(s * 1000).toISOString().slice(0, 16).replace("T", " ") : "0");
+      const pr = questStatus?.prestige_by_mode ?? {};
+      const ib = questStatus?.ignore_before_by_mode ?? {};
+      head.push("퀘스트 " + (["pvp", "pve", "season"] as const).map((m) => `${m}:프레스티지=${day(pr[m])},무시기준=${day(ib[m])}`).join(" "));
+    } catch {}
     return diagBlock(head, Math.max(200, room));
   };
   // "empty" = 내용 없이 보내기를 눌렀을 때(전송 실패와 다른 안내 — t.feedbackEmpty)
@@ -4865,6 +4874,7 @@ function App() {
       // ignore
     }
     fresh.forEach((m) => clearManualQuestDone(m));
+    dailyAdd("prd", fresh.length); // 11-26 하루 요약: 게임 로그에서 프레스티지를 새로 감지(피드백 #66 — 감지가 실제 PC 에서 되는지)
     const recent = fresh.some(
       (m) => Date.now() / 1000 - (pres[m] ?? 0) < 3 * 86400
     );
@@ -4956,7 +4966,11 @@ function App() {
           from_now: fromNow,
         }),
       });
-      if (res.ok) setQuestStatus(await res.json());
+      if (res.ok) {
+        setQuestStatus(await res.json());
+        // 11-26 하루 요약: qwr 와이프 리셋(지금 이전 기록 무시) · qrs 수동 동기화(되돌리기 포함) — 프레스티지를 자동으로 못 잡아 손으로 고치는지(피드백 #66)
+        dailyAdd(fromNow ? "qwr" : "qrs");
+      }
     } catch (e) {
       log(`quest: reset failed — ${String(e)}`);
     }
