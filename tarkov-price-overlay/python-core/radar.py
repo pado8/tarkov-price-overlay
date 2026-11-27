@@ -1688,6 +1688,9 @@ def annotate_loot(doc: dict, loc: dict, loc_en: dict) -> None:
 
 _MAP_USER: Optional[dict] = None
 MAP_USER_LAYERS = ("extracts", "transits", "hazards")
+# 11-27 사용자 결정(1.3.7 에서 뺌): 지도 고침 기록은 아직 편집 중이라 공개판에서는 파일이 있어도 읽지 않는다(빌드가 data 폴더를
+# 통째로 넣어 미커밋 파일도 섞이므로 스위치로 막음). 지도 제작 세션 시험은 환경변수 TPO_MAP_USER=1 로 켠다. 다 고치면 기본값을 켠다.
+MAP_USER_ON = os.environ.get("TPO_MAP_USER") == "1"
 
 
 def map_user_doc() -> dict:
@@ -1695,6 +1698,8 @@ def map_user_doc() -> dict:
     {maps: {맵: {extracts|transits|hazards: {patch: {키: {p: [x, z], outline: [[x, z]…], hide, kind, label}}, add: [{id, kind, label, p, y, outline}]}}}}.
     보스 구역(boss_user.json)과 달리 항목별 고침 기록이다 — 손대지 않은 항목은 게임 자료 그대로(자료가 갱신되면 따라간다)."""
     global _MAP_USER
+    if _MAP_USER is None and not MAP_USER_ON:
+        _MAP_USER = {}  # 스위치 꺼짐(위 MAP_USER_ON) — 게임 자료 그대로
     if _MAP_USER is None:
         try:
             base = Path(getattr(sys, "_MEIPASS", "")) if getattr(sys, "frozen", False) else Path(__file__).resolve().parent
